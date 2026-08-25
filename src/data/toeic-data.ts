@@ -1,0 +1,797 @@
+// ============================================================
+// TOEIC Mock Data - Cho trang Practice > TOEIC
+// LingoSphere - English Learning Platform
+// ============================================================
+
+import type { ToeicExam, ToeicQuestion, ToeicPart, ToeicPartAnalysis } from '@/types/toeic'
+
+// ============================================================
+// TOEIC PARTS (Part 1-7)
+// ============================================================
+
+export const toeicParts: ToeicPart[] = [
+  // LISTENING
+  {
+    id: 'part-1',
+    partNumber: 1,
+    section: 'LISTENING',
+    skillType: 'LISTENING',
+    name: 'Photographs',
+    nameVi: 'Mô tả hình ảnh',
+    description: 'Look at the photograph and choose the best response.',
+    descriptionVi: 'Nhìn hình ảnh và chọn câu mô tả đúng nhất.',
+    questionType: 'PHOTOGRAPHS',
+    standardQuestionCount: 6,
+    hasAudio: true,
+    hasImage: true,
+    hasPassage: false,
+    hasRecording: false,
+    hasWriting: false,
+    listeningDurationSeconds: 0,
+    displayOrder: 1,
+  },
+  {
+    id: 'part-2',
+    partNumber: 2,
+    section: 'LISTENING',
+    skillType: 'LISTENING',
+    name: 'Question-Response',
+    nameVi: 'Hỏi - Đáp',
+    description: 'Listen to the question and three responses, then choose the best answer.',
+    descriptionVi: 'Nghe câu hỏi và ba câu trả lời, chọn câu trả lời đúng nhất.',
+    questionType: 'QUESTION_RESPONSE',
+    standardQuestionCount: 25,
+    hasAudio: true,
+    hasImage: false,
+    hasPassage: false,
+    hasRecording: false,
+    hasWriting: false,
+    listeningDurationSeconds: 0,
+    displayOrder: 2,
+  },
+  {
+    id: 'part-3',
+    partNumber: 3,
+    section: 'LISTENING',
+    skillType: 'LISTENING',
+    name: 'Conversations',
+    nameVi: 'Đoạn hội thoại',
+    description: 'Listen to conversations and answer the questions.',
+    descriptionVi: 'Nghe các đoạn hội thoại và trả lời câu hỏi.',
+    questionType: 'CONVERSATIONS',
+    standardQuestionCount: 39,
+    hasAudio: true,
+    hasImage: false,
+    hasPassage: true,
+    hasRecording: false,
+    hasWriting: false,
+    passageType: 'CONVERSATION',
+    listeningDurationSeconds: 0,
+    displayOrder: 3,
+  },
+  {
+    id: 'part-4',
+    partNumber: 4,
+    section: 'LISTENING',
+    skillType: 'LISTENING',
+    name: 'Short Talks',
+    nameVi: 'Bài nói ngắn',
+    description: 'Listen to short talks and answer the questions.',
+    descriptionVi: 'Nghe các bài nói ngắn và trả lời câu hỏi.',
+    questionType: 'TALKS',
+    standardQuestionCount: 30,
+    hasAudio: true,
+    hasImage: false,
+    hasPassage: true,
+    hasRecording: false,
+    hasWriting: false,
+    passageType: 'TALK',
+    listeningDurationSeconds: 0,
+    displayOrder: 4,
+  },
+  // READING
+  {
+    id: 'part-5',
+    partNumber: 5,
+    section: 'READING',
+    skillType: 'READING',
+    name: 'Incomplete Sentences',
+    nameVi: 'Hoàn thành câu',
+    description: 'Complete the sentence by choosing the best word.',
+    descriptionVi: 'Hoàn thành câu bằng cách chọn từ đúng nhất.',
+    questionType: 'INCOMPLETE_SENTENCES',
+    standardQuestionCount: 30,
+    hasAudio: false,
+    hasImage: false,
+    hasPassage: false,
+    hasRecording: false,
+    hasWriting: false,
+    displayOrder: 5,
+  },
+  {
+    id: 'part-6',
+    partNumber: 6,
+    section: 'READING',
+    skillType: 'READING',
+    name: 'Text Completion',
+    nameVi: 'Hoàn thành đoạn văn',
+    description: 'Complete the passage by choosing the best answer.',
+    descriptionVi: 'Hoàn thành đoạn văn bằng cách chọn đáp án đúng.',
+    questionType: 'TEXT_COMPLETION',
+    standardQuestionCount: 16,
+    hasAudio: false,
+    hasImage: false,
+    hasPassage: true,
+    hasRecording: false,
+    hasWriting: false,
+    passageType: 'TRIPLE_PASSAGE',
+    displayOrder: 6,
+  },
+  {
+    id: 'part-7',
+    partNumber: 7,
+    section: 'READING',
+    skillType: 'READING',
+    name: 'Reading Comprehension',
+    nameVi: 'Đọc hiểu',
+    description: 'Read the passages and answer the questions.',
+    descriptionVi: 'Đọc các đoạn văn và trả lời câu hỏi.',
+    questionType: 'READING_COMPREHENSION',
+    standardQuestionCount: 54,
+    hasAudio: false,
+    hasImage: false,
+    hasPassage: true,
+    hasRecording: false,
+    hasWriting: false,
+    passageType: 'DOUBLE_PASSAGE',
+    displayOrder: 7,
+  },
+]
+
+// ============================================================
+// TOEIC EXAMS (Mock Data)
+// ============================================================
+
+export const toeicExams: ToeicExam[] = [
+  // BỘ ĐỀ 2019
+  {
+    id: 'exam-bo2019-test1',
+    title: 'Đề thi thử TOEIC 2019 - Test 1',
+    code: 'HACKER_2019_T1',
+    description: 'Bộ đề luyện thi TOEIC năm 2019 - Đề số 1',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2019,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2019',
+    isOfficial: false,
+    officialCode: '',
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    scoringVersion: 'ETS_2018',
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2019',
+    thumbnailUrl: '/assets/toeic/thumb-2019.png',
+    totalAttempts: 15420,
+    avgScore: 685,
+  },
+  {
+    id: 'exam-bo2019-test2',
+    title: 'Đề thi thử TOEIC 2019 - Test 2',
+    code: 'HACKER_2019_T2',
+    description: 'Bộ đề luyện thi TOEIC năm 2019 - Đề số 2',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2019,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2019',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2019',
+    totalAttempts: 12350,
+    avgScore: 692,
+  },
+  {
+    id: 'exam-bo2019-test3',
+    title: 'Đề thi thử TOEIC 2019 - Test 3',
+    code: 'HACKER_2019_T3',
+    description: 'Bộ đề luyện thi TOEIC năm 2019 - Đề số 3',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2019,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2019',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2019',
+    totalAttempts: 11890,
+    avgScore: 678,
+  },
+  {
+    id: 'exam-bo2019-test4',
+    title: 'Đề thi thử TOEIC 2019 - Test 4',
+    code: 'HACKER_2019_T4',
+    description: 'Bộ đề luyện thi TOEIC năm 2019 - Đề số 4',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2019,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2019',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'HARD',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2019',
+    totalAttempts: 9870,
+    avgScore: 654,
+  },
+  {
+    id: 'exam-bo2019-test5',
+    title: 'Đề thi thử TOEIC 2019 - Test 5',
+    code: 'HACKER_2019_T5',
+    description: 'Bộ đề luyện thi TOEIC năm 2019 - Đề số 5',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2019,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2019',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2019',
+    totalAttempts: 11230,
+    avgScore: 701,
+  },
+
+  // BỘ ĐỀ 2020
+  {
+    id: 'exam-bo2020-test1',
+    title: 'Đề thi thử TOEIC 2020 - Test 1',
+    code: 'HACKER_2020_T1',
+    description: 'Bộ đề luyện thi TOEIC năm 2020 - Đề số 1',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2020,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2020',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2020',
+    totalAttempts: 8930,
+    avgScore: 715,
+  },
+  {
+    id: 'exam-bo2020-test2',
+    title: 'Đề thi thử TOEIC 2020 - Test 2',
+    code: 'HACKER_2020_T2',
+    description: 'Bộ đề luyện thi TOEIC năm 2020 - Đề số 2',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2020,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2020',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'EASY',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2020',
+    totalAttempts: 7650,
+    avgScore: 742,
+  },
+  {
+    id: 'exam-bo2020-test3',
+    title: 'Đề thi thử TOEIC 2020 - Test 3',
+    code: 'HACKER_2020_T3',
+    description: 'Bộ đề luyện thi TOEIC năm 2020 - Đề số 3',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2020,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2020',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'HARD',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2020',
+    totalAttempts: 6230,
+    avgScore: 638,
+  },
+
+  // BỘ ĐỀ 2021
+  {
+    id: 'exam-bo2021-test1',
+    title: 'Đề thi thử TOEIC 2021 - Test 1',
+    code: 'HACKER_2021_T1',
+    description: 'Bộ đề luyện thi TOEIC năm 2021 - Đề số 1',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2021,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2021',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2021',
+    totalAttempts: 5420,
+    avgScore: 698,
+  },
+  {
+    id: 'exam-bo2021-test2',
+    title: 'Đề thi thử TOEIC 2021 - Test 2',
+    code: 'HACKER_2021_T2',
+    description: 'Bộ đề luyện thi TOEIC năm 2021 - Đề số 2',
+    examType: 'PRACTICE_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2021,
+    examSeries: 'HACKER',
+    examVariant: 'HACKER_2021',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Bộ đề thi 2021',
+    totalAttempts: 4890,
+    avgScore: 705,
+  },
+
+  // ETS OFFICIAL
+  {
+    id: 'exam-ets-2026',
+    title: 'ETS TOEIC 2026 - Official Practice Test',
+    code: 'ETS_2026_OFFICIAL',
+    description: 'Đề thi TOEIC chính thức từ ETS năm 2026',
+    examType: 'FULL_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2026,
+    examSeries: 'ETS',
+    examVariant: 'ETS_OFFICIAL',
+    isOfficial: true,
+    officialCode: 'ETS_2026',
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    scoringVersion: 'ETS_2024',
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'ETS Official',
+    totalAttempts: 32450,
+    avgScore: 720,
+  },
+
+  // MOCK TEST
+  {
+    id: 'exam-mock-full',
+    title: 'Mock Test TOEIC - Full Test',
+    code: 'MOCK_FULL',
+    description: 'Đề thi thử TOEIC - Full test (2 kỹ năng)',
+    examType: 'MOCK_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2026,
+    examSeries: 'MOCK',
+    examVariant: 'MOCK_FULL',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 100,
+    totalQuestions: 200,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 990,
+    passingScore: 600,
+    status: 'PUBLISHED',
+    sourceInfo: 'Mock Test',
+    totalAttempts: 25670,
+    avgScore: 675,
+  },
+  {
+    id: 'exam-mock-listening',
+    title: 'Mock Test TOEIC - Listening Only',
+    code: 'MOCK_LC',
+    description: 'Đề thi thử TOEIC - Chỉ phần Listening',
+    examType: 'MOCK_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2026,
+    examSeries: 'MOCK',
+    examVariant: 'MOCK_LC',
+    isOfficial: false,
+    listeningQuestionCount: 100,
+    readingQuestionCount: 0,
+    totalQuestions: 100,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 495,
+    passingScore: 300,
+    status: 'PUBLISHED',
+    sourceInfo: 'Mock Test',
+    totalAttempts: 18230,
+    avgScore: 342,
+  },
+  {
+    id: 'exam-mock-reading',
+    title: 'Mock Test TOEIC - Reading Only',
+    code: 'MOCK_RC',
+    description: 'Đề thi thử TOEIC - Chỉ phần Reading',
+    examType: 'MOCK_TEST',
+    skillsEnabled: 'LR',
+    releaseYear: 2026,
+    examSeries: 'MOCK',
+    examVariant: 'MOCK_RC',
+    isOfficial: false,
+    listeningQuestionCount: 0,
+    readingQuestionCount: 100,
+    totalQuestions: 100,
+    difficultyLevel: 'MEDIUM',
+    targetScore: 495,
+    passingScore: 300,
+    status: 'PUBLISHED',
+    sourceInfo: 'Mock Test',
+    totalAttempts: 15890,
+    avgScore: 335,
+  },
+]
+
+// ============================================================
+// SAMPLE QUESTIONS (Mỗi Part 1 câu)
+// ============================================================
+
+export const toeicSampleQuestions: ToeicQuestion[] = [
+  // Part 1 - Photographs (Sample)
+  {
+    id: 'q-part1-sample-1',
+    examId: 'exam-mock-full',
+    partId: 'part-1',
+    partNumber: 1,
+    questionNumber: 1,
+    questionType: 'MULTIPLE_CHOICE',
+    questionTextEn: '',
+    questionTextVi: 'Look at the photograph and choose the best description.',
+    instructionEn: 'Look at the photograph and choose the best response.',
+    instructionVi: 'Nhìn hình ảnh và chọn mô tả đúng nhất.',
+    options: [
+      { key: 'A', textEn: 'A man is talking on the phone.', textVi: 'Một người đàn ông đang nói chuyện điện thoại.' },
+      { key: 'B', textEn: 'The woman is reading a book.', textVi: 'Người phụ nữ đang đọc sách.' },
+      { key: 'C', textEn: 'They are having a meeting.', textVi: 'Họ đang họp.' },
+      { key: 'D', textEn: 'Someone is typing on a computer.', textVi: 'Ai đó đang gõ máy tính.' },
+    ],
+    correctOption: 'A',
+    difficultyLevel: 'EASY',
+    skillType: 'LISTENING',
+    hasAudio: true,
+    hasImage: true,
+    status: 'PUBLISHED',
+  },
+
+  // Part 2 - Question-Response (Sample)
+  {
+    id: 'q-part2-sample-1',
+    examId: 'exam-mock-full',
+    partId: 'part-2',
+    partNumber: 2,
+    questionNumber: 1,
+    questionType: 'MULTIPLE_CHOICE',
+    questionTextEn: '',
+    questionTextVi: 'Listen and choose the best response.',
+    instructionEn: 'Listen to the question and three responses. Choose the best response.',
+    instructionVi: 'Nghe câu hỏi và ba câu trả lời. Chọn câu trả lời đúng nhất.',
+    options: [
+      { key: 'A', textEn: 'Yes, I am.', textVi: 'Vâng, tôi đây.' },
+      { key: 'B', textEn: 'It is on the table.', textVi: 'Nó ở trên bàn.' },
+      { key: 'C', textEn: 'Nice to meet you.', textVi: 'Rất vui được gặp bạn.' },
+      { key: 'D', textEn: 'Yes, please do.', textVi: 'Vâng, xin mời.' },
+    ],
+    correctOption: 'A',
+    difficultyLevel: 'EASY',
+    skillType: 'LISTENING',
+    hasAudio: true,
+    status: 'PUBLISHED',
+  },
+
+  // Part 3 - Conversation (Sample)
+  {
+    id: 'q-part3-sample-1',
+    examId: 'exam-mock-full',
+    partId: 'part-3',
+    partNumber: 3,
+    questionNumber: 101,
+    questionType: 'MULTIPLE_CHOICE',
+    passageId: 'passage-part3-1',
+    passageTitle: 'Conversation at a Restaurant',
+    questionTextEn: 'What is the conversation mainly about?',
+    questionTextVi: 'Cuộc trò chuyện chủ yếu nói về điều gì?',
+    instructionEn: 'Listen to the conversation and answer the questions.',
+    instructionVi: 'Nghe đoạn hội thoại và trả lời câu hỏi.',
+    options: [
+      { key: 'A', textEn: 'Ordering food', textVi: 'Đặt món ăn' },
+      { key: 'B', textEn: 'Making a reservation', textVi: 'Đặt bàn' },
+      { key: 'C', textEn: 'Paying the bill', textVi: 'Thanh toán hóa đơn' },
+      { key: 'D', textEn: 'Complaining about service', textVi: 'Khiếu nại dịch vụ' },
+    ],
+    correctOption: 'B',
+    difficultyLevel: 'MEDIUM',
+    skillType: 'LISTENING',
+    hasAudio: true,
+    hasPassage: true,
+    status: 'PUBLISHED',
+  },
+
+  // Part 5 - Incomplete Sentences (Sample)
+  {
+    id: 'q-part5-sample-1',
+    examId: 'exam-mock-full',
+    partId: 'part-5',
+    partNumber: 5,
+    questionNumber: 151,
+    questionType: 'MULTIPLE_CHOICE',
+    questionTextEn: 'The meeting has been _____ until next Friday.',
+    questionTextVi: 'Cuộc họp đã được _____ đến thứ Sáu tuần sau.',
+    instructionEn: 'Choose the best word to complete the sentence.',
+    instructionVi: 'Chọn từ đúng nhất để hoàn thành câu.',
+    options: [
+      { key: 'A', textEn: 'postponed', textVi: 'hoãn lại' },
+      { key: 'B', textEn: 'canceled', textVi: 'hủy bỏ' },
+      { key: 'C', textEn: 'scheduled', textVi: 'lên lịch' },
+      { key: 'D', textEn: 'organized', textVi: 'tổ chức' },
+    ],
+    correctOption: 'A',
+    difficultyLevel: 'EASY',
+    skillType: 'READING',
+    grammarPointId: 'grammar-passive-voice',
+    topicId: 'topic-business',
+    status: 'PUBLISHED',
+  },
+
+  // Part 6 - Text Completion (Sample)
+  {
+    id: 'q-part6-sample-1',
+    examId: 'exam-mock-full',
+    partId: 'part-6',
+    partNumber: 6,
+    questionNumber: 171,
+    questionType: 'MULTIPLE_CHOICE',
+    passageId: 'passage-part6-1',
+    passageTitle: 'Email about Conference',
+    questionTextEn: '(171) _____',
+    questionTextVi: 'Hãy chọn từ/cụm từ đúng nhất.',
+    instructionEn: 'Complete the passage by choosing the best answer.',
+    instructionVi: 'Hoàn thành đoạn văn bằng cách chọn đáp án đúng.',
+    options: [
+      { key: 'A', textEn: 'However', textVi: 'Tuy nhiên' },
+      { key: 'B', textEn: 'Therefore', textVi: 'Vì vậy' },
+      { key: 'C', textEn: 'Meanwhile', textVi: 'Trong khi đó' },
+      { key: 'D', textEn: 'Nevertheless', textVi: 'Dù sao' },
+    ],
+    correctOption: 'B',
+    difficultyLevel: 'MEDIUM',
+    skillType: 'READING',
+    status: 'PUBLISHED',
+  },
+
+  // Part 7 - Reading Comprehension (Sample)
+  {
+    id: 'q-part7-sample-1',
+    examId: 'exam-mock-full',
+    partId: 'part-7',
+    partNumber: 7,
+    questionNumber: 186,
+    questionType: 'MULTIPLE_CHOICE',
+    passageId: 'passage-part7-1',
+    passageTitle: 'Company Memo',
+    questionTextEn: 'What is the purpose of this memo?',
+    questionTextVi: 'Mục đích của bản ghi nhớ này là gì?',
+    instructionEn: 'Read the passage and answer the questions.',
+    instructionVi: 'Đọc đoạn văn và trả lời câu hỏi.',
+    options: [
+      { key: 'A', textEn: 'To announce a new policy', textVi: 'Thông báo về một chính sách mới' },
+      { key: 'B', textEn: 'To request employee feedback', textVi: 'Yêu cầu phản hồi từ nhân viên' },
+      { key: 'C', textEn: 'To schedule a meeting', textVi: 'Lên lịch họp' },
+      { key: 'D', textEn: 'To apologize for delays', textVi: 'Xin lỗi vì sự chậm trễ' },
+    ],
+    correctOption: 'A',
+    difficultyLevel: 'MEDIUM',
+    skillType: 'READING',
+    status: 'PUBLISHED',
+  },
+]
+
+// ============================================================
+// PART GROUPINGS (For UI display)
+// ============================================================
+
+export const toeicPartGroups = [
+  {
+    title: 'Listening',
+    titleVi: 'Nghe',
+    section: 'LISTENING',
+    parts: toeicParts.filter(p => p.section === 'LISTENING'),
+    totalQuestions: 100,
+    durationMinutes: 45,
+  },
+  {
+    title: 'Reading',
+    titleVi: 'Đọc',
+    section: 'READING',
+    parts: toeicParts.filter(p => p.section === 'READING'),
+    totalQuestions: 100,
+    durationMinutes: 75,
+  },
+]
+
+// ============================================================
+// FILTER OPTIONS
+// ============================================================
+
+export const toeicYearFilters = [
+  { value: 'all', label: 'Tất cả năm', count: 15 },
+  { value: '2019', label: '2019', count: 5 },
+  { value: '2020', label: '2020', count: 3 },
+  { value: '2021', label: '2021', count: 2 },
+  { value: '2026', label: '2026', count: 2 },
+]
+
+export const toeicSeriesFilters = [
+  { value: 'all', label: 'Tất cả loại', count: 15 },
+  { value: 'HACKER', label: 'HACKER', count: 10 },
+  { value: 'ETS', label: 'ETS Official', count: 1 },
+  { value: 'MOCK', label: 'Mock Test', count: 3 },
+]
+
+export const toeicDifficultyFilters = [
+  { value: 'all', label: 'Tất cả độ khó', count: 15 },
+  { value: 'EASY', label: 'Dễ', count: 3 },
+  { value: 'MEDIUM', label: 'Trung bình', count: 9 },
+  { value: 'HARD', label: 'Khó', count: 3 },
+]
+
+export const toeicExamTypeFilters = [
+  { value: 'all', label: 'Tất cả loại đề', count: 15 },
+  { value: 'FULL_TEST', label: 'Full Test', count: 1 },
+  { value: 'PRACTICE_TEST', label: 'Practice Test', count: 10 },
+  { value: 'MOCK_TEST', label: 'Mock Test', count: 3 },
+]
+
+// ============================================================
+// PART ANALYSIS (For user progress)
+// ============================================================
+
+export const mockPartAnalysis: ToeicPartAnalysis[] = [
+  { partNumber: 1, partName: 'Photographs', section: 'LISTENING', totalQuestions: 6, correctCount: 0, accuracyPercent: 0 },
+  { partNumber: 2, partName: 'Question-Response', section: 'LISTENING', totalQuestions: 25, correctCount: 0, accuracyPercent: 0 },
+  { partNumber: 3, partName: 'Conversations', section: 'LISTENING', totalQuestions: 39, correctCount: 0, accuracyPercent: 0 },
+  { partNumber: 4, partName: 'Short Talks', section: 'LISTENING', totalQuestions: 30, correctCount: 0, accuracyPercent: 0 },
+  { partNumber: 5, partName: 'Incomplete Sentences', section: 'READING', totalQuestions: 30, correctCount: 0, accuracyPercent: 0 },
+  { partNumber: 6, partName: 'Text Completion', section: 'READING', totalQuestions: 16, correctCount: 0, accuracyPercent: 0 },
+  { partNumber: 7, partName: 'Reading Comprehension', section: 'READING', totalQuestions: 54, correctCount: 0, accuracyPercent: 0 },
+]
+
+// ============================================================
+// SCORING TABLES
+// ============================================================
+
+// ETS Listening Scaled Score Table (approximate)
+export const listeningScaledScoreTable = [
+  { rawScore: 0, scaledScore: 5 },
+  { rawScore: 5, scaledScore: 30 },
+  { rawScore: 10, scaledScore: 55 },
+  { rawScore: 15, scaledScore: 80 },
+  { rawScore: 20, scaledScore: 110 },
+  { rawScore: 25, scaledScore: 140 },
+  { rawScore: 30, scaledScore: 170 },
+  { rawScore: 35, scaledScore: 200 },
+  { rawScore: 40, scaledScore: 230 },
+  { rawScore: 45, scaledScore: 260 },
+  { rawScore: 50, scaledScore: 290 },
+  { rawScore: 55, scaledScore: 320 },
+  { rawScore: 60, scaledScore: 350 },
+  { rawScore: 65, scaledScore: 380 },
+  { rawScore: 70, scaledScore: 410 },
+  { rawScore: 75, scaledScore: 440 },
+  { rawScore: 80, scaledScore: 465 },
+  { rawScore: 85, scaledScore: 480 },
+  { rawScore: 90, scaledScore: 490 },
+  { rawScore: 95, scaledScore: 495 },
+  { rawScore: 100, scaledScore: 495 },
+]
+
+// ETS Reading Scaled Score Table (approximate)
+export const readingScaledScoreTable = [
+  { rawScore: 0, scaledScore: 5 },
+  { rawScore: 5, scaledScore: 30 },
+  { rawScore: 10, scaledScore: 55 },
+  { rawScore: 15, scaledScore: 80 },
+  { rawScore: 20, scaledScore: 110 },
+  { rawScore: 25, scaledScore: 140 },
+  { rawScore: 30, scaledScore: 170 },
+  { rawScore: 35, scaledScore: 200 },
+  { rawScore: 40, scaledScore: 230 },
+  { rawScore: 45, scaledScore: 260 },
+  { rawScore: 50, scaledScore: 290 },
+  { rawScore: 55, scaledScore: 320 },
+  { rawScore: 60, scaledScore: 350 },
+  { rawScore: 65, scaledScore: 380 },
+  { rawScore: 70, scaledScore: 410 },
+  { rawScore: 75, scaledScore: 440 },
+  { rawScore: 80, scaledScore: 465 },
+  { rawScore: 85, scaledScore: 480 },
+  { rawScore: 90, scaledScore: 490 },
+  { rawScore: 95, scaledScore: 495 },
+  { rawScore: 100, scaledScore: 495 },
+]
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+export function getScaledScore(rawScore: number, section: 'LISTENING' | 'READING'): number {
+  const table = section === 'LISTENING' ? listeningScaledScoreTable : readingScaledScoreTable
+
+  for (let i = table.length - 1; i >= 0; i--) {
+    if (rawScore >= table[i].rawScore) {
+      return table[i].scaledScore
+    }
+  }
+  return 5
+}
+
+export function getTotalScore(listeningRaw: number, readingRaw: number): number {
+  return getScaledScore(listeningRaw, 'LISTENING') + getScaledScore(readingRaw, 'READING')
+}
+
+export function getPassingStatus(totalScore: number): 'PASS' | 'FAIL' {
+  return totalScore >= 600 ? 'PASS' : 'FAIL'
+}
+
+export function getScoreLevel(totalScore: number): string {
+  if (totalScore >= 900) return 'Expert'
+  if (totalScore >= 800) return 'Advanced'
+  if (totalScore >= 700) return 'Upper-Intermediate'
+  if (totalScore >= 600) return 'Intermediate'
+  if (totalScore >= 500) return 'Pre-Intermediate'
+  return 'Beginner'
+}
