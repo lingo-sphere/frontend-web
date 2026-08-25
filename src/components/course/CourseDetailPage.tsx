@@ -37,8 +37,8 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
             id: liveCourse.id || liveCourse._id || courseId,
             title: liveCourse.title || prev.title,
             description: liveCourse.description || prev.description,
-            level: (liveCourse.level as any) || prev.level,
-            thumbnail: liveCourse.thumbnail_url || (prev as any).thumbnail || '',
+            level: liveCourse.level || prev.level,
+            thumbnail: liveCourse.thumbnail_url || prev.thumbnail || '',
           }))
         }
       } catch {

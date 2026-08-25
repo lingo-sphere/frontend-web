@@ -12,6 +12,7 @@ import type {
   EditProfileForm,
   Achievement,
   Activity,
+  Badge,
 } from "@/types/user";
 import type { GamificationProfile, LeaderboardEntry } from "@/types/api.types";
 import {
@@ -256,7 +257,7 @@ function LeaderboardSection() {
           <div className="text-sm text-text-secondary">{isVietnamese ? 'Top' : 'Top'} {Math.round((1 - currentRank / defaultLeaderboard.length) * 100)}% {isVietnamese ? 'người học' : 'learners'}</div>
         </div>
       </div>
-      {defaultLeaderboard.slice(0, 5).map((user: any, index: number) => (
+      {defaultLeaderboard.slice(0, 5).map((user: (typeof defaultLeaderboard)[0], index: number) => (
         <div key={user.userId} className={`bg-surface-subtle rounded-xl p-3 flex items-center gap-3 ${user.isCurrentUser ? "ring-2 ring-primary" : ""}`}>
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? "bg-yellow text-yellow" : index === 1 ? "bg-gray-300 text-gray" : index === 2 ? "bg-amber-600 text-white" : "bg-surface text-text-tertiary"}`}>{index + 1}</div>
           <Avatar src={user.avatar} size="sm" />
@@ -352,7 +353,7 @@ export function UserProfileContent() {
           <div>
             <h3 className="font-semibold text-text-primary mb-4">{isVietnamese ? 'Huy hiệu của bạn' : 'Your Badges'}</h3>
             <div className="space-y-3">
-              {activeUser.stats.badges.map((badge: any) => (
+              {activeUser.stats.badges.map((badge: Badge) => (
                 <div key={badge.id} className="bg-surface-subtle rounded-xl p-4 flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${badge.tier === "gold" ? "bg-yellow-100 text-yellow" : badge.tier === "silver" ? "bg-gray-100 text-gray" : "bg-amber-100 text-amber-700"}`}><Icon name={badge.icon} size={20} /></div>
                   <div><div className="font-medium text-text-primary">{badge.name}</div><div className="text-xs text-text-tertiary">{badge.description}</div></div>

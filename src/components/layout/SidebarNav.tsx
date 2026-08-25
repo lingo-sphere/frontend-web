@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Icon } from '@/components/icons/icon-map'
-import type { NavGroup } from '@/types/dashboard'
+import type { NavGroup } from '@/config/navigation.config'
 
 interface SidebarNavProps {
   groups: NavGroup[]
@@ -93,17 +93,16 @@ export function SidebarNav({ groups, activeItem, onNavigate, collapsed = false }
       {groups.map((group, index) => (
         <div className={index === 0 ? '' : 'pt-4'} key={group.id}>
           {index > 0 && <Separator className={collapsed ? 'mb-2' : 'mb-4'} />}
-          {/* Group label */}
-          {group.label && (
+          {(group.titleVi || group.titleEn) && (
             <div className={`mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-text-tertiary ${collapsed ? 'hidden' : ''}`}>
-              {groupLabels[group.id]?.[isVietnamese ? 'vi' : 'en'] || group.label}
+              {isVietnamese ? group.titleVi : group.titleEn}
             </div>
           )}
           <div className={collapsed ? 'flex flex-col items-center gap-2' : 'space-y-1'}>
             {group.items.map((item) => {
               const isActive = activeItem === item.id
-              const iconClass = isActive ? 'text-primary' : accentClasses[item.accent ?? 'neutral']
-              const label = navLabels[item.id]?.[isVietnamese ? 'vi' : 'en'] || item.label
+              const iconClass = isActive ? 'text-primary' : 'text-text-secondary'
+              const label = isVietnamese ? item.labelVi : item.labelEn
 
               return (
                 <Button

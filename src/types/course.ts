@@ -114,6 +114,9 @@ export interface Course {
   totalLessons: number
   progress: CourseProgress
   chapters: Chapter[]
+  thumbnail?: string
+  thumbnail_url?: string
+  price?: number
   preTest: {
     status: LessonStatus
     result?: TestResult

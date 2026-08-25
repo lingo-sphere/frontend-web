@@ -4,9 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { Volume2, Mic, Square, Check, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { speakWord } from '@/data/vocabulary-learn-data'
+import type { VocabularyItem } from '@/types/vocabulary-learn'
 
 interface PronunciationExerciseProps {
-  word: any
+  word: VocabularyItem
   isAnswered: boolean
   onAnswer: (isCorrect: boolean, userAnswer: string) => void
   onNext: () => void

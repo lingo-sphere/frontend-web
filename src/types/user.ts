@@ -56,6 +56,12 @@ export interface Badge {
   tier: 'bronze' | 'silver' | 'gold' | 'platinum'
 }
 
+export interface NotificationCategorySettings {
+  push: boolean
+  email: boolean
+  inApp: boolean
+}
+
 export interface UserPreferences {
   language: string
   theme: 'light' | 'dark' | 'system'
@@ -68,7 +74,10 @@ export interface UserPreferences {
     sms?: boolean
     dailyReminder?: boolean
     weeklyReport?: boolean
-    [key: string]: any
+    quietHoursEnabled?: boolean
+    quietHoursStart?: string
+    quietHoursEnd?: string
+    categories?: Record<string, NotificationCategorySettings>
   }
   learning: {
     autoPlayAudio: boolean

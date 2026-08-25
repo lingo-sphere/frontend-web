@@ -53,7 +53,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           <p className="mt-0.5 text-[11px] font-medium leading-4 text-text-tertiary">{isVietnamese ? 'Học tiếng Anh' : 'English learning'}</p>
         </div>
       </div>
-      <SidebarNav activeItem={activeNavItem} groups={NAV_GROUPS as any} onNavigate={handleNavigate} collapsed={sidebarCollapsed} />
+      <SidebarNav activeItem={activeNavItem} groups={NAV_GROUPS} onNavigate={handleNavigate} collapsed={sidebarCollapsed} />
       <Button
         aria-label="Open profile"
         className={`mt-4 h-auto w-full shrink-0 justify-start gap-3 rounded-2xl bg-surface-subtle p-3 text-left hover:bg-surface-hover ${sidebarCollapsed ? '!justify-center !px-0' : ''}`}

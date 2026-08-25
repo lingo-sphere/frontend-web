@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, X, ChevronRight, Volume2, Eye, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import type { VocabularyItem } from '@/types/vocabulary-learn'
 
 interface ImageWordExerciseProps {
-  word: any
+  word: VocabularyItem
   isAnswered: boolean
   onAnswer: (isCorrect: boolean, userAnswer: string) => void
   onNext: () => void
@@ -87,7 +88,7 @@ export function ImageWordExercise({ word, isAnswered, onAnswer, onNext, onSpeakW
         <div className="flex items-center justify-center gap-3">
           <h2 className="text-[32px] font-bold text-primary">{word.meaningVi}</h2>
           <span className="rounded-full bg-surface-subtle px-3 py-1 text-[12px] font-medium text-text-secondary">
-            {word.partOfSpeech || word.word_type}
+            {word.partOfSpeech}
           </span>
         </div>
       </div>
@@ -96,7 +97,7 @@ export function ImageWordExercise({ word, isAnswered, onAnswer, onNext, onSpeakW
         <p className="mb-1 text-[12px] font-medium text-text-tertiary">
           {isVietnamese ? 'Định nghĩa tiếng Anh:' : 'English Definition:'}
         </p>
-        <p className="text-[14px] italic text-text-primary">{word.definitionEn || word.meaningEn}</p>
+        <p className="text-[14px] italic text-text-primary">{word.example}</p>
       </div>
 
       <div className="mb-6 w-full text-center">

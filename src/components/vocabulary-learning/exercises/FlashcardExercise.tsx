@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Volume2, Bookmark, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import type { VocabularyItem } from '@/types/vocabulary-learn'
 
 interface FlashcardExerciseProps {
-  word: any
+  word: VocabularyItem
   isAnswered: boolean
   onAnswer: (isCorrect: boolean, userAnswer: string) => void
   onNext: () => void
@@ -57,7 +58,7 @@ export function FlashcardExercise({
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-6 shadow-lg"
             style={{ backfaceVisibility: 'hidden' }}>
             <span className="mb-2 rounded-full bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary">
-              {word.partOfSpeech || word.word_type}
+              {word.partOfSpeech}
             </span>
             <h2 className="text-[36px] font-bold text-text-primary sm:text-[42px]">{word.word}</h2>
             <p className="mt-3 font-mono text-[16px] text-text-secondary">{word.pronunciation}</p>

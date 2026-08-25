@@ -35,7 +35,7 @@ interface ExamState {
   timedMode: boolean
 }
 
-const getPartTimings = (isVietnamese: boolean) => ({
+const getPartTimings = (isVietnamese: boolean): Record<number, { questions: number; seconds: number; description: string }> => ({
   1: { questions: 6, seconds: 0, description: isVietnamese ? 'Đi theo audio' : 'Follow audio' },
   2: { questions: 25, seconds: 0, description: isVietnamese ? 'Đi theo audio' : 'Follow audio' },
   3: { questions: 39, seconds: 0, description: isVietnamese ? 'Đi theo audio' : 'Follow audio' },
@@ -45,7 +45,7 @@ const getPartTimings = (isVietnamese: boolean) => ({
   7: { questions: 54, seconds: 60 * 60, description: '60 ' + (isVietnamese ? 'phút' : 'min') },
 })
 
-const getPartTips = (isVietnamese: boolean) => ({
+const getPartTips = (isVietnamese: boolean): Record<number, string> => ({
   1: isVietnamese ? 'Phần này khá ngắn, hãy tập trung vào những gì đang xảy ra trong hình.' : 'This part is short, focus on what is happening in the picture.',
   2: isVietnamese ? 'Chỉ nghe một lần, hãy chọn nhanh câu trả lời phù hợp nhất.' : 'Listen only once, quickly choose the best answer.',
   3: isVietnamese ? 'Đọc câu hỏi TRƯỚC khi audio phát để biết cần nghe thông tin gì.' : 'Read questions BEFORE audio plays to know what to listen for.',
@@ -383,7 +383,7 @@ export function ToeicExamPage() {
       case 'LISTENING': return 45 * 60
       case 'READING': return 96 * 60
       case 'PART':
-        const partTiming = (PART_TIMINGS as any)[parts[0]]
+        const partTiming = PART_TIMINGS[parts[0]]
         return partTiming?.seconds || 0
       default: return 0
     }
@@ -713,9 +713,9 @@ export function ToeicExamPage() {
               <Badge variant="default" className="bg-primary">Part {currentPart}</Badge>
               <span className="text-[12px] text-text-secondary">{getPartByNumber(currentPart)?.nameVi}</span>
             </div>
-            {(PART_TIPS as any)[currentPart] && (
+            {PART_TIPS[currentPart] && (
               <div className="max-w-md rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800">
-                💡 {(PART_TIPS as any)[currentPart]}
+                💡 {PART_TIPS[currentPart]}
               </div>
             )}
           </div>
@@ -827,11 +827,11 @@ export function ToeicExamPage() {
                 <div className="space-y-2 text-[12px]">
                   <div className="flex justify-between">
                     <span className="text-text-secondary">{isVietnamese ? 'Số câu' : 'Questions'}</span>
-                    <span className="font-medium">{(PART_TIMINGS as any)[currentPart]?.questions || 0}</span>
+                    <span className="font-medium">{PART_TIMINGS[currentPart]?.questions || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-secondary">{isVietnamese ? 'Thời gian' : 'Time'}</span>
-                    <span className="font-medium">{(PART_TIMINGS as any)[currentPart]?.description || 'N/A'}</span>
+                    <span className="font-medium">{PART_TIMINGS[currentPart]?.description || 'N/A'}</span>
                   </div>
                 </div>
               </CardContent>

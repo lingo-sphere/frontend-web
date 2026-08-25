@@ -44,13 +44,8 @@ export function AiLearningRoute() {
     setIsLoading(true)
 
     try {
-      const res: any = await aiService.chatWithAiTutor(query, messages)
-      const aiReply =
-        res?.response ||
-        res?.data?.response ||
-        res?.text ||
-        res?.data?.text ||
-        'Xin lỗi, tôi gặp trục trặc khi kết nối với máy chủ AI. Vui lòng thử lại sau.'
+      const res = await aiService.chatWithAiTutor(query, messages)
+      const aiReply = res?.response || 'Xin lỗi, tôi gặp trục trặc khi kết nối với máy chủ AI. Vui lòng thử lại sau.'
       setMessages((prev) => [...prev, { role: 'assistant', content: aiReply }])
     } catch (err) {
       console.error('AI chat error:', err)

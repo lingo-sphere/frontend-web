@@ -59,6 +59,7 @@ export type NotificationType =
   | 'TOEIC_RESULT_READY'
   | 'TOEIC_SCORE_IMPROVED'
   | 'TOEIC_PART_WEAK'
+  | 'TEST_ASSIGNED'
   // COURSE
   | 'COURSE_ENROLLED'
   | 'LESSON_AVAILABLE'
@@ -89,7 +90,7 @@ export interface Notification {
   actionUrl?: string
   actionParams?: Record<string, unknown>
   actionLabel?: string
-  sourceService?: 'AUTH' | 'USER' | 'VOCABULARY' | 'PRACTICE' | 'EXAM' | 'COURSE' | 'AI'
+  sourceService?: 'AUTH' | 'USER' | 'VOCABULARY' | 'PRACTICE' | 'EXAM' | 'COURSE' | 'AI' | 'SYSTEM'
   sourceType?: string
   sourceId?: string
   priority: NotificationPriority

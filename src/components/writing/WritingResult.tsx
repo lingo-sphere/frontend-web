@@ -40,7 +40,7 @@ export function WritingResult({
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'vocabulary' | 'grammar' | 'sentence'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'vocabulary' | 'grammar' | 'errors' | 'vocabulary-detailed' | 'sentence'>('overview')
 
   const aiEval = submission.ai_evaluation
   const scores = {
@@ -159,7 +159,7 @@ export function WritingResult({
       <section className="mb-6">
         <div className="flex gap-2 border-b border-border">
           {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+            <button key={tab.id} onClick={() => setActiveTab(tab.id as 'overview' | 'vocabulary' | 'grammar' | 'errors' | 'vocabulary-detailed')}
               className={`flex items-center gap-2 border-b-2 px-4 py-2 text-[13px] font-medium transition-colors ${
                 activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'
               }`}>

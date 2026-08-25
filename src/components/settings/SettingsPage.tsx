@@ -55,6 +55,9 @@ export function SettingsPage() {
   }
 
   const toggleCategoryChannel = (category: string, channel: string) => {
+    if (!preferences.notifications.categories) return
+    const prevCat = preferences.notifications.categories[category] || { push: true, email: true, inApp: true }
+    const channelKey = channel as keyof { push: boolean; email: boolean; inApp: boolean }
     setPreferences({
       ...preferences,
       notifications: {
@@ -62,8 +65,8 @@ export function SettingsPage() {
         categories: {
           ...preferences.notifications.categories,
           [category]: {
-            ...preferences.notifications.categories[category as keyof typeof preferences.notifications.categories],
-            [channel]: !preferences.notifications.categories[category as keyof typeof preferences.notifications.categories][channel as keyof { push: boolean; email: boolean; inApp: boolean }],
+            ...prevCat,
+            [channelKey]: !prevCat[channelKey],
           },
         },
       },
@@ -71,7 +74,8 @@ export function SettingsPage() {
   }
 
   const toggleCategoryAll = (category: string) => {
-    const cat = preferences.notifications.categories[category as keyof typeof preferences.notifications.categories]
+    if (!preferences.notifications.categories) return
+    const cat = preferences.notifications.categories[category]
     if (!cat) return
     const allEnabled = cat.push && cat.email && cat.inApp
     setPreferences({
@@ -206,7 +210,7 @@ export function SettingsPage() {
                 <span>{isVietnamese ? 'Từ' : 'From'}</span>
                 <Input
                   type="time"
-                  value={preferences.notifications.quietHoursStart}
+                  value={preferences.notifications.quietHoursStart || '22:00'}
                   onChange={(e) =>
                     setPreferences({
                       ...preferences,
@@ -218,7 +222,7 @@ export function SettingsPage() {
                 <span>{isVietnamese ? 'đến' : 'to'}</span>
                 <Input
                   type="time"
-                  value={preferences.notifications.quietHoursEnd}
+                  value={preferences.notifications.quietHoursEnd || '08:00'}
                   onChange={(e) =>
                     setPreferences({
                       ...preferences,
@@ -235,7 +239,7 @@ export function SettingsPage() {
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-text-secondary">{isVietnamese ? 'Danh mục thông báo' : 'Notification Categories'}</h4>
             {Object.entries(categoryConfig).map(([key, config]) => {
-              const cat = preferences.notifications.categories[key as keyof typeof preferences.notifications.categories]
+              const cat = preferences.notifications.categories?.[key]
               if (!cat) return null
               const hasAnyEnabled = cat.push || cat.email || cat.inApp
 
@@ -246,7 +250,7 @@ export function SettingsPage() {
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Icon name={config.icon as any} size={16} className="text-text-tertiary" />
+                      <Icon name={config.icon} size={16} className="text-text-tertiary" />
                       <div>
                         <div className="font-medium text-text-primary">{config.label[isVietnamese ? 'vi' : 'en']}</div>
                         <div className="text-xs text-text-tertiary">{config.description[isVietnamese ? 'vi' : 'en']}</div>
