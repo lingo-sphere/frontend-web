@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Modal để chọn deck khi lưu từ vựng
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

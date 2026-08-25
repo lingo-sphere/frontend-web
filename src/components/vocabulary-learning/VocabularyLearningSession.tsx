@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Vocabulary Learning Session - Main session component
 
 import { useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

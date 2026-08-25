@@ -1,14 +1,3 @@
-// Updated: 2026-08-17
-// TypeScript types cho dashboard:
-// - ThemeMode: light/dark
-// - NavSectionId: sidebar sections (home, learning, practice, ai, community, progress, system)
-// - LearningTaskKind: vocabulary, listening, writing, speaking
-// - RoadmapUnitStatus: completed, current, locked
-// - MilestoneStatus: done, current, locked
-// - LeaderboardPeriod: week, month, year
-// - HeatmapIntensity: 0-4 (màu sắc heatmap)
-// - HeatmapStatus: checked-in, freeze, inactive
-// - LeaderboardType: streak | learning
 
 export type ThemeMode = 'light' | 'dark'
 export type NavSectionId = 'home' | 'learning' | 'ai' | 'community' | 'leaderboard' | 'progress' | 'system'
@@ -99,7 +88,6 @@ export interface DashboardData {
   heatmapSummary: HeatmapSummary
 }
 
-// Monthly Leaderboard types
 export interface MonthlyLeaderboardUser {
   rank: number
   name: string
@@ -120,9 +108,9 @@ export interface MonthlyReward {
 }
 
 export interface MonthlyLeaderboard {
-  month: string // YYYY-MM format
-  monthLabel: string // "August 2026"
-  closingDate: string // ISO date
+  month: string 
+  monthLabel: string 
+  closingDate: string 
   topThree: MonthlyLeaderboardUser[]
   fullRanking: MonthlyLeaderboardUser[]
   rewards: MonthlyReward[]

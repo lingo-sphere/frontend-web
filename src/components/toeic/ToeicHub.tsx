@@ -10,10 +10,6 @@ import type { Exam } from '@/types/api.types'
 import { toeicExams, toeicParts, toeicYearFilters, toeicSeriesFilters, toeicDifficultyFilters } from '@/data/toeic-data'
 import type { ToeicExam, ToeicExamFilters, ToeicPart } from '@/types/toeic'
 
-// ============================================================
-// FILTER CHIP
-// ============================================================
-
 function FilterChip({
   label,
   active,
@@ -43,10 +39,6 @@ function FilterChip({
     </button>
   )
 }
-
-// ============================================================
-// EXAM CARD
-// ============================================================
 
 function ExamCard({
   exam,
@@ -162,10 +154,6 @@ function ExamCard({
   )
 }
 
-// ============================================================
-// PART OVERVIEW
-// ============================================================
-
 function PartOverview({ isVietnamese }: { isVietnamese: boolean }) {
   const listeningParts = toeicParts.filter(p => p.section === 'LISTENING')
   const readingParts = toeicParts.filter(p => p.section === 'READING')
@@ -231,10 +219,6 @@ function PartOverview({ isVietnamese }: { isVietnamese: boolean }) {
   )
 }
 
-// ============================================================
-// MAIN COMPONENT
-// ============================================================
-
 export function ToeicHub() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
@@ -282,25 +266,24 @@ export function ToeicHub() {
     }
   }, [])
 
-  // Filter exams
   const filteredExams = useMemo(() => {
     return exams.filter(exam => {
-      // Search
+
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase()
         if (!exam.title.toLowerCase().includes(query) && !exam.code.toLowerCase().includes(query)) {
           return false
         }
       }
-      // Year
+
       if (filters.year && filters.year !== 'all') {
         if (exam.releaseYear?.toString() !== filters.year) return false
       }
-      // Series
+
       if (filters.series && filters.series !== 'all') {
         if (exam.examSeries !== filters.series) return false
       }
-      // Difficulty
+
       if (filters.difficulty && filters.difficulty !== 'all') {
         if (exam.difficultyLevel !== filters.difficulty) return false
       }
@@ -308,7 +291,6 @@ export function ToeicHub() {
     })
   }, [filters, searchQuery])
 
-  // Group by year
   const groupedExams = useMemo(() => {
     const groups: Record<string, ToeicExam[]> = {}
     filteredExams.forEach(exam => {
@@ -320,7 +302,7 @@ export function ToeicHub() {
   }, [filteredExams])
 
   const handleStartExam = (exam: ToeicExam) => {
-    // Chỉ test với exam đầu tiên
+
     navigate(`/toeic/exam/toeic_2019_test1`)
   }
 

@@ -1,5 +1,3 @@
-// Updated: 2026-08-17
-// Route wrapper cho Vocabulary Notebook page
 
 import { Layout } from '@/components/layout/Layout'
 import { NotebookPage } from '@/components/vocabulary/NotebookPage'

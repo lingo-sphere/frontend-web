@@ -1,8 +1,7 @@
 import type { Notification } from '@/types/notification'
 
-// Sample notifications data synced with notification-service.dbml
 export const mockNotifications: Notification[] = [
-  // AUTH
+
   {
     id: 'notif-001',
     recipientId: 'user-001',
@@ -24,7 +23,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-14T10:30:00Z',
   },
 
-  // SUBSCRIPTION
   {
     id: 'notif-002',
     recipientId: 'user-001',
@@ -67,7 +65,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-14T09:01:00Z',
   },
 
-  // USER & GAMIFICATION
   {
     id: 'notif-004',
     recipientId: 'user-001',
@@ -152,7 +149,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-11T15:00:00Z',
   },
 
-  // VOCABULARY
   {
     id: 'notif-008',
     recipientId: 'user-001',
@@ -216,7 +212,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-13T14:00:00Z',
   },
 
-  // PRACTICE
   {
     id: 'notif-011',
     recipientId: 'user-001',
@@ -280,7 +275,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-13T11:00:00Z',
   },
 
-  // EXAM
   {
     id: 'notif-014',
     recipientId: 'user-001',
@@ -344,7 +338,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-11T10:00:00Z',
   },
 
-  // COURSE
   {
     id: 'notif-017',
     recipientId: 'user-001',
@@ -388,7 +381,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-10T15:00:00Z',
   },
 
-  // AI
   {
     id: 'notif-019',
     recipientId: 'user-001',
@@ -430,7 +422,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-12T09:00:00Z',
   },
 
-  // SYSTEM
   {
     id: 'notif-021',
     recipientId: 'user-001',
@@ -451,7 +442,6 @@ export const mockNotifications: Notification[] = [
     createdAt: '2026-08-14T12:00:00Z',
   },
 
-  // DAILY REMINDER (Marketing/Engagement)
   {
     id: 'notif-022',
     recipientId: 'user-001',
@@ -474,7 +464,6 @@ export const mockNotifications: Notification[] = [
   },
 ]
 
-// Helper functions
 export function getUnreadCount(notifications: Notification[]): number {
   return notifications.filter((n) => !n.isRead).length
 }

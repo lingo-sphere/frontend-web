@@ -1,9 +1,3 @@
-// Updated: 2026-08-20
-// Vocabulary Notebook page - saved vocabulary words & decks:
-// - Tab 1: Vocabulary list (saved words from dictionary)
-// - Tab 2: Deck list (user's vocabulary decks)
-// - Data synced with vocabulary-service.dbml
-// - Logic đồng bộ: Saved Vocabulary <-> Deck
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +27,6 @@ import type {
   UserDeck,
 } from "@/types/vocabulary";
 
-// Import mock data (sẽ thay bằng API call sau)
 import {
   savedVocabulary as initialSavedVocabulary,
   userDecks as initialUserDecks,
@@ -50,13 +43,11 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
   const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem);
   const [activeTab, setActiveTab] = useState<"vocabulary" | "decks">("vocabulary");
 
-  // ===== STATE CHO ĐỒNG BỘ =====
   const [savedVocabulary, setSavedVocabulary] = useState<SavedVocabulary[]>(
     initialSavedVocabulary
   );
   const [userDecks, setUserDecks] = useState<UserDeck[]>(initialUserDecks);
 
-  // Modal states
   const [selectDeckModal, setSelectDeckModal] = useState<{
     isOpen: boolean;
     word: SavedVocabulary | null;
@@ -70,8 +61,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
   const [createDeckModal, setCreateDeckModal] = useState<boolean>(false);
   const [newDeckTitle, setNewDeckTitle] = useState("");
 
-  // ===== COMPUTED DATA =====
-  // Đếm số từ trong mỗi deck
   const deckWordCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     savedVocabulary.forEach((item) => {
@@ -82,29 +71,24 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
     return counts;
   }, [savedVocabulary]);
 
-  // Từ chưa có trong deck nào (inbox)
   const inboxWords = useMemo(() => {
     return savedVocabulary.filter((item) => !item.deck_id);
   }, [savedVocabulary]);
 
-  // Từ trong deck được chọn
   const wordsInDeck = (deckId: string) => {
     return savedVocabulary.filter((item) => item.deck_id === deckId);
   };
 
-  // ===== HANDLERS =====
   const handleDeckClick = (deckId: string) => {
     setActiveNavItem("vocabulary");
     navigate(`/vocabulary/learn/${deckId}`);
     onAction(isVietnamese ? "Bắt đầu học deck" : "Starting deck learning");
   };
 
-  // Mở modal chọn deck để thêm từ vào deck
   const handleAddToDeck = (word: SavedVocabulary) => {
     setSelectDeckModal({ isOpen: true, word });
   };
 
-  // Xử lý khi chọn deck
   const handleSelectDeck = (
     deckId: string | null,
     createNew: boolean,
@@ -114,7 +98,7 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
     if (!word) return;
 
     if (createNew && newDeckTitle) {
-      // Tạo deck mới
+
       const newDeck: UserDeck = {
         id: `deck-${Date.now()}`,
         title: newDeckTitle,
@@ -123,7 +107,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
       };
       setUserDecks((prev) => [...prev, newDeck]);
 
-      // Thêm từ vào deck mới
       setSavedVocabulary((prev) =>
         prev.map((item) =>
           item.id === word.id ? { ...item, deck_id: newDeck.id } : item
@@ -132,7 +115,7 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
 
       onAction(isVietnamese ? `Đã tạo deck "${newDeckTitle}" và thêm từ` : `Created deck "${newDeckTitle}" and added word`);
     } else if (deckId) {
-      // Thêm vào deck có sẵn
+
       setSavedVocabulary((prev) =>
         prev.map((item) =>
           item.id === word.id ? { ...item, deck_id: deckId } : item
@@ -141,15 +124,13 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
       const deckName = userDecks.find((d) => d.id === deckId)?.title || deckId;
       onAction(isVietnamese ? `Đã thêm từ vào "${deckName}"` : `Added word to "${deckName}"`);
     } else {
-      // Chỉ lưu (không thêm vào deck)
+
       onAction(isVietnamese ? `Đã lưu từ "${word.lexical_item.word}"` : `Saved word "${word.lexical_item.word}"`);
     }
 
-    // Reset modal
     setSelectDeckModal({ isOpen: false, word: null });
   };
 
-  // Xóa từ khỏi saved vocabulary
   const handleDeleteWord = (word: SavedVocabulary) => {
     setDeleteWordModal({ isOpen: true, word });
   };
@@ -164,7 +145,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
     setDeleteWordModal({ isOpen: false, word: null });
   };
 
-  // Tạo deck mới
   const handleCreateDeck = () => {
     if (!newDeckTitle.trim()) return;
 
@@ -181,12 +161,10 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
     onAction(isVietnamese ? `Đã tạo deck "${newDeck.title}"` : `Created deck "${newDeck.title}"`);
   };
 
-  // Xóa deck (xóa deck nhưng giữ lại từ trong saved vocabulary)
   const handleDeleteDeck = (deck: UserDeck) => {
-    // Xóa deck khỏi danh sách
+
     setUserDecks((prev) => prev.filter((d) => d.id !== deck.id));
 
-    // Xóa deck_id khỏi các từ trong deck đó (chuyển về inbox)
     setSavedVocabulary((prev) =>
       prev.map((item) =>
         item.deck_id === deck.id ? { ...item, deck_id: undefined } : item
@@ -196,7 +174,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
     onAction(isVietnamese ? `Đã xóa deck "${deck.title}"` : `Deleted deck "${deck.title}"`);
   };
 
-  // Xóa từ khỏi deck (vẫn giữ trong saved vocabulary)
   const handleRemoveFromDeck = (word: SavedVocabulary) => {
     setSavedVocabulary((prev) =>
       prev.map((item) =>
@@ -304,7 +281,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
   );
 }
 
-// ===== VOCABULARY TAB =====
 interface VocabularyTabProps {
   savedVocabulary: SavedVocabulary[];
   userDecks: UserDeck[];
@@ -315,8 +291,7 @@ interface VocabularyTabProps {
   isVietnamese: boolean;
 }
 
-// Pagination config - số từ hiển thị mỗi lần load
-const ITEMS_PER_PAGE = 20; // 4 rows × 5 columns = 20 items
+const ITEMS_PER_PAGE = 20; 
 
 function VocabularyTab({
   savedVocabulary,
@@ -332,9 +307,8 @@ function VocabularyTab({
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Filter saved words (client-side filter for display)
   const filteredWords = savedVocabulary.filter((item) => {
-    // Search filter
+
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       const meanings = item.meanings || (item.primary_meaning ? [item.primary_meaning] : []);
@@ -347,7 +321,6 @@ function VocabularyTab({
       if (!matchesSearch) return false;
     }
 
-    // Deck filter
     if (filterDeck === "inbox") {
       return !item.deck_id;
     } else if (filterDeck !== "all" && item.deck_id !== filterDeck) {
@@ -357,17 +330,15 @@ function VocabularyTab({
     return true;
   });
 
-  // Reset display count when filters change
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
   }, [searchQuery, filterDeck]);
 
-  // Infinite scroll - load more when scrolling near bottom
   useEffect(() => {
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
       const scrollPosition = scrollTop + clientHeight;
-      const scrollThreshold = scrollHeight * 0.8; // Load more when 80% scrolled
+      const scrollThreshold = scrollHeight * 0.8; 
 
       if (
         scrollPosition >= scrollThreshold &&
@@ -375,7 +346,7 @@ function VocabularyTab({
         !isLoading
       ) {
         setIsLoading(true);
-        // Simulate loading delay (thay bằng API call thực tế)
+
         setTimeout(() => {
           setDisplayCount((prev) => Math.min(prev + ITEMS_PER_PAGE, filteredWords.length));
           setIsLoading(false);
@@ -387,7 +358,6 @@ function VocabularyTab({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [displayCount, filteredWords.length, isLoading]);
 
-  // Get items to display
   const displayedWords = filteredWords.slice(0, displayCount);
   const hasMore = displayCount < filteredWords.length;
 
@@ -493,7 +463,6 @@ function VocabularyTab({
   );
 }
 
-// ===== DECKS TAB =====
 interface DecksTabProps {
   decks: UserDeck[];
   deckWordCounts: Record<string, number>;
@@ -644,7 +613,6 @@ function DecksTab({
   );
 }
 
-// ===== CREATE DECK MODAL =====
 interface CreateDeckModalProps {
   isOpen: boolean;
   onClose: () => void;

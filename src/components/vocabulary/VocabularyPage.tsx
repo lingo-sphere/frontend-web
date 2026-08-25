@@ -59,7 +59,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
     ? oxfordPacks
     : oxfordPacks.filter(p => p.tags.includes(activeTag))
 
-  // Status labels
   const statusLabels = {
     learning: { vi: 'Đang học', en: 'Learning' },
     reviewing: { vi: 'Đang ôn', en: 'Reviewing' },
@@ -356,7 +355,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
   )
 }
 
-// Stat Item Component
 function StatItem({ icon, label, value }: { icon: string; label: string; value: string | number }) {
   return (
     <div className="flex flex-col">
@@ -369,7 +367,6 @@ function StatItem({ icon, label, value }: { icon: string; label: string; value: 
   )
 }
 
-// Pack Card Component
 function PackCard({ pack, onAction, isVietnamese }: { pack: VocabularyPack; onAction: (message: string) => void; isVietnamese: boolean }) {
   return (
     <Card className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg" onClick={() => onAction(`Opening "${pack.title}"`)}>

@@ -1,4 +1,3 @@
-// User types and interfaces
 
 export interface User {
   id: string
@@ -8,24 +7,20 @@ export interface User {
   avatar?: string
   bio?: string
   phone?: string
-  dateOfBirth?: string // ISO date string
+  dateOfBirth?: string 
   gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say'
   address?: string
   city?: string
   country?: string
 
-  // Learning stats
   stats: UserStats
 
-  // Preferences
   preferences: UserPreferences
 
-  // Account info
   role: 'student' | 'teacher' | 'admin'
   isVerified: boolean
   isActive: boolean
 
-  // Timestamps
   createdAt: string
   updatedAt: string
   lastLoginAt?: string
@@ -35,23 +30,21 @@ export interface UserStats {
   totalExercises: number
   totalListeningExercises: number
   totalVocabularyLearned: number
-  totalListeningTime: number // in minutes
-  totalSpeakingTime: number // in minutes
-  currentStreak: number // days
-  longestStreak: number // days
+  totalListeningTime: number 
+  totalSpeakingTime: number 
+  currentStreak: number 
+  longestStreak: number 
   totalXP: number
   level: number
   badges: Badge[]
 
-  // Accuracy stats
-  averageAccuracy: number // percentage
+  averageAccuracy: number 
   totalCorrectAnswers: number
   totalWrongAnswers: number
 
-  // Time stats
-  totalStudyTime: number // in minutes
-  weeklyStudyTime: number // in minutes this week
-  monthlyStudyTime: number // in minutes this month
+  totalStudyTime: number 
+  weeklyStudyTime: number 
+  monthlyStudyTime: number 
 }
 
 export interface Badge {
@@ -81,7 +74,7 @@ export interface UserPreferences {
     autoPlayAudio: boolean
     showPhonetic: boolean
     defaultExerciseDifficulty: 'easy' | 'medium' | 'hard'
-    dailyGoal: number // minutes per day
+    dailyGoal: number 
   }
   privacy: {
     showProfile: boolean
@@ -119,7 +112,6 @@ export interface Activity {
   metadata?: Record<string, unknown>
 }
 
-// Form types for editing
 export interface EditProfileForm {
   displayName: string
   bio: string

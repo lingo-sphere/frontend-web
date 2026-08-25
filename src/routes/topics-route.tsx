@@ -1,5 +1,3 @@
-// Updated: 2026-08-17
-// Route wrapper cho Topics page
 
 import { Layout } from '@/components/layout/Layout'
 import { TopicsPage } from '@/components/topics/TopicsPage'

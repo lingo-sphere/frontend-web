@@ -2,7 +2,6 @@ import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig 
 import { API_CONFIG } from '@/config/api.config'
 import type { ApiResponse } from '@/types/api.types'
 
-// Tạo instance axios chuẩn
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
@@ -11,7 +10,6 @@ export const apiClient: AxiosInstance = axios.create({
   },
 })
 
-// Request Interceptor: Gắn Bearer Token & Correlation ID
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     if (typeof window !== 'undefined') {
@@ -28,7 +26,6 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
-// Quản lý hàng đợi khi refresh token đồng thời
 let isRefreshing = false
 let failedQueue: Array<{
   resolve: (token: string) => void
@@ -46,7 +43,6 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = []
 }
 
-// Response Interceptor: Xử lý Format dữ liệu và Bắt lỗi 401 tự động Refresh Token
 apiClient.interceptors.response.use(
   (response) => {
     return response
@@ -54,10 +50,9 @@ apiClient.interceptors.response.use(
   async (error: AxiosError<{ message?: string | string[]; error?: string; statusCode?: number }>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    // Kiểm tra mã lỗi 401 (Unauthorized - AccessToken hết hạn)
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       if (isRefreshing) {
-        // Nếu đang có 1 request khác tiến hành refresh token, xếp request này vào hàng đợi
+
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         })
@@ -79,7 +74,6 @@ apiClient.interceptors.response.use(
           throw new Error('No refresh token available')
         }
 
-        // Gọi API cấp mới Access Token
         const res = await axios.post<ApiResponse<{ access_token: string; refresh_token?: string }>>(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
           { refresh_token: refreshToken },
@@ -90,7 +84,7 @@ apiClient.interceptors.response.use(
         const newRefreshToken = payload?.refresh_token
 
         if (newAccessToken) {
-          // Lưu token mới vào Storage
+
           localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
           if (newRefreshToken) {
             localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
@@ -100,7 +94,6 @@ apiClient.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
           }
 
-          // Giải phóng hàng đợi các request đang chờ
           processQueue(null, newAccessToken)
 
           return apiClient(originalRequest)
@@ -108,7 +101,7 @@ apiClient.interceptors.response.use(
           throw new Error('Invalid token response structure')
         }
       } catch (refreshErr) {
-        // Nếu refresh token cũng hết hạn -> Hủy hàng đợi & Đăng xuất
+
         processQueue(refreshErr, null)
         console.warn('Phiên đăng nhập học viên đã hết hạn. Đang đăng xuất...', refreshErr)
 
@@ -134,7 +127,6 @@ apiClient.interceptors.response.use(
   },
 )
 
-// Generic API Service wrapper
 export const api = {
   async get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
     const res = await apiClient.get<ApiResponse<T> | T>(url, { params })

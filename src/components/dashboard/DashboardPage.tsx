@@ -1,12 +1,3 @@
-// Updated: 2026-08-17
-// Dashboard page chính, render các sections:
-// 1. WelcomeBanner - header greeting
-// 2. StreakHistory - heatmap 90 ngày gần nhất
-// 3. Grid 2 columns:
-//    - Left: ContinueLearning, TodaysLearning, LearningRoadmap
-//    - Right: InsightRail (AI recommendation, Vocabulary, Rewards)
-// 4. Grid 3 columns: StreakRewards, StreakLeaderboard, ExploreTopics
-// Layout dùng items-stretch + h-full để columns cao bằng nhau
 
 import { ContinueLearningCard } from '@/components/dashboard/ContinueLearningCard'
 import { ExploreTopics } from '@/components/dashboard/ExploreTopics'

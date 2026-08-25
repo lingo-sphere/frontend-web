@@ -1,7 +1,3 @@
-// Updated: 2026-08-20
-// Mock data cho Writing - Synced with practice-service.dbml
-// Thiên về TOEIC: đời sống + môi trường công sở + giao tiếp kinh doanh
-// Không phải IELTS Writing
 
 import type {
   WritingExercise,
@@ -10,10 +6,6 @@ import type {
   WritingProgress,
   ContinueWriting,
 } from '@/types/writing'
-
-// ============================================================
-// RUBRIC TEMPLATES
-// ============================================================
 
 const rubricBasic = {
   task_achievement: { weight: 0.3, max_score: 10, criteria: ['Correct word', 'Correct form'] },
@@ -34,15 +26,7 @@ const rubricAdvanced = {
   grammatical_accuracy: { weight: 0.2, max_score: 10, criteria: ['Grammar range', 'Accuracy'] },
 }
 
-// ============================================================
-// WRITING EXERCISES (55 bài)
-// ============================================================
-
 export const writingExercises: WritingExercise[] = [
-
-  // ═══════════════════════════════════════════════════════════
-  // BASIC - SENTENCE COMPLETION (10 bài)
-  // ═══════════════════════════════════════════════════════════
 
   {
     id: 'we-b-sc-01',
@@ -305,10 +289,6 @@ export const writingExercises: WritingExercise[] = [
     updated_at: '2026-06-01T00:00:00Z',
   },
 
-  // ═══════════════════════════════════════════════════════════
-  // BASIC - SENTENCE ARRANGEMENT (10 bài)
-  // ═══════════════════════════════════════════════════════════
-
   {
     id: 'we-b-sa-01',
     title: 'Office Routine',
@@ -569,10 +549,6 @@ export const writingExercises: WritingExercise[] = [
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-06-01T00:00:00Z',
   },
-
-  // ═══════════════════════════════════════════════════════════
-  // INTERMEDIATE - PARAPHRASING (10 bài)
-  // ═══════════════════════════════════════════════════════════
 
   {
     id: 'we-i-p-01',
@@ -845,10 +821,6 @@ export const writingExercises: WritingExercise[] = [
     updated_at: '2026-06-15T00:00:00Z',
   },
 
-  // ═══════════════════════════════════════════════════════════
-  // INTERMEDIATE - KEYWORD WRITING (10 bài)
-  // ═══════════════════════════════════════════════════════════
-
   {
     id: 'we-i-kw-01',
     title: 'Making an Appointment',
@@ -1119,10 +1091,6 @@ export const writingExercises: WritingExercise[] = [
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-06-20T00:00:00Z',
   },
-
-  // ═══════════════════════════════════════════════════════════
-  // ADVANCED - TOPIC WRITING (15 bài) - Giới hạn 200 từ
-  // ═══════════════════════════════════════════════════════════
 
   {
     id: 'we-a-tw-01',
@@ -1516,10 +1484,6 @@ export const writingExercises: WritingExercise[] = [
   },
 ]
 
-// ============================================================
-// WRITING SUBMISSIONS (Mock submissions)
-// ============================================================
-
 export const writingSubmissions: WritingSubmission[] = [
   {
     id: 'ws-001',
@@ -1574,10 +1538,6 @@ export const writingSubmissions: WritingSubmission[] = [
   },
 ]
 
-// ============================================================
-// CONTINUE WRITING (Draft in progress)
-// ============================================================
-
 export const continueWriting: ContinueWriting | null = {
   submission_id: 'ws-draft-001',
   exercise_id: 'we-a-tw-01',
@@ -1590,10 +1550,6 @@ export const continueWriting: ContinueWriting | null = {
   content: 'There are several ways employees can make their workplace more productive. First, they should organize their workspace and prioritize tasks. This helps reduce time wasted on unimportant activities. Second, employees should communicate effectively with their colleagues...',
   word_count: 52,
 }
-
-// ============================================================
-// WRITING STATISTICS
-// ============================================================
 
 export const writingStats: WritingStats = {
   total_submissions: 42,
@@ -1617,10 +1573,6 @@ export const writingProgress: WritingProgress = {
   weakest_area: 'Vocabulary',
   recommended_topics: ['Business Communication', 'Technology', 'Meetings'],
 }
-
-// ============================================================
-// FILTER OPTIONS
-// ============================================================
 
 export const writingLevelFilters = [
   { value: 'all', label: 'All Levels' },

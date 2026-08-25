@@ -7,7 +7,6 @@ import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { Icon } from '@/components/icons/icon-map'
 import { currentUser } from '@/data/user-data'
 
-// Category config synced with notification-service.dbml
 const categoryConfig: Record<string, { label: { vi: string; en: string }; description: { vi: string; en: string }; icon: string }> = {
   auth: { label: { vi: 'Bảo mật', en: 'Auth & Security' }, description: { vi: 'Đăng nhập, mật khẩu, 2FA', en: 'Login, password, 2FA, account' }, icon: 'shield' },
   subscription: { label: { vi: 'Đăng ký', en: 'Subscription' }, description: { vi: 'Gói, thanh toán', en: 'Plans, billing, payments' }, icon: 'credit-card' },
@@ -33,7 +32,6 @@ export function SettingsPage() {
   const [preferences, setPreferences] = useState(currentUser.preferences)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
 
-  // Toggle master switch
   const toggleMasterNotification = () => {
     setPreferences({
       ...preferences,
@@ -44,7 +42,6 @@ export function SettingsPage() {
     })
   }
 
-  // Toggle channel
   const toggleChannel = (key: keyof typeof preferences.notifications) => {
     if (typeof preferences.notifications[key] === 'boolean') {
       setPreferences({
@@ -57,7 +54,6 @@ export function SettingsPage() {
     }
   }
 
-  // Toggle category channel
   const toggleCategoryChannel = (category: string, channel: string) => {
     setPreferences({
       ...preferences,
@@ -74,7 +70,6 @@ export function SettingsPage() {
     })
   }
 
-  // Toggle all channels for a category
   const toggleCategoryAll = (category: string) => {
     const cat = preferences.notifications.categories[category as keyof typeof preferences.notifications.categories]
     if (!cat) return
@@ -91,7 +86,6 @@ export function SettingsPage() {
     })
   }
 
-  // Toggle quiet hours
   const toggleQuietHours = () => {
     setPreferences({
       ...preferences,
@@ -102,7 +96,6 @@ export function SettingsPage() {
     })
   }
 
-  // Toggle learning
   const toggleLearning = (key: keyof typeof preferences.learning) => {
     if (typeof preferences.learning[key] === 'boolean') {
       setPreferences({
@@ -378,7 +371,6 @@ export function SettingsPage() {
   )
 }
 
-// Change password modal
 function ChangePasswordModal({ onClose, isVietnamese }: { onClose: () => void; isVietnamese: boolean }) {
   const { t } = useTranslation()
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })

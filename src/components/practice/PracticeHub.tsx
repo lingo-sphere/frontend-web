@@ -1,8 +1,3 @@
-// Updated: 2026-08-20
-// Practice hub page - tổng hợp các bài luyện tập:
-// - Knowledge: Grammar, IPA
-// - Skills: Listening, Speaking, Writing
-// - Exam: TOEIC
 
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'

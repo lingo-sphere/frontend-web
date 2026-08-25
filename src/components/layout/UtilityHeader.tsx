@@ -1,13 +1,3 @@
-// Updated: 2026-08-20
-// Header bar chứa các utility actions:
-// - Search bar: tra từ điển (click mở modal)
-// - Stats: Diamonds, Streak count
-// - Upgrade button
-// - Language toggle (VI/EN)
-// - Theme toggle (light/dark)
-// - Notifications button (mở notification modal dropdown)
-// Props:
-// - onAction: callback để hiển thị toast message
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -44,7 +34,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
 
   const unreadCount = getUnreadCount(notifications)
 
-  // Get latest 5 notifications
   const latestNotifications = useMemo(() => {
     return [...notifications]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -70,7 +59,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
     return date.toLocaleDateString()
   }
 
-  // Handle language toggle
   const handleLanguageToggle = () => {
     const newLang = language === 'VI' ? 'en' : 'vi'
     setLanguage(newLang === 'en' ? 'EN' : 'VI')
@@ -314,7 +302,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   )
 }
 
-// Get icon for notification type
 function getNotifIcon(type: string): string {
   const iconMap: Record<string, string> = {
     LOGIN_SUCCESS: 'logIn',

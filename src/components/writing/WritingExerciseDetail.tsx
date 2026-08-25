@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Writing Exercise Detail page - Xem chi tiết trước khi bắt đầu
-// Data synced with practice-service.dbml
 
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Clock, Target, BookOpen } from 'lucide-react'

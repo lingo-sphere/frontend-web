@@ -1,9 +1,3 @@
-// Updated: 2026-08-17
-// Course Detail Page - trang chi tiết khóa học:
-// - Course header với progress
-// - Course Curriculum (accordion)
-// - Pre-test dialog
-// - Lesson player integration
 
 import { useState, useEffect } from 'react'
 import { Play, Trophy, ChevronDown, ChevronRight, Lock, Check, Circle, BookOpen } from 'lucide-react'
@@ -57,19 +51,16 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
     }
   }, [courseId])
 
-  // Calculate progress
   const completedLessons = course.chapters.reduce((acc, ch) =>
     acc + ch.lessons.filter(l => l.status === 'completed').length, 0)
   const totalLessons = course.totalLessons
   const progressPercent = Math.round((completedLessons / totalLessons) * 100)
 
-  // Handle lesson click
   const handleLessonClick = (lesson: Lesson) => {
     if (lesson.status === 'locked') return
     setCurrentLesson(lesson)
   }
 
-  // Handle lesson progress update
   const handleLessonProgress = (lessonId: string, progress: number) => {
     setCourse(prev => {
       const updated = { ...prev }
@@ -83,7 +74,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
 
       lesson.progress = progress
 
-      // Unlock next lesson if 80% reached
       if (progress >= 80) {
         const lessonIndex = chapter.lessons.findIndex(l => l.id === lessonId)
         if (lessonIndex < chapter.lessons.length - 1) {
@@ -93,24 +83,21 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
           }
         }
 
-        // Mark current lesson as completed if 100%
         if (progress >= 100) {
           lesson.status = 'completed'
-          // Unlock next if completed
+
           if (lessonIndex < chapter.lessons.length - 1) {
             chapter.lessons[lessonIndex + 1].status = 'available'
           }
         }
       }
 
-      // Recalculate chapter progress
       const allLessonsDone = chapter.lessons.every(l => l.status === 'completed')
       if (allLessonsDone) {
         chapter.status = 'completed'
         chapter.exercise.status = 'available'
       }
 
-      // Recalculate course progress
       const totalCompleted = updated.chapters.reduce((acc, ch) =>
         acc + ch.lessons.filter(l => l.status === 'completed').length, 0)
       updated.progress.currentProgress = Math.round((totalCompleted / updated.totalLessons) * 100)
@@ -119,13 +106,11 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
     })
   }
 
-  // Handle test completion
   const handleTestComplete = (result: TestResult, type: string) => {
     setTestResultType(type)
     setShowTestResult(result)
   }
 
-  // Get status icon
   const StatusIcon = ({ status }: { status: string }) => {
     switch (status) {
       case 'completed':
@@ -325,7 +310,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   )
 }
 
-// Chapter Accordion Component
 interface ChapterAccordionProps {
   chapter: Chapter
   isExpanded: boolean

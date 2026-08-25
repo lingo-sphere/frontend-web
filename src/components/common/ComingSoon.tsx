@@ -1,7 +1,3 @@
-// Updated: 2026-08-20
-// Component hiển thị trang "Đang phát triển"
-// Props:
-// - title: tiêu đề trang
 
 import { useTranslation } from 'react-i18next'
 

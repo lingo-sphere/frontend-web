@@ -1,5 +1,3 @@
-// Updated: 2026-08-20
-// Mock data cho Vocabulary page - Synced with vocabulary-service.dbml
 
 import type {
   VocabularyPack,
@@ -10,10 +8,6 @@ import type {
   LearningStatus,
 } from '@/types/vocabulary'
 import { learningStatistics } from './vocabulary-learn-data'
-
-// ============================================================
-// VOCABULARY STATISTICS (from DB: learning_statistics)
-// ============================================================
 
 export const vocabularyStats: VocabularyStats = {
   totalCards: learningStatistics.total_cards,
@@ -30,22 +24,14 @@ export const vocabularyStatus: VocabularyStatus = {
   totalCards: learningStatistics.total_cards,
 }
 
-// ============================================================
-// TAG FILTERS
-// ============================================================
-
 export const vocabularyTagFilters = [
   'all', 'a1', 'a2', 'b1', 'b2', 'basic', 'c1', 'common',
   'communication', 'conversation', 'essential', 'ets',
   'idioms', 'ielts', 'oxford', 'sat', 'thpt', 'toefl', 'toeic'
 ]
 
-// ============================================================
-// SAVED VOCABULARY (from DB: user_vocabulary_progress + lexical_items)
-// ============================================================
-
 export const savedVocabulary: SavedVocabulary[] = [
-  // Từ "about" - CÓ 2 NGHĨA: giới từ + phó từ
+
   {
     id: 'sv-001',
     lexical_item_id: 'lex_about',
@@ -69,7 +55,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
     },
-    // Tất cả nghĩa của "about"
+
     meanings: [
       {
         id: 'm1',
@@ -101,7 +87,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ trong deck "Business English"
+
   {
     id: 'sv-002',
     lexical_item_id: 'lex_book',
@@ -285,7 +271,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: coffee
+
   {
     id: 'sv-006',
     lexical_item_id: 'lex_coffee',
@@ -321,7 +307,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: cat
+
   {
     id: 'sv-007',
     lexical_item_id: 'lex_cat',
@@ -357,7 +343,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: work - có 2 nghĩa
+
   {
     id: 'sv-008',
     lexical_item_id: 'lex_work',
@@ -407,7 +393,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: time
+
   {
     id: 'sv-009',
     lexical_item_id: 'lex_time',
@@ -443,7 +429,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: important
+
   {
     id: 'sv-010',
     lexical_item_id: 'lex_important',
@@ -479,7 +465,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: different - có 2 nghĩa
+
   {
     id: 'sv-011',
     lexical_item_id: 'lex_different',
@@ -515,7 +501,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: water
+
   {
     id: 'sv-012',
     lexical_item_id: 'lex_water',
@@ -551,7 +537,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: eat
+
   {
     id: 'sv-013',
     lexical_item_id: 'lex_eat',
@@ -587,7 +573,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: good - có 3 nghĩa
+
   {
     id: 'sv-014',
     lexical_item_id: 'lex_good',
@@ -636,7 +622,7 @@ export const savedVocabulary: SavedVocabulary[] = [
       },
     ],
   },
-  // Từ thêm: learn
+
   {
     id: 'sv-015',
     lexical_item_id: 'lex_learn',
@@ -674,10 +660,6 @@ export const savedVocabulary: SavedVocabulary[] = [
   },
 ]
 
-// ============================================================
-// USER'S DECKS (from DB: flashcard_decks where creator_type = 'USER')
-// ============================================================
-
 export const userDecks: UserDeck[] = [
   {
     id: 'deck-001',
@@ -701,10 +683,6 @@ export const userDecks: UserDeck[] = [
   },
 ]
 
-// ============================================================
-// COMMON PACKS (from DB: flashcard_decks where creator_type = 'SYSTEM')
-// ============================================================
-
 export const commonPacks: VocabularyPack[] = [
   {
     id: 'common-1',
@@ -723,10 +701,6 @@ export const commonPacks: VocabularyPack[] = [
     tags: ['communication', 'conversation', 'essential'],
   },
 ]
-
-// ============================================================
-// OXFORD PACKS (from DB: flashcard_decks by CEFR level)
-// ============================================================
 
 export const oxfordPacks: VocabularyPack[] = [
   {

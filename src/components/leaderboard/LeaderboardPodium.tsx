@@ -1,8 +1,3 @@
-// Updated: 2026-08-22
-// Podium component hiển thị top 3:
-// - 3 cards cùng kích thước (min-h-[180px])
-// - Gold/Silver/Bronze colors với vương miện tương ứng
-// - Responsive layout
 
 import { useTranslation } from 'react-i18next'
 import { Crown } from "lucide-react";
@@ -47,12 +42,10 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Reorder users to match podium layout: 2nd, 1st, 3rd
   const sortedUsers = podiumConfig.map(
     (p) => users.find((u) => u.rank === p.rank)!
   );
 
-  // Translation helpers
   const getStatLabel = () => {
     if (type === "streak") return isVietnamese ? 'Ngày' : 'days'
     if (type === "learning") return isVietnamese ? 'Phút' : 'min'

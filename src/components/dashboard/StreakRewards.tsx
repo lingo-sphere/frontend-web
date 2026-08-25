@@ -1,8 +1,3 @@
-// Updated: 2026-08-17
-// Hiển thị danh sách streak milestones:
-// - Mỗi milestone là 1 row: icon + "Mốc X ngày" + reward + button
-// - Trạng thái: done (success), current (warning), locked (disabled)
-// - Props: milestones[], onAction callback
 
 import { useTranslation } from 'react-i18next'
 import { Gift, Lock } from 'lucide-react'
@@ -22,7 +17,6 @@ export function StreakRewards({ milestones, onAction }: StreakRewardsProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Get remaining days
   const getRemainingDays = (days: number, currentStreak: number = 1) => {
     const remaining = Math.max(0, days - currentStreak)
     return remaining

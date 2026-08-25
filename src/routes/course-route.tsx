@@ -1,5 +1,3 @@
-// Updated: 2026-08-17
-// Route wrapper cho Course Detail page
 
 import { useNavigate } from 'react-router-dom'
 import { Layout } from '@/components/layout/Layout'

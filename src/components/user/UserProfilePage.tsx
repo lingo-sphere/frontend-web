@@ -19,7 +19,6 @@ import type {
   Activity,
 } from "@/types/user";
 
-// Avatar component
 function Avatar({
   src,
   size = "md",
@@ -68,7 +67,6 @@ function Avatar({
   );
 }
 
-// Stat card component
 function StatCard({
   icon,
   label,
@@ -106,7 +104,6 @@ function StatCard({
   );
 }
 
-// XP Progress bar
 function XPProgress({ currentXP }: { currentXP: number }) {
   const { current, required, progress } = getXPForNextLevel(currentXP);
 
@@ -130,7 +127,6 @@ function XPProgress({ currentXP }: { currentXP: number }) {
   );
 }
 
-// Achievement card
 function AchievementCard({ achievement }: { achievement: Achievement }) {
   return (
     <div
@@ -181,7 +177,6 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
   );
 }
 
-// Activity item
 function ActivityItem({ activity }: { activity: Activity }) {
   const typeIcons: Record<string, string> = {
     vocabulary: "book",
@@ -239,7 +234,6 @@ function ActivityItem({ activity }: { activity: Activity }) {
   );
 }
 
-// Edit profile modal
 function EditProfileModal({
   user,
   onClose,
@@ -402,7 +396,6 @@ function EditProfileModal({
   );
 }
 
-// Change password modal
 function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({
     currentPassword: "",
@@ -420,7 +413,7 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
       setError("Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
-    // Call API to change password
+
     console.log("Change password:", form);
     onClose();
   };
@@ -503,7 +496,6 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// Settings section
 function SettingsSection() {
   const [preferences, setPreferences] = useState(currentUser.preferences);
 
@@ -596,7 +588,6 @@ function SettingsSection() {
   );
 }
 
-// Leaderboard section
 function LeaderboardSection() {
   const currentRank = getUserRank(currentUser.id);
 
@@ -660,7 +651,6 @@ function LeaderboardSection() {
   );
 }
 
-// Main User Profile Page
 export function UserProfilePage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);

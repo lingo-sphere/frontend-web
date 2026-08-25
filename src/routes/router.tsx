@@ -1,6 +1,4 @@
-// Updated: 2026-08-17
-// Router configuration cho app:
-// - Dashboard: /
+
 import { createBrowserRouter } from 'react-router-dom'
 import { App } from '@/App'
 import { DashboardRoute } from '@/routes/dashboard-route'

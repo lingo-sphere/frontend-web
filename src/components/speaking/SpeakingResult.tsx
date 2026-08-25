@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Speaking Result - AI Evaluation Display
-// LingoSphere
 
 import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -32,7 +29,6 @@ export function SpeakingResult({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const evaluation = submission.ai_evaluation
 
-  // Score data
   const scores = [
     { label: isVietnamese ? 'Phát âm' : 'Pronunciation', value: submission.pronunciation_score || 0, color: 'bg-blue-500' },
     { label: 'Fluency', value: submission.fluency_score || 0, color: 'bg-emerald-500' },
@@ -276,7 +272,6 @@ export function SpeakingResult({
   )
 }
 
-// Analysis Item Component
 function AnalysisItem({
   icon,
   title,

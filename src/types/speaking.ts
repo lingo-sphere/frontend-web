@@ -1,9 +1,3 @@
-// Updated: 2026-08-20
-// TypeScript interfaces cho Speaking - Synced with practice-service.dbml
-
-// ============================================================
-// SPEAKING EXERCISES
-// ============================================================
 
 export type SpeakingExerciseType = 'TOPIC' | 'RESPOND_SITUATION' | 'PRONUNCIATION' | 'READ_ALOUD' | 'SHADOWING'
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD'
@@ -18,51 +12,40 @@ export interface SpeakingExercise {
   domain: 'SPEAKING'
   toeic_part?: number
 
-  // Exercise types
   exercise_type: SpeakingExerciseType
 
-  // Prompt/Instruction
   prompt_text_en?: string
   prompt_text_vi?: string
   prompt_media_id?: string
 
-  // Reference media
   reference_media_id?: string
 
-  // Content cho READ_ALOUD, SHADOWING
   source_text?: string
   source_text_vi?: string
 
-  // Target vocabulary, IPA (chỉ lưu ID - reference tới Vocabulary Service)
   target_lexical_item_ids?: string[]
   target_ipa_symbol_ids?: string[]
   target_grammar_point_ids?: string[]
 
-  // Expected criteria
   expected_keywords?: string[]
   expected_structure?: string[]
 
-  // Rubric
   rubric?: SpeakingRubric
   max_score?: number
 
-  // Configuration
   preparation_time_seconds?: number
   response_time_seconds?: number
   topic?: string
   topic_id?: string
   topic_name?: string
 
-  // Difficulty
   difficulty_level?: DifficultyLevel
   cefr_level?: string
   estimated_minutes?: number
 
-  // Stats
   total_attempts?: number
   avg_score?: number
 
-  // Status
   status: 'DRAFT' | 'REVIEW' | 'PUBLISHED' | 'ARCHIVED'
   created_at: string
   updated_at: string
@@ -77,25 +60,18 @@ export interface SpeakingRubric {
   content?: { weight: number; criteria: string[] }
 }
 
-// ============================================================
-// SPEAKING ATTEMPTS
-// ============================================================
-
 export interface SpeakingAttempt {
   id: string
   user_id: string
   exercise_id: string
   session_id?: string
 
-  // Recording
   recording_media_id?: string
   recording_duration_seconds?: number
 
-  // Transcription
   transcription?: string
   transcription_confidence?: number
 
-  // AI Evaluation
   ai_evaluation?: AIEvaluationResult
   pronunciation_score?: number
   fluency_score?: number
@@ -105,19 +81,16 @@ export interface SpeakingAttempt {
   content_score?: number
   overall_score?: number
 
-  // Timing
   preparation_time_seconds?: number
   speaking_time_seconds?: number
   attempt_number: number
   is_best_attempt: boolean
 
-  // Status
   domain: 'SPEAKING'
   status: SpeakingStatus
   completed_at?: string
   created_at: string
 
-  // Nested exercise
   exercise?: SpeakingExercise
 }
 
@@ -158,10 +131,6 @@ export interface AIEvaluationResult {
   processing_time_ms?: number
 }
 
-// ============================================================
-// SPEAKING STATISTICS
-// ============================================================
-
 export interface SpeakingStats {
   total_attempts: number
   average_score: number
@@ -183,10 +152,6 @@ export interface SpeakingProgress {
   weakest_area: string
   recommended_exercises: string[]
 }
-
-// ============================================================
-// RECORDING STATE
-// ============================================================
 
 export type RecordingPhase = 'idle' | 'preparing' | 'recording' | 'reviewing'
 

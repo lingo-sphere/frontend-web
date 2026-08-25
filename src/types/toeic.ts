@@ -1,10 +1,3 @@
-// ============================================================
-// TOEIC Types - LingoSphere
-// ============================================================
-
-// ============================================================
-// PART
-// ============================================================
 
 export interface ToeicPart {
   id: string
@@ -30,10 +23,6 @@ export interface ToeicPart {
   isActive?: boolean
 }
 
-// ============================================================
-// EXAM
-// ============================================================
-
 export interface ToeicExam {
   id: string
   title: string
@@ -42,21 +31,18 @@ export interface ToeicExam {
   examType: 'FULL_TEST' | 'PRACTICE_TEST' | 'MOCK_TEST' | 'DIAGNOSTIC_TEST'
   skillsEnabled: 'LR' | 'LRSW'
 
-  // Năm phát hành & loại đề
   releaseYear?: number
   examSeries?: string
   examVariant?: string
   isOfficial?: boolean
   officialCode?: string
 
-  // Counts
   listeningQuestionCount?: number
   readingQuestionCount?: number
   speakingQuestionCount?: number
   writingQuestionCount?: number
   totalQuestions?: number
 
-  // Difficulty & Scoring
   difficultyLevel?: 'EASY' | 'MEDIUM' | 'HARD'
   targetScore?: number
   scoringVersion?: string
@@ -64,27 +50,20 @@ export interface ToeicExam {
   speakingPassingScore?: number
   writingPassingScore?: number
 
-  // Metadata
   sourceInfo?: string
   sourceUrl?: string
   thumbnailUrl?: string
   copyrightNote?: string
 
-  // Stats
   totalAttempts?: number
   avgScore?: number
   avgTimeMinutes?: number
 
-  // Status
   status?: 'DRAFT' | 'PENDING_REVIEW' | 'APPROVED' | 'PUBLISHED' | 'ARCHIVED'
   publishedAt?: string
   createdAt?: string
   updatedAt?: string
 }
-
-// ============================================================
-// QUESTION
-// ============================================================
 
 export interface ToeicOption {
   key: string
@@ -126,10 +105,6 @@ export interface ToeicQuestion {
   createdAt?: string
 }
 
-// ============================================================
-// PASSAGE
-// ============================================================
-
 export interface ToeicPassage {
   id: string
   examId?: string
@@ -150,10 +125,6 @@ export interface ToeicPassage {
   status?: string
 }
 
-// ============================================================
-// ATTEMPT
-// ============================================================
-
 export interface ToeicAttempt {
   id: string
   userId: string
@@ -163,18 +134,15 @@ export interface ToeicAttempt {
   targetPart?: number
   targetParts?: number[]
 
-  // Timing
   startedAt: string
   submittedAt?: string
   expiredAt?: string
   totalTimeSeconds?: number
 
-  // Questions
   totalQuestions?: number
   answeredQuestions?: number
   skippedQuestions?: number
 
-  // Scores
   correctQuestions?: number
   incorrectQuestions?: number
   listeningRawScore?: number
@@ -183,16 +151,11 @@ export interface ToeicAttempt {
   readingScaledScore?: number
   totalScaledScore?: number
 
-  // Status
   status: 'IN_PROGRESS' | 'SUBMITTED' | 'EXPIRED' | 'CANCELLED'
   isBestAttempt?: boolean
   improvementVsPrevious?: number
   previousAttemptId?: string
 }
-
-// ============================================================
-// ANSWER
-// ============================================================
 
 export interface ToeicAnswer {
   id: string
@@ -211,10 +174,6 @@ export interface ToeicAnswer {
   flaggedForReview?: boolean
   createdAt?: string
 }
-
-// ============================================================
-// PART ANALYSIS
-// ============================================================
 
 export interface ToeicPartAnalysis {
   id?: string
@@ -237,10 +196,6 @@ export interface ToeicPartAnalysis {
   weakVocabulary?: string[]
 }
 
-// ============================================================
-// EXAM RESULT
-// ============================================================
-
 export interface ToeicExamResult {
   attempt: ToeicAttempt
   answers: ToeicAnswer[]
@@ -250,10 +205,6 @@ export interface ToeicExamResult {
   improvement?: number
 }
 
-// ============================================================
-// FILTER TYPES
-// ============================================================
-
 export interface ToeicExamFilters {
   year?: string
   series?: string
@@ -262,10 +213,6 @@ export interface ToeicExamFilters {
   isOfficial?: boolean
   search?: string
 }
-
-// ============================================================
-// PART PRACTICE
-// ============================================================
 
 export interface ToeicPartPractice {
   partNumber: number

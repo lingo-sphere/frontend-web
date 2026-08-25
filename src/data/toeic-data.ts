@@ -1,16 +1,8 @@
-// ============================================================
-// TOEIC Mock Data - Cho trang Practice > TOEIC
-// LingoSphere - English Learning Platform
-// ============================================================
 
 import type { ToeicExam, ToeicQuestion, ToeicPart, ToeicPartAnalysis } from '@/types/toeic'
 
-// ============================================================
-// TOEIC PARTS (Part 1-7)
-// ============================================================
-
 export const toeicParts: ToeicPart[] = [
-  // LISTENING
+
   {
     id: 'part-1',
     partNumber: 1,
@@ -89,7 +81,7 @@ export const toeicParts: ToeicPart[] = [
     listeningDurationSeconds: 0,
     displayOrder: 4,
   },
-  // READING
+
   {
     id: 'part-5',
     partNumber: 5,
@@ -148,12 +140,8 @@ export const toeicParts: ToeicPart[] = [
   },
 ]
 
-// ============================================================
-// TOEIC EXAMS (Mock Data)
-// ============================================================
-
 export const toeicExams: ToeicExam[] = [
-  // BỘ ĐỀ 2019
+
   {
     id: 'exam-bo2019-test1',
     title: 'Đề thi thử TOEIC 2019 - Test 1',
@@ -268,7 +256,6 @@ export const toeicExams: ToeicExam[] = [
     avgScore: 701,
   },
 
-  // BỘ ĐỀ 2020
   {
     id: 'exam-bo2020-test1',
     title: 'Đề thi thử TOEIC 2020 - Test 1',
@@ -336,7 +323,6 @@ export const toeicExams: ToeicExam[] = [
     avgScore: 638,
   },
 
-  // BỘ ĐỀ 2021
   {
     id: 'exam-bo2021-test1',
     title: 'Đề thi thử TOEIC 2021 - Test 1',
@@ -382,7 +368,6 @@ export const toeicExams: ToeicExam[] = [
     avgScore: 705,
   },
 
-  // ETS OFFICIAL
   {
     id: 'exam-ets-2026',
     title: 'ETS TOEIC 2026 - Official Practice Test',
@@ -408,7 +393,6 @@ export const toeicExams: ToeicExam[] = [
     avgScore: 720,
   },
 
-  // MOCK TEST
   {
     id: 'exam-mock-full',
     title: 'Mock Test TOEIC - Full Test',
@@ -477,12 +461,8 @@ export const toeicExams: ToeicExam[] = [
   },
 ]
 
-// ============================================================
-// SAMPLE QUESTIONS (Mỗi Part 1 câu)
-// ============================================================
-
 export const toeicSampleQuestions: ToeicQuestion[] = [
-  // Part 1 - Photographs (Sample)
+
   {
     id: 'q-part1-sample-1',
     examId: 'exam-mock-full',
@@ -508,7 +488,6 @@ export const toeicSampleQuestions: ToeicQuestion[] = [
     status: 'PUBLISHED',
   },
 
-  // Part 2 - Question-Response (Sample)
   {
     id: 'q-part2-sample-1',
     examId: 'exam-mock-full',
@@ -533,7 +512,6 @@ export const toeicSampleQuestions: ToeicQuestion[] = [
     status: 'PUBLISHED',
   },
 
-  // Part 3 - Conversation (Sample)
   {
     id: 'q-part3-sample-1',
     examId: 'exam-mock-full',
@@ -561,7 +539,6 @@ export const toeicSampleQuestions: ToeicQuestion[] = [
     status: 'PUBLISHED',
   },
 
-  // Part 5 - Incomplete Sentences (Sample)
   {
     id: 'q-part5-sample-1',
     examId: 'exam-mock-full',
@@ -587,7 +564,6 @@ export const toeicSampleQuestions: ToeicQuestion[] = [
     status: 'PUBLISHED',
   },
 
-  // Part 6 - Text Completion (Sample)
   {
     id: 'q-part6-sample-1',
     examId: 'exam-mock-full',
@@ -613,7 +589,6 @@ export const toeicSampleQuestions: ToeicQuestion[] = [
     status: 'PUBLISHED',
   },
 
-  // Part 7 - Reading Comprehension (Sample)
   {
     id: 'q-part7-sample-1',
     examId: 'exam-mock-full',
@@ -640,10 +615,6 @@ export const toeicSampleQuestions: ToeicQuestion[] = [
   },
 ]
 
-// ============================================================
-// PART GROUPINGS (For UI display)
-// ============================================================
-
 export const toeicPartGroups = [
   {
     title: 'Listening',
@@ -662,10 +633,6 @@ export const toeicPartGroups = [
     durationMinutes: 75,
   },
 ]
-
-// ============================================================
-// FILTER OPTIONS
-// ============================================================
 
 export const toeicYearFilters = [
   { value: 'all', label: 'Tất cả năm', count: 15 },
@@ -696,10 +663,6 @@ export const toeicExamTypeFilters = [
   { value: 'MOCK_TEST', label: 'Mock Test', count: 3 },
 ]
 
-// ============================================================
-// PART ANALYSIS (For user progress)
-// ============================================================
-
 export const mockPartAnalysis: ToeicPartAnalysis[] = [
   { partNumber: 1, partName: 'Photographs', section: 'LISTENING', totalQuestions: 6, correctCount: 0, accuracyPercent: 0 },
   { partNumber: 2, partName: 'Question-Response', section: 'LISTENING', totalQuestions: 25, correctCount: 0, accuracyPercent: 0 },
@@ -710,11 +673,6 @@ export const mockPartAnalysis: ToeicPartAnalysis[] = [
   { partNumber: 7, partName: 'Reading Comprehension', section: 'READING', totalQuestions: 54, correctCount: 0, accuracyPercent: 0 },
 ]
 
-// ============================================================
-// SCORING TABLES
-// ============================================================
-
-// ETS Listening Scaled Score Table (approximate)
 export const listeningScaledScoreTable = [
   { rawScore: 0, scaledScore: 5 },
   { rawScore: 5, scaledScore: 30 },
@@ -739,7 +697,6 @@ export const listeningScaledScoreTable = [
   { rawScore: 100, scaledScore: 495 },
 ]
 
-// ETS Reading Scaled Score Table (approximate)
 export const readingScaledScoreTable = [
   { rawScore: 0, scaledScore: 5 },
   { rawScore: 5, scaledScore: 30 },
@@ -763,10 +720,6 @@ export const readingScaledScoreTable = [
   { rawScore: 95, scaledScore: 495 },
   { rawScore: 100, scaledScore: 495 },
 ]
-
-// ============================================================
-// HELPERS
-// ============================================================
 
 export function getScaledScore(rawScore: number, section: 'LISTENING' | 'READING'): number {
   const table = section === 'LISTENING' ? listeningScaledScoreTable : readingScaledScoreTable

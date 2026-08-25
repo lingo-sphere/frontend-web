@@ -1,6 +1,3 @@
-// Updated: 2026-08-20
-// Writing Home page - Tổng quan về Writing Practice
-// Data synced with practice-service.dbml
 
 import { useTranslation } from 'react-i18next'
 import {
@@ -49,7 +46,6 @@ export function WritingHome({
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Get exercise by ID
   const getExercise = (exerciseId: string) => {
     return exercises.find((ex) => ex.id === exerciseId);
   };
@@ -390,7 +386,6 @@ export function WritingHome({
   );
 }
 
-// Helper function
 function formatTimeAgo(dateString: string, isVietnamese: boolean): string {
   const date = new Date(dateString);
   const now = new Date();

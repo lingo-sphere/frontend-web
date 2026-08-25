@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Countdown timer component for leaderboard:
-// - Display days remaining until month ends
-// - Gradient background with warning colors
 
 import { useTranslation } from 'react-i18next'
 import { Clock3 } from 'lucide-react'

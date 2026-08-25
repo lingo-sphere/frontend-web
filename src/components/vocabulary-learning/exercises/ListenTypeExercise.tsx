@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Listen and Type Exercise Component
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

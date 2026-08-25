@@ -1,7 +1,3 @@
-// Updated: 2026-08-22
-// Rewards section component:
-// - Display diamond rewards for top 3
-// - Medal styling with special badge
 
 import { useTranslation } from 'react-i18next'
 import { Diamond } from 'lucide-react'

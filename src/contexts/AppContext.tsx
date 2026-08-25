@@ -1,9 +1,3 @@
-// Updated: 2026-08-17
-// Global context cho app:
-// - actionMessage: toast message hiện tại
-// - showAction: hiển thị toast message (auto hide sau 2.8s)
-// - theme: light/dark mode
-// - toggleTheme: toggle light/dark
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useDashboardStore } from '@/store/dashboard-store'

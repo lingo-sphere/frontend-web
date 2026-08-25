@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Speaking Exercise List - LingoSphere
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -42,7 +40,6 @@ export function SpeakingExerciseList({
     SHADOWING: isVietnamese ? 'Bắt chước' : 'Shadowing',
   }
 
-  // Filter exercises
   const filteredExercises = useMemo(() => {
     return exercises.filter((ex) => {
       if (searchQuery.trim()) {
@@ -59,7 +56,6 @@ export function SpeakingExerciseList({
     })
   }, [exercises, searchQuery, typeFilter, levelFilter])
 
-  // Group by type
   const groupedExercises = useMemo(() => {
     const groups: Record<SpeakingExerciseType, SpeakingExercise[]> = {
       TOPIC: [],
@@ -224,7 +220,6 @@ export function SpeakingExerciseList({
   )
 }
 
-// Filter Chip Component
 function FilterChip({
   label,
   active,
@@ -248,7 +243,6 @@ function FilterChip({
   )
 }
 
-// Exercise Card Component
 function ExerciseCard({
   exercise,
   onClick,

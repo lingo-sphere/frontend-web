@@ -3,7 +3,7 @@ import { API_CONFIG } from '@/config/api.config'
 import type { SpeechAssessmentResult } from '@/types/api.types'
 
 export const practiceService = {
-  // 1. Luyện Nghe (Listening)
+
   async getListeningExercises(params?: { part?: number; level?: string }) {
     return api.get(API_CONFIG.ENDPOINTS.PRACTICE.LISTENING, params)
   },
@@ -12,12 +12,10 @@ export const practiceService = {
     return api.get(API_CONFIG.ENDPOINTS.PRACTICE.LISTENING_BY_ID(id))
   },
 
-  // 2. Luyện Nói (Speaking với Whisper.cpp)
   async getSpeakingExercises(params?: { part?: number }) {
     return api.get(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING, params)
   },
 
-  // Gửi file ghi âm của học viên lên Backend để Whisper.cpp nhận diện & chấm điểm phát âm
   async evaluateSpeakingAudio(audioBlob: Blob, exerciseId?: string, topic?: string): Promise<SpeechAssessmentResult> {
     return api.upload<SpeechAssessmentResult>(
       API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_EVALUATE,
@@ -29,12 +27,10 @@ export const practiceService = {
     )
   },
 
-  // 3. Luyện Viết (Writing với Ollama AI)
   async getWritingExercises() {
     return api.get(API_CONFIG.ENDPOINTS.PRACTICE.WRITING)
   },
 
-  // Chấm điểm bài viết luận / nhật ký tiếng Anh
   async evaluateWritingEssay(essay: string, topic: string): Promise<{
     grammar_score: number
     vocabulary_score: number
@@ -49,7 +45,6 @@ export const practiceService = {
     })
   },
 
-  // Lấy chủ đề viết nhật ký hôm nay
   async getDailyJournalPrompt(): Promise<{ id: string; topic_vi: string; topic_en: string; date: string }> {
     return api.get(API_CONFIG.ENDPOINTS.PRACTICE.DAILY_PROMPT)
   },

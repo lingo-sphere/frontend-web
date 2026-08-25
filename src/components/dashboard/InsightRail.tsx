@@ -1,9 +1,3 @@
-// Updated: 2026-08-17
-// Sidebar insights panel trên dashboard:
-// - AI Recommendation: gợi ý học TOEIC Listening
-// - Vocabulary card: số từ đã học, cần review
-// - Rewards card: streak count, diamonds, streak freeze
-// Dùng flex-1 để cards giãn đều chiều cao
 
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Brain, Flame } from 'lucide-react'

@@ -1,6 +1,3 @@
-// Updated: 2026-08-17
-// Mock data cho Vocabulary Learning - Synced with vocabulary-service.dbml
-// 10 từ vựng mẫu cho demo
 
 import type {
   VocabularyItem,
@@ -10,10 +7,6 @@ import type {
   FlashcardDeck,
   LearningStatistics,
 } from '@/types/vocabulary-learn'
-
-// ============================================================
-// LEXICAL ITEMS (Core Vocabulary)
-// ============================================================
 
 export const lexicalItems: LexicalItem[] = [
   {
@@ -137,10 +130,6 @@ export const lexicalItems: LexicalItem[] = [
     created_at: '2026-01-01T00:00:00Z',
   },
 ]
-
-// ============================================================
-// MEANINGS (with examples)
-// ============================================================
 
 export const meanings: Meaning[] = [
   {
@@ -367,10 +356,6 @@ export const meanings: Meaning[] = [
   },
 ]
 
-// ============================================================
-// FLASHCARD DECKS (from DB: flashcard_decks)
-// ============================================================
-
 export const flashcardDecks: FlashcardDeck[] = [
   {
     id: 'deck-001',
@@ -418,11 +403,6 @@ export const flashcardDecks: FlashcardDeck[] = [
   },
 ]
 
-// ============================================================
-// FRONTEND-OPTIMIZED VOCABULARY ITEMS (for UI)
-// ============================================================
-
-// Combined lexical item + meaning for easier frontend use
 export const vocabularyItems: VocabularyItem[] = lexicalItems.map((lex, idx) => {
   const meaning = meanings.find(m => m.lexical_item_id === lex.id)
   return {
@@ -443,7 +423,6 @@ export const vocabularyItems: VocabularyItem[] = lexicalItems.map((lex, idx) => 
   }
 })
 
-// Helper function to get image emoji for word
 function getImageForWord(word: string): string {
   const imageMap: Record<string, string> = {
     adventure: '🏔️',
@@ -459,10 +438,6 @@ function getImageForWord(word: string): string {
   }
   return imageMap[word.toLowerCase()] || '📖'
 }
-
-// ============================================================
-// VOCABULARY DECKS (for frontend)
-// ============================================================
 
 export const vocabularyDecks: VocabularyDeck[] = [
   {
@@ -495,10 +470,6 @@ export const vocabularyDecks: VocabularyDeck[] = [
   },
 ]
 
-// ============================================================
-// LEARNING STATISTICS (from DB: learning_statistics)
-// ============================================================
-
 export const learningStatistics: LearningStatistics = {
   id: 'stat-001',
   user_id: 'user-001',
@@ -520,15 +491,9 @@ export const learningStatistics: LearningStatistics = {
   shadowing_practices: 5,
 }
 
-// Alias for backward compatibility
 export const allVocabularyWords = vocabularyItems
 export const mockDecks = vocabularyDecks
 
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
-
-// Shuffle array
 export function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array]
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -538,7 +503,6 @@ export function shuffleArray<T>(array: T[]): T[] {
   return newArray
 }
 
-// Get random distractors for multiple choice
 export function getRandomDistractors(correctWord: VocabularyItem, allWords: VocabularyItem[], count: number = 3): VocabularyItem[] {
   return allWords
     .filter(w => w.id !== correctWord.id)
@@ -546,7 +510,6 @@ export function getRandomDistractors(correctWord: VocabularyItem, allWords: Voca
     .slice(0, count)
 }
 
-// Speak word using Web Speech API
 export function speakWord(word: string, rate: number = 1): void {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel()
@@ -557,7 +520,6 @@ export function speakWord(word: string, rate: number = 1): void {
   }
 }
 
-// Speak sentence
 export function speakSentence(sentence: string, rate: number = 1): void {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel()

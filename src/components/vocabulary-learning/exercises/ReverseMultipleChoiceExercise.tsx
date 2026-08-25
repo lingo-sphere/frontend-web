@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Reverse Multiple Choice Exercise - English to Vietnamese
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

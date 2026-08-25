@@ -1,7 +1,3 @@
-// Updated: 2026-08-17
-// Mock data cho Course demo:
-// - TOEIC Foundation course với 6 chapters
-// - Demo state: Chapter 1 completed, Chapter 2 in progress (Lesson 3 at 80%)
 
 import type { Course, Chapter, Lesson, LessonStatus, TestResult } from '@/types/course'
 
@@ -33,7 +29,6 @@ const makeTestResult = (score: number, listening: number, reading: number): Test
   completedAt: new Date().toISOString(),
 })
 
-// Chapter 1 - Completed
 const chapter1: Chapter = {
   id: 'ch-01',
   courseId: 'toeic-foundation',
@@ -77,7 +72,6 @@ const chapter1: Chapter = {
   },
 }
 
-// Chapter 2 - In Progress (Lesson 3 at 80%)
 const chapter2: Chapter = {
   id: 'ch-02',
   courseId: 'toeic-foundation',
@@ -119,7 +113,6 @@ const chapter2: Chapter = {
   },
 }
 
-// Chapter 3-6 - Locked
 const makeLockedChapter = (order: number, title: string, description: string): Chapter => ({
   id: `ch-0${order}`,
   courseId: 'toeic-foundation',
@@ -189,9 +182,8 @@ export const demoCourse: Course = {
   },
 }
 
-// Helper functions
 export function updateLessonProgress(_lessonId: string, _progress: number): Course {
-  // Update lesson progress và recalculate statuses
+
   return { ...demoCourse }
 }
 

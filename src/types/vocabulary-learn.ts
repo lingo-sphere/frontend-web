@@ -1,9 +1,3 @@
-// Updated: 2026-08-17
-// TypeScript interfaces cho Vocabulary Learning - Synced with vocabulary-service.dbml
-
-// ============================================================
-// CORE VOCABULARY
-// ============================================================
 
 export interface LexicalItem {
   id: string
@@ -46,10 +40,6 @@ export interface Example {
   blank_word_position?: number
 }
 
-// ============================================================
-// FLASHCARD DECKS
-// ============================================================
-
 export interface FlashcardDeck {
   id: string
   name: string
@@ -87,10 +77,6 @@ export interface Flashcard {
   order_index?: number
   status: 'ACTIVE' | 'INACTIVE'
 }
-
-// ============================================================
-// USER PROGRESS
-// ============================================================
 
 export interface UserCardProgress {
   id: string
@@ -136,10 +122,6 @@ export interface FlashcardDeckEnrollment {
   last_review_at?: string
   completed_at?: string
 }
-
-// ============================================================
-// REVIEW SESSIONS
-// ============================================================
 
 export interface ReviewSession {
   id: string
@@ -193,10 +175,6 @@ export interface ReviewSessionItem {
   reviewed_at?: string
 }
 
-// ============================================================
-// LEARNING STATISTICS
-// ============================================================
-
 export interface LearningStatistics {
   id: string
   user_id: string
@@ -218,32 +196,24 @@ export interface LearningStatistics {
   shadowing_practices: number
 }
 
-// ============================================================
-// FRONTEND SPECIFIC TYPES
-// ============================================================
-
-// For easier frontend usage - combines lexical_item + meaning
-// isNew: true = new word (needs Learning Activity/Flashcard first)
-// isNew: false = review word (skip Flashcard, go to Practice)
 export interface VocabularyItem {
   id: string
   word: string
   word_lowercase: string
-  pronunciation: string // US pronunciation
+  pronunciation: string 
   pronunciation_uk?: string
   meaningVi: string
   partOfSpeech: string
   cefrLevel?: string
   example: string
   exampleMeaningVi?: string
-  image?: string // emoji placeholder
+  image?: string 
   audioUrl?: string
   synonyms: string[]
   collocations: string[]
-  isNew?: boolean // true = new word, false/undefined = review word
+  isNew?: boolean 
 }
 
-// Vocabulary deck with cards
 export interface VocabularyDeck {
   id: string
   title: string
@@ -259,7 +229,6 @@ export interface VocabularyDeck {
   vocabularyItems: VocabularyItem[]
 }
 
-// Exercise modes
 export type ExerciseMode =
   | 'flashcard'
   | 'multiple-choice'

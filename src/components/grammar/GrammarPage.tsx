@@ -1,4 +1,4 @@
-// Updated: 2026-08-20
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
@@ -19,7 +19,6 @@ import { GRAMMAR_TYPE_LABELS, CEFR_LEVEL_LABELS } from '@/types/grammar'
 
 const ITEMS_PER_PAGE = 12
 
-// Grammar Card
 function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietnamese: boolean }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const examples = getGrammarExamples(grammar.id)
@@ -123,7 +122,6 @@ function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietn
   )
 }
 
-// Main Grammar Page
 export function GrammarPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
@@ -131,7 +129,6 @@ export function GrammarPage() {
   const [selectedType, setSelectedType] = useState<GrammarType | 'ALL'>('ALL')
   const [currentPage, setCurrentPage] = useState(1)
 
-  // Filter grammars
   const filteredGrammars = useMemo(() => {
     let result: GrammarPoint[]
 
@@ -146,14 +143,12 @@ export function GrammarPage() {
     return result.sort((a, b) => a.displayOrder - b.displayOrder)
   }, [searchQuery, selectedType])
 
-  // Pagination
   const totalPages = Math.ceil(filteredGrammars.length / ITEMS_PER_PAGE)
   const paginatedGrammars = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE
     return filteredGrammars.slice(start, start + ITEMS_PER_PAGE)
   }, [filteredGrammars, currentPage])
 
-  // Stats
   const stats = useMemo(() => {
     const active = grammarPoints.filter((g) => g.status === 'ACTIVE')
     return {
@@ -169,7 +164,6 @@ export function GrammarPage() {
     }
   }, [])
 
-  // Reset page when filter changes
   const handleTypeChange = (type: GrammarType | 'ALL') => {
     setSelectedType(type)
     setSearchQuery('')

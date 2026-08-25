@@ -1,5 +1,3 @@
-// Updated: 2026-08-17
-// Route wrapper cho IPA page
 
 import { Layout } from '@/components/layout/Layout'
 import { IPAPage } from '@/components/ipa/IPAPage'

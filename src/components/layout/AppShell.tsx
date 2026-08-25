@@ -1,9 +1,3 @@
-// Updated: 2026-08-17
-// Layout chính của app, bao gồm:
-// - Sidebar: fixed left, responsive (hidden on mobile, shown on lg+)
-// - Mobile sidebar: Sheet component cho mobile
-// - Content area: tự động adjust margin theo sidebarCollapsed state
-// - UtilityHeader: search bar, theme toggle, notifications
 
 import type { ReactNode } from 'react'
 

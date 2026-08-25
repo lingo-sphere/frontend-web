@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Writing History page - Lịch sử các bài đã nộp
-// Data synced with practice-service.dbml
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

@@ -1,11 +1,3 @@
-// Updated: 2026-08-20
-// Sidebar chính của app:
-// - Logo + brand name
-// - Navigation items (SidebarNav)
-// - User profile button → navigate đến /profile
-// - Collapse toggle button (Thu gọn/Mở rộng)
-// Props:
-// - mobile: boolean - render cho mobile Sheet hay desktop fixed sidebar
 
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, PanelLeftClose, PanelLeft } from 'lucide-react'

@@ -1,9 +1,3 @@
-// Updated: 2026-08-17
-// Heatmap hiển thị 90 ngày học gần nhất:
-// - HeatmapGrid: grid cells màu theo intensity (0-4)
-// - HeatmapSummaryCard: tổng hợp stats (studyDays, totalMinutes, longestStreak)
-// - HeatmapDetailCard: chi tiết ngày được chọn
-// - Click cell → update dashboardStore.selectedHeatmapDayId
 
 import { useTranslation } from 'react-i18next'
 import { CalendarDays } from 'lucide-react'

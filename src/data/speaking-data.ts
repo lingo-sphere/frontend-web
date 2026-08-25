@@ -1,12 +1,5 @@
-// Updated: 2026-08-20
-// Mock data cho Speaking Practice - Synced with practice-service.dbml
-// LingoSphere - English Learning Platform
 
 import type { SpeakingExercise, SpeakingAttempt, SpeakingStats, SpeakingProgress } from '@/types/speaking'
-
-// ============================================================
-// RUBRIC TEMPLATES
-// ============================================================
 
 const rubricDefault = {
   pronunciation: { weight: 0.25, criteria: ['Phát âm đúng', 'Ngữ âm rõ ràng'] },
@@ -17,15 +10,7 @@ const rubricDefault = {
   content: { weight: 0.1, criteria: ['Nội dung phù hợp', 'Ý nghĩa đầy đủ'] },
 }
 
-// ============================================================
-// SPEAKING EXERCISES (22 bài)
-// ============================================================
-
 export const speakingExercises: SpeakingExercise[] = [
-
-  // ═══════════════════════════════════════════════════════════
-  // TOPIC (5 bài)
-  // ═══════════════════════════════════════════════════════════
 
   {
     id: 'sp-topic-01',
@@ -153,10 +138,6 @@ export const speakingExercises: SpeakingExercise[] = [
     updated_at: '2026-06-01T00:00:00Z',
   },
 
-  // ═══════════════════════════════════════════════════════════
-  // RESPOND_SITUATION (4 bài)
-  // ═══════════════════════════════════════════════════════════
-
   {
     id: 'sp-rs-01',
     title: 'Customer Complaint',
@@ -258,10 +239,6 @@ export const speakingExercises: SpeakingExercise[] = [
     updated_at: '2026-06-01T00:00:00Z',
   },
 
-  // ═══════════════════════════════════════════════════════════
-  // PRONUNCIATION (4 bài)
-  // ═══════════════════════════════════════════════════════════
-
   {
     id: 'sp-pro-01',
     title: 'Common Confusing Words',
@@ -354,10 +331,6 @@ export const speakingExercises: SpeakingExercise[] = [
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-06-01T00:00:00Z',
   },
-
-  // ═══════════════════════════════════════════════════════════
-  // READ_ALOUD (4 bài)
-  // ═══════════════════════════════════════════════════════════
 
   {
     id: 'sp-ra-01',
@@ -460,10 +433,6 @@ export const speakingExercises: SpeakingExercise[] = [
     updated_at: '2026-06-01T00:00:00Z',
   },
 
-  // ═══════════════════════════════════════════════════════════
-  // SHADOWING (3 bài)
-  // ═══════════════════════════════════════════════════════════
-
   {
     id: 'sp-sha-01',
     title: 'Daily Conversation',
@@ -537,10 +506,6 @@ export const speakingExercises: SpeakingExercise[] = [
     updated_at: '2026-06-01T00:00:00Z',
   },
 ]
-
-// ============================================================
-// SPEAKING ATTEMPTS (Mock)
-// ============================================================
 
 export const speakingAttempts: SpeakingAttempt[] = [
   {
@@ -655,10 +620,6 @@ export const speakingAttempts: SpeakingAttempt[] = [
   },
 ]
 
-// ============================================================
-// SPEAKING STATISTICS
-// ============================================================
-
 export const speakingStats: SpeakingStats = {
   total_attempts: 38,
   average_score: 7.2,
@@ -680,10 +641,6 @@ export const speakingProgress: SpeakingProgress = {
   weakest_area: 'Grammar',
   recommended_exercises: ['sp-rs-02', 'sp-pro-04', 'sp-topic-03'],
 }
-
-// ============================================================
-// FILTER OPTIONS
-// ============================================================
 
 export const speakingLevelFilters = [
   { value: 'all', label: 'Tất cả' },

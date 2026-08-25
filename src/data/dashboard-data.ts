@@ -1,12 +1,3 @@
-// Updated: 2026-08-20
-// Mock data cho dashboard, bao gồm:
-// - navGroups: cấu trúc navigation sidebar
-// - tasks: danh sách bài học hôm nay
-// - roadmap: learning path với các units
-// - milestones: streak rewards (7, 14, 30, 60, 90 ngày)
-// - leaderboard: top users theo week/month/year
-// - topics: vocabulary topics để khám phá
-// - heatmap: 90 ngày gần nhất (makeHeatmap())
 
 import type { DashboardData, HeatmapDay, HeatmapIntensity, HeatmapStatus, NavGroup } from '@/types/dashboard'
 

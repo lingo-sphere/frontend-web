@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Component card cho mỗi từ vựng đã lưu (dạng grid)
 
 import { useTranslation } from 'react-i18next'
 import { Volume2, Plus, Trash2 } from 'lucide-react'

@@ -1,9 +1,3 @@
-// Updated: 2026-08-20
-// TypeScript interfaces cho Writing - Synced with practice-service.dbml
-
-// ============================================================
-// WRITING EXERCISES
-// ============================================================
 
 export type WritingLevel = 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
 export type ExerciseType = 'SENTENCE_ARRANGEMENT' | 'SENTENCE_COMPLETION' | 'PARAPHRASING' | 'KEYWORD_WRITING' | 'TOPIC_WRITING' | 'DIARY'
@@ -21,47 +15,37 @@ export interface WritingExercise {
   exercise_type: ExerciseType
   writing_level: WritingLevel
 
-  // Prompt/Instruction
   prompt?: string
   prompt_en?: string
   prompt_vi?: string
   instructions?: string
 
-  // Reference
   reference_media_id?: string
 
-  // Target (chỉ lưu IDs - reference tới Vocabulary Service)
   target_lexical_item_ids?: string[]
   target_grammar_point_ids?: string[]
 
-  // Expected answer (BASIC only)
   expected_answer?: string
   alternative_answers?: string[]
 
-  // Keywords
   keywords?: string[]
   optional_keywords?: string[]
 
-  // AI
   rubric?: WritingRubric
   ai_hints?: string[]
 
-  // Word limits
   min_words?: number
   max_words?: number
 
-  // Metadata
   topic_id?: string
   topic_name?: string
   difficulty_level?: DifficultyLevel
   cefr_level?: string
   estimated_minutes?: number
 
-  // Stats
   total_attempts?: number
   avg_score?: number
 
-  // Status
   status: 'DRAFT' | 'REVIEW' | 'PUBLISHED' | 'ARCHIVED'
   created_at: string
   updated_at: string
@@ -90,10 +74,6 @@ export interface WritingRubric {
   }
 }
 
-// ============================================================
-// WRITING SUBMISSIONS
-// ============================================================
-
 export interface WritingDraft {
   content: string
   word_count: number
@@ -107,57 +87,43 @@ export interface WritingSubmission {
   exercise_id: string
   session_id?: string
 
-  // Content
   content: string
   word_count: number
 
-  // Versioning
   version_number: number
   drafts: WritingDraft[]
   is_draft: boolean
 
-  // AI Evaluation (CHỈ tạo SAU khi nộp)
   ai_evaluation?: AIEvaluation
 
-  // Summary scores - để query nhanh
   overall_score?: number
   task_achievement_score?: number
   coherence_score?: number
   lexical_resource_score?: number
   grammatical_accuracy_score?: number
 
-  // Keyword analysis
   keywords_included?: string[]
   keywords_missing?: string[]
   keyword_score?: number
 
-  // Self-check (BASIC)
   is_correct?: boolean
   correct_answer?: string
 
-  // Timing
   writing_time_seconds?: number
   time_score?: number
 
-  // CEFR estimation
   estimated_cefr?: string
 
-  // Status
   domain: 'WRITING'
   status: SubmissionStatus
   submitted_at?: string
   created_at: string
 
-  // Nested exercise data
   exercise?: WritingExercise
 }
 
-// ============================================================
-// AI EVALUATION (Chi tiết đánh giá AI)
-// ============================================================
-
 export interface AIEvaluation {
-  // Overall assessment
+
   overall_feedback: string
   overall_strengths?: string
   overall_weaknesses?: string
@@ -168,7 +134,6 @@ export interface AIEvaluation {
   grammar_feedback?: string
   vocabulary_feedback?: string
 
-  // Criterion scores
   scores?: {
     task_achievement?: ScoreDetail
     coherence?: ScoreDetail
@@ -177,33 +142,25 @@ export interface AIEvaluation {
     overall?: ScoreDetail
   }
 
-  // Detailed feedback by criterion
   task_achievement_feedback?: string
   coherence_feedback?: string
   lexical_resource_feedback?: string
   grammatical_accuracy_feedback?: string
 
-  // Error analysis
   errors: GrammarError[]
 
-  // Vocabulary analysis
   vocabulary_analysis?: VocabularyAnalysis
 
-  // Grammar analysis
   grammar_analysis?: GrammarAnalysis
 
-  // Sentence analysis
   sentence_analysis?: SentenceAnalysis
 
-  // Suggested improvement
   suggested_version?: string
   improvement_tips?: string[]
   alternative_phrases?: string[]
 
-  // Paraphrase analysis (nếu là bài PARAPHRASING)
   paraphrase_analysis?: ParaphraseAnalysis
 
-  // AI model info
   ai_model?: string
   ai_version?: string
   processing_time_ms?: number
@@ -271,10 +228,6 @@ export interface ParaphraseAnalysis {
   suggested_paraphrases: string[]
 }
 
-// ============================================================
-// WRITING STATISTICS
-// ============================================================
-
 export interface WritingStats {
   total_submissions: number
   average_score: number
@@ -297,10 +250,6 @@ export interface WritingProgress {
   weakest_area: string
   recommended_topics: string[]
 }
-
-// ============================================================
-// CONTINUE WRITING (Draft in progress)
-// ============================================================
 
 export interface ContinueWriting {
   submission_id: string

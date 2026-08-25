@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Learning Result View Component
 
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, RotateCcw, Home } from 'lucide-react'

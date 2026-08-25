@@ -1,4 +1,4 @@
-// Custom hook for language management
+
 import { useTranslation } from 'react-i18next'
 import { useCallback } from 'react'
 

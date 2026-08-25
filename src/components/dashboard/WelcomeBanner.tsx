@@ -7,7 +7,6 @@ export function WelcomeBanner() {
   const isVietnamese = i18n.language === 'vi'
   const { user, isAuthenticated } = useAuthStore()
 
-  // Get greeting based on time of day
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (isVietnamese) {

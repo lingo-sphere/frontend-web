@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Speaking History - Danh sách các lần luyện
-// LingoSphere
 
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Clock, TrendingUp } from 'lucide-react'
@@ -23,7 +20,6 @@ export function SpeakingHistory({
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Group attempts by exercise
   const groupedAttempts = attempts.reduce((acc, attempt) => {
     if (!acc[attempt.exercise_id]) {
       acc[attempt.exercise_id] = []
@@ -175,7 +171,6 @@ export function SpeakingHistory({
   )
 }
 
-// Mini Score Component
 function MiniScore({ label, value }: { label: string; value: number | undefined }) {
   if (!value) return null
   const color = value >= 8 ? 'text-emerald-600' : value >= 6 ? 'text-amber-600' : 'text-red-600'

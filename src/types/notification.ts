@@ -1,4 +1,3 @@
-// Notification types synced with notification-service.dbml
 
 export type NotificationCategory =
   | 'AUTH'
@@ -14,7 +13,7 @@ export type NotificationCategory =
   | 'SYSTEM'
 
 export type NotificationType =
-  // AUTH
+
   | 'LOGIN_SUCCESS'
   | 'LOGIN_FAILED'
   | 'PASSWORD_CHANGED'
@@ -102,7 +101,6 @@ export interface Notification {
   updatedAt?: string
 }
 
-// Helper to get category color
 export function getCategoryColor(category: NotificationCategory): string {
   const colors: Record<NotificationCategory, string> = {
     AUTH: 'bg-red-500',
@@ -120,7 +118,6 @@ export function getCategoryColor(category: NotificationCategory): string {
   return colors[category] || 'bg-gray-500'
 }
 
-// Helper to get category label
 export function getCategoryLabel(category: NotificationCategory): string {
   const labels: Record<NotificationCategory, string> = {
     AUTH: 'Auth & Security',

@@ -1,9 +1,3 @@
-// Updated: 2026-08-17
-// Bảng xếp hạng streak:
-// - Tabs: Tuần / Tháng / Năm (dùng dashboardStore.leaderboardPeriod)
-// - Render danh sách top 5 users với rank, name, streakDays
-// - Top 3 được highlight màu warning
-// - Props: leaderboard{}, onAction callback
 
 import { useTranslation } from 'react-i18next'
 
@@ -27,7 +21,6 @@ export function StreakLeaderboard({ leaderboard, onAction }: StreakLeaderboardPr
   const setPeriod = useDashboardStore((state) => state.setLeaderboardPeriod)
   const entries = leaderboard[period]
 
-  // Period labels
   const periodLabels: Record<LeaderboardPeriod, { vi: string; en: string }> = {
     week: { vi: 'Tuần', en: 'Week' },
     month: { vi: 'Tháng', en: 'Month' },

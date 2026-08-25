@@ -1,7 +1,3 @@
-// Updated: 2026-08-17
-// Mock data cho Topics page:
-// - topics: 30 topics phổ biến với thông tin cơ bản
-// - accessCount: lượt truy cập (để sort/filter)
 
 export interface Topic {
   id: string

@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Writing Workspace - Màn hình chính để viết bài
-// Data synced with practice-service.dbml
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

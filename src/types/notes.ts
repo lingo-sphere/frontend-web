@@ -1,4 +1,3 @@
-// User Notes types
 
 export interface UserNote {
   id: string

@@ -1,4 +1,3 @@
-// Grammar Types - đồng bộ với vocabulary-service.dbml
 
 export type GrammarType =
   | 'TENSE'
@@ -60,7 +59,6 @@ export interface GrammarPoint {
   createdAt: string
 }
 
-// Labels
 export const GRAMMAR_TYPE_LABELS: Record<GrammarType, string> = {
   TENSE: 'Thì',
   CONDITIONAL: 'Câu điều kiện',

@@ -8,7 +8,7 @@ export const API_CONFIG = {
     THEME: 'lingosphere-web-theme',
   },
   ENDPOINTS: {
-    // Auth
+
     AUTH: {
       LOGIN: '/auth/login',
       REGISTER: '/auth/register',
@@ -19,7 +19,7 @@ export const API_CONFIG = {
       FORGOT_PASSWORD: '/auth/forgot-password',
       RESET_PASSWORD: '/auth/reset-password',
     },
-    // User & Gamification
+
     USERS: {
       PROFILE: '/users/profile',
       PROFILE_BY_ID: (userId: string) => `/users/profile/${userId}`,
@@ -30,7 +30,7 @@ export const API_CONFIG = {
       ACHIEVEMENTS: '/users/achievements',
       MY_SUBSCRIPTION: '/users/subscriptions/my',
     },
-    // Courses & Lessons
+
     COURSES: {
       LIST: '/courses',
       BY_ID: (id: string) => `/courses/${id}`,
@@ -40,7 +40,7 @@ export const API_CONFIG = {
       ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,
       MY_ENROLLED: '/courses/my/enrolled',
     },
-    // Vocabulary & Flashcards (Spaced Repetition SM-2)
+
     VOCABULARY: {
       ITEMS: '/vocabulary/items',
       ITEM_BY_ID: (id: string) => `/vocabulary/items/${id}`,
@@ -52,7 +52,7 @@ export const API_CONFIG = {
       NOTEBOOK: '/vocabulary/notebook',
       NOTEBOOK_SAVE: '/vocabulary/notebook/save',
     },
-    // TOEIC Exams
+
     EXAMS: {
       LIST: '/exams',
       BY_ID: (id: string) => `/exams/${id}`,
@@ -61,7 +61,7 @@ export const API_CONFIG = {
       HISTORY: '/exams/my/history',
       RESULT: (submissionId: string) => `/exams/results/${submissionId}`,
     },
-    // 4 Skills Practice
+
     PRACTICE: {
       LISTENING: '/practice/listening/exercises',
       LISTENING_BY_ID: (id: string) => `/practice/listening/exercises/${id}`,
@@ -73,21 +73,21 @@ export const API_CONFIG = {
       WRITING_EVALUATE: '/practice/writing/evaluate',
       DAILY_PROMPT: '/practice/writing/journal/daily-prompt',
     },
-    // AI Tutor & LLM
+
     AI: {
       CHAT: '/ai/chat',
       EXPLAIN_QUESTION: '/ai/explain-question',
       GENERATE: '/ai/generate',
       IMPROVE_WRITING: '/ai/improve-writing',
     },
-    // Notifications
+
     NOTIFICATIONS: {
       MY: '/notifications/my',
       MARK_READ: (id: string) => `/notifications/${id}/read`,
       MARK_ALL_READ: '/notifications/my/read-all',
       PREFERENCES: '/notifications/preferences/my',
     },
-    // Community & Forum
+
     COMMUNITY: {
       POSTS: '/community/posts',
       POST_BY_ID: (id: string) => `/community/posts/${id}`,

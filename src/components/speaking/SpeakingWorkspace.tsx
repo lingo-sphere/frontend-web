@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Speaking Workspace - Common Recording UI for all exercise types
-// LingoSphere
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,7 +14,6 @@ interface SpeakingWorkspaceProps {
   onBack: () => void
 }
 
-// Check if exercise needs preparation time
 const needsPreparation = (type: SpeakingExerciseType): boolean => {
   return type === 'TOPIC' || type === 'RESPOND_SITUATION'
 }
@@ -47,7 +43,6 @@ export function SpeakingWorkspace({
     isPlaying,
   } = recordingState
 
-  // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
 
@@ -59,7 +54,7 @@ export function SpeakingWorkspace({
         }))
       }, 1000)
     } else if (phase === 'preparing' && preparationTimeLeft === 0) {
-      // Start recording automatically after preparation
+
       startRecording()
     }
 
@@ -78,7 +73,6 @@ export function SpeakingWorkspace({
     }
   }, [phase, preparationTimeLeft, speakingTimeLeft, onUpdateRecording])
 
-  // Auto-stop when time runs out
   useEffect(() => {
     if (phase === 'recording' && speakingTimeLeft === 0) {
       stopRecording()
@@ -108,7 +102,6 @@ export function SpeakingWorkspace({
           phase: 'reviewing',
         }))
 
-        // Stop all tracks
         stream.getTracks().forEach(track => track.stop())
       }
 

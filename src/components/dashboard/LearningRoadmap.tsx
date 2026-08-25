@@ -15,7 +15,6 @@ export function LearningRoadmap({ units, onAction }: LearningRoadmapProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Status labels
   const getStatusLabel = (status: string) => {
     if (isVietnamese) {
       if (status === 'completed') return 'Hoàn thành'

@@ -1,8 +1,3 @@
-// Updated: 2026-08-20
-// Topics page - hiển thị 30 topics phổ biến
-// - Grid view với search và sort theo lượt truy cập
-// - Pagination (6 items per page)
-// - Featured topics highlighted
 
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,7 +22,6 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filter and sort topics
   const filteredTopics = useMemo(() => {
     return topics
       .filter(
@@ -35,23 +29,20 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
           topic.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
           topic.nameVi.toLowerCase().includes(searchQuery.toLowerCase())
       )
-      .sort((a, b) => b.accessCount - a.accessCount); // Sort by access count
+      .sort((a, b) => b.accessCount - a.accessCount); 
   }, [searchQuery]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredTopics.length / ITEMS_PER_PAGE);
   const paginatedTopics = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredTopics.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredTopics, currentPage]);
 
-  // Reset page when search changes
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
   };
 
-  // Featured topics
   const featuredTopics = topics.filter((t) => t.isFeatured);
 
   return (

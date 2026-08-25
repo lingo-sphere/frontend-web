@@ -1,5 +1,3 @@
-// Updated: 2026-08-17
-// Route wrapper cho Leaderboard page
 
 import { Layout } from '@/components/layout/Layout'
 import { LeaderboardPage } from '@/components/leaderboard/LeaderboardPage'

@@ -1,8 +1,3 @@
-// ============================================================
-// TOEIC Exam Page - Full với lựa chọn luyện tập
-// LingoSphere
-// Updated: 2026-08-22 - Added i18n support
-// ============================================================
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,15 +15,11 @@ import {
 } from '@/data/toeic-test-1-data'
 import type { ToeicQuestion, ToeicPart } from '@/types/toeic'
 
-// ============================================================
-// TYPES
-// ============================================================
-
 type PracticeMode =
-  | 'FULL'        // Full test 7 parts
-  | 'LISTENING'   // Part 1-4
-  | 'READING'     // Part 5-7
-  | 'PART'        // Single part
+  | 'FULL'        
+  | 'LISTENING'   
+  | 'READING'     
+  | 'PART'        
 
 interface ExamState {
   mode: PracticeMode
@@ -44,7 +35,6 @@ interface ExamState {
   timedMode: boolean
 }
 
-// Part timing configs (theo thực tế TOEIC)
 const getPartTimings = (isVietnamese: boolean) => ({
   1: { questions: 6, seconds: 0, description: isVietnamese ? 'Đi theo audio' : 'Follow audio' },
   2: { questions: 25, seconds: 0, description: isVietnamese ? 'Đi theo audio' : 'Follow audio' },
@@ -55,7 +45,6 @@ const getPartTimings = (isVietnamese: boolean) => ({
   7: { questions: 54, seconds: 60 * 60, description: '60 ' + (isVietnamese ? 'phút' : 'min') },
 })
 
-// Tips làm bài đúng giờ
 const getPartTips = (isVietnamese: boolean) => ({
   1: isVietnamese ? 'Phần này khá ngắn, hãy tập trung vào những gì đang xảy ra trong hình.' : 'This part is short, focus on what is happening in the picture.',
   2: isVietnamese ? 'Chỉ nghe một lần, hãy chọn nhanh câu trả lời phù hợp nhất.' : 'Listen only once, quickly choose the best answer.',
@@ -66,11 +55,6 @@ const getPartTips = (isVietnamese: boolean) => ({
   7: isVietnamese ? '54 câu trong 60 phút = hơn 1 phút/câu. Ưu tiên đọc câu hỏi trước, tìm keyword trong passage.' : '54 questions in 60 minutes = over 1 min/question. Prioritize reading questions first, find keywords in passage.',
 })
 
-// ============================================================
-// MOCK QUESTIONS - All Parts
-// ============================================================
-
-// Part 1 - Photographs (6 câu: 1-6)
 const part1Questions: ToeicQuestion[] = Array.from({ length: 6 }, (_, i) => ({
   id: `p1-q${i + 1}`,
   examId: 'toeic_2019_test1',
@@ -94,7 +78,6 @@ const part1Questions: ToeicQuestion[] = Array.from({ length: 6 }, (_, i) => ({
   status: 'PUBLISHED',
 }))
 
-// Part 2 - Question-Response (25 câu: 7-31)
 const part2Questions: ToeicQuestion[] = Array.from({ length: 25 }, (_, i) => ({
   id: `p2-q${i + 7}`,
   examId: 'toeic_2019_test1',
@@ -116,7 +99,6 @@ const part2Questions: ToeicQuestion[] = Array.from({ length: 25 }, (_, i) => ({
   status: 'PUBLISHED',
 }))
 
-// Part 3 - Conversations (39 câu: 32-70)
 const createPart3Questions = (): ToeicQuestion[] => {
   const questions: ToeicQuestion[] = []
   const startNum = 32
@@ -155,7 +137,6 @@ const createPart3Questions = (): ToeicQuestion[] => {
   return questions
 }
 
-// Part 4 - Short Talks (30 câu: 71-100)
 const createPart4Questions = (): ToeicQuestion[] => {
   const questions: ToeicQuestion[] = []
   const startNum = 71
@@ -194,7 +175,6 @@ const createPart4Questions = (): ToeicQuestion[] => {
   return questions
 }
 
-// Part 5 - Incomplete Sentences (30 câu: 101-130)
 const createPart5Questions = (): ToeicQuestion[] => {
   const topics = [
     { word: 'decision', hint: 'The manager made an important _____.', grammar: 'noun' },
@@ -251,7 +231,6 @@ const createPart5Questions = (): ToeicQuestion[] => {
   }))
 }
 
-// Part 6 - Text Completion (16 câu: 131-146)
 const createPart6Questions = (): ToeicQuestion[] => {
   const passages = [
     { id: 'p6-1', title: 'Office Memo', start: 131 },
@@ -289,7 +268,6 @@ const createPart6Questions = (): ToeicQuestion[] => {
   return questions
 }
 
-// Part 7 - Reading Comprehension (54 câu: 147-200)
 const createPart7Questions = (): ToeicQuestion[] => {
   const questions: ToeicQuestion[] = []
   const passageConfigs = [
@@ -365,10 +343,6 @@ const getQuestionsForPart = (part: number): ToeicQuestion[] => {
 const getAllQuestions = (parts: number[]): ToeicQuestion[] => {
   return parts.flatMap(part => getQuestionsForPart(part))
 }
-
-// ============================================================
-// MAIN COMPONENT
-// ============================================================
 
 export function ToeicExamPage() {
   const { i18n } = useTranslation()
@@ -482,7 +456,6 @@ export function ToeicExamPage() {
     return { correct, total, percentage: Math.round((correct / total) * 100) }
   }
 
-  // Mode selection screen
   if (showModeSelector) {
     return (
       <div className="min-h-screen bg-surface-secondary px-4 py-8">
@@ -652,7 +625,6 @@ export function ToeicExamPage() {
     )
   }
 
-  // Results screen
   if (state.submitted) {
     const results = calculateResults()
     const passed = results.percentage >= 60
@@ -704,7 +676,6 @@ export function ToeicExamPage() {
     )
   }
 
-  // Exam interface
   return (
     <div className="min-h-screen bg-surface-secondary">
       <header className="sticky top-0 z-10 border-b border-border bg-surface">

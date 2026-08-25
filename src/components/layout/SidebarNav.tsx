@@ -1,14 +1,3 @@
-// Updated: 2026-08-20
-// Navigation menu trong sidebar:
-// - Render danh sách nav groups (Home, LEARNING, PROGRESS, Settings)
-// - Active state highlighting dựa trên activeItem
-// - Click → navigate đến route tương ứng
-// - Collapse mode: icon căn giữa, ẩn text, spacing nhỏ
-// Props:
-// - groups: mảng NavGroup chứa các nav items
-// - activeItem: id của item đang active
-// - onNavigate: callback khi click vào item (để update active state)
-// - collapsed: boolean - thu gọn sidebar
 
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +13,6 @@ interface SidebarNavProps {
   collapsed?: boolean
 }
 
-// Map nav item id → route path
 const routeMap: Record<string, string> = {
   home: '/',
   courses: '/courses',
@@ -47,7 +35,6 @@ const routeMap: Record<string, string> = {
   profile: '/profile',
 }
 
-// Nav label translations
 const navLabels: Record<string, { vi: string; en: string }> = {
   home: { vi: 'Trang chủ', en: 'Home' },
   courses: { vi: 'Khóa học', en: 'Courses' },
@@ -70,7 +57,6 @@ const navLabels: Record<string, { vi: string; en: string }> = {
   profile: { vi: 'Hồ sơ', en: 'Profile' },
 }
 
-// Group label translations
 const groupLabels: Record<string, { vi: string; en: string }> = {
   home: { vi: '', en: '' },
   learning: { vi: 'HỌC TẬP', en: 'LEARNING' },
@@ -96,7 +82,7 @@ export function SidebarNav({ groups, activeItem, onNavigate, collapsed = false }
 
   const handleClick = (itemId: string) => {
     onNavigate(itemId)
-    // Profile is inline in dashboard, don't navigate
+
     if (itemId === 'profile') return
     const route = routeMap[itemId] ?? '/'
     navigate(route)

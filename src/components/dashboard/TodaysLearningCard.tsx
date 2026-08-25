@@ -16,7 +16,6 @@ export function TodaysLearningCard({ tasks, onAction }: TodaysLearningCardProps)
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Map task kinds to i18n keys
   const getTaskLabel = (task: LearningTask) => {
     const kindLabels: Record<string, { vi: string; en: string }> = {
       vocabulary: { vi: 'Từ vựng', en: 'Vocabulary' },

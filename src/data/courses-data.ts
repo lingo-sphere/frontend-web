@@ -1,6 +1,3 @@
-// Updated: 2026-08-17
-// Mock data cho Courses page:
-// - allCourses: danh sách khóa học
 
 export interface CourseCardData {
   id: string

@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Writing Exercise List page
-// Data synced with practice-service.dbml
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

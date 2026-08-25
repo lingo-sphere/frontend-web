@@ -1,14 +1,5 @@
-// ============================================================
-// TOEIC Test 1 - Complete Mock Data
-// Source: BỘ ĐỀ THI 2019 / TEST 1
-// LingoSphere - English Learning Platform
-// ============================================================
 
 import type { ToeicExam, ToeicQuestion, ToeicPart, ToeicPassage, ToeicAnswer } from '@/types/toeic'
-
-// ============================================================
-// EXAM INFO
-// ============================================================
 
 export const toeicTest1: ToeicExam = {
   id: 'toeic_2019_test1',
@@ -35,10 +26,6 @@ export const toeicTest1: ToeicExam = {
   avgScore: 685,
   avgTimeMinutes: 125,
 }
-
-// ============================================================
-// PARTS
-// ============================================================
 
 export const toeicTest1Parts: ToeicPart[] = [
   {
@@ -158,10 +145,6 @@ export const toeicTest1Parts: ToeicPart[] = [
     displayOrder: 7,
   },
 ]
-
-// ============================================================
-// SAMPLE QUESTIONS - Part 5 (Vocabulary & Grammar)
-// ============================================================
 
 export const toeicTest1Part5Questions: ToeicQuestion[] = [
   {
@@ -377,10 +360,6 @@ export const toeicTest1Part5Questions: ToeicQuestion[] = [
   },
 ]
 
-// ============================================================
-// SAMPLE QUESTIONS - Part 6 (Text Completion)
-// ============================================================
-
 export const toeicTest1Part6Passage: ToeicPassage = {
   id: 'passage-p6-t1-1',
   examId: 'toeic_2019_test1',
@@ -502,10 +481,6 @@ export const toeicTest1Part6Questions: ToeicQuestion[] = [
     status: 'PUBLISHED',
   },
 ]
-
-// ============================================================
-// SAMPLE QUESTIONS - Part 7 (Reading Comprehension)
-// ============================================================
 
 export const toeicTest1Part7Passage: ToeicPassage = {
   id: 'passage-p7-t1-1',
@@ -656,33 +631,21 @@ export const toeicTest1Part7Questions: ToeicQuestion[] = [
   },
 ]
 
-// ============================================================
-// ALL QUESTIONS FOR DEMO
-// ============================================================
-
 export const toeicTest1AllQuestions: ToeicQuestion[] = [
   ...toeicTest1Part5Questions,
   ...toeicTest1Part6Questions,
   ...toeicTest1Part7Questions,
 ]
 
-// ============================================================
-// ANSWER KEY
-// ============================================================
-
 export const toeicTest1AnswerKey: Record<number, string> = {
-  // Part 5 (sample)
+
   151: 'A', 152: 'A', 153: 'A', 154: 'A', 155: 'A',
   156: 'A', 157: 'A', 158: 'A', 159: 'A', 160: 'A',
-  // Part 6 (sample)
+
   171: 'A', 172: 'A', 173: 'A', 174: 'A',
-  // Part 7 (sample)
+
   186: 'A', 187: 'A', 188: 'A', 189: 'A', 190: 'A',
 }
-
-// ============================================================
-// PART TIMINGS
-// ============================================================
 
 export const toeicTest1PartTimings = {
   part1: { questions: 6, seconds: 0 },
@@ -693,10 +656,6 @@ export const toeicTest1PartTimings = {
   part6: { questions: 16, seconds: 0 },
   part7: { questions: 54, seconds: 0 },
 }
-
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
 
 export function getPartByNumber(partNumber: number): ToeicPart | undefined {
   return toeicTest1Parts.find(p => p.partNumber === partNumber)

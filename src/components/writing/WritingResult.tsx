@@ -1,6 +1,3 @@
-// Updated: 2026-08-22
-// Writing Result page - Hiển thị kết quả sau khi nộp bài
-// Data synced with practice-service.dbml
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

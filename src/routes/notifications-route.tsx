@@ -1,5 +1,3 @@
-// Updated: 2026-08-17
-// Notifications page with modal
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -11,7 +9,6 @@ import { mockNotifications, markAsRead, markAllAsRead, getUnreadCount } from '@/
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification, NotificationCategory } from '@/types/notification'
 
-// Category tabs
 const categoryTabs: { key: 'ALL' | NotificationCategory; label: { vi: string; en: string } }[] = [
   { key: 'ALL', label: { vi: 'Tất cả', en: 'All' } },
   { key: 'AUTH', label: { vi: 'Bảo mật', en: 'Auth' } },
@@ -24,7 +21,6 @@ const categoryTabs: { key: 'ALL' | NotificationCategory; label: { vi: string; en
   { key: 'AI', label: { vi: 'AI', en: 'AI' } },
 ]
 
-// Priority badge colors
 const priorityColors = {
   LOW: 'bg-gray-100 text-gray-600',
   NORMAL: 'bg-blue-100 text-blue-600',
@@ -41,21 +37,17 @@ export function NotificationsRoute() {
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [showRead, setShowRead] = useState(true)
 
-  // Filter notifications
   const filteredNotifications = useMemo(() => {
     let filtered = notifications
 
-    // Filter by category
     if (activeTab !== 'ALL') {
       filtered = filtered.filter((n) => n.notificationCategory === activeTab)
     }
 
-    // Filter read/unread
     if (!showRead) {
       filtered = filtered.filter((n) => !n.isRead)
     }
 
-    // Sort: pinned first, then by date
     filtered = [...filtered].sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1
       if (!a.isPinned && b.isPinned) return 1
@@ -67,7 +59,6 @@ export function NotificationsRoute() {
 
   const unreadCount = getUnreadCount(notifications)
 
-  // Handle actions
   const handleMarkAsRead = (id: string) => {
     setNotifications(markAsRead(notifications, id))
   }
@@ -83,7 +74,6 @@ export function NotificationsRoute() {
     }
   }
 
-  // Format time
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
@@ -188,7 +178,6 @@ export function NotificationsRoute() {
   )
 }
 
-// Notification Item Component
 function NotificationItem({
   notification,
   onClick,
@@ -266,7 +255,6 @@ function NotificationItem({
   )
 }
 
-// Notification Modal
 function NotificationModal({
   notification,
   onClose,
@@ -370,7 +358,6 @@ function NotificationModal({
   )
 }
 
-// Get icon for notification type
 function getNotificationIcon(type: string): string {
   const iconMap: Record<string, string> = {
     LOGIN_SUCCESS: 'logIn',

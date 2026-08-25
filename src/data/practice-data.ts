@@ -1,7 +1,3 @@
-// Updated: 2026-08-20
-// Mock data cho Practice hub:
-// - practiceCategories: danh sách categories và items
-// - publicDecks: danh sách bộ từ vựng public
 
 export interface PracticeItem {
   id: string
@@ -9,7 +5,7 @@ export interface PracticeItem {
   labelVi?: string
   description: string
   descriptionVi?: string
-  icon: string // icon name từ icon-map
+  icon: string 
   color: string
   bgColor: string
 }
@@ -24,7 +20,7 @@ export interface PublicDeck {
   id: string
   title: string
   author: string
-  authorAvatar: string // avatar color
+  authorAvatar: string 
   wordCount: number
   topic: string
   views: number
@@ -74,5 +70,4 @@ export const publicDecks: PublicDeck[] = [
   { id: 'deck-12', title: 'Legal English', author: 'Thanh Hà', authorAvatar: '#795548', wordCount: 175, topic: 'Legal', views: 1890, saves: 36 },
 ]
 
-// Get top 6 most viewed decks
 export const topPublicDecks: PublicDeck[] = [...publicDecks].sort((a, b) => b.views - a.views).slice(0, 6)

@@ -1,8 +1,3 @@
-// Updated: 2026-08-17
-// Mock data cho Leaderboard page:
-// - monthlyLeaderboards: danh sách leaderboard theo tháng
-// - getLeaderboard(month, type): lấy leaderboard theo tháng và loại
-// - getMonthLabel(month): chuyển YYYY-MM thành label
 
 import type { MonthlyLeaderboard, MonthlyLeaderboardUser } from '@/types/dashboard'
 

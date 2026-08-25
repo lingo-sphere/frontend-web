@@ -1,4 +1,4 @@
-// Updated: 2026-08-20
+
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,6 @@ import { NOTE_TARGET_LABELS, NOTE_TARGET_ICONS } from "@/types/notes";
 
 const ITEMS_PER_PAGE = 9;
 
-// Note card component
 function NoteCard({
   note,
   onEdit,
@@ -97,7 +96,6 @@ function NoteCard({
   );
 }
 
-// Create/Edit Note Modal
 function NoteModal({
   note,
   onClose,
@@ -271,7 +269,6 @@ function NoteModal({
   );
 }
 
-// Delete confirmation modal
 function DeleteConfirmModal({
   onClose,
   onConfirm,
@@ -312,7 +309,6 @@ function DeleteConfirmModal({
   );
 }
 
-// Main Notes Page
 export function NotesPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
@@ -336,11 +332,9 @@ export function NotesPage() {
     "WRITING_EXERCISE",
   ];
 
-  // Filter notes
   const filteredNotes = useMemo(() => {
     let result = notes.filter((note) => note.status === "ACTIVE");
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -350,12 +344,10 @@ export function NotesPage() {
       );
     }
 
-    // Type filter
     if (selectedFilter !== "ALL") {
       result = result.filter((note) => note.targetType === selectedFilter);
     }
 
-    // Sort: pinned first, then by updated date
     result.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
@@ -365,26 +357,22 @@ export function NotesPage() {
     return result;
   }, [notes, searchQuery, selectedFilter]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredNotes.length / ITEMS_PER_PAGE);
   const paginatedNotes = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredNotes.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredNotes, currentPage]);
 
-  // Reset page when filter changes
   const handleFilterChange = (filter: NoteTargetType | "ALL") => {
     setSelectedFilter(filter);
     setCurrentPage(1);
   };
 
-  // Reset page when search changes
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
   };
 
-  // Stats
   const stats = useMemo(() => {
     const activeNotes = notes.filter((n) => n.status === "ACTIVE");
     const pinnedCount = activeNotes.filter((n) => n.isPinned).length;
@@ -395,12 +383,11 @@ export function NotesPage() {
     return { total: activeNotes.length, pinned: pinnedCount, byType };
   }, [notes]);
 
-  // Handlers
   const handleSaveNote = (
     data: CreateNoteForm & { id?: string; isPinned?: boolean }
   ) => {
     if (data.id) {
-      // Update existing note
+
       setNotes((prev) =>
         prev.map((n) =>
           n.id === data.id
@@ -417,7 +404,7 @@ export function NotesPage() {
         )
       );
     } else {
-      // Create new note
+
       const newNote: UserNote = {
         id: `note-${Date.now()}`,
         userId: "user-001",

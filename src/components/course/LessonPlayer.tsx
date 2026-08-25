@@ -1,9 +1,3 @@
-// Updated: 2026-08-17
-// Lesson Player với video progress:
-// - Video player với progress bar
-// - Fullscreen mode
-// - Progress cập nhật theo thời gian xem
-// - 80% progress = unlock bài tiếp theo
 
 import { useState, useEffect, useCallback } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Check, ChevronLeft, ChevronRight, Lock, Maximize2, Minimize2 } from 'lucide-react'
@@ -24,15 +18,13 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
   const [currentTime, setCurrentTime] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  const totalDuration = lesson.duration // seconds
+  const totalDuration = lesson.duration 
   const progressPercent = Math.round((currentTime / totalDuration) * 100)
 
-  // Toggle fullscreen
   const toggleFullscreen = useCallback(() => {
     setIsFullscreen(prev => !prev)
   }, [])
 
-  // Handle Escape key to exit fullscreen
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
@@ -43,7 +35,6 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isFullscreen])
 
-  // Auto-play effect
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isPlaying && currentTime < totalDuration) {
@@ -54,7 +45,7 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
             setIsPlaying(false)
             return totalDuration
           }
-          // Update progress every 5 seconds
+
           if (newTime % 5 === 0) {
             const newProgress = Math.round((newTime / totalDuration) * 100)
             setProgress(newProgress)
@@ -67,7 +58,6 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
     return () => clearInterval(interval)
   }, [isPlaying, currentTime, totalDuration, lesson.id, onProgress])
 
-  // Format time
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -85,11 +75,9 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
     onProgress(lesson.id, newProgress)
   }
 
-  // Find chapter order from lesson id
   const chapterNum = lesson.chapterId.split('-')[1]
   const lessonNum = lesson.order
 
-  // Fullscreen video player
   if (isFullscreen) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
@@ -176,7 +164,6 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
     )
   }
 
-  // Normal player
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <Card className="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden bg-surface">

@@ -1,8 +1,3 @@
-// Updated: 2026-08-17
-// Grid hiển thị các topics để khám phá:
-// - Mỗi topic: emoji icon + name + word count + explore button
-// - Grid 2 columns (sm:grid-cols-2)
-// - Props: topics[], onAction callback
 
 import { useTranslation } from 'react-i18next'
 import { ArrowUpRight } from 'lucide-react'

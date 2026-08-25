@@ -1,6 +1,3 @@
-// Updated: 2026-08-17
-// Vocabulary Learning Page - Main entry point
-// Flow: Vocabulary -> Start Learning -> Learning Session -> Result
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -31,7 +28,6 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
   const [selectedDeck, setSelectedDeck] = useState<VocabularyDeck | null>(null)
   const [learningResult, setLearningResult] = useState<LearningResult | null>(null)
 
-  // Fetch live decks from Backend API
   useEffect(() => {
     let isMounted = true
     const fetchDecks = async () => {
@@ -60,7 +56,6 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
     }
   }, [])
 
-  // Auto-start learning if deckId is provided
   useEffect(() => {
     const activeDeckId = deckId || selectedDeckId
     if (activeDeckId) {
@@ -78,7 +73,7 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
   }
 
   const handleStartQuickLearn = () => {
-    // Create a deck with all words
+
     const quickDeck: VocabularyDeck = {
       id: 'quick-learn',
       title: 'Quick Learn',
@@ -111,7 +106,6 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
     }
   }
 
-  // Learning Session View
   if (viewMode === 'session' && selectedDeck) {
     return (
       <VocabularyLearningSession
@@ -123,7 +117,6 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
     )
   }
 
-  // Result View
   if (viewMode === 'result' && learningResult) {
     return (
       <LearningResultView
@@ -135,7 +128,6 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
     )
   }
 
-  // Home View - Deck Selection
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
       <SectionHeading

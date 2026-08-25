@@ -13,13 +13,11 @@ export function HeatmapDetailCard({ day }: HeatmapDetailCardProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Format date based on language
   const formatDate = (date: string) => {
     const locale = isVietnamese ? 'vi-VN' : 'en-US'
     return new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${date}T12:00:00`))
   }
 
-  // Get status label
   const getStatusLabel = (status: string) => {
     if (isVietnamese) {
       if (status === 'checked-in') return 'Đã điểm danh'
@@ -31,7 +29,6 @@ export function HeatmapDetailCard({ day }: HeatmapDetailCardProps) {
     return 'Not studied'
   }
 
-  // Check if today
   const today = new Date().toISOString().slice(0, 10)
   const isToday = day.id === today
 

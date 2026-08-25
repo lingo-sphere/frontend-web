@@ -1,10 +1,3 @@
-// Updated: 2026-08-17
-// Modal component chung cho web app:
-// - Overlay với backdrop blur
-// - Header với title + close button
-// - Body content
-// - Footer với actions (optional)
-// - Màu sắc và font đồng bộ với design system
 
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
@@ -26,7 +19,7 @@ const sizeClasses = {
 }
 
 export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
-  // Close on Escape key
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) onClose()
@@ -35,7 +28,6 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
     return () => document.removeEventListener('keydown', handleEscape)
   }, [open, onClose])
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden'

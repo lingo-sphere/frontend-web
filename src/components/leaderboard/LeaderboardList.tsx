@@ -1,8 +1,3 @@
-// Updated: 2026-08-22
-// Ranking list component:
-// - Display full rankings from rank 4 onwards
-// - Scrollable container
-// - Alternating rows, current user highlighted
 
 import { useTranslation } from 'react-i18next'
 import type { LeaderboardType, MonthlyLeaderboardUser } from '@/types/dashboard'
@@ -16,7 +11,6 @@ export function LeaderboardList({ users, type }: LeaderboardListProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Skip top 3, start from rank 4
   const rankedUsers = users.slice(3)
 
   const columnLabel = type === 'streak'

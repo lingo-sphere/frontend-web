@@ -7,7 +7,6 @@ import type {
   Activity,
 } from '@/types/user'
 
-// Sample user data
 export const currentUser: User = {
   id: 'user-001',
   email: 'nguyen.van.a@email.com',
@@ -68,42 +67,39 @@ export const currentUser: User = {
     language: 'vi',
     theme: 'system',
     notifications: {
-      // Master toggle
+
       allEnabled: true,
       marketingEnabled: false,
 
-      // Channels
       email: true,
       push: true,
       sound: true,
       sms: false,
 
-      // Quiet hours
       quietHoursEnabled: false,
       quietHoursStart: '22:00',
       quietHoursEnd: '08:00',
 
-      // Per-category toggles (synced with notification-service.dbml)
       categories: {
-        // AUTH - Login, security
+
         auth: { push: true, email: true, inApp: true },
-        // SUBSCRIPTION - Subscription, billing
+
         subscription: { push: true, email: true, inApp: true },
-        // USER - User profile, account
+
         user: { push: true, email: false, inApp: true },
-        // VOCABULARY - Words, SRS, flashcards
+
         vocabulary: { push: true, email: false, inApp: true },
-        // PRACTICE - Speaking, Writing, Listening
+
         practice: { push: true, email: false, inApp: true },
-        // EXAM - TOEIC, tests
+
         exam: { push: true, email: true, inApp: true },
-        // COURSE - Courses, lessons
+
         course: { push: false, email: false, inApp: true },
-        // AI - AI quotas, recommendations
+
         ai: { push: false, email: false, inApp: true },
-        // GAMIFICATION - Streak, achievement, XP
+
         gamification: { push: true, email: false, inApp: true },
-        // MARKETING - Promotions, campaigns
+
         marketing: { push: false, email: false, inApp: false },
       },
     },
@@ -127,7 +123,6 @@ export const currentUser: User = {
   lastLoginAt: '2024-06-15T10:30:00Z',
 }
 
-// Sample achievements for the user
 export const userAchievements: Achievement[] = [
   {
     id: 'ach-1',
@@ -188,7 +183,6 @@ export const userAchievements: Achievement[] = [
   },
 ]
 
-// Sample recent activities
 export const userActivities: Activity[] = [
   {
     id: 'act-1',
@@ -255,7 +249,6 @@ export const userActivities: Activity[] = [
   },
 ]
 
-// Sample leaderboard data
 export const leaderboardData = [
   { userId: 'user-002', displayName: 'Trần Thị B', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100', xp: 45000, level: 18, streak: 89 },
   { userId: 'user-003', displayName: 'Lê Văn C', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100', xp: 38200, level: 15, streak: 45 },
@@ -264,17 +257,14 @@ export const leaderboardData = [
   { userId: 'user-005', displayName: 'Hoàng Văn E', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100', xp: 15200, level: 8, streak: 8 },
 ]
 
-// Helper function to get user rank
 export function getUserRank(userId: string): number {
   const sorted = [...leaderboardData].sort((a, b) => b.xp - a.xp)
   const index = sorted.findIndex(u => u.userId === userId)
   return index + 1
 }
 
-// Helper to get level from XP
 export function getLevelFromXP(xp: number): number {
-  // Each level requires progressively more XP
-  // Level 1: 0, Level 2: 1000, Level 3: 2500, etc.
+
   let level = 1
   let requiredXP = 0
   while (requiredXP <= xp) {
@@ -284,7 +274,6 @@ export function getLevelFromXP(xp: number): number {
   return level
 }
 
-// Helper to get XP needed for next level
 export function getXPForNextLevel(currentXP: number): { current: number; required: number; progress: number } {
   const currentLevel = getLevelFromXP(currentXP)
   let requiredForCurrent = 0

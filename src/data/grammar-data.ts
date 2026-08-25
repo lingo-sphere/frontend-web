@@ -1,12 +1,7 @@
 import type { GrammarPoint, GrammarExample, GrammarType, CEFRLevel } from '@/types/grammar'
 
-// ============================================================
-// GRAMMAR POINTS - đồng bộ với vocabulary-service.dbml
-// ============================================================
-
 export const grammarPoints: GrammarPoint[] = [
-  // ==================== TENSES ====================
-  // 1. Present Simple
+
   {
     id: 'grammar-present-simple',
     nameEn: 'Present Simple',
@@ -35,7 +30,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 2. Present Continuous
   {
     id: 'grammar-present-continuous',
     nameEn: 'Present Continuous',
@@ -64,7 +58,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 3. Present Perfect
   {
     id: 'grammar-present-perfect',
     nameEn: 'Present Perfect',
@@ -93,7 +86,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 4. Present Perfect Continuous
   {
     id: 'grammar-present-perfect-continuous',
     nameEn: 'Present Perfect Continuous',
@@ -122,7 +114,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 5. Past Simple
   {
     id: 'grammar-past-simple',
     nameEn: 'Past Simple',
@@ -151,7 +142,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 6. Past Continuous
   {
     id: 'grammar-past-continuous',
     nameEn: 'Past Continuous',
@@ -180,7 +170,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 7. Past Perfect
   {
     id: 'grammar-past-perfect',
     nameEn: 'Past Perfect',
@@ -209,7 +198,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 8. Past Perfect Continuous
   {
     id: 'grammar-past-perfect-continuous',
     nameEn: 'Past Perfect Continuous',
@@ -237,7 +225,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 9. Future Simple - Will
   {
     id: 'grammar-future-will',
     nameEn: 'Future Simple - Will',
@@ -266,7 +253,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 10. Future Continuous
   {
     id: 'grammar-future-continuous',
     nameEn: 'Future Continuous',
@@ -294,7 +280,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 11. Future Perfect
   {
     id: 'grammar-future-perfect',
     nameEn: 'Future Perfect',
@@ -322,7 +307,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 12. Future Perfect Continuous
   {
     id: 'grammar-future-perfect-continuous',
     nameEn: 'Future Perfect Continuous',
@@ -349,7 +333,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 13. Future Near - Going to
   {
     id: 'grammar-future-going-to',
     nameEn: 'Future Near - Going to',
@@ -378,8 +361,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // ==================== CONDITIONALS ====================
-  // 14. Zero Conditional
   {
     id: 'grammar-zero-conditional',
     nameEn: 'Zero Conditional',
@@ -408,7 +389,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 15. First Conditional
   {
     id: 'grammar-first-conditional',
     nameEn: 'First Conditional',
@@ -437,7 +417,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 16. Second Conditional
   {
     id: 'grammar-second-conditional',
     nameEn: 'Second Conditional',
@@ -466,7 +445,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 17. Third Conditional
   {
     id: 'grammar-third-conditional',
     nameEn: 'Third Conditional',
@@ -495,7 +473,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 18. Mixed Conditional
   {
     id: 'grammar-mixed-conditional',
     nameEn: 'Mixed Conditional',
@@ -523,8 +500,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // ==================== PASSIVE VOICE ====================
-  // 19. Present Simple Passive
   {
     id: 'grammar-present-simple-passive',
     nameEn: 'Present Simple Passive',
@@ -552,7 +527,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 20. Past Simple Passive
   {
     id: 'grammar-past-simple-passive',
     nameEn: 'Past Simple Passive',
@@ -580,7 +554,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 21. Future Simple Passive
   {
     id: 'grammar-future-simple-passive',
     nameEn: 'Future Simple Passive',
@@ -608,8 +581,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // ==================== MODALS ====================
-  // 22. Can / Could
   {
     id: 'grammar-can-could',
     nameEn: 'Can / Could',
@@ -638,7 +609,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 23. May / Might
   {
     id: 'grammar-may-might',
     nameEn: 'May / Might',
@@ -667,7 +637,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 24. Must / Have to
   {
     id: 'grammar-must-have-to',
     nameEn: 'Must / Have to',
@@ -696,7 +665,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 25. Should / Ought to
   {
     id: 'grammar-should-ought-to',
     nameEn: 'Should / Ought to',
@@ -725,7 +693,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 26. Modal Perfect
   {
     id: 'grammar-modal-perfect',
     nameEn: 'Modal Perfect',
@@ -754,8 +721,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // ==================== VERB FORMS ====================
-  // 27. Gerund (V-ing)
   {
     id: 'grammar-gerund',
     nameEn: 'Gerund (V-ing)',
@@ -784,7 +749,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 28. Infinitive (To + V)
   {
     id: 'grammar-infinitive',
     nameEn: 'Infinitive (To + V)',
@@ -813,8 +777,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // ==================== COMPARISONS ====================
-  // 29. Comparative
   {
     id: 'grammar-comparative',
     nameEn: 'Comparative',
@@ -843,7 +805,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 30. Superlative
   {
     id: 'grammar-superlative',
     nameEn: 'Superlative',
@@ -872,8 +833,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // ==================== SPECIAL STRUCTURES ====================
-  // 31. Either...Or / Neither...Nor
   {
     id: 'grammar-either-neither',
     nameEn: 'Either...Or / Neither...Nor',
@@ -902,7 +861,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 32. Wish + Past Simple
   {
     id: 'grammar-wish-past-simple',
     nameEn: 'Wish + Past Simple',
@@ -931,7 +889,6 @@ export const grammarPoints: GrammarPoint[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // 33. Used to
   {
     id: 'grammar-used-to',
     nameEn: 'Used to',
@@ -961,12 +918,8 @@ export const grammarPoints: GrammarPoint[] = [
   },
 ]
 
-// ============================================================
-// GRAMMAR EXAMPLES - đồng bộ với vocabulary-service.dbml
-// ============================================================
-
 export const grammarExamples: GrammarExample[] = [
-  // Present Simple Examples
+
   {
     id: 'ex-present-simple-1',
     grammarPointId: 'grammar-present-simple',
@@ -1004,7 +957,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // Present Perfect Examples
   {
     id: 'ex-present-perfect-1',
     grammarPointId: 'grammar-present-perfect',
@@ -1042,7 +994,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // Past Simple Examples
   {
     id: 'ex-past-simple-1',
     grammarPointId: 'grammar-past-simple',
@@ -1068,7 +1019,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // First Conditional Examples
   {
     id: 'ex-first-conditional-1',
     grammarPointId: 'grammar-first-conditional',
@@ -1094,7 +1044,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // Second Conditional Examples
   {
     id: 'ex-second-conditional-1',
     grammarPointId: 'grammar-second-conditional',
@@ -1120,7 +1069,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // Passive Voice Examples
   {
     id: 'ex-passive-1',
     grammarPointId: 'grammar-present-simple-passive',
@@ -1146,7 +1094,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // Modal Perfect Examples
   {
     id: 'ex-modal-perfect-1',
     grammarPointId: 'grammar-modal-perfect',
@@ -1172,7 +1119,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // Comparative Examples
   {
     id: 'ex-comparative-1',
     grammarPointId: 'grammar-comparative',
@@ -1198,7 +1144,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 
-  // Wish Examples
   {
     id: 'ex-wish-1',
     grammarPointId: 'grammar-wish-past-simple',
@@ -1224,10 +1169,6 @@ export const grammarExamples: GrammarExample[] = [
     createdAt: '2024-01-01T00:00:00Z',
   },
 ]
-
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
 
 export function getGrammarPointsByType(type: GrammarType): GrammarPoint[] {
   return grammarPoints.filter((g) => g.grammarType === type && g.status === 'ACTIVE')

@@ -1,6 +1,3 @@
-// Updated: 2026-08-17
-// Mock data cho Listening page - Synced với Practice Service DB
-// Cấu trúc dữ liệu đúng cho Video Dictation
 
 import type {
   ListeningExercise,
@@ -11,7 +8,6 @@ import type {
   AIAnalysis,
 } from '@/types/listening'
 
-// Re-export types for convenience
 export type {
   ListeningExercise,
   ListeningAttempt,
@@ -21,29 +17,17 @@ export type {
   AIAnalysis,
 }
 
-// ============================================================
-// TYPES - Matching Practice Service DB
-// ============================================================
-
 export type MediaType = 'AUDIO' | 'VIDEO'
 export type ExerciseType = 'DICTATION' | 'VIDEO_DICTATION' | 'LISTEN_CHOOSE' | 'LISTEN_ORDER'
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD'
 export type AttemptStatus = 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED'
 export type BlankStatus = 'PENDING' | 'CORRECT' | 'INCORRECT' | 'SKIPPED' | 'HINTED'
 
-// ============================================================
-// TOPICS (từ topics-data.ts)
-// ============================================================
-
 export const listeningTopics = [
   { id: 'topic-business', name: 'Business', nameVi: 'Kinh doanh', cefr: 'B1-B2' },
   { id: 'topic-daily', name: 'Daily Life', nameVi: 'Đời thường', cefr: 'A2-B1' },
   { id: 'topic-travel', name: 'Travel', nameVi: 'Du lịch', cefr: 'A2-B1' },
 ]
-
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
 
 export function getExerciseById(id: string): ListeningExercise | undefined {
   return listeningExercises.find((e) => e.id === id)
@@ -123,10 +107,6 @@ export function getExerciseTypeLabel(type: ExerciseType): string {
   }
 }
 
-/**
- * Xác định segment index tại thời điểm currentTime
- * SINGLE SOURCE OF TRUTH cho việc xác định segment hiện tại
- */
 export function getSegmentIndexAtTime(currentTime: number, segments: TranscriptSegment[]): number {
   for (let i = segments.length - 1; i >= 0; i--) {
     if (currentTime >= segments[i].startTime) {
@@ -136,9 +116,6 @@ export function getSegmentIndexAtTime(currentTime: number, segments: TranscriptS
   return 0
 }
 
-/**
- * Validate listening exercise data
- */
 export function validateListeningExercise(exercise: ListeningExercise): { valid: boolean; errors: string[] } {
   const errors: string[] = []
 
@@ -159,7 +136,6 @@ export function validateListeningExercise(exercise: ListeningExercise): { valid:
     }
     prevEndTime = seg.endTime
 
-    // Validate blanks
     seg.blanks?.forEach((blank) => {
       const words = seg.textEn.split(' ')
       if (blank.wordIndex < 0 || blank.wordIndex >= words.length) {
@@ -175,12 +151,8 @@ export function validateListeningExercise(exercise: ListeningExercise): { valid:
   return { valid: errors.length === 0, errors }
 }
 
-// ============================================================
-// LISTENING EXERCISES MẪU
-// ============================================================
-
 export const listeningExercises: ListeningExercise[] = [
-  // Exercise 1: VIDEO - EASY - A2
+
   {
     id: 'listen-video-easy-01',
     title: 'Daily Routines',
@@ -260,7 +232,6 @@ export const listeningExercises: ListeningExercise[] = [
     ],
   },
 
-  // Exercise 2: VIDEO - MEDIUM - B1
   {
     id: 'listen-video-medium-01',
     title: 'Business Meeting',
@@ -342,7 +313,6 @@ export const listeningExercises: ListeningExercise[] = [
     ],
   },
 
-  // Exercise 3: AUDIO - HARD - B2
   {
     id: 'listen-audio-hard-01',
     title: 'Conference Call',
@@ -425,12 +395,8 @@ export const listeningExercises: ListeningExercise[] = [
   },
 ]
 
-// ============================================================
-// LISTENING ATTEMPTS MẪU
-// ============================================================
-
 export const listeningAttempts: ListeningAttempt[] = [
-  // Attempt đang làm dở
+
   {
     id: 'attempt-in-progress-01',
     exerciseId: 'listen-video-medium-01',
@@ -457,7 +423,6 @@ export const listeningAttempts: ListeningAttempt[] = [
     totalTimeSeconds: 180,
   },
 
-  // Attempt hoàn thành tốt
   {
     id: 'attempt-completed-01',
     exerciseId: 'listen-video-easy-01',
@@ -516,7 +481,6 @@ export const listeningAttempts: ListeningAttempt[] = [
     accuracy: 100,
   },
 
-  // Attempt hoàn thành với lỗi và hint
   {
     id: 'attempt-completed-02',
     exerciseId: 'listen-audio-hard-01',
@@ -604,10 +568,6 @@ export const listeningAttempts: ListeningAttempt[] = [
     },
   },
 ]
-
-// ============================================================
-// VALIDATE ALL EXERCISES ON IMPORT
-// ============================================================
 
 if (typeof window !== 'undefined') {
   listeningExercises.forEach((exercise) => {

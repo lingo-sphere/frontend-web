@@ -1,5 +1,4 @@
-// Updated: 2026-08-22
-// Tabs component cho chuyển đổi streak/learning/vocabulary:
+
 import { useTranslation } from 'react-i18next'
 import { Flame, BookOpen, GraduationCap } from 'lucide-react'
 import type { LeaderboardType } from '@/types/dashboard'

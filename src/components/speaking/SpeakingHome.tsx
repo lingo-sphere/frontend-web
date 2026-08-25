@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Speaking Home - LingoSphere
 
 import { useTranslation } from 'react-i18next'
 import { Mic, TrendingUp, Clock, ChevronRight, Play } from 'lucide-react'
@@ -29,7 +27,6 @@ export function SpeakingHome({
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  // Get a recommended exercise
   const recommendedExercise = exercises.find(e =>
     stats.total_attempts === 0 ? e.difficulty_level === 'EASY' :
     progress.weakest_area === 'Grammar' ? e.exercise_type === 'TOPIC' :
@@ -203,7 +200,6 @@ export function SpeakingHome({
   )
 }
 
-// Stat Card Component
 function StatCard({ icon, label, value, small }: {
   icon: React.ReactNode
   label: string
@@ -227,7 +223,6 @@ function StatCard({ icon, label, value, small }: {
   )
 }
 
-// Progress Item Component
 function ProgressItem({ label, value }: { label: string; value: number }) {
   return (
     <div>

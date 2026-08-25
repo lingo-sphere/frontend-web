@@ -1,4 +1,3 @@
-// Type definitions cho toàn bộ hệ thống API LingoSphere Learner Web Platform
 
 export interface ApiResponse<T = unknown> {
   statusCode: number
@@ -56,7 +55,6 @@ export interface RegisterPayload {
   phone_number?: string
 }
 
-// Khóa học & Bài giảng
 export interface Lesson {
   id: string
   _id?: string
@@ -110,7 +108,6 @@ export interface CourseEnrollment {
   last_accessed_at: string
 }
 
-// Từ vựng & Flashcards
 export interface LexicalItem {
   id: string
   _id?: string
@@ -142,11 +139,10 @@ export interface Deck {
 
 export interface SpacedRepetitionReviewPayload {
   card_id: string
-  rating: 1 | 2 | 3 | 4 | 5 // 1: Lại, 2: Khó, 3: Được, 4: Tốt, 5: Quá dễ
+  rating: 1 | 2 | 3 | 4 | 5 
   time_spent_seconds?: number
 }
 
-// Đề thi & Luyện tập TOEIC
 export interface QuestionOption {
   key: 'A' | 'B' | 'C' | 'D'
   text: string
@@ -202,7 +198,6 @@ export interface ExamResult {
   completed_at: string
 }
 
-// Gamification
 export interface GamificationProfile {
   xp: number
   level: number
@@ -222,7 +217,6 @@ export interface LeaderboardEntry {
   is_current_user?: boolean
 }
 
-// Luyện Nói Whisper STT & Chấm Điểm
 export interface SpeechAssessmentResult {
   transcribed_text: string
   duration: number

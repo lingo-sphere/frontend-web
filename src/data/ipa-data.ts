@@ -1,8 +1,3 @@
-// Updated: 2026-08-17
-// Mock data cho IPA (International Phonetic Alphabet):
-// - vowels: nguyên âm với symbol, examples, progress
-// - consonants: phụ âm với symbol, examples, progress
-// - progress: placeholder (sẽ làm sau)
 
 export type IPASymbolType = 'VOWEL' | 'CONSONANT' | 'DIPHTHONG'
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD'
@@ -27,16 +22,15 @@ export interface IPASymbol {
   practiceInstruction: string
   examples: IPAExample[]
   relatedSymbols: string[]
-  progress?: number // 0-100, placeholder
+  progress?: number 
 }
 
 export interface IPAProgress {
   practicedSymbols: string[]
   totalPracticed: number
-  masteryLevel: Record<string, number> // symbol -> mastery %
+  masteryLevel: Record<string, number> 
 }
 
-// Vowels - Nguyên âm
 export const vowels: IPASymbol[] = [
   { id: '1', symbol: 'iː', type: 'VOWEL', soundName: 'Long E', descriptionVi: 'Âm i dài như trong see', mouthPosition: 'Jaw nearly closed', tonguePosition: 'Front, high', lipPosition: 'spread', voicing: true, difficulty: 'EASY', practiceInstruction: 'Dãn môi nhẹ, đưa lưỡi lên phía trước và giữ âm /iː/ ổn định.', examples: [{ word: 'see', position: 'INITIAL', isCommon: true }, { word: 'green', position: 'MEDIAL', isCommon: true }, { word: 'team', position: 'MEDIAL', isCommon: true }], relatedSymbols: ['ɪ'], progress: 0 },
   { id: '2', symbol: 'ɪ', type: 'VOWEL', soundName: 'Short I', descriptionVi: 'Âm i ngắn như sit', mouthPosition: 'Jaw slightly open', tonguePosition: 'Front, near-high', lipPosition: 'neutral', voicing: true, difficulty: 'EASY', practiceInstruction: 'Thả lỏng hàm, đưa lưỡi phía trước nhưng thấp hơn /iː/, phát âm ngắn.', examples: [{ word: 'sit', position: 'MEDIAL', isCommon: true }, { word: 'window', position: 'MEDIAL', isCommon: true }, { word: 'fish', position: 'MEDIAL', isCommon: true }], relatedSymbols: ['iː'], progress: 0 },
@@ -52,7 +46,6 @@ export const vowels: IPASymbol[] = [
   { id: '12', symbol: 'ə', type: 'VOWEL', soundName: 'Schwa', descriptionVi: 'Âm schwa như about', mouthPosition: 'Relaxed', tonguePosition: 'Central', lipPosition: 'neutral', voicing: true, difficulty: 'MEDIUM', practiceInstruction: 'Thả lỏng toàn bộ khẩu hình, giữ lưỡi ở vị trí trung tâm và phát âm rất ngắn.', examples: [{ word: 'about', position: 'MEDIAL', isCommon: true }, { word: 'ago', position: 'MEDIAL', isCommon: true }, { word: 'teacher', position: 'MEDIAL', isCommon: true }], relatedSymbols: ['ʌ', 'ɜː'], progress: 0 },
 ]
 
-// Diphthongs - Âm đôi (thuộc nhóm nguyên âm)
 export const diphthongs: IPASymbol[] = [
   { id: '19', symbol: 'eɪ', type: 'DIPHTHONG', soundName: 'Long A', descriptionVi: 'Âm đôi như trong day, trượt từ e sang ɪ', mouthPosition: 'Jaw open then closing', tonguePosition: 'Front-mid to near-high', lipPosition: 'Slightly spread', voicing: true, difficulty: 'EASY', practiceInstruction: 'Bắt đầu với âm e, trượt dần sang âm ɪ trong cùng một âm tiết.', examples: [{ word: 'day', position: 'MEDIAL', isCommon: true }, { word: 'paper', position: 'MEDIAL', isCommon: true }, { word: 'late', position: 'MEDIAL', isCommon: true }], relatedSymbols: ['e'], progress: 0 },
   { id: '20', symbol: 'aɪ', type: 'DIPHTHONG', soundName: 'Long I', descriptionVi: 'Âm đôi như trong my, trượt từ a sang ɪ', mouthPosition: 'Jaw open then closing', tonguePosition: 'Low to near-high front', lipPosition: 'Neutral to spread', voicing: true, difficulty: 'EASY', practiceInstruction: 'Mở miệng phát âm a, trượt dần sang âm ɪ.', examples: [{ word: 'my', position: 'MEDIAL', isCommon: true }, { word: 'time', position: 'MEDIAL', isCommon: true }, { word: 'light', position: 'MEDIAL', isCommon: true }], relatedSymbols: ['ɑː'], progress: 0 },
@@ -64,7 +57,6 @@ export const diphthongs: IPASymbol[] = [
   { id: '26', symbol: 'ʊə', type: 'DIPHTHONG', soundName: 'Long URE', descriptionVi: 'Âm đôi như trong tour, trượt từ ʊ sang ə', mouthPosition: 'Jaw slightly open', tonguePosition: 'Back-near-high to central', lipPosition: 'Rounded to neutral', voicing: true, difficulty: 'HARD', practiceInstruction: 'Bắt đầu với âm ʊ tròn môi, trượt dần về vị trí schwa.', examples: [{ word: 'tour', position: 'MEDIAL', isCommon: true }, { word: 'sure', position: 'MEDIAL', isCommon: true }, { word: 'pure', position: 'MEDIAL', isCommon: true }], relatedSymbols: ['ɪə', 'eə'], progress: 0 },
 ]
 
-// Consonants - Phụ âm
 export const consonants: IPASymbol[] = [
   { id: '13', symbol: 'p', type: 'CONSONANT', soundName: 'Voiceless P', descriptionVi: 'Âm p như trong pen, không rung thanh', mouthPosition: 'Jaw slightly open', tonguePosition: 'Neutral, resting', lipPosition: 'Closed then released', voicing: false, difficulty: 'EASY', practiceInstruction: 'Đặt hai môi khép lại, bịt hơi, sau đó mở môi ra đột ngột để phát âm.', examples: [{ word: 'pen', position: 'INITIAL', isCommon: true }, { word: 'happy', position: 'MEDIAL', isCommon: true }, { word: 'stop', position: 'FINAL', isCommon: true }], relatedSymbols: ['b'], progress: 0 },
   { id: '14', symbol: 'b', type: 'CONSONANT', soundName: 'Voiced B', descriptionVi: 'Âm b như trong bed, có rung thanh', mouthPosition: 'Jaw slightly open', tonguePosition: 'Neutral, resting', lipPosition: 'Closed then released', voicing: true, difficulty: 'EASY', practiceInstruction: 'Đặt tay lên cổ họng, rung thanh rồi mở môi ra để phát âm.', examples: [{ word: 'bed', position: 'INITIAL', isCommon: true }, { word: 'about', position: 'MEDIAL', isCommon: true }, { word: 'job', position: 'FINAL', isCommon: true }], relatedSymbols: ['p'], progress: 0 },
@@ -80,15 +72,12 @@ export const consonants: IPASymbol[] = [
   { id: '32', symbol: 'z', type: 'CONSONANT', soundName: 'Voiced Z', descriptionVi: 'Âm z như trong zoo, có rung thanh', mouthPosition: 'Jaw slightly open', tonguePosition: 'Tip near alveolar ridge', lipPosition: 'Neutral', voicing: true, difficulty: 'EASY', practiceInstruction: 'Đặt đầu lưỡi gần lợi trên, rung thanh và thổi hơi qua kẽ răng.', examples: [{ word: 'zoo', position: 'INITIAL', isCommon: true }, { word: 'music', position: 'MEDIAL', isCommon: true }, { word: 'eyes', position: 'FINAL', isCommon: true }], relatedSymbols: ['s'], progress: 0 },
 ]
 
-// All IPA symbols combined
 export const allIPASymbols = [...vowels, ...diphthongs, ...consonants]
 
-// Get symbol by ID
 export const getIPASymbolById = (id: string): IPASymbol | undefined => {
   return allIPASymbols.find(s => s.id === id)
 }
 
-// Get symbol by symbol character
 export const getIPASymbolBySymbol = (symbol: string): IPASymbol | undefined => {
   return allIPASymbols.find(s => s.symbol === symbol)
 }

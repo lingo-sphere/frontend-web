@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Test Result Dialog
 
 import { useTranslation } from 'react-i18next'
 import { Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react'

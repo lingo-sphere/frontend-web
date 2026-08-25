@@ -1,10 +1,3 @@
-// Updated: 2026-08-17
-// Listening Page - Video Dictation với Timeline Sync đúng
-// Logic:
-// - currentTime → getSegmentIndexAtTime() → activeSegment
-// - Blank được xác định từ data, không random
-// - Hint reveal từng từ một
-// - Blank checking từng từ
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,23 +29,16 @@ import {
   type Blank,
 } from "@/types/listening";
 
-// ============================================================
-// TYPES
-// ============================================================
-
 type ViewMode = "list" | "exercise" | "result" | "review";
 
-// User typed answer for each blank
 interface UserAnswers {
   [blankId: string]: string;
 }
 
-// Number of characters revealed by hint for each blank
 interface HintRevealedCount {
   [blankId: string]: number;
 }
 
-// Result of checking a blank after submit
 interface CheckedBlankResult {
   blankId: string;
   userAnswer: string;
@@ -60,19 +46,10 @@ interface CheckedBlankResult {
   isCorrect: boolean;
 }
 
-// Checked results for all blanks in current segment
 interface CheckedResults {
   [blankId: string]: CheckedBlankResult;
 }
 
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
-
-/**
- * Calculate display text: userInput + remaining stars
- * NOT checking correctness here
- */
 function calculateDisplayText(
   answer: string,
   userInput: string,
@@ -81,13 +58,10 @@ function calculateDisplayText(
   const answerLength = answer.length;
   const userInputLength = userInput.length;
 
-  // Revealed characters from hint
   const revealedPrefix = answer.slice(0, hintCount);
 
-  // What user has typed (after hint characters)
   const userTypedPart = userInput.slice(hintCount);
 
-  // Remaining stars = total - what user has (revealed + typed)
   const totalShown = Math.max(userInputLength, hintCount);
   const remainingStars = Math.max(0, answerLength - totalShown);
 
@@ -99,16 +73,10 @@ function calculateDisplayText(
   return display;
 }
 
-/**
- * Check if blank has enough characters typed to submit
- */
 function hasEnoughCharacters(blank: Blank, userAnswer: string): boolean {
   return userAnswer.length >= blank.answer.length;
 }
 
-/**
- * Check if all blanks in a segment have enough characters
- */
 function areAllBlanksReady(blanks: Blank[], userAnswers: UserAnswers): boolean {
   return blanks.every((blank) => {
     const userAnswer = userAnswers[blank.id] || "";
@@ -116,9 +84,6 @@ function areAllBlanksReady(blanks: Blank[], userAnswers: UserAnswers): boolean {
   });
 }
 
-/**
- * Find a blank that can receive a hint
- */
 function findHintableBlank(
   blanks: Blank[],
   hintCounts: HintRevealedCount
@@ -129,9 +94,6 @@ function findHintableBlank(
   });
 }
 
-/**
- * Get total hints used for a segment
- */
 function getSegmentHintCount(
   blanks: Blank[],
   hintCounts: HintRevealedCount
@@ -139,9 +101,6 @@ function getSegmentHintCount(
   return blanks.reduce((sum, blank) => sum + (hintCounts[blank.id] || 0), 0);
 }
 
-/**
- * Check a single blank answer
- */
 function checkBlank(blank: Blank, userAnswer: string): CheckedBlankResult {
   const isCorrect =
     userAnswer.toLowerCase().trim() === blank.answer.toLowerCase().trim();
@@ -152,10 +111,6 @@ function checkBlank(blank: Blank, userAnswer: string): CheckedBlankResult {
     isCorrect,
   };
 }
-
-// ============================================================
-// MAIN LISTENING PAGE
-// ============================================================
 
 export function ListeningPage() {
   const { t, i18n } = useTranslation()
@@ -169,7 +124,6 @@ export function ListeningPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedMediaType, setSelectedMediaType] = useState<string>("all");
 
-  // Filter exercises
   const filteredExercises = listeningExercises.filter((exercise) => {
     const matchesSearch =
       exercise.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -186,7 +140,7 @@ export function ListeningPage() {
   const recommended = getRecommendedExercises();
 
   const handleSelectExercise = (exercise: ListeningExercise) => {
-    // Validate exercise data
+
     const { valid, errors } = validateListeningExercise(exercise);
     if (!valid) {
       console.error("Exercise validation failed:", errors);
@@ -391,10 +345,6 @@ export function ListeningPage() {
   );
 }
 
-// ============================================================
-// FILTER CHIP
-// ============================================================
-
 function FilterChip({
   children,
   active,
@@ -431,10 +381,6 @@ function FilterChip({
     </button>
   );
 }
-
-// ============================================================
-// EXERCISE CARD
-// ============================================================
 
 function ExerciseCard({
   exercise,
@@ -544,10 +490,6 @@ function ExerciseCard({
   );
 }
 
-// ============================================================
-// CONTINUE CARD
-// ============================================================
-
 function ContinueCard({
   exercise,
   attempt,
@@ -593,10 +535,6 @@ function ContinueCard({
   );
 }
 
-// ============================================================
-// VIDEO DICTATION VIEW - CORRECT LOGIC
-// ============================================================
-
 function VideoDictationView({
   exercise,
   existingAttempt,
@@ -610,7 +548,7 @@ function VideoDictationView({
 }) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  // ===== MEDIA STATE =====
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(
     existingAttempt?.currentTime || 0
@@ -618,15 +556,11 @@ function VideoDictationView({
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [autoPause, setAutoPause] = useState(true);
 
-  // ===== EXERCISE STATE =====
-  // activeSegmentIndex được tính từ currentTime - SINGLE SOURCE OF TRUTH
   const activeSegmentIndex = useMemo(
     () => getSegmentIndexAtTime(currentTime, exercise.segments),
     [currentTime, exercise.segments]
   );
 
-  // ===== COMPLETED SEGMENTS STATE =====
-  // Set các segment IDs đã hoàn thành (đã submit và xem kết quả)
   const [completedSegments, setCompletedSegments] = useState<Set<string>>(
     () => {
       const result = new Set<string>();
@@ -639,8 +573,6 @@ function VideoDictationView({
     }
   );
 
-  // ===== ANSWER STATE =====
-  // User answers cho từng blank
   const [answers, setAnswers] = useState<UserAnswers>(() => {
     const result: UserAnswers = {};
     if (existingAttempt) {
@@ -653,7 +585,6 @@ function VideoDictationView({
     return result;
   });
 
-  // Số ký tự đã được reveal bởi hint cho mỗi blank
   const [hintRevealedCount, setHintRevealedCount] = useState<HintRevealedCount>(
     () => {
       const result: HintRevealedCount = {};
@@ -661,7 +592,7 @@ function VideoDictationView({
         existingAttempt.segmentAnswers.forEach((segAns) => {
           segAns.blankResults.forEach((blankRes) => {
             if (blankRes.isHintUsed) {
-              result[blankRes.blankId] = 1; // Simplified: 1 ký tự đã hint
+              result[blankRes.blankId] = 1; 
             }
           });
         });
@@ -670,7 +601,6 @@ function VideoDictationView({
     }
   );
 
-  // ===== STATS STATE =====
   const [replayCount, setReplayCount] = useState(
     existingAttempt?.totalReplays || 0
   );
@@ -678,36 +608,26 @@ function VideoDictationView({
     existingAttempt?.totalHintsUsed || 0
   );
 
-  // ===== CHECKED RESULTS STATE =====
-  // Lưu kết quả check đúng/sai của segment HIỆN TẠI
   const [checkedResults, setCheckedResults] = useState<CheckedResults>({});
 
-  // Lưu đáp án đúng cho các blank SAI (sau khi submit)
-  // Khi segment đã hoàn thành, blank sai sẽ hiển thị đáp án đúng
   const [correctedAnswers, setCorrectedAnswers] = useState<
     Record<string, string>
   >({});
 
-  // ===== TIMING STATE =====
   const segmentStartTimeRef = useRef<number>(Date.now());
 
-  // ===== REFS =====
   const segmentRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Current segment
   const currentSegment = exercise.segments[activeSegmentIndex];
 
-  // Kiểm tra segment có phải là CURRENT (đang làm) hay COMPLETED (đã xong)
   const isCurrentSegmentCompleted = currentSegment
     ? completedSegments.has(currentSegment.id)
     : false;
 
-  // ===== HELPER: Check nếu blank đã nhập đủ ký tự =====
   const isBlankFilled = (blank: Blank, userAnswer: string): boolean => {
     return userAnswer.length >= blank.answer.length;
   };
 
-  // ===== HELPER: Check tất cả blanks đã đủ ký tự chưa =====
   const canSubmitCurrentSegment = currentSegment
     ? currentSegment.blanks.every((blank) => {
         const userAnswer = answers[blank.id] || "";
@@ -715,17 +635,13 @@ function VideoDictationView({
       })
     : false;
 
-  // ===== HELPER: Kiểm tra đã xem kết quả segment hiện tại chưa =====
   const hasViewedCurrentResult = currentSegment
     ? checkedResults[currentSegment.blanks[0]?.id] !== undefined
     : false;
 
-  // ===== HELPER: Tất cả segments đã hoàn thành chưa =====
   const allSegmentsCompleted =
     completedSegments.size === exercise.segments.length;
 
-  // ===== MEDIA PLAYBACK =====
-  // Simulate playback (cho demo)
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -757,7 +673,6 @@ function VideoDictationView({
     exercise.durationSeconds,
   ]);
 
-  // Sync active segment with media
   useEffect(() => {
     const segmentEl = segmentRefs.current[currentSegment?.id || ""];
     if (segmentEl) {
@@ -765,8 +680,6 @@ function VideoDictationView({
     }
     segmentStartTimeRef.current = Date.now();
   }, [activeSegmentIndex]);
-
-  // ===== HANDLERS =====
 
   const togglePlayback = () => setIsPlaying(!isPlaying);
 
@@ -784,7 +697,6 @@ function VideoDictationView({
     setIsPlaying(true);
   };
 
-  // Hint: Chỉ hoạt động khi segment CHƯA hoàn thành
   const handleHint = () => {
     if (!currentSegment || isCurrentSegmentCompleted) return;
 
@@ -803,11 +715,9 @@ function VideoDictationView({
     }
   };
 
-  // Handle segment completion - KHÔNG chuyển segment tự động
   const handleNext = () => {
     if (!currentSegment) return;
 
-    // BƯỚC 1: Chưa submit -> Check và hiển thị kết quả
     if (!hasViewedCurrentResult) {
       const newCheckedResults: CheckedResults = {};
       currentSegment.blanks.forEach((blank) => {
@@ -815,10 +725,9 @@ function VideoDictationView({
         newCheckedResults[blank.id] = checkBlank(blank, userAnswer);
       });
       setCheckedResults(newCheckedResults);
-      return; // DỪNG - user phải xem kết quả
+      return; 
     }
 
-    // BƯỚC 2: Đã xem kết quả -> Lưu đáp án đúng cho blank sai + đánh dấu hoàn thành
     const newCorrected: Record<string, string> = {};
     currentSegment.blanks.forEach((blank) => {
       const result = checkedResults[blank.id];
@@ -834,9 +743,8 @@ function VideoDictationView({
       return next;
     });
 
-    // BƯỚC 3: Kiểm tra nếu là câu cuối cùng
     if (activeSegmentIndex === exercise.segments.length - 1) {
-      // Complete exercise
+
       const segmentAnswers = exercise.segments.map((seg) => {
         const blankResults = seg.blanks.map((blank) => {
           const userAnswer = answers[blank.id] || "";
@@ -891,7 +799,7 @@ function VideoDictationView({
 
       onComplete(attempt);
     } else {
-      // BƯỚC 4: Chuyển sang segment tiếp theo
+
       const nextSegment = exercise.segments[activeSegmentIndex + 1];
       setCurrentTime(nextSegment.startTime);
       setCheckedResults({});
@@ -899,12 +807,10 @@ function VideoDictationView({
     }
   };
 
-  // Navigate to segment - Chỉ cho phép xem segment đã hoàn thành
   const goToSegment = (index: number) => {
     if (index < 0 || index >= exercise.segments.length) return;
     const segment = exercise.segments[index];
 
-    // Không cho nhảy tới segment phía sau (chưa làm)
     if (
       index > activeSegmentIndex &&
       !completedSegments.has(exercise.segments[index - 1]?.id || "")
@@ -915,7 +821,6 @@ function VideoDictationView({
     setCurrentTime(segment.startTime);
     setIsPlaying(false);
 
-    // Nếu segment đã hoàn thành, hiển thị kết quả đã lưu
     if (completedSegments.has(segment.id)) {
       const results: CheckedResults = {};
       segment.blanks.forEach((blank) => {
@@ -923,7 +828,7 @@ function VideoDictationView({
         results[blank.id] = checkBlank(blank, userAnswer);
       });
       setCheckedResults(results);
-      // Load corrected answers for this segment
+
       const corrected: Record<string, string> = {};
       segment.blanks.forEach((blank) => {
         if (correctedAnswers[blank.id]) {
@@ -938,7 +843,6 @@ function VideoDictationView({
     }
   };
 
-  // Render blank input component - theo kiểu Porrata
   const renderBlank = (blank: Blank, segmentId: string) => {
     const userAnswer = answers[blank.id] || "";
     const hintCount = hintRevealedCount[blank.id] || 0;
@@ -948,13 +852,11 @@ function VideoDictationView({
     const isSegmentCompleted = completedSegments.has(segmentId);
     const hasCorrectedAnswer = !!correctedAnswers[blank.id];
 
-    // Tính display text: userInput + remaining stars
     const answerLength = blank.answer.length;
     const userInputLength = userAnswer.length;
     const totalShown = Math.max(userInputLength, hintCount);
     const remainingStars = Math.max(0, answerLength - totalShown);
 
-    // Display = revealed hint + user typed + stars
     const hintPrefix = blank.answer.slice(0, hintCount);
     const userTypedPart = userAnswer.slice(hintCount);
     let displayText = hintPrefix + userTypedPart;
@@ -962,27 +864,26 @@ function VideoDictationView({
       displayText += "*".repeat(remainingStars);
     }
 
-    // Xác định text hiển thị và màu
     let finalText = displayText;
     let textColor = "text-text-tertiary";
     let hasLineThrough = false;
 
     if (isSegmentCompleted) {
-      // Đã hoàn thành: hiện đáp án đúng cho blank sai
+
       if (isCorrect) {
-        // Đúng: giữ user answer, màu xanh
+
         textColor = "text-success";
       } else if (hasCorrectedAnswer) {
-        // Sai: hiện đáp án đúng, màu vàng
+
         finalText = correctedAnswers[blank.id];
         textColor = "text-warning font-medium";
       }
     } else if (isChecked) {
-      // Đang xem kết quả (đã check nhưng chưa completed)
+
       if (isCorrect) {
         textColor = "text-success";
       } else {
-        // Sai: hiện user answer gạch ngang, màu đỏ
+
         textColor = "text-error";
         hasLineThrough = true;
       }
@@ -1053,7 +954,6 @@ function VideoDictationView({
     );
   };
 
-  // Render segment text with blanks
   const renderSegmentWithBlanks = (segment: TranscriptSegment) => {
     const words = segment.textEn.split(" ");
     const isCompleted = completedSegments.has(segment.id);
@@ -1074,12 +974,10 @@ function VideoDictationView({
     });
   };
 
-  // Count hints used in current segment
   const currentSegmentHintsUsed = currentSegment
     ? getSegmentHintCount(currentSegment.blanks, hintRevealedCount)
     : 0;
 
-  // Check if can hint more (still have blanks with remaining hints)
   const hasMoreHints = currentSegment
     ? findHintableBlank(currentSegment.blanks, hintRevealedCount) !== undefined
     : false;
@@ -1356,10 +1254,6 @@ function VideoDictationView({
   );
 }
 
-// ============================================================
-// RESULT VIEW
-// ============================================================
-
 function ResultView({
   exercise,
   attempt,
@@ -1483,10 +1377,6 @@ function ResultView({
     </main>
   );
 }
-
-// ============================================================
-// REVIEW VIEW
-// ============================================================
 
 function ReviewView({
   exercise,

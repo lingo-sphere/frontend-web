@@ -1,11 +1,3 @@
-// Updated: 2026-08-20
-// Leaderboard page:
-// - Countdown timer to month closing date
-// - Tabs for streak/learning/vocabulary
-// - Month navigation (prev/next)
-// - Podium top 3
-// - Full ranking list
-// - Rewards section
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -28,7 +20,7 @@ interface LeaderboardPageProps {
 }
 
 export function LeaderboardPage({ onAction: _onAction }: LeaderboardPageProps) {
-  useApp() // Initialize context
+  useApp() 
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonth())

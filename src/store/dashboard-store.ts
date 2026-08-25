@@ -1,11 +1,3 @@
-// Updated: 2026-08-17
-// Store chính của dashboard, quản lý:
-// - theme: light/dark mode (persist localStorage)
-// - activeNavItem: navigation state
-// - leaderboardPeriod: week/month/year
-// - selectedHeatmapDayId: ngày được chọn trên heatmap
-// - mobileSidebarOpen: toggle sidebar trên mobile
-// - sidebarCollapsed: thu gọn/mở rộng sidebar (252px ↔ 72px)
 
 import { useSyncExternalStore } from 'react'
 import { createStore } from 'zustand/vanilla'

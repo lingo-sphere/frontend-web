@@ -1,5 +1,3 @@
-// Updated: 2026-08-20
-// Courses page với tabs All Courses / My Learning
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'

@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Modal xác nhận xóa với các tùy chọn
 
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'

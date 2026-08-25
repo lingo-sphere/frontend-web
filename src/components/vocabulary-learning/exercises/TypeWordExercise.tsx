@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Type Word Exercise Component
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

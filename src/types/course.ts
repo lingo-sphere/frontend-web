@@ -1,10 +1,3 @@
-// Updated: 2026-08-17
-// Types cho Course system:
-// - Course: khóa học chính
-// - Chapter: chương trong khóa học
-// - Lesson: bài học trong chương
-// - LessonStatus: locked | available | in-progress | completed
-// - TestResult: kết quả bài kiểm tra
 
 export type LessonStatus = 'locked' | 'available' | 'in-progress' | 'completed'
 export type ChapterStatus = 'locked' | 'available' | 'in-progress' | 'completed'
@@ -20,7 +13,7 @@ export interface CourseProgress {
   baselineScore: BaselineScore | null
   currentChapterIndex: number
   currentLessonId: string | null
-  currentProgress: number // 0-100
+  currentProgress: number 
 }
 
 export interface BaselineScore {
@@ -40,7 +33,7 @@ export interface TestResult {
   speakingScore?: number
   writingScore?: number
   completedAt: string
-  improvement?: number // % so với baseline hoặc post-mini trước
+  improvement?: number 
 }
 
 export interface Lesson {
@@ -49,9 +42,9 @@ export interface Lesson {
   order: number
   title: string
   type: 'video' | 'audio' | 'reading' | 'mixed'
-  duration: number // seconds
+  duration: number 
   status: LessonStatus
-  progress: number // 0-100
+  progress: number 
   content: LessonContent
 }
 

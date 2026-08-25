@@ -1,11 +1,3 @@
-// Updated: 2026-08-20
-// Writing Route - Quản lý các trang con của Writing:
-// - /writing - Writing Home
-// - /writing/exercises - Exercise List
-// - /writing/exercise/:id - Exercise Detail
-// - /writing/workspace/:id - Writing Workspace
-// - /writing/result/:id - Result
-// - /writing/history - History
 
 import { useState, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -36,7 +28,6 @@ export function WritingRoute() {
   const navigate = useNavigate()
   const { '*': path } = useParams()
 
-  // State management
   const [currentView, setCurrentView] = useState<WritingView>(() => {
     if (path?.startsWith('exercises')) return 'exercises'
     if (path?.startsWith('exercise/')) return 'detail'
@@ -52,12 +43,10 @@ export function WritingRoute() {
   const [draftVersion, setDraftVersion] = useState<number>(1)
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false)
 
-  // Get exercise from ID
   const getExerciseById = useCallback((id: string): WritingExercise | undefined => {
     return writingExercises.find((ex) => ex.id === id)
   }, [])
 
-  // Navigation handlers
   const handleGoHome = useCallback(() => {
     setCurrentView('home')
     navigate('/writing')
@@ -115,7 +104,6 @@ export function WritingRoute() {
       console.warn('AI Writing evaluation fallback:', err)
     }
 
-    // Create submission (in real app, backend would create this)
     const submission: WritingSubmission = {
       id: `ws-${Date.now()}`,
       user_id: 'user-001',
@@ -200,7 +188,6 @@ export function WritingRoute() {
     }
   }, [getExerciseById, navigate, showAction])
 
-  // Render content based on current view
   const renderContent = () => {
     switch (currentView) {
       case 'exercises':

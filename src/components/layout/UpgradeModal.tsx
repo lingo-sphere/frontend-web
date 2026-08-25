@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Modal nang cap Premium - LingoSphere
 
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'

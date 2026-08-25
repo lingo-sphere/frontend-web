@@ -51,7 +51,6 @@ export function PublicDecksPage({ onAction }: PublicDecksPageProps) {
     }
   }, [])
 
-  // Filter and sort decks
   const filteredDecks = decks
     .filter((deck) =>
       deck.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

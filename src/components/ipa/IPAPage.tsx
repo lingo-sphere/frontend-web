@@ -1,10 +1,3 @@
-// Updated: 2026-08-20
-// IPA Page - Trang học phiên âm quốc tế:
-// - Vowels (Nguyên âm) + Diphthongs (Âm đôi)
-// - Consonants (Phụ âm)
-// - Mỗi symbol có symbol, examples, progress bar
-// - Ấn vào symbol để phát âm (hiệu ứng placeholder)
-// - Nút "Luyện tập IPA" ở đầu trang (chuyển đến bài luyện tập)
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,7 +24,7 @@ export function IPAPage({ onAction }: IPAPageProps) {
   const handlePlaySound = (symbol: IPASymbol) => {
     setPlayingSymbol(symbol.id);
     onAction(`${isVietnamese ? 'Phát âm' : 'Playing'}: ${symbol.symbol} (${symbol.soundName})`);
-    // Reset after animation
+
     setTimeout(() => setPlayingSymbol(null), 300);
   };
 

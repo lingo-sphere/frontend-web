@@ -1,5 +1,3 @@
-// Updated: 2026-08-20
-// Speaking Practice Route - LingoSphere
 
 import { useState, useCallback } from 'react'
 import { Layout } from '@/components/layout/Layout'
@@ -36,7 +34,6 @@ export function SpeakingRoute() {
   })
   const [userTranscript, setUserTranscript] = useState('')
 
-  // Navigation handlers
   const handleGoHome = useCallback(() => {
     setView('home')
     setSelectedExercise(null)
@@ -190,13 +187,12 @@ export function SpeakingRoute() {
 
   const handleNextExercise = useCallback(() => {
     if (!selectedExercise) return
-    // Find next exercise of same type
+
     const currentIndex = speakingExercises.findIndex(e => e.id === selectedExercise.id)
     const nextExercise = speakingExercises[(currentIndex + 1) % speakingExercises.length]
     handleSelectExercise(nextExercise)
   }, [selectedExercise, handleSelectExercise])
 
-  // Render content based on view
   const renderContent = () => {
     switch (view) {
       case 'list':

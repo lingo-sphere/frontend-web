@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Pronunciation Exercise Component
 
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'

@@ -1,8 +1,3 @@
-// Updated: 2026-08-17
-// Mock data cho Dictionary:
-// - lexicon: từ vựng (đơn từ & cụm từ)
-// - Fields match với tables lexical_items, meanings, example_sentences
-// - Có thể search theo word hoặc cụm từ chứa string
 
 export type WordForm = 'BASE' | 'PAST' | 'PAST_PARTICIPLE' | 'PRESENT_PARTICIPLE' | 'PLURAL' | 'COMPARATIVE' | 'SUPERLATIVE'
 export type MasteryLevel = 'NEW' | 'LEARNING' | 'FAMILIAR' | 'MASTERED'
@@ -33,11 +28,11 @@ export interface DictionaryEntry {
   isCommon: boolean
   wordForm: WordForm
   meanings: Meaning[]
-  relatedWords?: string[] // các cụm từ liên quan
+  relatedWords?: string[] 
 }
 
 export const dictionary: DictionaryEntry[] = [
-  // ===== Từ bắt đầu bằng "a" =====
+
   {
     id: 'lex_about',
     word: 'about',
@@ -112,7 +107,6 @@ export const dictionary: DictionaryEntry[] = [
     ],
   },
 
-  // ===== Từ bắt đầu bằng "b" =====
   {
     id: 'lex_bed',
     word: 'bed',
@@ -187,7 +181,6 @@ export const dictionary: DictionaryEntry[] = [
     ],
   },
 
-  // ===== Từ bắt đầu bằng "c" =====
   {
     id: 'lex_cat',
     word: 'cat',
@@ -255,7 +248,6 @@ export const dictionary: DictionaryEntry[] = [
     ],
   },
 
-  // ===== Từ bắt đầu bằng "t" =====
   {
     id: 'lex_topic',
     word: 'topic',
@@ -301,7 +293,6 @@ export const dictionary: DictionaryEntry[] = [
     ],
   },
 
-  // ===== Cụm từ - PHRASE =====
   {
     id: 'lex_deal_with_topic',
     word: 'deal with a topic',
@@ -590,18 +581,14 @@ export const dictionary: DictionaryEntry[] = [
   },
 ]
 
-/**
- * Search dictionary - tìm từ & cụm từ có chứa string query
- * Case-insensitive, match exact word or substring
- */
 export function searchDictionary(query: string): DictionaryEntry[] {
   if (!query.trim()) return []
 
   const q = query.toLowerCase().trim()
   return dictionary.filter((entry) => {
-    // Exact match word
+
     if (entry.wordLowercase === q) return true
-    // Phrase contains the query
+
     if (entry.wordLowercase.includes(q)) return true
     return false
   })

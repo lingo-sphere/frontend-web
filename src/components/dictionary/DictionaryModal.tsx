@@ -1,5 +1,3 @@
-// Updated: 2026-08-22
-// Dictionary Modal
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'

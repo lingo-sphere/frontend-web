@@ -1,6 +1,5 @@
 import type { UserNote, NoteTargetType } from '@/types/notes'
 
-// Sample notes data
 export const sampleNotes: UserNote[] = [
   {
     id: 'note-001',
@@ -124,7 +123,6 @@ export const sampleNotes: UserNote[] = [
   },
 ]
 
-// Helper functions
 export function getNotesByTargetType(targetType: NoteTargetType): UserNote[] {
   return sampleNotes.filter(
     (note) => note.targetType === targetType && note.status === 'ACTIVE'

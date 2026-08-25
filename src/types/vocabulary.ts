@@ -1,5 +1,3 @@
-// Updated: 2026-08-20
-// TypeScript interfaces cho vocabulary page - Synced with vocabulary-service.dbml
 
 export interface VocabularyStats {
   totalCards: number
@@ -44,11 +42,11 @@ export interface SavedVocabulary {
   lexical_item_id: string
   user_id: string
   added_at: string
-  deck_id?: string // Nếu có thì đã được thêm vào deck
+  deck_id?: string 
   lexical_item: LexicalItem
-  // Tất cả meanings của từ này
+
   meanings?: Meaning[]
-  // Meaning chính (backward compatible)
+
   primary_meaning?: Meaning
   learning_status?: LearningStatus
   review_count?: number
@@ -99,10 +97,6 @@ export interface ExampleSentence {
   difficulty_level?: string
 }
 
-// ============================================================
-// DECK CARD - Liên kết từ đã lưu với deck
-// ============================================================
-
 export interface DeckCard {
   id: string
   deck_id: string
@@ -110,14 +104,10 @@ export interface DeckCard {
   user_notes?: string
   order_index?: number
   created_at: string
-  // Nested data
+
   saved_vocabulary?: SavedVocabulary
   lexical_item?: LexicalItem
 }
-
-// ============================================================
-// MODAL TYPES
-// ============================================================
 
 export interface SelectDeckModalProps {
   isOpen: boolean
