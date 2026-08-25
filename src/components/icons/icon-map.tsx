@@ -87,6 +87,10 @@ import {
   X,
   XCircle,
   ZapOff,
+  Bot,
+  MessageSquare,
+  Send,
+  LogOut,
 } from 'lucide-react'
 
 const iconMap: Record<string, LucideIcon> = {
@@ -140,6 +144,10 @@ const iconMap: Record<string, LucideIcon> = {
   list: List,
   lock: Lock,
   logIn: ArrowRight,
+  logOut: LogOut,
+  bot: Bot,
+  messageSquare: MessageSquare,
+  send: Send,
   mapPin: MapPin,
   megaphone: Megaphone,
   menu: Menu,

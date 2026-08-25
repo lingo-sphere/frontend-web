@@ -9,8 +9,10 @@ import { GraduationCap } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { vocabularyService } from '@/services/vocabulary.service'
 import { mockDecks, allVocabularyWords } from '@/data/vocabulary-learn-data'
 import type { VocabularyDeck, LearningResult } from '@/types/vocabulary-learn'
+import type { Deck, LexicalItem } from '@/types/api.types'
 import { VocabularyLearningSession } from '@/components/vocabulary-learning/VocabularyLearningSession'
 import { LearningResultView } from '@/components/vocabulary-learning/LearningResultView'
 
@@ -25,8 +27,38 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
   const navigate = useNavigate()
   const { deckId } = useParams<{ deckId?: string }>()
   const [viewMode, setViewMode] = useState<ViewMode>('home')
+  const [decks, setDecks] = useState<VocabularyDeck[]>(mockDecks)
   const [selectedDeck, setSelectedDeck] = useState<VocabularyDeck | null>(null)
   const [learningResult, setLearningResult] = useState<LearningResult | null>(null)
+
+  // Fetch live decks from Backend API
+  useEffect(() => {
+    let isMounted = true
+    const fetchDecks = async () => {
+      try {
+        const liveDecks: Deck[] = await vocabularyService.getPublicDecks()
+        if (isMounted && Array.isArray(liveDecks) && liveDecks.length > 0) {
+          const mapped: VocabularyDeck[] = liveDecks.map((d, index) => ({
+            id: d.id || d._id || `deck-${index}`,
+            title: d.title,
+            description: d.description || '',
+            coverColor: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e', '#e17055'][index % 5],
+            cardCount: d.total_cards || d.cards?.length || 20,
+            creatorType: 'SYSTEM',
+            visibility: 'PUBLIC',
+            vocabularyItems: allVocabularyWords,
+          }))
+          setDecks(mapped)
+        }
+      } catch {
+        // Fallback to mockDecks
+      }
+    }
+    fetchDecks()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Auto-start learning if deckId is provided
   useEffect(() => {
@@ -143,7 +175,7 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
           Choose a Deck
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {mockDecks.map((deck) => (
+          {decks.map((deck) => (
             <Card
               key={deck.id}
               className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"

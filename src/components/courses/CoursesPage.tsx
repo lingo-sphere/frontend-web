@@ -1,6 +1,7 @@
 // Updated: 2026-08-20
 // Courses page với tabs All Courses / My Learning
 
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Play, BookOpen, Users, Trophy } from 'lucide-react'
@@ -9,19 +10,56 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { ComingSoon } from '@/components/common/ComingSoon'
+import { courseService } from '@/services/course.service'
 import { allCourses } from '@/data/courses-data'
 import type { CourseCardData } from '@/data/courses-data'
+import type { Course } from '@/types/api.types'
 
 interface CoursesPageProps {
   onAction: (message: string) => void
 }
 
-const myCourses = allCourses.filter((c: CourseCardData) => c.progress > 0)
-
 export function CoursesPage({ onAction: _onAction }: CoursesPageProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
+
+  const [courses, setCourses] = useState<CourseCardData[]>(allCourses)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchCourses = async () => {
+      try {
+        const liveCourses: Course[] = await courseService.getAllCourses()
+        if (isMounted && Array.isArray(liveCourses) && liveCourses.length > 0) {
+          const mapped: CourseCardData[] = liveCourses.map((c) => ({
+            id: c.id || c._id || '',
+            title: c.title,
+            description: c.description,
+            level: c.level,
+            lessons: c.total_lessons || 10,
+            chapters: c.chapters?.length || 3,
+            students: 1250,
+            duration: `${Math.round((c.total_duration_minutes || 120) / 60)}h`,
+            progress: 0,
+            category: c.category || 'general',
+          }))
+          setCourses(mapped)
+        }
+      } catch {
+        // Use initial mock courses fallback
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+    fetchCourses()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const myCourses = courses.filter((c) => c.progress > 0)
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
@@ -47,11 +85,19 @@ export function CoursesPage({ onAction: _onAction }: CoursesPageProps) {
             title={isVietnamese ? 'Tất cả khóa học' : 'All Courses'}
             description={isVietnamese ? 'Duyệt và đăng ký khóa học' : 'Browse and enroll in courses'}
           />
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {allCourses.map((course: CourseCardData) => (
-              <CourseCard key={course.id} course={course} onSelect={() => navigate(`/course/${course.id}`)} isVietnamese={isVietnamese} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-64 rounded-2xl bg-surface-subtle animate-pulse border border-border" />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {courses.map((course: CourseCardData) => (
+                <CourseCard key={course.id} course={course} onSelect={() => navigate(`/course/${course.id}`)} isVietnamese={isVietnamese} />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="my">

@@ -18,7 +18,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Icon } from '@/components/icons/icon-map'
 import { DictionaryModal } from '@/components/dictionary/DictionaryModal'
 import { UpgradeModal } from '@/components/layout/UpgradeModal'
+import { AuthModal } from '@/components/auth/AuthModal'
 import { useDashboardStore } from '@/store/dashboard-store'
+import { useAuthStore } from '@/store/auth-store'
 import { mockNotifications, getUnreadCount, markAsRead } from '@/data/notifications-data'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification } from '@/types/notification'
@@ -32,11 +34,13 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const [language, setLanguage] = useState<'VI' | 'EN'>(i18n.language === 'en' ? 'EN' : 'VI')
   const [dictionaryOpen, setDictionaryOpen] = useState(false)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
   const theme = useDashboardStore((state) => state.theme)
   const toggleTheme = useDashboardStore((state) => state.toggleTheme)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
+  const { user, isAuthenticated, logout } = useAuthStore()
 
   const unreadCount = getUnreadCount(notifications)
 
@@ -237,8 +241,62 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
               </>
             )}
           </div>
+
+          {/* User Auth Profile Area */}
+          {isAuthenticated && user ? (
+            <div className="flex items-center gap-2 border-l border-border pl-3">
+              <button
+                onClick={() => (window.location.href = '/profile')}
+                className="flex items-center gap-2 rounded-xl p-1 hover:bg-surface-subtle transition-colors text-left"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs ring-2 ring-primary/20 overflow-hidden">
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
+                  ) : (
+                    user.full_name?.charAt(0)?.toUpperCase() || 'U'
+                  )}
+                </div>
+                <div className="hidden sm:block">
+                  <div className="text-xs font-bold text-text-primary leading-tight line-clamp-1">
+                    {user.full_name || 'Học viên'}
+                  </div>
+                  <div className="text-[10px] text-text-tertiary">
+                    {user.email}
+                  </div>
+                </div>
+              </button>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-text-tertiary hover:text-error rounded-lg"
+                    onClick={() => logout()}
+                  >
+                    <Icon name="logOut" size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Đăng xuất</TooltipContent>
+              </Tooltip>
+            </div>
+          ) : (
+            <Button
+              onClick={() => setAuthModalOpen(true)}
+              className="bg-primary hover:bg-primary/90 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm h-9"
+            >
+              <Icon name="logIn" size={15} className="mr-1.5" />
+              <span>{language === 'VI' ? 'Đăng nhập' : 'Sign in'}</span>
+            </Button>
+          )}
         </div>
       </header>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
 
       {/* Dictionary Modal */}
       <DictionaryModal

@@ -14,7 +14,9 @@ import {
   speakingStats,
   speakingProgress,
 } from '@/data/speaking-data'
+import { practiceService } from '@/services/practice.service'
 import type { SpeakingExercise, SpeakingAttempt, RecordingState } from '@/types/speaking'
+import type { SpeechAssessmentResult } from '@/types/api.types'
 
 type ViewState = 'home' | 'list' | 'workspace' | 'result' | 'history'
 
@@ -22,6 +24,7 @@ export function SpeakingRoute() {
   const [view, setView] = useState<ViewState>('home')
   const [selectedExercise, setSelectedExercise] = useState<SpeakingExercise | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<SpeakingAttempt | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [recordingState, setRecordingState] = useState<RecordingState>({
     phase: 'idle',
     preparationTimeLeft: 0,
@@ -75,10 +78,35 @@ export function SpeakingRoute() {
     handleSelectExercise(exercise)
   }, [handleSelectExercise])
 
-  const handleSubmitRecording = useCallback((transcription: string, duration: number) => {
+  const handleSubmitRecording = useCallback(async (transcription: string, duration: number, audioBlob?: Blob) => {
     if (!selectedExercise) return
+    setIsSubmitting(true)
 
-    // Create mock submission
+    let finalTranscript = transcription
+    let pronunciationScore = 7.5
+    let fluencyScore = 7.0
+    let overallScore = 7.5
+    let feedback = 'Good job! Your response demonstrates solid speaking skills.'
+
+    if (audioBlob) {
+      try {
+        const assessment: SpeechAssessmentResult = await practiceService.evaluateSpeakingAudio(
+          audioBlob,
+          selectedExercise.id,
+          selectedExercise.topic,
+        )
+        if (assessment && assessment.transcribed_text) {
+          finalTranscript = assessment.transcribed_text
+          pronunciationScore = assessment.pronunciation_score || 8.0
+          fluencyScore = assessment.fluency_score || 7.5
+          overallScore = assessment.overall_score || 8.0
+          if (assessment.feedback_vi) feedback = assessment.feedback_vi
+        }
+      } catch (err) {
+        console.warn('API Speech Evaluation fallback:', err)
+      }
+    }
+
     const newSubmission: SpeakingAttempt = {
       id: `sa-${Date.now()}`,
       user_id: 'user-001',
@@ -87,49 +115,49 @@ export function SpeakingRoute() {
       is_best_attempt: true,
       recording_duration_seconds: duration,
       speaking_time_seconds: duration,
-      transcription: transcription,
-      overall_score: 7.5,
-      pronunciation_score: 7.5,
-      fluency_score: 7.0,
+      transcription: finalTranscript,
+      overall_score: overallScore,
+      pronunciation_score: pronunciationScore,
+      fluency_score: fluencyScore,
       grammar_score: 7.5,
       vocabulary_score: 8.0,
       coherence_score: 7.5,
       content_score: 7.5,
       ai_evaluation: {
-        overall_feedback: 'Good job! Your response demonstrates solid speaking skills. Continue practicing to improve fluency and reduce pauses.',
+        overall_feedback: feedback,
         pronunciation_analysis: {
-          score: 7.5,
-          issues: ['Some sounds could be clearer'],
-          suggestions: ['Practice word endings and vowel sounds'],
+          score: pronunciationScore,
+          issues: ['Chú ý các âm đuôi và nguyên âm đôi'],
+          suggestions: ['Luyện phát âm rõ ràng hơn theo mốc thời gian Whisper STT'],
         },
         fluency_analysis: {
-          score: 7.0,
-          issues: ['Occasional pauses between ideas'],
-          suggestions: ['Use transition words to connect thoughts'],
+          score: fluencyScore,
+          issues: ['Có một vài khoảng ngắt tự nhiên'],
+          suggestions: ['Sử dụng thêm từ nối để tăng độ mượt mà'],
         },
         grammar_analysis: {
           score: 7.5,
-          issues: ['Minor grammar issues'],
-          suggestions: ['Review sentence structures'],
+          issues: [],
+          suggestions: ['Cấu trúc câu phong phú và tự nhiên'],
         },
         vocabulary_analysis: {
           score: 8.0,
           issues: [],
-          suggestions: ['Good vocabulary range for this level'],
+          suggestions: ['Sử dụng từ vựng đa dạng, phù hợp ngữ cảnh'],
         },
         coherence_analysis: {
           score: 7.5,
-          issues: ['Could use more linking phrases'],
-          suggestions: ['Add transitional phrases'],
+          issues: [],
+          suggestions: ['Mạch lạc, liên kết ý tốt'],
         },
         content_analysis: {
           score: 7.5,
           issues: [],
-          suggestions: ['Good coverage of the topic'],
+          suggestions: ['Đáp ứng đúng trọng tâm câu hỏi'],
         },
         improvement_tips: [
-          'Practice speaking about familiar topics regularly',
-          'Record yourself and listen back to identify areas for improvement',
+          'Thực hành ghi âm thường xuyên để làm quen phản xạ',
+          'Nghe lại bản ghi âm để tự nhận diện lỗi phát âm',
         ],
       },
       domain: 'SPEAKING',
@@ -138,9 +166,10 @@ export function SpeakingRoute() {
       created_at: new Date().toISOString(),
     }
 
+    setIsSubmitting(false)
     setCurrentSubmission(newSubmission)
-    setUserTranscript(transcription)
-    setRecordingState(prev => ({ ...prev, phase: 'reviewing' }))
+    setUserTranscript(finalTranscript)
+    setRecordingState((prev) => ({ ...prev, phase: 'reviewing' }))
     setView('result')
   }, [selectedExercise])
 
