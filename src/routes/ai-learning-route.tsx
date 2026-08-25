@@ -52,7 +52,8 @@ export function AiLearningRoute() {
         res?.data?.text ||
         'Xin lỗi, tôi gặp trục trặc khi kết nối với máy chủ AI. Vui lòng thử lại sau.'
       setMessages((prev) => [...prev, { role: 'assistant', content: aiReply }])
-    } catch {
+    } catch (err) {
+      console.error('AI chat error:', err)
       setMessages((prev) => [
         ...prev,
         {
