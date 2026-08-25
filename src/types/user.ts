@@ -67,11 +67,15 @@ export interface UserPreferences {
   language: string
   theme: 'light' | 'dark' | 'system'
   notifications: {
+    allEnabled?: boolean
+    marketingEnabled?: boolean
     email: boolean
     push: boolean
     sound: boolean
-    dailyReminder: boolean
-    weeklyReport: boolean
+    sms?: boolean
+    dailyReminder?: boolean
+    weeklyReport?: boolean
+    [key: string]: any
   }
   learning: {
     autoPlayAudio: boolean

@@ -5,11 +5,12 @@
 // - Pre-test dialog
 // - Lesson player integration
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Play, Trophy, ChevronDown, ChevronRight, Lock, Check, Circle, BookOpen } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { courseService } from '@/services/course.service'
 import { demoCourse } from '@/data/course-data'
 import type { Lesson, Chapter, Course } from '@/types/course'
 import { LessonPlayer } from './LessonPlayer'
@@ -22,13 +23,39 @@ interface CourseDetailPageProps {
   onBack: () => void
 }
 
-export function CourseDetailPage({ onBack }: CourseDetailPageProps) {
+export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   const [course, setCourse] = useState<Course>(demoCourse)
   const [expandedChapter, setExpandedChapter] = useState<string>('ch-02')
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
   const [showPreTest, setShowPreTest] = useState(false)
   const [showTestResult, setShowTestResult] = useState<TestResult | null>(null)
   const [testResultType, setTestResultType] = useState<string>('')
+
+  useEffect(() => {
+    if (!courseId) return
+    let isMounted = true
+    const fetchCourseData = async () => {
+      try {
+        const liveCourse = await courseService.getCourseById(courseId)
+        if (isMounted && liveCourse) {
+          setCourse((prev) => ({
+            ...prev,
+            id: liveCourse.id || liveCourse._id || courseId,
+            title: liveCourse.title || prev.title,
+            description: liveCourse.description || prev.description,
+            level: (liveCourse.level as any) || prev.level,
+            thumbnail: liveCourse.thumbnail_url || (prev as any).thumbnail || '',
+          }))
+        }
+      } catch {
+        // Fallback to demoCourse
+      }
+    }
+    fetchCourseData()
+    return () => {
+      isMounted = false
+    }
+  }, [courseId])
 
   // Calculate progress
   const completedLessons = course.chapters.reduce((acc, ch) =>

@@ -1,10 +1,4 @@
-// Updated: 2026-08-17
-// Vocabulary page - vocabulary hub:
-// - Section 1: Learning Statistics + Review Now button + Vocabulary Status (bar chart)
-// - Section 2: My Decks (user's own) + Popular/Community links
-// - Section 3: Common Vocabulary Packs (filterable by tags)
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Layers3, Star, Globe, Info, Plus, Users, GraduationCap, Bookmark, HelpCircle } from 'lucide-react'
@@ -14,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { Icon } from '@/components/icons/icon-map'
 import { useDashboardStore } from '@/store/dashboard-store'
+import { vocabularyService } from '@/services/vocabulary.service'
+import type { Deck } from '@/types/api.types'
 import { vocabularyStats, vocabularyStatus, commonPacks, oxfordPacks, vocabularyTagFilters, userDecks } from '@/data/vocabulary-data'
 import type { VocabularyPack, UserDeck } from '@/types/vocabulary'
 
@@ -27,6 +23,33 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
   const navigate = useNavigate()
   const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
   const [activeTag, setActiveTag] = useState('all')
+  const [liveDecks, setLiveDecks] = useState<UserDeck[]>(userDecks)
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchVocabularyData = async () => {
+      try {
+        const decks = await vocabularyService.getPublicDecks()
+        if (isMounted && Array.isArray(decks) && decks.length > 0) {
+          const mapped: UserDeck[] = decks.map((d, idx) => ({
+            id: d.id || d._id || `deck-${idx}`,
+            title: d.title,
+            cardCount: d.total_cards || 20,
+            createdAt: new Date().toISOString(),
+            description: d.description,
+            cefrLevel: d.cefr_level || 'A2',
+          }))
+          setLiveDecks(mapped)
+        }
+      } catch {
+        // Fallback to userDecks
+      }
+    }
+    fetchVocabularyData()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const filteredCommonPacks = activeTag === 'all'
     ? commonPacks

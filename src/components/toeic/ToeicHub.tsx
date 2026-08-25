@@ -1,16 +1,12 @@
-// ============================================================
-// TOEIC Hub - Trang chính của TOEIC Practice
-// LingoSphere
-// Updated: 2026-08-22 - Added i18n support
-// ============================================================
-
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { Search, Filter, Trophy, Clock, Users, ChevronRight, Star, CheckCircle2, BookOpen, Headphones, FileText } from 'lucide-react'
+import { Search, Filter, Trophy, Clock, Users, ChevronRight, Star, BookOpen, Headphones, FileText } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { examService } from '@/services/exam.service'
+import type { Exam } from '@/types/api.types'
 import { toeicExams, toeicParts, toeicYearFilters, toeicSeriesFilters, toeicDifficultyFilters } from '@/data/toeic-data'
 import type { ToeicExam, ToeicExamFilters, ToeicPart } from '@/types/toeic'
 
@@ -195,7 +191,7 @@ function PartOverview({ isVietnamese }: { isVietnamese: boolean }) {
               <div key={part.id} className="flex items-center justify-between rounded-lg bg-surface-subtle p-2">
                 <div>
                   <span className="text-[13px] font-medium text-text-primary">Part {part.partNumber}</span>
-                  <span className="ml-2 text-[11px] text-text-tertiary">{isVietnamese ? part.nameVi : part.nameEn}</span>
+                  <span className="ml-2 text-[11px] text-text-tertiary">{part.nameVi}</span>
                 </div>
                 <span className="text-[11px] text-text-tertiary">{part.standardQuestionCount} {isVietnamese ? 'câu' : 'q'}</span>
               </div>
@@ -223,7 +219,7 @@ function PartOverview({ isVietnamese }: { isVietnamese: boolean }) {
               <div key={part.id} className="flex items-center justify-between rounded-lg bg-surface-subtle p-2">
                 <div>
                   <span className="text-[13px] font-medium text-text-primary">Part {part.partNumber}</span>
-                  <span className="ml-2 text-[11px] text-text-tertiary">{isVietnamese ? part.nameVi : part.nameEn}</span>
+                  <span className="ml-2 text-[11px] text-text-tertiary">{part.nameVi}</span>
                 </div>
                 <span className="text-[11px] text-text-tertiary">{part.standardQuestionCount} {isVietnamese ? 'câu' : 'q'}</span>
               </div>
@@ -243,6 +239,7 @@ export function ToeicHub() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
+  const [exams, setExams] = useState<ToeicExam[]>(toeicExams)
   const [filters, setFilters] = useState<ToeicExamFilters>({
     year: 'all',
     series: 'all',
@@ -250,9 +247,44 @@ export function ToeicHub() {
   })
   const [searchQuery, setSearchQuery] = useState('')
 
+  useEffect(() => {
+    let isMounted = true
+    const fetchExams = async () => {
+      try {
+        const liveExams: Exam[] = await examService.getExams()
+        if (isMounted && Array.isArray(liveExams) && liveExams.length > 0) {
+          const mapped: ToeicExam[] = liveExams.map((e, idx) => ({
+            id: e.id || e._id || `exam-${idx}`,
+            code: e.code || `TOEIC-TEST-${idx + 1}`,
+            title: e.title,
+            description: 'Đề thi chuẩn cấu trúc ETS 200 câu hỏi 120 phút',
+            examSeries: 'ETS',
+            releaseYear: e.year || 2024,
+            testNumber: idx + 1,
+            difficultyLevel: 'MEDIUM',
+            estimatedDurationMinutes: e.duration_minutes || 120,
+            questionCount: e.total_questions || 200,
+            isOfficial: true,
+            isFullTest: true,
+            isPublished: true,
+            examType: 'FULL_TEST',
+            skillsEnabled: 'LR',
+          }))
+          setExams(mapped)
+        }
+      } catch {
+        // Fallback to toeicExams
+      }
+    }
+    fetchExams()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   // Filter exams
   const filteredExams = useMemo(() => {
-    return toeicExams.filter(exam => {
+    return exams.filter(exam => {
       // Search
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase()

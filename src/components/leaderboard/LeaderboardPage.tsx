@@ -7,12 +7,14 @@
 // - Full ranking list
 // - Rewards section
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useApp } from '@/contexts/AppContext'
+import { userService } from '@/services/user.service'
+import type { LeaderboardEntry } from '@/types/api.types'
 import { getCurrentMonth, getLeaderboard, getNextMonth, getPrevMonth, getDaysUntilMonthEnd, getMonthLabel } from '@/data/leaderboard-data'
 import type { LeaderboardType } from '@/types/dashboard'
 import { LeaderboardCountdown } from './LeaderboardCountdown'
@@ -31,6 +33,25 @@ export function LeaderboardPage({ onAction: _onAction }: LeaderboardPageProps) {
   const isVietnamese = i18n.language === 'vi'
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonth())
   const [leaderboardType, setLeaderboardType] = useState<LeaderboardType>('streak')
+  const [liveEntries, setLiveEntries] = useState<LeaderboardEntry[]>([])
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchLeaderboard = async () => {
+      try {
+        const data = await userService.getLeaderboard('weekly')
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setLiveEntries(data)
+        }
+      } catch {
+        // Fallback to local leaderboard data
+      }
+    }
+    fetchLeaderboard()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const leaderboard = getLeaderboard(currentMonth)
   const daysLeft = getDaysUntilMonthEnd()

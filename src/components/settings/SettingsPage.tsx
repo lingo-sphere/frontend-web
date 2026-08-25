@@ -373,14 +373,14 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Change Password Modal */}
-      {showPasswordModal && <ChangePasswordModal onClose={() => setShowPasswordModal(false)} isVietnamese={isVietnamese} />}
+      {showPasswordModal && <ChangePasswordModal isVietnamese={isVietnamese} onClose={() => setShowPasswordModal(false)} />}
     </main>
   )
 }
 
 // Change password modal
 function ChangePasswordModal({ onClose, isVietnamese }: { onClose: () => void; isVietnamese: boolean }) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [error, setError] = useState('')
 

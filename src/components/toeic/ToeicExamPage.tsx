@@ -409,7 +409,7 @@ export function ToeicExamPage() {
       case 'LISTENING': return 45 * 60
       case 'READING': return 96 * 60
       case 'PART':
-        const partTiming = PART_TIMINGS[parts[0]]
+        const partTiming = (PART_TIMINGS as any)[parts[0]]
         return partTiming?.seconds || 0
       default: return 0
     }
@@ -742,9 +742,9 @@ export function ToeicExamPage() {
               <Badge variant="default" className="bg-primary">Part {currentPart}</Badge>
               <span className="text-[12px] text-text-secondary">{getPartByNumber(currentPart)?.nameVi}</span>
             </div>
-            {PART_TIPS[currentPart] && (
+            {(PART_TIPS as any)[currentPart] && (
               <div className="max-w-md rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800">
-                💡 {PART_TIPS[currentPart]}
+                💡 {(PART_TIPS as any)[currentPart]}
               </div>
             )}
           </div>
@@ -856,11 +856,11 @@ export function ToeicExamPage() {
                 <div className="space-y-2 text-[12px]">
                   <div className="flex justify-between">
                     <span className="text-text-secondary">{isVietnamese ? 'Số câu' : 'Questions'}</span>
-                    <span className="font-medium">{PART_TIMINGS[currentPart]?.questions || 0}</span>
+                    <span className="font-medium">{(PART_TIMINGS as any)[currentPart]?.questions || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-secondary">{isVietnamese ? 'Thời gian' : 'Time'}</span>
-                    <span className="font-medium">{PART_TIMINGS[currentPart]?.description || 'N/A'}</span>
+                    <span className="font-medium">{(PART_TIMINGS as any)[currentPart]?.description || 'N/A'}</span>
                   </div>
                 </div>
               </CardContent>

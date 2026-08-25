@@ -1,25 +1,27 @@
-// Updated: 2026-08-22
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SectionHeading } from "@/components/dashboard/SectionHeading";
 import { Icon } from "@/components/icons/icon-map";
-import {
-  currentUser,
-  userAchievements,
-  userActivities,
-  leaderboardData,
-  getUserRank,
-  getXPForNextLevel,
-} from "@/data/user-data";
+import { useAuthStore } from "@/store/auth-store";
+import { userService } from "@/services/user.service";
 import type {
   User,
   EditProfileForm,
   Achievement,
   Activity,
 } from "@/types/user";
+import type { GamificationProfile, LeaderboardEntry } from "@/types/api.types";
+import {
+  currentUser as defaultUser,
+  userAchievements,
+  userActivities,
+  leaderboardData as defaultLeaderboard,
+  getUserRank,
+  getXPForNextLevel,
+} from "@/data/user-data";
 
 function Avatar({ src, size = "md", editable = false, onClick }: {
   src?: string; size?: "sm" | "md" | "lg" | "xl"; editable?: boolean; onClick?: () => void;
@@ -244,17 +246,17 @@ function ChangePasswordModal({ onClose }: { onClose: () => void }) {
 function LeaderboardSection() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const currentRank = getUserRank(currentUser.id);
+  const currentRank = getUserRank(defaultUser.id);
   return (
     <div className="space-y-4">
       <div className="bg-primary-10 rounded-xl p-4 flex items-center gap-4">
         <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg">#{currentRank}</div>
         <div className="flex-1">
           <div className="font-medium text-text-primary">{isVietnamese ? 'Xếp hạng của bạn' : 'Your ranking'}</div>
-          <div className="text-sm text-text-secondary">{isVietnamese ? 'Top' : 'Top'} {Math.round((1 - currentRank / leaderboardData.length) * 100)}% {isVietnamese ? 'người học' : 'learners'}</div>
+          <div className="text-sm text-text-secondary">{isVietnamese ? 'Top' : 'Top'} {Math.round((1 - currentRank / defaultLeaderboard.length) * 100)}% {isVietnamese ? 'người học' : 'learners'}</div>
         </div>
       </div>
-      {leaderboardData.slice(0, 5).map((user, index) => (
+      {defaultLeaderboard.slice(0, 5).map((user: any, index: number) => (
         <div key={user.userId} className={`bg-surface-subtle rounded-xl p-3 flex items-center gap-3 ${user.isCurrentUser ? "ring-2 ring-primary" : ""}`}>
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? "bg-yellow text-yellow" : index === 1 ? "bg-gray-300 text-gray" : index === 2 ? "bg-amber-600 text-white" : "bg-surface text-text-tertiary"}`}>{index + 1}</div>
           <Avatar src={user.avatar} size="sm" />
@@ -272,9 +274,17 @@ function LeaderboardSection() {
 export function UserProfileContent() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const { user } = useAuthStore()
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "achievements" | "activity" | "leaderboard">("overview");
+
+  const activeUser = {
+    ...defaultUser,
+    displayName: user?.full_name || defaultUser.displayName,
+    avatar: user?.avatar_url || defaultUser.avatar,
+    email: user?.email || defaultUser.email,
+  }
 
   const tabs = [
     { id: "overview", label: isVietnamese ? "Tổng quan" : "Overview", icon: "layout" },
@@ -291,14 +301,14 @@ export function UserProfileContent() {
         <div className="h-32 bg-linear-to-r from-primary to-primary-hover" />
         <CardContent className="px-8 pb-8 pt-4">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-14">
-            <Avatar src={currentUser.avatar} size="xl" editable onClick={() => setShowEditModal(true)} />
+            <Avatar src={activeUser.avatar} size="xl" editable onClick={() => setShowEditModal(true)} />
             <div className="flex-1 text-center sm:text-left">
               <div className="flex items-center gap-2 justify-center sm:justify-start">
-                <h2 className="text-xl font-bold text-text-primary">{currentUser.displayName}</h2>
-                {currentUser.isVerified && <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center"><Icon name="check" size={12} className="text-white" /></div>}
+                <h2 className="text-xl font-bold text-text-primary">{activeUser.displayName}</h2>
+                {activeUser.isVerified && <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center"><Icon name="check" size={12} className="text-white" /></div>}
               </div>
-              <p className="text-sm text-text-secondary">@{currentUser.username}</p>
-              <p className="text-sm text-text-tertiary mt-1 line-clamp-2">{currentUser.bio}</p>
+              <p className="text-sm text-text-secondary">@{activeUser.username}</p>
+              <p className="text-sm text-text-tertiary mt-1 line-clamp-2">{activeUser.bio}</p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowEditModal(true)}><Icon name="edit" size={16} /><span className="ml-1 hidden sm:inline">{isVietnamese ? 'Chỉnh sửa' : 'Edit'}</span></Button>
@@ -306,10 +316,10 @@ export function UserProfileContent() {
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-            <div className="bg-surface-subtle rounded-xl p-3 text-center"><div className="text-xl font-bold text-primary">{currentUser.stats.level}</div><div className="text-xs text-text-tertiary">{isVietnamese ? 'Cấp độ' : 'Level'}</div></div>
-            <div className="bg-surface-subtle rounded-xl p-3 text-center"><div className="text-xl font-bold text-warning">{currentUser.stats.currentStreak}</div><div className="text-xs text-text-tertiary">Streak 🔥</div></div>
-            <div className="bg-surface-subtle rounded-xl p-3 text-center"><div className="text-xl font-bold text-success">{currentUser.stats.averageAccuracy}%</div><div className="text-xs text-text-tertiary">{isVietnamese ? 'Độ chính xác' : 'Accuracy'}</div></div>
-            <div className="bg-surface-subtle rounded-xl p-3 text-center"><div className="text-xl font-bold text-info">{currentUser.stats.totalVocabularyLearned}</div><div className="text-xs text-text-tertiary">{isVietnamese ? 'Từ vựng' : 'Vocabulary'}</div></div>
+            <div className="bg-surface-subtle rounded-xl p-3 text-center"><div className="text-xl font-bold text-primary">{activeUser.stats.level}</div><div className="text-xs text-text-tertiary">{isVietnamese ? 'Cấp độ' : 'Level'}</div></div>
+            <div className="bg-surface-subtle rounded-xl p-3 text-center"><div className="text-xl font-bold text-warning">{activeUser.stats.currentStreak}</div><div className="text-xs text-text-tertiary">Streak 🔥</div></div>
+            <div className="bg-surface-subtle rounded-xl p-3 text-center"><div className="text-xl font-bold text-success">{activeUser.stats.averageAccuracy}%</div><div className="text-xs text-text-tertiary">{isVietnamese ? 'Độ chính xác' : 'Accuracy'}</div></div>
+            <div className="bg-surface-subtle rounded-xl p-3 text-center"><div className="text-xl font-bold text-info">{activeUser.stats.totalVocabularyLearned}</div><div className="text-xs text-text-tertiary">{isVietnamese ? 'Từ vựng' : 'Vocabulary'}</div></div>
           </div>
         </CardContent>
       </Card>
@@ -328,21 +338,21 @@ export function UserProfileContent() {
           <div className="lg:col-span-2 space-y-4">
             <h3 className="font-semibold text-text-primary">{isVietnamese ? 'Thống kê học tập' : 'Learning Statistics'}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <StatCard icon="book" label={isVietnamese ? 'Bài học' : 'Exercises'} value={currentUser.stats.totalExercises} color="primary" />
-              <StatCard icon="headphones" label={isVietnamese ? 'Bài nghe' : 'Listening'} value={currentUser.stats.totalListeningExercises} color="info" />
-              <StatCard icon="clock" label={isVietnamese ? 'Giờ học' : 'Study hours'} value={Math.round(currentUser.stats.totalStudyTime / 60)} subtext={isVietnamese ? 'tổng cộng' : 'total'} color="success" />
-              <StatCard icon="target" label={isVietnamese ? 'Đúng/Sai' : 'Correct/Wrong'} value={`${currentUser.stats.totalCorrectAnswers}/${currentUser.stats.totalWrongAnswers}`} color="warning" />
+              <StatCard icon="book" label={isVietnamese ? 'Bài học' : 'Exercises'} value={activeUser.stats.totalExercises} color="primary" />
+              <StatCard icon="headphones" label={isVietnamese ? 'Bài nghe' : 'Listening'} value={activeUser.stats.totalListeningExercises} color="info" />
+              <StatCard icon="clock" label={isVietnamese ? 'Giờ học' : 'Study hours'} value={Math.round(activeUser.stats.totalStudyTime / 60)} subtext={isVietnamese ? 'tổng cộng' : 'total'} color="success" />
+              <StatCard icon="target" label={isVietnamese ? 'Đúng/Sai' : 'Correct/Wrong'} value={`${activeUser.stats.totalCorrectAnswers}/${activeUser.stats.totalWrongAnswers}`} color="warning" />
             </div>
-            <XPProgress currentXP={currentUser.stats.totalXP} />
+            <XPProgress currentXP={activeUser.stats.totalXP} />
             <div className="grid grid-cols-2 gap-3">
-              <StatCard icon="flame" label={isVietnamese ? 'Streak hiện tại' : 'Current streak'} value={`${currentUser.stats.currentStreak} ${isVietnamese ? 'ngày' : 'days'}`} color="error" />
-              <StatCard icon="award" label={isVietnamese ? 'Badge đạt được' : 'Badges earned'} value={currentUser.stats.badges.length} color="warning" />
+              <StatCard icon="flame" label={isVietnamese ? 'Streak hiện tại' : 'Current streak'} value={`${activeUser.stats.currentStreak} ${isVietnamese ? 'ngày' : 'days'}`} color="error" />
+              <StatCard icon="award" label={isVietnamese ? 'Badge đạt được' : 'Badges earned'} value={activeUser.stats.badges.length} color="warning" />
             </div>
           </div>
           <div>
             <h3 className="font-semibold text-text-primary mb-4">{isVietnamese ? 'Huy hiệu của bạn' : 'Your Badges'}</h3>
             <div className="space-y-3">
-              {currentUser.stats.badges.map((badge) => (
+              {activeUser.stats.badges.map((badge: any) => (
                 <div key={badge.id} className="bg-surface-subtle rounded-xl p-4 flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${badge.tier === "gold" ? "bg-yellow-100 text-yellow" : badge.tier === "silver" ? "bg-gray-100 text-gray" : "bg-amber-100 text-amber-700"}`}><Icon name={badge.icon} size={20} /></div>
                   <div><div className="font-medium text-text-primary">{badge.name}</div><div className="text-xs text-text-tertiary">{badge.description}</div></div>
@@ -365,7 +375,7 @@ export function UserProfileContent() {
 
       {activeTab === "leaderboard" && <LeaderboardSection />}
 
-      {showEditModal && <EditProfileModal user={currentUser} onClose={() => setShowEditModal(false)} onSave={(data) => { setShowEditModal(false); }} />}
+      {showEditModal && <EditProfileModal user={activeUser} onClose={() => setShowEditModal(false)} onSave={(data) => { setShowEditModal(false); }} />}
       {showPasswordModal && <ChangePasswordModal onClose={() => setShowPasswordModal(false)} />}
     </main>
   );

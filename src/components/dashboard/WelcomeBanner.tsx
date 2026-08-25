@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
-import { currentUser } from '@/data/user-data'
+import { useAuthStore } from '@/store/auth-store'
 
 export function WelcomeBanner() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const { user, isAuthenticated } = useAuthStore()
 
   // Get greeting based on time of day
   const getGreeting = () => {
@@ -19,6 +20,10 @@ export function WelcomeBanner() {
     return 'Good evening'
   }
 
+  const studentName = isAuthenticated && user?.full_name
+    ? user.full_name.split(' ').pop()
+    : isVietnamese ? 'bạn' : 'Learner'
+
   return (
     <motion.section
       aria-labelledby="dashboard-title"
@@ -31,7 +36,7 @@ export function WelcomeBanner() {
       <div>
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">{t('dashboard.continueLearning')}</p>
         <h1 className="mt-2 text-h1 text-text-primary" id="dashboard-title">
-          {getGreeting()}, {currentUser.displayName.split(' ').pop()} 👋
+          {getGreeting()}, {studentName} 👋
         </h1>
         <p className="mt-1 text-[14px] text-text-secondary">
           {isVietnamese

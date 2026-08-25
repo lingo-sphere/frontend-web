@@ -1,2 +1,2 @@
 export { ComingSoon } from './ComingSoon'
-export { Pagination, PaginationInfo, FullPagination, usePagination } from './Pagination'
+export { Pagination } from './Pagination'

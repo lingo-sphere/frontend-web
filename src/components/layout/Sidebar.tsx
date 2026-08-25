@@ -13,8 +13,8 @@ import { ChevronDown, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { SidebarNav } from '@/components/layout/SidebarNav'
-import { mockDashboardData } from '@/data/dashboard-data'
-import { currentUser } from '@/data/user-data'
+import { NAV_GROUPS } from '@/config/navigation.config'
+import { useAuthStore } from '@/store/auth-store'
 import { useDashboardStore } from '@/store/dashboard-store'
 
 interface SidebarProps {
@@ -29,6 +29,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
   const sidebarCollapsed = useDashboardStore((state) => state.sidebarCollapsed)
   const toggleSidebarCollapsed = useDashboardStore((state) => state.toggleSidebarCollapsed)
+  const { user, isAuthenticated } = useAuthStore()
 
   const handleNavigate = (id: string) => {
     setActiveNavItem(id)
@@ -38,9 +39,12 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const handleProfileClick = () => {
     setActiveNavItem('profile')
     setMobileSidebarOpen(false)
+    window.location.href = '/profile'
   }
 
   const sidebarWidth = sidebarCollapsed ? 'w-[72px]' : 'w-[252px]'
+  const displayName = isAuthenticated && user?.full_name ? user.full_name : isVietnamese ? 'Khách / Học viên' : 'Guest Learner'
+  const userLevel = user?.level || 'A1'
 
   const content = (
     <>
@@ -57,7 +61,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           <p className="mt-0.5 text-[11px] font-medium leading-4 text-text-tertiary">{isVietnamese ? 'Học tiếng Anh' : 'English learning'}</p>
         </div>
       </div>
-      <SidebarNav activeItem={activeNavItem} groups={mockDashboardData.navGroups} onNavigate={handleNavigate} collapsed={sidebarCollapsed} />
+      <SidebarNav activeItem={activeNavItem} groups={NAV_GROUPS as any} onNavigate={handleNavigate} collapsed={sidebarCollapsed} />
       <Button
         aria-label="Open profile"
         className={`mt-4 h-auto w-full shrink-0 justify-start gap-3 rounded-2xl bg-surface-subtle p-3 text-left hover:bg-surface-hover ${sidebarCollapsed ? '!justify-center !px-0' : ''}`}
@@ -65,14 +69,14 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         variant="ghost"
       >
         <Avatar className="h-9 w-9 rounded-xl" size="default">
-          <AvatarImage alt="User avatar" src={currentUser.avatar || ''} />
+          <AvatarImage alt="User avatar" src={user?.avatar_url || ''} />
           <AvatarFallback className="rounded-xl bg-primary-soft text-primary">
-            {currentUser.displayName.charAt(0).toUpperCase()}
+            {displayName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <span className={`min-w-0 flex-1 ${sidebarCollapsed ? 'hidden' : ''}`}>
-          <span className="block truncate text-[13px] font-semibold text-text-primary">{currentUser.displayName}</span>
-          <span className="mt-0.5 block text-[11px] text-text-tertiary">{t('dashboard.level')} {currentUser.stats.level}</span>
+          <span className="block truncate text-[13px] font-semibold text-text-primary">{displayName}</span>
+          <span className="mt-0.5 block text-[11px] text-text-tertiary">{t('dashboard.level')} {userLevel}</span>
         </span>
         <ChevronDown aria-hidden="true" className={`h-4 w-4 text-text-tertiary ${sidebarCollapsed ? 'hidden' : ''}`} />
       </Button>

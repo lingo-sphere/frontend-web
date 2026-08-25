@@ -49,6 +49,7 @@ export interface SpeakingExercise {
   // Configuration
   preparation_time_seconds?: number
   response_time_seconds?: number
+  topic?: string
   topic_id?: string
   topic_name?: string
 

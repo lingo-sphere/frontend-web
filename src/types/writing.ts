@@ -22,6 +22,7 @@ export interface WritingExercise {
   writing_level: WritingLevel
 
   // Prompt/Instruction
+  prompt?: string
   prompt_en?: string
   prompt_vi?: string
   instructions?: string
@@ -45,7 +46,8 @@ export interface WritingExercise {
   rubric?: WritingRubric
   ai_hints?: string[]
 
-  // Word limits (chỉ giới hạn tối đa, không giới hạn tối thiểu)
+  // Word limits
+  min_words?: number
   max_words?: number
 
   // Metadata
@@ -159,15 +161,20 @@ export interface AIEvaluation {
   overall_feedback: string
   overall_strengths?: string
   overall_weaknesses?: string
+  strengths?: string[]
+  weaknesses?: string[]
   recommended_level?: string
+  estimated_cefr?: string
+  grammar_feedback?: string
+  vocabulary_feedback?: string
 
   // Criterion scores
-  scores: {
-    task_achievement: ScoreDetail
-    coherence: ScoreDetail
-    lexical_resource: ScoreDetail
-    grammatical_accuracy: ScoreDetail
-    overall: ScoreDetail
+  scores?: {
+    task_achievement?: ScoreDetail
+    coherence?: ScoreDetail
+    lexical_resource?: ScoreDetail
+    grammatical_accuracy?: ScoreDetail
+    overall?: ScoreDetail
   }
 
   // Detailed feedback by criterion

@@ -20,7 +20,7 @@ export interface PracticeCategory {
   items: PracticeItem[]
 }
 
-export interface publicDeck {
+export interface PublicDeck {
   id: string
   title: string
   author: string
@@ -59,7 +59,7 @@ export const practiceCategories: PracticeCategory[] = [
   },
 ]
 
-export const publicDecks: publicDeck[] = [
+export const publicDecks: PublicDeck[] = [
   { id: 'deck-1', title: 'Business TOEIC 450', author: 'Minh Anh', authorAvatar: '#e74c3c', wordCount: 120, topic: 'Business', views: 12450, saves: 234 },
   { id: 'deck-2', title: 'Travel English Essential', author: 'Thu Hà', authorAvatar: '#3498db', wordCount: 85, topic: 'Travel', views: 9820, saves: 189 },
   { id: 'deck-3', title: 'Daily Conversation 100', author: 'Hoàng Bảo', authorAvatar: '#2ecc71', wordCount: 100, topic: 'Conversation', views: 8650, saves: 156 },
@@ -75,4 +75,4 @@ export const publicDecks: publicDeck[] = [
 ]
 
 // Get top 6 most viewed decks
-export const topPublicDecks: publicDeck[] = [...publicDecks].sort((a, b) => b.views - a.views).slice(0, 6)
+export const topPublicDecks: PublicDeck[] = [...publicDecks].sort((a, b) => b.views - a.views).slice(0, 6)

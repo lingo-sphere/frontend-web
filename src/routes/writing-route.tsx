@@ -50,6 +50,7 @@ export function WritingRoute() {
   const [currentSubmission, setCurrentSubmission] = useState<WritingSubmission | null>(null)
   const [draftContent, setDraftContent] = useState<string>('')
   const [draftVersion, setDraftVersion] = useState<number>(1)
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(false)
 
   // Get exercise from ID
   const getExerciseById = useCallback((id: string): WritingExercise | undefined => {

@@ -276,6 +276,7 @@ function NotificationModal({
   onClose: () => void
   isVietnamese: boolean
 }) {
+  const { t } = useTranslation()
   const categoryColor = getCategoryColor(notification.notificationCategory)
   const categoryLabel = getCategoryLabel(notification.notificationCategory)
 

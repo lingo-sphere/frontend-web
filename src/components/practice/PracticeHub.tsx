@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { Icon } from '@/components/icons/icon-map'
-import { practiceCategories } from '@/data/practice-data'
+import { PRACTICE_CATEGORIES } from '@/config/practice.config'
 
 interface PracticeHubProps {
   onAction: (message: string) => void
@@ -54,7 +54,7 @@ export function PracticeHub({ onAction }: PracticeHubProps) {
       />
 
       <div className="mt-6 space-y-8">
-        {practiceCategories.map((category) => (
+        {PRACTICE_CATEGORIES.map((category) => (
           <section key={category.title}>
             <h3 className="mb-4 text-[14px] font-semibold uppercase tracking-wide text-text-tertiary">
               {isVietnamese && category.titleVi ? category.titleVi : category.title}
