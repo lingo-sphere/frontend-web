@@ -24,7 +24,7 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
   const navigate = useNavigate()
   const { deckId } = useParams<{ deckId?: string }>()
   const [viewMode, setViewMode] = useState<ViewMode>('home')
-  const [decks, setDecks] = useState<VocabularyDeck[]>(mockDecks)
+  const [decks, setDecks] = useState<VocabularyDeck[]>([])
   const [selectedDeck, setSelectedDeck] = useState<VocabularyDeck | null>(null)
   const [learningResult, setLearningResult] = useState<LearningResult | null>(null)
 

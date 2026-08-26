@@ -32,7 +32,7 @@ const priorityColors = {
 export function NotificationsRoute() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [activeTab, setActiveTab] = useState<'ALL' | NotificationCategory>('ALL')
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [showRead, setShowRead] = useState(true)

@@ -26,7 +26,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const theme = useDashboardStore((state) => state.theme)
   const toggleTheme = useDashboardStore((state) => state.toggleTheme)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
