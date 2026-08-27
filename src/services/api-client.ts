@@ -117,11 +117,14 @@ apiClient.interceptors.response.use(
       }
     }
 
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      error.message ||
-      'Đã xảy ra lỗi khi kết nối tới máy chủ'
+    let errorMessage: string | string[] = 'Đã xảy ra lỗi khi kết nối tới máy chủ'
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message
+    } else if (error.response?.data?.error) {
+      errorMessage = error.response.data.error
+    } else if (error.message) {
+      errorMessage = error.message
+    }
 
     return Promise.reject(new Error(Array.isArray(errorMessage) ? errorMessage.join(', ') : String(errorMessage)))
   },

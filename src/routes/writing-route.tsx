@@ -80,28 +80,28 @@ export function WritingRoute() {
     if (!selectedExercise) return
     setIsEvaluating(true)
 
-    let grammarScore = 7.5
-    let vocabScore = 7.5
-    let coherenceScore = 7.5
-    let overallScore = 7.5
-    let feedback = 'Good job! Your writing is clear and mostly grammatically correct.'
+    let grammarScore = 0
+    let vocabScore = 0
+    let coherenceScore = 0
+    let overallScore = 0
+    let feedback = ''
     let suggestedVersion = content
 
     try {
       const evaluation = await practiceService.evaluateWritingEssay(
         content,
-        selectedExercise.title || selectedExercise.prompt || 'English Essay Writing',
+        selectedExercise.title ? selectedExercise.title : 'English Essay Writing',
       )
       if (evaluation) {
-        grammarScore = evaluation.grammar_score || 8.0
-        vocabScore = evaluation.vocabulary_score || 7.5
-        coherenceScore = evaluation.coherence_score || 8.0
-        overallScore = evaluation.overall_score || 8.0
-        if (evaluation.feedback_vi) feedback = evaluation.feedback_vi
-        if (evaluation.improved_essay) suggestedVersion = evaluation.improved_essay
+        grammarScore = evaluation.grammar_score !== undefined ? evaluation.grammar_score : 0
+        vocabScore = evaluation.vocabulary_score !== undefined ? evaluation.vocabulary_score : 0
+        coherenceScore = evaluation.coherence_score !== undefined ? evaluation.coherence_score : 0
+        overallScore = evaluation.overall_score !== undefined ? evaluation.overall_score : 0
+        feedback = evaluation.feedback_vi ? evaluation.feedback_vi : ''
+        suggestedVersion = evaluation.improved_essay ? evaluation.improved_essay : content
       }
     } catch (err) {
-      console.warn('AI Writing evaluation fallback:', err)
+      console.error('AI Writing evaluation error:', err)
     }
 
     const submission: WritingSubmission = {

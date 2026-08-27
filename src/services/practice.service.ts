@@ -17,13 +17,14 @@ export const practiceService = {
   },
 
   async evaluateSpeakingAudio(audioBlob: Blob, exerciseId?: string, topic?: string): Promise<SpeechAssessmentResult> {
+    const params: Record<string, string> = {}
+    if (exerciseId) params.exercise_id = exerciseId
+    if (topic) params.topic = topic
+
     return api.upload<SpeechAssessmentResult>(
       API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_EVALUATE,
       audioBlob,
-      {
-        exercise_id: exerciseId || '',
-        topic: topic || '',
-      },
+      params,
     )
   },
 

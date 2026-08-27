@@ -80,10 +80,10 @@ export function SpeakingRoute() {
     setIsSubmitting(true)
 
     let finalTranscript = transcription
-    let pronunciationScore = 7.5
-    let fluencyScore = 7.0
-    let overallScore = 7.5
-    let feedback = 'Good job! Your response demonstrates solid speaking skills.'
+    let pronunciationScore = 0
+    let fluencyScore = 0
+    let overallScore = 0
+    let feedback = ''
 
     if (audioBlob) {
       try {
@@ -92,15 +92,15 @@ export function SpeakingRoute() {
           selectedExercise.id,
           selectedExercise.topic,
         )
-        if (assessment && assessment.transcribed_text) {
-          finalTranscript = assessment.transcribed_text
-          pronunciationScore = assessment.pronunciation_score || 8.0
-          fluencyScore = assessment.fluency_score || 7.5
-          overallScore = assessment.overall_score || 8.0
-          if (assessment.feedback_vi) feedback = assessment.feedback_vi
+        if (assessment) {
+          finalTranscript = assessment.transcribed_text ? assessment.transcribed_text : finalTranscript
+          pronunciationScore = assessment.pronunciation_score !== undefined ? assessment.pronunciation_score : 0
+          fluencyScore = assessment.fluency_score !== undefined ? assessment.fluency_score : 0
+          overallScore = assessment.overall_score !== undefined ? assessment.overall_score : 0
+          feedback = assessment.feedback_vi ? assessment.feedback_vi : ''
         }
       } catch (err) {
-        console.warn('API Speech Evaluation fallback:', err)
+        console.error('API Speech Evaluation error:', err)
       }
     }
 
@@ -116,10 +116,10 @@ export function SpeakingRoute() {
       overall_score: overallScore,
       pronunciation_score: pronunciationScore,
       fluency_score: fluencyScore,
-      grammar_score: 7.5,
-      vocabulary_score: 8.0,
-      coherence_score: 7.5,
-      content_score: 7.5,
+      grammar_score: overallScore,
+      vocabulary_score: overallScore,
+      coherence_score: overallScore,
+      content_score: overallScore,
       ai_evaluation: {
         overall_feedback: feedback,
         pronunciation_analysis: {
@@ -133,12 +133,12 @@ export function SpeakingRoute() {
           suggestions: ['Sử dụng thêm từ nối để tăng độ mượt mà'],
         },
         grammar_analysis: {
-          score: 7.5,
+          score: overallScore,
           issues: [],
           suggestions: ['Cấu trúc câu phong phú và tự nhiên'],
         },
         vocabulary_analysis: {
-          score: 8.0,
+          score: overallScore,
           issues: [],
           suggestions: ['Sử dụng từ vựng đa dạng, phù hợp ngữ cảnh'],
         },
