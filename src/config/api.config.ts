@@ -13,6 +13,7 @@ export const API_CONFIG = {
       LOGIN: '/auth/login',
       REGISTER: '/auth/register',
       VERIFY_EMAIL_OTP: '/auth/verify-email-otp',
+      VERIFY_EMAIL_TOKEN: '/auth/verify-email-token',
       RESEND_VERIFICATION_OTP: '/auth/resend-verification-otp',
       REFRESH_TOKEN: '/auth/refresh-token',
       LOGOUT: '/auth/logout',

@@ -36,6 +36,20 @@ export const authService = {
     return res
   },
 
+  async verifyEmailToken(payload: { email: string; token: string }): Promise<AuthResponse> {
+    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_TOKEN, payload)
+    if (res.access_token) {
+      localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      if (res.refresh_token) {
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+      }
+      if (res.user) {
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
+      }
+    }
+    return res
+  },
+
   async resendVerificationOtp(payload: { email: string }): Promise<{ message: string }> {
     return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.RESEND_VERIFICATION_OTP, payload)
   },

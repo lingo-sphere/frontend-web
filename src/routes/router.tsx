@@ -28,13 +28,19 @@ import { ToeicRoute } from '@/routes/toeic-route'
 import { ToeicExamRoute } from '@/routes/toeic-exam-route'
 import { DailyJournalRoute } from '@/routes/daily-journal-route'
 import { AiTranslationRoute } from '@/routes/ai-translation-route'
+import { VerifyEmailRoute } from '@/routes/verify-email-route'
 
 export const router = createBrowserRouter([
+  {
+    path: '/verify-email',
+    element: <VerifyEmailRoute />,
+  },
   {
     path: '/',
     element: <App />,
     children: [
       { index: true, element: <DashboardRoute /> },
+      { path: 'verify-email', element: <VerifyEmailRoute /> },
       { path: 'courses', element: <CoursesRoute /> },
       { path: 'course/:courseId', element: <CourseRoute /> },
       { path: 'roadmap', element: <RoadmapRoute /> },
