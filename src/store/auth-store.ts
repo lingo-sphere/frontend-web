@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { authService } from '@/services/auth.service'
+import { API_CONFIG } from '@/config/api.config'
 import type { User, LoginPayload, RegisterPayload } from '@/types/api.types'
 
 interface AuthState {
@@ -128,6 +129,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = await authService.getCurrentUser()
       set({ user, isAuthenticated: true })
     } catch {
+      localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+      localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
+      localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
       set({ user: null, isAuthenticated: false })
     }
   },
