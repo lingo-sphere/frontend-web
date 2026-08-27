@@ -8,9 +8,6 @@ export const authService = {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, payload)
     if (res.access_token) {
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
-      if (res.refresh_token) {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
-      }
       if (res.user) {
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
       }
@@ -26,9 +23,6 @@ export const authService = {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_OTP, payload)
     if (res.access_token) {
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
-      if (res.refresh_token) {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
-      }
       if (res.user) {
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
       }
@@ -40,9 +34,6 @@ export const authService = {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_TOKEN, payload)
     if (res.access_token) {
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
-      if (res.refresh_token) {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
-      }
       if (res.user) {
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
       }
@@ -68,15 +59,11 @@ export const authService = {
 
   async logout(): Promise<void> {
     try {
-      const refreshToken = localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
-      await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {}, {
-        headers: refreshToken ? { 'x-refresh-token': refreshToken } : {},
-      })
+      await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
     } catch {
       // Bỏ qua lỗi server khi logout
     } finally {
       localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-      localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
       localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
       window.location.href = '/'
     }

@@ -69,26 +69,19 @@ apiClient.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const refreshToken = localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
-
-        const res = await axios.post<ApiResponse<{ access_token: string; refresh_token?: string }>>(
+        const res = await axios.post<ApiResponse<{ access_token: string }>>(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
           {},
           {
             withCredentials: true,
-            headers: refreshToken ? { 'x-refresh-token': refreshToken } : {},
           },
         )
 
-        const responseData = res.data as unknown as { data?: { access_token?: string; refresh_token?: string }; access_token?: string; refresh_token?: string }
+        const responseData = res.data as unknown as { data?: { access_token?: string }; access_token?: string }
         const newAccessToken = responseData?.data?.access_token ? responseData.data.access_token : responseData?.access_token
-        const newRefreshToken = responseData?.data?.refresh_token ? responseData.data.refresh_token : responseData?.refresh_token
 
         if (newAccessToken) {
           localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
-          if (newRefreshToken) {
-            localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
-          }
 
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
@@ -101,13 +94,11 @@ apiClient.interceptors.response.use(
           throw new Error('Invalid token response structure')
         }
       } catch (refreshErr) {
-
         processQueue(refreshErr, null)
         console.warn('Phiên đăng nhập học viên đã hết hạn. Đang đăng xuất...', refreshErr)
 
         if (typeof window !== 'undefined') {
           localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
           localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
           window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
         }

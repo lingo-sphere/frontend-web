@@ -130,7 +130,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user, isAuthenticated: true })
     } catch {
       localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-      localStorage.removeItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
       localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
       set({ user: null, isAuthenticated: false })
     }
