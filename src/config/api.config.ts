@@ -12,6 +12,8 @@ export const API_CONFIG = {
     AUTH: {
       LOGIN: '/auth/login',
       REGISTER: '/auth/register',
+      VERIFY_EMAIL_OTP: '/auth/verify-email-otp',
+      RESEND_VERIFICATION_OTP: '/auth/resend-verification-otp',
       REFRESH_TOKEN: '/auth/refresh-token',
       LOGOUT: '/auth/logout',
       ME: '/auth/me',

@@ -5,6 +5,7 @@ import type { ApiResponse } from '@/types/api.types'
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -52,7 +53,6 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       if (isRefreshing) {
-
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         })
@@ -70,21 +70,21 @@ apiClient.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
-        if (!refreshToken) {
-          throw new Error('No refresh token available')
-        }
 
         const res = await axios.post<ApiResponse<{ access_token: string; refresh_token?: string }>>(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
-          { refresh_token: refreshToken },
+          {},
+          {
+            withCredentials: true,
+            headers: refreshToken ? { 'x-refresh-token': refreshToken } : {},
+          },
         )
 
-        const payload = (res.data as ApiResponse<{ access_token: string; refresh_token?: string }>)?.data || (res.data as unknown as { access_token: string; refresh_token?: string })
-        const newAccessToken = payload?.access_token
-        const newRefreshToken = payload?.refresh_token
+        const responseData = res.data as unknown as { data?: { access_token?: string; refresh_token?: string }; access_token?: string; refresh_token?: string }
+        const newAccessToken = responseData?.data?.access_token ? responseData.data.access_token : responseData?.access_token
+        const newRefreshToken = responseData?.data?.refresh_token ? responseData.data.refresh_token : responseData?.refresh_token
 
         if (newAccessToken) {
-
           localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
           if (newRefreshToken) {
             localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)

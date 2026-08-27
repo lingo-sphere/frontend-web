@@ -55,6 +55,25 @@ export interface RegisterPayload {
   phone_number?: string
 }
 
+export interface VerifyEmailOtpPayload {
+  email: string
+  otp: string
+}
+
+export interface ResendOtpPayload {
+  email: string
+}
+
+export interface ForgotPasswordPayload {
+  email: string
+}
+
+export interface ResetPasswordPayload {
+  email: string
+  otp: string
+  new_password: string
+}
+
 export interface Lesson {
   id: string
   _id?: string

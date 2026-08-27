@@ -1,4 +1,4 @@
-import { api } from '@/services/api-client'
+import { api, apiClient } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 import type { User, LoginPayload, RegisterPayload, AuthResponse } from '@/types/api.types'
 
@@ -22,6 +22,32 @@ export const authService = {
     return api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.REGISTER, payload)
   },
 
+  async verifyEmailOtp(payload: { email: string; otp: string }): Promise<AuthResponse> {
+    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_OTP, payload)
+    if (res.access_token) {
+      localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      if (res.refresh_token) {
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+      }
+      if (res.user) {
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
+      }
+    }
+    return res
+  },
+
+  async resendVerificationOtp(payload: { email: string }): Promise<{ message: string }> {
+    return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.RESEND_VERIFICATION_OTP, payload)
+  },
+
+  async forgotPassword(payload: { email: string }): Promise<{ message: string }> {
+    return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD, payload)
+  },
+
+  async resetPassword(payload: { email: string; otp: string; new_password: string }): Promise<{ message: string }> {
+    return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, payload)
+  },
+
   async getCurrentUser(): Promise<User> {
     return api.get<User>(API_CONFIG.ENDPOINTS.AUTH.ME)
   },
@@ -29,7 +55,9 @@ export const authService = {
   async logout(): Promise<void> {
     try {
       const refreshToken = localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
-      await api.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, { refresh_token: refreshToken })
+      await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {}, {
+        headers: refreshToken ? { 'x-refresh-token': refreshToken } : {},
+      })
     } catch {
       // Bỏ qua lỗi server khi logout
     } finally {
