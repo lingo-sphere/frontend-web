@@ -36,6 +36,13 @@ export function VerifyEmailRoute() {
 
         if (res && res.user) {
           setUser(res.user)
+          try {
+            const channel = new BroadcastChannel('lingo_auth_channel')
+            channel.postMessage({ type: 'EMAIL_VERIFIED_SUCCESS', user: res.user })
+            channel.close()
+          } catch {
+            // BroadcastChannel fallback
+          }
         }
         setState('SUCCESS')
       } catch (err: unknown) {

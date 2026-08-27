@@ -40,6 +40,15 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
     clearError,
   } = useAuthStore()
 
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  // Tự động đóng modal khi người dùng đã đăng nhập hoặc đã xác thực ở tab khác
+  useEffect(() => {
+    if (isAuthenticated && isOpen) {
+      onClose()
+    }
+  }, [isAuthenticated, isOpen, onClose])
+
   // Đồng bộ mode ban đầu
   useEffect(() => {
     if (isOpen) {
