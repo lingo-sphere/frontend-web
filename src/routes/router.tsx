@@ -26,6 +26,8 @@ import { WritingRoute } from '@/routes/writing-route'
 import { SpeakingRoute } from '@/routes/speaking-route'
 import { ToeicRoute } from '@/routes/toeic-route'
 import { ToeicExamRoute } from '@/routes/toeic-exam-route'
+import { DailyJournalRoute } from '@/routes/daily-journal-route'
+import { AiTranslationRoute } from '@/routes/ai-translation-route'
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +44,8 @@ export const router = createBrowserRouter([
       { path: 'listening', element: <ListeningRoute /> },
       { path: 'grammar', element: <GrammarRoute /> },
       { path: 'ipa', element: <IpaRoute /> },
+      { path: 'journal', element: <DailyJournalRoute /> },
+      { path: 'translate', element: <AiTranslationRoute /> },
       { path: 'notes', element: <NotesRoute /> },
       { path: 'ai-learning', element: <AiLearningRoute /> },
       { path: 'community', element: <CommunityRoute /> },
