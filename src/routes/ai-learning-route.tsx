@@ -53,7 +53,7 @@ export function AiLearningRoute() {
         ...prev,
         {
           role: 'assistant',
-          content: 'Hệ thống AI đang khởi động hoặc chưa có kết nối. Vui lòng đảm bảo máy chủ Ollama đang chạy trên hệ thống của bạn.',
+          content: 'Hệ thống AI đang bận hoặc gặp sự cố kết nối. Vui lòng thử lại sau giây lát nhé.',
         },
       ])
     } finally {
@@ -75,7 +75,7 @@ export function AiLearningRoute() {
                 Gia Sư AI LingoSphere
                 <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  Ollama Gemma-2B
+                  Groq Cloud LPU
                 </span>
               </h1>
               <p className="text-xs text-text-tertiary">

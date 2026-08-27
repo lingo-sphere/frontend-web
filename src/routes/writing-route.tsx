@@ -146,7 +146,7 @@ export function WritingRoute() {
     setIsEvaluating(false)
     setCurrentSubmission(submission)
     setCurrentView('result')
-    showAction(`Đã chấm bài với Ollama AI! Điểm: ${submission.overall_score?.toFixed(1)}/10`)
+    showAction(`Đã chấm bài với AI Engine! Điểm: ${submission.overall_score?.toFixed(1)}/10`)
     navigate(`/writing/result/${submission.id}`)
   }, [selectedExercise, draftVersion, draftContent, navigate, showAction])
 
