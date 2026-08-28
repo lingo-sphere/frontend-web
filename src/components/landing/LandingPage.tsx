@@ -172,7 +172,7 @@ export function LandingPage() {
           className="flex items-center gap-3 group cursor-pointer bg-transparent border-none p-0 outline-none"
           aria-label="Cuộn lên đầu trang"
         >
-          <div className="h-2.5 w-2.5 rounded-full bg-[oklch(75%_0.15_50)] animate-pulse shadow-[0_0_12px_oklch(75%_0.15_50)]" />
+          <div className="h-2.5 w-2.5 rounded-full bg-[oklch(75%_0.15_50)] shadow-[0_0_8px_oklch(75%_0.15_50)]" />
           <div className="text-xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
             LINGO <span className="font-light text-white/80">SPHERE</span>
           </div>
@@ -197,19 +197,17 @@ export function LandingPage() {
       <section className="relative flex h-screen w-screen items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <video ref={heroVideoRef} autoPlay muted loop playsInline className="hero-mask h-full w-full object-contain">
-            <source src="/video.mp4" type="video/mp4" />
+            <source src="/video-banner.mp4" type="video/mp4" />
           </video>
         </div>
 
         <div className="relative z-10 px-6 text-center">
-          <span className="mb-8 block text-[11px] uppercase tracking-[0.6em] text-[oklch(75%_0.15_50)]/90 animate-[pulse-soft_4s_ease-in-out_infinite] font-semibold">
-            Học Viện Tiếng Anh Tư Duy AI Thế Hệ Mới
-          </span>
+          
 
           <h1 className="shimmer-text mb-8 text-5xl font-extrabold leading-tight tracking-tighter md:text-[7.5rem] animate-[shimmer_4s_linear_infinite]">
-            Tiếng Anh Tư Duy.
+            Tiếng Anh Tư Duy
             <br />
-            Bứt Phá TOEIC.
+            Bứt Phá TOEIC
           </h1>
 
           <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 p-8 backdrop-blur-md bg-black/20">
@@ -261,42 +259,29 @@ export function LandingPage() {
             </div>
           </div>
 
-          <div className="workbench-ui animate-[float-slow_8s_ease-in-out_infinite] rounded-[40px] p-1">
-            <div className="flex items-center justify-between rounded-t-[39px] border-b border-white/10 bg-black/60 p-6">
-              <div className="flex gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
-                <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/80" />
-                <div className="h-2.5 w-2.5 rounded-full bg-green-500/80" />
-              </div>
-              <span className="text-[10px] uppercase tracking-widest text-white/40 font-mono">lingothinking_engine.ts</span>
+          <div className="relative flex items-center justify-center">
+            <div className="relative h-[360px] w-[360px] sm:h-[420px] sm:w-[420px] aspect-square rounded-full overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(255,255,255,0.08)]">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full rounded-full object-cover"
+              >
+                <source src="/video-contact.mp4" type="video/mp4" />
+              </video>
+
+              {/* Lớp phủ sương mờ nhẹ tinh tế */}
+              <div className="absolute inset-0 rounded-full bg-white/[0.08] backdrop-blur-[0.4px] pointer-events-none" />
             </div>
 
-            <div className="p-8 sm:p-10 font-mono text-sm leading-relaxed overflow-x-auto">
-              <code className="block text-white/50">
-                <span className="text-[oklch(75%_0.15_50)] italic">import</span> {"{ LingoThinking, SRSMemory }"}{" "}
-                <span className="text-[oklch(75%_0.15_50)] italic">from</span> <span className="text-[oklch(45%_0.1_150)]">&quot;@lingosphere/core&quot;</span>;
-              </code>
-              <code className="mt-4 block">
-                <span className="text-[oklch(75%_0.15_50)]">const</span> <span className="text-white font-bold">MasterEnglish</span> = (
-                <span className="text-white">learner</span>: <span className="text-[oklch(45%_0.1_150)]">LearnerProfile</span>
-                ) =&gt; {"{"}
-              </code>
-              <code className="block text-white/70">
-                &nbsp;&nbsp;<span className="text-[oklch(75%_0.15_50)]">return</span> learner.activate({"{"}
-              </code>
-              <code className="block text-white/80">&nbsp;&nbsp;&nbsp;&nbsp;method: <span className="text-[oklch(45%_0.1_150)]">&quot;LingoThinking&quot;</span>,</code>
-              <code className="block text-white/80">&nbsp;&nbsp;&nbsp;&nbsp;listening: <span className="text-[oklch(45%_0.1_150)]">&quot;WhisperSTT&quot;</span>,</code>
-              <code className="block text-white/80">&nbsp;&nbsp;&nbsp;&nbsp;targetScore: <span className="text-[oklch(75%_0.15_50)]">850</span>,</code>
-              <code className="block text-white/80">&nbsp;&nbsp;&nbsp;&nbsp;forgettingCurve: <span className="text-[oklch(75%_0.15_50)]">null</span></code>
-              <code className="block text-white/70">&nbsp;&nbsp;{"});"}</code>
-              <code className="block text-white/70">{"};"}</code>
-
-              <div className="mt-8 flex gap-4 border-t border-white/10 pt-6">
-                <div className="rounded-lg border border-[oklch(45%_0.1_150)]/30 bg-[oklch(45%_0.1_150)]/20 px-4 py-1.5 text-[11px] text-[oklch(45%_0.1_150)] font-bold">
-                  TOEIC ETS 2024
-                </div>
-                <div className="rounded-lg bg-white/10 px-4 py-1.5 text-[11px] text-white/60 font-mono">v2.5.0-ai</div>
-              </div>
+            <div className="vellum-overlay absolute bottom-2 right-0 sm:right-4 max-w-[200px] rounded-2xl border border-white/10 p-5 backdrop-blur-xl bg-black/50 shadow-2xl">
+              <span className="font-serif font-light mb-1 block text-base italic text-[oklch(75%_0.15_50)]">
+                Deep Focus
+              </span>
+              <p className="text-[10px] uppercase tracking-widest text-white/70 font-semibold leading-relaxed">
+                Tối ưu hóa tải nhận thức cho học viên
+              </p>
             </div>
           </div>
         </div>
@@ -444,7 +429,7 @@ export function LandingPage() {
         <button
           onClick={scrollToTop}
           aria-label="Cuộn lên đầu trang"
-          className="fixed bottom-8 right-8 z-[100] flex h-12 w-12 items-center justify-center rounded-none border border-white/30 bg-black/70 backdrop-blur-xl text-white shadow-2xl transition-all duration-300 hover:border-[oklch(75%_0.15_50)] hover:bg-[oklch(75%_0.15_50)] hover:text-black hover:scale-110 cursor-pointer"
+          className="fixed bottom-8 right-8 z-[100] flex h-12 w-12 items-center justify-center rounded-none border border-[oklch(75%_0.15_50)]/50 bg-black/80 backdrop-blur-xl text-white shadow-[0_0_20px_rgba(255,170,80,0.35),0_0_40px_rgba(255,170,80,0.18),inset_0_0_12px_rgba(255,170,80,0.1)] transition-all duration-500 ease-out hover:border-[oklch(75%_0.15_50)] hover:bg-[oklch(75%_0.15_50)] hover:text-black hover:shadow-[0_0_30px_rgba(255,170,80,0.8),0_0_60px_rgba(255,170,80,0.4)] cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -495,6 +480,18 @@ export function LandingPage() {
         .hero-mask {
           -webkit-mask-image: radial-gradient(circle, black 40%, transparent 75%);
           mask-image: radial-gradient(circle, black 40%, transparent 75%);
+        }
+
+        .squircle-mask {
+          mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
+          -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 75%);
+          border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+        }
+
+        .vellum-overlay {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px) contrast(0.95);
+          -webkit-backdrop-filter: blur(20px) contrast(0.95);
         }
 
         .lantern-glow {
