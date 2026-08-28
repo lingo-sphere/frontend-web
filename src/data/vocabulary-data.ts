@@ -7,7 +7,7 @@ import type {
   SavedVocabulary,
   LearningStatus,
 } from '@/types/vocabulary'
-import { learningStatistics } from './vocabulary-learn-data'
+import { learningStatistics } from '@/data/vocabulary-learn-data'
 
 export const vocabularyStats: VocabularyStats = {
   totalCards: learningStatistics.total_cards,

@@ -8,11 +8,11 @@ import { userService } from '@/services/user.service'
 import type { LeaderboardEntry } from '@/types/api.types'
 import { getCurrentMonth, getLeaderboard, getNextMonth, getPrevMonth, getDaysUntilMonthEnd, getMonthLabel } from '@/data/leaderboard-data'
 import type { LeaderboardType } from '@/types/dashboard'
-import { LeaderboardCountdown } from './LeaderboardCountdown'
-import { LeaderboardTabs } from './LeaderboardTabs'
-import { LeaderboardPodium } from './LeaderboardPodium'
-import { LeaderboardList } from './LeaderboardList'
-import { LeaderboardRewards } from './LeaderboardRewards'
+import { LeaderboardCountdown } from '@/components/leaderboard/LeaderboardCountdown'
+import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs'
+import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium'
+import { LeaderboardList } from '@/components/leaderboard/LeaderboardList'
+import { LeaderboardRewards } from '@/components/leaderboard/LeaderboardRewards'
 
 interface LeaderboardPageProps {
   onAction: (message: string) => void
