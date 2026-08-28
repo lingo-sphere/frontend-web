@@ -53,6 +53,7 @@ export interface Lesson {
   status: LessonStatus
   progress: number 
   videoUrl?: string
+  qualities?: Record<string, string>
   resources?: LessonResource[]
   content: LessonContent
 }

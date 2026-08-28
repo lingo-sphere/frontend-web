@@ -154,13 +154,33 @@ export function LessonPlayer({
   const [showEndedScreen, setShowEndedScreen] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(5)
 
-  const videoSource = useMemo(() => {
+  const lastTimeBeforeSwitchRef = useRef<number>(0)
+  const wasPlayingBeforeSwitchRef = useRef<boolean>(false)
+
+  const baseVideoSource = useMemo(() => {
     return (lesson?.videoUrl || lesson?.content?.videoUrl || '').trim()
   }, [lesson])
 
-  const isDirectVideo = isDirectVideoUrl(videoSource)
-  const isYouTube = isYouTubeUrl(videoSource)
-  const embedUrl = isYouTube ? getYoutubeEmbedUrl(videoSource) : ''
+  const effectiveVideoUrl = useMemo(() => {
+    if (!baseVideoSource) return ''
+    if (lesson?.qualities && lesson.qualities[selectedQuality]) {
+      return lesson.qualities[selectedQuality]
+    }
+    if (
+      selectedQuality !== '1080p' &&
+      selectedQuality !== 'auto' &&
+      isDirectVideoUrl(baseVideoSource) &&
+      baseVideoSource.includes('.r2.dev')
+    ) {
+      const base = baseVideoSource.replace(/\.[^/.]+$/, '')
+      return `${base}_${selectedQuality}.mp4`
+    }
+    return baseVideoSource
+  }, [baseVideoSource, lesson?.qualities, selectedQuality])
+
+  const isDirectVideo = isDirectVideoUrl(effectiveVideoUrl || baseVideoSource)
+  const isYouTube = isYouTubeUrl(baseVideoSource)
+  const embedUrl = isYouTube ? getYoutubeEmbedUrl(baseVideoSource) : ''
 
   const triggerFeedback = useCallback(
     (type: 'forward' | 'rewind' | 'play' | 'pause' | 'speed' | 'volume' | 'quality', text?: string) => {
@@ -248,6 +268,10 @@ export function LessonPlayer({
   // 5. Resolution / Quality Change
   const handleQualityChange = useCallback(
     (qualityId: string) => {
+      if (videoRef.current) {
+        lastTimeBeforeSwitchRef.current = videoRef.current.currentTime
+        wasPlayingBeforeSwitchRef.current = !videoRef.current.paused
+      }
       setSelectedQuality(qualityId)
       setSettingsSubmenu('main')
       setShowSettingsMenu(false)
@@ -444,7 +468,7 @@ export function LessonPlayer({
     if (videoRef.current) {
       videoRef.current.currentTime = 0
     }
-  }, [lesson?.id, videoSource])
+  }, [lesson?.id, baseVideoSource])
 
   return (
     <div
@@ -464,7 +488,7 @@ export function LessonPlayer({
       {isDirectVideo ? (
         <video
           ref={videoRef}
-          src={videoSource}
+          src={effectiveVideoUrl}
           playsInline
           className="w-full h-full object-contain bg-black cursor-pointer"
           onClick={togglePlay}
@@ -487,6 +511,12 @@ export function LessonPlayer({
           onPause={() => setIsPlaying(false)}
           onWaiting={() => setIsBuffering(true)}
           onPlaying={() => setIsBuffering(false)}
+          onError={() => {
+            // If a specific quality rendition fails or is not available, fallback to 1080p
+            if (selectedQuality !== '1080p' && selectedQuality !== 'auto') {
+              setSelectedQuality('1080p')
+            }
+          }}
           onTimeUpdate={(e) => {
             const current = e.currentTarget.currentTime
             const dur = e.currentTarget.duration || 1
@@ -508,6 +538,13 @@ export function LessonPlayer({
           }}
           onLoadedMetadata={(e) => {
             setDuration(e.currentTarget.duration || 0)
+            if (lastTimeBeforeSwitchRef.current > 0) {
+              e.currentTarget.currentTime = lastTimeBeforeSwitchRef.current
+              lastTimeBeforeSwitchRef.current = 0
+              if (wasPlayingBeforeSwitchRef.current) {
+                e.currentTarget.play().catch(() => {})
+              }
+            }
           }}
           onEnded={() => {
             setIsPlaying(false)
@@ -682,7 +719,7 @@ export function LessonPlayer({
 
           {isYouTube && (
             <a
-              href={videoSource || 'https://www.youtube.com'}
+              href={baseVideoSource || 'https://www.youtube.com'}
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-md px-3 py-1.5 text-[11px] font-bold text-white shadow-lg hover:bg-primary transition-colors border border-white/15 cursor-pointer"
