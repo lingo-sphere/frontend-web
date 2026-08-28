@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { Layers3, Bookmark } from 'lucide-react'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'

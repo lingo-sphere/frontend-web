@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from '@/lib/navigation'
 import { GraduationCap } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
@@ -8,7 +10,7 @@ import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { mockDecks, allVocabularyWords } from '@/data/vocabulary-learn-data'
 import type { VocabularyDeck, LearningResult } from '@/types/vocabulary-learn'
-import type { Deck, LexicalItem } from '@/types/api.types'
+import type { Deck } from '@/types/api.types'
 import { VocabularyLearningSession } from '@/components/vocabulary-learning/VocabularyLearningSession'
 import { LearningResultView } from '@/components/vocabulary-learning/LearningResultView'
 
@@ -58,7 +60,7 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
   useEffect(() => {
     const activeDeckId = deckId || selectedDeckId
     if (activeDeckId) {
-      const deck = mockDecks.find(d => d.id === activeDeckId)
+      const deck = mockDecks.find((d) => d.id === activeDeckId)
       if (deck) {
         setSelectedDeck(deck)
         setViewMode('session')
@@ -72,7 +74,6 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
   }
 
   const handleStartQuickLearn = () => {
-
     const quickDeck: VocabularyDeck = {
       id: 'quick-learn',
       title: 'Quick Learn',

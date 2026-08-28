@@ -1,12 +1,20 @@
+'use client'
 
-import { useParams } from 'react-router-dom'
+import { useParams } from '@/lib/navigation'
 import { Layout } from '@/components/layout/Layout'
-import { VocabularyLearnPage } from '@/pages/VocabularyLearnPage'
+import { VocabularyLearnPage } from '@/components/vocabulary-learning/VocabularyLearnPage'
 import { useApp } from '@/contexts/AppContext'
 
 export function VocabularyLearnRoute() {
   const { showAction } = useApp()
-  const { deckId } = useParams<{ deckId?: string }>()
+  const params = useParams()
+  const rawDeckId = params?.deckId
+  const deckId =
+    typeof rawDeckId === 'string'
+      ? rawDeckId
+      : Array.isArray(rawDeckId)
+        ? rawDeckId[0]
+        : undefined
 
   return (
     <Layout>

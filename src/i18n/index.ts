@@ -1,4 +1,3 @@
-
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
@@ -11,29 +10,37 @@ const resources = {
   en: { translation: en },
 }
 
-i18n
-  .use(LanguageDetector) 
-  .use(initReactI18next)
-  .init({
-    resources,
-    fallbackLng: 'vi', // Default language
-    supportedLngs: ['vi', 'en'],
-    interpolation: {
-      escapeValue: false, // React already escapes
-    },
-    detection: {
+if (!i18n.isInitialized) {
+  const isBrowser = typeof window !== 'undefined'
+  
+  if (isBrowser) {
+    i18n.use(LanguageDetector)
+  }
 
-      order: ['localStorage', 'navigator', 'htmlTag'],
-
-      caches: ['localStorage'],
-    },
-  })
+  i18n
+    .use(initReactI18next)
+    .init({
+      resources,
+      lng: isBrowser ? (localStorage.getItem('i18nextLng') || 'vi') : 'vi',
+      fallbackLng: 'vi',
+      supportedLngs: ['vi', 'en'],
+      interpolation: {
+        escapeValue: false,
+      },
+      detection: {
+        order: ['localStorage', 'navigator', 'htmlTag'],
+        caches: ['localStorage'],
+      },
+    })
+}
 
 export default i18n
 
 export const changeLanguage = (lang: 'vi' | 'en') => {
   i18n.changeLanguage(lang)
-  localStorage.setItem('i18nextLng', lang)
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('i18nextLng', lang)
+  }
 }
 
 export const getCurrentLanguage = (): 'vi' | 'en' => {

@@ -1,6 +1,8 @@
 
+'use client'
+
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@/lib/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { Icon } from '@/components/icons/icon-map'

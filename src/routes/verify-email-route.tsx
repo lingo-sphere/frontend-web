@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate } from '@/lib/navigation'
 import { motion } from 'motion/react'
 import { Icon } from '@/components/icons/icon-map'
 import { Button } from '@/components/ui/button'
@@ -9,10 +11,10 @@ import { useAuthStore } from '@/store/auth-store'
 type VerifyState = 'VERIFYING' | 'SUCCESS' | 'ERROR'
 
 export function VerifyEmailRoute() {
-  const [searchParams] = useSearchParams()
+  const searchParams = useSearchParams()
   const navigate = useNavigate()
-  const token = searchParams.get('token')
-  const email = searchParams.get('email')
+  const token = searchParams?.get('token')
+  const email = searchParams?.get('email')
 
   const [state, setState] = useState<VerifyState>('VERIFYING')
   const [errorMessage, setErrorMessage] = useState<string>('')

@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Layers3, Star, Globe, Info, Plus, Users, GraduationCap, Bookmark, HelpCircle } from 'lucide-react'
 

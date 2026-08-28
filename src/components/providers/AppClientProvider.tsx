@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import { ShieldAlert } from 'lucide-react'
+'use client'
+
+import { useEffect, useState, type ReactNode } from 'react'
+import '@/i18n'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/contexts/AppContext'
 import { useAuthStore } from '@/store/auth-store'
@@ -8,18 +9,24 @@ import { API_CONFIG } from '@/config/api.config'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 
-export function App() {
+interface AppClientProviderProps {
+  children: ReactNode
+}
+
+export function AppClientProvider({ children }: AppClientProviderProps) {
   const checkAuth = useAuthStore((s) => s.checkAuth)
   const setUser = useAuthStore((s) => s.setUser)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [kickoutMessage, setKickoutMessage] = useState<string | null>(null)
 
   const triggerKickout = (message?: string) => {
+    if (typeof window === 'undefined') return
     localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
     localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
     setUser(null)
     setKickoutMessage(
-      message || 'Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác. Bạn đã bị đăng xuất để đảm bảo an toàn.',
+      message ||
+        'Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác. Bạn đã bị đăng xuất để đảm bảo an toàn.'
     )
   }
 
@@ -58,13 +65,19 @@ export function App() {
     }
 
     window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('lingosphere:session_terminated', handleSessionTerminated)
+    window.addEventListener(
+      'lingosphere:session_terminated',
+      handleSessionTerminated
+    )
     window.addEventListener('lingosphere:unauthorized', handleUnauthorized)
 
     return () => {
       channel?.close()
       window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('lingosphere:session_terminated', handleSessionTerminated)
+      window.removeEventListener(
+        'lingosphere:session_terminated',
+        handleSessionTerminated
+      )
       window.removeEventListener('lingosphere:unauthorized', handleUnauthorized)
     }
   }, [checkAuth, setUser])
@@ -72,7 +85,10 @@ export function App() {
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const token = localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+    const token =
+      typeof window !== 'undefined'
+        ? localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+        : null
     if (!token) return
 
     let eventSource: EventSource | null = null
@@ -102,7 +118,7 @@ export function App() {
   return (
     <AppProvider>
       <TooltipProvider>
-        <Outlet />
+        {children}
 
         <Modal
           open={Boolean(kickoutMessage)}
@@ -114,23 +130,17 @@ export function App() {
               className="w-full bg-primary font-semibold text-white shadow-md hover:bg-primary/90"
               onClick={() => {
                 setKickoutMessage(null)
-                window.location.href = '/'
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/'
+                }
               }}
             >
               Đã hiểu & Đăng nhập lại
             </Button>
           }
         >
-          <div className="flex flex-col items-center gap-4 py-4 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 ring-8 ring-amber-500/5">
-              <ShieldAlert className="h-8 w-8 text-amber-600" />
-            </div>
-            <div className="space-y-1.5">
-              <h4 className="text-base font-bold text-text-primary">Phiên Đăng Nhập Đã Hết Hạn</h4>
-              <p className="text-sm leading-relaxed text-text-secondary">
-                {kickoutMessage}
-              </p>
-            </div>
+          <div className="flex flex-col items-center gap-3 py-2 text-center">
+            <p className="text-sm text-text-secondary">{kickoutMessage}</p>
           </div>
         </Modal>
       </TooltipProvider>

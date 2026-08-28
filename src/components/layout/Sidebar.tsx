@@ -49,8 +49,8 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           width="36"
         />
         <div className={sidebarCollapsed ? 'hidden' : ''}>
-          <p className="text-[16px] font-bold leading-5 text-text-primary">{t('common.appName')}</p>
-          <p className="mt-0.5 text-[11px] font-medium leading-4 text-text-tertiary">{isVietnamese ? 'Học tiếng Anh' : 'English learning'}</p>
+          <p className="text-[16px] font-bold leading-5 text-text-primary" suppressHydrationWarning>{t('common.appName')}</p>
+          <p className="mt-0.5 text-[11px] font-medium leading-4 text-text-tertiary" suppressHydrationWarning>{isVietnamese ? 'Học tiếng Anh' : 'English learning'}</p>
         </div>
       </div>
       <SidebarNav activeItem={activeNavItem} groups={NAV_GROUPS} onNavigate={handleNavigate} collapsed={sidebarCollapsed} />
@@ -67,8 +67,8 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           </AvatarFallback>
         </Avatar>
         <span className={`min-w-0 flex-1 ${sidebarCollapsed ? 'hidden' : ''}`}>
-          <span className="block truncate text-[13px] font-semibold text-text-primary">{displayName}</span>
-          <span className="mt-0.5 block text-[11px] text-text-tertiary">{t('dashboard.level')} {userLevel}</span>
+          <span className="block truncate text-[13px] font-semibold text-text-primary" suppressHydrationWarning>{displayName}</span>
+          <span className="mt-0.5 block text-[11px] text-text-tertiary" suppressHydrationWarning>{t('dashboard.level')} {userLevel}</span>
         </span>
         <ChevronDown aria-hidden="true" className={`h-4 w-4 text-text-tertiary ${sidebarCollapsed ? 'hidden' : ''}`} />
       </Button>

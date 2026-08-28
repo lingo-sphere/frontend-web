@@ -1,5 +1,7 @@
 
-import { useNavigate } from 'react-router-dom'
+'use client'
+
+import { useNavigate } from '@/lib/navigation'
 import { Layout } from '@/components/layout/Layout'
 import { CourseDetailPage } from '@/components/course/CourseDetailPage'
 

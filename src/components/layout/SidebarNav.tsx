@@ -1,5 +1,7 @@
 
-import { useNavigate } from 'react-router-dom'
+'use client'
+
+import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'

@@ -1,6 +1,8 @@
+'use client'
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from '@/lib/navigation'
 import { ArrowLeft, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { courseService } from '@/services/course.service'

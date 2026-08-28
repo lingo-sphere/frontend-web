@@ -1,4 +1,6 @@
 
+'use client'
+
 import type { ReactNode } from 'react'
 import { AppShell } from '@/components/layout/AppShell'
 import { UserProfileContent } from '@/components/user/UserProfileContent'

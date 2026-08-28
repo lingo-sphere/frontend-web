@@ -1,4 +1,6 @@
 
+'use client'
+
 import { useState, useCallback } from 'react'
 import { Layout } from '@/components/layout/Layout'
 import { SpeakingHome } from '@/components/speaking/SpeakingHome'

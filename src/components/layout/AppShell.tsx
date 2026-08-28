@@ -1,4 +1,6 @@
 
+'use client'
+
 import type { ReactNode } from 'react'
 
 import { Sheet, SheetContent } from '@/components/ui/sheet'

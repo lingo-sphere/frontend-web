@@ -56,13 +56,26 @@ apiClient.interceptors.response.use(
       const errorMsg = Array.isArray(rawMsg) ? rawMsg.join(', ') : (rawMsg || '')
       const isKickout = errorMsg.includes('thiết bị khác') || errorMsg.includes('đăng nhập trên một thiết bị')
 
+      const isAuthEndpoint =
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.LOGIN) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.REGISTER) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_OTP) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_TOKEN) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD) ||
+        originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN)
+
       if (isKickout) {
         if (typeof window !== 'undefined') {
           localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
           localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
           window.dispatchEvent(new CustomEvent('lingosphere:session_terminated', { detail: { message: errorMsg } }))
         }
-        return Promise.reject(error)
+        return Promise.reject(new Error(errorMsg || 'Phiên đăng nhập đã bị đăng xuất từ thiết bị khác'))
+      }
+
+      if (isAuthEndpoint) {
+        return Promise.reject(new Error(errorMsg || 'Thông tin xác thực không chính xác'))
       }
 
       if (!originalRequest._retry) {

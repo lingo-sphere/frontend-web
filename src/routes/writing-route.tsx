@@ -1,6 +1,8 @@
 
+'use client'
+
 import { useState, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from '@/lib/navigation'
 import { Layout } from '@/components/layout/Layout'
 import { useApp } from '@/contexts/AppContext'
 import {

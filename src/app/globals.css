@@ -1,8 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
-@import './styles/tokens.css';
+@import '../styles/tokens.css';
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
 
 @theme inline {
   --font-sans: var(--font-sans);
@@ -196,7 +194,6 @@
   }
 }
 
-/* Custom Scrollbar Styles */
 :root {
   scrollbar-color: var(--surface-subtle) transparent;
   scrollbar-width: thin;
@@ -222,7 +219,6 @@
   background-color: var(--surface-hover);
 }
 
-/* Dark mode scrollbar */
 [data-theme="dark"] ::-webkit-scrollbar-thumb,
 .dark ::-webkit-scrollbar-thumb {
   background-color: #333333;
@@ -233,7 +229,6 @@
   background-color: #444444;
 }
 
-
 @media (max-width: 767px) {
   .text-display {
     font-size: 28px;
@@ -243,16 +238,5 @@
   .text-h1 {
     font-size: 24px;
     line-height: 32px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
   }
 }

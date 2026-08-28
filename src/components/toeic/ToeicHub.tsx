@@ -1,6 +1,8 @@
+'use client'
+
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@/lib/navigation'
 import { Trophy, Headphones, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
