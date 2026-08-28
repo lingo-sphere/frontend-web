@@ -21,7 +21,7 @@ export const NAV_GROUPS: NavGroup[] = [
     titleVi: 'Học tập',
     titleEn: 'Learning',
     items: [
-      { id: 'home', labelVi: 'Tổng quan', labelEn: 'Dashboard', icon: 'home', path: '/' },
+      { id: 'home', labelVi: 'Tổng quan', labelEn: 'Dashboard', icon: 'home', path: '/home' },
       { id: 'courses', labelVi: 'Khóa học', labelEn: 'Courses', icon: 'book', path: '/courses' },
       { id: 'vocabulary', labelVi: 'Từ vựng (SRS)', labelEn: 'Vocabulary', icon: 'cards', path: '/vocabulary' },
       { id: 'toeic', labelVi: 'Đề thi TOEIC', labelEn: 'TOEIC Exam', icon: 'fileText', path: '/toeic', badge: 'ETS', badgeColor: 'bg-primary' },

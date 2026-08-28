@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useNavigate } from '@/lib/navigation'
+import { useNavigate, useLocation } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -16,21 +16,24 @@ interface SidebarNavProps {
 }
 
 const routeMap: Record<string, string> = {
-  home: '/',
+  home: '/home',
   courses: '/courses',
-  roadmap: '/roadmap',
+  toeic: '/toeic',
   vocabulary: '/vocabulary',
-  practice: '/practice',
   listening: '/listening',
   writing: '/writing',
   speaking: '/speaking',
+  journal: '/journal',
+  grammar: '/grammar',
   ipa: '/ipa',
-  notes: '/notes',
   'ai-learning': '/ai-learning',
+  translate: '/translate',
   community: '/community',
+  leaderboard: '/leaderboard',
+  notes: '/notes',
+  roadmap: '/roadmap',
   'public-decks': '/public-decks',
   topics: '/topics',
-  leaderboard: '/leaderboard',
   progress: '/progress',
   notifications: '/notifications',
   settings: '/settings',
@@ -81,12 +84,13 @@ export function SidebarNav({ groups, activeItem, onNavigate, collapsed = false }
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
+  const location = useLocation()
 
   const handleClick = (itemId: string) => {
     onNavigate(itemId)
 
     if (itemId === 'profile') return
-    const route = routeMap[itemId] ?? '/'
+    const route = routeMap[itemId] ?? '/home'
     navigate(route)
   }
 
@@ -102,7 +106,12 @@ export function SidebarNav({ groups, activeItem, onNavigate, collapsed = false }
           )}
           <div className={collapsed ? 'flex flex-col items-center gap-2' : 'space-y-1'}>
             {group.items.map((item) => {
-              const isActive = activeItem === item.id
+              const itemRoute = routeMap[item.id] || item.path
+              const isCurrentPath =
+                location.pathname === itemRoute ||
+                (itemRoute !== '/home' && location.pathname.startsWith(`${itemRoute}/`)) ||
+                (item.id === 'home' && (location.pathname === '/home' || location.pathname === '/'))
+              const isActive = isCurrentPath || activeItem === item.id
               const iconClass = isActive ? 'text-primary' : 'text-text-secondary'
               const label = isVietnamese ? item.labelVi : item.labelEn
 

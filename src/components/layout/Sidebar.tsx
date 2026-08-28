@@ -40,7 +40,13 @@ export function Sidebar({ mobile = false }: SidebarProps) {
 
   const content = (
     <>
-      <div className={`flex items-center gap-3 border-b border-border px-2 pb-5 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+      <div
+        onClick={() => {
+          handleNavigate('home')
+          window.location.href = '/home'
+        }}
+        className={`flex items-center gap-3 border-b border-border px-2 pb-5 cursor-pointer hover:opacity-90 transition-opacity ${sidebarCollapsed ? 'justify-center' : ''}`}
+      >
         <img
           alt="LingoSphere logo"
           className="h-9 w-9 rounded-xl bg-primary-soft object-contain p-1"

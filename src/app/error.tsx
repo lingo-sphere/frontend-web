@@ -45,7 +45,7 @@ export default function GlobalError({
             <Icon name="rotateCcw" size={16} />
             Thử Lại Ngay
           </Button>
-          <Link href="/">
+          <Link href="/home">
             <Button variant="outline" className="gap-2 cursor-pointer">
               <Icon name="home" size={16} />
               Quay Về Trang Chủ

@@ -22,7 +22,7 @@ export default function NotFound() {
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/">
+          <Link href="/home">
             <Button className="gap-2 bg-primary px-5 font-semibold text-white shadow-md hover:bg-primary/90">
               <Icon name="home" size={16} />
               Trang Chủ Dashboard

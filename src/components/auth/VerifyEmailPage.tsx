@@ -69,7 +69,7 @@ export function VerifyEmailPage() {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer)
-          navigate('/')
+          navigate('/home')
           return 0
         }
         return prev - 1
@@ -131,7 +131,7 @@ export function VerifyEmailPage() {
             </div>
 
             <Button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/home')}
               className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-xl shadow-lg shadow-primary/25 cursor-pointer"
             >
               Bắt Đầu Học Ngay Bây Giờ
@@ -158,13 +158,13 @@ export function VerifyEmailPage() {
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/home')}
                 className="flex-1 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
               >
                 Trang Chủ
               </Button>
               <Button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/home')}
                 className="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-xl text-xs font-semibold shadow-md cursor-pointer"
               >
                 Đăng Nhập
