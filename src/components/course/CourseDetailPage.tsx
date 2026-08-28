@@ -6,6 +6,7 @@ import { CourseReviewsTab } from '@/components/course/CourseReviewsTab'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { Button } from '@/components/ui/button'
 import { demoCourse } from '@/data/course-data'
+import { allCourses } from '@/data/courses-data'
 import { courseService } from '@/services/course.service'
 import type { Chapter, Course, Lesson } from '@/types/course'
 import {
@@ -30,7 +31,7 @@ import {
   Users,
   X
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 
 interface CourseDetailPageProps {
   courseId?: string
@@ -66,23 +67,222 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   useEffect(() => {
     if (!courseId) return
     let isMounted = true
+
+    const catalogMatch = allCourses.find(
+      (c) => c.id === courseId || c.id.toLowerCase() === courseId.toLowerCase()
+    )
+
     const fetchCourse = async () => {
       try {
-        const liveCourse = await courseService.getCourseById(courseId)
-        if (isMounted && liveCourse) {
-          setCourse((prev) => ({
-            ...prev,
-            id: liveCourse.id || liveCourse._id || courseId,
-            title: liveCourse.title || prev.title,
-            description: liveCourse.description || prev.description,
-            level: liveCourse.level || prev.level,
-            thumbnail: liveCourse.thumbnail_url || prev.thumbnail,
-          }))
+        const liveCourseResponse = await courseService.getCourseById(courseId)
+        if (isMounted && liveCourseResponse) {
+          const raw = liveCourseResponse as unknown as Record<string, unknown>
+          const courseObj = (raw.course as Record<string, unknown>) || raw
+          const curriculumList = (raw.curriculum as Array<Record<string, unknown>>) || (raw.modules as Array<Record<string, unknown>>) || []
+
+          let mappedChapters: Chapter[] = []
+          if (Array.isArray(curriculumList) && curriculumList.length > 0) {
+            mappedChapters = curriculumList.map((mod, modIdx) => {
+              const modLessons = (mod.lessons as Array<Record<string, unknown>>) || []
+              const modId = String(mod._id || mod.id || `ch-${modIdx + 1}`)
+              const modTitle = String(mod.title || `Chương ${modIdx + 1}`)
+
+              return {
+                id: modId,
+                courseId: String(courseObj._id || courseObj.id || courseId),
+                order: Number(mod.order_index || mod.module_order || modIdx + 1),
+                title: modTitle,
+                description: String(mod.description || ''),
+                status: (modIdx === 0 ? 'in-progress' : 'available') as Chapter['status'],
+                lessons: modLessons.map((les, lesIdx) => {
+                  const lesId = String(les._id || les.id || `les-${modIdx + 1}-${lesIdx + 1}`)
+                  const lesTitle = String(les.title || `Bài ${lesIdx + 1}`)
+                  const vidUrl = String(
+                    les.video_url ||
+                    les.videoUrl ||
+                    les.video_link ||
+                    les.file_url ||
+                    les.url ||
+                    ''
+                  )
+                  const durationSec = Number(
+                    les.duration_seconds || (les.duration_minutes ? Number(les.duration_minutes) * 60 : 600)
+                  )
+
+                  return {
+                    id: lesId,
+                    chapterId: modId,
+                    order: Number(les.order_index || les.lesson_order || lesIdx + 1),
+                    title: lesTitle,
+                    type: 'video' as const,
+                    duration: durationSec,
+                    status: (lesIdx === 0 && modIdx === 0 ? 'in-progress' : 'available') as Lesson['status'],
+                    progress: 0,
+                    videoUrl: vidUrl,
+                    resources: [],
+                    content: {
+                      videoUrl: vidUrl,
+                      sections: [
+                        {
+                          id: '1',
+                          title: 'Giới thiệu & Mục tiêu bài học',
+                          type: 'introduction',
+                          content: String(les.content || 'Nắm vững kiến thức trọng tâm của bài học.'),
+                        },
+                      ],
+                    },
+                  }
+                }),
+                challengeTest: {
+                  id: `ct-${modIdx + 1}`,
+                  chapterId: modId,
+                  title: `${modTitle} - Mini Test`,
+                  questionsCount: 10,
+                  passingScore: 70,
+                  status: 'available',
+                },
+                exercise: {
+                  id: `ex-${modIdx + 1}`,
+                  chapterId: modId,
+                  title: `${modTitle} - Thực hành`,
+                  questionsCount: 5,
+                  skills: ['Vocabulary', 'Grammar'],
+                  status: 'available',
+                },
+                postMiniTest: {
+                  id: `pm-${modIdx + 1}`,
+                  chapterId: modId,
+                  title: `${modTitle} - Assessment`,
+                  questionsCount: 15,
+                  skills: ['Listening', 'Reading'],
+                  difficulty: 'Standard',
+                  status: 'available',
+                },
+              }
+            })
+          }
+
+          if (mappedChapters.length === 0) {
+            mappedChapters = [
+              {
+                id: 'ch-01',
+                courseId: String(courseObj._id || courseObj.id || courseId),
+                order: 1,
+                title: 'Chương 1: Tổng quan bài giảng',
+                description: String(courseObj.description || 'Nắm vững kiến thức trọng tâm của khóa học.'),
+                status: 'in-progress' as Chapter['status'],
+                lessons: [
+                  {
+                    id: 'les-01-01',
+                    chapterId: 'ch-01',
+                    order: 1,
+                    title: `Bài 1: Giới thiệu ${String(courseObj.title || 'khóa học')}`,
+                    type: 'video' as const,
+                    duration: 600,
+                    status: 'in-progress' as Lesson['status'],
+                    progress: 0,
+                    videoUrl: String(courseObj.video_url || courseObj.intro_video_url || ''),
+                    resources: [],
+                    content: {
+                      videoUrl: String(courseObj.video_url || courseObj.intro_video_url || ''),
+                      sections: [
+                        {
+                          id: '1',
+                          title: 'Giới thiệu & Mục tiêu bài học',
+                          type: 'introduction',
+                          content: String(courseObj.description || 'Tổng quan bài giảng'),
+                        },
+                      ],
+                    },
+                  },
+                ],
+                challengeTest: {
+                  id: 'ct-01',
+                  chapterId: 'ch-01',
+                  title: 'Kiểm tra trắc nghiệm',
+                  questionsCount: 5,
+                  passingScore: 70,
+                  status: 'available',
+                },
+                exercise: {
+                  id: 'ex-01',
+                  chapterId: 'ch-01',
+                  title: 'Thực hành',
+                  questionsCount: 5,
+                  skills: ['Vocabulary'],
+                  status: 'available',
+                },
+                postMiniTest: {
+                  id: 'pm-01',
+                  chapterId: 'ch-01',
+                  title: 'Mini Test',
+                  questionsCount: 10,
+                  skills: ['Listening', 'Reading'],
+                  difficulty: 'Standard',
+                  status: 'available',
+                },
+              },
+            ]
+          }
+
+          setCourse((prev) => {
+            return {
+              ...prev,
+              id: String(courseObj._id || courseObj.id || courseId),
+              title: String(courseObj.title || catalogMatch?.title || prev.title),
+              description: String(courseObj.description || catalogMatch?.description || prev.description),
+              level: String(courseObj.level || catalogMatch?.level || prev.level),
+              thumbnail: String(courseObj.thumbnail_url || courseObj.thumbnail || catalogMatch?.thumbnail || prev.thumbnail),
+              chapters: mappedChapters,
+              instructor: {
+                name: String(courseObj.instructor_name || catalogMatch?.instructor || prev.instructor?.name || 'LingoSphere Academic Team'),
+                title: prev.instructor?.title || 'Chuyên gia đào tạo LingoSphere',
+                avatar: String(courseObj.thumbnail_url || catalogMatch?.thumbnail || prev.instructor?.avatar || ''),
+                rating: Number(courseObj.rating || catalogMatch?.rating || 4.8),
+                ratingCount: Number(courseObj.rating_count || catalogMatch?.ratingCount || 142),
+                studentsCount: Number(courseObj.students_count || catalogMatch?.students || 1250),
+                coursesCount: 6,
+                bio: String(courseObj.description || 'Đội ngũ giảng viên và chuyên gia học thuật giàu kinh nghiệm sư phạm và luyện thi chứng chỉ quốc tế.'),
+              },
+            }
+          })
+
+          setExpandedChapters(mappedChapters.map((ch) => ch.id))
+          if (mappedChapters[0]?.lessons?.length > 0) {
+            setCurrentChapter(mappedChapters[0])
+            setCurrentLesson(mappedChapters[0].lessons[0])
+          }
+          return
         }
       } catch {
-        // Use default rich demoCourse
+        // Fallback to catalog data
+      }
+
+      if (isMounted && catalogMatch) {
+        setCourse((prev) => ({
+          ...prev,
+          id: catalogMatch.id,
+          title: catalogMatch.title,
+          description: catalogMatch.description,
+          level: catalogMatch.level,
+          thumbnail: catalogMatch.thumbnail,
+          rating: catalogMatch.rating,
+          ratingCount: catalogMatch.ratingCount,
+          badge: catalogMatch.badge,
+          instructor: {
+            name: catalogMatch.instructor,
+            title: prev.instructor?.title || 'Chuyên gia đào tạo LingoSphere',
+            avatar: catalogMatch.thumbnail || prev.instructor?.avatar || '',
+            rating: catalogMatch.rating || 4.9,
+            ratingCount: catalogMatch.ratingCount || 1200,
+            studentsCount: catalogMatch.students || 25000,
+            coursesCount: 6,
+            bio: 'Đội ngũ giảng viên và chuyên gia học thuật giàu kinh nghiệm sư phạm và luyện thi chứng chỉ quốc tế.',
+          },
+        }))
       }
     }
+
     fetchCourse()
     return () => {
       isMounted = false
@@ -160,6 +360,49 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
     }, 700)
   }
 
+  const allFlatLessons = useMemo(() => {
+    const list: Array<{ chapter: Chapter; lesson: Lesson }> = []
+    course.chapters.forEach((ch) => {
+      ch.lessons.forEach((les) => {
+        list.push({ chapter: ch, lesson: les })
+      })
+    })
+    return list
+  }, [course.chapters])
+
+  const currentLessonIndex = useMemo(() => {
+    return allFlatLessons.findIndex((item: { chapter: Chapter; lesson: Lesson }) => item.lesson.id === currentLesson.id)
+  }, [allFlatLessons, currentLesson.id])
+
+  const hasNextLesson = currentLessonIndex >= 0 && currentLessonIndex < allFlatLessons.length - 1
+  const hasPrevLesson = currentLessonIndex > 0
+
+  const handleNextLesson = useCallback(() => {
+    if (hasNextLesson) {
+      const nextItem = allFlatLessons[currentLessonIndex + 1]
+      setCurrentChapter(nextItem.chapter)
+      setCurrentLesson(nextItem.lesson)
+      if (!expandedChapters.includes(nextItem.chapter.id)) {
+        setExpandedChapters((prev) => [...prev, nextItem.chapter.id])
+      }
+    }
+  }, [hasNextLesson, allFlatLessons, currentLessonIndex, expandedChapters])
+
+  const handlePrevLesson = useCallback(() => {
+    if (hasPrevLesson) {
+      const prevItem = allFlatLessons[currentLessonIndex - 1]
+      setCurrentChapter(prevItem.chapter)
+      setCurrentLesson(prevItem.lesson)
+      if (!expandedChapters.includes(prevItem.chapter.id)) {
+        setExpandedChapters((prev) => [...prev, prevItem.chapter.id])
+      }
+    }
+  }, [hasPrevLesson, allFlatLessons, currentLessonIndex, expandedChapters])
+
+  const handleAddNoteAtTimestamp = useCallback((_seconds: number) => {
+    setActiveBottomTab('notes')
+  }, [])
+
   const totalLessons = course.chapters.reduce((acc, ch) => acc + ch.lessons.length, 0)
   const completedLessons = course.chapters.reduce(
     (acc, ch) => acc + ch.lessons.filter((l) => l.status === 'completed').length,
@@ -233,6 +476,11 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
             lesson={currentLesson || course.chapters[0]?.lessons[0] || demoCourse.chapters[0].lessons[0]}
             onProgress={handleLessonProgress}
             onTimeUpdate={(t) => setPlayerCurrentTime(t)}
+            onNextLesson={handleNextLesson}
+            onPrevLesson={handlePrevLesson}
+            hasNextLesson={hasNextLesson}
+            hasPrevLesson={hasPrevLesson}
+            onAddNoteAtTimestamp={handleAddNoteAtTimestamp}
           />
 
           {/* Below Player Area */}
