@@ -1,401 +1,552 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { motion } from 'motion/react'
-import { Icon } from '@/components/icons/icon-map'
-import { Button } from '@/components/ui/button'
-import { useTranslation } from 'react-i18next'
-import { useDashboardStore } from '@/store/dashboard-store'
+import { useEffect, useRef } from "react"
+
+const manifestoLines = [
+  "Engineering is the poetry of logic.",
+  "Every module is a floating island of intention.",
+  "We prioritize human rhythm over machine efficiency.",
+  "Software should breathe with the person using it.",
+]
+
+const navItems = [
+  { href: "#workbench", label: "The Forge" },
+  { href: "#islands", label: "Archipelago" },
+  { href: "#manifesto", label: "Manifesto" },
+  { href: "#stargazer", label: "Signal" },
+]
+
+const islands = [
+  {
+    node: "NODE_01",
+    title: "Reactive Architecture",
+    description:
+      "We do not just build interfaces; we build ecosystems that respond to the emotional state of the user.",
+    accent: "lantern",
+    topOffset: "",
+  },
+  {
+    node: "NODE_02",
+    title: "Fluid Motion APIs",
+    description:
+      "Movement is life. Our motion layer mimics natural sways so the digital feels organic and alive.",
+    accent: "moss",
+    topOffset: "md:mt-12",
+  },
+  {
+    node: "NODE_03",
+    title: "Semantic Clarity",
+    description:
+      "Code should be readable like a late-night novel. Clean structures tell the story before the comments do.",
+    accent: "neutral",
+    topOffset: "",
+  },
+]
+
+const stats = [
+  { value: "12ms", label: "Avg Latency" },
+  { value: "∞", label: "Creativity" },
+  { value: "43k", label: "Lines of Love" },
+  { value: "0.1", label: "Energy Bias" },
+]
 
 export function LandingPage() {
-  const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
-  const theme = useDashboardStore((state) => state.theme)
-  const toggleTheme = useDashboardStore((state) => state.toggleTheme)
-
-  const [bannerVisible, setBannerVisible] = useState(true)
-  const [, setSelectedCategory] = useState<'toeic' | 'skills' | 'kids' | 'all'>('toeic')
-  const [isScrolled, setIsScrolled] = useState(false)
+  const manifestoRef = useRef<HTMLPreElement | null>(null)
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
+    document.documentElement.classList.add("scroll-smooth", "dark")
   }, [])
 
-  const toggleLanguage = () => {
-    const nextLang = isVi ? 'en' : 'vi'
-    i18n.changeLanguage(nextLang)
-  }
+  useEffect(() => {
+    const el = manifestoRef.current
+    if (!el) return
+
+    let cancelled = false
+    let lineIndex = 0
+    let charIndex = 0
+    let completedText = ""
+
+    const type = () => {
+      if (cancelled || !manifestoRef.current) return
+      if (lineIndex >= manifestoLines.length) return
+
+      const currentLine = manifestoLines[lineIndex]
+      const progress = currentLine.slice(0, charIndex + 1)
+
+      manifestoRef.current.textContent = `${completedText}${lineIndex > 0 ? "\n\n" : ""}${progress}`
+
+      charIndex += 1
+
+      if (charIndex < currentLine.length) {
+        window.setTimeout(type, 25)
+        return
+      }
+
+      completedText += `${lineIndex > 0 ? "\n\n" : ""}${currentLine}`
+      lineIndex += 1
+      charIndex = 0
+      window.setTimeout(type, 800)
+    }
+
+    type()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in")
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.16 }
+    )
+
+    const nodes = document.querySelectorAll<HTMLElement>(".reveal")
+    nodes.forEach((node) => observer.observe(node))
+
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const heroVideo = heroVideoRef.current
+    if (!heroVideo) return
+
+    const islandsEls = Array.from(document.querySelectorAll<HTMLElement>(".parallax-island"))
+    let ticking = false
+
+    const update = () => {
+      const scrollY = window.scrollY
+      const progress = scrollY / Math.max(document.documentElement.scrollHeight - window.innerHeight, 1)
+      document.body.style.setProperty("--scroll", String(progress))
+
+      islandsEls.forEach((island, index) => {
+        const speed = 0.05 + index * 0.02
+        island.style.transform = `translateY(${scrollY * speed * -1}px)`
+      })
+
+      const heroProgress = Math.min(scrollY / (window.innerHeight * 1.15), 1)
+      const scale = 1.07 + heroProgress * 0.1
+      const translate = heroProgress * 14
+      heroVideo.style.transform = `scale(${scale}) translateY(${translate}px)`
+    }
+
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      window.requestAnimationFrame(() => {
+        update()
+        ticking = false
+      })
+    }
+
+    update()
+    window.addEventListener("scroll", onScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+    }
+  }, [])
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-[#242938] font-sans antialiased selection:bg-[#D14242]/20 selection:text-[#D14242] relative">
-      {/* ─── 1. TOP HEADER (STICKY TOP-0 VỚI SHADOW KHI CUỘN) ─── */}
-      <header
-        className={`sticky top-0 z-50 w-full border-b border-[#E3E7ED] bg-white/95 backdrop-blur-md transition-all duration-300 ${
-          isScrolled ? 'shadow-md shadow-[#304278]/10' : ''
-        }`}
-      >
-        <div className="mx-auto flex h-16 max-w-[1340px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo DOL LingoSphere */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#D14242] text-white shadow-md shadow-[#D14242]/25 transition-transform group-hover:scale-105">
-              <span className="font-black text-lg">L</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tight text-[#242938] leading-none">
-                LINGO<span className="text-[#D14242]">SPHERE</span>
-              </span>
-              <span className="text-[10px] font-extrabold text-[#7C8793] tracking-wider uppercase mt-0.5">
-                TIẾNG ANH TƯ DUY
-              </span>
-            </div>
-          </Link>
+    <main className="relative overflow-x-hidden bg-[oklch(20%_0.08_280)] text-white antialiased">
+      <div className="noise pointer-events-none fixed inset-0 z-[9999]" />
 
-          {/* Nav Menu */}
-          <nav className="hidden xl:flex items-center gap-6 text-[14px] font-semibold text-[#242938]">
-            <div className="relative group cursor-pointer py-5 flex items-center gap-1 hover:text-[#D14242]">
-              <span>Về LingoSphere</span>
-              <Icon name="chevronDown" size={14} className="text-[#7C8793] group-hover:text-[#D14242]" />
-            </div>
-
-            <div className="relative group cursor-pointer py-5 flex items-center gap-1 hover:text-[#D14242]">
-              <span>Điểm khác biệt</span>
-              <Icon name="chevronDown" size={14} className="text-[#7C8793] group-hover:text-[#D14242]" />
-            </div>
-
-            <Link href="#methodology" className="hover:text-[#D14242] transition-colors">
-              LingoThinking
-            </Link>
-
-            <Link href="#hall-of-fame" className="hover:text-[#D14242] transition-colors">
-              Điểm và review
-            </Link>
-
-            <div className="relative group cursor-pointer py-5 flex items-center gap-1 hover:text-[#D14242]">
-              <span>Khóa học</span>
-              <Icon name="chevronDown" size={14} className="text-[#7C8793] group-hover:text-[#D14242]" />
-            </div>
-
-            <div className="relative group cursor-pointer py-5 flex items-center gap-1 hover:text-[#D14242]">
-              <span>Lịch khai giảng</span>
-              <Icon name="chevronDown" size={14} className="text-[#7C8793] group-hover:text-[#D14242]" />
-            </div>
-
-            <div className="relative group cursor-pointer py-5 flex items-center gap-1 hover:text-[#D14242]">
-              <span>Kiến thức</span>
-              <Icon name="chevronDown" size={14} className="text-[#7C8793] group-hover:text-[#D14242]" />
-            </div>
-
-            <Link href="/toeic" className="hover:text-[#D14242] transition-colors">
-              Đề thi ETS
-            </Link>
-          </nav>
-
-          {/* Right Action Buttons */}
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E3E7ED] bg-[#F4F4F6] text-[#5A6877] hover:text-[#242938]"
-            >
-              <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={16} />
-            </button>
-
-            <button
-              onClick={toggleLanguage}
-              aria-label="Toggle language"
-              className="flex h-9 items-center gap-1 rounded-lg border border-[#E3E7ED] bg-[#F4F4F6] px-2.5 text-xs font-bold text-[#5A6877] hover:text-[#242938]"
-            >
-              <Icon name="globe" size={13} />
-              <span>{isVi ? 'VN' : 'EN'}</span>
-            </button>
-
-            <Link href="/home">
-              <Button className="h-9 rounded-lg bg-[#D14242] hover:bg-[#DE4C47] px-4 text-xs font-bold text-white shadow-md shadow-[#D14242]/20 transition-all cursor-pointer">
-                Vào Bàn Học
-              </Button>
-            </Link>
+      <header className="fixed left-0 top-0 z-[100] flex w-full items-center justify-between p-6 mix-blend-difference md:p-10">
+        <div className="flex items-center gap-4">
+          <div className="h-2 w-2 rounded-full bg-[oklch(75%_0.15_50)]" />
+          <div className="text-xl font-medium tracking-tighter">
+            HAVEN <span className="font-light opacity-40">CORE</span>
           </div>
         </div>
+
+        <nav className="hidden gap-12 text-[10px] font-bold uppercase tracking-[0.4em] opacity-60 transition-opacity hover:opacity-100 md:flex">
+          {navItems.map((item) => (
+            <a key={item.href} href={item.href} className="transition-colors hover:text-[oklch(75%_0.15_50)]">
+              {item.label}
+            </a>
+          ))}
+        </nav>
       </header>
 
-      {/* ─── 2. TOP BANNER KHAI GIẢNG (GIỐNG 100% THANH MÀU XANH NHẠT CỦA DOL) ─── */}
-      {bannerVisible && (
-        <div className="bg-[#EBF7F0] border-b border-[#D1EEDD] py-2.5 px-4 transition-all">
-          <div className="mx-auto max-w-[1340px] flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#358756]/15 text-[#358756]">
-                <Icon name="calendar" size={18} />
-              </div>
-              <div className="text-xs text-[#242938] leading-tight">
-                <span className="font-bold text-[#358756]">Đã có lịch khai giảng tháng 8, 9 với ưu đãi đặc biệt</span>
-                <span className="hidden md:inline text-[#5A6877]">
-                  {' '}— Các khóa học: <strong className="text-[#242938]">TOEIC / 4 KỸ NĂNG / TỪ VỰNG SRS / GIA SƯ AI</strong> tư duy tháng 8, 9 đang hết slot rất nhanh <strong>với ưu đãi đặc biệt</strong> của năm.
-                </span>
-                <Link href="/home" className="text-[#358756] font-bold hover:underline ml-2">
-                  Xem ngay →
-                </Link>
-              </div>
-            </div>
-            <button
-              onClick={() => setBannerVisible(false)}
-              className="text-[#7C8793] hover:text-[#242938] p-1 rounded-md"
-              aria-label="Close banner"
-            >
-              <Icon name="x" size={16} />
+      <section className="relative flex h-screen w-screen items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <video ref={heroVideoRef} autoPlay muted loop playsInline className="hero-mask h-full w-full object-contain">
+            <source src="/video.mp4" type="video/mp4" />
+          </video>
+        </div>
+
+        <div className="relative z-10 px-6 text-center">
+          <span className="mb-8 block text-[10px] uppercase tracking-[0.8em] text-[oklch(75%_0.15_50)]/60 animate-[pulse-soft_4s_ease-in-out_infinite]">
+            Establishing Connection
+          </span>
+
+          <h1 className="shimmer-text mb-8 text-6xl font-bold leading-none tracking-tighter md:text-[9rem] animate-[shimmer_4s_linear_infinite]">
+            Soulful
+            <br />
+            Systems.
+          </h1>
+
+          <div className="mx-auto max-w-xl rounded-3xl border border-white/10 p-8 backdrop-blur-sm">
+            <p className="mb-10 font-serif text-lg leading-relaxed font-light italic text-white">
+              &quot;Engineering is the poetry of logic.&quot;
+            </p>
+            <button className="lantern-glow rounded-2xl border border-white/10 bg-black/30 px-12 py-5 text-[10px] font-black uppercase tracking-[0.4em] text-white transition-all hover:border-[oklch(75%_0.15_50)] hover:bg-[oklch(75%_0.15_50)]">
+              Initiate Workspace
             </button>
           </div>
         </div>
-      )}
 
-      {/* ─── 3. RIGHT FLOATING SIDEBAR WIDGETS (GIỐNG 100% CÁC NÚT BÊN PHẢI CỦA DOL) ─── */}
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col gap-2.5 pr-1">
-        {/* Nút 1: Điểm & Review */}
-        <Link
-          href="#hall-of-fame"
-          className="group flex flex-col items-center justify-center w-[76px] py-2.5 rounded-l-2xl bg-white border border-[#E3E7ED] border-r-0 shadow-lg shadow-[#304278]/10 hover:translate-x-[-4px] transition-all"
-        >
-          <div className="h-9 w-9 rounded-xl bg-[#358756] text-white flex items-center justify-center font-black text-xs shadow-sm">
-            ⭐ 850+
+        <div className="absolute bottom-12 left-1/2 flex -translate-x-1/2 flex-col items-center gap-4">
+          <div className="h-12 w-px bg-gradient-to-b from-white to-transparent" />
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white">Scroll to Descend</span>
+        </div>
+      </section>
+
+      <section id="workbench" className="relative min-h-screen px-6 py-60 md:px-24">
+        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-20 lg:grid-cols-2">
+          <div className="relative z-10">
+            <h2 className="mb-8 text-5xl font-bold tracking-tighter leading-tight">
+              The Digital
+              <br />
+              <span className="font-serif font-light italic text-[oklch(75%_0.15_50)]">Craftsman’s</span> Forge
+            </h2>
+            <p className="mb-12 max-w-md text-lg leading-relaxed text-white/40">
+              Every module is a floating island of logic. We prioritize the human rhythm over machine efficiency, creating tools that breathe with you.
+            </p>
+
+            <div className="space-y-6">
+              <div className="group flex cursor-help items-center gap-6">
+                <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-[oklch(75%_0.15_50)]">
+                  01
+                </div>
+                <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-[oklch(75%_0.15_50)]/30" />
+                <span className="text-[10px] uppercase tracking-[0.2em] opacity-40">Latency Optimization</span>
+              </div>
+
+              <div className="group flex cursor-help items-center gap-6">
+                <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-[oklch(45%_0.1_150)]">
+                  02
+                </div>
+                <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-[oklch(45%_0.1_150)]/30" />
+                <span className="text-[10px] uppercase tracking-[0.2em] opacity-40">Reactive Life-cycles</span>
+              </div>
+            </div>
           </div>
-          <span className="text-[11px] font-bold text-[#358756] mt-1 text-center leading-tight">
-            Điểm &amp; Review
-          </span>
-        </Link>
 
-        {/* Nút 2: LingoThinking */}
-        <Link
-          href="#methodology"
-          className="group flex flex-col items-center justify-center w-[76px] py-2.5 rounded-l-2xl bg-white border border-[#E3E7ED] border-r-0 shadow-lg shadow-[#304278]/10 hover:translate-x-[-4px] transition-all"
-        >
-          <div className="h-9 w-9 rounded-xl bg-[#D14242] text-white flex items-center justify-center shadow-sm">
-            <Icon name="sparkles" size={18} />
-          </div>
-          <span className="text-[11px] font-bold text-[#D14242] mt-1 text-center leading-tight">
-            Lingo<br />thinking
-          </span>
-        </Link>
-
-        {/* Nút 3: Sách độc quyền */}
-        <Link
-          href="/vocabulary"
-          className="group flex flex-col items-center justify-center w-[76px] py-2.5 rounded-l-2xl bg-white border border-[#E3E7ED] border-r-0 shadow-lg shadow-[#304278]/10 hover:translate-x-[-4px] transition-all"
-        >
-          <div className="h-9 w-9 rounded-xl bg-[#5243AA] text-white flex items-center justify-center shadow-sm">
-            <Icon name="cards" size={18} />
-          </div>
-          <span className="text-[11px] font-bold text-[#5243AA] mt-1 text-center leading-tight">
-            Sách độc quyền
-          </span>
-        </Link>
-      </div>
-
-      {/* ─── 4. FLOATING MESSENGER & ZALO (GÓC PHẢI DƯỚI GIỐNG DOL) ─── */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
-        <Link
-          href="/ai-learning"
-          aria-label="Gia sư AI"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0084FF] text-white shadow-xl shadow-[#0084FF]/30 hover:scale-110 transition-transform"
-        >
-          <Icon name="bot" size={22} />
-        </Link>
-        <Link
-          href="/home"
-          aria-label="Zalo tư vấn"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0068FF] text-white font-black text-xs shadow-xl shadow-[#0068FF]/30 hover:scale-110 transition-transform"
-        >
-          Zalo
-        </Link>
-      </div>
-
-      {/* ─── 5. HERO SECTION CHÍNH (CHUẨN 100% CẤU TRÚC ẢNH CHỤP) ─── */}
-      <section className="relative pt-10 pb-24 overflow-hidden">
-        <div className="mx-auto max-w-[1340px] px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          {/* Top Pill Badges (IELTS, THCS, Flyers -> TOEIC, THCS, SKILLS) */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-center gap-2.5 mb-6"
-          >
-            <span className="inline-flex items-center justify-center rounded-full bg-[#D14242] text-white font-black text-xs px-4 py-1.5 shadow-sm">
-              TOEIC
-            </span>
-            <span className="inline-flex items-center justify-center rounded-full bg-[#1E293B] text-white font-black text-xs px-4 py-1.5 shadow-sm">
-              4 KỸ NĂNG
-            </span>
-            <span className="inline-flex items-center justify-center rounded-full bg-[#1D4ED8] text-white font-black text-xs px-4 py-1.5 shadow-sm">
-              AI TUTOR
-            </span>
-          </motion.div>
-
-          {/* Main Hero Heading */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="space-y-1"
-          >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-[#242938] tracking-tight">
-              Học viện Tiếng Anh Tư Duy
-            </h1>
-            <div className="text-4xl sm:text-5xl md:text-6xl font-black text-[#D14242] tracking-tight flex items-center justify-center gap-2">
-              <span>LingoSphere</span>
-              <span className="text-[#D14242] text-2xl sm:text-3xl animate-bounce">✨</span>
-            </div>
-          </motion.div>
-
-          {/* Key Stats Bar (Linearthinking | 4,000+ | 20,000+) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 my-10"
-          >
-            <div className="text-center">
-              <div className="text-xl sm:text-2xl font-black text-[#242938]">LingoThinking</div>
-              <div className="text-[11px] font-bold text-[#7C8793] uppercase tracking-wider mt-0.5">
-                TIẾNG ANH TƯ DUY
+          <div className="workbench-ui animate-[float-slow_8s_ease-in-out_infinite] rounded-[40px] p-1">
+            <div className="flex items-center justify-between rounded-t-[39px] border-b border-white/10 bg-black/60 p-6">
+              <div className="flex gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
+                <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
+                <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
               </div>
+              <span className="text-[9px] uppercase tracking-widest text-white/20">core_engine.tsx</span>
             </div>
 
-            <div className="h-8 w-[1px] bg-[#E3E7ED] hidden sm:block" />
+            <div className="p-10 font-mono text-sm leading-relaxed">
+              <code className="block text-white/40">
+                <span className="text-[oklch(75%_0.15_50)] italic">import</span> {"{ Soul }"}{" "}
+                <span className="text-[oklch(75%_0.15_50)] italic">from</span> <span className="text-[oklch(45%_0.1_150)]">&quot;@haven/core&quot;</span>;
+              </code>
+              <code className="mt-4 block">
+                <span className="text-[oklch(75%_0.15_50)]">const</span> <span className="text-white">Dream</span> = (
+                <span className="text-white">intent</span>: <span className="text-[oklch(45%_0.1_150)]">CreativeIntent</span>
+                ) =&gt; {"{"}
+              </code>
+              <code className="block text-white/60">
+                &nbsp;&nbsp;<span className="text-[oklch(75%_0.15_50)]">return</span> intent.map(synapse =&gt; ({"{"}
+              </code>
+              <code className="block">&nbsp;&nbsp;&nbsp;&nbsp;...synapse,</code>
+              <code className="block text-white/60">&nbsp;&nbsp;&nbsp;&nbsp;state: <span className="text-[oklch(45%_0.1_150)]">&quot;floating&quot;</span>,</code>
+              <code className="block text-white/60">&nbsp;&nbsp;&nbsp;&nbsp;latency: <span className="text-[oklch(75%_0.15_50)]">null</span></code>
+              <code className="block text-white/60">&nbsp;&nbsp;{"})"});</code>
+              <code className="block text-white/60">{"};"}</code>
 
-            <div className="text-center">
-              <div className="text-xl sm:text-2xl font-black text-[#242938]">4,000+</div>
-              <div className="text-[11px] font-bold text-[#7C8793] uppercase tracking-wider mt-0.5">
-                HỌC VIÊN ĐẠT 850+ TOEIC
-              </div>
-            </div>
-
-            <div className="h-8 w-[1px] bg-[#E3E7ED] hidden sm:block" />
-
-            <div className="text-center">
-              <div className="text-xl sm:text-2xl font-black text-[#242938]">20,000+</div>
-              <div className="text-[11px] font-bold text-[#7C8793] uppercase tracking-wider mt-0.5">
-                TÂM TÌNH HỌC VIÊN
-              </div>
-            </div>
-          </motion.div>
-
-          {/* ─── VÒNG CUNG HỌC VIÊN + KHUNG TRUNG TÂM 4 KHỐI (CHUẨN 100% ẢNH DOL) ─── */}
-          <div className="relative mx-auto max-w-4xl pt-4">
-            {/* Ảnh học viên cánh trái 1 */}
-            <div className="hidden lg:block absolute -left-28 top-6 z-0 w-36 rounded-2xl overflow-hidden shadow-lg border-2 border-white -rotate-6">
-              <div className="bg-gradient-to-br from-primary/20 to-accent/20 h-28 flex flex-col items-center justify-center p-3 text-center">
-                <span className="text-2xl">🎓</span>
-                <span className="text-[10px] font-bold text-[#242938] mt-1">Lớp TOEIC 850+</span>
-              </div>
-            </div>
-
-            {/* Ảnh học viên cánh trái 2 */}
-            <div className="hidden lg:block absolute -left-20 bottom-0 z-0 w-36 rounded-2xl overflow-hidden shadow-lg border-2 border-white -rotate-12">
-              <div className="bg-gradient-to-br from-success/20 to-primary/20 h-28 flex flex-col items-center justify-center p-3 text-center">
-                <span className="text-2xl">🏆</span>
-                <span className="text-[10px] font-bold text-[#242938] mt-1">Thủ khoa 990</span>
-              </div>
-            </div>
-
-            {/* Ảnh học viên cánh phải 1 */}
-            <div className="hidden lg:block absolute -right-28 top-6 z-0 w-36 rounded-2xl overflow-hidden shadow-lg border-2 border-white rotate-6">
-              <div className="bg-gradient-to-br from-accent/20 to-warning/20 h-28 flex flex-col items-center justify-center p-3 text-center">
-                <span className="text-2xl">🌟</span>
-                <span className="text-[10px] font-bold text-[#242938] mt-1">Đội ngũ Giảng viên</span>
-              </div>
-            </div>
-
-            {/* Ảnh học viên cánh phải 2 */}
-            <div className="hidden lg:block absolute -right-20 bottom-0 z-0 w-36 rounded-2xl overflow-hidden shadow-lg border-2 border-white rotate-12">
-              <div className="bg-gradient-to-br from-primary/20 to-success/20 h-28 flex flex-col items-center justify-center p-3 text-center">
-                <span className="text-2xl">🚀</span>
-                <span className="text-[10px] font-bold text-[#242938] mt-1">Học viên xuất sắc</span>
-              </div>
-            </div>
-
-            {/* KHUNG TRUNG TÂM 4 KHỐI PHÂN LOẠI (GIỐNG 100% CARD TRONG ẢNH) */}
-            <div className="relative z-10 rounded-3xl border border-[#E3E7ED] bg-white shadow-xl overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E3E7ED]">
-                {/* Khối 1: TOEIC Người Lớn */}
-                <Link
-                  href="/courses"
-                  className="p-8 text-center hover:bg-[#F9FAFA] transition-colors group cursor-pointer"
-                >
-                  <div className="flex justify-center mb-3">
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-black bg-[#D14242] text-white">
-                      TOEIC
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-[#242938] group-hover:text-[#D14242] transition-colors">
-                    TOEIC Người Lớn
-                  </h3>
-                  <p className="text-xs text-[#7C8793] mt-1">
-                    Học sinh THPT, Sinh viên &amp; Người đi làm
-                  </p>
-                </Link>
-
-                {/* Khối 2: 4 Kỹ Năng & Giao Tiếp */}
-                <Link
-                  href="/speaking"
-                  className="p-8 text-center hover:bg-[#F9FAFA] transition-colors group cursor-pointer"
-                >
-                  <div className="flex justify-center mb-3">
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-black bg-[#1E293B] text-white">
-                      4 KỸ NĂNG
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-[#242938] group-hover:text-[#D14242] transition-colors">
-                    Luyện Nói Whisper &amp; Viết AI
-                  </h3>
-                  <p className="text-xs text-[#7C8793] mt-1">
-                    Chuẩn hóa phát âm và tư duy viết học thuật
-                  </p>
-                </Link>
-              </div>
-
-              <div className="border-t border-[#E3E7ED] grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#E3E7ED]">
-                {/* Khối 3: Flashcard SRS */}
-                <Link
-                  href="/vocabulary"
-                  className="p-6 text-center hover:bg-[#F9FAFA] transition-colors group cursor-pointer"
-                >
-                  <span className="text-sm font-extrabold text-[#242938] group-hover:text-[#D14242] transition-colors uppercase tracking-wider">
-                    TỪ VỰNG SRS
-                  </span>
-                </Link>
-
-                {/* Khối 4: Tổng Hợp */}
-                <Link
-                  href="/courses"
-                  className="p-6 text-center hover:bg-[#F9FAFA] transition-colors group cursor-pointer"
-                >
-                  <span className="text-sm font-extrabold text-[#242938] group-hover:text-[#D14242] transition-colors uppercase tracking-wider">
-                    TỔNG HỢP KHÓA HỌC
-                  </span>
-                </Link>
+              <div className="mt-8 flex gap-4 border-t border-white/5 pt-8">
+                <div className="rounded-lg border border-[oklch(45%_0.1_150)]/20 bg-[oklch(45%_0.1_150)]/20 px-4 py-2 text-[10px] text-[oklch(45%_0.1_150)]">
+                  Active Session
+                </div>
+                <div className="rounded-lg bg-white/5 px-4 py-2 text-[10px] text-white/30">v2.4.0-cloud</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── 6. FOOTER ─── */}
-      <footer className="border-t border-[#E3E7ED] bg-white py-12 text-center text-xs text-[#7C8793]">
-        <div className="mx-auto max-w-[1340px] px-4 space-y-4">
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#D14242] text-white font-black text-xs">
-              L
+      <section id="islands" className="relative px-6 py-60">
+        <div className="mb-32 text-center">
+          <h2 className="absolute left-0 right-0 top-40 select-none text-[10vw] font-bold leading-none tracking-[-0.05em] opacity-5">
+            ARCHIPELAGO
+          </h2>
+          <span className="mb-6 block text-[10px] uppercase tracking-[0.5em] text-[oklch(75%_0.15_50)]">Explore the Cloud Islands</span>
+          <h3 className="text-4xl font-bold tracking-tighter md:text-6xl">Personal Nodes of Innovation</h3>
+        </div>
+
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {islands.map((item) => (
+            <div
+              key={item.node}
+              className={`parallax-island glass-card group relative overflow-hidden rounded-[50px] p-12 ${item.topOffset}`}
+            >
+              <div
+                className={[
+                  "absolute -top-20 -right-20 h-40 w-40 blur-[80px] transition-all",
+                  item.accent === "lantern"
+                    ? "bg-[oklch(75%_0.15_50)]/20 group-hover:bg-[oklch(75%_0.15_50)]/40"
+                    : item.accent === "moss"
+                      ? "bg-[oklch(45%_0.1_150)]/20 group-hover:bg-[oklch(45%_0.1_150)]/40"
+                      : "bg-white/10 group-hover:bg-white/20",
+                ].join(" ")}
+              />
+              <div
+                className={[
+                  "mb-8 font-mono text-[10px]",
+                  item.accent === "lantern" ? "text-[oklch(75%_0.15_50)]" : item.accent === "moss" ? "text-[oklch(45%_0.1_150)]" : "opacity-40",
+                ].join(" ")}
+              >
+                {item.node}
+              </div>
+              <h4 className="mb-6 text-2xl font-bold tracking-tight">{item.title}</h4>
+              <p className="mb-10 text-sm leading-loose text-white/40">{item.description}</p>
+              <div className="flex gap-2">
+                <div className="h-[1px] w-8 bg-white/20" />
+                <div
+                  className={[
+                    "h-[1px] w-2",
+                    item.accent === "lantern" ? "bg-[oklch(75%_0.15_50)]" : item.accent === "moss" ? "bg-[oklch(45%_0.1_150)]" : "bg-white/40",
+                  ].join(" ")}
+                />
+              </div>
             </div>
-            <span className="text-base font-black text-[#242938]">
-              Lingo<span className="text-[#D14242]">Sphere</span>
-            </span>
+          ))}
+        </div>
+      </section>
+
+      <section id="manifesto" className="relative overflow-hidden py-60">
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,_rgba(255,170,80,0.05)_0%,_transparent_70%)]" />
+        <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
+          <h2 className="mb-16 font-serif text-6xl font-light leading-tight tracking-tighter italic md:text-8xl">
+            Software is the <span className="text-[oklch(75%_0.15_50)]">mirror</span> of the developer&apos;s soul.
+          </h2>
+
+          <div className="grid grid-cols-2 gap-12 border-t border-white/5 pt-20 md:grid-cols-4">
+            {stats.map((stat) => (
+              <div key={stat.label}>
+                <div className="mb-2 text-4xl font-bold">{stat.value}</div>
+                <div className="text-[10px] uppercase tracking-widest opacity-40">{stat.label}</div>
+              </div>
+            ))}
           </div>
-          <p>© {new Date().getFullYear()} LingoSphere - Hệ Sinh Thái Học Tiếng Anh Tư Duy Chuẩn Quốc Tế.</p>
+        </div>
+      </section>
+
+      <footer id="stargazer" className="relative overflow-hidden bg-black px-10 pb-20 pt-60">
+        <div className="absolute top-0 left-1/2 h-[100vh] w-[200vw] -translate-x-1/2 -translate-y-1/2 rounded-[100%] border border-white/5 opacity-20" />
+
+        <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-end gap-32 md:grid-cols-2">
+          <div className="space-y-12">
+            <div className="animate-[pulse-soft_4s_ease-in-out_infinite] flex h-16 w-16 items-center justify-center rounded-full border border-white/5 bg-white/2.5 glass-card">
+              <div className="h-2 w-2 rounded-full bg-[oklch(75%_0.15_50)]" />
+            </div>
+            <h2 className="text-5xl font-bold tracking-tighter">Ready to float?</h2>
+            <p className="max-w-sm text-lg italic text-white/30">
+              The archipelago is always expanding. Send a signal and join the haven.
+            </p>
+            <div className="flex gap-4">
+              <input
+                type="text"
+                placeholder="your@email.com"
+                className="w-full max-w-xs rounded-xl border border-white/10 bg-white/5 px-6 py-4 text-sm outline-none transition-all placeholder:text-white/30 focus:border-[oklch(75%_0.15_50)]/50"
+              />
+              <button className="rounded-xl bg-[oklch(75%_0.15_50)] px-8 py-4 text-[10px] font-black uppercase tracking-widest text-[oklch(20%_0.08_280)]">
+                Connect
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-20 text-right">
+            <div className="space-y-4">
+              <div className="mb-8 text-[10px] uppercase tracking-[0.3em] text-[oklch(75%_0.15_50)]">Navigation</div>
+              <a href="#" className="block text-sm opacity-40 transition-all hover:opacity-100">
+                Archive
+              </a>
+              <a href="#" className="block text-sm opacity-40 transition-all hover:opacity-100">
+                Telemetry
+              </a>
+              <a href="#" className="block text-sm opacity-40 transition-all hover:opacity-100">
+                Open Source
+              </a>
+            </div>
+            <div className="space-y-4">
+              <div className="mb-8 text-[10px] uppercase tracking-[0.3em] text-[oklch(75%_0.15_50)]">Social Signal</div>
+              <a href="#" className="block text-sm opacity-40 transition-all hover:opacity-100">
+                GitHub
+              </a>
+              <a href="#" className="block text-sm opacity-40 transition-all hover:opacity-100">
+                LinkedIn
+              </a>
+              <a href="#" className="block text-sm opacity-40 transition-all hover:opacity-100">
+                Bluesky
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-40 flex flex-col items-center justify-between gap-8 border-t border-white/5 pt-10 md:flex-row">
+          <p className="text-[10px] uppercase tracking-[0.5em] text-white/20">© 2026 Code Haven / Soulful Engineering</p>
+          <div className="flex items-center gap-2">
+            <div className="h-1 w-1 animate-pulse rounded-full bg-green-500" />
+            <span className="text-[9px] uppercase tracking-widest text-white/30">System Operational: Clouds Clear</span>
+          </div>
         </div>
       </footer>
-    </div>
+
+      <style jsx global>{`
+        :root {
+          color-scheme: dark;
+          --scroll: 0;
+        }
+
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          margin: 0;
+          overflow-x: hidden;
+          background: oklch(20% 0.08 280);
+        }
+
+        body::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          opacity: 0.03;
+          z-index: 9999;
+          background: url("https://grainy-gradients.vercel.app/noise.svg");
+        }
+
+        ::-webkit-scrollbar {
+          display: none;
+        }
+
+        .hero-mask {
+          -webkit-mask-image: radial-gradient(circle, black 40%, transparent 75%);
+          mask-image: radial-gradient(circle, black 40%, transparent 75%);
+        }
+
+        .lantern-glow {
+          background: rgba(255, 170, 80, 0.05);
+          backdrop-filter: blur(12px) saturate(1.5);
+          border: 1px solid rgba(255, 170, 80, 0.2);
+          box-shadow:
+            0 0 30px rgba(255, 170, 80, 0.05),
+            inset 0 0 10px rgba(255, 170, 80, 0.05);
+          transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .lantern-glow:hover {
+          background: rgba(255, 170, 80, 0.15);
+          box-shadow: 0 0 50px rgba(255, 170, 80, 0.3);
+          border-color: rgba(255, 170, 80, 0.5);
+          transform: translateY(-5px);
+        }
+
+        .shimmer-text {
+          background: linear-gradient(90deg, #fff 0%, #ffaa50 50%, #fff 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .workbench-ui {
+          background: rgba(15, 15, 30, 0.3);
+          backdrop-filter: blur(50px) saturate(1.8);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-card {
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          transition: all 0.5s ease;
+        }
+
+        .glass-card:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 170, 80, 0.3);
+        }
+
+        .reveal {
+          opacity: 0;
+          transform: translateY(30px);
+          transition:
+            opacity 0.8s ease,
+            transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .ascending-bg {
+          background: oklch(calc(20% - (var(--scroll) * 15%)) 0.08 280);
+          transition: background 0.2s linear;
+        }
+
+        @keyframes float-slow {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-25px);
+          }
+        }
+
+        @keyframes float-mid {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-18px);
+          }
+        }
+
+        @keyframes shimmer {
+          0% {
+            background-position: -200% center;
+          }
+          100% {
+            background-position: 200% center;
+          }
+        }
+
+        @keyframes pulse-soft {
+          0%,
+          100% {
+            opacity: 0.4;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.7;
+            transform: scale(1.05);
+          }
+        }
+      `}</style>
+    </main>
   )
 }
