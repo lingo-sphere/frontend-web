@@ -24,7 +24,7 @@ const islands = [
     description:
       "Phòng thi thử 200 câu 7 Part bấm giờ thực tế. Thuật toán chấm điểm và phân tích điểm yếu tức thì.",
     accent: "lantern",
-    topOffset: "",
+    topOffset: "lg:translate-y-0",
   },
   {
     node: "NODE_02",
@@ -32,7 +32,7 @@ const islands = [
     description:
       "Nhận diện giọng nói siêu chuẩn xác từng âm vị. Hướng dẫn phát âm, nối âm và ngữ điệu tự nhiên.",
     accent: "moss",
-    topOffset: "md:mt-12",
+    topOffset: "lg:translate-y-12 sm:translate-y-6",
   },
   {
     node: "NODE_03",
@@ -40,7 +40,15 @@ const islands = [
     description:
       "Khoa học SuperMemo SM-2 tự động nhắc lại từ vựng đúng thời điểm não bộ sắp quên để ghi nhớ vĩnh viễn.",
     accent: "neutral",
-    topOffset: "",
+    topOffset: "lg:translate-y-3",
+  },
+  {
+    node: "NODE_04",
+    title: "Gia Sư AI Hybrid 24/7",
+    description:
+      "Trợ lý AI Gemini Flash kết hợp Groq LPU giải đáp thắc mắc, phân tích ngữ pháp và sửa bài viết tức thì.",
+    accent: "lantern",
+    topOffset: "lg:translate-y-16 sm:translate-y-6",
   },
 ]
 
@@ -125,7 +133,6 @@ export function LandingPage() {
     const heroVideo = heroVideoRef.current
     if (!heroVideo) return
 
-    const islandsEls = Array.from(document.querySelectorAll<HTMLElement>(".parallax-island"))
     let ticking = false
 
     const update = () => {
@@ -133,11 +140,6 @@ export function LandingPage() {
       setShowScrollTop(scrollY > 250)
       const progress = scrollY / Math.max(document.documentElement.scrollHeight - window.innerHeight, 1)
       document.body.style.setProperty("--scroll", String(progress))
-
-      islandsEls.forEach((island, index) => {
-        const speed = 0.05 + index * 0.02
-        island.style.transform = `translateY(${scrollY * speed * -1}px)`
-      })
 
       const heroProgress = Math.min(scrollY / (window.innerHeight * 1.15), 1)
       const scale = 1.07 + heroProgress * 0.1
@@ -172,7 +174,7 @@ export function LandingPage() {
           className="flex items-center gap-3 group cursor-pointer bg-transparent border-none p-0 outline-none"
           aria-label="Cuộn lên đầu trang"
         >
-          <div className="h-2.5 w-2.5 rounded-full bg-[oklch(75%_0.15_50)] shadow-[0_0_8px_oklch(75%_0.15_50)]" />
+          <div className="h-2.5 w-2.5 rounded-full bg-[#2f7f78] shadow-[0_0_8px_#2f7f78]" />
           <div className="text-xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
             LINGO <span className="font-light text-white/80">SPHERE</span>
           </div>
@@ -180,7 +182,7 @@ export function LandingPage() {
 
         <nav className="hidden gap-10 text-[11px] font-bold uppercase tracking-[0.35em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] md:flex">
           {navItems.map((item) => (
-            <a key={item.href} href={item.href} className="transition-all hover:text-[oklch(75%_0.15_50)] hover:scale-105">
+            <a key={item.href} href={item.href} className="transition-all hover:text-[#2f7f78] hover:scale-105">
               {item.label}
             </a>
           ))}
@@ -188,7 +190,7 @@ export function LandingPage() {
 
         <Link
           href="/home"
-          className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/15 backdrop-blur-md px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-[0_4px_20px_rgba(0,0,0,0.5)] hover:scale-105 hover:bg-white hover:text-black hover:border-white transition-all cursor-pointer"
+          className="inline-flex items-center justify-center rounded-full border border-white/30 bg-[#2f7f78]/30 backdrop-blur-md px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-[0_4px_20px_rgba(47,127,120,0.4)] hover:scale-105 hover:bg-[#2f7f78] hover:text-white hover:border-[#2f7f78] transition-all cursor-pointer"
         >
           Vào Bàn Học
         </Link>
@@ -202,20 +204,18 @@ export function LandingPage() {
         </div>
 
         <div className="relative z-10 px-6 text-center">
-          
-
-          <h1 className="shimmer-text mb-8 text-5xl font-extrabold leading-tight tracking-tighter md:text-[7.5rem] animate-[shimmer_4s_linear_infinite]">
+          <h1 className="shimmer-text heading-glow mb-8 text-5xl font-extrabold leading-tight tracking-tighter md:text-[7.5rem] animate-[shimmer_4s_linear_infinite]">
             Tiếng Anh Tư Duy
             <br />
             Bứt Phá TOEIC
           </h1>
 
-          <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 p-8 backdrop-blur-md bg-black/20">
-            <p className="mb-8 font-serif text-lg md:text-xl leading-relaxed font-light italic text-white/95">
+          <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 p-8 backdrop-blur-[2px] bg-black/5 shadow-lg">
+            <p className="mb-8 font-serif text-lg md:text-xl leading-relaxed font-light italic text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
               &quot;Học tiếng Anh bằng tư duy logic và khoa học não bộ, nói không với học vẹt.&quot;
             </p>
             <Link href="/home">
-              <button className="lantern-glow rounded-2xl border border-white/20 bg-black/40 px-12 py-4 text-[11px] font-black uppercase tracking-[0.35em] text-white transition-all hover:border-[oklch(75%_0.15_50)] hover:bg-[oklch(75%_0.15_50)] hover:text-black cursor-pointer">
+              <button className="rounded-2xl border border-white/20 bg-black/10 backdrop-blur-sm px-12 py-4 text-[11px] font-black uppercase tracking-[0.35em] text-white shadow-lg transition-all duration-500 ease-out hover:border-[#2f7f78] hover:text-[#2f7f78] hover:shadow-[0_0_30px_rgba(47,127,120,0.5),inset_0_0_15px_rgba(47,127,120,0.2)] cursor-pointer">
                 Bắt Đầu Học Miễn Phí
               </button>
             </Link>
@@ -231,10 +231,10 @@ export function LandingPage() {
       <section id="workbench" className="relative min-h-screen px-6 py-40 md:px-24">
         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-20 lg:grid-cols-2">
           <div className="relative z-10">
-            <h2 className="mb-8 text-4xl sm:text-5xl font-bold tracking-tighter leading-tight">
+            <h2 className="heading-glow mb-8 text-4xl sm:text-5xl font-bold tracking-tighter leading-tight text-white">
               Hệ Phương Pháp
               <br />
-              <span className="font-serif font-light italic text-[oklch(75%_0.15_50)]">LingoThinking</span> Logic
+              <span className="font-serif font-light italic text-[#48c9b0] teal-glow">LingoThinking</span> Logic
             </h2>
             <p className="mb-12 max-w-md text-base sm:text-lg leading-relaxed text-white/60">
               Tách cấu trúc câu, hiểu trọn vẹn ngữ cảnh và ghi nhớ vĩnh viễn từ vựng bằng thuật toán lặp lại ngắt quãng Spaced Repetition.
@@ -242,25 +242,25 @@ export function LandingPage() {
 
             <div className="space-y-6">
               <div className="group flex cursor-help items-center gap-6">
-                <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-[oklch(75%_0.15_50)] font-bold text-sm">
+                <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-[#2f7f78] font-bold text-sm">
                   01
                 </div>
-                <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-[oklch(75%_0.15_50)]/30" />
+                <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-[#2f7f78]/30" />
                 <span className="text-[11px] uppercase tracking-[0.2em] opacity-60 font-semibold">Tư Duy Logic (Simplify & Connect)</span>
               </div>
 
               <div className="group flex cursor-help items-center gap-6">
-                <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-[oklch(45%_0.1_150)] font-bold text-sm">
+                <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-[#2f7f78] font-bold text-sm">
                   02
                 </div>
-                <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-[oklch(45%_0.1_150)]/30" />
+                <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-[#2f7f78]/30" />
                 <span className="text-[11px] uppercase tracking-[0.2em] opacity-60 font-semibold">Chuẩn Hóa Âm Vị Whisper STT</span>
               </div>
             </div>
           </div>
 
           <div className="relative flex items-center justify-center">
-            <div className="relative h-[360px] w-[360px] sm:h-[420px] sm:w-[420px] aspect-square rounded-full overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(255,255,255,0.08)]">
+            <div className="relative h-[360px] w-[360px] sm:h-[420px] sm:w-[420px] aspect-square rounded-full overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(47,127,120,0.15)]">
               <video
                 autoPlay
                 muted
@@ -271,12 +271,11 @@ export function LandingPage() {
                 <source src="/video-contact.mp4" type="video/mp4" />
               </video>
 
-              {/* Lớp phủ sương mờ nhẹ tinh tế */}
               <div className="absolute inset-0 rounded-full bg-white/[0.08] backdrop-blur-[0.4px] pointer-events-none" />
             </div>
 
             <div className="vellum-overlay absolute bottom-2 right-0 sm:right-4 max-w-[200px] rounded-2xl border border-white/10 p-5 backdrop-blur-xl bg-black/50 shadow-2xl">
-              <span className="font-serif font-light mb-1 block text-base italic text-[oklch(75%_0.15_50)]">
+              <span className="font-serif font-light mb-1 block text-base italic text-[#2f7f78]">
                 Deep Focus
               </span>
               <p className="text-[10px] uppercase tracking-widest text-white/70 font-semibold leading-relaxed">
@@ -288,48 +287,53 @@ export function LandingPage() {
       </section>
 
       <section id="islands" className="relative px-6 py-40">
-        <div className="mb-24 text-center relative">
+        <div className="mb-28 text-center relative z-20">
           <h2 className="absolute left-0 right-0 top-0 select-none text-[12vw] font-bold leading-none tracking-[-0.05em] opacity-5 pointer-events-none">
             LINGOSPHERE
           </h2>
-          <span className="mb-4 block text-[11px] uppercase tracking-[0.5em] text-[oklch(75%_0.15_50)] font-bold">
+          <span className="teal-glow mb-4 block text-[11px] uppercase tracking-[0.5em] text-[#48c9b0] font-bold">
             Khám Phá Hệ Sinh Thái Học Tập
           </span>
-          <h3 className="text-3xl sm:text-5xl font-bold tracking-tighter">4 Trụ Cột Đột Phá Điểm Số</h3>
+          <h3 className="heading-glow text-3xl sm:text-5xl font-bold tracking-tighter text-white">4 Trụ Cột Đột Phá Điểm Số</h3>
         </div>
 
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 items-start pb-12">
           {islands.map((item) => (
             <div
               key={item.node}
-              className={`parallax-island glass-card group relative overflow-hidden rounded-[40px] p-10 ${item.topOffset}`}
+              className={[
+                "glass-card group relative overflow-hidden rounded-[32px] p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl flex flex-col justify-between min-h-[320px]",
+                item.topOffset,
+              ].join(" ")}
             >
               <div
                 className={[
                   "absolute -top-20 -right-20 h-40 w-40 blur-[80px] transition-all",
                   item.accent === "lantern"
-                    ? "bg-[oklch(75%_0.15_50)]/20 group-hover:bg-[oklch(75%_0.15_50)]/40"
+                    ? "bg-[#2f7f78]/20 group-hover:bg-[#2f7f78]/40"
                     : item.accent === "moss"
-                      ? "bg-[oklch(45%_0.1_150)]/20 group-hover:bg-[oklch(45%_0.1_150)]/40"
+                      ? "bg-[#3f8f68]/20 group-hover:bg-[#3f8f68]/40"
                       : "bg-white/10 group-hover:bg-white/20",
                 ].join(" ")}
               />
-              <div
-                className={[
-                  "mb-6 font-mono text-[11px] font-bold tracking-widest",
-                  item.accent === "lantern" ? "text-[oklch(75%_0.15_50)]" : item.accent === "moss" ? "text-[oklch(45%_0.1_150)]" : "opacity-60",
-                ].join(" ")}
-              >
-                {item.node}
+              <div>
+                <div
+                  className={[
+                    "mb-6 font-mono text-[11px] font-bold tracking-widest",
+                    item.accent === "lantern" ? "text-[#2f7f78]" : item.accent === "moss" ? "text-[#3f8f68]" : "opacity-60",
+                  ].join(" ")}
+                >
+                  {item.node}
+                </div>
+                <h4 className="mb-4 text-xl font-bold tracking-tight text-white">{item.title}</h4>
+                <p className="mb-8 text-xs sm:text-sm leading-relaxed text-white/60">{item.description}</p>
               </div>
-              <h4 className="mb-4 text-2xl font-bold tracking-tight text-white">{item.title}</h4>
-              <p className="mb-8 text-sm leading-relaxed text-white/60">{item.description}</p>
               <div className="flex gap-2">
                 <div className="h-[1px] w-8 bg-white/30" />
                 <div
                   className={[
                     "h-[1px] w-2",
-                    item.accent === "lantern" ? "bg-[oklch(75%_0.15_50)]" : item.accent === "moss" ? "bg-[oklch(45%_0.1_150)]" : "bg-white/50",
+                    item.accent === "lantern" ? "bg-[#2f7f78]" : item.accent === "moss" ? "bg-[#3f8f68]" : "bg-white/50",
                   ].join(" ")}
                 />
               </div>
@@ -339,10 +343,10 @@ export function LandingPage() {
       </section>
 
       <section id="manifesto" className="relative overflow-hidden py-40">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,_rgba(255,170,80,0.08)_0%,_transparent_70%)]" />
+        <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,_rgba(47,127,120,0.12)_0%,_transparent_70%)]" />
         <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
-          <h2 className="mb-16 font-serif text-4xl sm:text-6xl md:text-7xl font-light leading-tight tracking-tighter italic text-white/95">
-            Tiếng Anh không phải để học vẹt, mà là công cụ của <span className="text-[oklch(75%_0.15_50)] font-normal not-italic">tư duy logic</span>.
+          <h2 className="heading-glow mb-16 font-serif text-4xl sm:text-6xl md:text-7xl font-light leading-tight tracking-tighter italic text-white/95">
+            Tiếng Anh không phải để học vẹt, mà là công cụ của <span className="text-[#48c9b0] teal-glow font-normal not-italic">tư duy logic</span>.
           </h2>
 
           <div className="grid grid-cols-2 gap-8 sm:gap-12 border-t border-white/10 pt-16 md:grid-cols-4">
@@ -356,71 +360,76 @@ export function LandingPage() {
         </div>
       </section>
 
-      <footer id="stargazer" className="relative overflow-hidden bg-black/90 px-8 pb-16 pt-40">
-        <div className="absolute top-0 left-1/2 h-[100vh] w-[200vw] -translate-x-1/2 -translate-y-1/2 rounded-[100%] border border-white/5 opacity-20" />
+      <footer id="stargazer" className="relative overflow-hidden bg-gradient-to-b from-[oklch(20%_0.08_280)] via-black/90 to-black px-6 sm:px-12 pt-16 pb-10 border-t border-white/10">
+        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-32 w-full max-w-4xl bg-[radial-gradient(ellipse_at_top,_rgba(72,201,176,0.18),_transparent_70%)]" />
 
-        <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-end gap-20 md:grid-cols-2">
-          <div className="space-y-8">
-            <div className="animate-[pulse-soft_4s_ease-in-out_infinite] flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 glass-card">
-              <div className="h-2.5 w-2.5 rounded-full bg-[oklch(75%_0.15_50)]" />
+        <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-start gap-12 lg:grid-cols-12">
+          <div className="space-y-5 lg:col-span-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#48c9b0]/30 bg-[#2f7f78]/15 px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest text-[#48c9b0] backdrop-blur-md">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#48c9b0] shadow-[0_0_8px_#48c9b0]" />
+              LingoSphere Platform
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold tracking-tighter">Sẵn sàng bứt phá?</h2>
-            <p className="max-w-md text-base italic text-white/50 leading-relaxed">
-              Hơn 20,000 học viên đã làm chủ tiếng Anh cùng LingoSphere. Nhập email hoặc bấm vào bàn học để trải nghiệm ngay.
+            <h2 className="heading-glow text-3xl sm:text-4xl font-bold tracking-tight text-white">
+              Sẵn sàng bứt phá điểm số?
+            </h2>
+            <p className="max-w-md text-sm text-white/60 leading-relaxed">
+              Hơn 20,000 học viên đã làm chủ tiếng Anh cùng LingoSphere. Học bằng tư duy logic não bộ và chinh phục mục tiêu TOEIC ngay hôm nay.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link href="/home">
-                <button className="rounded-xl bg-[oklch(75%_0.15_50)] px-8 py-4 text-[11px] font-black uppercase tracking-widest text-[oklch(20%_0.08_280)] hover:opacity-90 transition-all cursor-pointer">
+                <button className="rounded-xl bg-[#2f7f78] px-7 py-3.5 text-[11px] font-black uppercase tracking-widest text-white hover:bg-[#236b65] transition-all cursor-pointer shadow-lg shadow-[#2f7f78]/30 hover:scale-105 active:scale-95">
                   Vào Bàn Học Ngay
                 </button>
               </Link>
               <Link href="/toeic">
-                <button className="rounded-xl border border-white/20 bg-white/5 px-8 py-4 text-[11px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all cursor-pointer">
+                <button className="rounded-xl border border-white/20 bg-white/5 px-7 py-3.5 text-[11px] font-black uppercase tracking-widest text-white hover:bg-white/10 hover:border-white/40 transition-all cursor-pointer">
                   Thi Thử TOEIC ETS
                 </button>
               </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-12 text-right">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 lg:col-span-7 pt-2">
             <div className="space-y-3">
-              <div className="mb-6 text-[11px] uppercase tracking-[0.3em] text-[oklch(75%_0.15_50)] font-bold">Khóa Học</div>
-              <Link href="/courses" className="block text-sm text-white/50 transition-all hover:text-white">
-                TOEIC Foundation 450+
-              </Link>
-              <Link href="/courses" className="block text-sm text-white/50 transition-all hover:text-white">
-                TOEIC Intensive 750+
-              </Link>
-              <Link href="/speaking" className="block text-sm text-white/50 transition-all hover:text-white">
-                Luyện Nói Whisper AI
-              </Link>
-              <Link href="/vocabulary" className="block text-sm text-white/50 transition-all hover:text-white">
-                Từ Vựng SRS Flashcard
-              </Link>
+              <div className="text-[11px] uppercase tracking-[0.25em] text-[#48c9b0] font-bold">Khóa Học</div>
+              <ul className="space-y-2.5 text-xs text-white/60">
+                <li><Link href="/courses" className="hover:text-white transition-colors">TOEIC Foundation 450+</Link></li>
+                <li><Link href="/courses" className="hover:text-white transition-colors">TOEIC Intensive 750+</Link></li>
+                <li><Link href="/speaking" className="hover:text-white transition-colors">Luyện Nói Whisper AI</Link></li>
+                <li><Link href="/vocabulary" className="hover:text-white transition-colors">Từ Vựng SRS 44 Âm</Link></li>
+              </ul>
             </div>
+
             <div className="space-y-3">
-              <div className="mb-6 text-[11px] uppercase tracking-[0.3em] text-[oklch(75%_0.15_50)] font-bold">Hệ Thống</div>
-              <Link href="/home" className="block text-sm text-white/50 transition-all hover:text-white">
-                Bàn Học (Dashboard)
-              </Link>
-              <Link href="/ai-learning" className="block text-sm text-white/50 transition-all hover:text-white">
-                Gia Sư AI 24/7
-              </Link>
-              <Link href="/leaderboard" className="block text-sm text-white/50 transition-all hover:text-white">
-                Bảng Xếp Hạng
-              </Link>
-              <Link href="/journal" className="block text-sm text-white/50 transition-all hover:text-white">
-                Nhật Ký Tiếng Anh
-              </Link>
+              <div className="text-[11px] uppercase tracking-[0.25em] text-[#48c9b0] font-bold">Tính Năng</div>
+              <ul className="space-y-2.5 text-xs text-white/60">
+                <li><Link href="/ai-learning" className="hover:text-white transition-colors">Gia Sư AI Hybrid 24/7</Link></li>
+                <li><Link href="/practice" className="hover:text-white transition-colors">Luyện Nghe Dictation</Link></li>
+                <li><Link href="/writing" className="hover:text-white transition-colors">Luyện Viết Sư Phạm</Link></li>
+                <li><Link href="/journal" className="hover:text-white transition-colors">Nhật Ký Học Tập</Link></li>
+              </ul>
+            </div>
+
+            <div className="space-y-3 col-span-2 sm:col-span-1">
+              <div className="text-[11px] uppercase tracking-[0.25em] text-[#48c9b0] font-bold">Hệ Thống</div>
+              <ul className="space-y-2.5 text-xs text-white/60">
+                <li><Link href="/home" className="hover:text-white transition-colors">Bàn Học Dashboard</Link></li>
+                <li><Link href="/leaderboard" className="hover:text-white transition-colors">Bảng Xếp Hạng XP</Link></li>
+                <li><Link href="/progress" className="hover:text-white transition-colors">Heatmap Hoạt Động</Link></li>
+                <li><Link href="/toeic" className="hover:text-white transition-colors">ETS Exam Simulator</Link></li>
+              </ul>
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 mt-32 flex flex-col items-center justify-between gap-6 border-t border-white/10 pt-8 md:flex-row">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-white/40">© 2026 LingoSphere / Học Viện Tiếng Anh Tư Duy</p>
+        <div className="relative z-10 mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row text-center sm:text-left">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">© 2026 LingoSphere — Học Viện Tiếng Anh Tư Duy</p>
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-            <span className="text-[10px] uppercase tracking-widest text-white/50 font-medium">Hệ Thống Trực Tuyến: 24/7 AI Tutor Sẵn Sàng</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] uppercase tracking-widest text-white/50 font-medium">Hệ Thống: 24/7 AI Tutor Sẵn Sàng</span>
           </div>
         </div>
       </footer>
@@ -429,7 +438,7 @@ export function LandingPage() {
         <button
           onClick={scrollToTop}
           aria-label="Cuộn lên đầu trang"
-          className="fixed bottom-8 right-8 z-[100] flex h-12 w-12 items-center justify-center rounded-none border border-[oklch(75%_0.15_50)]/50 bg-black/80 backdrop-blur-xl text-white shadow-[0_0_20px_rgba(255,170,80,0.35),0_0_40px_rgba(255,170,80,0.18),inset_0_0_12px_rgba(255,170,80,0.1)] transition-all duration-500 ease-out hover:border-[oklch(75%_0.15_50)] hover:bg-[oklch(75%_0.15_50)] hover:text-black hover:shadow-[0_0_30px_rgba(255,170,80,0.8),0_0_60px_rgba(255,170,80,0.4)] cursor-pointer"
+          className="fixed bottom-8 right-8 z-[100] flex h-12 w-12 items-center justify-center rounded-none border border-[#2f7f78]/50 bg-black/80 backdrop-blur-xl text-white shadow-[0_0_20px_rgba(47,127,120,0.4),0_0_40px_rgba(47,127,120,0.2),inset_0_0_12px_rgba(47,127,120,0.15)] transition-all duration-500 ease-out hover:border-[#2f7f78] hover:bg-[#2f7f78] hover:text-white hover:shadow-[0_0_30px_rgba(47,127,120,0.8),0_0_60px_rgba(47,127,120,0.4)] cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -495,24 +504,38 @@ export function LandingPage() {
         }
 
         .lantern-glow {
-          background: rgba(255, 170, 80, 0.05);
+          background: rgba(47, 127, 120, 0.05);
           backdrop-filter: blur(12px) saturate(1.5);
-          border: 1px solid rgba(255, 170, 80, 0.2);
+          border: 1px solid rgba(47, 127, 120, 0.3);
           box-shadow:
-            0 0 30px rgba(255, 170, 80, 0.05),
-            inset 0 0 10px rgba(255, 170, 80, 0.05);
+            0 0 30px rgba(47, 127, 120, 0.08),
+            inset 0 0 10px rgba(47, 127, 120, 0.08);
           transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .lantern-glow:hover {
-          background: rgba(255, 170, 80, 0.15);
-          box-shadow: 0 0 50px rgba(255, 170, 80, 0.3);
-          border-color: rgba(255, 170, 80, 0.5);
-          transform: translateY(-5px);
+          background: #2f7f78;
+          color: #ffffff;
+          box-shadow: 0 0 50px rgba(47, 127, 120, 0.7);
+          border-color: #2f7f78;
+          transform: translateY(-2px);
+        }
+
+        .heading-glow {
+          text-shadow:
+            0 0 30px rgba(72, 201, 176, 0.45),
+            0 0 60px rgba(47, 127, 120, 0.3),
+            0 4px 20px rgba(0, 0, 0, 0.95);
+        }
+
+        .teal-glow {
+          text-shadow:
+            0 0 20px rgba(72, 201, 176, 0.85),
+            0 0 45px rgba(47, 127, 120, 0.6);
         }
 
         .shimmer-text {
-          background: linear-gradient(90deg, #fff 0%, #ffaa50 50%, #fff 100%);
+          background: linear-gradient(90deg, #fff 0%, #48c9b0 50%, #fff 100%);
           background-size: 200% auto;
           -webkit-background-clip: text;
           background-clip: text;
@@ -535,7 +558,7 @@ export function LandingPage() {
 
         .glass-card:hover {
           background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 170, 80, 0.3);
+          border-color: rgba(47, 127, 120, 0.4);
         }
 
         .reveal {
