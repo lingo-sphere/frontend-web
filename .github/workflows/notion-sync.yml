@@ -1,0 +1,128 @@
+name: Sync Commits to Notion Tasks
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      sync_all:
+        description: 'Quét và nạp toàn bộ lịch sử commit từ đầu'
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  sync-notion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync Commits to Notion
+        uses: actions/github-script@v7
+        env:
+          NOTION_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DB: ${{ secrets.NOTION_DATABASE_ID }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO_NAME: ${{ github.repository }}
+          REPO_TAG: "Frontend Web"
+        with:
+          script: |
+            const https = require('https');
+            const { execSync } = require('child_process');
+
+            const notionKey = process.env.NOTION_KEY;
+            const notionDb = process.env.NOTION_DB;
+            const repoName = process.env.REPO_NAME;
+            const repoTag = process.env.REPO_TAG;
+            const eventName = process.env.EVENT_NAME;
+
+            if (!notionKey || !notionDb) {
+              core.setFailed("Secrets NOTION_API_KEY or NOTION_DATABASE_ID not found in this repository!");
+              return;
+            }
+
+            function postNotion(hash, date, msg) {
+              const url = `https://github.com/${repoName}/commit/${hash}`;
+              const payload = JSON.stringify({
+                parent: { database_id: notionDb },
+                properties: {
+                  "Tên": {
+                    title: [{ type: "text", text: { content: msg, link: { url: url } } }]
+                  },
+                  "Dự án / Repo": {
+                    select: { name: repoTag }
+                  },
+                  "Trạng thái": {
+                    status: { name: "Hoàn tất" }
+                  },
+                  "Ngày đến hạn": {
+                    date: { start: date }
+                  },
+                  "Link Commit": {
+                    url: url
+                  }
+                }
+              });
+
+              return new Promise((resolve) => {
+                const req = https.request('https://api.notion.com/v1/pages', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${notionKey}`,
+                    'Content-Type': 'application/json',
+                    'Notion-Version': '2022-06-28'
+                  }
+                }, (res) => {
+                  let data = '';
+                  res.on('data', chunk => data += chunk);
+                  res.on('end', () => {
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                      console.log(`[SUCCESS ${res.statusCode}] ${msg}`);
+                    } else {
+                      console.error(`[ERROR ${res.statusCode}] ${msg}: ${data}`);
+                    }
+                    resolve();
+                  });
+                });
+                req.on('error', (err) => {
+                  console.error(`[NETWORK ERROR] ${err.message}`);
+                  resolve();
+                });
+                req.write(payload);
+                req.end();
+              });
+            }
+
+            if (eventName === 'workflow_dispatch') {
+              console.log('=== RUNNING FULL HISTORICAL COMMIT SYNC ===');
+              const raw = execSync('git log --no-merges --pretty=format:"%H|%ad|%s" --date=short --reverse', { encoding: 'utf8' });
+              const lines = raw.trim().split('\n').filter(Boolean);
+              console.log(`Found ${lines.length} historical commits.`);
+              for (const line of lines) {
+                const [hash, date, ...rest] = line.split('|');
+                const msg = rest.join('|');
+                await postNotion(hash, date, msg);
+                await new Promise(r => setTimeout(r, 150));
+              }
+            } else {
+              console.log('=== RUNNING NEW PUSH COMMIT SYNC ===');
+              const commits = context.payload.commits || [];
+              if (commits.length > 0) {
+                for (const c of commits) {
+                  const hash = c.id;
+                  const date = (c.timestamp || new Date().toISOString()).split('T')[0];
+                  const msg = (c.message || '').split('\n')[0];
+                  await postNotion(hash, date, msg);
+                  await new Promise(r => setTimeout(r, 150));
+                }
+              } else {
+                const hash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+                const date = execSync('git log -1 --pretty=format:"%ad" --date=short', { encoding: 'utf8' }).trim();
+                const msg = execSync('git log -1 --pretty=format:"%s"', { encoding: 'utf8' }).trim();
+                await postNotion(hash, date, msg);
+              }
+            }
+            console.log('=== ALL DONE ===');
