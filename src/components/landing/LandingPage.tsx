@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence, animate, useInView } from "motion/react"
+import { ChevronUp } from "lucide-react"
+import { LingoShowcase } from "@/components/landing/LingoShowcase"
+import { LingoPerformance } from "@/components/landing/LingoPerformance"
 
 const manifestoLines = [
   "Học tiếng Anh bằng tư duy logic, không học vẹt.",
@@ -13,6 +16,8 @@ const manifestoLines = [
 
 const navItems = [
   { href: "#workbench", label: "LingoThinking" },
+  { href: "#showcase", label: "Showcase" },
+  { href: "#performance", label: "Hiệu Năng" },
   { href: "#islands", label: "4 Trụ Cột" },
   { href: "#manifesto", label: "Triết Lý" },
   { href: "#stargazer", label: "Bắt Đầu" },
@@ -79,6 +84,76 @@ function StatCounter({ target, suffix = "", decimals = 0 }: { target: number; su
   }, [isInView, target, suffix, decimals])
 
   return <span ref={nodeRef}>{decimals > 0 ? (0).toFixed(decimals) : "0"}{suffix}</span>
+}
+
+// 🎬 Seamless Loop Cross-fade Engine for Deep Focus Circular Video
+function SeamlessCircleVideo() {
+  const v1Ref = useRef<HTMLVideoElement | null>(null)
+  const v2Ref = useRef<HTMLVideoElement | null>(null)
+  const [activeVideo, setActiveVideo] = useState<1 | 2>(1)
+  const crossfadeTriggeredRef = useRef(false)
+
+  useEffect(() => {
+    const v1 = v1Ref.current
+    const v2 = v2Ref.current
+    if (!v1 || !v2) return
+
+    v1.play().catch(() => {})
+
+    const checkTime = (e: Event) => {
+      const vid = e.target as HTMLVideoElement
+      const dur = vid.duration
+      if (!dur || isNaN(dur)) return
+
+      // Khi còn 1.8s trước khi hết video, kích hoạt video đệm mờ vào (crossfade)
+      if (dur - vid.currentTime <= 1.8 && !crossfadeTriggeredRef.current) {
+        crossfadeTriggeredRef.current = true
+        if (activeVideo === 1) {
+          v2.currentTime = 0
+          v2.play().catch(() => {})
+          setActiveVideo(2)
+        } else {
+          v1.currentTime = 0
+          v1.play().catch(() => {})
+          setActiveVideo(1)
+        }
+      } else if (dur - vid.currentTime > 2.2) {
+        crossfadeTriggeredRef.current = false
+      }
+    }
+
+    v1.addEventListener("timeupdate", checkTime)
+    v2.addEventListener("timeupdate", checkTime)
+
+    return () => {
+      v1.removeEventListener("timeupdate", checkTime)
+      v2.removeEventListener("timeupdate", checkTime)
+    }
+  }, [activeVideo])
+
+  return (
+    <div className="relative h-full w-full rounded-full overflow-hidden">
+      <video
+        ref={v1Ref}
+        src="/video-contact.mp4"
+        autoPlay
+        muted
+        playsInline
+        className={`absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-700 ease-in-out ${
+          activeVideo === 1 ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      />
+      <video
+        ref={v2Ref}
+        src="/video-contact.mp4"
+        muted
+        playsInline
+        className={`absolute inset-0 h-full w-full rounded-full object-cover transition-opacity duration-700 ease-in-out ${
+          activeVideo === 2 ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      />
+    </div>
+  )
 }
 
 export function LandingPage() {
@@ -321,7 +396,7 @@ export function LandingPage() {
             autoPlay
             muted
             playsInline
-            className={`hero-mask absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-in-out ${
+            className={`hero-mask absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700 ease-in-out ${
               activeHeroVideo === 1 ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           />
@@ -330,7 +405,7 @@ export function LandingPage() {
             src="/video-banner.mp4"
             muted
             playsInline
-            className={`hero-mask absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-in-out ${
+            className={`hero-mask absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700 ease-in-out ${
               activeHeroVideo === 2 ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           />
@@ -352,7 +427,7 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 45, filter: "blur(10px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ duration: 1.2, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="hero-gradient-flow mb-8 text-4xl sm:text-6xl md:text-7xl lg:text-[5.6rem] xl:text-[6.5rem] font-extrabold leading-[1.1] tracking-tighter drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] drop-shadow-[0_0_45px_rgba(94,234,212,0.45)] select-none flex flex-col items-center"
+            className="hero-gradient-flow mb-8 font-serif font-light italic text-4xl sm:text-6xl md:text-7xl lg:text-[5.6rem] xl:text-[6.5rem] leading-[1.1] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] drop-shadow-[0_0_45px_rgba(94,234,212,0.45)] select-none flex flex-col items-center"
           >
             <span className="whitespace-nowrap">Tiếng Anh Tư Duy</span>
             <span className="whitespace-nowrap">Bứt Phá TOEIC</span>
@@ -387,17 +462,20 @@ export function LandingPage() {
             y: { repeat: Infinity, duration: 2.2, ease: "easeInOut", delay: 1.1 },
           }}
           onClick={() => scrollToSection("workbench")}
-          className="absolute bottom-10 left-1/2 flex -translate-x-1/2 flex-col items-center gap-3 cursor-pointer select-none group"
+          className="absolute bottom-10 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center gap-3 cursor-pointer select-none group"
         >
           <div className="h-10 w-px bg-gradient-to-b from-[#5eead4] to-transparent group-hover:h-14 transition-all" />
           <span className="text-[10px] uppercase tracking-[0.3em] text-white/80 font-medium group-hover:text-[#5eead4] transition-colors">
             Cuộn Để Khám Phá
           </span>
         </motion.div>
+
+        {/* 🌫️ Soft bottom feather gradient blending Hero into Section 3 seamlessly */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[oklch(20%_0.08_280)] via-[oklch(20%_0.08_280)]/75 to-transparent z-10" />
       </section>
 
       {/* 🧠 3. Hệ Phương Pháp LingoThinking Logic */}
-      <section id="workbench" className="relative min-h-screen px-6 py-40 md:px-24">
+      <section id="workbench" className="relative px-6 pt-32 pb-10 md:px-24 md:pt-36 md:pb-12">
         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-20 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -454,16 +532,7 @@ export function LandingPage() {
             className="relative flex items-center justify-center"
           >
             <div className="relative h-[360px] w-[360px] sm:h-[420px] sm:w-[420px] aspect-square rounded-full overflow-hidden border border-[#48c9b0]/30 shadow-[0_0_50px_rgba(72,201,176,0.35),0_0_90px_rgba(47,127,120,0.2),0_16px_40px_rgba(0,0,0,0.7)]">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="h-full w-full rounded-full object-cover"
-              >
-                <source src="/video-contact.mp4" type="video/mp4" />
-              </video>
-
+              <SeamlessCircleVideo />
               <div className="absolute inset-0 rounded-full bg-white/[0.04] pointer-events-none" />
             </div>
 
@@ -484,6 +553,12 @@ export function LandingPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* 🎬 3.5. Apple-Style Video Cutout Showcase */}
+      <LingoShowcase />
+
+      {/* ⚡ 3.8. Apple-Style 3D Parallax Exploded Performance View */}
+      <LingoPerformance />
 
       {/* 🏝️ 4. Bốn Trụ Cột Đột Phá Điểm Số */}
       <section id="islands" className="relative px-6 py-40">
@@ -674,7 +749,7 @@ export function LandingPage() {
           </motion.div>
         </div>
 
-        <div className="relative z-10 mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row text-center sm:text-left">
+        <div className="relative z-10 mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row text-center sm:text-left pr-0 sm:pr-20 pb-10 sm:pb-2">
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">© 2026 LingoSphere — Học Viện Tiếng Anh Tư Duy</p>
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
@@ -690,28 +765,15 @@ export function LandingPage() {
       <AnimatePresence>
         {showScrollTop && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.6, y: 20 }}
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.6, y: 20 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            whileTap={{ scale: 0.96 }}
             onClick={scrollToTop}
             aria-label="Cuộn lên đầu trang"
             className="fixed bottom-8 right-8 z-[100] flex h-12 w-12 items-center justify-center rounded-none border border-[#2f7f78]/50 bg-black/80 backdrop-blur-xl text-white shadow-[0_0_20px_rgba(47,127,120,0.4),0_0_40px_rgba(47,127,120,0.2),inset_0_0_12px_rgba(47,127,120,0.15)] transition-colors duration-300 hover:border-[#48c9b0] hover:bg-[#2f7f78] hover:text-white hover:shadow-[0_0_30px_rgba(47,127,120,0.8),0_0_60px_rgba(47,127,120,0.4)] cursor-pointer"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="18 15 12 9 6 15" />
-            </svg>
+            <ChevronUp className="h-6 w-6 stroke-[2.5]" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -747,8 +809,8 @@ export function LandingPage() {
         }
 
         .hero-mask {
-          -webkit-mask-image: radial-gradient(circle, black 40%, transparent 75%);
-          mask-image: radial-gradient(circle, black 40%, transparent 75%);
+          -webkit-mask-image: radial-gradient(ellipse 95% 75% at 50% 48%, black 40%, transparent 92%);
+          mask-image: radial-gradient(ellipse 95% 75% at 50% 48%, black 40%, transparent 92%);
         }
 
         .squircle-mask {
