@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Newsreader } from 'next/font/google'
 import './globals.css'
 import { AppClientProvider } from '@/components/providers/AppClientProvider'
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
   variable: '--font-sans',
+  display: 'swap',
+})
+
+const newsreader = Newsreader({
+  subsets: ['latin', 'vietnamese'],
+  variable: '--font-serif',
+  style: ['normal', 'italic'],
   display: 'swap',
 })
 
@@ -68,7 +75,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="vi" className={`${inter.variable} h-full antialiased`} data-theme="light" suppressHydrationWarning>
+    <html lang="vi" className={`${inter.variable} ${newsreader.variable} h-full antialiased`} data-theme="light" suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <AppClientProvider>{children}</AppClientProvider>
       </body>
