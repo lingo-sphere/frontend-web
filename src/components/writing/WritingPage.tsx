@@ -4,14 +4,12 @@ import { useState, useCallback } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { Layout } from '@/components/layout/Layout'
 import { useApp } from '@/contexts/AppContext'
-import {
-  WritingHome,
-  WritingExerciseList,
-  WritingExerciseDetail,
-  WritingWorkspace,
-  WritingResult,
-  WritingHistory,
-} from '@/components/writing'
+import { WritingHome } from '@/components/writing/WritingHome'
+import { WritingExerciseList } from '@/components/writing/WritingExerciseList'
+import { WritingExerciseDetail } from '@/components/writing/WritingExerciseDetail'
+import { WritingWorkspace } from '@/components/writing/WritingWorkspace'
+import { WritingResult } from '@/components/writing/WritingResult'
+import { WritingHistory } from '@/components/writing/WritingHistory'
 import {
   writingExercises,
   writingSubmissions,
