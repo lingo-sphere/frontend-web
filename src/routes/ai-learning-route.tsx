@@ -64,7 +64,7 @@ export function AiLearningRoute() {
   return (
     <Layout>
       <main className="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col px-4 py-4 sm:px-6">
-        {/* Header */}
+
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-accent text-white shadow-md">
@@ -101,7 +101,6 @@ export function AiLearningRoute() {
           </Button>
         </div>
 
-        {/* Message Stream */}
         <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
           {messages.map((msg, idx) => (
             <motion.div
@@ -155,7 +154,6 @@ export function AiLearningRoute() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggested Prompts (when only 1 welcome message) */}
         {messages.length === 1 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
             {SUGGESTED_PROMPTS.map((p, i) => (
@@ -176,7 +174,6 @@ export function AiLearningRoute() {
           </div>
         )}
 
-        {/* Input Bar */}
         <form
           onSubmit={(e) => {
             e.preventDefault()

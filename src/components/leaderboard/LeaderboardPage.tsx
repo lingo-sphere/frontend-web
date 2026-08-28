@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -20,7 +19,7 @@ interface LeaderboardPageProps {
 }
 
 export function LeaderboardPage({ onAction: _onAction }: LeaderboardPageProps) {
-  useApp() 
+  useApp()
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonth())
@@ -64,12 +63,11 @@ export function LeaderboardPage({ onAction: _onAction }: LeaderboardPageProps) {
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header with Countdown */}
+
       <section className="mb-6">
         <LeaderboardCountdown daysLeft={daysLeft} isCurrentMonth={isCurrentMonth} />
       </section>
 
-      {/* Month Navigation + Tabs */}
       <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <Button
@@ -96,17 +94,14 @@ export function LeaderboardPage({ onAction: _onAction }: LeaderboardPageProps) {
         <LeaderboardTabs active={leaderboardType} onChange={setLeaderboardType} />
       </section>
 
-      {/* Podium Top 3 */}
       <section className="mb-6">
         <LeaderboardPodium users={leaderboard.topThree} type={leaderboardType} />
       </section>
 
-      {/* Full Rankings List */}
       <section className="mb-6">
         <LeaderboardList users={leaderboard.fullRanking} type={leaderboardType} />
       </section>
 
-      {/* Rewards Section */}
       <section>
         <LeaderboardRewards rewards={leaderboard.rewards} />
       </section>

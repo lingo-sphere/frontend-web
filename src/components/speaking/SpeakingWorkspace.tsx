@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Mic, MicOff, Play, Pause, Square, RotateCcw, Volume2 } from 'lucide-react'
@@ -194,7 +193,7 @@ export function SpeakingWorkspace({
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <div className="mb-6 flex items-center gap-4">
         <button
           onClick={onBack}
@@ -209,10 +208,9 @@ export function SpeakingWorkspace({
         </div>
       </div>
 
-      {/* Exercise Info */}
       <Card className="mb-6 dashboard-card">
         <CardContent className="p-4">
-          {/* Instructions */}
+
           <div className="mb-4">
             <h2 className="mb-2 text-[14px] font-semibold text-text-primary">
               {isVietnamese ? 'Hướng dẫn' : 'Instructions'}
@@ -222,7 +220,6 @@ export function SpeakingWorkspace({
             </p>
           </div>
 
-          {/* Prompt for TOPIC/RESPOND_SITUATION */}
           {(exercise.exercise_type === 'TOPIC' || exercise.exercise_type === 'RESPOND_SITUATION') && (
             <div className="mb-4 rounded-xl bg-surface-subtle p-4">
               <h3 className="mb-2 text-[13px] font-medium text-text-primary">
@@ -234,7 +231,6 @@ export function SpeakingWorkspace({
             </div>
           )}
 
-          {/* Source text for PRONUNCIATION/READ_ALOUD/SHADOWING */}
           {(exercise.exercise_type === 'PRONUNCIATION' || exercise.exercise_type === 'READ_ALOUD') && exercise.source_text && (
             <div className="mb-4 rounded-xl bg-surface-subtle p-4">
               <h3 className="mb-2 flex items-center gap-2 text-[13px] font-medium text-text-primary">
@@ -247,7 +243,6 @@ export function SpeakingWorkspace({
             </div>
           )}
 
-          {/* Target info */}
           <div className="flex flex-wrap gap-3 text-[12px]">
             <span className="rounded-full bg-surface-subtle px-3 py-1 text-text-secondary">
               {isVietnamese ? 'Loại:' : 'Type:'} {typeLabels[exercise.exercise_type]}
@@ -267,12 +262,11 @@ export function SpeakingWorkspace({
         </CardContent>
       </Card>
 
-      {/* Recording Area */}
       <Card className="dashboard-card">
         <CardContent className="p-6">
           {phase === 'idle' && (
             <div className="text-center">
-              {/* Microphone icon */}
+
               <div className="mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/5">
                 <Mic className="h-16 w-16 text-primary" />
               </div>
@@ -314,7 +308,7 @@ export function SpeakingWorkspace({
 
           {phase === 'recording' && (
             <div className="text-center">
-              {/* Recording indicator */}
+
               <div className="mb-6 flex items-center justify-center gap-3">
                 <div className="relative">
                   <div className="h-32 w-32 animate-pulse rounded-full bg-red-500/20" />
@@ -325,7 +319,6 @@ export function SpeakingWorkspace({
                 <div className="h-32 w-32 animate-pulse rounded-full bg-red-500/10" />
               </div>
 
-              {/* Timer */}
               <div className="mb-4">
                 <span className="text-4xl font-bold text-red-500">{formatTime(speakingTimeLeft)}</span>
               </div>
@@ -351,7 +344,7 @@ export function SpeakingWorkspace({
 
           {phase === 'reviewing' && audioUrl && (
             <div className="text-center">
-              {/* Playback */}
+
               <div className="mb-6">
                 <audio ref={audioRef} src={audioUrl} />
                 <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100">
@@ -374,7 +367,6 @@ export function SpeakingWorkspace({
                 </p>
               </div>
 
-              {/* Actions */}
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Button
                   variant="outline"

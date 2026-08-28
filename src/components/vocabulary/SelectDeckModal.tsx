@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Layers3, Plus, Check } from 'lucide-react'
@@ -74,7 +73,7 @@ export function SelectDeckModal({
       }
     >
       <div className="space-y-4">
-        {/* Existing decks */}
+
         <div>
           <h3 className="mb-2 text-[13px] font-medium text-text-secondary">
             {isVietnamese ? 'Chọn deck có sẵn' : 'Choose existing deck'}
@@ -102,7 +101,6 @@ export function SelectDeckModal({
           </div>
         </div>
 
-        {/* Create new deck */}
         <div className="border-t border-border pt-4">
           <button
             onClick={() => { setIsCreatingNew(true); setSelectedDeckId(null) }}

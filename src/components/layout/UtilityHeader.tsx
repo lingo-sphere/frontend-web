@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -156,7 +155,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
               <TooltipContent>Notifications</TooltipContent>
             </Tooltip>
 
-            {/* Notification Dropdown */}
             {notificationOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setNotificationOpen(false)} />
@@ -230,7 +228,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             )}
           </div>
 
-          {/* User Auth Profile Area */}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 border-l border-border pl-3">
               <button
@@ -280,20 +277,17 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
         </div>
       </header>
 
-      {/* Auth Modal */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
       />
 
-      {/* Dictionary Modal */}
       <DictionaryModal
         open={dictionaryOpen}
         onAction={onAction}
         onOpenChange={setDictionaryOpen}
       />
 
-      {/* Upgrade Modal */}
       <UpgradeModal
         open={upgradeOpen}
         onOpenChange={setUpgradeOpen}

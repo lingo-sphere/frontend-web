@@ -70,9 +70,8 @@ export function PublicDecksPage({ onAction }: PublicDecksPageProps) {
         description={isVietnamese ? 'Khám phá bộ từ vựng được chia sẻ từ cộng đồng' : 'Explore vocabulary decks shared by the community'}
       />
 
-      {/* Search and Sort */}
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Search */}
+
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
           <input
@@ -84,7 +83,6 @@ export function PublicDecksPage({ onAction }: PublicDecksPageProps) {
           />
         </div>
 
-        {/* Sort options */}
         <div className="flex items-center gap-2 rounded-lg border border-border bg-surface p-1">
           <Filter className="ml-2 h-4 w-4 text-text-tertiary" />
           <button
@@ -110,12 +108,10 @@ export function PublicDecksPage({ onAction }: PublicDecksPageProps) {
         </div>
       </div>
 
-      {/* Results count */}
       <p className="mt-4 text-[13px] text-text-secondary">
         {isVietnamese ? 'Tìm thấy' : 'Found'} <span className="font-semibold text-text-primary">{filteredDecks.length}</span> {isVietnamese ? 'bộ từ vựng' : 'vocabulary decks'}
       </p>
 
-      {/* Decks Grid */}
       {filteredDecks.length > 0 ? (
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredDecks.map((deck: PublicDeck) => (
@@ -125,7 +121,7 @@ export function PublicDecksPage({ onAction }: PublicDecksPageProps) {
               onClick={() => onAction(`${isVietnamese ? 'Đã mở' : 'Opened'} "${deck.title}"`)}
             >
               <CardContent className="p-4">
-                {/* Author row */}
+
                 <div className="flex items-center gap-3">
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[14px] font-bold text-white"
@@ -139,7 +135,6 @@ export function PublicDecksPage({ onAction }: PublicDecksPageProps) {
                   </div>
                 </div>
 
-                {/* Topic and word count */}
                 <div className="mt-3 flex items-center gap-3">
                   <span className="rounded-full bg-primary-soft px-3 py-1 text-[11px] font-medium text-primary">
                     {deck.topic}
@@ -147,7 +142,6 @@ export function PublicDecksPage({ onAction }: PublicDecksPageProps) {
                   <span className="text-[12px] text-text-tertiary">{deck.wordCount} {isVietnamese ? 'từ' : 'words'}</span>
                 </div>
 
-                {/* Stats */}
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                   <div className="flex items-center gap-4 text-[12px] text-text-secondary">
                     <span className="flex items-center gap-1">

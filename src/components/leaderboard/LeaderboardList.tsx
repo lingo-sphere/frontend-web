@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next'
 import type { LeaderboardType, MonthlyLeaderboardUser } from '@/types/dashboard'
 
@@ -27,7 +26,7 @@ export function LeaderboardList({ users, type }: LeaderboardListProps) {
 
   return (
     <div className="dashboard-card overflow-hidden">
-      {/* Header */}
+
       <div className="flex items-center gap-4 border-b border-border bg-surface-subtle px-4 py-3">
         <span className="w-10 text-center text-[12px] font-semibold text-text-tertiary">
           {isVietnamese ? 'Hạng' : 'Rank'}
@@ -40,7 +39,6 @@ export function LeaderboardList({ users, type }: LeaderboardListProps) {
         </span>
       </div>
 
-      {/* List */}
       <div className="max-h-[400px] overflow-y-auto">
         {rankedUsers.map((user, idx) => (
           <div
@@ -49,7 +47,7 @@ export function LeaderboardList({ users, type }: LeaderboardListProps) {
               idx % 2 === 0 ? 'bg-surface' : 'bg-surface-subtle/50'
             } ${user.isCurrentUser ? 'border-l-4 border-l-primary' : ''}`}
           >
-            {/* Rank */}
+
             <div className="flex h-8 w-10 items-center justify-center">
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] font-semibold ${
@@ -60,7 +58,6 @@ export function LeaderboardList({ users, type }: LeaderboardListProps) {
               </span>
             </div>
 
-            {/* User info */}
             <div className="flex flex-1 items-center gap-3">
               <div
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[14px] font-bold text-white"
@@ -71,7 +68,6 @@ export function LeaderboardList({ users, type }: LeaderboardListProps) {
               <span className="text-[14px] font-medium text-text-primary">{user.name}</span>
             </div>
 
-            {/* Stats */}
             <div className="flex w-20 items-center justify-end gap-1">
               <span className="text-[14px] font-semibold text-text-primary">
                 {statValue(user)}

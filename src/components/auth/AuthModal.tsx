@@ -23,7 +23,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
   const [showPassword, setShowPassword] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  // OTP State (6 digits)
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', ''])
   const [resendCooldown, setResendCooldown] = useState<number>(0)
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -42,14 +41,12 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
-  // Tự động đóng modal khi người dùng đã đăng nhập hoặc đã xác thực ở tab khác
   useEffect(() => {
     if (isAuthenticated && isOpen) {
       onClose()
     }
   }, [isAuthenticated, isOpen, onClose])
 
-  // Đồng bộ mode ban đầu
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode)
@@ -59,7 +56,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
     }
   }, [isOpen, initialMode, clearError])
 
-  // Countdown timer cho Resend OTP
   useEffect(() => {
     if (resendCooldown <= 0) return
     const timer = setInterval(() => {
@@ -164,7 +160,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="relative w-full max-w-md overflow-hidden rounded-2xl bg-surface border border-surface-border shadow-2xl"
         >
-          {/* Header */}
+
           <div className="flex items-center justify-between border-b border-surface-border px-6 py-4">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-primary-focus text-white font-bold shadow-md">
@@ -182,7 +178,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
             </button>
           </div>
 
-          {/* Mode Switcher Tabs (Only for login & register) */}
           {(mode === 'login' || mode === 'register') && (
             <div className="grid grid-cols-2 p-1.5 m-6 mb-2 bg-surface-subtle rounded-xl">
               <button
@@ -218,9 +213,8 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
             </div>
           )}
 
-          {/* Form Content */}
           <form onSubmit={handleSubmit} className="p-6 pt-2 space-y-4">
-            {/* Error Message */}
+
             {error && (
               <div className="rounded-xl bg-error/10 border border-error/20 p-3 text-xs text-error flex items-start gap-2">
                 <Icon name="alert-circle" size={16} className="shrink-0 mt-0.5" />
@@ -228,7 +222,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               </div>
             )}
 
-            {/* Success Message */}
             {successMessage && (
               <div className="rounded-xl bg-success/10 border border-success/20 p-3 text-xs text-success flex items-start gap-2">
                 <Icon name="check-circle" size={16} className="shrink-0 mt-0.5" />
@@ -236,7 +229,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               </div>
             )}
 
-            {/* 1. MÀN HÌNH ĐĂNG NHẬP HOẶC ĐĂNG KÝ */}
             {(mode === 'login' || mode === 'register') && (
               <>
                 {mode === 'register' && (
@@ -324,7 +316,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               </>
             )}
 
-            {/* 2. MÀN HÌNH NHẬP MÃ XÁC THỰC OTP KÍCH HOẠT TÀI KHOẢN (Verify Email OTP) */}
             {mode === 'verify_email_otp' && (
               <div className="space-y-4 text-center py-2">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-1">
@@ -338,7 +329,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
                   </p>
                 </div>
 
-                {/* 6 Ô nhập OTP */}
                 <div className="flex justify-center gap-2 py-2">
                   {otpDigits.map((digit, idx) => (
                     <input
@@ -372,7 +362,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               </div>
             )}
 
-            {/* 3. MÀN HÌNH QUÊN MẬT KHẨU (Gửi OTP) */}
             {mode === 'forgot_password' && (
               <div className="space-y-4">
                 <div className="text-center py-1">
@@ -401,7 +390,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               </div>
             )}
 
-            {/* 4. MÀN HÌNH ĐẶT LẠI MẬT KHẨU BẰNG OTP (Reset Password) */}
             {mode === 'reset_password' && (
               <div className="space-y-4">
                 <div className="text-center py-1">
@@ -411,7 +399,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
                   </p>
                 </div>
 
-                {/* 6 Ô nhập OTP */}
                 <div className="flex justify-center gap-2 py-1">
                   {otpDigits.map((digit, idx) => (
                     <input
@@ -459,7 +446,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               </div>
             )}
 
-            {/* Submit Button */}
             <Button
               type="submit"
               disabled={isLoading}
@@ -483,7 +469,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               )}
             </Button>
 
-            {/* Back to Login button for sub-modes */}
             {(mode === 'verify_email_otp' || mode === 'forgot_password' || mode === 'reset_password') && (
               <button
                 type="button"
@@ -499,7 +484,6 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
             )}
           </form>
 
-          {/* Footer Note */}
           <div className="bg-surface-subtle px-6 py-4 text-center text-xs text-text-tertiary border-t border-surface-border">
             Bằng việc tiếp tục, bạn đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của LingoSphere.
           </div>

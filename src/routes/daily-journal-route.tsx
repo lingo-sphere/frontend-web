@@ -62,7 +62,7 @@ export function DailyJournalRoute() {
         setEvaluation(res)
       }
     } catch {
-      // Fallback mock AI evaluation
+
       setEvaluation({
         overall_score: 8.5,
         word_count: wordCount,
@@ -85,7 +85,7 @@ export function DailyJournalRoute() {
   return (
     <Layout>
       <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
-        {/* Header */}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
           <div>
             <div className="flex items-center gap-2">
@@ -104,7 +104,6 @@ export function DailyJournalRoute() {
           </div>
         </div>
 
-        {/* Daily Prompt Card */}
         <div className="rounded-2xl bg-gradient-to-tr from-primary/10 via-surface to-accent/10 border border-primary/20 p-6 shadow-sm space-y-3">
           <div className="flex items-center gap-2 text-primary font-bold text-sm">
             <Icon name="bookCheck" size={18} />
@@ -127,7 +126,6 @@ export function DailyJournalRoute() {
           </div>
         </div>
 
-        {/* Writing Editor Form */}
         {!evaluation ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="rounded-2xl bg-surface border border-border p-4 shadow-sm space-y-3">
@@ -170,9 +168,9 @@ export function DailyJournalRoute() {
             </div>
           </form>
         ) : (
-          /* Evaluation Results View */
+
           <div className="space-y-5">
-            {/* Overall Score Banner */}
+
             <div className="rounded-2xl bg-gradient-to-r from-primary to-primary-focus p-6 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="space-y-1 text-center sm:text-left">
                 <span className="text-xs uppercase tracking-widest text-white/80 font-bold">Kết quả đánh giá</span>
@@ -185,7 +183,6 @@ export function DailyJournalRoute() {
               </div>
             </div>
 
-            {/* Teacher Advice */}
             <div className="rounded-2xl bg-surface border border-border p-5 shadow-sm space-y-2">
               <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
                 <Icon name="sparkles" size={16} className="text-primary" />
@@ -196,9 +193,8 @@ export function DailyJournalRoute() {
               </p>
             </div>
 
-            {/* Grammar & Vocabulary Feedback */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Grammar Feedback */}
+
               <div className="rounded-2xl bg-surface border border-border p-5 shadow-sm space-y-3">
                 <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
                   <Icon name="bookCheck" size={16} className="text-success" />
@@ -214,7 +210,6 @@ export function DailyJournalRoute() {
                 </ul>
               </div>
 
-              {/* Vocabulary Suggestions */}
               <div className="rounded-2xl bg-surface border border-border p-5 shadow-sm space-y-3">
                 <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
                   <Icon name="cards" size={16} className="text-accent" />
@@ -231,7 +226,6 @@ export function DailyJournalRoute() {
               </div>
             </div>
 
-            {/* Action buttons */}
             <div className="flex justify-end gap-3 pt-2">
               <Button
                 variant="outline"

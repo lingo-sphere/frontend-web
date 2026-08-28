@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -131,7 +130,7 @@ function CourseCard({ course, onSelect, isVietnamese }: CourseCardProps) {
       className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
       onClick={onSelect}
     >
-      {/* Course header */}
+
       <div className="bg-gradient-to-br from-primary to-primary/80 p-4">
         <div className="flex items-center justify-between">
           <span className="rounded-lg bg-white/20 px-2 py-1 text-[11px] font-semibold text-white">
@@ -149,7 +148,6 @@ function CourseCard({ course, onSelect, isVietnamese }: CourseCardProps) {
       <CardContent className="p-4">
         <p className="line-clamp-2 text-[13px] text-text-secondary">{course.description}</p>
 
-        {/* Course stats */}
         <div className="mt-4 grid grid-cols-2 gap-2">
           <div className="flex items-center gap-1 text-[12px] text-text-secondary">
             <BookOpen className="h-4 w-4" />
@@ -169,7 +167,6 @@ function CourseCard({ course, onSelect, isVietnamese }: CourseCardProps) {
           </div>
         </div>
 
-        {/* Progress bar */}
         {course.progress > 0 && (
           <div className="mt-4">
             <div className="h-2 w-full overflow-hidden rounded-full bg-surface-subtle">
@@ -181,7 +178,6 @@ function CourseCard({ course, onSelect, isVietnamese }: CourseCardProps) {
           </div>
         )}
 
-        {/* Action */}
         <div className="mt-4">
           <button
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover"

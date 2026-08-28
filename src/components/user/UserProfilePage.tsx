@@ -521,7 +521,7 @@ function SettingsSection() {
 
   return (
     <div className="space-y-4">
-      {/* Notifications */}
+
       <div className="bg-surface-subtle rounded-xl p-4">
         <h4 className="font-medium text-text-primary mb-4">Thông báo</h4>
         <div className="space-y-3">
@@ -555,7 +555,6 @@ function SettingsSection() {
         </div>
       </div>
 
-      {/* Privacy */}
       <div className="bg-surface-subtle rounded-xl p-4">
         <h4 className="font-medium text-text-primary mb-4">Quyền riêng tư</h4>
         <div className="space-y-3">
@@ -593,7 +592,7 @@ function LeaderboardSection() {
 
   return (
     <div className="space-y-4">
-      {/* Current user rank */}
+
       <div className="bg-primary-10 rounded-xl p-4 flex items-center gap-4">
         <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
           #{currentRank}
@@ -607,7 +606,6 @@ function LeaderboardSection() {
         </div>
       </div>
 
-      {/* Top users */}
       {leaderboardData.slice(0, 5).map((user, index) => (
         <div
           key={user.userId}
@@ -674,7 +672,6 @@ export function UserProfilePage() {
         description="Quản lý thông tin và theo dõi tiến độ học tập"
       />
 
-      {/* Profile Header Card */}
       <Card className="mb-6 overflow-hidden">
         <div className="h-32 bg-linear-to-r from-primary to-primary-hover" />
         <CardContent className="px-6 pb-6">
@@ -717,7 +714,6 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* Quick Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
             <div className="bg-surface-subtle rounded-xl p-3 text-center">
               <div className="text-xl font-bold text-primary">
@@ -747,7 +743,6 @@ export function UserProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-surface-subtle rounded-xl p-1 overflow-x-auto">
         {tabs.map((tab) => (
           <button
@@ -765,10 +760,9 @@ export function UserProfilePage() {
         ))}
       </div>
 
-      {/* Tab Content */}
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Stats */}
+
           <div className="lg:col-span-2 space-y-4">
             <h3 className="font-semibold text-text-primary">
               Thống kê học tập
@@ -819,7 +813,6 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          {/* Right: Badges */}
           <div>
             <h3 className="font-semibold text-text-primary mb-4">
               Huy hiệu của bạn
@@ -883,7 +876,6 @@ export function UserProfilePage() {
 
       {activeTab === "leaderboard" && <LeaderboardSection />}
 
-      {/* Modals */}
       {showEditModal && (
         <EditProfileModal
           user={currentUser}

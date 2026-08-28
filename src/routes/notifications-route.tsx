@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '@/components/layout/Layout'
@@ -92,7 +91,7 @@ export function NotificationsRoute() {
   return (
     <Layout>
       <main className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Header */}
+
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Icon name="bell" size={24} className="text-text-primary" />
@@ -112,7 +111,6 @@ export function NotificationsRoute() {
           )}
         </div>
 
-        {/* Category Tabs */}
         <div className="mb-6 flex flex-wrap gap-2">
           {categoryTabs.map((tab) => (
             <button
@@ -129,7 +127,6 @@ export function NotificationsRoute() {
           ))}
         </div>
 
-        {/* Filter toggle */}
         <div className="mb-4 flex items-center gap-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
             <input
@@ -142,7 +139,6 @@ export function NotificationsRoute() {
           </label>
         </div>
 
-        {/* Notifications List */}
         <div className="space-y-3">
           {filteredNotifications.length === 0 ? (
             <Card>
@@ -166,7 +162,6 @@ export function NotificationsRoute() {
         </div>
       </main>
 
-      {/* Notification Modal */}
       {selectedNotification && (
         <NotificationModal
           notification={selectedNotification}
@@ -199,7 +194,7 @@ function NotificationItem({
     >
       <CardContent className="p-4">
         <div className="flex gap-3" onClick={onClick}>
-          {/* Icon */}
+
           <div className={`mt-1 shrink-0 rounded-xl p-2 ${categoryColor}/10`}>
             <Icon
               name={getNotificationIcon(notification.notificationType)}
@@ -208,7 +203,6 @@ function NotificationItem({
             />
           </div>
 
-          {/* Content */}
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -230,7 +224,6 @@ function NotificationItem({
               </div>
             </div>
 
-            {/* Tags */}
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${categoryColor} text-white`}>
                 {getCategoryLabel(notification.notificationCategory)}
@@ -284,7 +277,7 @@ function NotificationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <Card className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
         <CardContent className="p-6">
-          {/* Header */}
+
           <div className="mb-4 flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className={`rounded-xl p-2 ${categoryColor}/10`}>
@@ -305,22 +298,18 @@ function NotificationModal({
             </button>
           </div>
 
-          {/* Title */}
           <h3 className="mb-2 text-lg font-semibold text-text-primary">
             {isVietnamese && notification.titleVi ? notification.titleVi : notification.title}
           </h3>
 
-          {/* Time */}
           <p className="mb-4 text-sm text-text-tertiary">{formatDateTime(notification.createdAt)}</p>
 
-          {/* Content */}
           <div className="mb-6 rounded-xl bg-surface-subtle p-4">
             <p className="text-text-primary">
               {isVietnamese && notification.contentVi ? notification.contentVi : notification.content}
             </p>
           </div>
 
-          {/* Data */}
           {notification.data && Object.keys(notification.data).length > 0 && (
             <div className="mb-6">
               <h4 className="mb-2 text-sm font-medium text-text-secondary">
@@ -334,14 +323,12 @@ function NotificationModal({
             </div>
           )}
 
-          {/* Meta */}
           <div className="mb-6 flex flex-wrap gap-2 text-xs text-text-tertiary">
             <span>{isVietnamese ? 'Kênh' : 'Channels'}: {notification.channels.join(', ')}</span>
             {notification.sourceService && <span>{isVietnamese ? 'Nguồn' : 'Source'}: {notification.sourceService}</span>}
             {notification.sourceId && <span>ID: {notification.sourceId}</span>}
           </div>
 
-          {/* Action */}
           <div className="flex gap-3">
             {notification.actionUrl && (
               <Button className="flex-1" onClick={() => window.location.href = notification.actionUrl!}>

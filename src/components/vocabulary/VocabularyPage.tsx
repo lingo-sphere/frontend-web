@@ -86,7 +86,7 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-3">
@@ -105,7 +105,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Button
             className="gap-2 bg-primary hover:bg-primary-hover"
@@ -127,9 +126,8 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
         </div>
       </div>
 
-      {/* Section 1: Statistics + Vocabulary Status */}
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
-        {/* Learning Statistics */}
+
         <Card className="dashboard-card">
           <CardContent className="p-4">
             <h3 className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-text-primary">
@@ -143,7 +141,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
               <StatItem icon="award" label={t('dashboard.accuracy')} value={`${vocabularyStats.accuracy}%`} />
             </div>
 
-            {/* Review Buttons */}
             <div className="mt-4 grid grid-cols-2 gap-2">
               {reviewStats.map((stat, idx) => (
                 <button
@@ -162,7 +159,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
           </CardContent>
         </Card>
 
-        {/* Vocabulary Status - Bar Chart */}
         <Card className="dashboard-card">
           <CardContent className="flex h-full flex-col justify-between p-4">
             <h3 className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-text-primary">
@@ -170,7 +166,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
               {isVietnamese ? 'Trạng thái từ vựng' : 'Vocabulary Status'}
             </h3>
 
-            {/* Bar Chart */}
             <div className="flex flex-1 items-end justify-around gap-3 pt-4">
               {statusData.map((item, idx) => {
                 const maxVal = Math.max(...statusData.map(d => d.value || 10), 10)
@@ -194,9 +189,8 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
         </Card>
       </section>
 
-      {/* Section 2: My Decks */}
       <section className="mt-8">
-        {/* Header */}
+
         <div className="flex items-center justify-between">
           <div>
             <h3 className="flex items-center gap-2 text-[16px] font-semibold text-text-primary">
@@ -218,7 +212,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
           </div>
         </div>
 
-        {/* User Decks */}
         {userDecks.length > 0 ? (
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {userDecks.map((deck) => (
@@ -259,7 +252,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
           </div>
         )}
 
-        {/* Helper Cards */}
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Card className="dashboard-card cursor-pointer transition-all hover:-translate-y-0.5" onClick={() => {
               setActiveNavItem('topics')
@@ -292,14 +284,12 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
         </div>
       </section>
 
-      {/* Section 3: Common Vocabulary Packs */}
       <section className="mt-8">
         <h3 className="mb-4 flex items-center gap-2 text-[16px] font-semibold text-text-primary">
           <GraduationCap className="text-primary" size={20} />
           {isVietnamese ? 'BỘ TỪ VỰNG PHỔ BIẾN' : 'COMMON VOCABULARY PACKS'}
         </h3>
 
-        {/* Filter Tags */}
         <div className="mb-4 flex flex-wrap gap-2">
           {vocabularyTagFilters.map((tag) => (
             <button
@@ -316,7 +306,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
           ))}
         </div>
 
-        {/* Common Packs */}
         {filteredCommonPacks.length > 0 && (
           <div className="mb-6">
             <h4 className="mb-3 text-[13px] font-semibold text-text-secondary">
@@ -330,7 +319,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
           </div>
         )}
 
-        {/* Oxford Packs */}
         {filteredOxfordPacks.length > 0 && (
           <div>
             <h4 className="mb-3 text-[13px] font-semibold text-text-secondary">
@@ -344,7 +332,6 @@ export function VocabularyPage({ onAction }: VocabularyPageProps) {
           </div>
         )}
 
-        {/* No results */}
         {filteredCommonPacks.length === 0 && filteredOxfordPacks.length === 0 && (
           <div className="mt-8 text-center">
             <p className="text-[14px] text-text-secondary">{isVietnamese ? 'Không tìm thấy pack nào cho' : 'No vocabulary packs found for'} "#{activeTag}"</p>
@@ -370,7 +357,7 @@ function StatItem({ icon, label, value }: { icon: string; label: string; value: 
 function PackCard({ pack, onAction, isVietnamese }: { pack: VocabularyPack; onAction: (message: string) => void; isVietnamese: boolean }) {
   return (
     <Card className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg" onClick={() => onAction(`Opening "${pack.title}"`)}>
-      {/* Cover */}
+
       <div
         className="flex h-24 w-full items-center justify-center"
         style={{ backgroundColor: pack.coverColor }}

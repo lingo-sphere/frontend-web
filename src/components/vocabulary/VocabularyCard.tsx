@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next'
 import { Volume2, Plus, Trash2 } from 'lucide-react'
 import type { SavedVocabulary, UserDeck, Meaning } from '@/types/vocabulary'
@@ -43,7 +42,7 @@ export function VocabularyCard({
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-5 transition-all hover:shadow-md hover:-translate-y-0.5">
-      {/* Header: Word + Actions */}
+
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <h4 className="truncate text-[20px] font-bold text-text-primary">{word.word}</h4>
@@ -72,7 +71,6 @@ export function VocabularyCard({
         </div>
       </div>
 
-      {/* Audio buttons */}
       <div className="mt-3 flex items-center gap-2">
         {word.pronunciation_uk && (
           <button
@@ -94,7 +92,6 @@ export function VocabularyCard({
         )}
       </div>
 
-      {/* IPA */}
       {(word.pronunciation_uk || word.pronunciation_us) && (
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-text-tertiary">
           {word.pronunciation_uk && (

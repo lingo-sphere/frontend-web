@@ -60,7 +60,6 @@ export function VerifyEmailRoute() {
     }
   }, [token, email, setUser])
 
-  // Tự động chuyển hướng khi thành công
   useEffect(() => {
     if (state !== 'SUCCESS') return
 
@@ -80,17 +79,16 @@ export function VerifyEmailRoute() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4 relative overflow-hidden font-sans">
-      {/* Background Decorative Glows */}
+
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-accent/20 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Main Card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative w-full max-w-md overflow-hidden rounded-3xl bg-surface border border-surface-border p-8 shadow-2xl backdrop-blur-xl z-10 text-center space-y-6"
       >
-        {/* Brand Header */}
+
         <div className="flex items-center justify-center gap-2 mb-2">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-primary-focus text-white font-black text-xl shadow-lg shadow-primary/30">
             L
@@ -100,7 +98,6 @@ export function VerifyEmailRoute() {
           </span>
         </div>
 
-        {/* 1. STATE: VERIFYING */}
         {state === 'VERIFYING' && (
           <div className="py-8 space-y-4">
             <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
@@ -116,7 +113,6 @@ export function VerifyEmailRoute() {
           </div>
         )}
 
-        {/* 2. STATE: SUCCESS */}
         {state === 'SUCCESS' && (
           <div className="py-4 space-y-4">
             <div className="mx-auto w-16 h-16 rounded-2xl bg-success/15 text-success flex items-center justify-center shadow-lg shadow-success/20">
@@ -142,7 +138,6 @@ export function VerifyEmailRoute() {
           </div>
         )}
 
-        {/* 3. STATE: ERROR */}
         {state === 'ERROR' && (
           <div className="py-4 space-y-4">
             <div className="mx-auto w-16 h-16 rounded-2xl bg-error/15 text-error flex items-center justify-center shadow-lg shadow-error/20">

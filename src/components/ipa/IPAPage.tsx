@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -85,7 +84,7 @@ export function IPAPage({ onAction }: IPAPageProps) {
         onClick={() => handlePlaySound(symbol)}
       >
         <CardContent className="p-4">
-          {/* Symbol */}
+
           <div className="flex items-center justify-between mb-3">
             <span
               className={`text-5xl font-bold text-text-primary transition-transform ${
@@ -103,7 +102,6 @@ export function IPAPage({ onAction }: IPAPageProps) {
             </span>
           </div>
 
-          {/* Sound name */}
           <p className="text-sm font-medium text-text-primary mb-1">
             {symbol.soundName}
           </p>
@@ -111,14 +109,12 @@ export function IPAPage({ onAction }: IPAPageProps) {
             {symbol.descriptionVi}
           </p>
 
-          {/* Examples - chỉ 1 từ */}
           <div className="flex justify-center mb-3">
             <span className="text-sm px-3 py-1.5 bg-surface-subtle rounded text-text-secondary font-medium">
               {symbol.examples[0]?.word}
             </span>
           </div>
 
-          {/* Progress bar */}
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-text-tertiary">
               <span>{isVietnamese ? 'Tiến độ' : 'Progress'}</span>
@@ -138,7 +134,7 @@ export function IPAPage({ onAction }: IPAPageProps) {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <SectionHeading
           eyebrow={t('ipa.title')}
@@ -153,7 +149,6 @@ export function IPAPage({ onAction }: IPAPageProps) {
         </Button>
       </div>
 
-      {/* Vowels + Diphthongs Section */}
       <section className="mb-10">
         <h3 className="mb-4 text-lg font-semibold text-text-primary flex items-center gap-2">
           <Icon name="languages" className="text-primary" size={20} />
@@ -163,7 +158,6 @@ export function IPAPage({ onAction }: IPAPageProps) {
           {isVietnamese ? '12 nguyên âm đơn + 8 âm đôi (diphthongs)' : '12 monophthongs + 8 diphthongs'}
         </p>
 
-        {/* Vowels */}
         <div className="mb-6">
           <h4 className="text-sm font-medium text-text-tertiary uppercase tracking-wide mb-3">
             {isVietnamese ? 'Nguyên âm (Vowels)' : 'Vowels'}
@@ -173,7 +167,6 @@ export function IPAPage({ onAction }: IPAPageProps) {
           </div>
         </div>
 
-        {/* Diphthongs */}
         <div>
           <h4 className="text-sm font-medium text-text-tertiary uppercase tracking-wide mb-3">
             {isVietnamese ? 'Âm đôi (Diphthongs)' : 'Diphthongs'}
@@ -184,7 +177,6 @@ export function IPAPage({ onAction }: IPAPageProps) {
         </div>
       </section>
 
-      {/* Consonants Section */}
       <section>
         <h3 className="mb-4 text-lg font-semibold text-text-primary flex items-center gap-2">
           <Icon name="type" className="text-info" size={20} />
@@ -198,7 +190,6 @@ export function IPAPage({ onAction }: IPAPageProps) {
         </div>
       </section>
 
-      {/* Info footer */}
       <div className="mt-10 p-4 bg-surface-subtle rounded-xl">
         <h4 className="text-sm font-semibold text-text-primary mb-2">
           {isVietnamese ? 'Mẹo học IPA' : 'IPA Learning Tips'}

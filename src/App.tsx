@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { ShieldAlert } from 'lucide-react'
@@ -27,7 +26,6 @@ export function App() {
   useEffect(() => {
     checkAuth()
 
-    // 🌐 Cross-Tab Sync: Tự động đóng modal OTP và đồng bộ phiên đăng nhập khi xác thực qua Email ở tab khác
     let channel: BroadcastChannel | null = null
     try {
       channel = new BroadcastChannel('lingo_auth_channel')
@@ -71,7 +69,6 @@ export function App() {
     }
   }, [checkAuth, setUser])
 
-  // 🚀 Real-time Session Kickout via Server-Sent Events (SSE)
   useEffect(() => {
     if (!isAuthenticated) return
 
@@ -107,7 +104,6 @@ export function App() {
       <TooltipProvider>
         <Outlet />
 
-        {/* 🚨 Popup Cảnh Báo An Ninh Khi Bị Đăng Nhập Từ Nơi Khác */}
         <Modal
           open={Boolean(kickoutMessage)}
           onClose={() => setKickoutMessage(null)}

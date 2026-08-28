@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Play, Pause, RotateCcw, ChevronRight, CheckCircle2, XCircle, Volume2 } from 'lucide-react'
@@ -56,7 +55,7 @@ export function SpeakingResult({
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <div className="mb-6 flex items-center gap-4">
         <button
           onClick={onBack}
@@ -73,7 +72,6 @@ export function SpeakingResult({
         </div>
       </div>
 
-      {/* Overall Score */}
       <Card className="mb-6 dashboard-card border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
         <CardContent className="p-6">
           <div className="flex flex-col items-center">
@@ -98,7 +96,6 @@ export function SpeakingResult({
             </div>
           </div>
 
-          {/* Score Breakdown */}
           <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
             {scores.map((score) => (
               <div key={score.label} className="text-center">
@@ -112,14 +109,12 @@ export function SpeakingResult({
         </CardContent>
       </Card>
 
-      {/* Recording & Transcript */}
       <Card className="mb-6 dashboard-card">
         <CardContent className="p-4">
           <h2 className="mb-4 text-[16px] font-semibold text-text-primary">
             {isVietnamese ? 'Bản ghi & Phát lại' : 'Recording & Playback'}
           </h2>
 
-          {/* Audio Player */}
           <div className="mb-4 flex items-center gap-3 rounded-xl bg-surface-subtle p-4">
             <Button
               variant="outline"
@@ -146,7 +141,6 @@ export function SpeakingResult({
             </Button>
           </div>
 
-          {/* Transcript */}
           {submission.transcription && (
             <div>
               <h3 className="mb-2 text-[13px] font-medium text-text-secondary">
@@ -160,7 +154,6 @@ export function SpeakingResult({
         </CardContent>
       </Card>
 
-      {/* AI Feedback */}
       {evaluation && (
         <Card className="mb-6 dashboard-card">
           <CardContent className="p-4">
@@ -171,14 +164,12 @@ export function SpeakingResult({
               </h2>
             </div>
 
-            {/* Overall Feedback */}
             <div className="mb-4 rounded-xl bg-surface-subtle p-4">
               <p className="text-[14px] leading-relaxed text-text-primary">
                 {evaluation.overall_feedback}
               </p>
             </div>
 
-            {/* Detailed Analysis */}
             <div className="space-y-3">
               {evaluation.pronunciation_analysis && (
                 <AnalysisItem
@@ -230,7 +221,6 @@ export function SpeakingResult({
               )}
             </div>
 
-            {/* Improvement Tips */}
             {evaluation.improvement_tips && evaluation.improvement_tips.length > 0 && (
               <div className="mt-4 rounded-xl bg-amber-50 p-4">
                 <h3 className="mb-2 flex items-center gap-2 text-[13px] font-semibold text-amber-700">
@@ -250,7 +240,6 @@ export function SpeakingResult({
         </Card>
       )}
 
-      {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button
           variant="outline"

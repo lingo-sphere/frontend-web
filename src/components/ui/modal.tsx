@@ -1,4 +1,3 @@
-
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -47,18 +46,17 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
       className="fixed inset-0 z-50 flex items-center justify-center"
       role="dialog"
     >
-      {/* Backdrop */}
+
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Modal content */}
       <div
         className={`relative z-10 w-full ${sizeClasses[size]} mx-4 rounded-2xl border border-border bg-surface shadow-[var(--shadow-popover)]`}
       >
-        {/* Header */}
+
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-[16px] font-bold text-text-primary">{title}</h2>
           <Button
@@ -71,12 +69,10 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
           </Button>
         </div>
 
-        {/* Body */}
         <div className="px-6 py-4">
           {children}
         </div>
 
-        {/* Footer */}
         {footer && (
           <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
             {footer}

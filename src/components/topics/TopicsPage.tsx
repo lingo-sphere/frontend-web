@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, Star } from "lucide-react";
@@ -29,7 +28,7 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
           topic.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
           topic.nameVi.toLowerCase().includes(searchQuery.toLowerCase())
       )
-      .sort((a, b) => b.accessCount - a.accessCount); 
+      .sort((a, b) => b.accessCount - a.accessCount);
   }, [searchQuery]);
 
   const totalPages = Math.ceil(filteredTopics.length / ITEMS_PER_PAGE);
@@ -53,7 +52,6 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
         description={isVietnamese ? "Khám phá các chủ đề phổ biến để mở rộng vốn từ vựng" : "Explore popular topics to expand your vocabulary"}
       />
 
-      {/* Featured Topics */}
       <section className="mt-6">
         <h3 className="mb-4 flex items-center gap-2 text-[14px] font-semibold uppercase tracking-wide text-text-tertiary">
           <Star className="h-4 w-4 text-warning" />
@@ -72,7 +70,6 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
         </div>
       </section>
 
-      {/* Search */}
       <div className="mt-6 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
@@ -86,7 +83,6 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
         </div>
       </div>
 
-      {/* Results count */}
       <p className="mt-4 text-[13px] text-text-secondary">
         {isVietnamese ? "Tìm thấy" : "Found"}{" "}
         <span className="font-semibold text-text-primary">
@@ -95,7 +91,6 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
         {isVietnamese ? "chủ đề" : "topics"}
       </p>
 
-      {/* Topics Grid */}
       {paginatedTopics.length > 0 ? (
         <>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -108,7 +103,7 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
                 onClick={() => onAction(`${isVietnamese ? "Đã mở" : "Opened"} "${topic.nameVi}"`)}
               >
                 <CardContent className="p-4">
-                  {/* Header */}
+
                   <div className="flex items-start justify-between">
                     <div>
                       <h4 className="text-[16px] font-semibold text-text-primary">
@@ -123,19 +118,16 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
                     )}
                   </div>
 
-                  {/* Description */}
                   <p className="mt-2 text-[12px] text-text-secondary line-clamp-2">
                     {topic.description}
                   </p>
 
-                  {/* Tags */}
                   <div className="mt-3 flex items-center gap-2">
                     <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-tertiary">
                       {topic.cefrLevel}
                     </span>
                   </div>
 
-                  {/* Stats */}
                   <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
                     <span className="text-[12px] text-text-tertiary">
                       {topic.wordCount} {isVietnamese ? "từ" : "words"}
@@ -149,7 +141,6 @@ export function TopicsPage({ onAction }: TopicsPageProps) {
             ))}
           </div>
 
-          {/* Pagination - using shared component */}
           <div className="mt-8">
             <Pagination
               currentPage={currentPage}

@@ -36,7 +36,7 @@ export function AiTranslationRoute() {
         throw new Error('No translation returned')
       }
     } catch {
-      // Fallback mock high quality translation
+
       setResult({
         translated_text: 'Sự phát triển nhanh chóng của trí tuệ nhân tạo đang làm thay đổi căn bản diện mạo của nền giáo dục hiện đại.',
         source_lang: sourceLang,
@@ -78,7 +78,7 @@ export function AiTranslationRoute() {
   return (
     <Layout>
       <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
-        {/* Header */}
+
         <div className="border-b border-border pb-5">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
@@ -95,9 +95,8 @@ export function AiTranslationRoute() {
           </p>
         </div>
 
-        {/* Translation Studio Container */}
         <div className="rounded-2xl bg-surface border border-border shadow-md overflow-hidden">
-          {/* Language Selector Bar */}
+
           <div className="flex items-center justify-between border-b border-border bg-surface-subtle px-4 py-2.5">
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-text-primary">
@@ -126,9 +125,8 @@ export function AiTranslationRoute() {
             </Button>
           </div>
 
-          {/* Input & Output Split */}
           <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
-            {/* Input Box */}
+
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-text-tertiary uppercase">Văn bản gốc</span>
@@ -152,7 +150,6 @@ export function AiTranslationRoute() {
               />
             </div>
 
-            {/* Output Box */}
             <div className="p-4 bg-surface-subtle/40 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-primary uppercase">Bản dịch AI</span>
@@ -174,10 +171,9 @@ export function AiTranslationRoute() {
           </div>
         </div>
 
-        {/* AI Key Vocabulary & Grammar Insights */}
         {result && result.key_vocabulary && result.key_vocabulary.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Key Vocabulary */}
+
             <div className="rounded-2xl bg-surface border border-border p-5 shadow-sm space-y-3">
               <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
                 <Icon name="cards" size={16} className="text-primary" />
@@ -198,7 +194,6 @@ export function AiTranslationRoute() {
               </div>
             </div>
 
-            {/* Grammar Notes */}
             <div className="rounded-2xl bg-surface border border-border p-5 shadow-sm space-y-3">
               <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
                 <Icon name="bookCheck" size={16} className="text-success" />

@@ -122,7 +122,6 @@ export function SettingsPage() {
         description={isVietnamese ? 'Quản lý thông báo và cài đặt học tập' : 'Manage notifications and learning preferences'}
       />
 
-      {/* Account Settings */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <h3 className="mb-4 flex items-center gap-2 font-semibold text-text-primary">
@@ -146,7 +145,6 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Notification Settings */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <h3 className="mb-4 flex items-center gap-2 font-semibold text-text-primary">
@@ -154,7 +152,6 @@ export function SettingsPage() {
             {t('settings.notifications')}
           </h3>
 
-          {/* Master Toggle */}
           <div className="mb-4 flex items-center justify-between rounded-xl bg-surface-subtle p-4">
             <div>
               <div className="font-medium text-text-primary">{isVietnamese ? 'Bật tất cả thông báo' : 'Enable All Notifications'}</div>
@@ -168,7 +165,6 @@ export function SettingsPage() {
             </button>
           </div>
 
-          {/* Channel Toggles */}
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {(['push', 'email', 'sms', 'sound'] as const).map((key) => {
               const labels: Record<string, { vi: string; en: string }> = {
@@ -191,7 +187,6 @@ export function SettingsPage() {
             })}
           </div>
 
-          {/* Quiet Hours */}
           <div className="mb-6 rounded-xl border border-surface-subtle p-4">
             <div className="mb-3 flex items-center justify-between">
               <div>
@@ -235,7 +230,6 @@ export function SettingsPage() {
             )}
           </div>
 
-          {/* Category Settings */}
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-text-secondary">{isVietnamese ? 'Danh mục thông báo' : 'Notification Categories'}</h4>
             {Object.entries(categoryConfig).map(([key, config]) => {
@@ -282,7 +276,6 @@ export function SettingsPage() {
             })}
           </div>
 
-          {/* Marketing Toggle */}
           <div className="mt-4 flex items-center justify-between rounded-xl border border-surface-subtle p-4">
             <div className="flex items-center gap-2">
               <Icon name="megaphone" size={16} className="text-text-tertiary" />
@@ -301,7 +294,6 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Learning Settings */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <h3 className="mb-4 flex items-center gap-2 font-semibold text-text-primary">

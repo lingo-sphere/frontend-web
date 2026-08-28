@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next'
 import { Clock3 } from 'lucide-react'
 
@@ -23,7 +22,7 @@ export function LeaderboardCountdown({ daysLeft, isCurrentMonth }: LeaderboardCo
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-warning/30 bg-gradient-to-br from-warning-soft via-surface to-surface p-6">
-      {/* Decorative circles */}
+
       <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-warning/10" />
       <div className="absolute -bottom-4 -right-4 h-20 w-20 rounded-full bg-warning/5" />
 

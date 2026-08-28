@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -16,10 +15,10 @@ import {
 import type { ToeicQuestion, ToeicPart } from '@/types/toeic'
 
 type PracticeMode =
-  | 'FULL'        
-  | 'LISTENING'   
-  | 'READING'     
-  | 'PART'        
+  | 'FULL'
+  | 'LISTENING'
+  | 'READING'
+  | 'PART'
 
 interface ExamState {
   mode: PracticeMode
@@ -483,7 +482,7 @@ export function ToeicExamPage() {
           </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
-            {/* Full Test */}
+
             <Card className="dashboard-card cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5" onClick={() => handleSelectMode('FULL', [1, 2, 3, 4, 5, 6, 7], true)}>
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-3">
@@ -514,7 +513,6 @@ export function ToeicExamPage() {
               </CardContent>
             </Card>
 
-            {/* Listening */}
             <Card className="dashboard-card cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5" onClick={() => handleSelectMode('LISTENING', [1, 2, 3, 4], true)}>
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-3">
@@ -537,7 +535,6 @@ export function ToeicExamPage() {
               </CardContent>
             </Card>
 
-            {/* Reading */}
             <Card className="dashboard-card cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5" onClick={() => handleSelectMode('READING', [5, 6, 7], true)}>
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-3">
@@ -560,7 +557,6 @@ export function ToeicExamPage() {
               </CardContent>
             </Card>
 
-            {/* Single Part */}
             <Card className="dashboard-card">
               <CardContent className="p-5">
                 <div className="mb-3 flex items-center gap-3">
@@ -591,7 +587,6 @@ export function ToeicExamPage() {
             </Card>
           </div>
 
-          {/* Time tips */}
           <Card className="mt-6 dashboard-card border-amber-200 bg-amber-50">
             <CardContent className="p-4">
               <h3 className="mb-3 flex items-center gap-2 text-[14px] font-semibold text-amber-800">

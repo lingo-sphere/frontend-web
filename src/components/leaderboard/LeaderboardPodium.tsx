@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next'
 import { Crown } from "lucide-react";
 import type {
@@ -75,7 +74,7 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
 
         return (
           <div key={user.rank} className="flex flex-col items-center">
-            {/* User info card */}
+
             <div
               className={`flex w-full min-h-[180px] flex-col items-center rounded-2xl border p-4 transition-transform ${
                 isFirst
@@ -83,7 +82,7 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
                   : "border-border bg-surface"
               }`}
             >
-              {/* Crown for top 3 */}
+
               {config.rank === 1 && (
                 <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-warning to-warning/70 shadow-md">
                   <Crown className="h-4 w-4 text-white" />
@@ -100,7 +99,6 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
                 </div>
               )}
 
-              {/* Avatar */}
               <div
                 className="mb-2 flex h-12 w-12 items-center justify-center rounded-full text-[18px] font-bold text-white shadow-md"
                 style={{ backgroundColor: user.avatarColor }}
@@ -108,12 +106,10 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
                 {user.name.charAt(0)}
               </div>
 
-              {/* Name */}
               <p className="mb-1 text-[13px] font-semibold text-text-primary text-center line-clamp-1">
                 {user.name}
               </p>
 
-              {/* Stats */}
               <p
                 className="text-[15px] font-bold"
                 style={{ color: config.medal }}
@@ -129,7 +125,6 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
               </p>
             </div>
 
-            {/* Podium base */}
             <div
               className="mt-2 w-full rounded-t-lg text-center"
               style={{

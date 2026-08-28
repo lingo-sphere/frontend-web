@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next'
 import { Mic, TrendingUp, Clock, ChevronRight, Play } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -43,7 +42,7 @@ export function SpeakingHome({
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <div className="mb-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -70,7 +69,6 @@ export function SpeakingHome({
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
           icon={<Mic className="h-5 w-5 text-primary" />}
@@ -95,7 +93,6 @@ export function SpeakingHome({
         />
       </div>
 
-      {/* Progress */}
       <Card className="mb-6 dashboard-card">
         <CardContent className="p-4">
           <h2 className="mb-4 text-[16px] font-semibold text-text-primary">
@@ -110,7 +107,6 @@ export function SpeakingHome({
         </CardContent>
       </Card>
 
-      {/* Recommended Exercise */}
       {recommendedExercise && (
         <Card className="mb-6 dashboard-card border-primary/20">
           <CardContent className="p-4">
@@ -136,7 +132,6 @@ export function SpeakingHome({
         </Card>
       )}
 
-      {/* Recent Attempts */}
       <Card className="dashboard-card">
         <CardContent className="p-4">
           <div className="mb-4 flex items-center justify-between">

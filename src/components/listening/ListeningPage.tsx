@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -206,7 +205,6 @@ export function ListeningPage() {
         description={isVietnamese ? 'Cải thiện kỹ năng nghe với các bài luyện tập đa dạng' : 'Improve listening skills with various exercises'}
       />
 
-      {/* Continue Learning */}
       {continueListening.length > 0 && (
         <section className="mb-8">
           <h3 className="mb-4 text-lg font-semibold text-text-primary flex items-center gap-2">
@@ -231,7 +229,6 @@ export function ListeningPage() {
         </section>
       )}
 
-      {/* Recommended */}
       <section className="mb-8">
         <h3 className="mb-4 text-lg font-semibold text-text-primary flex items-center gap-2">
           <Icon name="star" className="text-warning" size={20} />
@@ -249,7 +246,6 @@ export function ListeningPage() {
         </div>
       </section>
 
-      {/* Filters */}
       <section className="mb-6">
         <div className="relative mb-4">
           <Icon
@@ -265,7 +261,6 @@ export function ListeningPage() {
           />
         </div>
 
-        {/* Difficulty filters */}
         <div className="flex flex-wrap gap-2 mb-3">
           <FilterChip
             active={selectedDifficulty === "all"}
@@ -296,7 +291,6 @@ export function ListeningPage() {
           </FilterChip>
         </div>
 
-        {/* Media type filters */}
         <div className="flex flex-wrap gap-2">
           <FilterChip
             active={selectedMediaType === "AUDIO"}
@@ -321,7 +315,6 @@ export function ListeningPage() {
         </div>
       </section>
 
-      {/* Exercise Library */}
       <section>
         <h3 className="mb-4 text-lg font-semibold text-text-primary flex items-center gap-2">
           <Icon name="library" className="text-primary" size={20} />
@@ -401,7 +394,7 @@ function ExerciseCard({
       onClick={onClick}
     >
       <CardContent className="p-4">
-        {/* Header */}
+
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
             <div
@@ -425,7 +418,6 @@ function ExerciseCard({
           </span>
         </div>
 
-        {/* Title */}
         <h4 className="font-semibold text-text-primary mb-1 line-clamp-1">
           {exercise.title}
         </h4>
@@ -433,7 +425,6 @@ function ExerciseCard({
           {exercise.description}
         </p>
 
-        {/* Meta */}
         <div className="flex items-center gap-3 text-xs text-text-tertiary mb-3">
           <span className="flex items-center gap-1">
             <Icon name="clock" size={12} />
@@ -451,7 +442,6 @@ function ExerciseCard({
           )}
         </div>
 
-        {/* Last attempt */}
         {lastAttempt && (
           <div className="flex items-center gap-2 p-2 bg-surface-subtle rounded-lg mb-3">
             <div className="flex-1">
@@ -474,7 +464,6 @@ function ExerciseCard({
           </div>
         )}
 
-        {/* Button */}
         <Button
           className={`w-full ${
             lastAttempt
@@ -592,7 +581,7 @@ function VideoDictationView({
         existingAttempt.segmentAnswers.forEach((segAns) => {
           segAns.blankResults.forEach((blankRes) => {
             if (blankRes.isHintUsed) {
-              result[blankRes.blankId] = 1; 
+              result[blankRes.blankId] = 1;
             }
           });
         });
@@ -725,7 +714,7 @@ function VideoDictationView({
         newCheckedResults[blank.id] = checkBlank(blank, userAnswer);
       });
       setCheckedResults(newCheckedResults);
-      return; 
+      return;
     }
 
     const newCorrected: Record<string, string> = {};
@@ -916,7 +905,7 @@ function VideoDictationView({
         >
           {finalText}
         </span>
-        {/* Hidden input - disabled khi đã completed */}
+
         <input
           id={`blank-input-${blank.id}`}
           type="text"
@@ -984,7 +973,7 @@ function VideoDictationView({
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-4 lg:px-6">
-      {/* Header */}
+
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={onBack}
@@ -996,11 +985,10 @@ function VideoDictationView({
         <div className="text-sm text-text-tertiary">{exercise.title}</div>
       </div>
 
-      {/* Layout 2 columns: Player (Left) + Answers (Right) */}
       <div className="flex gap-4 h-[calc(100vh-140px)]">
-        {/* LEFT: Media Player + Timeline */}
+
         <div className="w-180 shrink-0 flex flex-col gap-4">
-          {/* Media Player */}
+
           <Card className="overflow-hidden">
             <div
               className={`relative ${
@@ -1048,9 +1036,8 @@ function VideoDictationView({
               </button>
             </div>
 
-            {/* Controls */}
             <CardContent className="p-3">
-              {/* Progress bar */}
+
               <div className="mb-2">
                 <input
                   type="range"
@@ -1067,7 +1054,6 @@ function VideoDictationView({
                 </div>
               </div>
 
-              {/* Control buttons */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <Button
@@ -1089,7 +1075,6 @@ function VideoDictationView({
                   </Button>
                 </div>
 
-                {/* Speed */}
                 <div className="flex items-center gap-0.5 bg-surface-subtle rounded-md p-0.5">
                   {[0.75, 1, 1.25].map((speed) => (
                     <button
@@ -1109,7 +1094,6 @@ function VideoDictationView({
             </CardContent>
           </Card>
 
-          {/* Timeline */}
           <div className="flex gap-1 overflow-x-auto pb-1">
             {exercise.segments.map((seg, i) => {
               const isCompleted = completedSegments.has(seg.id);
@@ -1136,7 +1120,6 @@ function VideoDictationView({
             })}
           </div>
 
-          {/* Stats */}
           <div className="flex items-center justify-center gap-4 text-xs text-text-tertiary">
             <span>{isVietnamese ? 'Gợi ý' : 'Hints'}: {totalHintsUsed}</span>
             <span>{isVietnamese ? 'Nghe lại' : 'Replay'}: {replayCount}</span>
@@ -1145,13 +1128,11 @@ function VideoDictationView({
             </span>
           </div>
         </div>
-        {/* END LEFT */}
 
-        {/* RIGHT: Answer Panel */}
         <div className="flex-1 flex flex-col min-w-0">
           <Card className="flex-1 flex flex-col overflow-hidden">
             <CardContent className="flex-1 overflow-y-auto p-4">
-              {/* Segment info */}
+
               <div className="flex items-center gap-2 mb-4 sticky top-0 bg-white pb-2">
                 <span className="text-xs px-2 py-1 bg-primary-soft text-primary rounded-full font-medium">
                   Câu {activeSegmentIndex + 1}
@@ -1162,12 +1143,10 @@ function VideoDictationView({
                 </span>
               </div>
 
-              {/* Transcript với blanks */}
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg leading-relaxed text-text-primary mb-4 font-medium">
                 {renderSegmentWithBlanks(currentSegment)}
               </div>
 
-              {/* Kết quả check đúng/sai - CHỈ hiện khi đã check nhưng chưa hoàn thành */}
               {hasViewedCurrentResult && !isCurrentSegmentCompleted && (
                 <div className="mb-4 p-3 bg-surface-subtle rounded-lg">
                   <h4 className="text-sm font-medium text-text-secondary mb-2">
@@ -1210,7 +1189,6 @@ function VideoDictationView({
                 </div>
               )}
 
-              {/* Hint button - disabled khi đã hoàn thành */}
               <div className="flex gap-2 mb-4">
                 <Button
                   variant="outline"
@@ -1228,7 +1206,6 @@ function VideoDictationView({
                 </Button>
               </div>
 
-              {/* Next button */}
               <Button
                 onClick={handleNext}
                 disabled={!hasViewedCurrentResult && !canSubmitCurrentSegment}
@@ -1283,7 +1260,6 @@ function ResultView({
         <p className="text-text-secondary">{exercise.title}</p>
       </div>
 
-      {/* Score */}
       <Card className="mb-6">
         <CardContent className="p-8 text-center">
           <div className={`text-6xl font-bold mb-2 ${scoreColor}`}>
@@ -1317,7 +1293,6 @@ function ResultView({
         </CardContent>
       </Card>
 
-      {/* AI Analysis */}
       {attempt.aiAnalysis && (
         <Card className="mb-6 bg-primary-5 border-primary">
           <CardContent className="p-4">
@@ -1346,7 +1321,6 @@ function ResultView({
         </Card>
       )}
 
-      {/* Actions */}
       <div className="flex flex-col gap-3">
         <Button
           onClick={onReview}

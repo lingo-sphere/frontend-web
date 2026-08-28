@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react'
 import { Play, Pause, SkipBack, SkipForward, Check, ChevronLeft, ChevronRight, Lock, Maximize2, Minimize2 } from 'lucide-react'
 
@@ -18,7 +17,7 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
   const [currentTime, setCurrentTime] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  const totalDuration = lesson.duration 
+  const totalDuration = lesson.duration
   const progressPercent = Math.round((currentTime / totalDuration) * 100)
 
   const toggleFullscreen = useCallback(() => {
@@ -81,7 +80,7 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
   if (isFullscreen) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
-        {/* Close fullscreen button */}
+
         <button
           className="absolute right-4 top-4 z-10 rounded-lg bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
           onClick={() => setIsFullscreen(false)}
@@ -89,9 +88,8 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
           <Minimize2 className="h-6 w-6" />
         </button>
 
-        {/* Video area */}
         <div className="relative flex h-full w-full items-center justify-center">
-          {/* Video frame placeholder */}
+
           <div className="flex items-center justify-center">
             <div className="text-center">
               <div
@@ -109,16 +107,14 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
             </div>
           </div>
 
-          {/* Progress bar overlay */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
-            {/* Time display */}
+
             <div className="mb-3 flex items-center justify-between text-[14px] text-white">
               <span>{formatTime(currentTime)}</span>
               <span className="rounded-full bg-primary/30 px-3 py-1 font-semibold">{progressPercent}%</span>
               <span>{formatTime(totalDuration)}</span>
             </div>
 
-            {/* Progress bar */}
             <div
               className="h-3 w-full cursor-pointer overflow-hidden rounded-full bg-white/30"
               onClick={handleProgressClick}
@@ -129,7 +125,6 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
               />
             </div>
 
-            {/* Controls */}
             <div className="mt-4 flex items-center justify-center gap-6">
               <button
                 className="rounded-full p-3 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
@@ -167,7 +162,7 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <Card className="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden bg-surface">
-        {/* Header */}
+
         <div className="flex items-center justify-between border-b border-border p-4">
           <Button
             variant="ghost"
@@ -189,12 +184,11 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
           </Button>
         </div>
 
-        {/* Video Player Area */}
         <div className="relative flex-1 bg-black">
-          {/* Video placeholder */}
+
           <div className="flex h-full w-full items-center justify-center">
             <div className="relative">
-              {/* Video frame placeholder */}
+
               <div className="flex h-[300px] w-[533px] items-center justify-center rounded-lg bg-gradient-to-br from-surface-subtle to-surface">
                 <div className="text-center">
                   <div
@@ -214,16 +208,14 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
             </div>
           </div>
 
-          {/* Progress bar overlay */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-            {/* Time display */}
+
             <div className="mb-2 flex items-center justify-between text-[12px] text-white">
               <span>{formatTime(currentTime)}</span>
               <span className="text-warning">{progressPercent}%</span>
               <span>{formatTime(totalDuration)}</span>
             </div>
 
-            {/* Progress bar */}
             <div
               className="h-2 w-full cursor-pointer overflow-hidden rounded-full bg-white/30"
               onClick={handleProgressClick}
@@ -234,7 +226,6 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
               />
             </div>
 
-            {/* Controls */}
             <div className="mt-3 flex items-center justify-center gap-4">
               <button
                 className="rounded-full p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
@@ -272,7 +263,6 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
           </div>
         </div>
 
-        {/* Lesson Content */}
         <div className="border-t border-border p-4">
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -287,7 +277,6 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
             </div>
           </div>
 
-          {/* Progress indicator */}
           <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-surface-subtle">
             <div
               className={`h-full transition-all ${progress >= 80 ? 'bg-success' : 'bg-primary'}`}
@@ -297,7 +286,6 @@ export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps)
 
         </div>
 
-        {/* Footer Actions */}
         <div className="flex items-center justify-between border-t border-border p-4">
           <Button variant="outline" disabled>
             <ChevronLeft className="mr-1 h-4 w-4" />

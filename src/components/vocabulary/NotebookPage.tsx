@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -185,14 +184,13 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <SectionHeading
         eyebrow={t('vocabulary.notebook')}
         title={isVietnamese ? "Sổ tay từ vựng" : "Vocabulary Notebook"}
         description={isVietnamese ? "Từ vựng đã lưu và bộ thẻ của bạn" : "Your saved vocabulary and decks"}
       />
 
-      {/* Tabs */}
       <div className="mt-6 inline-flex rounded-xl border border-border bg-surface p-1">
         <button
           onClick={() => setActiveTab("vocabulary")}
@@ -218,7 +216,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
         </button>
       </div>
 
-      {/* Tab Content */}
       {activeTab === "vocabulary" && (
         <VocabularyTab
           savedVocabulary={savedVocabulary}
@@ -244,9 +241,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
         />
       )}
 
-      {/* ===== MODALS ===== */}
-
-      {/* Modal chọn deck */}
       <SelectDeckModal
         isOpen={selectDeckModal.isOpen}
         onClose={() => setSelectDeckModal({ isOpen: false, word: null })}
@@ -255,7 +249,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
         onSelectDeck={handleSelectDeck}
       />
 
-      {/* Modal xác nhận xóa từ */}
       <ConfirmDeleteModal
         isOpen={deleteWordModal.isOpen}
         onClose={() => setDeleteWordModal({ isOpen: false, word: null })}
@@ -265,7 +258,6 @@ export function NotebookPage({ onAction }: NotebookPageProps) {
         onConfirm={confirmDeleteWord}
       />
 
-      {/* Modal tạo deck mới */}
       <CreateDeckModal
         isOpen={createDeckModal}
         onClose={() => {
@@ -291,7 +283,7 @@ interface VocabularyTabProps {
   isVietnamese: boolean;
 }
 
-const ITEMS_PER_PAGE = 20; 
+const ITEMS_PER_PAGE = 20;
 
 function VocabularyTab({
   savedVocabulary,
@@ -338,7 +330,7 @@ function VocabularyTab({
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
       const scrollPosition = scrollTop + clientHeight;
-      const scrollThreshold = scrollHeight * 0.8; 
+      const scrollThreshold = scrollHeight * 0.8;
 
       if (
         scrollPosition >= scrollThreshold &&
@@ -385,7 +377,7 @@ function VocabularyTab({
 
   return (
     <div className="mt-6 space-y-3">
-      {/* Search & Filter */}
+
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
@@ -398,7 +390,6 @@ function VocabularyTab({
           />
         </div>
 
-        {/* Filter by deck */}
         <select
           value={filterDeck}
           onChange={(e) => setFilterDeck(e.target.value as typeof filterDeck)}
@@ -417,13 +408,11 @@ function VocabularyTab({
         </select>
       </div>
 
-      {/* Stats */}
       <div className="flex gap-4 text-[12px] text-text-secondary">
         <span>{isVietnamese ? "Đang hiển thị" : "Showing"}: {displayedWords.length}/{filteredWords.length} {isVietnamese ? "từ" : "words"}</span>
         {hasMore && <span className="text-primary">• {isVietnamese ? "Cuộn xuống để xem thêm" : "Scroll down for more"}</span>}
       </div>
 
-      {/* Word Grid - 5 columns */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {displayedWords.map((item) => (
           <VocabularyCard
@@ -438,14 +427,12 @@ function VocabularyTab({
         ))}
       </div>
 
-      {/* Loading indicator */}
       {isLoading && (
         <div className="py-4 text-center">
           <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       )}
 
-      {/* End of list */}
       {!hasMore && filteredWords.length > 0 && (
         <p className="py-4 text-center text-[12px] text-text-tertiary">
           {isVietnamese ? "Đã hiển thị tất cả" : "Showing all"} {filteredWords.length} {isVietnamese ? "từ" : "words"}
@@ -488,7 +475,7 @@ function DecksTab({
 
   return (
     <div>
-      {/* Create Deck Button */}
+
       <div className="mt-6">
         <Button
           className="gap-2 bg-primary hover:bg-primary-hover"
@@ -499,7 +486,6 @@ function DecksTab({
         </Button>
       </div>
 
-      {/* Decks List */}
       {decks.length > 0 ? (
         <div className="mt-4 space-y-4">
           {decks.map((deck) => {
@@ -510,7 +496,7 @@ function DecksTab({
             return (
               <Card key={deck.id} className="dashboard-card overflow-hidden">
                 <CardContent className="p-0">
-                  {/* Deck Header */}
+
                   <div
                     className="flex cursor-pointer items-center justify-between p-4 hover:bg-surface-subtle/50"
                     onClick={() => setExpandedDeck(isExpanded ? null : deck.id)}
@@ -565,7 +551,6 @@ function DecksTab({
                     </div>
                   </div>
 
-                  {/* Expanded: Show words in deck */}
                   {isExpanded && deckWords.length > 0 && (
                     <div className="border-t border-border bg-surface-subtle/30 p-4">
                       <p className="mb-3 text-[12px] font-medium text-text-secondary">
@@ -634,13 +619,12 @@ function CreateDeckModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
+
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl border border-border bg-surface p-6 shadow-lg">
         <h3 className="text-[16px] font-bold text-text-primary">
           {isVietnamese ? "Tạo Deck Mới" : "Create New Deck"}

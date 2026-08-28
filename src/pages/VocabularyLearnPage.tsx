@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { GraduationCap } from 'lucide-react'
@@ -136,7 +135,6 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
         description="Choose a deck to start learning"
       />
 
-      {/* Quick Learn Button */}
       <section className="mt-6">
         <Card
           className="dashboard-card cursor-pointer overflow-hidden transition-all hover:shadow-lg"
@@ -161,7 +159,6 @@ export function VocabularyLearnPage({ onAction, selectedDeckId }: VocabularyLear
         </Card>
       </section>
 
-      {/* Browse Decks */}
       <section className="mt-8">
         <h3 className="mb-4 text-[16px] font-semibold text-text-primary">
           Choose a Deck

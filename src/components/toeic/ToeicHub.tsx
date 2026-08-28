@@ -70,7 +70,7 @@ function ExamCard({
       onClick={onClick}
     >
       <CardContent className="p-4">
-        {/* Header */}
+
         <div className="mb-3 flex items-start justify-between">
           <div className="flex items-center gap-2">
             {isOfficial ? (
@@ -96,12 +96,10 @@ function ExamCard({
           </span>
         </div>
 
-        {/* Description */}
         <p className="mb-3 text-[12px] text-text-secondary line-clamp-2">
           {exam.description}
         </p>
 
-        {/* Stats */}
         <div className="mb-3 grid grid-cols-3 gap-2">
           <div className="rounded-lg bg-surface-subtle p-2 text-center">
             <div className="flex items-center justify-center gap-1 text-[11px] text-text-tertiary">
@@ -132,7 +130,6 @@ function ExamCard({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
             <span className="flex items-center gap-1">
@@ -160,7 +157,7 @@ function PartOverview({ isVietnamese }: { isVietnamese: boolean }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      {/* Listening */}
+
       <Card className="dashboard-card">
         <CardContent className="p-4">
           <div className="mb-4 flex items-center gap-3">
@@ -188,7 +185,6 @@ function PartOverview({ isVietnamese }: { isVietnamese: boolean }) {
         </CardContent>
       </Card>
 
-      {/* Reading */}
       <Card className="dashboard-card">
         <CardContent className="p-4">
           <div className="mb-4 flex items-center gap-3">
@@ -308,14 +304,13 @@ export function ToeicHub() {
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <SectionHeading
         eyebrow={isVietnamese ? 'Luyện tập' : 'Practice'}
         title={isVietnamese ? 'Luyện thi TOEIC' : 'TOEIC Practice'}
         description={isVietnamese ? 'Chọn đề thi phù hợp với trình độ của bạn' : 'Choose exams that match your level'}
       />
 
-      {/* Part Overview */}
       <section className="mb-8">
         <h2 className="mb-4 text-[16px] font-semibold text-text-primary">
           {isVietnamese ? 'Tổng quan các phần thi' : 'Test Section Overview'}
@@ -323,9 +318,8 @@ export function ToeicHub() {
         <PartOverview isVietnamese={isVietnamese} />
       </section>
 
-      {/* Filters */}
       <section className="mb-6">
-        {/* Search */}
+
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
           <input
@@ -337,9 +331,8 @@ export function ToeicHub() {
           />
         </div>
 
-        {/* Filter chips */}
         <div className="flex flex-wrap gap-4">
-          {/* Year */}
+
           <div className="flex flex-wrap gap-2">
             <span className="flex items-center text-[12px] font-medium text-text-tertiary">
               <Filter size={14} className="mr-1" />
@@ -356,7 +349,6 @@ export function ToeicHub() {
             ))}
           </div>
 
-          {/* Series */}
           <div className="flex flex-wrap gap-2">
             <span className="flex items-center text-[12px] font-medium text-text-tertiary">
               {isVietnamese ? 'Loại đề:' : 'Type:'}
@@ -372,7 +364,6 @@ export function ToeicHub() {
             ))}
           </div>
 
-          {/* Difficulty */}
           <div className="flex flex-wrap gap-2">
             <span className="flex items-center text-[12px] font-medium text-text-tertiary">
               {isVietnamese ? 'Độ khó:' : 'Difficulty:'}
@@ -390,12 +381,10 @@ export function ToeicHub() {
         </div>
       </section>
 
-      {/* Results count */}
       <p className="mb-4 text-[13px] text-text-secondary">
         {isVietnamese ? 'Tìm thấy' : 'Found'} {filteredExams.length} {isVietnamese ? 'đề thi' : 'exams'}
       </p>
 
-      {/* Exam list by year */}
       <section className="space-y-8">
         {groupedExams.map(([year, exams]) => (
           <div key={year}>

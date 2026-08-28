@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,7 +25,7 @@ function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietn
   return (
     <Card className="dashboard-card cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg">
       <CardContent className="p-5" onClick={() => setIsExpanded(!isExpanded)}>
-        {/* Header */}
+
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -49,7 +48,6 @@ function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietn
           />
         </div>
 
-        {/* Structure */}
         <div className="mt-3 p-2 bg-surface-subtle rounded-lg">
           <p className="text-[12px] text-text-secondary">{isVietnamese ? 'Cấu trúc:' : 'Structure:'}</p>
           <p className="text-[13px] font-mono text-primary font-medium">
@@ -57,16 +55,14 @@ function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietn
           </p>
         </div>
 
-        {/* Expanded Content */}
         {isExpanded && (
           <div className="mt-4 space-y-4 border-t border-border pt-4">
-            {/* Description */}
+
             <div>
               <p className="text-[12px] text-text-secondary mb-1">{isVietnamese ? 'Mô tả:' : 'Description:'}</p>
               <p className="text-[13px] text-text-primary">{isVietnamese ? grammar.descriptionVi : grammar.descriptionEn}</p>
             </div>
 
-            {/* Rule */}
             <div>
               <p className="text-[12px] text-text-secondary mb-1">{isVietnamese ? 'Quy tắc:' : 'Rule:'}</p>
               <p className="text-[13px] text-text-primary">
@@ -77,7 +73,6 @@ function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietn
               </p>
             </div>
 
-            {/* Examples */}
             <div>
               <p className="text-[12px] text-text-secondary mb-2">{isVietnamese ? 'Ví dụ:' : 'Examples:'}</p>
               <div className="space-y-2">
@@ -90,7 +85,6 @@ function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietn
               </div>
             </div>
 
-            {/* Common Mistakes */}
             {grammar.commonMistakes && (
               <div className="p-3 bg-error-10 rounded-lg">
                 <p className="text-[12px] text-error font-medium mb-1">⚠️ {isVietnamese ? 'Lỗi thường gặp:' : 'Common mistakes:'}</p>
@@ -98,7 +92,6 @@ function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietn
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex gap-2 pt-2">
               <Button variant="outline" size="sm" className="flex-1">
                 <Icon name="book" size={14} />
@@ -112,7 +105,6 @@ function GrammarCard({ grammar, isVietnamese }: { grammar: GrammarPoint; isVietn
           </div>
         )}
 
-        {/* Footer */}
         <div className="mt-3 flex items-center justify-between text-[11px] text-text-tertiary">
           <span>{grammar.practiceCount.toLocaleString()} {isVietnamese ? 'lượt luyện' : 'practices'}</span>
           <span>{grammar.toeicRelevance * 100}% TOEIC</span>
@@ -184,7 +176,6 @@ export function GrammarPage() {
         description={isVietnamese ? 'Học và luyện tập các cấu trúc ngữ pháp' : 'Learn and practice grammar structures'}
       />
 
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <Card>
           <CardContent className="p-4 text-center">
@@ -216,7 +207,6 @@ export function GrammarPage() {
         </Card>
       </div>
 
-      {/* Search */}
       <div className="relative max-w-md mb-6">
         <Icon
           name="search"
@@ -231,7 +221,6 @@ export function GrammarPage() {
         />
       </div>
 
-      {/* Filter Pills */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         <button
           onClick={() => handleTypeChange('ALL')}
@@ -258,12 +247,10 @@ export function GrammarPage() {
         ))}
       </div>
 
-      {/* Results count */}
       <p className="text-sm text-text-secondary mb-4">
         {isVietnamese ? 'Tìm thấy' : 'Found'} <span className="font-medium text-text-primary">{filteredGrammars.length}</span> {isVietnamese ? 'cấu trúc' : 'structures'}
       </p>
 
-      {/* Grammar Grid */}
       {paginatedGrammars.length > 0 ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -272,7 +259,6 @@ export function GrammarPage() {
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-8">
               <Pagination

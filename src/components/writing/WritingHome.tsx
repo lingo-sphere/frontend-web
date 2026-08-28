@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next'
 import {
   Pencil,
@@ -52,7 +51,7 @@ export function WritingHome({
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <div className="mb-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -68,7 +67,7 @@ export function WritingHome({
               </p>
             </div>
           </div>
-          {/* Nút Bắt đầu bài mới - đặt ở đầu trang */}
+
           <Button
             size="lg"
             className="gap-2 bg-primary hover:bg-primary-hover"
@@ -80,7 +79,6 @@ export function WritingHome({
         </div>
       </div>
 
-      {/* Continue Writing Section */}
       {continueWriting && (
         <section className="mb-6">
           <Card className="dashboard-card border-amber-200 bg-amber-50/50">
@@ -108,7 +106,7 @@ export function WritingHome({
                       {isVietnamese ? 'Lưu' : 'Saved'}: {formatTimeAgo(continueWriting.last_saved_at, isVietnamese)}
                     </span>
                   </div>
-                  {/* Preview of content */}
+
                   <p className="mt-3 line-clamp-2 text-[13px] italic text-text-secondary">
                     "{continueWriting.content}"
                   </p>
@@ -127,13 +125,12 @@ export function WritingHome({
         </section>
       )}
 
-      {/* Writing Statistics */}
       <section className="mb-6">
         <h2 className="mb-4 text-[16px] font-semibold text-text-primary">
           {isVietnamese ? 'Tiến độ viết' : 'Writing Progress'}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Average Score */}
+
           <Card className="dashboard-card">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -152,7 +149,6 @@ export function WritingHome({
             </CardContent>
           </Card>
 
-          {/* Submissions */}
           <Card className="dashboard-card">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -169,7 +165,6 @@ export function WritingHome({
             </CardContent>
           </Card>
 
-          {/* Words Written */}
           <Card className="dashboard-card">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -186,7 +181,6 @@ export function WritingHome({
             </CardContent>
           </Card>
 
-          {/* Grammar Accuracy */}
           <Card className="dashboard-card">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -206,14 +200,13 @@ export function WritingHome({
           </Card>
         </div>
 
-        {/* Progress Bars - Kỹ năng theo dõi */}
         <Card className="mt-4 dashboard-card">
           <CardContent className="p-4">
             <h3 className="mb-4 text-[14px] font-medium text-text-primary">
               {isVietnamese ? 'Kỹ năng theo dõi' : 'Skills Tracking'}
             </h3>
             <div className="space-y-4">
-              {/* Grammar */}
+
               <div>
                 <div className="mb-1 flex justify-between text-[13px]">
                   <span className="text-text-secondary">Grammar</span>
@@ -229,7 +222,6 @@ export function WritingHome({
                 </div>
               </div>
 
-              {/* Vocabulary */}
               <div>
                 <div className="mb-1 flex justify-between text-[13px]">
                   <span className="text-text-secondary">Vocabulary</span>
@@ -245,7 +237,6 @@ export function WritingHome({
                 </div>
               </div>
 
-              {/* Coherence */}
               <div>
                 <div className="mb-1 flex justify-between text-[13px]">
                   <span className="text-text-secondary">Coherence</span>
@@ -262,7 +253,6 @@ export function WritingHome({
               </div>
             </div>
 
-            {/* Weakest Area */}
             {progress.weakest_area && (
               <div className="mt-4 rounded-lg bg-amber-50 p-3">
                 <p className="text-[13px] text-amber-800">
@@ -274,7 +264,6 @@ export function WritingHome({
           </CardContent>
         </Card>
 
-        {/* Recommended Practice */}
         {progress.recommended_topics.length > 0 && (
           <Card className="mt-4 dashboard-card border-primary/20 bg-primary/5">
             <CardContent className="p-4">
@@ -300,7 +289,6 @@ export function WritingHome({
         )}
       </section>
 
-      {/* Recent Submissions */}
       {recentSubmissions.length > 0 && (
         <section className="mb-6">
           <div className="mb-4 flex items-center justify-between">

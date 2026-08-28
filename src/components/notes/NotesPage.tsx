@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -165,7 +164,7 @@ function NoteModal({
           </div>
 
           <div className="space-y-4">
-            {/* Title */}
+
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
                 {isVietnamese ? "Tiêu đề (tùy chọn)" : "Title (optional)"}
@@ -177,7 +176,6 @@ function NoteModal({
               />
             </div>
 
-            {/* Content */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
                 {isVietnamese ? "Nội dung" : "Content"} <span className="text-error">*</span>
@@ -196,7 +194,6 @@ function NoteModal({
               )}
             </div>
 
-            {/* Target Type */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
                 {isVietnamese ? "Loại mục tiêu" : "Target Type"}
@@ -219,7 +216,6 @@ function NoteModal({
               </div>
             </div>
 
-            {/* Target ID */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
                 {isVietnamese ? "ID mục tiêu" : "Target ID"} <span className="text-error">*</span>
@@ -235,7 +231,6 @@ function NoteModal({
               )}
             </div>
 
-            {/* Pin */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setForm({ ...form, isPinned: !form.isPinned })}
@@ -450,7 +445,6 @@ export function NotesPage() {
         description={isVietnamese ? "Lưu lại kiến thức và ghi chú trong quá trình học tập" : "Save knowledge and notes during your learning journey"}
       />
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <Card>
           <CardContent className="p-4 text-center">
@@ -484,7 +478,6 @@ export function NotesPage() {
         </Card>
       </div>
 
-      {/* Search and Filter */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
           <Icon
@@ -505,7 +498,6 @@ export function NotesPage() {
         </Button>
       </div>
 
-      {/* Filter Pills */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         <button
           onClick={() => handleFilterChange("ALL")}
@@ -533,7 +525,6 @@ export function NotesPage() {
         ))}
       </div>
 
-      {/* Notes Grid */}
       {filteredNotes.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
@@ -573,7 +564,6 @@ export function NotesPage() {
             ))}
           </div>
 
-          {/* Pagination */}
           <div className="mt-8">
             <Pagination
               currentPage={currentPage}
@@ -586,7 +576,6 @@ export function NotesPage() {
         </>
       )}
 
-      {/* Modals */}
       {showCreateModal && (
         <NoteModal
           onClose={() => setShowCreateModal(false)}

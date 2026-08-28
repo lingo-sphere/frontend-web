@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Search, Clock, ChevronRight } from 'lucide-react'
@@ -84,7 +83,7 @@ export function SpeakingExerciseList({
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Back button */}
+
       <button
         onClick={onBack}
         className="mb-6 flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary"
@@ -93,7 +92,6 @@ export function SpeakingExerciseList({
         {isVietnamese ? 'Quay lại' : 'Back'}
       </button>
 
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-[24px] font-bold text-text-primary">
           {isVietnamese ? 'Bài tập Speaking' : 'Speaking Exercises'}
@@ -103,9 +101,8 @@ export function SpeakingExerciseList({
         </p>
       </div>
 
-      {/* Filters */}
       <div className="mb-6 space-y-4">
-        {/* Search */}
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
           <input
@@ -117,9 +114,8 @@ export function SpeakingExerciseList({
           />
         </div>
 
-        {/* Filter chips */}
         <div className="flex flex-wrap gap-3">
-          {/* Type filter */}
+
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Loại:' : 'Type:'}</span>
             <div className="flex flex-wrap gap-1">
@@ -139,7 +135,6 @@ export function SpeakingExerciseList({
             </div>
           </div>
 
-          {/* Level filter */}
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Độ khó:' : 'Level:'}</span>
             <div className="flex rounded-lg border border-border bg-surface p-1">
@@ -171,12 +166,10 @@ export function SpeakingExerciseList({
         </div>
       </div>
 
-      {/* Results count */}
       <p className="mb-4 text-[13px] text-text-secondary">
         {isVietnamese ? 'Tìm thấy' : 'Found'} {filteredExercises.length} {isVietnamese ? 'bài tập' : 'exercises'}
       </p>
 
-      {/* Exercise List */}
       {filteredExercises.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-[14px] text-text-secondary">
@@ -271,7 +264,7 @@ function ExerciseCard({
   return (
     <Card className="dashboard-card cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5" onClick={onClick}>
       <CardContent className="p-4">
-        {/* Header */}
+
         <div className="mb-3 flex items-start justify-between">
           <div>
             <h3 className="text-[15px] font-semibold text-text-primary">{exercise.title}</h3>
@@ -284,12 +277,10 @@ function ExerciseCard({
           </span>
         </div>
 
-        {/* Description */}
         <p className="mb-3 text-[13px] text-text-secondary line-clamp-2">
           {exercise.description_vi || exercise.description}
         </p>
 
-        {/* Meta info */}
         <div className="mb-3 flex flex-wrap gap-2">
           <span className={`inline-flex items-center rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] ${typeColors[exercise.exercise_type]}`}>
             {typeLabels[exercise.exercise_type]}
@@ -301,7 +292,6 @@ function ExerciseCard({
           )}
         </div>
 
-        {/* Stats */}
         <div className="mb-4 flex items-center justify-between text-[12px] text-text-tertiary">
           <span className="flex items-center gap-1">
             <Clock size={14} />
@@ -312,7 +302,6 @@ function ExerciseCard({
           )}
         </div>
 
-        {/* Action */}
         <Button
           size="sm"
           className="w-full bg-primary hover:bg-primary-hover"

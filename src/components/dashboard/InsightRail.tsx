@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Brain, Flame } from 'lucide-react'
 
@@ -16,7 +15,7 @@ export function InsightRail({ onAction }: InsightRailProps) {
 
   return (
     <div className="flex h-full flex-col gap-6">
-      {/* AI Recommendation Card */}
+
       <Card className="dashboard-card flex-1 border-ai/30 bg-ai-soft p-0 shadow-none">
         <CardContent className="flex h-full flex-col p-5">
           <div className="flex items-center gap-2 text-ai">
@@ -43,9 +42,8 @@ export function InsightRail({ onAction }: InsightRailProps) {
         </CardContent>
       </Card>
 
-      {/* Vocabulary & Rewards Grid */}
       <div className="grid flex-1 grid-cols-2 gap-3">
-        {/* Vocabulary Card */}
+
         <Card className="dashboard-card flex h-full flex-col p-0 shadow-none">
           <CardContent className="flex h-full flex-col p-4">
             <div className="flex items-center gap-2">
@@ -71,7 +69,6 @@ export function InsightRail({ onAction }: InsightRailProps) {
           </CardContent>
         </Card>
 
-        {/* Rewards Card */}
         <Card className="dashboard-card flex h-full flex-col border-warning/40 bg-gradient-to-br from-warning-soft to-warning/10 p-0 shadow-none">
           <CardContent className="flex h-full flex-col p-4">
             <div className="flex items-center justify-between">

@@ -1,4 +1,3 @@
-
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Clock, TrendingUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -37,7 +36,7 @@ export function SpeakingHistory({
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Header */}
+
       <div className="mb-6">
         <button
           onClick={onBack}
@@ -54,7 +53,6 @@ export function SpeakingHistory({
         </p>
       </div>
 
-      {/* Stats Summary */}
       <div className="mb-6 grid grid-cols-3 gap-4">
         <div className="rounded-xl bg-surface-subtle p-4 text-center">
           <p className="text-[12px] text-text-secondary">{isVietnamese ? 'TB điểm' : 'Avg score'}</p>
@@ -82,7 +80,6 @@ export function SpeakingHistory({
         </div>
       </div>
 
-      {/* Attempts List */}
       {Object.keys(groupedAttempts).length === 0 ? (
         <div className="py-12 text-center">
           <Clock className="mx-auto mb-4 h-12 w-12 text-text-tertiary" />
@@ -98,7 +95,7 @@ export function SpeakingHistory({
             return (
               <Card key={exerciseId} className="dashboard-card">
                 <CardContent className="p-4">
-                  {/* Exercise Header */}
+
                   <div className="mb-3 flex items-start justify-between">
                     <div>
                       <h3 className="text-[15px] font-semibold text-text-primary">
@@ -113,7 +110,6 @@ export function SpeakingHistory({
                     </span>
                   </div>
 
-                  {/* Attempts */}
                   <div className="space-y-2">
                     {exerciseAttempts.map((attempt) => {
                       const isBest = attempt.is_best_attempt
@@ -149,7 +145,7 @@ export function SpeakingHistory({
                           </div>
 
                           <div className="flex items-center gap-3">
-                            {/* Mini score breakdown */}
+
                             <div className="hidden gap-2 sm:flex">
                               <MiniScore label="PA" value={attempt.pronunciation_score} />
                               <MiniScore label="FL" value={attempt.fluency_score} />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { Play, Trophy, ChevronDown, ChevronRight, Lock, Check, Circle, BookOpen } from 'lucide-react'
 
@@ -125,7 +124,7 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
 
   return (
     <div className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Back button */}
+
       <Button
         variant="ghost"
         className="mb-4 h-auto p-0 text-[13px] text-text-secondary hover:bg-transparent hover:text-primary"
@@ -134,10 +133,9 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
         ← Back to Courses
       </Button>
 
-      {/* Course Header */}
       <section className="mb-6 rounded-2xl border border-border bg-surface p-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          {/* Left - Course Info */}
+
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <span className="rounded-lg bg-primary-soft px-3 py-1 text-[12px] font-semibold text-primary">
@@ -147,7 +145,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
             <h1 className="mt-2 text-[24px] font-bold text-text-primary">{course.title}</h1>
             <p className="mt-1 text-[14px] text-text-secondary">{course.description}</p>
 
-            {/* Course meta */}
             <div className="mt-4 flex flex-wrap items-center gap-4 text-[13px] text-text-secondary">
               <span className="flex items-center gap-1">
                 <BookOpen className="h-4 w-4" />
@@ -164,9 +161,8 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
             </div>
           </div>
 
-          {/* Right - Progress & Action */}
           <div className="shrink-0 lg:w-[320px]">
-            {/* Progress bar */}
+
             <div className="mb-4">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[13px] font-semibold text-text-primary">Course Progress</span>
@@ -183,7 +179,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
               </p>
             </div>
 
-            {/* Action button */}
             <Button
               className="w-full bg-primary hover:bg-primary-hover"
               onClick={() => setShowPreTest(true)}
@@ -195,11 +190,9 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
         </div>
       </section>
 
-      {/* Curriculum */}
       <section className="mb-6">
         <h2 className="mb-4 text-[18px] font-bold text-text-primary">Course Curriculum</h2>
 
-        {/* Pre-test */}
         <Card className="mb-4 dashboard-card border-primary/30 bg-primary-soft/50">
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
@@ -236,7 +229,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
           </CardContent>
         </Card>
 
-        {/* Chapters */}
         <div className="space-y-3">
           {course.chapters.map((chapter) => (
             <ChapterAccordion
@@ -249,7 +241,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
           ))}
         </div>
 
-        {/* Final Test */}
         <Card className={`mt-4 dashboard-card ${course.finalTest.status === 'locked' ? 'opacity-60' : 'border-primary/30'}`}>
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
@@ -278,7 +269,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
         </Card>
       </section>
 
-      {/* Lesson Player Modal */}
       {currentLesson && (
         <LessonPlayer
           lesson={currentLesson}
@@ -287,7 +277,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
         />
       )}
 
-      {/* Pre-test Dialog */}
       <PreTestDialog
         isOpen={showPreTest}
         onClose={() => setShowPreTest(false)}
@@ -299,7 +288,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
         }}
       />
 
-      {/* Test Result Dialog */}
       <TestResultDialog
         isOpen={!!showTestResult}
         onClose={() => setShowTestResult(null)}
@@ -333,7 +321,7 @@ function ChapterAccordion({ chapter, isExpanded, onToggle, onLessonClick }: Chap
 
   return (
     <Card className={`dashboard-card overflow-hidden ${chapter.status === 'locked' ? 'opacity-60' : ''}`}>
-      {/* Chapter Header */}
+
       <button
         className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-surface-hover"
         onClick={onToggle}
@@ -370,10 +358,9 @@ function ChapterAccordion({ chapter, isExpanded, onToggle, onLessonClick }: Chap
         </div>
       </button>
 
-      {/* Chapter Content */}
       {isExpanded && chapter.status !== 'locked' && (
         <div className="border-t border-border bg-surface-subtle/50 p-4">
-          {/* Challenge Test */}
+
           <div className={`mb-3 flex items-center justify-between rounded-lg p-3 ${
             chapter.challengeTest.status === 'completed'
               ? 'bg-success-soft/50'
@@ -386,7 +373,6 @@ function ChapterAccordion({ chapter, isExpanded, onToggle, onLessonClick }: Chap
             <span className="text-[12px] text-text-secondary">{chapter.challengeTest.questionsCount} questions</span>
           </div>
 
-          {/* Lessons */}
           <div className="space-y-2">
             {chapter.lessons.map((lesson) => (
               <div key={lesson.id}>
@@ -430,7 +416,6 @@ function ChapterAccordion({ chapter, isExpanded, onToggle, onLessonClick }: Chap
                   </div>
                 </button>
 
-                {/* Unlock message when previous lesson at 80% */}
                 {lesson.status === 'available' && lesson.progress === 0 && (
                   <div className="ml-10 mb-2 text-[11px] text-primary">
                     ← Available now! Click to start.
@@ -440,7 +425,6 @@ function ChapterAccordion({ chapter, isExpanded, onToggle, onLessonClick }: Chap
             ))}
           </div>
 
-          {/* Chapter Exercise */}
           <div className={`mt-4 flex items-center justify-between rounded-lg p-3 ${
             chapter.exercise.status === 'locked' ? 'bg-surface opacity-60' :
             chapter.exercise.status === 'completed' ? 'bg-success-soft/50' :
@@ -453,7 +437,6 @@ function ChapterAccordion({ chapter, isExpanded, onToggle, onLessonClick }: Chap
             <span className="text-[12px] text-text-secondary">{chapter.exercise.questionsCount} questions</span>
           </div>
 
-          {/* Post-mini Test */}
           <div className={`mt-2 flex items-center justify-between rounded-lg p-3 ${
             chapter.postMiniTest.status === 'locked' ? 'bg-surface opacity-60' :
             chapter.postMiniTest.status === 'completed' ? 'bg-success-soft/50' :
