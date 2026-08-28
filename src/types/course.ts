@@ -1,4 +1,3 @@
-
 export type LessonStatus = 'locked' | 'available' | 'in-progress' | 'completed'
 export type ChapterStatus = 'locked' | 'available' | 'in-progress' | 'completed'
 export type TestType = 'challenge' | 'exercise' | 'post-mini' | 'pre' | 'final'
@@ -36,6 +35,14 @@ export interface TestResult {
   improvement?: number 
 }
 
+export interface LessonResource {
+  id: string
+  title: string
+  type: 'pdf' | 'audio' | 'doc' | 'code' | 'external'
+  url: string
+  size?: string
+}
+
 export interface Lesson {
   id: string
   chapterId: string
@@ -45,6 +52,8 @@ export interface Lesson {
   duration: number 
   status: LessonStatus
   progress: number 
+  videoUrl?: string
+  resources?: LessonResource[]
   content: LessonContent
 }
 
@@ -104,6 +113,70 @@ export interface Chapter {
   status: ChapterStatus
 }
 
+export interface CourseInstructor {
+  name: string
+  title: string
+  avatar: string
+  rating: number
+  studentsCount: number
+  coursesCount: number
+  bio: string
+}
+
+export interface QnAAnswer {
+  id: string
+  author: string
+  authorAvatar?: string
+  authorRole?: string
+  body: string
+  createdAt: string
+  upvotes: number
+}
+
+export interface QnAItem {
+  id: string
+  lessonId?: string
+  lessonTitle?: string
+  author: string
+  authorAvatar?: string
+  authorRole?: string
+  title: string
+  body: string
+  createdAt: string
+  upvotes: number
+  answersCount: number
+  isAnswered: boolean
+  answers?: QnAAnswer[]
+}
+
+export interface NoteItem {
+  id: string
+  lessonId: string
+  lessonTitle: string
+  timestamp: number
+  formattedTime: string
+  content: string
+  createdAt: string
+}
+
+export interface CourseReviewItem {
+  id: string
+  author: string
+  authorAvatar?: string
+  rating: number
+  date: string
+  content: string
+}
+
+export interface CourseAnnouncement {
+  id: string
+  title: string
+  date: string
+  author: string
+  authorAvatar?: string
+  content: string
+}
+
 export interface Course {
   id: string
   title: string
@@ -112,11 +185,24 @@ export interface Course {
   duration: string
   totalChapters: number
   totalLessons: number
+  totalHours?: number
+  rating?: number
+  ratingCount?: number
+  studentsCount?: number
+  badge?: string
+  updatedAt?: string
+  language?: string
+  instructor?: CourseInstructor
+  whatYouWillLearn?: string[]
   progress: CourseProgress
   chapters: Chapter[]
   thumbnail?: string
   thumbnail_url?: string
   price?: number
+  qna?: QnAItem[]
+  notes?: NoteItem[]
+  reviews?: CourseReviewItem[]
+  announcements?: CourseAnnouncement[]
   preTest: {
     status: LessonStatus
     result?: TestResult

@@ -1,330 +1,79 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Play, Pause, SkipBack, SkipForward, Check, ChevronLeft, ChevronRight, Lock, Maximize2, Minimize2 } from 'lucide-react'
+'use client'
 
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { useState } from 'react'
+import {
+  Play,
+  RotateCcw,
+  RotateCw,
+  Maximize2,
+  Tv,
+  Sparkles,
+  ExternalLink
+} from 'lucide-react'
 import type { Lesson } from '@/types/course'
 
 interface LessonPlayerProps {
   lesson: Lesson
-  onClose: () => void
-  onProgress: (lessonId: string, progress: number) => void
+  onProgress?: (lessonId: string, progress: number) => void
+  onLessonComplete?: (lessonId: string) => void
+  onTimeUpdate?: (currentTime: number) => void
 }
 
-export function LessonPlayer({ lesson, onClose, onProgress }: LessonPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [progress, setProgress] = useState(lesson.progress)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-
-  const totalDuration = lesson.duration
-  const progressPercent = Math.round((currentTime / totalDuration) * 100)
-
-  const toggleFullscreen = useCallback(() => {
-    setIsFullscreen(prev => !prev)
-  }, [])
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false)
-      }
-    }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isFullscreen])
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (isPlaying && currentTime < totalDuration) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => {
-          const newTime = prev + 1
-          if (newTime >= totalDuration) {
-            setIsPlaying(false)
-            return totalDuration
-          }
-
-          if (newTime % 5 === 0) {
-            const newProgress = Math.round((newTime / totalDuration) * 100)
-            setProgress(newProgress)
-            onProgress(lesson.id, newProgress)
-          }
-          return newTime
-        })
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [isPlaying, currentTime, totalDuration, lesson.id, onProgress])
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
+function getYoutubeEmbedUrl(url?: string) {
+  if (!url) return 'https://www.youtube.com/embed/YykjpeuMNEk?autoplay=0&rel=0&modestbranding=1'
+  if (url.includes('youtube.com/embed/')) {
+    return url.includes('?') ? url : `${url}?autoplay=0&rel=0&modestbranding=1`
   }
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/)
+  const id = match ? match[1] : 'YykjpeuMNEk'
+  return `https://www.youtube.com/embed/${id}?autoplay=0&rel=0&modestbranding=1`
+}
 
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const percentage = Math.round((x / rect.width) * 100)
-    const newTime = Math.round((percentage / 100) * totalDuration)
-    setCurrentTime(Math.min(newTime, totalDuration))
-    const newProgress = Math.round((newTime / totalDuration) * 100)
-    setProgress(newProgress)
-    onProgress(lesson.id, newProgress)
-  }
-
-  const chapterNum = lesson.chapterId.split('-')[1]
-  const lessonNum = lesson.order
-
-  if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black">
-
-        <button
-          className="absolute right-4 top-4 z-10 rounded-lg bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
-          onClick={() => setIsFullscreen(false)}
-        >
-          <Minimize2 className="h-6 w-6" />
-        </button>
-
-        <div className="relative flex h-full w-full items-center justify-center">
-
-          <div className="flex items-center justify-center">
-            <div className="text-center">
-              <div
-                className="mx-auto mb-6 flex h-24 w-24 cursor-pointer items-center justify-center rounded-full bg-primary/30 transition-colors hover:bg-primary/40"
-                onClick={() => setIsPlaying(!isPlaying)}
-              >
-                {isPlaying ? (
-                  <Pause className="h-12 w-12 text-primary" />
-                ) : (
-                  <Play className="h-12 w-12 translate-x-1 text-primary" />
-                )}
-              </div>
-              <p className="text-[16px] text-white/80">Video Player</p>
-              <p className="text-[14px] text-white/50">Click to {isPlaying ? 'pause' : 'play'}</p>
-            </div>
-          </div>
-
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
-
-            <div className="mb-3 flex items-center justify-between text-[14px] text-white">
-              <span>{formatTime(currentTime)}</span>
-              <span className="rounded-full bg-primary/30 px-3 py-1 font-semibold">{progressPercent}%</span>
-              <span>{formatTime(totalDuration)}</span>
-            </div>
-
-            <div
-              className="h-3 w-full cursor-pointer overflow-hidden rounded-full bg-white/30"
-              onClick={handleProgressClick}
-            >
-              <div
-                className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-
-            <div className="mt-4 flex items-center justify-center gap-6">
-              <button
-                className="rounded-full p-3 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                onClick={() => {
-                  const newTime = Math.max(0, currentTime - 10)
-                  setCurrentTime(newTime)
-                  setProgress(Math.round((newTime / totalDuration) * 100))
-                }}
-              >
-                <SkipBack className="h-6 w-6" />
-              </button>
-              <button
-                className="rounded-full bg-primary p-4 text-white transition-colors hover:bg-primary-hover"
-                onClick={() => setIsPlaying(!isPlaying)}
-              >
-                {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 translate-x-0.5" />}
-              </button>
-              <button
-                className="rounded-full p-3 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                onClick={() => {
-                  const newTime = Math.min(totalDuration, currentTime + 10)
-                  setCurrentTime(newTime)
-                  setProgress(Math.round((newTime / totalDuration) * 100))
-                }}
-              >
-                <SkipForward className="h-6 w-6" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+export function LessonPlayer({
+  lesson,
+}: LessonPlayerProps) {
+  const [isTheater, setIsTheater] = useState(false)
+  const embedUrl = getYoutubeEmbedUrl(lesson.videoUrl || lesson.content?.videoUrl)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <Card className="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden bg-surface">
+    <div
+      className={`group relative w-full shrink-0 bg-black overflow-hidden shadow-2xl transition-all ${
+        isTheater
+          ? 'h-[640px]'
+          : 'h-[320px] sm:h-[400px] md:h-[480px] lg:h-[520px] xl:h-[560px]'
+      }`}
+    >
+      {/* Real YouTube Video Iframe */}
+      <iframe
+        src={embedUrl}
+        title={lesson?.title || 'Lesson Video'}
+        className="w-full h-full border-0 block"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      />
 
-        <div className="flex items-center justify-between border-b border-border p-4">
-          <Button
-            variant="ghost"
-            className="h-auto p-0 text-[13px] text-text-secondary hover:bg-transparent hover:text-primary"
-            onClick={onClose}
-          >
-            ← Back to Course
-          </Button>
-          <div className="text-center">
-            <p className="text-[12px] text-text-secondary">Chapter {chapterNum}</p>
-            <h2 className="text-[16px] font-bold text-text-primary">Lesson {lessonNum}: {lesson.title}</h2>
-          </div>
-          <Button
-            variant="ghost"
-            className="h-auto w-auto p-2 text-text-secondary hover:bg-transparent hover:text-primary"
-            onClick={toggleFullscreen}
-          >
-            <Maximize2 className="h-5 w-5" />
-          </Button>
-        </div>
+      {/* Top Floating Mini Header Overlay (Theater & Info toggle) */}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={() => setIsTheater(!isTheater)}
+          className="flex items-center gap-1.5 rounded-lg bg-black/80 backdrop-blur-md px-3 py-1.5 text-[11px] font-bold text-white shadow-lg hover:bg-primary transition-colors cursor-pointer border border-white/10"
+          title="Chuyển chế độ rạp chiếu"
+        >
+          <Tv size={13} />
+          <span>{isTheater ? 'Thu nhỏ' : 'Chế độ rạp'}</span>
+        </button>
 
-        <div className="relative flex-1 bg-black">
-
-          <div className="flex h-full w-full items-center justify-center">
-            <div className="relative">
-
-              <div className="flex h-[300px] w-[533px] items-center justify-center rounded-lg bg-gradient-to-br from-surface-subtle to-surface">
-                <div className="text-center">
-                  <div
-                    className="mx-auto mb-4 flex h-20 w-20 cursor-pointer items-center justify-center rounded-full bg-primary/20 transition-colors hover:bg-primary/30"
-                    onClick={() => setIsPlaying(!isPlaying)}
-                  >
-                    {isPlaying ? (
-                      <Pause className="h-10 w-10 text-primary" />
-                    ) : (
-                      <Play className="h-10 w-10 translate-x-1 text-primary" />
-                    )}
-                  </div>
-                  <p className="text-[14px] text-text-secondary">Video Player</p>
-                  <p className="text-[12px] text-text-tertiary">Click to {isPlaying ? 'pause' : 'play'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-
-            <div className="mb-2 flex items-center justify-between text-[12px] text-white">
-              <span>{formatTime(currentTime)}</span>
-              <span className="text-warning">{progressPercent}%</span>
-              <span>{formatTime(totalDuration)}</span>
-            </div>
-
-            <div
-              className="h-2 w-full cursor-pointer overflow-hidden rounded-full bg-white/30"
-              onClick={handleProgressClick}
-            >
-              <div
-                className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-
-            <div className="mt-3 flex items-center justify-center gap-4">
-              <button
-                className="rounded-full p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                onClick={() => {
-                  const newTime = Math.max(0, currentTime - 10)
-                  setCurrentTime(newTime)
-                  setProgress(Math.round((newTime / totalDuration) * 100))
-                }}
-              >
-                <SkipBack className="h-5 w-5" />
-              </button>
-              <button
-                className="rounded-full bg-primary p-3 text-white transition-colors hover:bg-primary-hover"
-                onClick={() => setIsPlaying(!isPlaying)}
-              >
-                {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 translate-x-0.5" />}
-              </button>
-              <button
-                className="rounded-full p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                onClick={() => {
-                  const newTime = Math.min(totalDuration, currentTime + 10)
-                  setCurrentTime(newTime)
-                  setProgress(Math.round((newTime / totalDuration) * 100))
-                }}
-              >
-                <SkipForward className="h-5 w-5" />
-              </button>
-              <button
-                className="rounded-full p-2 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-                onClick={toggleFullscreen}
-              >
-                <Maximize2 className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-border p-4">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-semibold text-text-primary">Lesson Content</h3>
-              <p className="text-[12px] text-text-secondary">Chapter {chapterNum} - Lesson {lessonNum}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[14px] font-bold text-primary">{progress}%</p>
-              <p className="text-[11px] text-text-secondary">
-                {progress >= 80 ? '✓ Next lesson unlocked' : `Need ${80 - progress}% more to unlock next`}
-              </p>
-            </div>
-          </div>
-
-          <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-surface-subtle">
-            <div
-              className={`h-full transition-all ${progress >= 80 ? 'bg-success' : 'bg-primary'}`}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-        </div>
-
-        <div className="flex items-center justify-between border-t border-border p-4">
-          <Button variant="outline" disabled>
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Previous Lesson
-          </Button>
-
-          <div className="flex items-center gap-2">
-            {progress >= 100 ? (
-              <Button className="bg-success hover:bg-success/90" onClick={onClose}>
-                <Check className="mr-1 h-4 w-4" />
-                Completed
-              </Button>
-            ) : (
-              <Button
-                className="bg-primary hover:bg-primary-hover"
-                onClick={() => {
-                  onProgress(lesson.id, 100)
-                  setProgress(100)
-                  setCurrentTime(totalDuration)
-                  onClose()
-                }}
-              >
-                Mark Complete
-              </Button>
-            )}
-          </div>
-
-          <Button
-            variant="outline"
-            disabled={progress < 80}
-            className={progress < 80 ? 'opacity-50' : ''}
-            onClick={onClose}
-          >
-            Next Lesson
-            <ChevronRight className="ml-1 h-4 w-4" />
-            {progress < 80 && <Lock className="ml-1 h-3 w-3" />}
-          </Button>
-        </div>
-      </Card>
+        <a
+          href={lesson.videoUrl || 'https://www.youtube.com/watch?v=YykjpeuMNEk'}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 rounded-lg bg-black/80 backdrop-blur-md px-3 py-1.5 text-[11px] font-bold text-white shadow-lg hover:bg-primary transition-colors cursor-pointer border border-white/10"
+          title="Mở trên YouTube"
+        >
+          <ExternalLink size={13} />
+          <span>YouTube</span>
+        </a>
+      </div>
     </div>
   )
 }
