@@ -30,10 +30,10 @@ const priorityColors = {
   CRITICAL: 'bg-red-600 text-white',
 }
 
-export function NotificationsRoute() {
+export function NotificationsPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
   const [activeTab, setActiveTab] = useState<'ALL' | NotificationCategory>('ALL')
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [showRead, setShowRead] = useState(true)
@@ -93,7 +93,6 @@ export function NotificationsRoute() {
   return (
     <Layout>
       <main className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Icon name="bell" size={24} className="text-text-primary" />
@@ -196,7 +195,6 @@ function NotificationItem({
     >
       <CardContent className="p-4">
         <div className="flex gap-3" onClick={onClick}>
-
           <div className={`mt-1 shrink-0 rounded-xl p-2 ${categoryColor}/10`}>
             <Icon
               name={getNotificationIcon(notification.notificationType)}
@@ -220,9 +218,7 @@ function NotificationItem({
               </div>
               <div className="shrink-0 text-right">
                 <span className="text-xs text-text-tertiary">{formatTime(notification.createdAt)}</span>
-                {!notification.isRead && (
-                  <div className="mt-1 ml-auto h-2 w-2 rounded-full bg-primary" />
-                )}
+                {!notification.isRead && <div className="mt-1 ml-auto h-2 w-2 rounded-full bg-primary" />}
               </div>
             </div>
 
@@ -231,7 +227,9 @@ function NotificationItem({
                 {getCategoryLabel(notification.notificationCategory)}
               </span>
               {notification.priority !== 'NORMAL' && (
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${priorityColors[notification.priority]}`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${priorityColors[notification.priority]}`}
+                >
                   {notification.priority}
                 </span>
               )}
@@ -279,7 +277,6 @@ function NotificationModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <Card className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
         <CardContent className="p-6">
-
           <div className="mb-4 flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className={`rounded-xl p-2 ${categoryColor}/10`}>
@@ -326,14 +323,20 @@ function NotificationModal({
           )}
 
           <div className="mb-6 flex flex-wrap gap-2 text-xs text-text-tertiary">
-            <span>{isVietnamese ? 'Kênh' : 'Channels'}: {notification.channels.join(', ')}</span>
-            {notification.sourceService && <span>{isVietnamese ? 'Nguồn' : 'Source'}: {notification.sourceService}</span>}
+            <span>
+              {isVietnamese ? 'Kênh' : 'Channels'}: {notification.channels.join(', ')}
+            </span>
+            {notification.sourceService && (
+              <span>
+                {isVietnamese ? 'Nguồn' : 'Source'}: {notification.sourceService}
+              </span>
+            )}
             {notification.sourceId && <span>ID: {notification.sourceId}</span>}
           </div>
 
           <div className="flex gap-3">
             {notification.actionUrl && (
-              <Button className="flex-1" onClick={() => window.location.href = notification.actionUrl!}>
+              <Button className="flex-1" onClick={() => (window.location.href = notification.actionUrl!)}>
                 {notification.actionLabel || (isVietnamese ? 'Xem' : 'View')}
               </Button>
             )}

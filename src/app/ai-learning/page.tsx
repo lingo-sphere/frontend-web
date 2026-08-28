@@ -1,7 +1,7 @@
 'use client'
 
-import { AiLearningRoute } from '@/routes/ai-learning-route'
+import { AiLearningPage } from '@/components/ai/AiLearningPage'
 
 export default function AiLearningAppPage() {
-  return <AiLearningRoute />
+  return <AiLearningPage />
 }

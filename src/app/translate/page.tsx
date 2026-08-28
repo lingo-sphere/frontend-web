@@ -1,7 +1,7 @@
 'use client'
 
-import { AiTranslationRoute } from '@/routes/ai-translation-route'
+import { AiTranslationPage } from '@/components/translation/AiTranslationPage'
 
 export default function AiTranslationAppPage() {
-  return <AiTranslationRoute />
+  return <AiTranslationPage />
 }

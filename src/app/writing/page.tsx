@@ -1,7 +1,7 @@
 'use client'
 
-import { WritingRoute } from '@/routes/writing-route'
+import { WritingPage } from '@/components/writing/WritingPage'
 
 export default function WritingAppPage() {
-  return <WritingRoute />
+  return <WritingPage />
 }

@@ -1,7 +1,7 @@
 'use client'
 
-import { DailyJournalRoute } from '@/routes/daily-journal-route'
+import { DailyJournalPage } from '@/components/journal/DailyJournalPage'
 
 export default function DailyJournalAppPage() {
-  return <DailyJournalRoute />
+  return <DailyJournalPage />
 }

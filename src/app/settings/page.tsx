@@ -1,7 +1,12 @@
 'use client'
 
-import { SettingsRoute } from '@/routes/settings-route'
+import { Layout } from '@/components/layout/Layout'
+import { SettingsPage } from '@/components/settings/SettingsPage'
 
 export default function SettingsAppPage() {
-  return <SettingsRoute />
+  return (
+    <Layout>
+      <SettingsPage />
+    </Layout>
+  )
 }

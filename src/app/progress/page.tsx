@@ -1,7 +1,12 @@
 'use client'
 
-import { ProgressRoute } from '@/routes/progress-route'
+import { Layout } from '@/components/layout/Layout'
+import { ComingSoon } from '@/components/common/ComingSoon'
 
 export default function ProgressAppPage() {
-  return <ProgressRoute />
+  return (
+    <Layout>
+      <ComingSoon title="Progress" />
+    </Layout>
+  )
 }

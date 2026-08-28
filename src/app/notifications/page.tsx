@@ -1,7 +1,7 @@
 'use client'
 
-import { NotificationsRoute } from '@/routes/notifications-route'
+import { NotificationsPage } from '@/components/notifications/NotificationsPage'
 
 export default function NotificationsAppPage() {
-  return <NotificationsRoute />
+  return <NotificationsPage />
 }

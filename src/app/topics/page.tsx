@@ -1,7 +1,15 @@
 'use client'
 
-import { TopicsRoute } from '@/routes/topics-route'
+import { Layout } from '@/components/layout/Layout'
+import { TopicsPage } from '@/components/topics/TopicsPage'
+import { useApp } from '@/contexts/AppContext'
 
 export default function TopicsAppPage() {
-  return <TopicsRoute />
+  const { showAction } = useApp()
+
+  return (
+    <Layout>
+      <TopicsPage onAction={showAction} />
+    </Layout>
+  )
 }

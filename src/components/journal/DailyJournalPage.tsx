@@ -15,7 +15,7 @@ interface JournalEvaluation {
   teacher_advice: string
 }
 
-export function DailyJournalRoute() {
+export function DailyJournalPage() {
   const [dailyPrompt, setDailyPrompt] = useState<{ title: string; prompt: string; hints: string[] }>({
     title: 'Hôm nay bạn học được điều gì mới mẻ?',
     prompt: 'Write about a memorable experience you had this week and what lessons you learned from it.',
@@ -30,12 +30,17 @@ export function DailyJournalRoute() {
   useEffect(() => {
     const fetchPrompt = async () => {
       try {
-        const res = await api.get<{ title?: string; prompt?: string; hints?: string[] }>('/practice/writing/journal/daily-prompt')
+        const res = await api.get<{ title?: string; prompt?: string; hints?: string[] }>(
+          '/practice/writing/journal/daily-prompt',
+        )
         if (res && res.prompt) {
           setDailyPrompt({
             title: res.title ? res.title : 'Chủ đề Nhật ký hôm nay',
             prompt: res.prompt,
-            hints: res.hints && res.hints.length > 0 ? res.hints : ['Describe in 50-150 words', 'Check your grammar & tenses'],
+            hints:
+              res.hints && res.hints.length > 0
+                ? res.hints
+                : ['Describe in 50-150 words', 'Check your grammar & tenses'],
           })
         }
       } catch {
@@ -64,7 +69,6 @@ export function DailyJournalRoute() {
         setEvaluation(res)
       }
     } catch {
-
       setEvaluation({
         overall_score: 8.5,
         word_count: wordCount,
@@ -77,7 +81,8 @@ export function DailyJournalRoute() {
           'Thử thay "good" bằng "exceptional" hoặc "remarkable" để văn phong tự nhiên hơn.',
           'Sử dụng liên từ nối "Furthermore", "In addition" để tạo tính liên kết.',
         ],
-        teacher_advice: 'Bài viết có chiều sâu và diễn đạt ý tưởng mạch lạc. Hãy duy trì thói quen viết nhật ký mỗi ngày nhé!',
+        teacher_advice:
+          'Bài viết có chiều sâu và diễn đạt ý tưởng mạch lạc. Hãy duy trì thói quen viết nhật ký mỗi ngày nhé!',
       })
     } finally {
       setIsSubmitting(false)
@@ -87,7 +92,6 @@ export function DailyJournalRoute() {
   return (
     <Layout>
       <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
-
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
           <div>
             <div className="flex items-center gap-2">
@@ -170,9 +174,7 @@ export function DailyJournalRoute() {
             </div>
           </form>
         ) : (
-
           <div className="space-y-5">
-
             <div className="rounded-2xl bg-gradient-to-r from-primary to-primary-focus p-6 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="space-y-1 text-center sm:text-left">
                 <span className="text-xs uppercase tracking-widest text-white/80 font-bold">Kết quả đánh giá</span>
@@ -196,7 +198,6 @@ export function DailyJournalRoute() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
               <div className="rounded-2xl bg-surface border border-border p-5 shadow-sm space-y-3">
                 <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
                   <Icon name="bookCheck" size={16} className="text-success" />
@@ -204,7 +205,10 @@ export function DailyJournalRoute() {
                 </h4>
                 <ul className="space-y-2">
                   {evaluation.grammar_feedback.map((item, idx) => (
-                    <li key={idx} className="text-xs text-text-secondary flex items-start gap-2 bg-surface-subtle p-2.5 rounded-lg">
+                    <li
+                      key={idx}
+                      className="text-xs text-text-secondary flex items-start gap-2 bg-surface-subtle p-2.5 rounded-lg"
+                    >
                       <span className="text-success font-bold mt-0.5">✓</span>
                       <span>{item}</span>
                     </li>
@@ -219,7 +223,10 @@ export function DailyJournalRoute() {
                 </h4>
                 <ul className="space-y-2">
                   {evaluation.vocabulary_suggestions.map((item, idx) => (
-                    <li key={idx} className="text-xs text-text-secondary flex items-start gap-2 bg-surface-subtle p-2.5 rounded-lg">
+                    <li
+                      key={idx}
+                      className="text-xs text-text-secondary flex items-start gap-2 bg-surface-subtle p-2.5 rounded-lg"
+                    >
                       <span className="text-accent font-bold mt-0.5">★</span>
                       <span>{item}</span>
                     </li>

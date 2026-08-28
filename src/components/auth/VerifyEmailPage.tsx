@@ -10,7 +10,7 @@ import { useAuthStore } from '@/store/auth-store'
 
 type VerifyState = 'VERIFYING' | 'SUCCESS' | 'ERROR'
 
-export function VerifyEmailRoute() {
+export function VerifyEmailPage() {
   const searchParams = useSearchParams()
   const navigate = useNavigate()
   const token = searchParams?.get('token')
@@ -81,7 +81,6 @@ export function VerifyEmailRoute() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4 relative overflow-hidden font-sans">
-
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-accent/20 rounded-full blur-[120px] pointer-events-none" />
 
@@ -90,7 +89,6 @@ export function VerifyEmailRoute() {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative w-full max-w-md overflow-hidden rounded-3xl bg-surface border border-surface-border p-8 shadow-2xl backdrop-blur-xl z-10 text-center space-y-6"
       >
-
         <div className="flex items-center justify-center gap-2 mb-2">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-primary-focus text-white font-black text-xl shadow-lg shadow-primary/30">
             L
@@ -109,7 +107,8 @@ export function VerifyEmailRoute() {
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-text-primary">Đang kích hoạt tài khoản...</h3>
               <p className="text-xs text-text-secondary">
-                Vui lòng đợi giây lát, hệ thống đang xác thực email <span className="font-semibold text-text-primary">{email}</span>
+                Vui lòng đợi giây lát, hệ thống đang xác thực email{' '}
+                <span className="font-semibold text-text-primary">{email}</span>
               </p>
             </div>
           </div>

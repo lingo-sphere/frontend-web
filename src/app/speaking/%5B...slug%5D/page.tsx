@@ -1,7 +1,7 @@
 'use client'
 
-import { SpeakingRoute } from '@/routes/speaking-route'
+import { SpeakingPage } from '@/components/speaking/SpeakingPage'
 
 export default function SpeakingCatchAllPage() {
-  return <SpeakingRoute />
+  return <SpeakingPage />
 }

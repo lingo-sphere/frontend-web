@@ -1,7 +1,12 @@
 'use client'
 
-import { CommunityRoute } from '@/routes/community-route'
+import { Layout } from '@/components/layout/Layout'
+import { ComingSoon } from '@/components/common/ComingSoon'
 
 export default function CommunityAppPage() {
-  return <CommunityRoute />
+  return (
+    <Layout>
+      <ComingSoon title="Community Chat" />
+    </Layout>
+  )
 }

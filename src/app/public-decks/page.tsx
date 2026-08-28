@@ -1,7 +1,15 @@
 'use client'
 
-import { PublicDecksRoute } from '@/routes/public-decks-route'
+import { Layout } from '@/components/layout/Layout'
+import { PublicDecksPage } from '@/components/practice/PublicDecksPage'
+import { useApp } from '@/contexts/AppContext'
 
 export default function PublicDecksAppPage() {
-  return <PublicDecksRoute />
+  const { showAction } = useApp()
+
+  return (
+    <Layout>
+      <PublicDecksPage onAction={showAction} />
+    </Layout>
+  )
 }

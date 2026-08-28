@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion } from 'motion/react'
 import { Layout } from '@/components/layout/Layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,7 @@ const SUGGESTED_PROMPTS = [
   { icon: 'pencil', label: 'Sửa lỗi câu', text: 'Câu này của tôi có đúng ngữ pháp không: "If I was you, I will buy this car"?' },
 ]
 
-export function AiLearningRoute() {
+export function AiLearningPage() {
   const { user } = useAuthStore()
   const [messages, setMessages] = useState<AiChatMessage[]>([
     {
@@ -66,7 +66,6 @@ export function AiLearningRoute() {
   return (
     <Layout>
       <main className="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col px-4 py-4 sm:px-6">
-
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-accent text-white shadow-md">

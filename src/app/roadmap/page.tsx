@@ -1,7 +1,12 @@
 'use client'
 
-import { RoadmapRoute } from '@/routes/roadmap-route'
+import { Layout } from '@/components/layout/Layout'
+import { ComingSoon } from '@/components/common/ComingSoon'
 
 export default function RoadmapAppPage() {
-  return <RoadmapRoute />
+  return (
+    <Layout>
+      <ComingSoon title="Learning Roadmap" />
+    </Layout>
+  )
 }
