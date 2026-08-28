@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Play, Trophy, ChevronDown, ChevronRight, Lock, Check, Circle, BookOpen } from 'lucide-react'
-
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { courseService } from '@/services/course.service'
 import { demoCourse } from '@/data/course-data'
-import type { Lesson, Chapter, Course } from '@/types/course'
-import { LessonPlayer } from './LessonPlayer'
-import { PreTestDialog } from './PreTestDialog'
-import { TestResultDialog } from './TestResultDialog'
-import type { TestResult } from '@/types/course'
+import type { Lesson, Course, TestResult } from '@/types/course'
+import { LessonPlayer } from '@/components/course/LessonPlayer'
+import { PreTestDialog } from '@/components/course/PreTestDialog'
+import { TestResultDialog } from '@/components/course/TestResultDialog'
+import { CourseHero } from '@/components/course/CourseHero'
+import { CourseCurriculumList } from '@/components/course/CourseCurriculumList'
 
 interface CourseDetailPageProps {
   courseId?: string
@@ -50,9 +49,11 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
     }
   }, [courseId])
 
-  const completedLessons = course.chapters.reduce((acc, ch) =>
-    acc + ch.lessons.filter(l => l.status === 'completed').length, 0)
-  const totalLessons = course.totalLessons
+  const completedLessons = course.chapters.reduce(
+    (acc, ch) => acc + ch.lessons.filter((l) => l.status === 'completed').length,
+    0
+  )
+  const totalLessons = course.totalLessons || 1
   const progressPercent = Math.round((completedLessons / totalLessons) * 100)
 
   const handleLessonClick = (lesson: Lesson) => {
@@ -61,20 +62,20 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   }
 
   const handleLessonProgress = (lessonId: string, progress: number) => {
-    setCourse(prev => {
+    setCourse((prev) => {
       const updated = { ...prev }
-      const chapter = updated.chapters.find(ch =>
-        ch.lessons.some(l => l.id === lessonId)
+      const chapter = updated.chapters.find((ch) =>
+        ch.lessons.some((l) => l.id === lessonId)
       )
       if (!chapter) return updated
 
-      const lesson = chapter.lessons.find(l => l.id === lessonId)
+      const lesson = chapter.lessons.find((l) => l.id === lessonId)
       if (!lesson) return updated
 
       lesson.progress = progress
 
       if (progress >= 80) {
-        const lessonIndex = chapter.lessons.findIndex(l => l.id === lessonId)
+        const lessonIndex = chapter.lessons.findIndex((l) => l.id === lessonId)
         if (lessonIndex < chapter.lessons.length - 1) {
           const nextLesson = chapter.lessons[lessonIndex + 1]
           if (nextLesson.status === 'locked') {
@@ -84,190 +85,53 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
 
         if (progress >= 100) {
           lesson.status = 'completed'
-
           if (lessonIndex < chapter.lessons.length - 1) {
             chapter.lessons[lessonIndex + 1].status = 'available'
           }
         }
       }
 
-      const allLessonsDone = chapter.lessons.every(l => l.status === 'completed')
+      const allLessonsDone = chapter.lessons.every((l) => l.status === 'completed')
       if (allLessonsDone) {
         chapter.status = 'completed'
         chapter.exercise.status = 'available'
       }
-
-      const totalCompleted = updated.chapters.reduce((acc, ch) =>
-        acc + ch.lessons.filter(l => l.status === 'completed').length, 0)
-      updated.progress.currentProgress = Math.round((totalCompleted / updated.totalLessons) * 100)
 
       return updated
     })
   }
 
   const handleTestComplete = (result: TestResult, type: string) => {
-    setTestResultType(type)
     setShowTestResult(result)
-  }
-
-  const StatusIcon = ({ status }: { status: string }) => {
-    switch (status) {
-      case 'completed':
-        return <Check className="h-4 w-4 text-success" />
-      case 'available':
-      case 'in-progress':
-        return <Circle className="h-4 w-4 text-primary" />
-      default:
-        return <Lock className="h-4 w-4 text-text-tertiary" />
-    }
+    setTestResultType(type)
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-
-      <Button
-        variant="ghost"
-        className="mb-4 h-auto p-0 text-[13px] text-text-secondary hover:bg-transparent hover:text-primary"
-        onClick={onBack}
-      >
-        ← Back to Courses
+    <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
+      <Button variant="ghost" onClick={onBack} className="gap-2 text-text-secondary hover:text-text-primary">
+        <ArrowLeft size={16} />
+        Quay lại danh sách khóa học
       </Button>
 
-      <section className="mb-6 rounded-2xl border border-border bg-surface p-6">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+      <CourseHero
+        course={course}
+        progressPercent={progressPercent}
+        completedLessons={completedLessons}
+        totalLessons={totalLessons}
+        onStartPreTest={() => setShowPreTest(true)}
+        onStartFinalTest={() => {
+          // Trigger final test
+        }}
+      />
 
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <span className="rounded-lg bg-primary-soft px-3 py-1 text-[12px] font-semibold text-primary">
-                {course.level}
-              </span>
-            </div>
-            <h1 className="mt-2 text-[24px] font-bold text-text-primary">{course.title}</h1>
-            <p className="mt-1 text-[14px] text-text-secondary">{course.description}</p>
-
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-[13px] text-text-secondary">
-              <span className="flex items-center gap-1">
-                <BookOpen className="h-4 w-4" />
-                {course.totalChapters} Chapters
-              </span>
-              <span className="flex items-center gap-1">
-                <Play className="h-4 w-4" />
-                {course.totalLessons} Lessons
-              </span>
-              <span className="flex items-center gap-1">
-                <Trophy className="h-4 w-4" />
-                {course.duration}
-              </span>
-            </div>
-          </div>
-
-          <div className="shrink-0 lg:w-[320px]">
-
-            <div className="mb-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-[13px] font-semibold text-text-primary">Course Progress</span>
-                <span className="text-[13px] font-bold text-primary">{progressPercent}%</span>
-              </div>
-              <div className="h-3 w-full overflow-hidden rounded-full bg-surface-subtle">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <p className="mt-2 text-[12px] text-text-secondary">
-                {completedLessons} / {totalLessons} lessons completed
-              </p>
-            </div>
-
-            <Button
-              className="w-full bg-primary hover:bg-primary-hover"
-              onClick={() => setShowPreTest(true)}
-            >
-              <Play className="mr-2 h-4 w-4" />
-              {course.progress.baselineScore ? 'Continue Learning' : 'Learn Now'}
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-6">
-        <h2 className="mb-4 text-[18px] font-bold text-text-primary">Course Curriculum</h2>
-
-        <Card className="mb-4 dashboard-card border-primary/30 bg-primary-soft/50">
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
-                <Trophy className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-[15px] font-semibold text-text-primary">Course Pre-test</h3>
-                <p className="text-[12px] text-text-secondary">
-                  {course.progress.baselineScore
-                    ? 'Find out your current level'
-                    : 'Your baseline has not been established yet'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {course.progress.baselineScore ? (
-                <Button
-                  variant="outline"
-                  className="h-auto border-primary/30 bg-surface p-2 text-[12px] text-primary"
-                  onClick={() => setShowPreTest(true)}
-                >
-                  View Baseline
-                </Button>
-              ) : (
-                <Button
-                  className="bg-primary hover:bg-primary-hover"
-                  onClick={() => setShowPreTest(true)}
-                >
-                  Take Pre-test
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-3">
-          {course.chapters.map((chapter) => (
-            <ChapterAccordion
-              key={chapter.id}
-              chapter={chapter}
-              isExpanded={expandedChapter === chapter.id}
-              onToggle={() => setExpandedChapter(expandedChapter === chapter.id ? '' : chapter.id)}
-              onLessonClick={handleLessonClick}
-            />
-          ))}
-        </div>
-
-        <Card className={`mt-4 dashboard-card ${course.finalTest.status === 'locked' ? 'opacity-60' : 'border-primary/30'}`}>
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                course.finalTest.status === 'locked'
-                  ? 'bg-surface-subtle'
-                  : 'bg-primary/20'
-              }`}>
-                <Trophy className={`h-5 w-5 ${
-                  course.finalTest.status === 'locked'
-                    ? 'text-text-tertiary'
-                    : 'text-primary'
-                }`} />
-              </div>
-              <div>
-                <h3 className="text-[15px] font-semibold text-text-primary">Final Test</h3>
-                <p className="text-[12px] text-text-secondary">
-                  {course.finalTest.status === 'locked'
-                    ? 'Complete all required chapters to unlock'
-                    : '4 Skills Assessment'}
-                </p>
-              </div>
-            </div>
-            <StatusIcon status={course.finalTest.status} />
-          </CardContent>
-        </Card>
-      </section>
+      <CourseCurriculumList
+        chapters={course.chapters}
+        expandedChapter={expandedChapter}
+        onToggleChapter={(chId) =>
+          setExpandedChapter((prev) => (prev === chId ? '' : chId))
+        }
+        onLessonClick={handleLessonClick}
+      />
 
       {currentLesson && (
         <LessonPlayer
@@ -280,8 +144,8 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
       <PreTestDialog
         isOpen={showPreTest}
         onClose={() => setShowPreTest(false)}
-        hasBaseline={!!course.progress.baselineScore}
-        baseline={course.progress.baselineScore}
+        hasBaseline={!!course.progress?.baselineScore}
+        baseline={course.progress?.baselineScore}
         onComplete={(result) => {
           handleTestComplete(result, 'pre-test')
           setShowPreTest(false)
@@ -295,161 +159,5 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
         testType={testResultType}
       />
     </div>
-  )
-}
-
-interface ChapterAccordionProps {
-  chapter: Chapter
-  isExpanded: boolean
-  onToggle: () => void
-  onLessonClick: (lesson: Lesson) => void
-}
-
-function ChapterAccordion({ chapter, isExpanded, onToggle, onLessonClick }: ChapterAccordionProps) {
-  const completedLessons = chapter.lessons.filter(l => l.status === 'completed').length
-  const StatusIcon = ({ status }: { status: string }) => {
-    switch (status) {
-      case 'completed':
-        return <Check className="h-4 w-4 text-success" />
-      case 'available':
-      case 'in-progress':
-        return <Circle className="h-4 w-4 text-primary" />
-      default:
-        return <Lock className="h-4 w-4 text-text-tertiary" />
-    }
-  }
-
-  return (
-    <Card className={`dashboard-card overflow-hidden ${chapter.status === 'locked' ? 'opacity-60' : ''}`}>
-
-      <button
-        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-surface-hover"
-        onClick={onToggle}
-        disabled={chapter.status === 'locked'}
-      >
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-            chapter.status === 'completed' ? 'bg-success/20' :
-            chapter.status === 'in-progress' ? 'bg-primary/20' :
-            'bg-surface-subtle'
-          }`}>
-            <span className={`text-[16px] font-bold ${
-              chapter.status === 'completed' ? 'text-success' :
-              chapter.status === 'in-progress' ? 'text-primary' :
-              'text-text-tertiary'
-            }`}>
-              {chapter.order}
-            </span>
-          </div>
-          <div>
-            <h3 className="text-[15px] font-semibold text-text-primary">{chapter.title}</h3>
-            <p className="text-[12px] text-text-secondary">
-              {completedLessons}/{chapter.lessons.length} lessons
-              {chapter.challengeTest.status === 'completed' && ' • Challenge passed'}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <StatusIcon status={chapter.status} />
-          {isExpanded
-            ? <ChevronDown className="h-5 w-5 text-text-tertiary" />
-            : <ChevronRight className="h-5 w-5 text-text-tertiary" />
-          }
-        </div>
-      </button>
-
-      {isExpanded && chapter.status !== 'locked' && (
-        <div className="border-t border-border bg-surface-subtle/50 p-4">
-
-          <div className={`mb-3 flex items-center justify-between rounded-lg p-3 ${
-            chapter.challengeTest.status === 'completed'
-              ? 'bg-success-soft/50'
-              : 'bg-surface'
-          }`}>
-            <div className="flex items-center gap-2">
-              <StatusIcon status={chapter.challengeTest.status} />
-              <span className="text-[13px] font-medium text-text-primary">{chapter.challengeTest.title}</span>
-            </div>
-            <span className="text-[12px] text-text-secondary">{chapter.challengeTest.questionsCount} questions</span>
-          </div>
-
-          <div className="space-y-2">
-            {chapter.lessons.map((lesson) => (
-              <div key={lesson.id}>
-                <button
-                  className={`flex w-full items-center justify-between rounded-lg p-3 transition-colors ${
-                    lesson.status === 'locked'
-                      ? 'cursor-not-allowed opacity-60'
-                      : 'hover:bg-surface cursor-pointer'
-                  } ${lesson.status === 'in-progress' || lesson.progress > 0 ? 'bg-primary-soft/30' : 'bg-surface'}`}
-                  onClick={() => onLessonClick(lesson)}
-                  disabled={lesson.status === 'locked'}
-                >
-                  <div className="flex items-center gap-3">
-                    <StatusIcon status={lesson.status} />
-                    <div className="text-left">
-                      <span className="text-[13px] font-medium text-text-primary">
-                        Lesson {lesson.order}: {lesson.title}
-                      </span>
-                      {lesson.status === 'locked' && (
-                        <p className="text-[11px] text-text-tertiary">
-                          Complete at least 80% of the previous lesson to unlock
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {lesson.progress > 0 && lesson.progress < 100 && (
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-16 overflow-hidden rounded-full bg-border">
-                          <div
-                            className="h-full bg-primary"
-                            style={{ width: `${lesson.progress}%` }}
-                          />
-                        </div>
-                        <span className="text-[11px] text-text-secondary">{lesson.progress}%</span>
-                      </div>
-                    )}
-                    {lesson.status === 'completed' && (
-                      <span className="text-[11px] text-success">✓</span>
-                    )}
-                  </div>
-                </button>
-
-                {lesson.status === 'available' && lesson.progress === 0 && (
-                  <div className="ml-10 mb-2 text-[11px] text-primary">
-                    ← Available now! Click to start.
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className={`mt-4 flex items-center justify-between rounded-lg p-3 ${
-            chapter.exercise.status === 'locked' ? 'bg-surface opacity-60' :
-            chapter.exercise.status === 'completed' ? 'bg-success-soft/50' :
-            'bg-surface'
-          }`}>
-            <div className="flex items-center gap-2">
-              <StatusIcon status={chapter.exercise.status} />
-              <span className="text-[13px] font-medium text-text-primary">{chapter.exercise.title}</span>
-            </div>
-            <span className="text-[12px] text-text-secondary">{chapter.exercise.questionsCount} questions</span>
-          </div>
-
-          <div className={`mt-2 flex items-center justify-between rounded-lg p-3 ${
-            chapter.postMiniTest.status === 'locked' ? 'bg-surface opacity-60' :
-            chapter.postMiniTest.status === 'completed' ? 'bg-success-soft/50' :
-            'bg-surface'
-          }`}>
-            <div className="flex items-center gap-2">
-              <StatusIcon status={chapter.postMiniTest.status} />
-              <span className="text-[13px] font-medium text-text-primary">{chapter.postMiniTest.title}</span>
-            </div>
-            <span className="text-[12px] text-text-secondary">{chapter.postMiniTest.questionsCount} questions</span>
-          </div>
-        </div>
-      )}
-    </Card>
   )
 }

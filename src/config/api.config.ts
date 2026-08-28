@@ -36,6 +36,7 @@ export const API_CONFIG = {
 
     COURSES: {
       LIST: '/courses',
+      RECOMMENDATIONS: '/courses/recommendations',
       BY_ID: (id: string) => `/courses/${id}`,
       CHAPTERS: (courseId: string) => `/courses/${courseId}/chapters`,
       LESSONS: (chapterId: string) => `/courses/chapters/${chapterId}/lessons`,

@@ -102,6 +102,8 @@ export interface Course {
   slug: string
   description: string
   thumbnail_url?: string
+  target_score?: number
+  skills?: string[]
   price: number
   discount_price?: number
   level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
