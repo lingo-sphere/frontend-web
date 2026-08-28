@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { animate, useInView } from "motion/react"
 
 const manifestoLines = [
   "Học tiếng Anh bằng tư duy logic, không học vẹt.",
@@ -53,11 +54,32 @@ const islands = [
 ]
 
 const stats = [
-  { value: "990", label: "ETS Max Scale" },
-  { value: "4,000+", label: "Học Viên 850+" },
-  { value: "20k+", label: "Tâm Tình Học Viên" },
-  { value: "0.4s", label: "AI Latency" },
+  { target: 990, suffix: "", decimals: 0, label: "ETS Max Scale" },
+  { target: 4000, suffix: "+", decimals: 0, label: "Học Viên 850+" },
+  { target: 20, suffix: "k+", decimals: 0, label: "Tâm Tình Học Viên" },
+  { target: 0.4, suffix: "s", decimals: 1, label: "AI Latency" },
 ]
+
+function StatCounter({ target, suffix = "", decimals = 0 }: { target: number; suffix?: string; decimals?: number }) {
+  const nodeRef = useRef<HTMLSpanElement | null>(null)
+  const isInView = useInView(nodeRef, { once: true, margin: "-40px" })
+
+  useEffect(() => {
+    if (!isInView || !nodeRef.current) return
+    const controls = animate(0, target, {
+      duration: 2,
+      ease: "easeOut",
+      onUpdate(value) {
+        if (nodeRef.current) {
+          nodeRef.current.textContent = `${decimals > 0 ? value.toFixed(decimals) : Math.floor(value).toLocaleString("en-US")}${suffix}`
+        }
+      },
+    })
+    return () => controls.stop()
+  }, [isInView, target, suffix, decimals])
+
+  return <span ref={nodeRef}>{decimals > 0 ? (0).toFixed(decimals) : "0"}{suffix}</span>
+}
 
 export function LandingPage() {
   const manifestoRef = useRef<HTMLPreElement | null>(null)
@@ -204,7 +226,7 @@ export function LandingPage() {
         </div>
 
         <div className="relative z-10 px-6 text-center">
-          <h1 className="shimmer-text heading-glow mb-8 text-5xl font-extrabold leading-tight tracking-tighter md:text-[7.5rem] animate-[shimmer_4s_linear_infinite]">
+          <h1 className="hero-gradient-flow mb-8 text-5xl font-extrabold leading-tight tracking-tighter md:text-[7.5rem] drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] drop-shadow-[0_0_45px_rgba(94,234,212,0.45)] select-none">
             Tiếng Anh Tư Duy
             <br />
             Bứt Phá TOEIC
@@ -215,7 +237,7 @@ export function LandingPage() {
               &quot;Học tiếng Anh bằng tư duy logic và khoa học não bộ, nói không với học vẹt.&quot;
             </p>
             <Link href="/home">
-              <button className="rounded-2xl border border-white/20 bg-black/10 backdrop-blur-sm px-12 py-4 text-[11px] font-black uppercase tracking-[0.35em] text-white shadow-lg transition-all duration-500 ease-out hover:border-[#2f7f78] hover:text-[#2f7f78] hover:shadow-[0_0_30px_rgba(47,127,120,0.5),inset_0_0_15px_rgba(47,127,120,0.2)] cursor-pointer">
+              <button className="rounded-2xl border border-white/20 bg-black/10 backdrop-blur-sm px-12 py-4 text-[11px] font-black uppercase tracking-[0.35em] text-white/90 shadow-lg transition-all duration-300 ease-out hover:border-[#48c9b0] hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.9)] hover:shadow-[0_0_30px_rgba(72,201,176,0.6),inset_0_0_15px_rgba(72,201,176,0.25)] cursor-pointer">
                 Bắt Đầu Học Miễn Phí
               </button>
             </Link>
@@ -260,7 +282,7 @@ export function LandingPage() {
           </div>
 
           <div className="relative flex items-center justify-center">
-            <div className="relative h-[360px] w-[360px] sm:h-[420px] sm:w-[420px] aspect-square rounded-full overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(47,127,120,0.15)]">
+            <div className="relative h-[360px] w-[360px] sm:h-[420px] sm:w-[420px] aspect-square rounded-full overflow-hidden border border-[#48c9b0]/30 shadow-[0_0_50px_rgba(72,201,176,0.35),0_0_90px_rgba(47,127,120,0.2),0_16px_40px_rgba(0,0,0,0.7)]">
               <video
                 autoPlay
                 muted
@@ -271,14 +293,14 @@ export function LandingPage() {
                 <source src="/video-contact.mp4" type="video/mp4" />
               </video>
 
-              <div className="absolute inset-0 rounded-full bg-white/[0.08] backdrop-blur-[0.4px] pointer-events-none" />
+              <div className="absolute inset-0 rounded-full bg-white/[0.04] pointer-events-none" />
             </div>
 
-            <div className="vellum-overlay absolute bottom-2 right-0 sm:right-4 max-w-[200px] rounded-2xl border border-white/10 p-5 backdrop-blur-xl bg-black/50 shadow-2xl">
-              <span className="font-serif font-light mb-1 block text-base italic text-[#2f7f78]">
+            <div className="vellum-overlay absolute bottom-2 right-0 sm:right-4 max-w-[210px] rounded-2xl border border-[#48c9b0]/30 p-5 backdrop-blur-xl bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_25px_rgba(72,201,176,0.25)]">
+              <span className="font-serif font-medium mb-1.5 block text-lg italic text-[#5eead4] drop-shadow-[0_0_12px_rgba(94,234,212,0.85)]">
                 Deep Focus
               </span>
-              <p className="text-[10px] uppercase tracking-widest text-white/70 font-semibold leading-relaxed">
+              <p className="text-[10px] uppercase tracking-wider text-white/90 font-bold leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
                 Tối ưu hóa tải nhận thức cho học viên
               </p>
             </div>
@@ -351,9 +373,13 @@ export function LandingPage() {
 
           <div className="grid grid-cols-2 gap-8 sm:gap-12 border-t border-white/10 pt-16 md:grid-cols-4">
             {stats.map((stat) => (
-              <div key={stat.label}>
-                <div className="mb-2 text-3xl sm:text-4xl font-extrabold text-white">{stat.value}</div>
-                <div className="text-[11px] uppercase tracking-widest text-white/50 font-medium">{stat.label}</div>
+              <div key={stat.label} className="group">
+                <div className="mb-2 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white heading-glow tracking-tight">
+                  <StatCounter target={stat.target} suffix={stat.suffix} decimals={stat.decimals} />
+                </div>
+                <div className="text-[11px] uppercase tracking-widest text-white/50 font-medium group-hover:text-[#48c9b0] transition-colors">
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
@@ -532,6 +558,31 @@ export function LandingPage() {
           text-shadow:
             0 0 20px rgba(72, 201, 176, 0.85),
             0 0 45px rgba(47, 127, 120, 0.6);
+        }
+
+        .hero-gradient-flow {
+          background: linear-gradient(
+            115deg,
+            #ffffff 0%,
+            #5eead4 25%,
+            #ffffff 50%,
+            #2dd4bf 75%,
+            #ffffff 100%
+          );
+          background-size: 250% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: text-flow 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes text-flow {
+          0% {
+            background-position: 0% 50%;
+          }
+          100% {
+            background-position: 100% 50%;
+          }
         }
 
         .shimmer-text {
