@@ -51,8 +51,22 @@ apiClient.interceptors.response.use(
   async (error: AxiosError<{ message?: string | string[]; error?: string; statusCode?: number }>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-      if (isRefreshing) {
+    if (error.response?.status === 401 && originalRequest) {
+      const rawMsg = error.response.data?.message
+      const errorMsg = Array.isArray(rawMsg) ? rawMsg.join(', ') : (rawMsg || '')
+      const isKickout = errorMsg.includes('thiết bị khác') || errorMsg.includes('đăng nhập trên một thiết bị')
+
+      if (isKickout) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
+          window.dispatchEvent(new CustomEvent('lingosphere:session_terminated', { detail: { message: errorMsg } }))
+        }
+        return Promise.reject(error)
+      }
+
+      if (!originalRequest._retry) {
+        if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         })
@@ -107,6 +121,7 @@ apiClient.interceptors.response.use(
         isRefreshing = false
       }
     }
+  }
 
     let errorMessage: string | string[] = 'Đã xảy ra lỗi khi kết nối tới máy chủ'
     if (error.response?.data?.message) {
