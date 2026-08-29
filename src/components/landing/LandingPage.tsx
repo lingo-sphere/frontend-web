@@ -6,6 +6,10 @@ import { motion, AnimatePresence, animate, useInView } from "motion/react"
 import { ChevronUp } from "lucide-react"
 import { LingoShowcase } from "@/components/landing/LingoShowcase"
 import { LingoPerformance } from "@/components/landing/LingoPerformance"
+import { ElectricBorder } from "@/components/ui/ElectricBorder"
+import { ClickSpark } from "@/components/ui/ClickSpark"
+import { CurvedLoop } from "@/components/ui/CurvedLoop"
+import { SpecularButton } from "@/components/ui/SpecularButton"
 
 const manifestoLines = [
   "Học tiếng Anh bằng tư duy logic, không học vẹt.",
@@ -30,6 +34,7 @@ const islands = [
     description:
       "Phòng thi thử 200 câu 7 Part bấm giờ thực tế. Thuật toán chấm điểm và phân tích điểm yếu tức thì.",
     accent: "lantern",
+    electricColor: "#48c9b0",
     topOffset: "lg:translate-y-0",
   },
   {
@@ -38,6 +43,7 @@ const islands = [
     description:
       "Nhận diện giọng nói siêu chuẩn xác từng âm vị. Hướng dẫn phát âm, nối âm và ngữ điệu tự nhiên.",
     accent: "moss",
+    electricColor: "#34d399",
     topOffset: "lg:translate-y-12 sm:translate-y-6",
   },
   {
@@ -46,6 +52,7 @@ const islands = [
     description:
       "Khoa học SuperMemo SM-2 tự động nhắc lại từ vựng đúng thời điểm não bộ sắp quên để ghi nhớ vĩnh viễn.",
     accent: "neutral",
+    electricColor: "#c084fc",
     topOffset: "lg:translate-y-3",
   },
   {
@@ -54,6 +61,7 @@ const islands = [
     description:
       "Trợ lý AI Gemini Flash kết hợp Groq LPU giải đáp thắc mắc, phân tích ngữ pháp và sửa bài viết tức thì.",
     accent: "lantern",
+    electricColor: "#38bdf8",
     topOffset: "lg:translate-y-16 sm:translate-y-6",
   },
 ]
@@ -159,14 +167,53 @@ function SeamlessCircleVideo() {
 export function LandingPage() {
   const manifestoRef = useRef<HTMLPreElement | null>(null)
   const heroVideoContainerRef = useRef<HTMLDivElement | null>(null)
-  const heroVideo1Ref = useRef<HTMLVideoElement | null>(null)
-  const heroVideo2Ref = useRef<HTMLVideoElement | null>(null)
-  const [activeHeroVideo, setActiveHeroVideo] = useState<1 | 2>(1)
-  const crossfadeTriggeredRef = useRef<boolean>(false)
+  const videoARef = useRef<HTMLVideoElement | null>(null)
+  const videoBRef = useRef<HTMLVideoElement | null>(null)
+  const [activeVideo, setActiveVideo] = useState<"A" | "B">("A")
+  const isTransitioningRef = useRef<boolean>(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isHeaderHidden, setIsHeaderHidden] = useState(false)
   const lastScrollYRef = useRef(0)
+
+  const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const currentVideo = e.currentTarget
+    const duration = currentVideo.duration
+    if (!duration || isNaN(duration) || isTransitioningRef.current) return
+
+    // Trigger seamless crossfade in the last 0.65s of playback
+    if (duration - currentVideo.currentTime <= 0.1) {
+      isTransitioningRef.current = true
+
+      if (activeVideo === "A") {
+        const next = videoBRef.current
+        if (next) {
+          next.currentTime = 0
+          next.play().then(() => {
+            setActiveVideo("B")
+            setTimeout(() => {
+              isTransitioningRef.current = false
+            }, 800)
+          }).catch(() => {
+            isTransitioningRef.current = false
+          })
+        }
+      } else {
+        const next = videoARef.current
+        if (next) {
+          next.currentTime = 0
+          next.play().then(() => {
+            setActiveVideo("A")
+            setTimeout(() => {
+              isTransitioningRef.current = false
+            }, 800)
+          }).catch(() => {
+            isTransitioningRef.current = false
+          })
+        }
+      }
+    }
+  }
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -182,45 +229,6 @@ export function LandingPage() {
   useEffect(() => {
     document.documentElement.classList.add("scroll-smooth", "dark")
   }, [])
-
-  // 🎬 Seamless Video Loop Cross-fade Engine (Double Buffering)
-  useEffect(() => {
-    const v1 = heroVideo1Ref.current
-    const v2 = heroVideo2Ref.current
-    if (!v1 || !v2) return
-
-    v1.play().catch(() => {})
-
-    const checkTime = (e: Event) => {
-      const vid = e.target as HTMLVideoElement
-      const dur = vid.duration
-      if (!dur || isNaN(dur)) return
-
-      // When reaching 2s before end, cross-fade to the other video
-      if (dur - vid.currentTime <= 2 && !crossfadeTriggeredRef.current) {
-        crossfadeTriggeredRef.current = true
-        if (activeHeroVideo === 1) {
-          v2.currentTime = 0
-          v2.play().catch(() => {})
-          setActiveHeroVideo(2)
-        } else {
-          v1.currentTime = 0
-          v1.play().catch(() => {})
-          setActiveHeroVideo(1)
-        }
-      } else if (dur - vid.currentTime > 2.5) {
-        crossfadeTriggeredRef.current = false
-      }
-    }
-
-    v1.addEventListener("timeupdate", checkTime)
-    v2.addEventListener("timeupdate", checkTime)
-
-    return () => {
-      v1.removeEventListener("timeupdate", checkTime)
-      v2.removeEventListener("timeupdate", checkTime)
-    }
-  }, [activeHeroVideo])
 
   useEffect(() => {
     const el = manifestoRef.current
@@ -314,7 +322,8 @@ export function LandingPage() {
 
   return (
     <main className="relative overflow-x-hidden bg-[oklch(20%_0.08_280)] text-white antialiased">
-      <div className="noise pointer-events-none fixed inset-0 z-[9999]" />
+      <ClickSpark sparkColor="#5eead4" sparkSize={14} sparkRadius={26} sparkCount={8} duration={450}>
+        <div className="noise pointer-events-none fixed inset-0 z-[9999]" />
 
       {/* 🧭 1. Ultra-Smooth Cinematic Header */}
       <motion.header
@@ -391,22 +400,26 @@ export function LandingPage() {
           className="absolute inset-0 z-0 overflow-hidden"
         >
           <video
-            ref={heroVideo1Ref}
+            ref={videoARef}
             src="/video-banner.mp4"
             autoPlay
             muted
             playsInline
+            preload="auto"
+            onTimeUpdate={activeVideo === "A" ? handleVideoTimeUpdate : undefined}
             className={`hero-mask absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700 ease-in-out ${
-              activeHeroVideo === 1 ? "opacity-100" : "opacity-0 pointer-events-none"
+              activeVideo === "A" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             }`}
           />
           <video
-            ref={heroVideo2Ref}
+            ref={videoBRef}
             src="/video-banner.mp4"
             muted
             playsInline
+            preload="auto"
+            onTimeUpdate={activeVideo === "B" ? handleVideoTimeUpdate : undefined}
             className={`hero-mask absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700 ease-in-out ${
-              activeHeroVideo === 2 ? "opacity-100" : "opacity-0 pointer-events-none"
+              activeVideo === "B" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             }`}
           />
         </motion.div>
@@ -442,14 +455,28 @@ export function LandingPage() {
             <p className="mb-8 font-serif text-lg md:text-xl leading-relaxed font-light italic text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
               &quot;Học tiếng Anh bằng tư duy logic và khoa học não bộ, nói không với học vẹt.&quot;
             </p>
-            <Link href="/home">
-              <motion.button
-                whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(72,201,176,0.6)" }}
-                whileTap={{ scale: 0.96 }}
-                className="rounded-2xl border border-white/20 bg-black/10 backdrop-blur-sm px-12 py-4 text-[11px] font-black uppercase tracking-[0.35em] text-white/90 shadow-lg transition-all duration-300 ease-out hover:border-[#48c9b0] hover:text-white hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.9)] hover:shadow-[0_0_30px_rgba(72,201,176,0.6),inset_0_0_15px_rgba(72,201,176,0.25)] cursor-pointer"
+            <Link href="/home" className="inline-block">
+              <SpecularButton
+                size="lg"
+                radius={20}
+                tint="#2f7f78"
+                tintOpacity={0.35}
+                blur={16}
+                textColor="#ffffff"
+                lineColor="#5eead4"
+                baseColor="#2f7f78"
+                intensity={1.3}
+                shineSize={12}
+                shineFade={45}
+                thickness={1.5}
+                speed={0.4}
+                followMouse
+                proximity={320}
+                autoAnimate
+                className="font-black tracking-[0.3em] text-[12px] sm:text-[13px] px-10 py-5"
               >
                 Bắt Đầu Học Miễn Phí
-              </motion.button>
+              </SpecularButton>
             </Link>
           </motion.div>
         </div>
@@ -561,24 +588,31 @@ export function LandingPage() {
       <LingoPerformance />
 
       {/* 🏝️ 4. Bốn Trụ Cột Đột Phá Điểm Số */}
-      <section id="islands" className="relative px-6 py-40">
+      <section id="islands" className="relative px-6 py-36 overflow-hidden">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-28 text-center relative z-20"
+          className="mb-14 text-center relative z-20"
         >
-          <h2 className="absolute left-0 right-0 top-0 select-none text-[12vw] font-bold leading-none tracking-[-0.05em] opacity-5 pointer-events-none">
-            LINGOSPHERE
-          </h2>
-          <span className="teal-glow mb-4 block text-[11px] uppercase tracking-[0.5em] text-[#48c9b0] font-bold">
+          <span className="teal-glow mb-2 block text-[11px] uppercase tracking-[0.5em] text-[#48c9b0] font-bold">
             Khám Phá Hệ Sinh Thái Học Tập
           </span>
-          <h3 className="heading-glow text-3xl sm:text-5xl font-bold tracking-tighter text-white">4 Trụ Cột Đột Phá Điểm Số</h3>
+
+          <CurvedLoop
+            marqueeText="✦ 4 TRỤ CỘT ĐỘT PHÁ ĐIỂM SỐ ✦ LINGOSPHERE ECOSYSTEM ✦ CHINH PHỤC ETS 990 ✦ PHÁT ÂM WHISPER AI ✦"
+            speed={2}
+            fontSize={62}
+            curveAmount={140}
+            direction="left"
+            interactive
+            className="tracking-wider fill-white drop-shadow-[0_0_35px_rgba(94,234,212,0.8)]"
+            wrapperClassName="my-[-10px] max-w-7xl mx-auto"
+          />
         </motion.div>
 
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 items-start pb-12">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 items-stretch pb-12">
           {islands.map((item, idx) => (
             <motion.div
               key={item.node}
@@ -591,42 +625,41 @@ export function LandingPage() {
                 ease: [0.16, 1, 0.3, 1],
               }}
               whileHover={{ y: -8, transition: { duration: 0.3 } }}
-              className={[
-                "glass-card group relative overflow-hidden rounded-[32px] p-8 transition-shadow duration-500 hover:shadow-2xl flex flex-col justify-between min-h-[320px] cursor-pointer",
-                item.topOffset,
-              ].join(" ")}
+              className={["group relative h-full flex flex-col cursor-pointer", item.topOffset].join(" ")}
             >
-              <div
-                className={[
-                  "absolute -top-20 -right-20 h-40 w-40 blur-[80px] transition-all",
-                  item.accent === "lantern"
-                    ? "bg-[#2f7f78]/20 group-hover:bg-[#2f7f78]/40"
-                    : item.accent === "moss"
-                      ? "bg-[#3f8f68]/20 group-hover:bg-[#3f8f68]/40"
-                      : "bg-white/10 group-hover:bg-white/20",
-                ].join(" ")}
-              />
-              <div>
-                <div
-                  className={[
-                    "mb-6 font-mono text-[11px] font-bold tracking-widest",
-                    item.accent === "lantern" ? "text-[#48c9b0]" : item.accent === "moss" ? "text-[#3f8f68]" : "opacity-60",
-                  ].join(" ")}
-                >
-                  {item.node}
+              <ElectricBorder
+                color={item.electricColor}
+                speed={1.2}
+                chaos={0.14}
+                borderRadius={32}
+                className="h-full w-full"
+              >
+                <div className="glass-card relative h-full overflow-hidden rounded-[32px] p-8 flex flex-col justify-between min-h-[340px] bg-[oklch(18%_0.06_280/0.8)] backdrop-blur-2xl transition-all duration-500 hover:shadow-2xl">
+                  <div
+                    className="absolute -top-20 -right-20 h-40 w-40 blur-[80px] transition-all opacity-30 group-hover:opacity-60"
+                    style={{ backgroundColor: item.electricColor }}
+                  />
+                  <div className="relative z-10">
+                    <div
+                      className="mb-6 font-mono text-[11px] font-bold tracking-widest"
+                      style={{ color: item.electricColor }}
+                    >
+                      {item.node}
+                    </div>
+                    <h4 className="mb-4 text-xl font-bold tracking-tight text-white transition-colors">
+                      {item.title}
+                    </h4>
+                    <p className="mb-8 text-xs sm:text-sm leading-relaxed text-white/70">{item.description}</p>
+                  </div>
+                  <div className="relative z-10 flex gap-2 items-center">
+                    <div className="h-[1px] w-8 bg-white/30 group-hover:w-12 transition-all" />
+                    <div
+                      className="h-[2px] w-3 rounded-full transition-all"
+                      style={{ backgroundColor: item.electricColor }}
+                    />
+                  </div>
                 </div>
-                <h4 className="mb-4 text-xl font-bold tracking-tight text-white group-hover:text-[#5eead4] transition-colors">{item.title}</h4>
-                <p className="mb-8 text-xs sm:text-sm leading-relaxed text-white/60">{item.description}</p>
-              </div>
-              <div className="flex gap-2">
-                <div className="h-[1px] w-8 bg-white/30 group-hover:w-12 transition-all" />
-                <div
-                  className={[
-                    "h-[1px] w-2",
-                    item.accent === "lantern" ? "bg-[#48c9b0]" : item.accent === "moss" ? "bg-[#3f8f68]" : "bg-white/50",
-                  ].join(" ")}
-                />
-              </div>
+              </ElectricBorder>
             </motion.div>
           ))}
         </div>
@@ -908,6 +941,7 @@ export function LandingPage() {
           border-color: rgba(47, 127, 120, 0.4);
         }
       `}</style>
+      </ClickSpark>
     </main>
   )
 }
