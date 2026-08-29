@@ -28,6 +28,11 @@ export function AppProvider({ children }: AppProviderProps) {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#F1F8F7' : '#121A1A')
   }, [theme])
 

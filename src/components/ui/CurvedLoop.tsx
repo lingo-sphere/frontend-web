@@ -50,18 +50,17 @@ export const CurvedLoop: FC<CurvedLoopProps> = ({
 
   useEffect(() => {
     if (measureRef.current) {
-      setSpacing(measureRef.current.getComputedTextLength())
+      const len = measureRef.current.getComputedTextLength()
+      if (len > 0) {
+        setSpacing(len)
+        if (textPathRef.current) {
+          const initial = -len
+          textPathRef.current.setAttribute('startOffset', initial + 'px')
+          setOffset(initial)
+        }
+      }
     }
   }, [text, className, fontSize])
-
-  useEffect(() => {
-    if (!spacing) return
-    if (textPathRef.current) {
-      const initial = -spacing
-      textPathRef.current.setAttribute('startOffset', initial + 'px')
-      setOffset(initial)
-    }
-  }, [spacing])
 
   useEffect(() => {
     if (!spacing || !ready) return
@@ -115,7 +114,7 @@ export const CurvedLoop: FC<CurvedLoopProps> = ({
 
   return (
     <div
-      className={`relative flex items-center justify-center w-full select-none overflow-visible ${wrapperClassName}`}
+      className={`relative flex items-center justify-center w-full max-w-full select-none overflow-hidden ${wrapperClassName}`}
       style={{ visibility: ready ? 'visible' : 'hidden', cursor: cursorStyle }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -123,7 +122,7 @@ export const CurvedLoop: FC<CurvedLoopProps> = ({
       onPointerLeave={endDrag}
     >
       <svg
-        className="select-none w-full overflow-visible block aspect-[1440/220]"
+        className="select-none w-full max-w-full overflow-hidden block aspect-[1440/220]"
         viewBox="0 0 1440 220"
       >
         <text

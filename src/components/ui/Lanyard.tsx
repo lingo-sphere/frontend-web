@@ -4,9 +4,11 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import * as THREE from 'three'
 import { ArrowDown, CheckCircle2 } from 'lucide-react'
+import { landingLocales, type LandingLang } from '@/components/landing/landing-locales'
 
 export interface LanyardProps {
   destinationUrl?: string
+  lang?: LandingLang
   onUnlock?: () => void
   className?: string
 }
@@ -16,17 +18,142 @@ interface Joint {
   oldPos: THREE.Vector3
 }
 
+function drawCardCanvas(canvas: HTMLCanvasElement, lang: LandingLang) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  const texts = landingLocales[lang]?.lanyard || landingLocales.vi.lanyard
+
+  const bgGrad = ctx.createLinearGradient(0, 0, 1024, 1440)
+  bgGrad.addColorStop(0, '#0a1a17')
+  bgGrad.addColorStop(0.4, '#061311')
+  bgGrad.addColorStop(1, '#020605')
+  ctx.fillStyle = bgGrad
+  ctx.fillRect(0, 0, 1024, 1440)
+
+  ctx.strokeStyle = '#5eead4'
+  ctx.lineWidth = 14
+  ctx.strokeRect(30, 30, 964, 1380)
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
+  ctx.lineWidth = 4
+  ctx.strokeRect(50, 50, 924, 1340)
+
+  ctx.fillStyle = '#000000'
+  ctx.fillRect(412, 55, 200, 28)
+  ctx.strokeStyle = '#5eead4'
+  ctx.lineWidth = 4
+  ctx.strokeRect(412, 55, 200, 28)
+
+  ctx.fillStyle = '#5eead4'
+  ctx.font = 'bold 34px monospace'
+  ctx.fillText(`● ${texts.vipPassport}`, 80, 150)
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '900 64px system-ui, sans-serif'
+  ctx.fillText('LINGOSPHERE', 80, 235)
+
+  ctx.fillStyle = '#48c9b0'
+  ctx.font = 'bold 26px system-ui, sans-serif'
+  ctx.fillText(texts.academy, 80, 280)
+
+  const chipGrad = ctx.createLinearGradient(80, 350, 260, 490)
+  chipGrad.addColorStop(0, '#fef08a')
+  chipGrad.addColorStop(0.5, '#eab308')
+  chipGrad.addColorStop(1, '#854d0e')
+  ctx.fillStyle = chipGrad
+  ctx.fillRect(80, 350, 180, 135)
+  ctx.strokeStyle = '#fef9c3'
+  ctx.lineWidth = 4
+  ctx.strokeRect(80, 350, 180, 135)
+
+  ctx.fillStyle = '#713f12'
+  ctx.fillRect(80, 415, 180, 7)
+  ctx.fillRect(165, 350, 7, 135)
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)'
+  ctx.fillRect(300, 350, 644, 135)
+  ctx.strokeStyle = 'rgba(94, 234, 212, 0.4)'
+  ctx.lineWidth = 3
+  ctx.strokeRect(300, 350, 644, 135)
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '900 50px monospace'
+  ctx.fillText(texts.targetBadge, 330, 415)
+
+  ctx.fillStyle = '#5eead4'
+  ctx.font = 'bold 26px system-ui, sans-serif'
+  ctx.fillText(texts.statusAuth, 330, 460)
+
+  const holoGrad = ctx.createLinearGradient(80, 530, 944, 910)
+  holoGrad.addColorStop(0, 'rgba(47, 127, 120, 0.45)')
+  holoGrad.addColorStop(0.5, 'rgba(94, 234, 212, 0.2)')
+  holoGrad.addColorStop(1, 'rgba(192, 132, 252, 0.35)')
+  ctx.fillStyle = holoGrad
+  ctx.fillRect(80, 530, 864, 380)
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
+  ctx.lineWidth = 3
+  ctx.strokeRect(80, 530, 864, 380)
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'italic 300 36px serif'
+  if (lang === 'vi') {
+    ctx.fillText('"Học tiếng Anh bằng tư duy tự nhiên,', 120, 670)
+    ctx.fillText('bứt phá điểm số cùng AI."', 120, 725)
+  } else {
+    ctx.fillText('"Master English with natural logic,', 120, 670)
+    ctx.fillText('supercharged by AI."', 120, 725)
+  }
+
+  ctx.fillStyle = '#5eead4'
+  ctx.font = 'bold 30px system-ui, sans-serif'
+  ctx.fillText(texts.sparkEngine, 120, 830)
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+  ctx.font = 'bold 26px system-ui, sans-serif'
+  ctx.fillText(texts.studentLabel, 80, 990)
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'bold 46px system-ui, sans-serif'
+  ctx.fillText(texts.studentName, 80, 1055)
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+  ctx.font = 'bold 26px system-ui, sans-serif'
+  ctx.fillText(texts.accessCodeLabel, 650, 990)
+
+  ctx.fillStyle = '#5eead4'
+  ctx.font = 'bold 46px monospace'
+  ctx.fillText('LS-990-PRO', 650, 1055)
+
+  ctx.fillStyle = '#ffffff'
+  let bx = 80
+  const barPattern = [12, 6, 18, 8, 24, 6, 10, 14, 8, 20, 6, 14, 10, 18, 6, 22, 10, 8, 16, 6, 14, 18, 8, 12, 16]
+  for (const w of barPattern) {
+    ctx.fillRect(bx, 1160, w, 100)
+    bx += w + 12
+  }
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+  ctx.font = '24px monospace'
+  ctx.fillText('* L I N G O S P H E R E - 2 0 2 6 *', 320, 1310)
+}
+
 export function Lanyard({
   destinationUrl = '/home',
+  lang = 'vi',
   onUnlock,
   className = '',
 }: LanyardProps) {
   const router = useRouter()
   const mountRef = useRef<HTMLDivElement | null>(null)
   const progressBarRef = useRef<HTMLDivElement | null>(null)
+  const cardCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const cardTextureRef = useRef<THREE.CanvasTexture | null>(null)
   const isUnlockedRef = useRef<boolean>(false)
   const [isUnlockedState, setIsUnlockedState] = useState<boolean>(false)
   const [isHovered, setIsHovered] = useState<boolean>(false)
+
+  const texts = landingLocales[lang]?.lanyard || landingLocales.vi.lanyard
 
   const triggerAccess = useCallback(() => {
     if (isUnlockedRef.current) return
@@ -42,11 +169,19 @@ export function Lanyard({
     }
   }, [destinationUrl, onUnlock, router])
 
+  // 1. Update Card Texture in-place when language changes (0ms, no WebGL tear-down)
+  useEffect(() => {
+    if (cardCanvasRef.current && cardTextureRef.current) {
+      drawCardCanvas(cardCanvasRef.current, lang)
+      cardTextureRef.current.needsUpdate = true
+    }
+  }, [lang])
+
+  // 2. Initialize Three.js Hardware Accelerated Physics Scene Once
   useEffect(() => {
     const container = mountRef.current
     if (!container) return
 
-    // 1. Full-Width Responsive Scene, Camera, Renderer
     const getContainerSize = () => ({
       w: container.clientWidth || window.innerWidth || 1200,
       h: container.clientHeight || 700,
@@ -70,7 +205,7 @@ export function Lanyard({
     renderer.toneMappingExposure = 1.2
     container.appendChild(renderer.domElement)
 
-    // 2. Realistic Studio Lighting
+    // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.2)
     scene.add(ambientLight)
 
@@ -86,126 +221,19 @@ export function Lanyard({
     topLight.position.set(0, 6, 4)
     scene.add(topLight)
 
-    // 3. Generate High-Res Holographic Texture for Card Front
+    // Card Canvas & Texture
     const cardCanvas = document.createElement('canvas')
     cardCanvas.width = 1024
     cardCanvas.height = 1440
-    const ctx = cardCanvas.getContext('2d')
-    if (ctx) {
-      const bgGrad = ctx.createLinearGradient(0, 0, 1024, 1440)
-      bgGrad.addColorStop(0, '#0a1a17')
-      bgGrad.addColorStop(0.4, '#061311')
-      bgGrad.addColorStop(1, '#020605')
-      ctx.fillStyle = bgGrad
-      ctx.fillRect(0, 0, 1024, 1440)
-
-      ctx.strokeStyle = '#5eead4'
-      ctx.lineWidth = 14
-      ctx.strokeRect(30, 30, 964, 1380)
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
-      ctx.lineWidth = 4
-      ctx.strokeRect(50, 50, 924, 1340)
-
-      ctx.fillStyle = '#000000'
-      ctx.fillRect(412, 55, 200, 28)
-      ctx.strokeStyle = '#5eead4'
-      ctx.lineWidth = 4
-      ctx.strokeRect(412, 55, 200, 28)
-
-      ctx.fillStyle = '#5eead4'
-      ctx.font = 'bold 34px monospace'
-      ctx.fillText('● VIP PASSPORT', 80, 150)
-
-      ctx.fillStyle = '#ffffff'
-      ctx.font = '900 64px system-ui, sans-serif'
-      ctx.fillText('LINGOSPHERE', 80, 235)
-
-      ctx.fillStyle = '#48c9b0'
-      ctx.font = 'bold 26px system-ui, sans-serif'
-      ctx.fillText('ACADEMY OF COGNITIVE ENGLISH', 80, 280)
-
-      const chipGrad = ctx.createLinearGradient(80, 350, 260, 490)
-      chipGrad.addColorStop(0, '#fef08a')
-      chipGrad.addColorStop(0.5, '#eab308')
-      chipGrad.addColorStop(1, '#854d0e')
-      ctx.fillStyle = chipGrad
-      ctx.fillRect(80, 350, 180, 135)
-      ctx.strokeStyle = '#fef9c3'
-      ctx.lineWidth = 4
-      ctx.strokeRect(80, 350, 180, 135)
-
-      ctx.fillStyle = '#713f12'
-      ctx.fillRect(80, 415, 180, 7)
-      ctx.fillRect(165, 350, 7, 135)
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)'
-      ctx.fillRect(300, 350, 644, 135)
-      ctx.strokeStyle = 'rgba(94, 234, 212, 0.4)'
-      ctx.lineWidth = 3
-      ctx.strokeRect(300, 350, 644, 135)
-
-      ctx.fillStyle = '#ffffff'
-      ctx.font = '900 50px monospace'
-      ctx.fillText('TARGET: ETS 990', 330, 415)
-
-      ctx.fillStyle = '#5eead4'
-      ctx.font = 'bold 26px system-ui, sans-serif'
-      ctx.fillText('STATUS: AUTHENTICATED 2026', 330, 460)
-
-      const holoGrad = ctx.createLinearGradient(80, 530, 944, 910)
-      holoGrad.addColorStop(0, 'rgba(47, 127, 120, 0.45)')
-      holoGrad.addColorStop(0.5, 'rgba(94, 234, 212, 0.2)')
-      holoGrad.addColorStop(1, 'rgba(192, 132, 252, 0.35)')
-      ctx.fillStyle = holoGrad
-      ctx.fillRect(80, 530, 864, 380)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
-      ctx.lineWidth = 3
-      ctx.strokeRect(80, 530, 864, 380)
-
-      ctx.fillStyle = '#ffffff'
-      ctx.font = 'italic 300 38px serif'
-      ctx.fillText('"Học tiếng Anh bằng tư duy tự nhiên,', 120, 670)
-      ctx.fillText('bứt phá điểm số cùng AI."', 120, 725)
-
-      ctx.fillStyle = '#5eead4'
-      ctx.font = 'bold 30px system-ui, sans-serif'
-      ctx.fillText('✦ SPARK COGNITIVE ENGINE', 120, 830)
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-      ctx.font = 'bold 26px system-ui, sans-serif'
-      ctx.fillText('HỌC VIÊN', 80, 990)
-
-      ctx.fillStyle = '#ffffff'
-      ctx.font = 'bold 46px system-ui, sans-serif'
-      ctx.fillText('Lingo Scholar VIP', 80, 1055)
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-      ctx.font = 'bold 26px system-ui, sans-serif'
-      ctx.fillText('MÃ TRUY CẬP', 650, 990)
-
-      ctx.fillStyle = '#5eead4'
-      ctx.font = 'bold 46px monospace'
-      ctx.fillText('LS-990-PRO', 650, 1055)
-
-      ctx.fillStyle = '#ffffff'
-      let bx = 80
-      const barPattern = [12, 6, 18, 8, 24, 6, 10, 14, 8, 20, 6, 14, 10, 18, 6, 22, 10, 8, 16, 6, 14, 18, 8, 12, 16]
-      for (const w of barPattern) {
-        ctx.fillRect(bx, 1160, w, 100)
-        bx += w + 12
-      }
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
-      ctx.font = '24px monospace'
-      ctx.fillText('* L I N G O S P H E R E - 2 0 2 6 *', 320, 1310)
-    }
+    cardCanvasRef.current = cardCanvas
+    drawCardCanvas(cardCanvas, lang)
 
     const cardTexture = new THREE.CanvasTexture(cardCanvas)
     cardTexture.colorSpace = THREE.SRGBColorSpace
     cardTexture.anisotropy = 8
+    cardTextureRef.current = cardTexture
 
-    // 4. Ribbon Texture
+    // Ribbon Texture
     const ribbonCanvas = document.createElement('canvas')
     ribbonCanvas.width = 1024
     ribbonCanvas.height = 128
@@ -227,7 +255,7 @@ export function Lanyard({
     ribbonTexture.wrapT = THREE.RepeatWrapping
     ribbonTexture.repeat.set(2, 1)
 
-    // 5. 3D Card Mesh with Metallic Clip
+    // 3D Card Mesh with Metallic Clip
     const cardGroup = new THREE.Group()
 
     const cardWidth = 1.9
@@ -249,7 +277,6 @@ export function Lanyard({
       new THREE.MeshStandardMaterial({ color: 0x050c0b, metalness: 0.8, roughness: 0.25 }),
     ]
 
-    // Card hangs beneath the top ring pivot (0, 0, 0)
     const cardMesh = new THREE.Mesh(cardGeo, cardMaterials)
     const clampOffset = cardHeight / 2 + 0.24
     cardMesh.position.set(0, -clampOffset, 0)
@@ -269,7 +296,7 @@ export function Lanyard({
 
     scene.add(cardGroup)
 
-    // 6. Physics Rope Simulation Nodes (Verlet Rope - Elevated with Clear Gap)
+    // Physics Rope Simulation Nodes
     const numJoints = 5
     const anchorY = 2.55
     const ropeLength = 0.75
@@ -349,7 +376,7 @@ export function Lanyard({
       ribbonGeo.computeVertexNormals()
     }
 
-    // 7. Wide-Range Drag Interaction
+    // Wide-Range Drag Interaction
     let isDragging = false
     let currentPull = 0
     const pointer = new THREE.Vector2()
@@ -396,7 +423,6 @@ export function Lanyard({
         const lastJoint = joints[numJoints - 1]
         targetPos.copy(planeIntersect).add(dragOffset)
 
-        // Wide screen drag boundary limits
         targetPos.x = Math.max(-5.5, Math.min(5.5, targetPos.x))
         targetPos.y = Math.max(-2.5, Math.min(1.6, targetPos.y))
 
@@ -436,7 +462,7 @@ export function Lanyard({
     window.addEventListener('touchmove', onPointerMove, { passive: true })
     window.addEventListener('touchend', onPointerUp)
 
-    // 8. Continuous Physics Loop
+    // Continuous Physics Loop
     let animId: number
     const gravity = new THREE.Vector3(0, -9.8, 0)
     const damping = 0.98
@@ -493,7 +519,7 @@ export function Lanyard({
 
     animate()
 
-    // 9. Full-Width Responsive Resize
+    // Full-Width Responsive Resize
     const handleResize = () => {
       if (!container) return
       const w = container.clientWidth || window.innerWidth || 1200
@@ -522,7 +548,7 @@ export function Lanyard({
 
   return (
     <div className={`relative w-full h-[620px] sm:h-[720px] mx-auto flex flex-col items-center justify-start select-none touch-none overflow-hidden ${className}`}>
-      {/* Three.js Hardware Accelerated WebGL Canvas (Full Width & Height) */}
+      {/* Three.js Hardware Accelerated WebGL Canvas */}
       <div ref={mountRef} className="w-full h-full" />
 
       {/* Tension Pull Indicator & Visual Prompt */}
@@ -530,7 +556,7 @@ export function Lanyard({
         {isUnlockedState ? (
           <div className="inline-flex items-center gap-2 rounded-full bg-[#2f7f78] border border-[#5eead4] px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_35px_rgba(94,234,212,0.95)] animate-pulse">
             <CheckCircle2 className="w-4 h-4 text-[#5eead4]" />
-            Xác Thực Thành Công ➔ Đang Vào Bàn Học...
+            {texts.granted}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2.5">
@@ -544,7 +570,7 @@ export function Lanyard({
 
             <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#5eead4] drop-shadow-[0_0_12px_rgba(94,234,212,0.8)]">
               <ArrowDown className={`w-4 h-4 ${isHovered ? 'animate-bounce' : ''}`} />
-              Kéo thẻ xuống để vào Bàn Học
+              {texts.promptPull}
             </div>
           </div>
         )}

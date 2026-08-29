@@ -3,14 +3,21 @@
 import { useRef, useEffect, useState } from "react"
 import Link from "next/link"
 import { motion, useScroll, useTransform } from "motion/react"
-import { Zap, Cpu, Sparkles, Brain, Award, ArrowRight, CheckCircle2 } from "lucide-react"
+import { Zap, Sparkles, Brain, ArrowRight, CheckCircle2, Cpu } from "lucide-react"
+import { landingLocales, type LandingLang } from "@/components/landing/landing-locales"
 
-export function LingoShowcase() {
+interface LingoShowcaseProps {
+  lang?: LandingLang
+}
+
+export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const v1Ref = useRef<HTMLVideoElement | null>(null)
   const v2Ref = useRef<HTMLVideoElement | null>(null)
   const [activeVideo, setActiveVideo] = useState<1 | 2>(1)
   const crossfadeTriggeredRef = useRef(false)
+
+  const t = landingLocales[lang]?.showcase || landingLocales.vi.showcase
 
   // 🎬 Seamless Video Loop Cross-fade Engine
   useEffect(() => {
@@ -55,7 +62,6 @@ export function LingoShowcase() {
     offset: ["start end", "end start"],
   })
 
-  // Smooth cinematic scale on scroll
   const maskScale = useTransform(scrollYProgress, [0.15, 0.52], [3.8, 1])
   const videoScale = useTransform(scrollYProgress, [0.15, 0.52], [1.12, 1.02])
 
@@ -63,12 +69,12 @@ export function LingoShowcase() {
     <section
       ref={sectionRef}
       id="showcase"
-      className="relative z-20 w-screen overflow-x-hidden bg-[oklch(20%_0.08_280)] pt-8 pb-24"
+      className="relative z-20 w-full max-w-full overflow-x-hidden bg-[oklch(20%_0.08_280)] pt-[62px] pb-24"
     >
       {/* Background ambient lighting */}
       <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[900px] rounded-full bg-[radial-gradient(circle,_rgba(72,201,176,0.15)_0%,_transparent_70%)] blur-[140px]" />
 
-      {/* Top Header (Centered Container) */}
+      {/* Top Header */}
       <div className="mx-auto max-w-7xl px-6 text-center mb-14">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -78,7 +84,7 @@ export function LingoShowcase() {
           className="inline-flex items-center gap-2 rounded-full border border-[#48c9b0]/30 bg-black/60 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-[#5eead4] backdrop-blur-md shadow-[0_0_20px_rgba(72,201,176,0.2)] mb-4"
         >
           <Cpu className="h-3.5 w-3.5 text-[#5eead4] animate-pulse" />
-          Kiến Trúc Đột Phá Điểm Số
+          {t.tag}
         </motion.div>
 
         <motion.h2
@@ -88,13 +94,12 @@ export function LingoShowcase() {
           transition={{ duration: 0.8, delay: 0.1 }}
           className="heading-glow text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white"
         >
-          Sức Mạnh Tư Duy & Công Nghệ AI
+          {t.title}
         </motion.h2>
       </div>
 
       {/* 🎬 1. Full-Width Edge-to-Edge Video Cutout Mask Showcase */}
-      <div className="relative w-screen h-[55vh] sm:h-[70vh] md:h-[82vh] overflow-hidden bg-[oklch(20%_0.08_280)] mb-20">
-        {/* Base Full-Width Video Dual Layers */}
+      <div className="relative w-full max-w-full h-[220px] sm:h-[280px] md:h-[340px] overflow-hidden bg-[oklch(20%_0.08_280)] mb-5">
         <motion.div style={{ scale: videoScale }} className="absolute inset-0 h-full w-full">
           <video
             ref={v1Ref}
@@ -117,16 +122,11 @@ export function LingoShowcase() {
           />
         </motion.div>
 
-        {/* Full-Width SVG Cutout Mask Overlay */}
         <motion.div
           style={{ scale: maskScale }}
           className="absolute inset-0 flex items-center justify-center pointer-events-none origin-center will-change-transform"
         >
-          <svg
-            viewBox="0 0 1920 800"
-            preserveAspectRatio="xMidYMid slice"
-            className="h-full w-full"
-          >
+          <svg viewBox="0 0 1920 340" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
             <defs>
               <mask id="lingo-cutout-mask" x="0" y="0" width="100%" height="100%">
                 <rect x="0" y="0" width="100%" height="100%" fill="white" />
@@ -136,7 +136,7 @@ export function LingoShowcase() {
                     y="50%"
                     textAnchor="middle"
                     dominantBaseline="central"
-                    fontSize="180"
+                    fontSize="190"
                     fontWeight="900"
                     letterSpacing="0.08em"
                     fontFamily="system-ui, -apple-system, sans-serif"
@@ -158,39 +158,39 @@ export function LingoShowcase() {
         </motion.div>
       </div>
 
-      {/* 📊 2. Narrative Content & Performance Columns (Centered Container) */}
+      {/* 📊 2. Narrative Content & Performance Columns */}
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Narrative */}
           <div className="lg:col-span-7 space-y-6 text-left">
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-tight">
-              Tối ưu hóa học tập bằng khoa học não bộ, <span className="text-[#5eead4]">nói không với học vẹt.</span>
+              {t.heading} <span className="text-[#5eead4]">{t.headingHighlight}</span>
             </h3>
             <p className="text-base sm:text-lg text-white/70 leading-relaxed font-light">
-              LingoSphere kết hợp thuật toán lặp lại ngắt quãng Spaced Repetition SM-2 và mô hình AI Whisper STT nhận diện ngữ điệu, giúp bạn ghi nhớ từ vựng vĩnh viễn và phát âm chuẩn bản xứ chỉ sau 30 ngày.
+              {t.desc}
             </p>
 
             <ul className="space-y-3.5 pt-2 text-sm sm:text-base text-white/80">
               <li className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 text-[#48c9b0] shrink-0" />
-                <span>Phân tích ngữ cảnh và cấu trúc câu thông minh theo tư duy LingoThinking.</span>
+                <span>{t.bullet1}</span>
               </li>
               <li className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 text-[#48c9b0] shrink-0" />
-                <span>Gia sư AI Hybrid đồng hành giải đáp thắc mắc và sửa lỗi chi tiết 24/7.</span>
+                <span>{t.bullet2}</span>
               </li>
               <li className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 text-[#48c9b0] shrink-0" />
-                <span>Bộ đề thi TOEIC Full Test 200 câu với thuật toán chấm điểm ETS chuẩn quốc tế.</span>
+                <span>{t.bullet3}</span>
               </li>
             </ul>
 
             <div className="pt-4">
               <Link
-                href="/courses"
+                href="/home"
                 className="inline-flex items-center gap-3 rounded-2xl border border-[#48c9b0]/50 bg-[#2f7f78]/30 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_25px_rgba(72,201,176,0.3)] hover:scale-105 hover:bg-[#2f7f78] transition-all cursor-pointer"
               >
-                Khám Phá Các Khóa Học <ArrowRight className="h-4 w-4" />
+                {t.btnTry} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -199,10 +199,10 @@ export function LingoShowcase() {
           <div className="lg:col-span-5 grid grid-cols-2 gap-4">
             <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-left shadow-lg hover:border-[#48c9b0]/40 transition-colors">
               <div className="flex items-center gap-2 text-[#48c9b0] mb-3 font-mono text-xs font-bold">
-                <Brain className="h-4 w-4" /> TRÍ NHỚ SRS
+                <Brain className="h-4 w-4" /> {lang === "vi" ? "TRÍ NHỚ SRS" : "SRS RETENTION"}
               </div>
               <div className="text-3xl sm:text-4xl font-black text-white">4.2x</div>
-              <div className="text-xs text-white/60 mt-1.5">Tăng tốc độ nhớ dài hạn</div>
+              <div className="text-xs text-white/60 mt-1.5">{lang === "vi" ? "Tăng tốc độ nhớ dài hạn" : "Faster memory consolidation"}</div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-left shadow-lg hover:border-[#48c9b0]/40 transition-colors">
@@ -210,7 +210,7 @@ export function LingoShowcase() {
                 <Zap className="h-4 w-4" /> GROQ LPU
               </div>
               <div className="text-3xl sm:text-4xl font-black text-white">0.3s</div>
-              <div className="text-xs text-white/60 mt-1.5">Tốc độ phản hồi Gia sư AI</div>
+              <div className="text-xs text-white/60 mt-1.5">{lang === "vi" ? "Tốc độ phản hồi Gia sư AI" : "AI Tutor response latency"}</div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-left shadow-lg hover:border-[#48c9b0]/40 transition-colors">
@@ -218,15 +218,15 @@ export function LingoShowcase() {
                 <Sparkles className="h-4 w-4" /> WHISPER STT
               </div>
               <div className="text-3xl sm:text-4xl font-black text-white">99.2%</div>
-              <div className="text-xs text-white/60 mt-1.5">Độ nhạy nhận diện âm vị</div>
+              <div className="text-xs text-white/60 mt-1.5">{lang === "vi" ? "Độ chuẩn xác âm vị" : "Phoneme recognition accuracy"}</div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-left shadow-lg hover:border-[#48c9b0]/40 transition-colors">
               <div className="flex items-center gap-2 text-[#48c9b0] mb-3 font-mono text-xs font-bold">
-                <Award className="h-4 w-4" /> ETS TOEIC
+                <Brain className="h-4 w-4" /> ETS 990
               </div>
-              <div className="text-3xl sm:text-4xl font-black text-white">990</div>
-              <div className="text-xs text-white/60 mt-1.5">Engine chấm điểm chuẩn ETS</div>
+              <div className="text-3xl sm:text-4xl font-black text-white">+240</div>
+              <div className="text-xs text-white/60 mt-1.5">{lang === "vi" ? "Điểm tăng trung bình / 60 ngày" : "Avg. score jump in 60 days"}</div>
             </div>
           </div>
         </div>
