@@ -18,6 +18,7 @@ import { ToeicModeSelector, type PracticeMode } from '@/components/toeic/ToeicMo
 import { ToeicExamResult, type ExamResultMetrics } from '@/components/toeic/ToeicExamResult'
 import { ToeicQuestionCard } from '@/components/toeic/ToeicQuestionCard'
 import { ToeicQuestionNav } from '@/components/toeic/ToeicQuestionNav'
+import { Analytics } from '@/lib/posthog'
 
 interface ExamState {
   mode: PracticeMode
@@ -273,6 +274,15 @@ export function ToeicExamPage() {
     if (!state.submitted) return
 
     const res = calculateResults()
+    Analytics.examSubmitted({
+      examId: (examId as string) || 'toeic-full-test',
+      examTitle: 'TOEIC Practice Test',
+      totalScore: res.estimatedTotal,
+      listeningScore: res.estimatedListening,
+      readingScore: res.estimatedReading,
+      mode: state.timedMode ? 'timed' : 'practice',
+    })
+
     setIsLoadingRecommendations(true)
 
     const weakSkills: string[] = []
@@ -299,7 +309,7 @@ export function ToeicExamPage() {
       .finally(() => {
         setIsLoadingRecommendations(false)
       })
-  }, [state.submitted, calculateResults])
+  }, [state.submitted, calculateResults, examId])
 
   useEffect(() => {
     if (!state.started || state.submitted || !state.timedMode) return
