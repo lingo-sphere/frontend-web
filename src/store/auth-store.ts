@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { authService } from '@/services/auth.service'
 import { API_CONFIG } from '@/config/api.config'
-import type { User, LoginPayload, RegisterPayload } from '@/types/api.types'
+import type { User, LoginPayload, RegisterPayload, SocialLoginPayload } from '@/types/api.types'
 
 interface AuthState {
   user: User | null
@@ -10,6 +10,7 @@ interface AuthState {
   error: string | null
   setUser: (user: User | null) => void
   login: (payload: LoginPayload) => Promise<void>
+  socialLogin: (payload: SocialLoginPayload) => Promise<void>
   register: (payload: RegisterPayload) => Promise<void>
   verifyEmailOtp: (payload: { email: string; otp: string }) => Promise<void>
   resendVerificationOtp: (payload: { email: string }) => Promise<void>
@@ -41,6 +42,22 @@ export const useAuthStore = create<AuthState>((set) => ({
       })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Đăng nhập không thành công'
+      set({ error: msg, isLoading: false })
+      throw err
+    }
+  },
+
+  socialLogin: async (payload) => {
+    set({ isLoading: true, error: null })
+    try {
+      const res = await authService.socialLogin(payload)
+      set({
+        user: res.user,
+        isAuthenticated: true,
+        isLoading: false,
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Đăng nhập qua mạng xã hội không thành công'
       set({ error: msg, isLoading: false })
       throw err
     }

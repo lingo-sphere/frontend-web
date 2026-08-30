@@ -74,6 +74,11 @@ export interface ResetPasswordPayload {
   new_password: string
 }
 
+export interface SocialLoginPayload {
+  provider: 'GOOGLE' | 'FACEBOOK'
+  token: string
+}
+
 export interface Lesson {
   id: string
   _id?: string

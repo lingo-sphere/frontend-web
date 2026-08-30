@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import '@/i18n'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/contexts/AppContext'
@@ -8,6 +9,8 @@ import { useAuthStore } from '@/store/auth-store'
 import { API_CONFIG } from '@/config/api.config'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
+
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '790440593251-mpum0jf5od7blmm2p20qi0p5ulc1gs9q.apps.googleusercontent.com'
 
 interface AppClientProviderProps {
   children: ReactNode
@@ -116,34 +119,36 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   }, [isAuthenticated, setUser])
 
   return (
-    <AppProvider>
-      <TooltipProvider>
-        {children}
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <AppProvider>
+        <TooltipProvider>
+          {children}
 
-        <Modal
-          open={Boolean(kickoutMessage)}
-          onClose={() => setKickoutMessage(null)}
-          title="Đăng Nhập Từ Thiết Bị Khác"
-          size="sm"
-          footer={
-            <Button
-              className="w-full bg-primary font-semibold text-white shadow-md hover:bg-primary/90"
-              onClick={() => {
-                setKickoutMessage(null)
-                if (typeof window !== 'undefined') {
-                  window.location.href = '/'
-                }
-              }}
-            >
-              Đã hiểu & Đăng nhập lại
-            </Button>
-          }
-        >
-          <div className="flex flex-col items-center gap-3 py-2 text-center">
-            <p className="text-sm text-text-secondary">{kickoutMessage}</p>
-          </div>
-        </Modal>
-      </TooltipProvider>
-    </AppProvider>
+          <Modal
+            open={Boolean(kickoutMessage)}
+            onClose={() => setKickoutMessage(null)}
+            title="Đăng Nhập Từ Thiết Bị Khác"
+            size="sm"
+            footer={
+              <Button
+                className="w-full bg-primary font-semibold text-white shadow-md hover:bg-primary/90"
+                onClick={() => {
+                  setKickoutMessage(null)
+                  if (typeof window !== 'undefined') {
+                    window.location.href = '/'
+                  }
+                }}
+              >
+                Đã hiểu & Đăng nhập lại
+              </Button>
+            }
+          >
+            <div className="flex flex-col items-center gap-3 py-2 text-center">
+              <p className="text-sm text-text-secondary">{kickoutMessage}</p>
+            </div>
+          </Modal>
+        </TooltipProvider>
+      </AppProvider>
+    </GoogleOAuthProvider>
   )
 }

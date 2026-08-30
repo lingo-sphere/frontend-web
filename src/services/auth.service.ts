@@ -1,11 +1,22 @@
 import { api } from '@/services/api-client'
 import { apiClient } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
-import type { User, LoginPayload, RegisterPayload, AuthResponse } from '@/types/api.types'
+import type { User, LoginPayload, RegisterPayload, AuthResponse, SocialLoginPayload } from '@/types/api.types'
 
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, payload)
+    if (typeof window !== 'undefined' && res.access_token) {
+      localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      if (res.user) {
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
+      }
+    }
+    return res
+  },
+
+  async socialLogin(payload: SocialLoginPayload): Promise<AuthResponse> {
+    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.SOCIAL_LOGIN, payload)
     if (typeof window !== 'undefined' && res.access_token) {
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'
 import { Icon } from '@/components/icons/icon-map'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +30,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
 
   const {
     login,
+    socialLogin,
     register,
     verifyEmailOtp,
     resendVerificationOtp,
@@ -147,6 +149,24 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
     } catch {
       // Error handled by store
     }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) return
+    try {
+      clearError()
+      await socialLogin({
+        provider: 'GOOGLE',
+        token: credentialResponse.credential,
+      })
+      onClose()
+    } catch {
+      // Error handled by store
+    }
+  }
+
+  const handleGoogleError = () => {
+    // Google login dialog dismissed
   }
 
   if (!isOpen) return null
@@ -468,6 +488,31 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
                 'Lưu mật khẩu mới'
               )}
             </Button>
+
+            {(mode === 'login' || mode === 'register') && (
+              <>
+                <div className="relative my-3 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-surface-border" />
+                  </div>
+                  <span className="relative bg-surface px-3 text-xs text-text-tertiary">
+                    Hoặc tiếp tục với
+                  </span>
+                </div>
+
+                <div className="flex justify-center w-full">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    theme="outline"
+                    size="large"
+                    shape="pill"
+                    text={mode === 'login' ? 'signin_with' : 'signup_with'}
+                    width="100%"
+                  />
+                </div>
+              </>
+            )}
 
             {(mode === 'verify_email_otp' || mode === 'forgot_password' || mode === 'reset_password') && (
               <button

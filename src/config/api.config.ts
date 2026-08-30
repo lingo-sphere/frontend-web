@@ -21,6 +21,7 @@ export const API_CONFIG = {
       CHANGE_PASSWORD: (userId: string) => `/auth/change-password/${userId}`,
       FORGOT_PASSWORD: '/auth/forgot-password',
       RESET_PASSWORD: '/auth/reset-password',
+      SOCIAL_LOGIN: '/auth/social-login',
     },
 
     USERS: {
