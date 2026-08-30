@@ -13,7 +13,6 @@ import { SpecularButton } from "@/components/ui/SpecularButton"
 import { Lanyard } from "@/components/ui/Lanyard"
 import { LanguageSkewSwitch } from "@/components/ui/LanguageSkewSwitch"
 import { useLandingLocale } from "@/components/landing/landing-locales"
-import { BestsellersBookShowcase } from "@/components/landing/BestsellersBookShowcase"
 
 function StatCounter({ target, suffix = "", decimals = 0 }: { target: number; suffix?: string; decimals?: number }) {
   const nodeRef = useRef<HTMLSpanElement | null>(null)
@@ -614,57 +613,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* 📚 4.5. ThreeUI 3D Bestsellers Book Showcase */}
-        <section className="relative px-4 sm:px-6 md:px-12 pt-16 pb-20 w-full max-w-7xl mx-auto z-20">
-          <div className="text-center max-w-3xl mx-auto mb-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 rounded-full border border-[#c3a47b]/30 bg-[#29251d]/70 px-4 py-1.5 text-[10.5px] sm:text-[11.5px] font-bold uppercase tracking-[0.25em] text-[#dbc39c] backdrop-blur-md shadow-[0_0_20px_rgba(195,164,123,0.2)] mb-4 select-none"
-            >
-              <span className="h-2 w-2 rounded-full bg-[#c3a47b] shadow-[0_0_8px_#c3a47b] animate-pulse" />
-              {lang === "vi" ? "THƯ VIỆN SÁCH & TÀI LIỆU 3D ĐỘC QUYỀN" : "EXCLUSIVE 3D BESTSELLERS LIBRARY"}
-            </motion.div>
-
-            <motion.h2
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="font-serif text-3xl sm:text-4xl md:text-5xl font-light italic text-[#eee2ca] drop-shadow-[0_2px_15px_rgba(0,0,0,0.8)]"
-            >
-              {lang === "vi" ? (
-                <>
-                  Khám Phá <span className="text-[#dbc39c] font-normal not-italic">Tủ Sách Tri Thức 3D</span> Sống Động
-                </>
-              ) : (
-                <>
-                  Explore Our <span className="text-[#dbc39c] font-normal not-italic">Interactive 3D</span> Library
-                </>
-              )}
-            </motion.h2>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 30 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <BestsellersBookShowcase
-              headingFont="iowan-old-style"
-              bodyFont="iowan-old-style"
-              headingWeight="500"
-              bodyWeight="400"
-              primaryColor="#c3a47b"
-              headingSize={325}
-              bodySize={17}
-              headingLetterSpacing={-0.085}
-            />
-          </motion.div>
-        </section>
 
         {/* 📜 5. Triết Lý & Thống Kê Điểm Số */}
         <section id="manifesto" className="relative overflow-hidden py-40">
