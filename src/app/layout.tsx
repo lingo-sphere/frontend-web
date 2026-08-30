@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Newsreader } from 'next/font/google'
 import './globals.css'
 import { AppClientProvider } from '@/components/providers/AppClientProvider'
+import { PostHogProvider } from '@/components/providers/PostHogProvider'
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -77,7 +78,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${inter.variable} ${newsreader.variable} h-full antialiased`} data-theme="light" suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
-        <AppClientProvider>{children}</AppClientProvider>
+        <PostHogProvider>
+          <AppClientProvider>{children}</AppClientProvider>
+        </PostHogProvider>
       </body>
     </html>
   )
