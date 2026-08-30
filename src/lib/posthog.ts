@@ -1,10 +1,21 @@
 import posthog from 'posthog-js'
 
 export const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
-
 export const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
 let isInitialized = false
+
+// Danh sách các trang học tập quan trọng cần ghi hình Session Replay
+const IMPORTANT_LEARNING_PATHS = [
+  '/exam',
+  '/practice',
+  '/vocabulary',
+  '/course',
+  '/dictation',
+  '/ai-tutor',
+  '/lessons',
+  '/challenge',
+]
 
 export function initPostHog(): void {
   if (typeof window === 'undefined') return
@@ -18,14 +29,20 @@ export function initPostHog(): void {
       capture_pageleave: true,
       autocapture: true,
       session_recording: {
+        // 1. Bảo vệ mật khẩu học viên
         maskAllInputs: false,
         maskInputOptions: {
           password: true,
         },
+        // 2. Bỏ qua các phiên dưới 5 giây (học viên vừa mở lên rồi tắt ngay)
+        // @ts-expect-error PostHog session recording config option
+        minimum_duration_milliseconds: 5000,
+        // 3. Che các trường nhạy cảm có class mask-private
+        maskTextSelector: '.mask-private',
       },
       loaded: () => {
         if (process.env.NODE_ENV === 'development') {
-          console.log('🚀 [PostHog] Initialized for LingoSphere Staging')
+          console.log('🚀 [PostHog] Initialized for LingoSphere Staging with Smart Session Filters')
         }
       },
     })
@@ -68,6 +85,27 @@ export function trackPageView(url: string): void {
   posthog.capture('$pageview', {
     $current_url: url,
   })
+
+  // Kiểm tra nếu là trang học tập quan trọng (TOEIC, Luyện Nghe, Từ vựng SRS, Khóa học)
+  const isImportantPage = IMPORTANT_LEARNING_PATHS.some((path) => url.toLowerCase().includes(path))
+  if (isImportantPage && typeof posthog.startSessionRecording === 'function') {
+    posthog.startSessionRecording()
+  }
+}
+
+// 🎯 Bắt lỗi & Kích hoạt ghi hình khi học viên gặp sự cố (Error-triggered Recording)
+export function trackError(errorName: string, errorDetail?: Record<string, unknown>): void {
+  if (typeof window === 'undefined' || !posthog) return
+  posthog.capture('$exception', {
+    error_name: errorName,
+    ...errorDetail,
+    occurred_at: new Date().toISOString(),
+  })
+
+  // Tự động kích hoạt ghi hình khi có lỗi phát sinh
+  if (typeof posthog.startSessionRecording === 'function') {
+    posthog.startSessionRecording()
+  }
 }
 
 // 🎯 LingoSphere Domain Specific Tracking Helpers
@@ -118,6 +156,10 @@ export const Analytics = {
     mistakesCount?: number
   }) => {
     trackEvent('dictation_completed', data)
+  },
+
+  errorOccurred: (errorName: string, detail?: Record<string, unknown>) => {
+    trackError(errorName, detail)
   },
 }
 
