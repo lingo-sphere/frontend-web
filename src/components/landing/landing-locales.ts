@@ -38,6 +38,13 @@ export const landingLocales = {
         "Gia sư AI Hybrid và Whisper STT đồng hành sửa lỗi 24/7.",
       ],
     },
+    books: {
+      tag: "Thư Viện Sách & Cẩm Nang Thực Chiến",
+      title: "Bộ Cẩm Nang & Giáo Trình Tư Duy",
+      titleHighlight: "3D Field Manuals",
+      desc: "Khám phá các cẩm nang thực chiến, bộ công cụ tư duy và phương pháp học tiếng Anh hiện đại được dựng trong không gian 3D tương tác sống động.",
+      hint: "Kéo chuột & Click để lật sách 3D",
+    },
     method: {
       title: "Hệ Phương Pháp",
       highlight: "Tư Duy Não Bộ",
@@ -201,6 +208,13 @@ export const landingLocales = {
         "Maximize long-term memory with Spaced Repetition (SRS) science.",
         "Hybrid AI Tutor and Whisper STT provide 24/7 instant feedback.",
       ],
+    },
+    books: {
+      tag: "Interactive 3D Book Showcase",
+      title: "Field Manuals & Practical Guides",
+      titleHighlight: "3D Field Manuals",
+      desc: "Explore hands-on field manuals, thinking blueprints, and modern language tools rendered in an immersive 3D interactive space.",
+      hint: "Drag & Click to explore 3D books",
     },
     method: {
       title: "Core Methodology",
