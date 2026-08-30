@@ -24,8 +24,6 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
   const triggerKickout = (message?: string) => {
     if (typeof window === 'undefined') return
-    localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-    localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
     setUser(null)
     setKickoutMessage(
       message ||
