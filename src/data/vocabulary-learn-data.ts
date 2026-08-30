@@ -403,23 +403,23 @@ export const flashcardDecks: FlashcardDeck[] = [
   },
 ]
 
-export const vocabularyItems: VocabularyItem[] = lexicalItems.map((lex, idx) => {
+export const vocabularyItems: VocabularyItem[] = lexicalItems.map((lex) => {
   const meaning = meanings.find(m => m.lexical_item_id === lex.id)
   return {
     id: lex.id,
     word: lex.word,
     word_lowercase: lex.word_lowercase,
-    pronunciation: lex.pronunciation_us || '',
+    pronunciation: lex.pronunciation_us,
     pronunciation_uk: lex.pronunciation_uk,
-    meaningVi: meaning?.definition_vi || '',
-    partOfSpeech: meaning?.part_of_speech || lex.word_type,
+    meaningVi: meaning?.definition_vi,
+    partOfSpeech: meaning?.part_of_speech ? meaning.part_of_speech : lex.word_type,
     cefrLevel: lex.cefr_level,
-    example: meaning?.examples?.[0]?.sentence_en || '',
-    exampleMeaningVi: meaning?.examples?.[0]?.sentence_vi || '',
+    example: meaning?.examples?.[0]?.sentence_en,
+    exampleMeaningVi: meaning?.examples?.[0]?.sentence_vi,
     image: getImageForWord(lex.word),
     audioUrl: lex.audio_url_us,
-    synonyms: meaning?.synonyms || [],
-    collocations: meaning?.collocations || [],
+    synonyms: meaning?.synonyms,
+    collocations: meaning?.collocations,
   }
 })
 

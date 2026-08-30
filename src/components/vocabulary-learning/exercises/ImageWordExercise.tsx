@@ -103,7 +103,7 @@ export function ImageWordExercise({ word, isAnswered, onAnswer, onNext, onSpeakW
       <div className="mb-6 w-full text-center">
         <p className="mb-2 text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Ví dụ:' : 'Example:'}</p>
         <p className="text-[16px] italic leading-relaxed text-text-primary">
-          {word.example.replace(/\b\w+\b/, (m: string) => m === word.word ? `*****` : m)}
+          {word.example ? word.example.replace(/\b\w+\b/, (m: string) => m === word.word ? `*****` : m) : ''}
         </p>
         <p className="mt-2 text-[14px] text-text-secondary">{word.exampleMeaningVi}</p>
       </div>

@@ -22,7 +22,7 @@ export function ContextExercise({ word, isAnswered, onAnswer, onNext, onSpeakSen
   const [isChecked, setIsChecked] = useState(false)
 
   const getSentenceWithBlank = () => {
-    const sentence = word.example
+    const sentence = word.example ? word.example : ''
     const regex = new RegExp(word.word, 'gi')
     return sentence.replace(regex, '______')
   }

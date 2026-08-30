@@ -35,11 +35,11 @@ export function ReverseMultipleChoiceExercise({
     return [correctOption, ...distractors].sort(() => Math.random() - 0.5)
   }, [word, allWords])
 
-  const handleSelect = (meaning: string, wordId: string) => {
+  const handleSelect = (meaning: string | undefined, wordId: string) => {
     if (isAnswered) return
     const isCorrect = wordId === word.id
-    setSelectedAnswer(meaning)
-    onAnswer(isCorrect, meaning)
+    setSelectedAnswer(meaning ? meaning : '')
+    onAnswer(isCorrect, meaning ? meaning : '')
   }
 
   const isCorrect = selectedAnswer === word.meaningVi

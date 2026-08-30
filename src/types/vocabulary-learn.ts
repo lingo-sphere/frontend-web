@@ -199,19 +199,19 @@ export interface LearningStatistics {
 export interface VocabularyItem {
   id: string
   word: string
-  word_lowercase: string
-  pronunciation: string 
+  word_lowercase?: string
+  pronunciation?: string
   pronunciation_uk?: string
-  meaningVi: string
-  partOfSpeech: string
+  meaningVi?: string
+  partOfSpeech?: string
   cefrLevel?: string
-  example: string
+  example?: string
   exampleMeaningVi?: string
-  image?: string 
+  image?: string
   audioUrl?: string
-  synonyms: string[]
-  collocations: string[]
-  isNew?: boolean 
+  synonyms?: string[]
+  collocations?: string[]
+  isNew?: boolean
 }
 
 export interface VocabularyDeck {

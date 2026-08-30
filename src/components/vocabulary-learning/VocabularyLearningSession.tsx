@@ -164,7 +164,7 @@ export function VocabularyLearningSession({ deck, onComplete, onExit, onAction }
       onAnswer: handleAnswer,
       onNext: handleNext,
       onSpeakWord: () => speakWord(currentWord.word),
-      onSpeakSentence: () => speakSentence(currentWord.example),
+      onSpeakSentence: () => speakSentence(currentWord.example ? currentWord.example : ''),
     }
 
     switch (currentMode) {
