@@ -54,6 +54,20 @@ export default function CoursesCatalogPage() {
             else if (rawLevel === 'ADVANCED') levelDisplay = 'Nâng cao (Advanced)'
             else if (rawLevel) levelDisplay = rawLevel
 
+            const rawPrice = Number(raw.price ?? 0)
+            const rawDiscount = Number(raw.discount_price ?? 0)
+            let finalPrice = rawPrice
+            let originalPrice = Number(raw.original_price ?? 0)
+
+            if (rawDiscount > 0 && rawPrice > 0 && rawPrice > rawDiscount) {
+              finalPrice = rawDiscount
+              originalPrice = rawPrice
+            } else if (rawDiscount > 0 && rawPrice === 0) {
+              finalPrice = rawDiscount
+            } else if (rawPrice > 0 && originalPrice === 0 && rawDiscount > rawPrice) {
+              originalPrice = rawDiscount
+            }
+
             return {
               id: String(c.id || raw._id || c.slug || ''),
               slug: c.slug,
@@ -72,11 +86,11 @@ export default function CoursesCatalogPage() {
               chapters:
                 Number(raw.total_modules) ||
                 (Array.isArray(c.chapters) ? c.chapters.length : 0),
-              students: Number(raw.enrollments) || 0,
-              rating: Number(raw.rating_avg) || 5.0,
-              ratingCount: Number(raw.rating_count) || 0,
-              price: Number(raw.price) || 0,
-              discountPrice: Number(raw.discount_price) || 0,
+              students: Number(raw.students_count || raw.enrollments || 0),
+              rating: Number(raw.rating || raw.rating_avg || 5.0),
+              ratingCount: Number(raw.rating_count || raw.reviews_count || 0),
+              price: finalPrice,
+              discountPrice: originalPrice > finalPrice ? originalPrice : undefined,
               targetScore: Number(raw.target_score) || 0,
               badge: is4Skills ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng',
               progress: 0,
@@ -174,7 +188,7 @@ export default function CoursesCatalogPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6 items-stretch">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
               {filteredCourses.map((course) => (
                 <CourseCard
                   key={course.id}
