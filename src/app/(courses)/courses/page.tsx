@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from '@/lib/navigation'
+import { useNavigate, useSearchParams } from '@/lib/navigation'
 import { BookOpen } from 'lucide-react'
 import { Layout } from '@/components/layout/Layout'
 import { courseService } from '@/services/course.service'
 import type { Course } from '@/types/api.types'
 import type { CourseCardData, CourseTabType } from '@/types/course'
-import { CourseCatalogHeader } from '@/components/course/CourseCatalogHeader'
 import { CourseSearchBar } from '@/components/course/CourseSearchBar'
 import { CourseScheduleBanner } from '@/components/course/CourseScheduleBanner'
 import { CourseScheduleModal } from '@/components/course/CourseScheduleModal'
@@ -19,9 +18,13 @@ export default function CoursesCatalogPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
+  const searchParams = useSearchParams()
   const { items: wishlistItems, toggleItem, isInWishlist } = useWishlistStore()
 
-  const [activeTab, setActiveTab] = useState<CourseTabType>('all')
+  const tabParam = searchParams.get('tab')
+  const activeTab: CourseTabType =
+    tabParam === 'my-courses' ? 'my-courses' : tabParam === 'wishlist' ? 'wishlist' : 'all'
+
   const [courses, setCourses] = useState<CourseCardData[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -146,14 +149,32 @@ export default function CoursesCatalogPage() {
   return (
     <Layout>
       <div className="min-h-screen bg-background text-text-primary">
-        <CourseCatalogHeader
-          totalCourses={courses.length}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          wishlistCount={wishlistItems.length}
-        />
-
         <main className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary">
+                {activeTab === 'my-courses'
+                  ? (isVi ? 'Khóa học của tôi' : 'My Courses')
+                  : activeTab === 'wishlist'
+                  ? (isVi ? 'Khóa học yêu thích' : 'Liked Courses')
+                  : (isVi ? 'Tất cả khóa học' : 'All Courses')}
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-text-secondary">
+                {activeTab === 'my-courses'
+                  ? (isVi ? 'Tiếp tục hành trình học tập và hoàn thành các bài giảng của bạn.' : 'Continue your enrolled courses and finish lessons.')
+                  : activeTab === 'wishlist'
+                  ? (isVi ? 'Danh sách các khóa học bạn đã lưu lại để học sau.' : 'Your saved wishlist courses for future learning.')
+                  : (isVi ? 'Khám phá các khóa học TOEIC & Tiếng Anh giao tiếp theo lộ trình chuẩn ETS.' : 'Explore TOEIC & Communication courses with ETS standard.')}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 self-start sm:self-auto rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary">
+              <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span>
+                {filteredCourses.length} {isVi ? 'Khóa học' : 'Courses'}
+              </span>
+            </div>
+          </div>
+
           {showScheduleBanner && (
             <CourseScheduleBanner
               onOpenModal={() => setShowScheduleModal(true)}

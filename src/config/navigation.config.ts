@@ -6,6 +6,7 @@ export interface NavItem {
   path: string
   badge?: string
   badgeColor?: string
+  children?: NavItem[]
 }
 
 export interface NavGroup {
@@ -22,7 +23,18 @@ export const NAV_GROUPS: NavGroup[] = [
     titleEn: 'Learning',
     items: [
       { id: 'home', labelVi: 'Tổng quan', labelEn: 'Dashboard', icon: 'home', path: '/home' },
-      { id: 'courses', labelVi: 'Khóa học', labelEn: 'Courses', icon: 'book', path: '/courses' },
+      {
+        id: 'courses',
+        labelVi: 'Khóa học',
+        labelEn: 'Courses',
+        icon: 'book',
+        path: '/courses',
+        children: [
+          { id: 'courses-all', labelVi: 'Tất cả khóa học', labelEn: 'All courses', icon: 'grid', path: '/courses?tab=all' },
+          { id: 'courses-my', labelVi: 'Khóa học của tôi', labelEn: 'My courses', icon: 'graduation', path: '/courses?tab=my-courses' },
+          { id: 'courses-liked', labelVi: 'Khóa học yêu thích', labelEn: 'Liked courses', icon: 'heart', path: '/courses?tab=wishlist' },
+        ],
+      },
       { id: 'vocabulary', labelVi: 'Từ vựng (SRS)', labelEn: 'Vocabulary', icon: 'cards', path: '/vocabulary' },
       { id: 'toeic', labelVi: 'Đề thi TOEIC', labelEn: 'TOEIC Exam', icon: 'fileText', path: '/toeic', badge: 'ETS', badgeColor: 'bg-primary' },
     ],
