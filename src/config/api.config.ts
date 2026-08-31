@@ -37,6 +37,14 @@ export const API_CONFIG = {
       MY_SUBSCRIPTION: '/users/subscriptions/my',
     },
 
+    SUBSCRIPTION: {
+      PLANS: '/users/subscriptions/plans',
+      SUBSCRIBE: '/users/subscriptions/subscribe',
+      MY: '/users/subscriptions/my',
+      CANCEL: '/users/subscriptions/cancel',
+      HISTORY: '/users/subscriptions/history',
+    },
+
     COURSES: {
       LIST: '/courses',
       RECOMMENDATIONS: '/courses/recommendations',

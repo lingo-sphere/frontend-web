@@ -26,6 +26,9 @@ export interface User {
   target_score?: number
   xp?: number
   streak_count?: number
+  is_premium?: boolean
+  subscription_expires_at?: string
+  subscription_plan?: string
   created_at?: string
   updated_at?: string
 }

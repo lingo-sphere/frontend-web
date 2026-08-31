@@ -12,6 +12,7 @@ import {
   Star,
   Check,
   Loader2,
+  Crown,
 } from 'lucide-react'
 import type { CourseCardData } from '@/types/course'
 import { useAuthStore } from '@/store/auth-store'
@@ -40,13 +41,18 @@ export function CourseCard({
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated } = useAuthStore()
   const { addToCart, isInCart } = useCartStore()
   const [isAdding, setIsAdding] = useState(false)
   const isAlreadyInCart = isInCart(course.id)
+  const isPremiumUser = Boolean(user?.is_premium)
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (isPremiumUser) {
+      navigate(`/course/${course.id}`)
+      return
+    }
     if (!isAuthenticated) {
       alert(isVi ? 'Vui lòng đăng nhập để thêm khóa học vào giỏ hàng!' : 'Please sign in to add courses to your cart!')
       return
@@ -83,6 +89,13 @@ export function CourseCard({
               <Play size={18} className="ml-1 fill-[#2d2f31]" />
             </div>
           </div>
+
+          {isPremiumUser && (
+            <div className="absolute left-2.5 top-2.5 z-10 flex items-center gap-1 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-md">
+              <Crown size={11} />
+              <span>{isVi ? 'ĐÃ MỞ KHÓA' : 'UNLOCKED'}</span>
+            </div>
+          )}
 
           <div className="absolute right-2.5 top-2.5 z-10">
             <button
@@ -190,40 +203,59 @@ export function CourseCard({
 
       <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between">
         <div className="flex items-baseline gap-2">
-          <span className="text-[15px] font-extrabold text-text-primary">
-            {course.price > 0
-              ? `₫${course.price.toLocaleString('vi-VN')}`
-              : isVi
-              ? 'Miễn phí'
-              : 'Free'}
-          </span>
-          {course.discountPrice && course.discountPrice > course.price ? (
-            <span className="text-xs text-text-tertiary line-through font-normal">
-              ₫{course.discountPrice.toLocaleString('vi-VN')}
+          {isPremiumUser ? (
+            <span className="text-[13px] font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+              <Crown size={14} className="fill-amber-500 text-amber-500" />
+              {isVi ? 'Gói Premium VIP' : 'Premium VIP'}
             </span>
-          ) : null}
+          ) : (
+            <>
+              <span className="text-[15px] font-extrabold text-text-primary">
+                {course.price > 0
+                  ? `₫${course.price.toLocaleString('vi-VN')}`
+                  : isVi
+                  ? 'Miễn phí'
+                  : 'Free'}
+              </span>
+              {course.discountPrice && course.discountPrice > course.price ? (
+                <span className="text-xs text-text-tertiary line-through font-normal">
+                  ₫${course.discountPrice.toLocaleString('vi-VN')}
+                </span>
+              ) : null}
+            </>
+          )}
         </div>
 
-        <button
-          onClick={handleAddToCart}
-          disabled={isAdding}
-          className={`rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
-            isAlreadyInCart
-              ? 'border-emerald-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
-              : 'border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30'
-          }`}
-        >
-          {isAdding ? (
-            <Loader2 size={13} className="animate-spin" />
-          ) : isAlreadyInCart ? (
-            <>
-              <Check size={13} />
-              <span>{isVi ? 'Đã trong giỏ' : 'In Cart'}</span>
-            </>
-          ) : (
-            <span>Add to cart</span>
-          )}
-        </button>
+        {isPremiumUser ? (
+          <button
+            onClick={handleAddToCart}
+            className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:from-amber-600 hover:to-orange-600 cursor-pointer flex items-center gap-1.5"
+          >
+            <Play size={12} className="fill-white" />
+            <span>{isVi ? 'Học ngay' : 'Learn Now'}</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            className={`rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
+              isAlreadyInCart
+                ? 'border-emerald-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
+                : 'border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30'
+            }`}
+          >
+            {isAdding ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : isAlreadyInCart ? (
+              <>
+                <Check size={13} />
+                <span>{isVi ? 'Đã trong giỏ' : 'In Cart'}</span>
+              </>
+            ) : (
+              <span>Add to cart</span>
+            )}
+          </button>
+        )}
       </div>
     </div>
   )

@@ -20,6 +20,9 @@ export interface User {
   role: 'student' | 'teacher' | 'admin'
   isVerified: boolean
   isActive: boolean
+  is_premium?: boolean
+  subscription_expires_at?: string
+  subscription_plan?: string
 
   createdAt: string
   updatedAt: string

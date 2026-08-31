@@ -125,12 +125,16 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             <span>12</span>
           </Button>
           <Button
-            className="hidden h-9 gap-2 rounded-xl border border-warning bg-gradient-to-r from-warning/20 to-warning/10 px-3 text-[12px] font-semibold text-warning hover:border-warning hover:from-warning/30 hover:to-warning/20 sm:inline-flex"
+            className={`hidden h-9 gap-2 rounded-xl border px-3 text-[12px] font-semibold sm:inline-flex ${
+              user?.is_premium
+                ? 'border-amber-500 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 hover:border-amber-600 hover:from-amber-500/30 hover:to-orange-500/30'
+                : 'border-warning bg-gradient-to-r from-warning/20 to-warning/10 text-warning hover:border-warning hover:from-warning/30 hover:to-warning/20'
+            }`}
             onClick={() => setUpgradeOpen(true)}
             variant="ghost"
           >
-            <Icon name="crown" size={16} />
-            <span>{language === 'VI' ? 'Nâng cấp' : 'Upgrade'}</span>
+            <Icon name="crown" size={16} className={user?.is_premium ? 'text-amber-500 fill-amber-500' : ''} />
+            <span>{user?.is_premium ? (language === 'VI' ? 'Premium VIP' : 'Premium VIP') : (language === 'VI' ? 'Nâng cấp' : 'Upgrade')}</span>
           </Button>
           <Tooltip>
             <TooltipTrigger asChild>
