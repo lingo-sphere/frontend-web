@@ -13,11 +13,13 @@ import { CourseSearchBar } from '@/components/course/CourseSearchBar'
 import { CourseScheduleBanner } from '@/components/course/CourseScheduleBanner'
 import { CourseScheduleModal } from '@/components/course/CourseScheduleModal'
 import { CourseCard } from '@/components/course/CourseCard'
+import { useWishlistStore } from '@/store/wishlist-store'
 
 export default function CoursesCatalogPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
+  const { items: wishlistItems, toggleItem, isInWishlist } = useWishlistStore()
 
   const [activeTab, setActiveTab] = useState<CourseTabType>('all')
   const [courses, setCourses] = useState<CourseCardData[]>([])
@@ -27,7 +29,6 @@ export default function CoursesCatalogPage() {
   const [showScheduleBanner, setShowScheduleBanner] = useState(true)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
-  const [wishlist, setWishlist] = useState<string[]>([])
 
   useEffect(() => {
     let isMounted = true
@@ -121,18 +122,19 @@ export default function CoursesCatalogPage() {
       const matchesCategory =
         selectedCategory === 'all' || c.category === selectedCategory
 
-      if (activeTab === 'wishlist') return matchesSearch && wishlist.includes(c.id)
+      if (activeTab === 'wishlist') return matchesSearch && isInWishlist(c.id)
       if (activeTab === 'my-courses') return matchesSearch && (c.progress !== undefined && c.progress >= 0)
 
       return matchesSearch && matchesCategory
     })
-  }, [courses, searchQuery, selectedCategory, activeTab, wishlist])
+  }, [courses, searchQuery, selectedCategory, activeTab, wishlistItems, isInWishlist])
 
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    )
+    const targetCourse = courses.find((c) => c.id === id)
+    if (targetCourse) {
+      toggleItem(targetCourse)
+    }
     setActiveMenuId(null)
   }
 
@@ -148,7 +150,7 @@ export default function CoursesCatalogPage() {
           totalCourses={courses.length}
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          wishlistCount={wishlist.length}
+          wishlistCount={wishlistItems.length}
         />
 
         <main className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-8">
@@ -168,10 +170,10 @@ export default function CoursesCatalogPage() {
 
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
+              {[...Array(8)].map((_, i) => (
                 <div
                   key={i}
-                  className="h-80 rounded-2xl bg-surface animate-pulse border border-border"
+                  className="h-80 rounded-2xl border border-border bg-surface/50 animate-pulse"
                 />
               ))}
             </div>
@@ -193,7 +195,7 @@ export default function CoursesCatalogPage() {
                 <CourseCard
                   key={course.id}
                   course={course}
-                  isFavorite={wishlist.includes(course.id)}
+                  isFavorite={isInWishlist(course.id)}
                   isMenuOpen={activeMenuId === course.id}
                   onToggleMenu={toggleMenu}
                   onToggleWishlist={toggleWishlist}

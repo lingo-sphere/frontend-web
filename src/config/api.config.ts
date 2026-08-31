@@ -48,6 +48,13 @@ export const API_CONFIG = {
       MY_ENROLLED: '/courses/my/enrolled',
     },
 
+    CART: {
+      GET: '/courses/cart',
+      ADD: '/courses/cart/items',
+      REMOVE: (courseId: string) => `/courses/cart/items/${courseId}`,
+      CLEAR: '/courses/cart/clear',
+    },
+
     VOCABULARY: {
       ITEMS: '/vocabulary/lexical-items',
       ITEM_BY_ID: (id: string) => `/vocabulary/lexical-items/${id}`,

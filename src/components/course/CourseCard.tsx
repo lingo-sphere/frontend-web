@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Play,
@@ -9,8 +10,13 @@ import {
   ListPlus,
   Archive,
   Star,
+  Check,
+  Loader2,
 } from 'lucide-react'
 import type { CourseCardData } from '@/types/course'
+import { useAuthStore } from '@/store/auth-store'
+import { useCartStore } from '@/store/cart-store'
+import { useNavigate } from '@/lib/navigation'
 
 interface CourseCardProps {
   course: CourseCardData
@@ -33,6 +39,31 @@ export function CourseCard({
 }: CourseCardProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStore()
+  const { addToCart, isInCart } = useCartStore()
+  const [isAdding, setIsAdding] = useState(false)
+  const isAlreadyInCart = isInCart(course.id)
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!isAuthenticated) {
+      alert(isVi ? 'Vui lòng đăng nhập để thêm khóa học vào giỏ hàng!' : 'Please sign in to add courses to your cart!')
+      return
+    }
+    if (isAlreadyInCart) {
+      navigate('/cart')
+      return
+    }
+    setIsAdding(true)
+    const result = await addToCart(course.id)
+    setIsAdding(false)
+    if (result.success) {
+      alert(isVi ? 'Đã thêm khóa học vào giỏ hàng thành công!' : 'Course added to cart successfully!')
+    } else {
+      alert(result.message || (isVi ? 'Không thể thêm vào giỏ hàng' : 'Failed to add to cart'))
+    }
+  }
 
   return (
     <div
@@ -174,13 +205,24 @@ export function CourseCard({
         </div>
 
         <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onClick(course.id)
-          }}
-          className="rounded-lg border border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 px-3.5 py-1.5 text-xs font-bold hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors cursor-pointer"
+          onClick={handleAddToCart}
+          disabled={isAdding}
+          className={`rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
+            isAlreadyInCart
+              ? 'border-emerald-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
+              : 'border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30'
+          }`}
         >
-          Add to cart
+          {isAdding ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : isAlreadyInCart ? (
+            <>
+              <Check size={13} />
+              <span>{isVi ? 'Đã trong giỏ' : 'In Cart'}</span>
+            </>
+          ) : (
+            <span>Add to cart</span>
+          )}
         </button>
       </div>
     </div>

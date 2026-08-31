@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Heart, ShoppingCart } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -8,8 +9,14 @@ import { Icon } from '@/components/icons/icon-map'
 import { DictionaryModal } from '@/components/dictionary/DictionaryModal'
 import { UpgradeModal } from '@/components/layout/UpgradeModal'
 import { AuthModal } from '@/components/auth/AuthModal'
+import { HeaderMyLearningHover } from '@/components/layout/HeaderMyLearningHover'
+import { HeaderWishlistHover } from '@/components/layout/HeaderWishlistHover'
+import { HeaderCartHover } from '@/components/layout/HeaderCartHover'
 import { useDashboardStore } from '@/store/dashboard-store'
 import { useAuthStore } from '@/store/auth-store'
+import { useCartStore } from '@/store/cart-store'
+import { useWishlistStore } from '@/store/wishlist-store'
+import { useNavigate } from '@/lib/navigation'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification } from '@/types/notification'
 
@@ -29,6 +36,18 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const toggleTheme = useDashboardStore((state) => state.toggleTheme)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
   const { user, isAuthenticated, logout } = useAuthStore()
+  const { getTotalItems, fetchCart } = useCartStore()
+  const { items: wishlistItems } = useWishlistStore()
+  const cartItemCount = getTotalItems()
+  const wishlistCount = wishlistItems.length
+  const navigate = useNavigate()
+  const [hoveredHeaderMenu, setHoveredHeaderMenu] = useState<'learning' | 'wishlist' | 'cart' | null>(null)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCart()
+    }
+  }, [isAuthenticated, fetchCart])
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
@@ -133,6 +152,80 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             </TooltipTrigger>
             <TooltipContent>{theme === 'light' ? 'Dark mode' : 'Light mode'}</TooltipContent>
           </Tooltip>
+          <div
+            className="relative hidden md:block"
+            onMouseEnter={() => setHoveredHeaderMenu('learning')}
+            onMouseLeave={() => setHoveredHeaderMenu(null)}
+          >
+            <button
+              onClick={() => navigate('/courses')}
+              className="h-9 px-3 text-[13px] font-semibold text-text-secondary hover:text-text-primary transition-colors rounded-xl flex items-center gap-1 cursor-pointer"
+            >
+              {language === 'VI' ? 'Khóa học của tôi' : 'My learning'}
+            </button>
+            {hoveredHeaderMenu === 'learning' && <HeaderMyLearningHover />}
+          </div>
+
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredHeaderMenu('wishlist')}
+            onMouseLeave={() => setHoveredHeaderMenu(null)}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  aria-label="Wishlist"
+                  className="relative h-9 w-9 rounded-xl border-border"
+                  onClick={() => navigate('/courses')}
+                  size="icon"
+                  variant="outline"
+                >
+                  <Heart size={17} />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                      {wishlistCount > 9 ? '9+' : wishlistCount}
+                    </span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{language === 'VI' ? 'Yêu thích' : 'Wishlist'}</TooltipContent>
+            </Tooltip>
+            {hoveredHeaderMenu === 'wishlist' && <HeaderWishlistHover />}
+          </div>
+
+          <div
+            className="relative"
+            onMouseEnter={() => setHoveredHeaderMenu('cart')}
+            onMouseLeave={() => setHoveredHeaderMenu(null)}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  aria-label="Shopping Cart"
+                  className="relative h-9 w-9 rounded-xl border-border"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      setAuthModalOpen(true)
+                    } else {
+                      navigate('/cart')
+                    }
+                  }}
+                  size="icon"
+                  variant="outline"
+                >
+                  <ShoppingCart size={17} />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white shadow-sm">
+                      {cartItemCount > 9 ? '9+' : cartItemCount}
+                    </span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{language === 'VI' ? 'Giỏ hàng' : 'Shopping Cart'}</TooltipContent>
+            </Tooltip>
+            {hoveredHeaderMenu === 'cart' && <HeaderCartHover />}
+          </div>
+
           <div className="relative">
             <Tooltip>
               <TooltipTrigger asChild>
