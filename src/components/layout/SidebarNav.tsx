@@ -6,7 +6,6 @@ import { useLocation } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { useMounted } from '@/hooks/use-mounted'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Icon } from '@/components/icons/icon-map'
 import type { NavGroup, NavItem } from '@/config/navigation.config'
 
@@ -105,14 +104,16 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
   }
 
   return (
-    <nav aria-label="Primary navigation" className={`min-h-0 flex-1 overflow-y-auto py-2.5 pr-1 ${collapsed ? 'scrollbar-none' : ''}`}>
+    <nav aria-label="Primary navigation" className={`min-h-0 flex-1 overflow-y-auto py-2 pr-1 ${collapsed ? 'scrollbar-none' : ''}`}>
       {groups.map((group, index) => (
-        <div className={index === 0 ? '' : 'pt-4'} key={group.id}>
-          {index > 0 && <Separator className={collapsed ? 'mb-2' : 'mb-4'} />}
+        <div className={index === 0 ? '' : 'pt-1'} key={group.id}>
+          {index > 0 && (
+            <div className={`my-3 border-t border-border/70 ${collapsed ? 'mx-1' : 'mx-2'}`} />
+          )}
           {(group.titleVi || group.titleEn) && (
             <div
               suppressHydrationWarning
-              className={`mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-text-tertiary ${collapsed ? 'hidden' : ''}`}
+              className={`mb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-text-secondary/80 ${collapsed ? 'hidden' : ''}`}
             >
               {isVietnamese ? group.titleVi : group.titleEn}
             </div>
@@ -122,7 +123,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
               const isActive = isItemActive(item)
               const hasChildren = Boolean(item.children && item.children.length > 0)
               const isExpanded = Boolean(expandedMenus[item.id])
-              const iconClass = isActive ? 'text-primary' : 'text-text-secondary'
+              const iconClass = isActive ? 'text-primary' : 'text-text-primary/70'
               const label = isVietnamese ? item.labelVi : item.labelEn
               const itemRoute = routeMap[item.id] || item.path
 
@@ -143,7 +144,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                       } ${
                         isActive
                           ? 'bg-primary-soft font-semibold text-primary hover:bg-primary-soft'
-                          : 'font-normal text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                          : 'font-medium text-text-primary/80 hover:bg-surface-hover hover:text-text-primary'
                       }`}
                       variant="ghost"
                     >
@@ -168,7 +169,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                     } ${
                       isActive
                         ? 'font-semibold text-text-primary hover:bg-surface-hover'
-                        : 'font-normal text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                        : 'font-medium text-text-primary/80 hover:bg-surface-hover hover:text-text-primary'
                     }`}
                     onClick={() => {
                       toggleSubMenu(item.id)
@@ -185,7 +186,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                       <span
                         onClick={(e) => toggleSubMenu(item.id, e)}
                         className={`flex items-center justify-center p-1 bg-transparent transition-transform duration-300 ease-in-out ${
-                          isActive ? 'text-primary/70 hover:text-primary' : 'text-text-tertiary hover:text-text-primary'
+                          isActive ? 'text-primary/70 hover:text-primary' : 'text-text-primary/50 hover:text-text-primary'
                         } ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
                       >
                         <Icon name="chevronDown" size={14} />
@@ -203,7 +204,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                         {item.children!.map((child) => {
                           const childActive = isChildActive(child)
                           const childLabel = isVietnamese ? child.labelVi : child.labelEn
-                          const childIconClass = childActive ? 'text-primary' : 'text-text-tertiary'
+                          const childIconClass = childActive ? 'text-primary' : 'text-text-primary/60'
 
                           return (
                             <Link
@@ -214,7 +215,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                               className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[12px] transition-colors cursor-pointer ${
                                 childActive
                                   ? 'bg-primary-soft font-bold text-primary'
-                                  : 'font-medium text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                                  : 'font-medium text-text-primary/75 hover:bg-surface-hover hover:text-text-primary'
                               }`}
                             >
                               <Icon className={childIconClass} name={child.icon} size={14} />
