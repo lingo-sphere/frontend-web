@@ -6,7 +6,6 @@ import { CourseReviewsTab } from '@/components/course/CourseReviewsTab'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { Button } from '@/components/ui/button'
 import { demoCourse } from '@/data/course-data'
-import { allCourses } from '@/data/courses-data'
 import { courseService } from '@/services/course.service'
 import type { Chapter, Course, Lesson } from '@/types/course'
 import {
@@ -67,10 +66,6 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   useEffect(() => {
     if (!courseId) return
     let isMounted = true
-
-    const catalogMatch = allCourses.find(
-      (c) => c.id === courseId || c.id.toLowerCase() === courseId.toLowerCase()
-    )
 
     const fetchCourse = async () => {
       try {
@@ -229,18 +224,18 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
             return {
               ...prev,
               id: String(courseObj._id || courseObj.id || courseId),
-              title: String(courseObj.title || catalogMatch?.title || prev.title),
-              description: String(courseObj.description || catalogMatch?.description || prev.description),
-              level: String(courseObj.level || catalogMatch?.level || prev.level),
-              thumbnail: String(courseObj.thumbnail_url || courseObj.thumbnail || catalogMatch?.thumbnail || prev.thumbnail),
+              title: String(courseObj.title || prev.title),
+              description: String(courseObj.description || prev.description),
+              level: String(courseObj.level || prev.level),
+              thumbnail: String(courseObj.thumbnail_url || courseObj.thumbnail || prev.thumbnail),
               chapters: mappedChapters,
               instructor: {
-                name: String(courseObj.instructor_name || catalogMatch?.instructor || prev.instructor?.name || 'LingoSphere Academic Team'),
+                name: String(courseObj.instructor_name || courseObj.author_name || prev.instructor?.name || 'LingoSphere Academic Team'),
                 title: prev.instructor?.title || 'Chuyên gia đào tạo LingoSphere',
-                avatar: String(courseObj.thumbnail_url || catalogMatch?.thumbnail || prev.instructor?.avatar || ''),
-                rating: Number(courseObj.rating || catalogMatch?.rating || 4.8),
-                ratingCount: Number(courseObj.rating_count || catalogMatch?.ratingCount || 142),
-                studentsCount: Number(courseObj.students_count || catalogMatch?.students || 1250),
+                avatar: String(courseObj.thumbnail_url || prev.instructor?.avatar || ''),
+                rating: Number(courseObj.rating || 4.8),
+                ratingCount: Number(courseObj.rating_count || 142),
+                studentsCount: Number(courseObj.students_count || 1250),
                 coursesCount: 6,
                 bio: String(courseObj.description || 'Đội ngũ giảng viên và chuyên gia học thuật giàu kinh nghiệm sư phạm và luyện thi chứng chỉ quốc tế.'),
               },
@@ -252,34 +247,9 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
             setCurrentChapter(mappedChapters[0])
             setCurrentLesson(mappedChapters[0].lessons[0])
           }
-          return
         }
-      } catch {
-        // Fallback to catalog data
-      }
-
-      if (isMounted && catalogMatch) {
-        setCourse((prev) => ({
-          ...prev,
-          id: catalogMatch.id,
-          title: catalogMatch.title,
-          description: catalogMatch.description,
-          level: catalogMatch.level,
-          thumbnail: catalogMatch.thumbnail,
-          rating: catalogMatch.rating,
-          ratingCount: catalogMatch.ratingCount,
-          badge: catalogMatch.badge,
-          instructor: {
-            name: catalogMatch.instructor,
-            title: prev.instructor?.title || 'Chuyên gia đào tạo LingoSphere',
-            avatar: catalogMatch.thumbnail || prev.instructor?.avatar || '',
-            rating: catalogMatch.rating || 4.9,
-            ratingCount: catalogMatch.ratingCount || 1200,
-            studentsCount: catalogMatch.students || 25000,
-            coursesCount: 6,
-            bio: 'Đội ngũ giảng viên và chuyên gia học thuật giàu kinh nghiệm sư phạm và luyện thi chứng chỉ quốc tế.',
-          },
-        }))
+      } catch (err) {
+        console.error('Lỗi khi tải chi tiết khóa học:', err)
       }
     }
 

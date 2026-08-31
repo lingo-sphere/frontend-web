@@ -4,8 +4,12 @@ import type { Course, Chapter, Lesson, CourseEnrollment } from '@/types/api.type
 
 export const courseService = {
 
-  async getAllCourses(params?: { category?: string; level?: string; search?: string }): Promise<Course[]> {
-    return api.get<Course[]>(API_CONFIG.ENDPOINTS.COURSES.LIST, params)
+  async getAllCourses(params?: { category?: string; level?: string; search?: string; limit?: number }): Promise<Course[]> {
+    const res = await api.get<{ result?: Course[]; data?: Course[]; meta?: unknown } | Course[]>(API_CONFIG.ENDPOINTS.COURSES.LIST, params)
+    if (Array.isArray(res)) return res
+    if (res && Array.isArray((res as { result?: Course[] }).result)) return (res as { result: Course[] }).result
+    if (res && Array.isArray((res as { data?: Course[] }).data)) return (res as { data: Course[] }).data
+    return []
   },
 
   async getCourseById(id: string): Promise<Course> {

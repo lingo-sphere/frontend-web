@@ -24,7 +24,7 @@ import {
   PlayCircle
 } from 'lucide-react'
 
-import { allCourses, type CourseCardData } from '@/data/courses-data'
+import type { CourseCardData } from '@/data/courses-data'
 import { courseService } from '@/services/course.service'
 import type { Course } from '@/types/api.types'
 
@@ -40,7 +40,7 @@ export function CoursesPage({ onAction: _onAction }: CoursesPageProps) {
   const navigate = useNavigate()
 
   const [activeTab, setActiveTab] = useState<TabType>('all')
-  const [courses, setCourses] = useState<CourseCardData[]>(allCourses)
+  const [courses, setCourses] = useState<CourseCardData[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -52,30 +52,49 @@ export function CoursesPage({ onAction: _onAction }: CoursesPageProps) {
   useEffect(() => {
     let isMounted = true
     const fetchCourses = async () => {
+      setLoading(true)
       try {
         const liveCourses: Course[] = await courseService.getAllCourses()
-        if (isMounted && Array.isArray(liveCourses) && liveCourses.length > 0) {
-          const mapped: CourseCardData[] = liveCourses.map((c) => ({
-            id: c.id || c._id || '',
-            title: c.title,
-            instructor: c.instructor_name || 'LingoSphere Academic Team',
-            thumbnail: c.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop',
-            category: (c.category as any) || 'toeic',
-            level: c.level || 'A2 → B1',
-            description: c.description || '',
-            duration: `${Math.round((c.total_duration_minutes || 120) / 60)} giờ`,
-            totalLessons: c.total_lessons || 24,
-            chapters: c.chapters?.length || 4,
-            students: 1250,
-            rating: c.rating_avg || 4.8,
-            ratingCount: c.rating_count || 142,
-            progress: 0,
-            hasCertificate: true,
-          }))
+        if (isMounted && Array.isArray(liveCourses)) {
+          const mapped: CourseCardData[] = liveCourses.map((c) => {
+            const raw = c as unknown as Record<string, unknown>
+            const is4Skills = c.category === 'TOEIC_4_SKILLS'
+            const durationHrs = Math.max(1, Math.round((Number(raw.total_duration_minutes) || (Number(raw.total_lessons) || 0) * 15 || 60) / 60))
+            const rawLevel = String(c.level || '')
+            let levelDisplay = 'TOEIC'
+            if (rawLevel === 'BEGINNER') levelDisplay = 'Sơ cấp (Beginner)'
+            else if (rawLevel === 'INTERMEDIATE') levelDisplay = 'Trung cấp (Intermediate)'
+            else if (rawLevel === 'ADVANCED') levelDisplay = 'Nâng cao (Advanced)'
+            else if (rawLevel) levelDisplay = rawLevel
+
+            return {
+              id: String(c.id || raw._id || c.slug || ''),
+              slug: c.slug,
+              title: c.title,
+              instructor: String(raw.author_name || raw.instructor_name || 'LingoSphere Academic Team'),
+              thumbnail: c.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop',
+              category: c.category || 'TOEIC_2_SKILLS',
+              level: levelDisplay,
+              description: c.description || '',
+              duration: `${durationHrs} giờ`,
+              totalLessons: Number(c.total_lessons) || 0,
+              chapters: Number(raw.total_modules) || (Array.isArray(c.chapters) ? c.chapters.length : 0),
+              students: Number(raw.enrollments) || 0,
+              rating: Number(raw.rating_avg) || 5.0,
+              ratingCount: Number(raw.rating_count) || 0,
+              price: Number(raw.price) || 0,
+              discountPrice: Number(raw.discount_price) || 0,
+              targetScore: Number(raw.target_score) || 0,
+              badge: is4Skills ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng',
+              progress: 0,
+              hasCertificate: true,
+            }
+          })
           setCourses(mapped)
         }
-      } catch {
-        // Use default rich allCourses data
+      } catch (err) {
+        console.error('Lỗi khi tải danh sách khóa học:', err)
+        if (isMounted) setCourses([])
       } finally {
         if (isMounted) setLoading(false)
       }
@@ -86,7 +105,6 @@ export function CoursesPage({ onAction: _onAction }: CoursesPageProps) {
     }
   }, [])
 
-  // Filter courses
   const filteredCourses = courses.filter((c) => {
     const matchesSearch =
       c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -285,12 +303,9 @@ export function CoursesPage({ onAction: _onAction }: CoursesPageProps) {
           {/* Category filter pills */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
             {[
-              { id: 'all', label: 'Tất cả' },
-              { id: 'toeic', label: 'Luyện thi TOEIC' },
-              { id: 'speaking', label: 'Luyện nói Whisper' },
-              { id: 'vocabulary', label: 'Từ vựng SRS' },
-              { id: 'grammar', label: 'Ngữ pháp logic' },
-              { id: 'business', label: 'Tiếng Anh đi làm' },
+              { id: 'all', label: isVi ? 'Tất cả' : 'All' },
+              { id: 'TOEIC_2_SKILLS', label: isVi ? 'TOEIC 2 Kỹ Năng' : 'TOEIC 2 Skills' },
+              { id: 'TOEIC_4_SKILLS', label: isVi ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 4 Skills' },
             ].map((cat) => {
               const isSelected = selectedCategory === cat.id
               return (
