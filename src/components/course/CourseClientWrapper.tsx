@@ -1,13 +1,13 @@
 'use client'
 
 import { useNavigate } from '@/lib/navigation'
-import { CourseDetailPage } from '@/components/course/CourseDetailPage'
+import { CourseDetailWorkspace } from '@/components/course/CourseDetailWorkspace'
 
 export function CourseClientWrapper({ courseId }: { courseId: string }) {
   const navigate = useNavigate()
 
   return (
-    <CourseDetailPage
+    <CourseDetailWorkspace
       courseId={courseId || 'toeic-foundation'}
       onBack={() => navigate('/courses')}
     />
