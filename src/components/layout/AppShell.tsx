@@ -1,4 +1,3 @@
-
 'use client'
 
 import type { ReactNode } from 'react'
@@ -28,7 +27,7 @@ export function AppShell({ children, onAction }: AppShellProps) {
           <Sidebar mobile />
         </SheetContent>
       </Sheet>
-      <div className={`min-h-screen ${sidebarMargin} transition-all duration-200`}>
+      <div className={`min-h-screen ${sidebarMargin} transition-[margin] duration-200 ease-in-out`}>
         <UtilityHeader onAction={onAction} />
         {children}
       </div>

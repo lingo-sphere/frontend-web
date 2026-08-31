@@ -10,7 +10,9 @@ import { API_CONFIG } from '@/config/api.config'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '790440593251-mpum0jf5od7blmm2p20qi0p5ulc1gs9q.apps.googleusercontent.com'
+import { PersistentLayout } from '@/components/layout/PersistentLayout'
+
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
 
 interface AppClientProviderProps {
   children: ReactNode
@@ -120,7 +122,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AppProvider>
         <TooltipProvider>
-          {children}
+          <PersistentLayout>{children}</PersistentLayout>
 
           <Modal
             open={Boolean(kickoutMessage)}
