@@ -43,12 +43,44 @@ interface LessonPlayerProps {
 const PLAYBACK_SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 
 const QUALITIES = [
+  { id: 'auto', label: 'Tự động (Auto)', badge: 'Thích ứng' },
   { id: '1080p', label: '1080p (Full HD)', badge: 'HD' },
   { id: '720p', label: '720p (HD)', badge: 'HD' },
-  { id: '480p', label: '480p (Tiêu chuẩn)' },
-  { id: '360p', label: '360p (Tiết kiệm)' },
-  { id: 'auto', label: 'Tự động (Auto)' },
+  { id: '480p', label: '480p (Tiêu chuẩn - Tiết kiệm 3G)' },
+  { id: '360p', label: '360p (Mạng yếu 2G/3G)' },
 ]
+
+function detectNetworkQuality(): '1080p' | '720p' | '480p' | '360p' {
+  if (typeof window === 'undefined') return '720p'
+  const nav = navigator as unknown as {
+    connection?: {
+      effectiveType?: 'slow-2g' | '2g' | '3g' | '4g'
+      downlink?: number
+      saveData?: boolean
+      addEventListener?: (type: string, listener: () => void) => void
+      removeEventListener?: (type: string, listener: () => void) => void
+    }
+  }
+
+  const conn = nav.connection
+  if (!conn) return '720p'
+
+  if (conn.saveData) return '360p'
+
+  if (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') {
+    return '360p'
+  }
+  if (conn.effectiveType === '3g') {
+    return conn.downlink && conn.downlink < 0.8 ? '360p' : '480p'
+  }
+  if (conn.downlink && conn.downlink < 1.5) {
+    return '480p'
+  }
+  if (conn.downlink && conn.downlink < 4.0) {
+    return '720p'
+  }
+  return '1080p'
+}
 
 function isDirectVideoUrl(url?: string): boolean {
   if (!url || !url.trim()) return false
@@ -97,6 +129,7 @@ export function LessonPlayer({
   const progressBarRef = useRef<HTMLDivElement | null>(null)
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const bufferStallCountRef = useRef<number>(0)
 
   // Player States
   const [isPlaying, setIsPlaying] = useState(false)
@@ -106,12 +139,36 @@ export function LessonPlayer({
   const [volume, setVolume] = useState(1)
   const [isMuted, setIsMuted] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
-  const [selectedQuality, setSelectedQuality] = useState<string>('1080p')
+  const [selectedQuality, setSelectedQuality] = useState<string>('auto')
+  const [autoResolvedQuality, setAutoResolvedQuality] = useState<'1080p' | '720p' | '480p' | '360p'>('720p')
   const [isTheater, setIsTheater] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isPipActive, setIsPipActive] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [isBuffering, setIsBuffering] = useState(false)
+
+  // Auto detect network quality (3G, 4G, WiFi, Data Saver)
+  useEffect(() => {
+    const updateNetworkQuality = () => {
+      const detected = detectNetworkQuality()
+      setAutoResolvedQuality(detected)
+    }
+    updateNetworkQuality()
+
+    const nav = navigator as unknown as {
+      connection?: {
+        addEventListener?: (type: string, listener: () => void) => void
+        removeEventListener?: (type: string, listener: () => void) => void
+      }
+    }
+    const conn = nav.connection
+    if (conn?.addEventListener) {
+      conn.addEventListener('change', updateNetworkQuality)
+      return () => {
+        conn.removeEventListener?.('change', updateNetworkQuality)
+      }
+    }
+  }, [])
 
   // Hover Scrubber Tooltip
   const [hoverTime, setHoverTime] = useState<number | null>(null)
@@ -141,22 +198,23 @@ export function LessonPlayer({
     return (lesson?.videoUrl || lesson?.content?.videoUrl || '').trim()
   }, [lesson])
 
+  const effectiveQualityKey = selectedQuality === 'auto' ? autoResolvedQuality : selectedQuality
+
   const effectiveVideoUrl = useMemo(() => {
     if (!baseVideoSource) return ''
-    if (lesson?.qualities && lesson.qualities[selectedQuality]) {
-      return lesson.qualities[selectedQuality]
+    if (lesson?.qualities && lesson.qualities[effectiveQualityKey]) {
+      return lesson.qualities[effectiveQualityKey]
     }
     if (
-      selectedQuality !== '1080p' &&
-      selectedQuality !== 'auto' &&
+      effectiveQualityKey !== '1080p' &&
       isDirectVideoUrl(baseVideoSource) &&
       baseVideoSource.includes('.r2.dev')
     ) {
       const base = baseVideoSource.replace(/\.[^/.]+$/, '')
-      return `${base}_${selectedQuality}.mp4`
+      return `${base}_${effectiveQualityKey}.mp4`
     }
     return baseVideoSource
-  }, [baseVideoSource, lesson?.qualities, selectedQuality])
+  }, [baseVideoSource, lesson?.qualities, effectiveQualityKey])
 
   const isDirectVideo = isDirectVideoUrl(effectiveVideoUrl || baseVideoSource)
 
@@ -253,8 +311,14 @@ export function LessonPlayer({
       setSelectedQuality(qualityId)
       setSettingsSubmenu('main')
       setShowSettingsMenu(false)
-      const match = QUALITIES.find((q) => q.id === qualityId)
-      triggerFeedback('quality', match ? match.id.toUpperCase() : qualityId)
+      if (qualityId === 'auto') {
+        const detected = detectNetworkQuality()
+        setAutoResolvedQuality(detected)
+        triggerFeedback('quality', `Tự động (${detected})`)
+      } else {
+        const match = QUALITIES.find((q) => q.id === qualityId)
+        triggerFeedback('quality', match ? match.id.toUpperCase() : qualityId)
+      }
     },
     [triggerFeedback]
   )
@@ -487,8 +551,25 @@ export function LessonPlayer({
             setShowEndedScreen(false)
           }}
           onPause={() => setIsPlaying(false)}
-          onWaiting={() => setIsBuffering(true)}
-          onPlaying={() => setIsBuffering(false)}
+          onWaiting={() => {
+            setIsBuffering(true)
+            if (selectedQuality === 'auto') {
+              bufferStallCountRef.current += 1
+              if (bufferStallCountRef.current >= 2) {
+                setAutoResolvedQuality((prev) => {
+                  if (prev === '1080p') return '720p'
+                  if (prev === '720p') return '480p'
+                  if (prev === '480p') return '360p'
+                  return prev
+                })
+                bufferStallCountRef.current = 0
+              }
+            }
+          }}
+          onPlaying={() => {
+            setIsBuffering(false)
+            bufferStallCountRef.current = 0
+          }}
           onError={() => {
             // If a specific quality rendition fails or is not available, fallback to 1080p
             if (selectedQuality !== '1080p' && selectedQuality !== 'auto') {
@@ -900,7 +981,11 @@ export function LessonPlayer({
                             <span>Chất lượng</span>
                           </span>
                           <span className="flex items-center gap-1 text-[11px] font-mono text-white/60">
-                            <span>{selectedQuality.toUpperCase()}</span>
+                            <span>
+                              {selectedQuality === 'auto'
+                                ? `Tự động (${autoResolvedQuality})`
+                                : selectedQuality.toUpperCase()}
+                            </span>
                             <ChevronRight size={14} />
                           </span>
                         </button>
@@ -950,27 +1035,34 @@ export function LessonPlayer({
                           <ChevronLeft size={14} />
                           <span>Độ phân giải Video</span>
                         </button>
-                        {QUALITIES.map((q) => (
-                          <button
-                            key={q.id}
-                            onClick={() => handleQualityChange(q.id)}
-                            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
-                              selectedQuality === q.id
-                                ? 'bg-primary text-white font-bold'
-                                : 'text-white/80 hover:bg-white/10'
-                            }`}
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <span>{q.label}</span>
-                              {q.badge && (
-                                <span className="rounded bg-indigo-500/30 px-1 py-0.2 text-[9px] font-bold text-indigo-300">
-                                  {q.badge}
+                        {QUALITIES.map((q) => {
+                          const isSelected = selectedQuality === q.id
+                          return (
+                            <button
+                              key={q.id}
+                              onClick={() => handleQualityChange(q.id)}
+                              className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                                isSelected
+                                  ? 'bg-primary text-white font-bold'
+                                  : 'text-white/80 hover:bg-white/10'
+                              }`}
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <span>
+                                  {q.id === 'auto'
+                                    ? `Tự động (Auto) • ${autoResolvedQuality}`
+                                    : q.label}
                                 </span>
-                              )}
-                            </span>
-                            {selectedQuality === q.id && <Check size={14} />}
-                          </button>
-                        ))}
+                                {q.badge && (
+                                  <span className="rounded bg-indigo-500/30 px-1 py-0.2 text-[9px] font-bold text-indigo-300">
+                                    {q.badge}
+                                  </span>
+                                )}
+                              </span>
+                              {isSelected && <Check size={14} />}
+                            </button>
+                          )
+                        })}
                       </div>
                     )}
 
