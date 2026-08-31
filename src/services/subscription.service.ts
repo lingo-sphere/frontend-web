@@ -20,9 +20,53 @@ export interface SubscriptionResponse {
   }
 }
 
+export interface CreateOrderPayload {
+  plan_slug?: string
+  billing_cycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'LIFETIME'
+}
+
+export interface BankInfo {
+  bank_name: string
+  bank_code: string
+  account_number: string
+  account_name: string
+}
+
+export interface PaymentOrderResponse {
+  order_code: string
+  amount: number
+  billing_cycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'LIFETIME'
+  qr_url: string
+  bank_info: BankInfo
+  expires_at: string
+}
+
+export interface PaymentOrderStatusResponse {
+  order_code: string
+  status: 'PENDING' | 'PAID' | 'EXPIRED' | 'CANCELLED'
+  amount: number
+  billing_cycle: string
+  paid_at?: string
+}
+
 export const subscriptionService = {
   async subscribe(payload: SubscribePayload): Promise<SubscriptionResponse> {
     return api.post<SubscriptionResponse>(API_CONFIG.ENDPOINTS.SUBSCRIPTION.SUBSCRIBE, payload)
+  },
+
+  async createPaymentOrder(payload: CreateOrderPayload): Promise<PaymentOrderResponse> {
+    return api.post<PaymentOrderResponse>(API_CONFIG.ENDPOINTS.SUBSCRIPTION.CREATE_ORDER, payload)
+  },
+
+  async getPaymentOrderStatus(orderCode: string): Promise<PaymentOrderStatusResponse> {
+    return api.get<PaymentOrderStatusResponse>(API_CONFIG.ENDPOINTS.SUBSCRIPTION.ORDER_STATUS(orderCode))
+  },
+
+  async simulatePayment(orderCode: string): Promise<{ success: boolean; message: string; order_code: string }> {
+    return api.post<{ success: boolean; message: string; order_code: string }>(
+      API_CONFIG.ENDPOINTS.SUBSCRIPTION.SIMULATE_ORDER(orderCode),
+      {}
+    )
   },
 
   async getMySubscription(): Promise<Record<string, unknown>> {

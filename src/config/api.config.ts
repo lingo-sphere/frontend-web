@@ -39,6 +39,9 @@ export const API_CONFIG = {
 
     SUBSCRIPTION: {
       PLANS: '/users/subscriptions/plans',
+      CREATE_ORDER: '/users/subscriptions/orders',
+      ORDER_STATUS: (orderCode: string) => `/users/subscriptions/orders/${orderCode}/status`,
+      SIMULATE_ORDER: (orderCode: string) => `/users/subscriptions/orders/${orderCode}/simulate`,
       SUBSCRIBE: '/users/subscriptions/subscribe',
       MY: '/users/subscriptions/my',
       CANCEL: '/users/subscriptions/cancel',
