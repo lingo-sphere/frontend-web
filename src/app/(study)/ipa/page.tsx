@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
@@ -8,125 +8,76 @@ import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { Icon } from '@/components/icons/icon-map'
 import { useApp } from '@/contexts/AppContext'
-import {
-  vowels,
-  diphthongs,
-  consonants,
-  type IPASymbol,
-} from '@/data/ipa-data'
+import { vocabularyService, type BackendIpaSymbol } from '@/services/vocabulary.service'
 
 export default function IpaAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const { showAction } = useApp()
   const [playingSymbol, setPlayingSymbol] = useState<string | null>(null)
+  const [ipaSymbols, setIpaSymbols] = useState<BackendIpaSymbol[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handlePlaySound = (symbol: IPASymbol) => {
-    setPlayingSymbol(symbol.id)
-    showAction(`${isVietnamese ? 'Phát âm' : 'Playing'}: ${symbol.symbol} (${symbol.soundName})`)
+  useEffect(() => {
+    let isMounted = true
+    const fetchIpa = async () => {
+      try {
+        setIsLoading(true)
+        const symbols = await vocabularyService.getIpaSymbols()
+        if (isMounted && Array.isArray(symbols)) {
+          setIpaSymbols(symbols)
+        }
+      } catch (err) {
+        console.error('Failed to load IPA symbols:', err)
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+    fetchIpa()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
-    setTimeout(() => setPlayingSymbol(null), 300)
+  const vowels = ipaSymbols.filter((s) => s.symbol_type === 'VOWEL')
+  const diphthongs = ipaSymbols.filter((s) => s.symbol_type === 'DIPHTHONG')
+  const consonants = ipaSymbols.filter((s) => s.symbol_type === 'CONSONANT')
+
+  const handlePlaySound = (symbol: BackendIpaSymbol) => {
+    setPlayingSymbol(symbol._id)
+    if (symbol.audio_url) {
+      const audio = new Audio(symbol.audio_url)
+      audio.play().catch(() => {})
+    }
+    showAction(`${isVietnamese ? 'Phát âm' : 'Pronouncing'}: /${symbol.symbol}/ (${symbol.example_word})`)
+    setTimeout(() => setPlayingSymbol(null), 400)
   }
 
   const handlePractice = () => {
-    showAction(isVietnamese ? 'Đã mở Luyện tập IPA' : 'Opened IPA Practice')
+    showAction(isVietnamese ? 'Đã mở chế độ Luyện tập ngữ âm IPA' : 'Opened IPA Practice Mode')
   }
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'EASY':
-        return 'text-success'
-      case 'MEDIUM':
-        return 'text-warning'
-      case 'HARD':
-        return 'text-error'
-      default:
-        return 'text-text-secondary'
-    }
-  }
-
-  const getDifficultyBg = (difficulty: string) => {
-    switch (difficulty) {
-      case 'EASY':
-        return 'bg-success-soft'
-      case 'MEDIUM':
-        return 'bg-warning-soft'
-      case 'HARD':
-        return 'bg-error-soft'
-      default:
-        return 'bg-surface-subtle'
-    }
-  }
-
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case 'EASY':
-        return isVietnamese ? 'Dễ' : 'Easy'
-      case 'MEDIUM':
-        return isVietnamese ? 'Trung bình' : 'Medium'
-      case 'HARD':
-        return isVietnamese ? 'Khó' : 'Hard'
-      default:
-        return difficulty
-    }
-  }
-
-  const renderSymbolCard = (symbol: IPASymbol) => {
-    const isPlaying = playingSymbol === symbol.id
+  const renderSymbolCard = (item: BackendIpaSymbol) => {
+    const isPlaying = playingSymbol === item._id
 
     return (
       <Card
-        key={symbol.id}
-        className={`
-          dashboard-card cursor-pointer transition-all duration-200
-          hover:-translate-y-0.5 hover:bg-surface-hover
-          ${isPlaying ? 'ring-2 ring-primary scale-105' : ''}
-        `}
-        onClick={() => handlePlaySound(symbol)}
+        key={item._id}
+        className={`cursor-pointer transition-all hover:scale-105 hover:shadow-md ${
+          isPlaying ? 'border-primary ring-2 ring-primary/20' : ''
+        }`}
+        onClick={() => handlePlaySound(item)}
       >
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span
-              className={`text-5xl font-bold text-text-primary transition-transform ${
-                isPlaying ? 'scale-110' : ''
-              }`}
-            >
-              {symbol.symbol}
-            </span>
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${getDifficultyBg(
-                symbol.difficulty
-              )} ${getDifficultyColor(symbol.difficulty)}`}
-            >
-              {getDifficultyLabel(symbol.difficulty)}
-            </span>
-          </div>
-
-          <p className="text-sm font-medium text-text-primary mb-1">
-            {symbol.soundName}
-          </p>
-          <p className="text-xs text-text-secondary mb-3">
-            {symbol.descriptionVi}
-          </p>
-
-          <div className="flex justify-center mb-3">
-            <span className="text-sm px-3 py-1.5 bg-surface-subtle rounded text-text-secondary font-medium">
-              {symbol.examples[0]?.word}
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-text-tertiary">
-              <span>{isVietnamese ? 'Tiến độ' : 'Progress'}</span>
-              <span>{symbol.progress || 0}%</span>
-            </div>
-            <div className="h-1.5 bg-surface-subtle rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-500"
-                style={{ width: `${symbol.progress || 0}%` }}
-              />
-            </div>
-          </div>
+        <CardContent className="flex flex-col items-center p-3 text-center">
+          <span className="font-mono text-[22px] font-bold text-primary">
+            /{item.symbol}/
+          </span>
+          <span className="mt-1 text-[13px] font-semibold text-text-primary">
+            {item.example_word}
+          </span>
+          <span className="text-[11px] font-mono text-text-tertiary">
+            {item.example_word_ipa}
+          </span>
         </CardContent>
       </Card>
     )
@@ -135,72 +86,59 @@ export default function IpaAppPage() {
   return (
     <Layout>
       <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <SectionHeading
-            eyebrow={t('ipa.title')}
-            title={isVietnamese ? 'IPA - Phiên âm quốc tế' : 'IPA - International Phonetic Alphabet'}
-            description={isVietnamese ? 'Học cách phát âm chuẩn IPA' : 'Learn to pronounce IPA symbols correctly'}
+            eyebrow={t('practice.title')}
+            title={isVietnamese ? 'Bảng phiên âm quốc tế IPA (44 âm)' : 'International Phonetic Alphabet (44 Sounds)'}
+            description={
+              isVietnamese
+                ? 'Nắm vững 44 âm trong tiếng Anh chuẩn quốc tế để phát âm chuẩn xác'
+                : 'Master the 44 International Phonetic Alphabet sounds for accurate pronunciation'
+            }
           />
           <Button
-            className="bg-primary hover:bg-primary-hover text-white"
+            className="self-start gap-2 bg-primary hover:bg-primary-hover"
             onClick={handlePractice}
           >
-            {isVietnamese ? 'Luyện tập IPA' : 'Practice IPA'}
+            <Icon name="mic" size={16} />
+            {isVietnamese ? 'Luyện phát âm' : 'Practice Pronunciation'}
           </Button>
         </div>
 
-        <section className="mb-10">
-          <h3 className="mb-4 text-lg font-semibold text-text-primary flex items-center gap-2">
-            <Icon name="languages" className="text-primary" size={20} />
-            {isVietnamese ? 'Nguyên âm & Âm đôi' : 'Vowels & Diphthongs'}
-          </h3>
-          <p className="text-sm text-text-secondary mb-4">
-            {isVietnamese ? '12 nguyên âm đơn + 8 âm đôi (diphthongs)' : '12 monophthongs + 8 diphthongs'}
-          </p>
-
-          <div className="mb-6">
-            <h4 className="text-sm font-medium text-text-tertiary uppercase tracking-wide mb-3">
-              {isVietnamese ? 'Nguyên âm (Vowels)' : 'Vowels'}
-            </h4>
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-              {vowels.map((symbol) => renderSymbolCard(symbol))}
-            </div>
+        {isLoading ? (
+          <div className="mt-12 flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
+        ) : (
+          <>
+            <section className="mt-8">
+              <h3 className="mb-3 text-[16px] font-bold text-text-primary">
+                {isVietnamese ? '1. Nguyên âm đơn (Monophthongs)' : '1. Monophthongs'} ({vowels.length})
+              </h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                {vowels.map(renderSymbolCard)}
+              </div>
+            </section>
 
-          <div>
-            <h4 className="text-sm font-medium text-text-tertiary uppercase tracking-wide mb-3">
-              {isVietnamese ? 'Âm đôi (Diphthongs)' : 'Diphthongs'}
-            </h4>
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-              {diphthongs.map((symbol) => renderSymbolCard(symbol))}
-            </div>
-          </div>
-        </section>
+            <section className="mt-8">
+              <h3 className="mb-3 text-[16px] font-bold text-text-primary">
+                {isVietnamese ? '2. Nguyên âm đôi (Diphthongs)' : '2. Diphthongs'} ({diphthongs.length})
+              </h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                {diphthongs.map(renderSymbolCard)}
+              </div>
+            </section>
 
-        <section>
-          <h3 className="mb-4 text-lg font-semibold text-text-primary flex items-center gap-2">
-            <Icon name="type" className="text-info" size={20} />
-            {isVietnamese ? 'Phụ âm' : 'Consonants'}
-          </h3>
-          <p className="text-sm text-text-secondary mb-4">
-            {isVietnamese ? '20 phụ âm cơ bản trong tiếng Anh' : '20 basic consonants in English'}
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-            {consonants.map((symbol) => renderSymbolCard(symbol))}
-          </div>
-        </section>
-
-        <div className="mt-10 p-4 bg-surface-subtle rounded-xl">
-          <h4 className="text-sm font-semibold text-text-primary mb-2">
-            {isVietnamese ? 'Mẹo học IPA' : 'IPA Learning Tips'}
-          </h4>
-          <ul className="text-xs text-text-secondary space-y-1">
-            <li>• {isVietnamese ? 'Ấn vào mỗi ký hiệu để nghe phát âm mẫu' : 'Click on each symbol to hear the pronunciation'}</li>
-            <li>• {isVietnamese ? 'Theo dõi thanh tiến độ để biết bạn đã luyện tập bao nhiêu' : 'Track your progress bar to see how much you have practiced'}</li>
-            <li>• {isVietnamese ? 'Bắt đầu với các âm Dễ trước, sau đó nâng dần lên Khó' : 'Start with Easy sounds first, then gradually move to Hard'}</li>
-            <li>• {isVietnamese ? 'Luyện tập thường xuyên để cải thiện khả năng phát âm' : 'Practice regularly to improve your pronunciation'}</li>
-          </ul>
-        </div>
+            <section className="mt-8">
+              <h3 className="mb-3 text-[16px] font-bold text-text-primary">
+                {isVietnamese ? '3. Phụ âm (Consonants)' : '3. Consonants'} ({consonants.length})
+              </h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                {consonants.map(renderSymbolCard)}
+              </div>
+            </section>
+          </>
+        )}
       </main>
     </Layout>
   )

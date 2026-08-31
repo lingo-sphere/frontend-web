@@ -13,8 +13,7 @@ import { Icon } from '@/components/icons/icon-map'
 import { useDashboardStore } from '@/store/dashboard-store'
 import { useApp } from '@/contexts/AppContext'
 import { vocabularyService } from '@/services/vocabulary.service'
-import { vocabularyStats, vocabularyStatus, commonPacks, oxfordPacks, vocabularyTagFilters, userDecks } from '@/data/vocabulary-data'
-import type { VocabularyPack, UserDeck } from '@/types/vocabulary'
+import type { Deck } from '@/types/api.types'
 
 export default function VocabularyAppPage() {
   const { t, i18n } = useTranslation()
@@ -23,26 +22,27 @@ export default function VocabularyAppPage() {
   const { showAction } = useApp()
   const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
   const [activeTag, setActiveTag] = useState('all')
-  const [, setLiveDecks] = useState<UserDeck[]>(userDecks)
+  const [publicDecks, setPublicDecks] = useState<Deck[]>([])
+  const [myDecks, setMyDecks] = useState<Deck[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
     const fetchVocabularyData = async () => {
       try {
-        const decks = await vocabularyService.getPublicDecks()
-        if (isMounted && Array.isArray(decks) && decks.length > 0) {
-          const mapped: UserDeck[] = decks.map((d, idx) => ({
-            id: d.id || d._id || `deck-${idx}`,
-            title: d.title,
-            cardCount: d.total_cards || 20,
-            createdAt: new Date().toISOString(),
-            description: d.description,
-            cefrLevel: d.cefr_level || 'A2',
-          }))
-          setLiveDecks(mapped)
+        setIsLoading(true)
+        const [pubDecks, myEnrollments] = await Promise.all([
+          vocabularyService.getPublicDecks(),
+          vocabularyService.getMyEnrollments().catch(() => []),
+        ])
+        if (isMounted) {
+          if (Array.isArray(pubDecks)) setPublicDecks(pubDecks)
+          if (Array.isArray(myEnrollments)) setMyDecks(myEnrollments)
         }
-      } catch {
-        // Fallback to userDecks
+      } catch (err) {
+        console.error('Error loading vocabulary data:', err)
+      } finally {
+        if (isMounted) setIsLoading(false)
       }
     }
     fetchVocabularyData()
@@ -51,37 +51,21 @@ export default function VocabularyAppPage() {
     }
   }, [])
 
-  const filteredCommonPacks = activeTag === 'all'
-    ? commonPacks
-    : commonPacks.filter(p => p.tags.includes(activeTag))
+  const tags = ['all', 'TOEIC', 'General', 'Business', 'Communication', 'Basic']
 
-  const filteredOxfordPacks = activeTag === 'all'
-    ? oxfordPacks
-    : oxfordPacks.filter(p => p.tags.includes(activeTag))
+  const filteredPacks = publicDecks.filter((d: any) => {
+    if (activeTag === 'all') return true
+    const deckTags = d.tags || []
+    return deckTags.some((t: string) => t.toLowerCase() === activeTag.toLowerCase()) ||
+      (d.category && d.category.toLowerCase() === activeTag.toLowerCase())
+  })
 
-  const statusLabels = {
-    learning: { vi: 'Đang học', en: 'Learning' },
-    reviewing: { vi: 'Đang ôn', en: 'Reviewing' },
-    mastered: { vi: 'Đã thành thạo', en: 'Mastered' },
-    total: { vi: 'Tổng', en: 'Total' },
-  }
+  const totalCards = publicDecks.reduce((sum: number, d: any) => sum + (d.card_count || d.total_cards || 0), 0)
 
-  const statusData = [
-    { label: statusLabels.learning[isVietnamese ? 'vi' : 'en'], value: vocabularyStatus.learning, color: 'bg-info' },
-    { label: statusLabels.reviewing[isVietnamese ? 'vi' : 'en'], value: vocabularyStatus.reviewing, color: 'bg-primary' },
-    { label: statusLabels.mastered[isVietnamese ? 'vi' : 'en'], value: vocabularyStatus.mastered, color: 'bg-success' },
-    { label: statusLabels.total[isVietnamese ? 'vi' : 'en'], value: vocabularyStatus.totalCards, color: 'bg-red-500' },
-  ]
-
-  const reviewStats = [
-    { label: { vi: 'Cần ôn', en: 'Due' }, value: vocabularyStats.due, color: 'bg-info' },
-    { label: { vi: 'Yếu', en: 'Weak' }, value: vocabularyStats.weak, color: 'bg-warning' },
-  ]
-
-  const handleDeckClick = (deck: UserDeck) => {
+  const handleDeckClick = (deck: Deck) => {
     setActiveNavItem('vocabulary')
-    navigate(`/vocabulary/learn/${deck.id}`)
-    showAction(`Starting learning with deck "${deck.title}"`)
+    navigate(`/vocabulary/learn/${deck.id || deck._id}`)
+    showAction(`Bắt đầu học bộ thẻ "${deck.title || (deck as any).name}"`)
   }
 
   return (
@@ -99,7 +83,7 @@ export default function VocabularyAppPage() {
                 <SectionHeading
                   eyebrow={t('vocabulary.title')}
                   title={isVietnamese ? 'Học từ vựng tiếng Anh' : 'Learn English Vocabulary'}
-                  description={isVietnamese ? 'Làm chủ từ vựng với hệ thống spaced repetition' : "Master English vocabulary with LingoSphere's spaced repetition system"}
+                  description={isVietnamese ? 'Làm chủ từ vựng với hệ thống Spaced Repetition SRS' : "Master English vocabulary with LingoSphere's Spaced Repetition System"}
                 />
               </div>
             </div>
@@ -118,7 +102,7 @@ export default function VocabularyAppPage() {
             </Button>
             <button
               className="flex h-9 items-center gap-2 rounded-xl border border-border bg-surface px-3 text-[12px] font-semibold text-text-secondary hover:bg-surface-hover"
-              onClick={() => showAction(isVietnamese ? 'Đang mở hướng dẫn Spaced Repetition' : 'Opening Spaced Repetition guide')}
+              onClick={() => showAction(isVietnamese ? 'Spaced Repetition (SM-2): Thuật toán lặp lại ngắt quãng tối ưu trí nhớ' : 'Spaced Repetition SM-2 Algorithm')}
             >
               <HelpCircle size={14} />
               {isVietnamese ? 'Spaced Repetition là gì?' : 'What is Spaced Repetition?'}
@@ -134,26 +118,33 @@ export default function VocabularyAppPage() {
                 {isVietnamese ? 'Thống kê học tập' : 'Learning Statistics'}
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                <StatItem icon="book" label={isVietnamese ? 'Tổng thẻ' : 'Total Cards'} value={vocabularyStats.totalCards} />
-                <StatItem icon="refresh" label={isVietnamese ? 'Tổng ôn' : 'Total Reviews'} value={vocabularyStats.totalReviews} />
-                <StatItem icon="clock" label={isVietnamese ? 'Cần ôn' : 'Due'} value={vocabularyStats.due} />
-                <StatItem icon="award" label={t('dashboard.accuracy')} value={`${vocabularyStats.accuracy}%`} />
+                <StatItem icon="book" label={isVietnamese ? 'Tổng thẻ' : 'Total Cards'} value={totalCards} />
+                <StatItem icon="refresh" label={isVietnamese ? 'Bộ thẻ công khai' : 'Public Decks'} value={publicDecks.length} />
+                <StatItem icon="clock" label={isVietnamese ? 'Bộ thẻ của tôi' : 'My Enrolled'} value={myDecks.length} />
+                <StatItem icon="award" label={t('dashboard.accuracy')} value="100%" />
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
-                {reviewStats.map((stat, idx) => (
-                  <button
-                    key={idx}
-                    className={`flex flex-col items-center justify-center gap-1 rounded-xl ${stat.color} px-4 py-3 text-white transition-all hover:opacity-90`}
-                    onClick={() => {
-                      setActiveNavItem('vocabulary')
-                      navigate('/vocabulary/learn')
-                    }}
-                  >
-                    <span className="text-[18px] font-bold">{stat.value}</span>
-                    <span className="text-[11px] font-medium">{stat.label[isVietnamese ? 'vi' : 'en']}</span>
-                  </button>
-                ))}
+                <button
+                  className="flex flex-col items-center justify-center gap-1 rounded-xl bg-primary px-4 py-3 text-white transition-all hover:opacity-90"
+                  onClick={() => {
+                    setActiveNavItem('vocabulary')
+                    navigate('/vocabulary/learn')
+                  }}
+                >
+                  <span className="text-[18px] font-bold">{publicDecks.length}</span>
+                  <span className="text-[11px] font-medium">{isVietnamese ? 'Bắt đầu học ngay' : 'Learn Now'}</span>
+                </button>
+                <button
+                  className="flex flex-col items-center justify-center gap-1 rounded-xl bg-info px-4 py-3 text-white transition-all hover:opacity-90"
+                  onClick={() => {
+                    setActiveNavItem('vocabulary')
+                    navigate('/public-decks')
+                  }}
+                >
+                  <span className="text-[18px] font-bold">{totalCards}</span>
+                  <span className="text-[11px] font-medium">{isVietnamese ? 'Khám phá thẻ từ' : 'Explore Decks'}</span>
+                </button>
               </div>
             </CardContent>
           </Card>
@@ -162,27 +153,26 @@ export default function VocabularyAppPage() {
             <CardContent className="flex h-full flex-col justify-between p-4">
               <h3 className="mb-4 flex items-center gap-2 text-[14px] font-semibold text-text-primary">
                 <Icon name="chart" className="text-info" size={18} />
-                {isVietnamese ? 'Trạng thái từ vựng' : 'Vocabulary Status'}
+                {isVietnamese ? 'Trạng thái bộ thẻ' : 'Deck Overview'}
               </h3>
 
               <div className="flex flex-1 items-end justify-around gap-3 pt-4">
-                {statusData.map((item, idx) => {
-                  const maxVal = Math.max(...statusData.map(d => d.value || 10), 10)
-                  const heightPercent = Math.max((item.value / maxVal) * 100, 5)
-
-                  return (
-                    <div key={idx} className="flex flex-1 flex-col items-center gap-2">
-                      <span className="text-[14px] font-bold text-text-primary">{item.value}</span>
-                      <div className="relative w-full overflow-hidden rounded-t-lg bg-surface-subtle" style={{ height: '120px' }}>
-                        <div
-                          className={`absolute bottom-0 left-0 right-0 rounded-t-lg transition-all duration-700 ${item.color}`}
-                          style={{ height: `${heightPercent}%` }}
-                        />
-                      </div>
-                      <span className="text-[12px] font-medium text-text-secondary">{item.label}</span>
+                {[
+                  { label: isVietnamese ? 'Công khai' : 'Public', value: publicDecks.length, color: 'bg-primary' },
+                  { label: isVietnamese ? 'Đã lưu' : 'Enrolled', value: myDecks.length, color: 'bg-success' },
+                  { label: isVietnamese ? 'Tổng thẻ' : 'Cards', value: totalCards, color: 'bg-info' },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex flex-1 flex-col items-center gap-2">
+                    <span className="text-[14px] font-bold text-text-primary">{item.value}</span>
+                    <div className="relative w-full overflow-hidden rounded-t-lg bg-surface-subtle" style={{ height: '120px' }}>
+                      <div
+                        className={`absolute bottom-0 left-0 right-0 rounded-t-lg transition-all duration-700 ${item.color}`}
+                        style={{ height: `${Math.min(Math.max((item.value / Math.max(totalCards, 1)) * 100, 15), 100)}%` }}
+                      />
                     </div>
-                  )
-                })}
+                    <span className="text-[12px] font-medium text-text-secondary">{item.label}</span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -193,47 +183,61 @@ export default function VocabularyAppPage() {
             <div>
               <h3 className="flex items-center gap-2 text-[16px] font-semibold text-text-primary">
                 <Icon name="cards" className="text-primary" size={18} />
-                {isVietnamese ? 'BỘ THẺ CỦA TÔI' : 'MY DECKS'}
+                {isVietnamese ? 'BỘ THẺ NỔI BẬT' : 'FEATURED DECKS'}
               </h3>
               <p className="mt-0.5 text-[12px] text-text-secondary">
-                {isVietnamese ? 'Free user ·' : 'Free user ·'} {userDecks.length}/3 {isVietnamese ? 'decks ·' : 'decks ·'} max 500 {isVietnamese ? 'thẻ' : 'cards'}
+                {publicDecks.length} {isVietnamese ? 'bộ thẻ khả dụng' : 'available decks'}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <button className="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary hover:bg-surface-hover">
                 <Info size={16} />
               </button>
-              <Button size="sm" className="gap-1 bg-primary hover:bg-primary-hover">
+              <Button
+                size="sm"
+                className="gap-1 bg-primary hover:bg-primary-hover"
+                onClick={() => navigate('/vocabulary/learn')}
+              >
                 <Plus size={14} />
-                {isVietnamese ? 'Tạo deck' : 'Create Deck'}
+                {isVietnamese ? 'Học ngay' : 'Learn Now'}
               </Button>
             </div>
           </div>
 
-          {userDecks.length > 0 ? (
+          {isLoading ? (
+            <div className="mt-6 flex h-32 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : publicDecks.length > 0 ? (
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {userDecks.map((deck) => (
+              {publicDecks.map((deck: any, idx) => (
                 <Card
-                  key={deck.id}
+                  key={deck.id || deck._id || idx}
                   className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   onClick={() => handleDeckClick(deck)}
                 >
-                  <div className="flex h-24 w-full items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
+                  <div
+                    className="flex h-24 w-full items-center justify-center"
+                    style={{ backgroundColor: ['#6b5ce7', '#00b894', '#0984e3'][idx % 3] }}
+                  >
                     <Layers3 className="text-white/60" size={36} />
                   </div>
                   <CardContent className="p-4">
-                    <h4 className="text-[15px] font-semibold text-text-primary">{deck.title}</h4>
-                    <p className="mt-1 text-[12px] text-text-secondary">{deck.cardCount} {isVietnamese ? 'từ' : 'words'}</p>
-                    <Button
-                      size="sm"
-                      className="mt-3 w-full bg-primary hover:bg-primary-hover"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeckClick(deck)
-                      }}
-                    >
-                      {isVietnamese ? 'Bắt đầu' : 'Start'}
-                    </Button>
+                    <h4 className="text-[15px] font-semibold text-text-primary">{deck.title || deck.name}</h4>
+                    <p className="mt-1 text-[12px] text-text-secondary line-clamp-2">{deck.description || deck.description_vi}</p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-[12px] text-text-tertiary">{deck.card_count || deck.total_cards || 0} {isVietnamese ? 'từ' : 'words'}</span>
+                      <Button
+                        size="sm"
+                        className="bg-primary hover:bg-primary-hover"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeckClick(deck)
+                        }}
+                      >
+                        {isVietnamese ? 'Bắt đầu' : 'Start'}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -241,12 +245,7 @@ export default function VocabularyAppPage() {
           ) : (
             <div className="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface py-12">
               <BookOpen className="mb-3 text-text-tertiary" size={48} />
-              <h4 className="text-[15px] font-semibold text-text-primary">{isVietnamese ? 'Chưa có deck nào' : 'No decks yet'}</h4>
-              <p className="mt-1 text-[13px] text-text-secondary">{isVietnamese ? 'Tạo deck đầu tiên để bắt đầu' : 'Create your first deck to start managing your vocabulary'}</p>
-              <Button className="mt-4 gap-1 bg-primary hover:bg-primary-hover">
-                <Plus size={14} />
-                {isVietnamese ? 'Tạo deck đầu tiên' : 'Create First Deck'}
-              </Button>
+              <h4 className="text-[15px] font-semibold text-text-primary">{isVietnamese ? 'Chưa có bộ thẻ nào' : 'No decks yet'}</h4>
             </div>
           )}
 
@@ -260,8 +259,8 @@ export default function VocabularyAppPage() {
                   <Star className="text-warning" size={24} />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-[14px] font-semibold text-text-primary">{isVietnamese ? 'CHỦ ĐỀ PHỔ BIẾN' : 'POPULAR TOPICS'}</h4>
-                  <p className="mt-0.5 text-[12px] text-text-secondary">{isVietnamese ? 'Khám phá các chủ đề phổ biến' : 'Explore the most popular topics'}</p>
+                  <h4 className="text-[14px] font-semibold text-text-primary">{isVietnamese ? 'CHỦ ĐỀ TỪ VỰNG' : 'VOCABULARY TOPICS'}</h4>
+                  <p className="mt-0.5 text-[12px] text-text-secondary">{isVietnamese ? 'Khám phá các chủ đề từ vựng đa dạng' : 'Explore diverse vocabulary topics'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -275,7 +274,7 @@ export default function VocabularyAppPage() {
                 </div>
                 <div className="flex-1">
                   <h4 className="text-[14px] font-semibold text-text-primary">{isVietnamese ? 'DECK CỘNG ĐỒNG' : 'COMMUNITY DECKS'}</h4>
-                  <p className="mt-0.5 text-[12px] text-text-secondary">{isVietnamese ? 'Khám phá deck từ cộng đồng' : 'Discover shared vocabulary decks from the community'}</p>
+                  <p className="mt-0.5 text-[12px] text-text-secondary">{isVietnamese ? 'Khám phá bộ thẻ từ cộng đồng' : 'Discover shared vocabulary decks'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -285,11 +284,11 @@ export default function VocabularyAppPage() {
         <section className="mt-8">
           <h3 className="mb-4 flex items-center gap-2 text-[16px] font-semibold text-text-primary">
             <GraduationCap className="text-primary" size={20} />
-            {isVietnamese ? 'BỘ TỪ VỰNG PHỔ BIẾN' : 'COMMON VOCABULARY PACKS'}
+            {isVietnamese ? 'DANH SÁCH BỘ THẺ' : 'ALL VOCABULARY DECKS'}
           </h3>
 
           <div className="mb-4 flex flex-wrap gap-2">
-            {vocabularyTagFilters.map((tag) => (
+            {tags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setActiveTag(tag)}
@@ -304,35 +303,47 @@ export default function VocabularyAppPage() {
             ))}
           </div>
 
-          {filteredCommonPacks.length > 0 && (
-            <div className="mb-6">
-              <h4 className="mb-3 text-[13px] font-semibold text-text-secondary">
-                {isVietnamese ? 'Từ vựng tiếng Anh phổ biến' : 'Common English Vocabulary'} ({filteredCommonPacks.length} packs)
-              </h4>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredCommonPacks.map((pack) => (
-                  <PackCard key={pack.id} pack={pack} onAction={showAction} isVietnamese={isVietnamese} />
-                ))}
-              </div>
+          {filteredPacks.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredPacks.map((pack: any, idx) => (
+                <Card
+                  key={pack.id || pack._id || idx}
+                  className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  onClick={() => handleDeckClick(pack)}
+                >
+                  <div
+                    className="flex h-24 w-full items-center justify-center"
+                    style={{ backgroundColor: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e'][idx % 4] }}
+                  >
+                    <Layers3 className="text-white/60" size={36} />
+                  </div>
+                  <CardContent className="p-3">
+                    <h4 className="text-[14px] font-semibold text-text-primary line-clamp-1">{pack.title || pack.name}</h4>
+                    <p className="mt-1 text-[12px] text-text-secondary line-clamp-2">{pack.description || pack.description_vi}</p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-[12px] text-text-secondary">{pack.card_count || pack.total_cards || 0} {isVietnamese ? 'từ' : 'words'}</span>
+                      <span className="flex items-center gap-1 text-[12px] text-text-secondary">
+                        <Users size={12} />
+                        {(pack.total_users || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="mt-3 w-full bg-primary hover:bg-primary-hover"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeckClick(pack)
+                      }}
+                    >
+                      {isVietnamese ? 'Bắt đầu học' : 'Start Learning'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          )}
-
-          {filteredOxfordPacks.length > 0 && (
-            <div>
-              <h4 className="mb-3 text-[13px] font-semibold text-text-secondary">
-                {isVietnamese ? 'Từ vựng Oxford' : 'Oxford Vocabulary'} ({filteredOxfordPacks.length} packs)
-              </h4>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredOxfordPacks.map((pack) => (
-                  <PackCard key={pack.id} pack={pack} onAction={showAction} isVietnamese={isVietnamese} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {filteredCommonPacks.length === 0 && filteredOxfordPacks.length === 0 && (
+          ) : (
             <div className="mt-8 text-center">
-              <p className="text-[14px] text-text-secondary">{isVietnamese ? 'Không tìm thấy pack nào cho' : 'No vocabulary packs found for'} "#{activeTag}"</p>
+              <p className="text-[14px] text-text-secondary">{isVietnamese ? 'Không tìm thấy bộ thẻ nào cho' : 'No vocabulary decks found for'} "#{activeTag}"</p>
             </div>
           )}
         </section>
@@ -350,38 +361,5 @@ function StatItem({ icon, label, value }: { icon: string; label: string; value: 
         {label}
       </span>
     </div>
-  )
-}
-
-function PackCard({ pack, onAction, isVietnamese }: { pack: VocabularyPack; onAction: (message: string) => void; isVietnamese: boolean }) {
-  return (
-    <Card className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg" onClick={() => onAction(`Opening "${pack.title}"`)}>
-      <div
-        className="flex h-24 w-full items-center justify-center"
-        style={{ backgroundColor: pack.coverColor }}
-      >
-        <Layers3 className="text-white/60" size={36} />
-      </div>
-      <CardContent className="p-3">
-        <h4 className="text-[14px] font-semibold text-text-primary line-clamp-1">{pack.title}</h4>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[12px] text-text-secondary">{pack.wordCount} {isVietnamese ? 'từ' : 'words'}</span>
-          <span className="flex items-center gap-1 text-[12px] text-text-secondary">
-            <Users size={12} />
-            {pack.studentCount.toLocaleString()}
-          </span>
-        </div>
-        <Button
-          size="sm"
-          className="mt-3 w-full bg-primary hover:bg-primary-hover"
-          onClick={(e) => {
-            e.stopPropagation()
-            onAction(`Starting "${pack.title}"`)
-          }}
-        >
-          {isVietnamese ? 'Bắt đầu học' : 'Start Learning'}
-        </Button>
-      </CardContent>
-    </Card>
   )
 }

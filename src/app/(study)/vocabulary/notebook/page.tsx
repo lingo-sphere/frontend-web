@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { Layers3, Bookmark } from 'lucide-react'
@@ -11,10 +11,7 @@ import { useApp } from '@/contexts/AppContext'
 import { SelectDeckModal } from '@/components/vocabulary/SelectDeckModal'
 import { ConfirmDeleteModal } from '@/components/vocabulary/ConfirmDeleteModal'
 import type { SavedVocabulary, UserDeck } from '@/types/vocabulary'
-import {
-  savedVocabulary as initialSavedVocabulary,
-  userDecks as initialUserDecks,
-} from '@/data/vocabulary-data'
+import { vocabularyService } from '@/services/vocabulary.service'
 import { VocabularyTab } from '@/components/vocabulary/NotebookWordManager'
 import { DecksTab, CreateDeckModal } from '@/components/vocabulary/NotebookDeckList'
 
@@ -26,10 +23,32 @@ export default function NotebookAppPage() {
   const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
   const [activeTab, setActiveTab] = useState<'vocabulary' | 'decks'>('vocabulary')
 
-  const [savedVocabulary, setSavedVocabulary] = useState<SavedVocabulary[]>(
-    initialSavedVocabulary
-  )
-  const [userDecks, setUserDecks] = useState<UserDeck[]>(initialUserDecks)
+  const [savedVocabulary, setSavedVocabulary] = useState<SavedVocabulary[]>([])
+  const [userDecks, setUserDecks] = useState<UserDeck[]>([])
+
+  useEffect(() => {
+    let isMounted = true
+    const loadNotebookData = async () => {
+      try {
+        const enrollments = await vocabularyService.getMyEnrollments().catch(() => [])
+        if (isMounted && Array.isArray(enrollments)) {
+          const mappedDecks: UserDeck[] = enrollments.map((d: any, idx) => ({
+            id: d.id || d._id || `deck-${idx}`,
+            title: d.title || d.name || 'Personal Deck',
+            cardCount: d.total_cards || d.card_count || 0,
+            createdAt: d.created_at || new Date().toISOString(),
+          }))
+          setUserDecks(mappedDecks)
+        }
+      } catch (err) {
+        console.error('Failed to load notebook enrollments:', err)
+      }
+    }
+    loadNotebookData()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const [selectDeckModal, setSelectDeckModal] = useState<{
     isOpen: boolean
@@ -182,93 +201,98 @@ export default function NotebookAppPage() {
     <Layout>
       <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
-          eyebrow={t('notebook.title') || 'Sổ tay cá nhân'}
-          title={isVietnamese ? 'Sổ tay Từ vựng & Flashcards' : 'Vocabulary Notebook & Decks'}
+          eyebrow={t('vocabulary.title')}
+          title={isVietnamese ? 'Sổ tay từ vựng' : 'Vocabulary Notebook'}
           description={
             isVietnamese
-              ? 'Quản lý các từ vựng đã lưu, sắp xếp theo bộ thẻ (Decks) và ôn tập ngắt quãng'
-              : 'Manage saved vocabulary, organize into decks and review with spaced repetition'
+              ? 'Quản lý từ vựng đã lưu và phân loại vào các bộ thẻ'
+              : 'Manage saved vocabulary and organize them into decks'
           }
         />
 
-        <div className="mt-4 flex gap-2 border-b border-border pb-3">
+        <div className="mt-6 flex gap-2 border-b border-border">
           <button
             onClick={() => setActiveTab('vocabulary')}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all ${
+            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-[14px] font-medium transition-colors ${
               activeTab === 'vocabulary'
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
             }`}
           >
             <Bookmark size={16} />
-            {isVietnamese ? 'Từ vựng' : 'Vocabulary'} ({savedVocabulary.length})
+            {isVietnamese ? 'Danh sách từ vựng' : 'Vocabulary List'}
+            <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-tertiary">
+              {savedVocabulary.length}
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('decks')}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all ${
+            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-[14px] font-medium transition-colors ${
               activeTab === 'decks'
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
             }`}
           >
             <Layers3 size={16} />
-            {isVietnamese ? 'Bộ thẻ' : 'Decks'} ({userDecks.length})
+            {isVietnamese ? 'Bộ thẻ cá nhân' : 'Personal Decks'}
+            <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-tertiary">
+              {userDecks.length}
+            </span>
           </button>
         </div>
 
-        {activeTab === 'vocabulary' && (
-          <VocabularyTab
-            savedVocabulary={savedVocabulary}
-            userDecks={userDecks}
-            onAddToDeck={handleAddToDeck}
-            onDeleteWord={handleDeleteWord}
-            onRemoveFromDeck={handleRemoveFromDeck}
-            onAction={showAction}
-            isVietnamese={isVietnamese}
-          />
-        )}
-
-        {activeTab === 'decks' && (
-          <DecksTab
-            decks={userDecks}
-            deckWordCounts={deckWordCounts}
-            wordsInDeck={wordsInDeck}
-            onDeckClick={handleDeckClick}
-            onDeleteDeck={handleDeleteDeck}
-            onCreateDeck={() => setCreateDeckModal(true)}
-            onAction={showAction}
-            isVietnamese={isVietnamese}
-          />
-        )}
+        <div className="mt-6">
+          {activeTab === 'vocabulary' ? (
+            <VocabularyTab
+              savedVocabulary={savedVocabulary}
+              userDecks={userDecks}
+              onAddToDeck={handleAddToDeck}
+              onRemoveFromDeck={handleRemoveFromDeck}
+              onDeleteWord={handleDeleteWord}
+              onAction={showAction}
+              isVietnamese={isVietnamese}
+            />
+          ) : (
+            <DecksTab
+              decks={userDecks}
+              deckWordCounts={deckWordCounts}
+              wordsInDeck={wordsInDeck}
+              onDeckClick={handleDeckClick}
+              onDeleteDeck={handleDeleteDeck}
+              onCreateDeck={() => setCreateDeckModal(true)}
+              onAction={showAction}
+              isVietnamese={isVietnamese}
+            />
+          )}
+        </div>
 
         <SelectDeckModal
           isOpen={selectDeckModal.isOpen}
-          onClose={() => setSelectDeckModal({ isOpen: false, word: null })}
-          word={selectDeckModal.word?.lexical_item.word || ''}
+          word={selectDeckModal.word?.lexical_item?.word || ''}
           existingDecks={userDecks}
+          onClose={() => setSelectDeckModal({ isOpen: false, word: null })}
           onSelectDeck={handleSelectDeck}
         />
 
         <ConfirmDeleteModal
           isOpen={deleteWordModal.isOpen}
-          onClose={() => setDeleteWordModal({ isOpen: false, word: null })}
-          title={isVietnamese ? 'Xóa từ đã lưu' : 'Delete Saved Word'}
+          title={isVietnamese ? 'Xóa từ vựng' : 'Delete Word'}
           message={
             isVietnamese
-              ? `Bạn có chắc muốn xóa từ "${deleteWordModal.word?.lexical_item.word}" khỏi danh sách đã lưu không?`
-              : `Are you sure you want to delete the word "${deleteWordModal.word?.lexical_item.word}" from your saved list?`
+              ? `Bạn có chắc muốn xóa từ "${deleteWordModal.word?.lexical_item?.word || ''}"?`
+              : `Are you sure you want to delete "${deleteWordModal.word?.lexical_item?.word || ''}"?`
           }
-          confirmText={isVietnamese ? 'Xóa' : 'Delete'}
+          onClose={() => setDeleteWordModal({ isOpen: false, word: null })}
           onConfirm={confirmDeleteWord}
         />
 
         <CreateDeckModal
           isOpen={createDeckModal}
+          deckTitle={newDeckTitle}
           onClose={() => {
             setCreateDeckModal(false)
             setNewDeckTitle('')
           }}
-          deckTitle={newDeckTitle}
           onDeckTitleChange={setNewDeckTitle}
           onCreate={handleCreateDeck}
           isVietnamese={isVietnamese}

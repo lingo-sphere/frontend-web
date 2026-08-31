@@ -10,7 +10,6 @@ import { UpgradeModal } from '@/components/layout/UpgradeModal'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { useDashboardStore } from '@/store/dashboard-store'
 import { useAuthStore } from '@/store/auth-store'
-import { mockNotifications, getUnreadCount, markAsRead } from '@/data/notifications-data'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification } from '@/types/notification'
 
@@ -31,7 +30,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
   const { user, isAuthenticated, logout } = useAuthStore()
 
-  const unreadCount = getUnreadCount(notifications)
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
   const latestNotifications = useMemo(() => {
     return [...notifications]
@@ -40,7 +39,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   }, [notifications])
 
   const handleMarkAsRead = (id: string) => {
-    setNotifications(markAsRead(notifications, id))
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
   }
 
   const formatTime = (dateString: string) => {

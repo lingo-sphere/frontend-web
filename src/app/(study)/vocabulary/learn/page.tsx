@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { useApp } from '@/contexts/AppContext'
 import { vocabularyService } from '@/services/vocabulary.service'
-import { mockDecks, allVocabularyWords } from '@/data/vocabulary-learn-data'
 import type { VocabularyDeck, LearningResult } from '@/types/vocabulary-learn'
 import type { Deck } from '@/types/api.types'
 import { VocabularyLearningSession } from '@/components/vocabulary-learning/VocabularyLearningSession'
@@ -25,29 +24,31 @@ export default function VocabularyLearnAppPage() {
   const [decks, setDecks] = useState<VocabularyDeck[]>([])
   const [selectedDeck, setSelectedDeck] = useState<VocabularyDeck | null>(null)
   const [learningResult, setLearningResult] = useState<LearningResult | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
     const fetchDecks = async () => {
       try {
+        setIsLoading(true)
         const liveDecks: Deck[] = await vocabularyService.getPublicDecks()
-        if (isMounted && Array.isArray(liveDecks) && liveDecks.length > 0) {
-          const mapped: VocabularyDeck[] = liveDecks.map((d, index) => ({
+        if (isMounted && Array.isArray(liveDecks)) {
+          const mapped: VocabularyDeck[] = liveDecks.map((d: any, index: number) => ({
             id: d.id || d._id || `deck-${index}`,
-            title: d.title,
-            description: d.description || '',
+            title: d.title || d.name || 'Flashcard Deck',
+            description: d.description || d.description_vi || '',
             coverColor: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e', '#e17055'][index % 5],
-            cardCount: d.total_cards || d.cards?.length || 20,
+            cardCount: d.total_cards || d.card_count || d.cards?.length || 0,
             creatorType: 'SYSTEM',
             visibility: 'PUBLIC',
-            vocabularyItems: allVocabularyWords,
+            vocabularyItems: [],
           }))
           setDecks(mapped)
-        } else {
-          setDecks(mockDecks)
         }
-      } catch {
-        setDecks(mockDecks)
+      } catch (err) {
+        console.error('Failed to fetch public decks:', err)
+      } finally {
+        if (isMounted) setIsLoading(false)
       }
     }
     fetchDecks()
@@ -57,23 +58,15 @@ export default function VocabularyLearnAppPage() {
   }, [])
 
   const handleSelectDeck = (deck: VocabularyDeck) => {
-    setSelectedDeck(deck)
-    setViewMode('session')
+    navigate(`/vocabulary/learn/${deck.id}`)
   }
 
   const handleStartQuickLearn = () => {
-    const quickDeck: VocabularyDeck = {
-      id: 'quick-learn',
-      title: 'Quick Learn',
-      description: 'All vocabulary',
-      coverColor: '#6b5ce7',
-      cardCount: allVocabularyWords.length,
-      creatorType: 'SYSTEM',
-      visibility: 'PUBLIC',
-      vocabularyItems: allVocabularyWords,
+    if (decks.length > 0) {
+      navigate(`/vocabulary/learn/${decks[0].id}`)
+    } else {
+      showAction('Chưa có bộ thẻ nào khả dụng')
     }
-    setSelectedDeck(quickDeck)
-    setViewMode('session')
   }
 
   const handleSessionComplete = (result: LearningResult) => {
@@ -138,7 +131,7 @@ export default function VocabularyLearnAppPage() {
                 <div>
                   <h3 className="text-[18px] font-bold text-white">Quick Learn</h3>
                   <p className="mt-1 text-[14px] text-white/80">
-                    {allVocabularyWords.length} words · All exercises
+                    {decks.length > 0 ? `${decks.reduce((acc, d) => acc + d.cardCount, 0)} words · Start Review` : 'Explore decks'}
                   </p>
                 </div>
               </div>
@@ -153,41 +146,51 @@ export default function VocabularyLearnAppPage() {
           <h3 className="mb-4 text-[16px] font-semibold text-text-primary">
             Choose a Deck
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {decks.map((deck) => (
-              <Card
-                key={deck.id}
-                className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                onClick={() => handleSelectDeck(deck)}
-              >
-                <div
-                  className="flex h-24 w-full items-center justify-center"
-                  style={{ backgroundColor: deck.coverColor }}
+          {isLoading ? (
+            <div className="flex h-40 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : decks.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {decks.map((deck) => (
+                <Card
+                  key={deck.id}
+                  className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  onClick={() => handleSelectDeck(deck)}
                 >
-                  <GraduationCap className="text-white/60" size={40} />
-                </div>
-                <CardContent className="p-4">
-                  <h4 className="text-[15px] font-semibold text-text-primary">{deck.title}</h4>
-                  <p className="mt-1 text-[12px] text-text-secondary line-clamp-2">
-                    {deck.description}
-                  </p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[12px] text-text-tertiary">{deck.cardCount} words</span>
-                    <Button
-                      size="sm"
-                      className="bg-primary hover:bg-primary-hover"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleSelectDeck(deck)
-                      }}
-                    >
-                      Learn
-                    </Button>
+                  <div
+                    className="flex h-24 w-full items-center justify-center"
+                    style={{ backgroundColor: deck.coverColor }}
+                  >
+                    <GraduationCap className="text-white/60" size={40} />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <CardContent className="p-4">
+                    <h4 className="text-[15px] font-semibold text-text-primary">{deck.title}</h4>
+                    <p className="mt-1 text-[12px] text-text-secondary line-clamp-2">
+                      {deck.description}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-[12px] text-text-tertiary">{deck.cardCount} words</span>
+                      <Button
+                        size="sm"
+                        className="bg-primary hover:bg-primary-hover"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleSelectDeck(deck)
+                        }}
+                      >
+                        Learn
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-text-tertiary">
+              No flashcard decks found.
+            </div>
+          )}
         </section>
       </main>
     </Layout>

@@ -23,9 +23,32 @@ import {
 } from 'lucide-react'
 
 import { Layout } from '@/components/layout/Layout'
-import type { CourseCardData } from '@/data/courses-data'
 import { courseService } from '@/services/course.service'
 import type { Course } from '@/types/api.types'
+
+export interface CourseCardData {
+  id: string
+  slug?: string
+  title: string
+  instructor: string
+  thumbnail: string
+  category: string
+  level: string
+  description: string
+  duration: string
+  totalLessons: number
+  chapters: number
+  students: number
+  rating: number
+  ratingCount: number
+  price: number
+  discountPrice?: number
+  targetScore?: number
+  badge?: string
+  progress?: number
+  hasCertificate?: boolean
+  isArchived?: boolean
+}
 
 type TabType = 'all' | 'my-lists' | 'wishlist' | 'certifications' | 'archived' | 'learning-tools'
 
@@ -446,7 +469,7 @@ export default function CoursesCatalogPage() {
                             </span>
                           </div>
                         </div>
-                      ) : course.progress > 0 ? (
+                      ) : (course.progress ?? 0) > 0 ? (
                         <div>
                           <div className="h-1.5 w-full rounded-none bg-surface-subtle overflow-hidden mb-1.5">
                             <div

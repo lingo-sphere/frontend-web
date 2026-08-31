@@ -2,37 +2,65 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-
 import { Layout } from '@/components/layout/Layout'
-import { Button } from '@/components/ui/button'
 import { userService } from '@/services/user.service'
-import type { LeaderboardEntry } from '@/types/api.types'
-import { getCurrentMonth, getLeaderboard, getNextMonth, getPrevMonth, getDaysUntilMonthEnd, getMonthLabel } from '@/data/leaderboard-data'
-import type { LeaderboardType } from '@/types/dashboard'
+import type {
+  LeaderboardType,
+  MonthlyLeaderboardUser,
+  MonthlyReward,
+} from '@/types/dashboard'
 import { LeaderboardCountdown } from '@/components/leaderboard/LeaderboardCountdown'
 import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs'
 import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium'
 import { LeaderboardList } from '@/components/leaderboard/LeaderboardList'
 import { LeaderboardRewards } from '@/components/leaderboard/LeaderboardRewards'
 
+const avatarColors = [
+  'bg-primary-soft text-primary',
+  'bg-success-soft text-success',
+  'bg-warning-soft text-warning',
+  'bg-info-soft text-info',
+  'bg-surface-subtle text-text-primary',
+]
+
 export default function LeaderboardAppPage() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const [currentMonth, setCurrentMonth] = useState(getCurrentMonth())
   const [leaderboardType, setLeaderboardType] = useState<LeaderboardType>('streak')
-  const [, setLiveEntries] = useState<LeaderboardEntry[]>([])
+  const [users, setUsers] = useState<MonthlyLeaderboardUser[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const defaultRewards: MonthlyReward[] = [
+    { rank: 1, diamonds: 500, specialBadge: 'Quán quân' },
+    { rank: 2, diamonds: 300, specialBadge: 'Á quân' },
+    { rank: 3, diamonds: 150, specialBadge: 'Top 3' },
+  ]
 
   useEffect(() => {
     let isMounted = true
     const fetchLeaderboard = async () => {
       try {
+        setIsLoading(true)
         const data = await userService.getLeaderboard('weekly')
-        if (isMounted && Array.isArray(data) && data.length > 0) {
-          setLiveEntries(data)
+        if (isMounted && Array.isArray(data)) {
+          const mapped: MonthlyLeaderboardUser[] = data.map((entry: any, idx: number) => ({
+            rank: idx + 1,
+            name: entry.full_name || entry.username || entry.user_name || `Học viên #${idx + 1}`,
+            avatarColor: avatarColors[idx % avatarColors.length],
+            streakDays: entry.streak_days || entry.streakDays || 1,
+            totalMinutes: entry.total_minutes || entry.totalMinutes || 60 + idx * 10,
+            questionsAnswered: entry.questions_answered || 20 + idx * 5,
+            wordsLearned: entry.words_learned || 15 + idx * 3,
+            diamonds: entry.diamonds || 50,
+            freezes: entry.freezes || 1,
+            isCurrentUser: idx === 0,
+          }))
+          setUsers(mapped)
         }
-      } catch {
-        // Fallback to local leaderboard data
+      } catch (err) {
+        console.error('Failed to load leaderboard:', err)
+      } finally {
+        if (isMounted) setIsLoading(false)
       }
     }
     fetchLeaderboard()
@@ -41,66 +69,51 @@ export default function LeaderboardAppPage() {
     }
   }, [])
 
-  const leaderboard = getLeaderboard(currentMonth)
-  const daysLeft = getDaysUntilMonthEnd()
-  const isCurrentMonth = currentMonth === getCurrentMonth()
-
-  const handlePrevMonth = () => setCurrentMonth(getPrevMonth(currentMonth))
-  const handleNextMonth = () => {
-    if (!isCurrentMonth) setCurrentMonth(getNextMonth(currentMonth))
-  }
-
   return (
     <Layout>
-      {!leaderboard ? (
-        <main className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-          <p className="text-text-secondary">{isVietnamese ? 'Không có dữ liệu cho tháng này.' : 'No data for this month.'}</p>
-        </main>
-      ) : (
-        <main className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-          <section className="mb-6">
-            <LeaderboardCountdown daysLeft={daysLeft} isCurrentMonth={isCurrentMonth} />
-          </section>
+      <main className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-[20px] font-bold text-text-primary">
+              {isVietnamese ? 'Bảng xếp hạng tuần' : 'Weekly Leaderboard'}
+            </h1>
+            <p className="mt-1 text-[13px] text-text-secondary">
+              {isVietnamese
+                ? 'Thi đua học tập cùng các học viên LingoSphere'
+                : 'Compete and rank with LingoSphere learners'}
+            </p>
+          </div>
+          <LeaderboardCountdown daysLeft={6} isCurrentMonth={true} />
+        </div>
 
-          <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <Button
-                className="h-9 w-9 rounded-xl border-border p-0"
-                onClick={handlePrevMonth}
-                size="icon"
-                variant="outline"
-              >
-                <ChevronLeft size={18} />
-              </Button>
-              <h2 className="min-w-[140px] text-center text-[16px] font-bold text-text-primary">
-                {getMonthLabel(currentMonth)}
-              </h2>
-              <Button
-                className="h-9 w-9 rounded-xl border-border p-0"
-                onClick={handleNextMonth}
-                disabled={isCurrentMonth}
-                size="icon"
-                variant="outline"
-              >
-                <ChevronRight size={18} />
-              </Button>
-            </div>
+        <div className="mt-6 flex flex-col gap-6 lg:flex-row">
+          <div className="flex-1">
             <LeaderboardTabs active={leaderboardType} onChange={setLeaderboardType} />
-          </section>
 
-          <section className="mb-6">
-            <LeaderboardPodium users={leaderboard.topThree} type={leaderboardType} />
-          </section>
+            {isLoading ? (
+              <div className="mt-12 flex h-40 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              </div>
+            ) : (
+              <>
+                {users.length > 0 && (
+                  <section className="mt-6">
+                    <LeaderboardPodium users={users.slice(0, 3)} type={leaderboardType} />
+                  </section>
+                )}
 
-          <section className="mb-6">
-            <LeaderboardList users={leaderboard.fullRanking} type={leaderboardType} />
-          </section>
+                <section className="mt-6">
+                  <LeaderboardList users={users} type={leaderboardType} />
+                </section>
+              </>
+            )}
+          </div>
 
-          <section>
-            <LeaderboardRewards rewards={leaderboard.rewards} />
-          </section>
-        </main>
-      )}
+          <aside className="w-full lg:w-[360px]">
+            <LeaderboardRewards rewards={defaultRewards} />
+          </aside>
+        </div>
+      </main>
     </Layout>
   )
 }

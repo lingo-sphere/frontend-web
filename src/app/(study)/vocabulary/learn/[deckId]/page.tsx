@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/AppContext'
-import { mockDecks, allVocabularyWords } from '@/data/vocabulary-learn-data'
 import { vocabularyService } from '@/services/vocabulary.service'
-import type { VocabularyDeck, LearningResult } from '@/types/vocabulary-learn'
+import type { VocabularyDeck, LearningResult, VocabularyItem } from '@/types/vocabulary-learn'
 import { VocabularyLearningSession } from '@/components/vocabulary-learning/VocabularyLearningSession'
 import { LearningResultView } from '@/components/vocabulary-learning/LearningResultView'
 
@@ -16,42 +15,57 @@ export default function VocabularyDeckLearnAppPage() {
   const [selectedDeck, setSelectedDeck] = useState<VocabularyDeck | null>(null)
   const [learningResult, setLearningResult] = useState<LearningResult | null>(null)
   const [isFinished, setIsFinished] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!deckId) return
-    const localDeck = mockDecks.find((d) => d.id === deckId)
-    if (localDeck) {
-      setSelectedDeck(localDeck)
-      return
-    }
+    setIsLoading(true)
 
     vocabularyService
       .getDeckById(deckId)
       .then((deck) => {
         if (deck) {
+          const cards = (deck as any).cards || []
+          const mappedItems: VocabularyItem[] = cards.map((c: any, index: number) => {
+            const item = c.lexical_item_id || {}
+            return {
+              id: c._id || `card-${index}`,
+              word: item.word || c.front_text || 'Vocabulary',
+              pronunciation: item.pronunciation_us || '',
+              partOfSpeech: item.word_type || 'noun',
+              meanings: [
+                {
+                  id: `m-${index}`,
+                  partOfSpeech: item.word_type || 'noun',
+                  definitionVi: item.meaning_vi || c.back_text || '',
+                  definitionEn: item.meaning_en || '',
+                  examples: item.example_sentence
+                    ? [{ id: `ex-${index}`, sentence: item.example_sentence, translationVi: item.example_meaning_vi || '' }]
+                    : [],
+                },
+              ],
+              audioUs: item.audio_url_us,
+              cefrLevel: item.cefr_level || 'B1',
+            }
+          })
+
           setSelectedDeck({
             id: deck.id || deck._id || deckId,
-            title: deck.title,
-            description: deck.description || '',
+            title: deck.title || (deck as any).name || 'Vocabulary Deck',
+            description: deck.description || (deck as any).description_vi || '',
             coverColor: '#6b5ce7',
-            cardCount: deck.total_cards || 20,
+            cardCount: mappedItems.length || deck.total_cards || (deck as any).card_count || 10,
             creatorType: 'SYSTEM',
             visibility: 'PUBLIC',
-            vocabularyItems: allVocabularyWords,
+            vocabularyItems: mappedItems,
           })
         }
       })
-      .catch(() => {
-        setSelectedDeck({
-          id: deckId,
-          title: 'Vocabulary Deck',
-          description: '',
-          coverColor: '#6b5ce7',
-          cardCount: allVocabularyWords.length,
-          creatorType: 'SYSTEM',
-          visibility: 'PUBLIC',
-          vocabularyItems: allVocabularyWords,
-        })
+      .catch((err) => {
+        console.error('Error fetching deck by ID:', err)
+      })
+      .finally(() => {
+        setIsLoading(false)
       })
   }, [deckId])
 
@@ -80,7 +94,7 @@ export default function VocabularyDeckLearnAppPage() {
     )
   }
 
-  if (!selectedDeck) {
+  if (isLoading || !selectedDeck) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

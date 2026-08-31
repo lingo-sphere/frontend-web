@@ -15,14 +15,85 @@ import type {
   Badge,
 } from "@/types/user";
 import type { GamificationProfile, LeaderboardEntry } from "@/types/api.types";
-import {
-  currentUser as defaultUser,
-  userAchievements,
-  userActivities,
-  leaderboardData as defaultLeaderboard,
-  getUserRank,
-  getXPForNextLevel,
-} from "@/data/user-data";
+
+const defaultUser: User = {
+  id: "current_user",
+  email: "user@lingosphere.edu.vn",
+  username: "learner",
+  displayName: "Học viên LingoSphere",
+  avatar: "",
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  role: "student",
+  isVerified: true,
+  isActive: true,
+  stats: {
+    totalExercises: 3,
+    totalListeningExercises: 1,
+    totalVocabularyLearned: 15,
+    totalListeningTime: 30,
+    totalSpeakingTime: 15,
+    currentStreak: 1,
+    longestStreak: 5,
+    totalXP: 100,
+    level: 1,
+    badges: [],
+    averageAccuracy: 90,
+    totalCorrectAnswers: 15,
+    totalWrongAnswers: 2,
+    totalStudyTime: 45,
+    weeklyStudyTime: 45,
+    monthlyStudyTime: 120,
+  },
+  preferences: {
+    language: 'vi',
+    theme: 'system',
+    notifications: {
+      allEnabled: true,
+      marketingEnabled: false,
+      email: true,
+      push: true,
+      sound: true,
+      sms: false,
+      quietHoursEnabled: false,
+      quietHoursStart: '22:00',
+      quietHoursEnd: '08:00',
+      categories: {
+        auth: { push: true, email: true, inApp: true },
+        subscription: { push: true, email: true, inApp: true },
+        user: { push: true, email: false, inApp: true },
+        vocabulary: { push: true, email: false, inApp: true },
+        practice: { push: true, email: false, inApp: true },
+        exam: { push: true, email: true, inApp: true },
+        course: { push: false, email: false, inApp: true },
+        ai: { push: false, email: false, inApp: true },
+        gamification: { push: true, email: false, inApp: true },
+      },
+    },
+    learning: {
+      autoPlayAudio: true,
+      showPhonetic: true,
+      defaultExerciseDifficulty: 'medium',
+      dailyGoal: 20,
+    },
+    privacy: {
+      showProfile: true,
+      showProgress: true,
+      allowFriendRequests: true,
+    },
+  },
+};
+
+const userAchievements: Achievement[] = [];
+const userActivities: Activity[] = [];
+const defaultLeaderboard: any[] = [];
+const getUserRank = (_id?: string) => 1;
+const getXPForNextLevel = (xp: number) => ({
+  level: Math.floor(xp / 100) + 1,
+  current: xp % 100,
+  required: 100,
+  progress: xp % 100,
+});
 
 function Avatar({ src, size = "md", editable = false, onClick }: {
   src?: string; size?: "sm" | "md" | "lg" | "xl"; editable?: boolean; onClick?: () => void;

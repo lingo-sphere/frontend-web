@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon-map'
-import { mockNotifications, markAsRead, markAllAsRead, getUnreadCount } from '@/data/notifications-data'
+import { api } from '@/services/api-client'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification, NotificationCategory } from '@/types/notification'
 
@@ -33,10 +33,32 @@ const priorityColors = {
 export default function NotificationsAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'ALL' | NotificationCategory>('ALL')
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [showRead, setShowRead] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchNotifications = async () => {
+      try {
+        setIsLoading(true)
+        const res = await api.get<Notification[]>('/notifications/my').catch(() => [])
+        if (isMounted && Array.isArray(res)) {
+          setNotifications(res)
+        }
+      } catch (err) {
+        console.error('Failed to load notifications:', err)
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+    fetchNotifications()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const filteredNotifications = useMemo(() => {
     let filtered = notifications
@@ -58,14 +80,16 @@ export default function NotificationsAppPage() {
     return filtered
   }, [notifications, activeTab, showRead])
 
-  const unreadCount = getUnreadCount(notifications)
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
   const handleMarkAsRead = (id: string) => {
-    setNotifications(markAsRead(notifications, id))
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
+    api.post(`/notifications/${id}/read`).catch(() => {})
   }
 
   const handleMarkAllAsRead = () => {
-    setNotifications(markAllAsRead(notifications))
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    api.post('/notifications/my/read-all').catch(() => {})
   }
 
   const handleNotificationClick = (notification: Notification) => {
@@ -123,277 +147,98 @@ export default function NotificationsAppPage() {
                   : 'bg-surface-subtle text-text-secondary hover:bg-surface-hover'
               }`}
             >
-              {tab.label[isVietnamese ? 'vi' : 'en']}
+              {isVietnamese ? tab.label.vi : tab.label.en}
             </button>
           ))}
         </div>
 
-        <div className="mb-4 flex items-center gap-4">
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-sm text-text-secondary">
+            {isVietnamese ? 'Hiển thị' : 'Showing'} {filteredNotifications.length}{' '}
+            {isVietnamese ? 'thông báo' : 'notifications'}
+          </span>
+          <label className="flex items-center gap-2 text-sm text-text-secondary">
             <input
               type="checkbox"
               checked={showRead}
               onChange={(e) => setShowRead(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
+              className="rounded border-border"
             />
-            {isVietnamese ? 'Hiển thị thông báo đã đọc' : 'Show read notifications'}
+            {isVietnamese ? 'Hiện thông báo đã đọc' : 'Show read notifications'}
           </label>
         </div>
 
-        <div className="space-y-3">
-          {filteredNotifications.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <Icon name="bellOff" size={48} className="mb-4 text-text-tertiary" />
-                <p className="text-lg font-medium text-text-primary">{t('notifications.noNotifications')}</p>
-                <p className="text-sm text-text-tertiary">{t('notifications.allCaughtUp')}</p>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredNotifications.map((notification) => (
-              <NotificationItem
+        {isLoading ? (
+          <div className="flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : filteredNotifications.length > 0 ? (
+          <div className="space-y-3">
+            {filteredNotifications.map((notification) => (
+              <Card
                 key={notification.id}
-                notification={notification}
                 onClick={() => handleNotificationClick(notification)}
-                formatTime={formatTime}
-                isVietnamese={isVietnamese}
-              />
-            ))
-          )}
-        </div>
-      </main>
-
-      {selectedNotification && (
-        <NotificationModal
-          notification={selectedNotification}
-          onClose={() => setSelectedNotification(null)}
-          isVietnamese={isVietnamese}
-        />
-      )}
-    </Layout>
-  )
-}
-
-function NotificationItem({
-  notification,
-  onClick,
-  formatTime,
-  isVietnamese,
-}: {
-  notification: Notification
-  onClick: () => void
-  formatTime: (date: string) => string
-  isVietnamese: boolean
-}) {
-  const categoryColor = getCategoryColor(notification.notificationCategory)
-
-  return (
-    <Card
-      className={`cursor-pointer transition-all hover:shadow-md ${
-        notification.isRead ? 'opacity-70' : ''
-      } ${notification.isPinned ? 'border-primary/30 bg-primary/5' : ''}`}
-    >
-      <CardContent className="p-4">
-        <div className="flex gap-3" onClick={onClick}>
-          <div className={`mt-1 shrink-0 rounded-xl p-2 ${categoryColor}/10`}>
-            <Icon
-              name={getNotificationIcon(notification.notificationType)}
-              size={20}
-              className={categoryColor.replace('bg-', 'text-')}
-            />
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  !notification.isRead ? 'border-primary/50 bg-primary/5' : ''
+                }`}
+              >
+                <CardContent className="flex items-start gap-4 p-4">
+                  <div
+                    className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${getCategoryColor(
+                      notification.notificationCategory,
+                    )}`}
+                  >
+                    <Icon name="bell" size={20} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold uppercase text-primary">
+                          {getCategoryLabel(notification.notificationCategory)}
+                        </span>
+                        {notification.isPinned && (
+                          <span className="rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-bold text-warning">
+                            PINNED
+                          </span>
+                        )}
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                            priorityColors[notification.priority]
+                          }`}
+                        >
+                          {notification.priority}
+                        </span>
+                      </div>
+                      <span className="text-xs text-text-tertiary">
+                        {formatTime(notification.createdAt)}
+                      </span>
+                    </div>
+                    <h3 className="mt-1 font-semibold text-text-primary">
+                      {isVietnamese && notification.titleVi ? notification.titleVi : notification.title}
+                    </h3>
+                    <p className="mt-0.5 text-sm text-text-secondary line-clamp-2">
+                      {isVietnamese && notification.contentVi ? notification.contentVi : notification.content}
+                    </p>
+                  </div>
+                  {!notification.isRead && (
+                    <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  {notification.isPinned && <Icon name="pin" size={12} className="text-primary" />}
-                  <h4 className={`font-medium ${notification.isRead ? 'text-text-secondary' : 'text-text-primary'}`}>
-                    {isVietnamese && notification.titleVi ? notification.titleVi : notification.title}
-                  </h4>
-                </div>
-                <p className="mt-1 text-sm text-text-tertiary line-clamp-2">
-                  {isVietnamese && notification.contentVi ? notification.contentVi : notification.content}
-                </p>
-              </div>
-              <div className="shrink-0 text-right">
-                <span className="text-xs text-text-tertiary">{formatTime(notification.createdAt)}</span>
-                {!notification.isRead && <div className="mt-1 ml-auto h-2 w-2 rounded-full bg-primary" />}
-              </div>
-            </div>
-
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${categoryColor} text-white`}>
-                {getCategoryLabel(notification.notificationCategory)}
-              </span>
-              {notification.priority !== 'NORMAL' && (
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${priorityColors[notification.priority]}`}
-                >
-                  {notification.priority}
-                </span>
-              )}
-              <div className="flex gap-1">
-                {notification.channels.map((ch) => (
-                  <span key={ch} className="rounded bg-surface-subtle px-1.5 py-0.5 text-[10px] text-text-tertiary">
-                    {ch}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function NotificationModal({
-  notification,
-  onClose,
-  isVietnamese,
-}: {
-  notification: Notification
-  onClose: () => void
-  isVietnamese: boolean
-}) {
-  const { t } = useTranslation()
-  const categoryColor = getCategoryColor(notification.notificationCategory)
-  const categoryLabel = getCategoryLabel(notification.notificationCategory)
-
-  const formatDateTime = (dateString: string) => {
-    const locale = isVietnamese ? 'vi-VN' : 'en-US'
-    return new Date(dateString).toLocaleString(locale, {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <Card className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
-        <CardContent className="p-6">
-          <div className="mb-4 flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`rounded-xl p-2 ${categoryColor}/10`}>
-                <Icon
-                  name={getNotificationIcon(notification.notificationType)}
-                  size={24}
-                  className={categoryColor.replace('bg-', 'text-')}
-                />
-              </div>
-              <div>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${categoryColor} text-white`}>
-                  {categoryLabel}
-                </span>
-              </div>
-            </div>
-            <button onClick={onClose} className="text-text-tertiary hover:text-text-primary">
-              <Icon name="x" size={20} />
-            </button>
-          </div>
-
-          <h3 className="mb-2 text-lg font-semibold text-text-primary">
-            {isVietnamese && notification.titleVi ? notification.titleVi : notification.title}
-          </h3>
-
-          <p className="mb-4 text-sm text-text-tertiary">{formatDateTime(notification.createdAt)}</p>
-
-          <div className="mb-6 rounded-xl bg-surface-subtle p-4">
-            <p className="text-text-primary">
-              {isVietnamese && notification.contentVi ? notification.contentVi : notification.content}
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border py-16 text-center">
+            <Icon name="bell" size={48} className="mx-auto mb-3 text-text-tertiary" />
+            <h3 className="text-lg font-semibold text-text-primary">
+              {isVietnamese ? 'Không có thông báo nào' : 'No notifications'}
+            </h3>
+            <p className="mt-1 text-sm text-text-secondary">
+              {isVietnamese ? 'Bạn đã xem hết tất cả thông báo mới' : "You're all caught up!"}
             </p>
           </div>
-
-          {notification.data && Object.keys(notification.data).length > 0 && (
-            <div className="mb-6">
-              <h4 className="mb-2 text-sm font-medium text-text-secondary">
-                {isVietnamese ? 'Chi tiết' : 'Details'}
-              </h4>
-              <div className="rounded-lg border border-surface-subtle p-3">
-                <pre className="text-xs text-text-tertiary overflow-x-auto">
-                  {JSON.stringify(notification.data, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
-
-          <div className="mb-6 flex flex-wrap gap-2 text-xs text-text-tertiary">
-            <span>
-              {isVietnamese ? 'Kênh' : 'Channels'}: {notification.channels.join(', ')}
-            </span>
-            {notification.sourceService && (
-              <span>
-                {isVietnamese ? 'Nguồn' : 'Source'}: {notification.sourceService}
-              </span>
-            )}
-            {notification.sourceId && <span>ID: {notification.sourceId}</span>}
-          </div>
-
-          <div className="flex gap-3">
-            {notification.actionUrl && (
-              <Button className="flex-1" onClick={() => (window.location.href = notification.actionUrl!)}>
-                {notification.actionLabel || (isVietnamese ? 'Xem' : 'View')}
-              </Button>
-            )}
-            <Button variant="outline" className="flex-1" onClick={onClose}>
-              {t('common.close')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </main>
+    </Layout>
   )
-}
-
-function getNotificationIcon(type: string): string {
-  const iconMap: Record<string, string> = {
-    LOGIN_SUCCESS: 'logIn',
-    LOGIN_FAILED: 'alertTriangle',
-    PASSWORD_CHANGED: 'lock',
-    EMAIL_VERIFIED: 'checkCircle',
-    TWO_FACTOR_ENABLED: 'shield',
-    ACCOUNT_BLOCKED: 'xCircle',
-    NEW_LOGIN_LOCATION: 'mapPin',
-    SUBSCRIPTION_CREATED: 'creditCard',
-    SUBSCRIPTION_RENEWED: 'refresh',
-    SUBSCRIPTION_EXPIRING: 'clock',
-    SUBSCRIPTION_EXPIRED: 'alertCircle',
-    PAYMENT_SUCCESS: 'checkCircle',
-    PAYMENT_FAILED: 'xCircle',
-    STREAK_REMINDER: 'flame',
-    STREAK_BROKEN: 'zapOff',
-    STREAK_MILESTONE: 'award',
-    LEVEL_UP: 'trendingUp',
-    XP_MILESTONE: 'star',
-    ACHIEVEMENT_UNLOCKED: 'trophy',
-    GEM_EARNED: 'gem',
-    SRS_DUE: 'clock',
-    NEW_CARDS_AVAILABLE: 'plusCircle',
-    DECK_COMPLETED: 'checkCircle',
-    VOCABULARY_MASTERED: 'checkSquare',
-    PRACTICE_SESSION_REMINDER: 'activity',
-    SPEAKING_EVALUATION_READY: 'mic',
-    WRITING_EVALUATION_READY: 'pencil',
-    LISTENING_EVALUATION_READY: 'headphones',
-    TOEIC_TEST_REMINDER: 'fileText',
-    TOEIC_RESULT_READY: 'barChart',
-    TOEIC_SCORE_IMPROVED: 'trendingUp',
-    TOEIC_PART_WEAK: 'alertTriangle',
-    COURSE_ENROLLED: 'book',
-    LESSON_AVAILABLE: 'playCircle',
-    LESSON_COMPLETED: 'checkCircle',
-    COURSE_COMPLETED: 'graduation',
-    COURSE_CERTIFICATE_READY: 'award',
-    AI_QUOTA_WARNING: 'alertTriangle',
-    AI_RECOMMENDATION_AVAILABLE: 'lightbulb',
-    DAILY_GOAL_REMINDER: 'target',
-    DAILY_GOAL_COMPLETED: 'checkCircle',
-    SYSTEM_MAINTENANCE: 'settings',
-  }
-  return iconMap[type] || 'bell'
 }

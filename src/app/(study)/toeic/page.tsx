@@ -7,9 +7,8 @@ import { Trophy, Headphones, BookOpen } from 'lucide-react'
 import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
-import { examService } from '@/services/exam.service'
-import { toeicExams } from '@/data/toeic-data'
-import type { ToeicExamFilters } from '@/types/toeic'
+import { examService, type BackendToeicExam } from '@/services/exam.service'
+import type { ToeicExam, ToeicExamFilters } from '@/types/toeic'
 import { ExamCard } from '@/components/toeic/ToeicExamCard'
 import { ToeicFilterBar } from '@/components/toeic/ToeicFilterBar'
 
@@ -18,24 +17,50 @@ export default function ToeicHubPage() {
   const navigate = useNavigate()
   const isVietnamese = i18n.language === 'vi'
 
+  const [exams, setExams] = useState<ToeicExam[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<ToeicExamFilters>({})
 
   useEffect(() => {
-    examService
-      .getExams({ type: 'TOEIC' })
-      .then((res) => {
-        if (res && res.length > 0) {
-          // Backend exams loaded
+    let isMounted = true
+    const fetchExams = async () => {
+      try {
+        setIsLoading(true)
+        const res = await examService.getExams()
+        if (isMounted && Array.isArray(res)) {
+          const mapped: ToeicExam[] = res.map((e: BackendToeicExam, idx) => ({
+            id: e._id,
+            title: e.title,
+            code: e.slug || `TOEIC-TEST-${idx + 1}`,
+            description: e.description || 'ETS Official TOEIC Test',
+            thumbnailUrl: '',
+            examSeries: 'ETS TOEIC',
+            releaseYear: 2024,
+            examType: 'FULL_TEST',
+            skillsEnabled: 'LR',
+            targetScore: 750,
+            difficultyLevel: 'MEDIUM',
+            totalQuestions: e.total_questions || 200,
+            totalAttempts: e.attempts_count || 1500,
+            status: 'PUBLISHED',
+          }))
+          setExams(mapped)
         }
-      })
-      .catch((err) => {
-        console.warn('Cannot fetch exams from backend, using local mock data:', err)
-      })
+      } catch (err) {
+        console.error('Failed to load TOEIC exams:', err)
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+    fetchExams()
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filteredExams = useMemo(() => {
-    return toeicExams.filter((exam) => {
+    return exams.filter((exam) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         const matchTitle = exam.title.toLowerCase().includes(query)
@@ -47,7 +72,7 @@ export default function ToeicHubPage() {
       if (filters.difficulty && exam.difficultyLevel !== filters.difficulty) return false
       return true
     })
-  }, [searchQuery, filters])
+  }, [exams, searchQuery, filters])
 
   return (
     <Layout>
@@ -64,7 +89,7 @@ export default function ToeicHubPage() {
 
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
           <Card className="dashboard-card border-amber-200/60 bg-amber-50/40">
-            <CardContent className="p-4 flex items-center gap-3">
+            <CardContent className="flex items-center gap-3 p-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
                 <Trophy className="h-6 w-6" />
               </div>
@@ -80,7 +105,7 @@ export default function ToeicHubPage() {
           </Card>
 
           <Card className="dashboard-card border-indigo-200/60 bg-indigo-50/40">
-            <CardContent className="p-4 flex items-center gap-3">
+            <CardContent className="flex items-center gap-3 p-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600">
                 <Headphones className="h-6 w-6" />
               </div>
@@ -94,7 +119,7 @@ export default function ToeicHubPage() {
           </Card>
 
           <Card className="dashboard-card border-emerald-200/60 bg-emerald-50/40">
-            <CardContent className="p-4 flex items-center gap-3">
+            <CardContent className="flex items-center gap-3 p-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
                 <BookOpen className="h-6 w-6" />
               </div>
@@ -116,16 +141,26 @@ export default function ToeicHubPage() {
           isVietnamese={isVietnamese}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredExams.map((exam) => (
-            <ExamCard
-              key={exam.id}
-              exam={exam}
-              onClick={() => navigate(`/toeic/exam/${exam.id}`)}
-              isVietnamese={isVietnamese}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="mt-12 flex h-40 items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : filteredExams.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredExams.map((exam) => (
+              <ExamCard
+                key={exam.id}
+                exam={exam}
+                onClick={() => navigate(`/exam/${exam.id}`)}
+                isVietnamese={isVietnamese}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-12 text-center text-text-secondary">
+            {isVietnamese ? 'Không tìm thấy đề thi nào phù hợp' : 'No exams found'}
+          </div>
+        )}
       </main>
     </Layout>
   )

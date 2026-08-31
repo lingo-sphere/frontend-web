@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Check, X, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { VocabularyItem } from '@/types/vocabulary-learn'
-import { getRandomDistractors } from '@/data/vocabulary-learn-data'
+import { getRandomDistractors } from '@/lib/audio-utils'
 
 interface ReverseMultipleChoiceExerciseProps {
   word: VocabularyItem

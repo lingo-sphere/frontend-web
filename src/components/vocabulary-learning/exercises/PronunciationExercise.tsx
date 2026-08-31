@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Volume2, Mic, Square, Check, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { speakWord } from '@/data/vocabulary-learn-data'
+import { speakWord } from '@/lib/audio-utils'
 import type { VocabularyItem } from '@/types/vocabulary-learn'
 
 interface PronunciationExerciseProps {

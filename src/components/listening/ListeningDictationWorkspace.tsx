@@ -4,16 +4,25 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon-map'
 import {
-  getSegmentIndexAtTime,
-  formatDuration,
-} from '@/data/listening-data'
-import {
   calculateAttemptScore,
   type ListeningExercise,
   type ListeningAttempt,
   type TranscriptSegment,
   type Blank,
 } from '@/types/listening'
+
+function formatDuration(seconds?: number): string {
+  if (!seconds) return '0:00'
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${s < 10 ? '0' : ''}${s}`
+}
+
+function getSegmentIndexAtTime(time: number, segments?: TranscriptSegment[]): number {
+  if (!segments || segments.length === 0) return 0
+  const idx = segments.findIndex((s) => time >= s.startTime && time <= s.endTime)
+  return idx !== -1 ? idx : 0
+}
 
 interface UserAnswers {
   [blankId: string]: string

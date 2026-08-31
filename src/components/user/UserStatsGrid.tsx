@@ -1,5 +1,4 @@
 import { Icon } from '@/components/icons/icon-map'
-import { getXPForNextLevel } from '@/data/user-data'
 
 export function StatCard({
   icon,
@@ -23,27 +22,29 @@ export function StatCard({
   }
 
   return (
-    <div className="bg-surface-subtle rounded-xl p-4">
+    <div className="rounded-xl bg-surface-subtle p-4">
       <div
-        className={`w-10 h-10 ${colorClasses[color]} rounded-lg flex items-center justify-center mb-3`}
+        className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${colorClasses[color]}`}
       >
         <Icon name={icon} size={20} />
       </div>
       <div className="text-2xl font-bold text-text-primary">{value}</div>
       <div className="text-sm text-text-secondary">{label}</div>
       {subtext && (
-        <div className="text-xs text-text-tertiary mt-1">{subtext}</div>
+        <div className="mt-1 text-xs text-text-tertiary">{subtext}</div>
       )}
     </div>
   )
 }
 
 export function XPProgress({ currentXP }: { currentXP: number }) {
-  const { current, required, progress } = getXPForNextLevel(currentXP)
+  const current = currentXP % 100
+  const required = 100
+  const progress = Math.min(Math.round((current / required) * 100), 100)
 
   return (
-    <div className="bg-surface-subtle rounded-xl p-4">
-      <div className="flex items-center justify-between mb-2">
+    <div className="rounded-xl bg-surface-subtle p-4">
+      <div className="mb-2 flex items-center justify-between">
         <span className="text-sm font-medium text-text-secondary">
           Cấp độ tiếp theo
         </span>
@@ -51,9 +52,9 @@ export function XPProgress({ currentXP }: { currentXP: number }) {
           {current}/{required} XP
         </span>
       </div>
-      <div className="h-2 bg-surface rounded-full overflow-hidden">
+      <div className="h-2 overflow-hidden rounded-full bg-surface">
         <div
-          className="h-full bg-primary rounded-full transition-all"
+          className="h-full rounded-full bg-primary transition-all"
           style={{ width: `${progress}%` }}
         />
       </div>

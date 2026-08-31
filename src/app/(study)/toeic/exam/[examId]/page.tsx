@@ -6,12 +6,8 @@ import { useNavigate, useParams } from '@/lib/navigation'
 import { ArrowLeft, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { courseService } from '@/services/course.service'
+import { examService, type BackendToeicExam } from '@/services/exam.service'
 import type { Course } from '@/types/api.types'
-import {
-  toeicTest1,
-  toeicTest1AnswerKey,
-  getPartByNumber,
-} from '@/data/toeic-test-1-data'
 import type { ToeicQuestion } from '@/types/toeic'
 import { ToeicModeSelector, type PracticeMode } from '@/components/toeic/ToeicModeSelector'
 import { ToeicExamResult, type ExamResultMetrics } from '@/components/toeic/ToeicExamResult'
@@ -52,122 +48,13 @@ const PART_TIPS: Record<number, string> = {
   7: 'Đọc câu hỏi trước -> Tìm từ khóa (keywords) -> Quét đoạn văn để tìm đáp án.',
 }
 
-const createMockQuestionsForPart = (partNum: number, startQ: number, count: number): ToeicQuestion[] => {
-  const questions: ToeicQuestion[] = []
-  for (let i = 0; i < count; i++) {
-    const qNum = startQ + i
-    const correctOption = toeicTest1AnswerKey[qNum] || 'A'
-    questions.push({
-      id: `p${partNum}-q${qNum}`,
-      examId: 'toeic_2019_test1',
-      partId: `p${partNum}-t1`,
-      partNumber: partNum,
-      questionNumber: qNum,
-      questionType: 'MULTIPLE_CHOICE',
-      questionTextEn: `Question ${qNum}: Select the best answer to complete the sentence or respond.`,
-      options: [
-        { key: 'A', textEn: 'Option A statement' },
-        { key: 'B', textEn: 'Option B statement' },
-        { key: 'C', textEn: 'Option C statement' },
-        { key: 'D', textEn: 'Option D statement' },
-      ],
-      correctOption,
-      difficultyLevel: 'MEDIUM',
-      skillType: partNum <= 4 ? 'LISTENING' : 'READING',
-      hasPassage: partNum >= 6,
-      status: 'PUBLISHED',
-    })
-  }
-  return questions
-}
-
-const createPart6Questions = (): ToeicQuestion[] => {
-  const passages = [
-    { id: 'p6-1', title: 'Company Policy Update', start: 131 },
-    { id: 'p6-2', title: 'Job Opening Announcement', start: 135 },
-    { id: 'p6-3', title: 'Product Recall Notice', start: 139 },
-    { id: 'p6-4', title: 'Customer Survey Request', start: 143 },
-  ]
-  const questions: ToeicQuestion[] = []
-  passages.forEach((passage) => {
-    for (let i = 0; i < 4; i++) {
-      questions.push({
-        id: `p6-q${passage.start + i}`,
-        examId: 'toeic_2019_test1',
-        partId: 'p6-t1',
-        partNumber: 6,
-        questionNumber: passage.start + i,
-        passageId: passage.id,
-        passageTitle: passage.title,
-        questionType: 'MULTIPLE_CHOICE',
-        questionTextEn: `Question ${i + 1} for ${passage.title}`,
-        options: [
-          { key: 'A', textEn: 'Option A' },
-          { key: 'B', textEn: 'Option B' },
-          { key: 'C', textEn: 'Option C' },
-          { key: 'D', textEn: 'Option D' },
-        ],
-        correctOption: 'A',
-        difficultyLevel: 'MEDIUM',
-        skillType: 'READING',
-        hasPassage: true,
-        status: 'PUBLISHED',
-      })
-    }
-  })
-  return questions
-}
-
-const createPart7Questions = (): ToeicQuestion[] => {
-  const questions: ToeicQuestion[] = []
-  const passageConfigs = [
-    { id: 'p7-1', title: 'Hotel Confirmation', start: 147, questions: 5 },
-    { id: 'p7-2', title: 'Job Offer Letter', start: 152, questions: 5 },
-    { id: 'p7-3', title: 'Travel Itinerary', start: 157, questions: 5 },
-    { id: 'p7-4', title: 'Meeting Agenda', start: 162, questions: 5 },
-    { id: 'p7-5', title: 'Product Announcement', start: 167, questions: 5 },
-    { id: 'p7-6', title: 'Event Invitation', start: 172, questions: 5 },
-    { id: 'p7-7', title: 'Policy Update', start: 177, questions: 5 },
-    { id: 'p7-8', title: 'Customer Service Email', start: 182, questions: 5 },
-    { id: 'p7-9', title: 'Contract Agreement', start: 187, questions: 5 },
-    { id: 'p7-10', title: 'Training Schedule', start: 192, questions: 5 },
-    { id: 'p7-11', title: 'Newsletter Article', start: 197, questions: 4 },
-  ]
-  passageConfigs.forEach((passage) => {
-    for (let i = 0; i < passage.questions; i++) {
-      questions.push({
-        id: `p7-q${passage.start + i}`,
-        examId: 'toeic_2019_test1',
-        partId: 'p7-t1',
-        partNumber: 7,
-        questionNumber: passage.start + i,
-        passageId: passage.id,
-        passageTitle: passage.title,
-        questionType: 'MULTIPLE_CHOICE',
-        questionTextEn: `Passage Question ${passage.start + i}: According to the passage, what is mentioned?`,
-        options: [
-          { key: 'A', textEn: 'Option A' },
-          { key: 'B', textEn: 'Option B' },
-          { key: 'C', textEn: 'Option C' },
-          { key: 'D', textEn: 'Option D' },
-        ],
-        correctOption: 'A',
-        difficultyLevel: 'HARD',
-        skillType: 'READING',
-        hasPassage: true,
-        status: 'PUBLISHED',
-      })
-    }
-  })
-  return questions
-}
-
 export default function ToeicExamAppPage() {
   const { i18n } = useTranslation()
   const navigate = useNavigate()
-  const { examId } = useParams()
+  const { examId } = useParams<{ examId?: string }>()
   const isVietnamese = i18n.language === 'vi'
 
+  const [examData, setExamData] = useState<BackendToeicExam | null>(null)
   const [showModeSelector, setShowModeSelector] = useState<boolean>(true)
   const [allQuestions, setAllQuestions] = useState<ToeicQuestion[]>([])
   const [state, setState] = useState<ExamState>({
@@ -176,7 +63,7 @@ export default function ToeicExamAppPage() {
     currentQuestionIndex: 0,
     answers: {},
     flagged: [],
-    timeRemaining: 135 * 60,
+    timeRemaining: 120 * 60,
     started: false,
     submitted: false,
     showAnswer: false,
@@ -192,17 +79,82 @@ export default function ToeicExamAppPage() {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
+  useEffect(() => {
+    if (!examId) return
+    examService
+      .getExamById(examId)
+      .then((data) => {
+        if (data) setExamData(data)
+      })
+      .catch((err) => {
+        console.error('Failed to load exam by ID:', err)
+      })
+  }, [examId])
+
   const generateQuestionsForParts = useCallback((parts: number[]): ToeicQuestion[] => {
-    let questions: ToeicQuestion[] = []
-    if (parts.includes(1)) questions = [...questions, ...createMockQuestionsForPart(1, 1, 6)]
-    if (parts.includes(2)) questions = [...questions, ...createMockQuestionsForPart(2, 7, 25)]
-    if (parts.includes(3)) questions = [...questions, ...createMockQuestionsForPart(3, 32, 39)]
-    if (parts.includes(4)) questions = [...questions, ...createMockQuestionsForPart(4, 71, 30)]
-    if (parts.includes(5)) questions = [...questions, ...createMockQuestionsForPart(5, 101, 30)]
-    if (parts.includes(6)) questions = [...questions, ...createPart6Questions()]
-    if (parts.includes(7)) questions = [...questions, ...createPart7Questions()]
+    if (!examData || !examData.parts) {
+      // Create fallback structure from exam
+      const qs: ToeicQuestion[] = []
+      let qIndex = 1
+      parts.forEach((partNum) => {
+        const count = PART_TIMINGS[partNum]?.questions || 10
+        for (let i = 0; i < count; i++) {
+          qs.push({
+            id: `p${partNum}-q${qIndex}`,
+            examId: examId || 'toeic-test',
+            partId: `p${partNum}`,
+            partNumber: partNum,
+            questionNumber: qIndex,
+            questionType: 'MULTIPLE_CHOICE',
+            questionTextEn: `Question ${qIndex}: Select the best answer.`,
+            options: [
+              { key: 'A', textEn: 'Option A' },
+              { key: 'B', textEn: 'Option B' },
+              { key: 'C', textEn: 'Option C' },
+              { key: 'D', textEn: 'Option D' },
+            ],
+            correctOption: 'A',
+            difficultyLevel: 'MEDIUM',
+            skillType: partNum <= 4 ? 'LISTENING' : 'READING',
+            hasPassage: partNum >= 6,
+            status: 'PUBLISHED',
+          })
+          qIndex++
+        }
+      })
+      return qs
+    }
+
+    const questions: ToeicQuestion[] = []
+    examData.parts.forEach((p) => {
+      if (parts.includes(p.part_number)) {
+        p.questions.forEach((q) => {
+          questions.push({
+            id: `p${p.part_number}-q${q.question_number}`,
+            examId: examData._id,
+            partId: `part-${p.part_number}`,
+            partNumber: p.part_number,
+            questionNumber: q.question_number,
+            questionType: 'MULTIPLE_CHOICE',
+            questionTextEn: q.question_text || `Question ${q.question_number}`,
+            options: q.options.map((opt) => ({ key: opt.key, textEn: opt.text })),
+            correctOption: q.correct_answer || 'A',
+            explanationEn: q.explanation,
+            imageMediaId: q.image_url,
+            audioMediaId: q.audio_url,
+            hasImage: !!q.image_url,
+            hasAudio: !!q.audio_url,
+            difficultyLevel: 'MEDIUM',
+            skillType: p.part_number <= 4 ? 'LISTENING' : 'READING',
+            hasPassage: p.part_number >= 6,
+            status: 'PUBLISHED',
+          })
+        })
+      }
+    })
+
     return questions
-  }, [])
+  }, [examData, examId])
 
   const calculateResults = useCallback((): ExamResultMetrics => {
     let correct = 0
@@ -275,7 +227,7 @@ export default function ToeicExamAppPage() {
     const res = calculateResults()
     Analytics.examSubmitted({
       examId: (examId as string) || 'toeic-full-test',
-      examTitle: 'TOEIC Practice Test',
+      examTitle: examData?.title || 'TOEIC Practice Test',
       totalScore: res.estimatedTotal,
       listeningScore: res.estimatedListening,
       readingScore: res.estimatedReading,
@@ -308,7 +260,7 @@ export default function ToeicExamAppPage() {
       .finally(() => {
         setIsLoadingRecommendations(false)
       })
-  }, [state.submitted, calculateResults, examId])
+  }, [state.submitted, calculateResults, examId, examData, state.timedMode])
 
   useEffect(() => {
     if (!state.started || state.submitted || !state.timedMode) return
@@ -334,7 +286,7 @@ export default function ToeicExamAppPage() {
 
     let time = 0
     if (timed) {
-      if (mode === 'FULL') time = 135 * 60
+      if (mode === 'FULL') time = 120 * 60
       else if (mode === 'LISTENING') time = 45 * 60
       else if (mode === 'READING') time = 75 * 60
       else {
@@ -395,8 +347,8 @@ export default function ToeicExamAppPage() {
   if (showModeSelector) {
     return (
       <ToeicModeSelector
-        title={toeicTest1.title}
-        description={toeicTest1.description}
+        title={examData?.title || 'ETS TOEIC Practice Test'}
+        description={examData?.description || 'Official ETS format with 7 Parts'}
         onSelectMode={handleSelectMode}
         onBack={() => navigate('/toeic')}
       />
@@ -442,7 +394,7 @@ export default function ToeicExamAppPage() {
               <ArrowLeft size={20} />
             </Button>
             <div>
-              <h1 className="text-[14px] font-semibold text-text-primary">{toeicTest1.title}</h1>
+              <h1 className="text-[14px] font-semibold text-text-primary">{examData?.title || 'TOEIC Exam'}</h1>
               <p className="text-[11px] text-text-tertiary">
                 {isVietnamese ? 'Câu' : 'Question'} {state.currentQuestionIndex + 1} / {allQuestions.length}
               </p>
@@ -472,7 +424,7 @@ export default function ToeicExamAppPage() {
           <ToeicQuestionCard
             question={currentQuestion}
             currentPart={currentPart}
-            partName={getPartByNumber(currentPart)?.nameVi}
+            partName={`Part ${currentPart}`}
             partTip={PART_TIPS[currentPart]}
             selectedOption={state.answers[currentQuestion.questionNumber]}
             isFlagged={state.flagged.includes(currentQuestion.questionNumber)}

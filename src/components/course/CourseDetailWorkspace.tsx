@@ -5,7 +5,6 @@ import { CourseQnATab } from '@/components/course/CourseQnATab'
 import { CourseReviewsTab } from '@/components/course/CourseReviewsTab'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { Button } from '@/components/ui/button'
-import { demoCourse } from '@/data/course-data'
 import { courseService } from '@/services/course.service'
 import type { Chapter, Course, Lesson } from '@/types/course'
 import {
