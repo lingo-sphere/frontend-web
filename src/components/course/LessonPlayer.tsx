@@ -51,7 +51,7 @@ const QUALITIES = [
 ]
 
 function detectNetworkQuality(): '1080p' | '720p' | '480p' | '360p' {
-  if (typeof window === 'undefined') return '720p'
+  if (typeof window === 'undefined') return '1080p'
   const nav = navigator as unknown as {
     connection?: {
       effectiveType?: 'slow-2g' | '2g' | '3g' | '4g'
@@ -63,21 +63,15 @@ function detectNetworkQuality(): '1080p' | '720p' | '480p' | '360p' {
   }
 
   const conn = nav.connection
-  if (!conn) return '720p'
+  if (!conn) return '1080p'
 
-  if (conn.saveData) return '360p'
+  if (conn.saveData) return '480p'
 
   if (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') {
     return '360p'
   }
   if (conn.effectiveType === '3g') {
-    return conn.downlink && conn.downlink < 0.8 ? '360p' : '480p'
-  }
-  if (conn.downlink && conn.downlink < 1.5) {
-    return '480p'
-  }
-  if (conn.downlink && conn.downlink < 4.0) {
-    return '720p'
+    return conn.downlink && conn.downlink < 0.4 ? '360p' : '720p'
   }
   return '1080p'
 }
@@ -140,7 +134,7 @@ export function LessonPlayer({
   const [isMuted, setIsMuted] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
   const [selectedQuality, setSelectedQuality] = useState<string>('auto')
-  const [autoResolvedQuality, setAutoResolvedQuality] = useState<'1080p' | '720p' | '480p' | '360p'>('720p')
+  const [autoResolvedQuality, setAutoResolvedQuality] = useState<'1080p' | '720p' | '480p' | '360p'>('1080p')
   const [isTheater, setIsTheater] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isPipActive, setIsPipActive] = useState(false)
@@ -204,14 +198,6 @@ export function LessonPlayer({
     if (!baseVideoSource) return ''
     if (lesson?.qualities && lesson.qualities[effectiveQualityKey]) {
       return lesson.qualities[effectiveQualityKey]
-    }
-    if (
-      effectiveQualityKey !== '1080p' &&
-      isDirectVideoUrl(baseVideoSource) &&
-      baseVideoSource.includes('.r2.dev')
-    ) {
-      const base = baseVideoSource.replace(/\.[^/.]+$/, '')
-      return `${base}_${effectiveQualityKey}.mp4`
     }
     return baseVideoSource
   }, [baseVideoSource, lesson?.qualities, effectiveQualityKey])
