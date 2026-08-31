@@ -41,9 +41,10 @@ type BottomTab = 'overview' | 'qna' | 'notes' | 'announcements' | 'reviews' | 't
 type SidebarTab = 'content' | 'ai'
 
 export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
-  const [course, setCourse] = useState<Course>(demoCourse)
-  const [currentChapter, setCurrentChapter] = useState<Chapter>(demoCourse.chapters[0])
-  const [currentLesson, setCurrentLesson] = useState<Lesson>(demoCourse.chapters[0].lessons[0])
+  const [course, setCourse] = useState<Course | null>(null)
+  const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
+  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [expandedChapters, setExpandedChapters] = useState<string[]>(['ch-01', 'ch-02'])
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('overview')
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('content')
@@ -57,7 +58,7 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   const [aiChatMessages, setAiChatMessages] = useState<Array<{ sender: 'ai' | 'user'; text: string; time: string }>>([
     {
       sender: 'ai',
-      text: `Xin chào! Tôi là Trợ lý AI LingoSphere. Bạn có thắc mắc gì về bài học "${demoCourse.chapters[0].lessons[0].title}" không? Hãy gửi câu hỏi cho tôi nhé!`,
+      text: 'Xin chào! Tôi là Trợ lý AI LingoSphere. Bạn có thắc mắc gì về bài học không? Hãy gửi câu hỏi cho tôi nhé!',
       time: 'Vừa xong',
     },
   ])
@@ -68,6 +69,7 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
     let isMounted = true
 
     const fetchCourse = async () => {
+      setIsLoading(true)
       try {
         const liveCourseResponse = await courseService.getCourseById(courseId)
         if (isMounted && liveCourseResponse) {
@@ -220,28 +222,47 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
             ]
           }
 
-          setCourse((prev) => {
-            return {
-              ...prev,
-              id: String(courseObj._id || courseObj.id || courseId),
-              title: String(courseObj.title || prev.title),
-              description: String(courseObj.description || prev.description),
-              level: String(courseObj.level || prev.level),
-              thumbnail: String(courseObj.thumbnail_url || courseObj.thumbnail || prev.thumbnail),
-              chapters: mappedChapters,
-              instructor: {
-                name: String(courseObj.instructor_name || courseObj.author_name || prev.instructor?.name || 'LingoSphere Academic Team'),
-                title: prev.instructor?.title || 'Chuyên gia đào tạo LingoSphere',
-                avatar: String(courseObj.thumbnail_url || prev.instructor?.avatar || ''),
-                rating: Number(courseObj.rating || 4.8),
-                ratingCount: Number(courseObj.rating_count || 142),
-                studentsCount: Number(courseObj.students_count || 1250),
-                coursesCount: 6,
-                bio: String(courseObj.description || 'Đội ngũ giảng viên và chuyên gia học thuật giàu kinh nghiệm sư phạm và luyện thi chứng chỉ quốc tế.'),
-              },
-            }
-          })
+          const totalLes = mappedChapters.reduce((acc, ch) => acc + (ch.lessons?.length || 0), 0)
+          const parsedCourse: Course = {
+            id: String(courseObj._id || courseObj.id || courseId),
+            title: String(courseObj.title || 'Khóa học LingoSphere'),
+            description: String(courseObj.description || ''),
+            level: String(courseObj.level || 'TOEIC'),
+            thumbnail: String(courseObj.thumbnail_url || courseObj.thumbnail || ''),
+            duration: `${Math.max(1, Math.round((Number(courseObj.total_duration_minutes) || totalLes * 15 || 60) / 60))} giờ`,
+            totalChapters: mappedChapters.length,
+            totalLessons: totalLes,
+            rating: Number(courseObj.rating || courseObj.rating_avg || 4.8),
+            ratingCount: Number(courseObj.rating_count || 142),
+            studentsCount: Number(courseObj.students_count || courseObj.enrollments || 1250),
+            chapters: mappedChapters,
+            progress: {
+              courseId: String(courseObj._id || courseObj.id || courseId),
+              startedAt: new Date().toISOString(),
+              completedLessons: 0,
+              totalLessons: totalLes,
+              completedChapters: 0,
+              totalChapters: mappedChapters.length,
+              baselineScore: null,
+              currentChapterIndex: 0,
+              currentLessonId: mappedChapters[0]?.lessons[0]?.id || null,
+              currentProgress: 0,
+            },
+            preTest: { status: 'available' },
+            finalTest: { status: 'locked' },
+            instructor: {
+              name: String(courseObj.instructor_name || courseObj.author_name || 'LingoSphere Academic Team'),
+              title: 'Chuyên gia đào tạo LingoSphere',
+              avatar: String(courseObj.thumbnail_url || ''),
+              rating: Number(courseObj.rating || courseObj.rating_avg || 4.8),
+              ratingCount: Number(courseObj.rating_count || 142),
+              studentsCount: Number(courseObj.students_count || courseObj.enrollments || 1250),
+              coursesCount: 6,
+              bio: String(courseObj.description || 'Đội ngũ giảng viên và chuyên gia học thuật giàu kinh nghiệm sư phạm và luyện thi chứng chỉ quốc tế.'),
+            },
+          }
 
+          setCourse(parsedCourse)
           setExpandedChapters(mappedChapters.map((ch) => ch.id))
           if (mappedChapters[0]?.lessons?.length > 0) {
             setCurrentChapter(mappedChapters[0])
@@ -250,6 +271,8 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
         }
       } catch (err) {
         console.error('Lỗi khi tải chi tiết khóa học:', err)
+      } finally {
+        if (isMounted) setIsLoading(false)
       }
     }
 
@@ -275,6 +298,7 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   const handleToggleLessonComplete = (lessonId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     setCourse((prev) => {
+      if (!prev) return prev
       const updated = { ...prev }
       updated.chapters = updated.chapters.map((ch) => ({
         ...ch,
@@ -290,6 +314,7 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
 
   const handleLessonProgress = (lessonId: string, progress: number) => {
     setCourse((prev) => {
+      if (!prev) return prev
       const updated = { ...prev }
       updated.chapters = updated.chapters.map((ch) => ({
         ...ch,
@@ -309,7 +334,7 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
 
   const handleSendAiMessage = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!aiInputMessage.trim()) return
+    if (!aiInputMessage.trim() || !currentLesson) return
 
     const userText = aiInputMessage
     setAiChatMessages((prev) => [
@@ -331,6 +356,7 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   }
 
   const allFlatLessons = useMemo(() => {
+    if (!course?.chapters) return []
     const list: Array<{ chapter: Chapter; lesson: Lesson }> = []
     course.chapters.forEach((ch) => {
       ch.lessons.forEach((les) => {
@@ -338,11 +364,12 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
       })
     })
     return list
-  }, [course.chapters])
+  }, [course?.chapters])
 
   const currentLessonIndex = useMemo(() => {
+    if (!currentLesson) return -1
     return allFlatLessons.findIndex((item: { chapter: Chapter; lesson: Lesson }) => item.lesson.id === currentLesson.id)
-  }, [allFlatLessons, currentLesson.id])
+  }, [allFlatLessons, currentLesson?.id])
 
   const hasNextLesson = currentLessonIndex >= 0 && currentLessonIndex < allFlatLessons.length - 1
   const hasPrevLesson = currentLessonIndex > 0
@@ -372,6 +399,43 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
   const handleAddNoteAtTimestamp = useCallback((_seconds: number) => {
     setActiveBottomTab('notes')
   }, [])
+
+  if (isLoading || !course || !currentLesson) {
+    return (
+      <div className="min-h-screen bg-background text-text-primary flex flex-col">
+        <header className="flex h-14 w-full items-center justify-between bg-[#1c1d1f] px-4 sm:px-6 text-white border-b border-white/10 shadow-md">
+          <button
+            onClick={onBack}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white cursor-pointer"
+            title="Quay lại danh sách khóa học"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div className="h-4 w-48 bg-white/20 rounded-md animate-pulse" />
+          <div className="w-16" />
+        </header>
+
+        <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden">
+          <div className="flex-1 flex flex-col bg-black">
+            <div className="aspect-video w-full max-h-[70vh] bg-slate-950 flex flex-col items-center justify-center gap-3 text-white/60">
+              <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-semibold text-white/80 animate-pulse">Đang tải nội dung bài giảng...</p>
+            </div>
+            <div className="p-6 space-y-4 max-w-5xl">
+              <div className="h-8 w-1/3 bg-surface-subtle rounded-xl animate-pulse" />
+              <div className="h-24 w-full bg-surface-subtle rounded-2xl animate-pulse" />
+            </div>
+          </div>
+          <div className="w-full lg:w-96 border-l border-border bg-surface p-4 space-y-3 hidden lg:block">
+            <div className="h-6 w-1/2 bg-surface-subtle rounded-md animate-pulse" />
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-14 w-full bg-surface-subtle rounded-xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const totalLessons = course.chapters.reduce((acc, ch) => acc + ch.lessons.length, 0)
   const completedLessons = course.chapters.reduce(
@@ -443,7 +507,7 @@ export function CourseDetailPage({ courseId, onBack }: CourseDetailPageProps) {
         <div className="flex-1 flex flex-col overflow-y-auto max-h-[calc(100vh-3.5rem)]">
           {/* Video Player */}
           <LessonPlayer
-            lesson={currentLesson || course.chapters[0]?.lessons[0] || demoCourse.chapters[0].lessons[0]}
+            lesson={currentLesson}
             onProgress={handleLessonProgress}
             onTimeUpdate={(t) => setPlayerCurrentTime(t)}
             onNextLesson={handleNextLesson}

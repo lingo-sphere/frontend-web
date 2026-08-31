@@ -20,7 +20,6 @@ import {
   FastForward,
   Rewind,
   Sparkles,
-  ExternalLink,
   Keyboard,
   X,
   RotateCcw as ReplayIcon,
@@ -51,15 +50,8 @@ const QUALITIES = [
   { id: 'auto', label: 'Tự động (Auto)' },
 ]
 
-function isYouTubeUrl(url?: string): boolean {
-  if (!url) return false
-  const clean = url.toLowerCase().trim()
-  return clean.includes('youtube.com') || clean.includes('youtu.be')
-}
-
 function isDirectVideoUrl(url?: string): boolean {
   if (!url || !url.trim()) return false
-  if (isYouTubeUrl(url)) return false
   const clean = url.toLowerCase().trim()
   if (
     clean.endsWith('.jpg') ||
@@ -73,18 +65,6 @@ function isDirectVideoUrl(url?: string): boolean {
     return false
   }
   return true
-}
-
-function getYoutubeEmbedUrl(url?: string) {
-  if (!url || !isYouTubeUrl(url)) {
-    return ''
-  }
-  if (url.includes('youtube.com/embed/')) {
-    return url.includes('?') ? url : `${url}?autoplay=0&rel=0&modestbranding=1`
-  }
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/)
-  const id = match ? match[1] : ''
-  return id ? `https://www.youtube.com/embed/${id}?autoplay=0&rel=0&modestbranding=1` : ''
 }
 
 function formatTime(seconds: number): string {
@@ -179,8 +159,6 @@ export function LessonPlayer({
   }, [baseVideoSource, lesson?.qualities, selectedQuality])
 
   const isDirectVideo = isDirectVideoUrl(effectiveVideoUrl || baseVideoSource)
-  const isYouTube = isYouTubeUrl(baseVideoSource)
-  const embedUrl = isYouTube ? getYoutubeEmbedUrl(baseVideoSource) : ''
 
   const triggerFeedback = useCallback(
     (type: 'forward' | 'rewind' | 'play' | 'pause' | 'speed' | 'volume' | 'quality', text?: string) => {
@@ -552,14 +530,6 @@ export function LessonPlayer({
             onLessonComplete?.(lesson.id)
           }}
         />
-      ) : isYouTube && embedUrl ? (
-        <iframe
-          src={embedUrl}
-          title={lesson?.title || 'Lesson Video'}
-          className="w-full h-full border-0 block"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-        />
       ) : (
         /* Empty / Placeholder State */
         <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center space-y-4">
@@ -716,19 +686,6 @@ export function LessonPlayer({
             <Tv size={14} />
             <span className="hidden sm:inline">{isTheater ? 'Thu nhỏ' : 'Rạp chiếu'}</span>
           </button>
-
-          {isYouTube && (
-            <a
-              href={baseVideoSource || 'https://www.youtube.com'}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-md px-3 py-1.5 text-[11px] font-bold text-white shadow-lg hover:bg-primary transition-colors border border-white/15 cursor-pointer"
-              title="Mở trên YouTube"
-            >
-              <ExternalLink size={14} />
-              <span>YouTube</span>
-            </a>
-          )}
         </div>
       </div>
 

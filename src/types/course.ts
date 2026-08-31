@@ -119,6 +119,7 @@ export interface CourseInstructor {
   title: string
   avatar: string
   rating: number
+  ratingCount?: number
   studentsCount: number
   coursesCount: number
   bio: string
