@@ -388,7 +388,7 @@ export default function ToeicExamAppPage() {
   return (
     <div className="min-h-screen bg-surface-secondary">
       <header className="sticky top-0 z-10 border-b border-border bg-surface">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+        <div className="w-full flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => setShowModeSelector(true)}>
               <ArrowLeft size={20} />
@@ -419,7 +419,7 @@ export default function ToeicExamAppPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-5xl gap-6 p-4 lg:grid-cols-[1fr_280px]">
+      <div className="w-full grid gap-6 p-4 sm:p-6 lg:p-8 lg:grid-cols-[1fr_320px]">
         {currentQuestion && (
           <ToeicQuestionCard
             question={currentQuestion}

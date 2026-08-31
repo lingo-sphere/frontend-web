@@ -41,7 +41,7 @@ export function SpeakingHome({
   }
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
 
       <div className="mb-6">
         <div className="flex items-center justify-between gap-4">

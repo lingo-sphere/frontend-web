@@ -111,7 +111,7 @@ export default function VocabularyLearnAppPage() {
 
   return (
     <Layout>
-      <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow="Vocabulary"
           title="Learn Vocabulary"

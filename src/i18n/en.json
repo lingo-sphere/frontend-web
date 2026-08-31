@@ -75,6 +75,8 @@
     "weeklyGoal": "Weekly goal",
     "monthlyGoal": "Monthly goal",
     "studyTime": "Study time",
+    "studyDays": "Study Days",
+    "longestStreak": "Longest Streak",
     "wordsLearned": "Words learned",
     "accuracy": "Accuracy",
     "minutes": "minutes",

@@ -148,8 +148,8 @@ export default function CoursesCatalogPage() {
   return (
     <Layout>
       <div className="min-h-screen bg-background text-text-primary">
-        <div className="w-full bg-[#1c1d1f] text-white pt-8 pb-0 px-4 sm:px-8 lg:px-12 border-b border-white/10">
-          <div className="mx-auto max-w-7xl space-y-6">
+        <div className="w-full bg-[#1c1d1f] text-white pt-8 pb-0 px-4 sm:px-6 lg:px-8 border-b border-white/10">
+          <div className="w-full space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-serif">
                 {isVi ? 'Khóa học của tôi' : 'My learning'}
@@ -193,7 +193,7 @@ export default function CoursesCatalogPage() {
           </div>
         </div>
 
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-8 lg:px-12 space-y-8">
+        <main className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-8">
           <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm transition-all hover:shadow-md">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-1.5">
@@ -351,7 +351,7 @@ export default function CoursesCatalogPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6 items-stretch">
               {filteredCourses.map((course) => {
                 const isMenuOpen = activeMenuId === course.id
                 const isFav = wishlist.includes(course.id)

@@ -71,7 +71,7 @@ export default function LeaderboardAppPage() {
 
   return (
     <Layout>
-      <main className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-[20px] font-bold text-text-primary">

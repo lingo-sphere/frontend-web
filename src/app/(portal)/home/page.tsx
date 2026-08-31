@@ -161,13 +161,13 @@ export default function HomeAppPage() {
     <Layout>
       <main
         aria-labelledby="dashboard-title"
-        className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8"
+        className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
       >
         <WelcomeBanner />
-        <section className="mt-6">
+        <section>
           <StreakHistory days={defaultHeatmap} summary={heatmapSummary} />
         </section>
-        <div className="mt-6 grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.72fr)_minmax(320px,.92fr)]">
+        <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.72fr)_minmax(320px,.92fr)]">
           <div className="flex h-full flex-col gap-6">
             <ContinueLearningCard onAction={showAction} />
             <TodaysLearningCard onAction={showAction} tasks={tasks} />
@@ -175,7 +175,7 @@ export default function HomeAppPage() {
           </div>
           <InsightRail onAction={showAction} />
         </div>
-        <section className="mt-6 grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <StreakRewards milestones={milestones} onAction={showAction} />
           <StreakLeaderboard leaderboard={leaderboard} onAction={showAction} />
           <ExploreTopics onAction={showAction} topics={topics} />

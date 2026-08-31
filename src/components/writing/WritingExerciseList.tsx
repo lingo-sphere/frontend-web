@@ -73,7 +73,7 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
   }
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
       <button onClick={onBack} className="mb-6 flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
         <ArrowLeft size={18} />
         {isVietnamese ? 'Quay lại' : 'Back'}

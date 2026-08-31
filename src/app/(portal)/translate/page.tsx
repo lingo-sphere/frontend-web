@@ -81,7 +81,7 @@ export default function AiTranslationAppPage() {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-4xl px-4 py-8 space-y-6">
+      <div className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
         <div className="border-b border-border pb-5">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">

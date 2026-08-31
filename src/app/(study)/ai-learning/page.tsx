@@ -65,7 +65,7 @@ export default function AiLearningAppPage() {
 
   return (
     <Layout>
-      <main className="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl flex-col px-4 py-4 sm:px-6">
+      <main className="flex h-[calc(100vh-4rem)] w-full flex-col px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-accent text-white shadow-md">
