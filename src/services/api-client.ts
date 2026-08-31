@@ -136,16 +136,28 @@ apiClient.interceptors.response.use(
     }
   }
 
-    let errorMessage: string | string[] = 'Đã xảy ra lỗi khi kết nối tới máy chủ'
-    if (error.response?.data?.message) {
-      errorMessage = error.response.data.message
-    } else if (error.response?.data?.error) {
-      errorMessage = error.response.data.error
-    } else if (error.message) {
-      errorMessage = error.message
+    let rawError = error.response?.data?.message || error.response?.data?.error || error.response?.data || error.message
+    const rawStr = Array.isArray(rawError) ? rawError.join(', ') : String(rawError || '')
+
+    let cleanMessage = rawStr
+    if (
+      !cleanMessage ||
+      cleanMessage.includes('ECONNREFUSED') ||
+      cleanMessage.includes('is unavailable') ||
+      cleanMessage.includes('Network Error') ||
+      cleanMessage.includes('Failed to fetch') ||
+      cleanMessage.includes('ENOTFOUND')
+    ) {
+      cleanMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại dịch vụ hoặc kết nối mạng.'
+    } else if (cleanMessage.includes('timeout') || cleanMessage.includes('ETIMEDOUT')) {
+      cleanMessage = 'Yêu cầu xử lý quá thời gian quy định. Vui lòng thử lại.'
+    } else if (cleanMessage.includes('Internal server error') || cleanMessage.includes('Internal Server Error')) {
+      cleanMessage = 'Hệ thống đang bận hoặc xảy ra sự cố khi xử lý dữ liệu. Vui lòng thử lại sau.'
+    } else if (cleanMessage.includes('<!DOCTYPE') || cleanMessage.includes('<html')) {
+      cleanMessage = 'Dịch vụ tạm thời không phản hồi. Vui lòng thử lại sau ít phút.'
     }
 
-    return Promise.reject(new Error(Array.isArray(errorMessage) ? errorMessage.join(', ') : String(errorMessage)))
+    return Promise.reject(new Error(cleanMessage))
   },
 )
 
