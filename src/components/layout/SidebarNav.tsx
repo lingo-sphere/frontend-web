@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useNavigate, useLocation } from '@/lib/navigation'
+import Link from 'next/link'
+import { useLocation } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { useMounted } from '@/hooks/use-mounted'
 import { Button } from '@/components/ui/button'
@@ -47,7 +48,6 @@ const routeMap: Record<string, string> = {
 export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNavProps) {
   const { i18n } = useTranslation()
   const mounted = useMounted()
-  const navigate = useNavigate()
   const location = useLocation()
   const currentPath = location.pathname
   const currentSearch = location.search
@@ -104,12 +104,6 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
     return currentPath === itemRoute || (itemRoute !== '/' && currentPath.startsWith(`${itemRoute}/`))
   }
 
-  const handleClick = (itemId: string, pathOverride?: string) => {
-    onNavigate(itemId)
-    const route = pathOverride || routeMap[itemId] || '/home'
-    navigate(route)
-  }
-
   return (
     <nav aria-label="Primary navigation" className={`min-h-0 flex-1 overflow-y-auto py-2.5 pr-1 ${collapsed ? 'scrollbar-none' : ''}`}>
       {groups.map((group, index) => (
@@ -130,6 +124,39 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
               const isExpanded = Boolean(expandedMenus[item.id])
               const iconClass = isActive ? 'text-primary' : 'text-text-secondary'
               const label = isVietnamese ? item.labelVi : item.labelEn
+              const itemRoute = routeMap[item.id] || item.path
+
+              if (!hasChildren) {
+                return (
+                  <Link
+                    key={item.id}
+                    href={itemRoute}
+                    prefetch={true}
+                    onClick={() => onNavigate(item.id)}
+                    className="block w-full"
+                  >
+                    <Button
+                      aria-current={isActive ? 'page' : undefined}
+                      aria-label={collapsed ? label : undefined}
+                      className={`h-9 justify-start gap-3 rounded-xl px-3 text-[13px] transition-colors ${
+                        collapsed ? '!w-11 !flex-initial !justify-center !px-0' : 'w-full'
+                      } ${
+                        isActive
+                          ? 'bg-primary-soft font-semibold text-primary hover:bg-primary-soft'
+                          : 'font-normal text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                      }`}
+                      variant="ghost"
+                    >
+                      <Icon className={iconClass} name={item.icon} size={17} />
+                      {!collapsed && (
+                        <span suppressHydrationWarning className="flex-1 truncate text-left">
+                          {label}
+                        </span>
+                      )}
+                    </Button>
+                  </Link>
+                )
+              }
 
               return (
                 <div key={item.id} className="w-full">
@@ -139,19 +166,12 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                     className={`h-9 justify-start gap-3 rounded-xl px-3 text-[13px] transition-colors ${
                       collapsed ? '!w-11 !flex-initial !justify-center !px-0' : 'w-full'
                     } ${
-                      isActive && !hasChildren
-                        ? 'bg-primary-soft font-semibold text-primary hover:bg-primary-soft'
-                        : isActive && hasChildren
+                      isActive
                         ? 'font-semibold text-text-primary hover:bg-surface-hover'
                         : 'font-normal text-text-secondary hover:bg-surface-hover hover:text-text-primary'
                     }`}
                     onClick={() => {
-                      if (hasChildren && !collapsed) {
-                        toggleSubMenu(item.id)
-                        handleClick(item.id, item.path)
-                      } else {
-                        handleClick(item.id, item.path)
-                      }
+                      toggleSubMenu(item.id)
                     }}
                     variant="ghost"
                   >
@@ -161,7 +181,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                         {label}
                       </span>
                     )}
-                    {!collapsed && hasChildren && (
+                    {!collapsed && (
                       <span
                         onClick={(e) => toggleSubMenu(item.id, e)}
                         className={`flex items-center justify-center p-1 bg-transparent transition-transform duration-300 ease-in-out ${
@@ -173,7 +193,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                     )}
                   </Button>
 
-                  {!collapsed && hasChildren && (
+                  {!collapsed && (
                     <div
                       className={`overflow-hidden transition-all duration-300 ease-in-out ${
                         isExpanded ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
@@ -186,9 +206,11 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                           const childIconClass = childActive ? 'text-primary' : 'text-text-tertiary'
 
                           return (
-                            <button
+                            <Link
                               key={child.id}
-                              onClick={() => handleClick(child.id, child.path)}
+                              href={child.path}
+                              prefetch={true}
+                              onClick={() => onNavigate(child.id)}
                               className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[12px] transition-colors cursor-pointer ${
                                 childActive
                                   ? 'bg-primary-soft font-bold text-primary'
@@ -199,7 +221,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                               <span suppressHydrationWarning className="truncate text-left">
                                 {childLabel}
                               </span>
-                            </button>
+                            </Link>
                           )
                         })}
                       </div>
