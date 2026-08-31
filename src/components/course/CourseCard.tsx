@@ -38,13 +38,13 @@ export function CourseCard({
   return (
     <div
       onClick={() => onClick(course.id)}
-      className="group relative flex flex-col justify-between rounded-none border border-border bg-surface overflow-hidden shadow-sm transition-shadow duration-200 hover:shadow-md cursor-pointer"
+      className="group relative flex flex-col justify-between rounded-2xl border border-border bg-surface overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/40 cursor-pointer"
     >
       <div className="relative aspect-video w-full overflow-hidden bg-black/5">
         <img
           src={course.thumbnail}
           alt={course.title}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
@@ -54,15 +54,15 @@ export function CourseCard({
         </div>
 
         {course.badge && (
-          <span className="absolute left-2 top-2 rounded-none bg-[#eceb98] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#3d3c0a] shadow-sm">
+          <span className="absolute left-2.5 top-2.5 rounded-lg bg-[#eceb98] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#3d3c0a] shadow-sm">
             {course.badge}
           </span>
         )}
 
-        <div className="absolute right-2 top-2 z-10">
+        <div className="absolute right-2.5 top-2.5 z-10">
           <button
             onClick={(e) => onToggleMenu(course.id, e)}
-            className="flex h-7 w-7 items-center justify-center rounded-none bg-black/70 text-white backdrop-blur-sm hover:bg-black transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/70 text-white backdrop-blur-sm hover:bg-black transition-colors"
             title={isVi ? 'Tùy chọn' : 'Options'}
           >
             <MoreVertical size={14} />
@@ -71,11 +71,11 @@ export function CourseCard({
           {isMenuOpen && (
             <div
               onClick={(e) => e.stopPropagation()}
-              className="absolute right-0 top-8 w-44 rounded-none border border-border bg-surface p-1.5 shadow-xl z-20 space-y-1 text-xs text-text-primary animate-in fade-in duration-150"
+              className="absolute right-0 top-8 w-44 rounded-xl border border-border bg-surface p-1.5 shadow-xl z-20 space-y-1 text-xs text-text-primary animate-in fade-in duration-150"
             >
               <button
                 onClick={(e) => onToggleWishlist(course.id, e)}
-                className="flex w-full items-center gap-2 rounded-none px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
               >
                 <Heart size={13} className={isFavorite ? 'text-red-500 fill-red-500' : ''} />
                 <span>
@@ -95,21 +95,21 @@ export function CourseCard({
                   )
                   onCloseMenu()
                 }}
-                className="flex w-full items-center gap-2 rounded-none px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
               >
                 <Share2 size={13} />
                 <span>{isVi ? 'Chia sẻ khóa học' : 'Share course'}</span>
               </button>
               <button
                 onClick={onCloseMenu}
-                className="flex w-full items-center gap-2 rounded-none px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
               >
                 <ListPlus size={13} />
                 <span>{isVi ? 'Tạo danh sách mới' : 'Add to list'}</span>
               </button>
               <button
                 onClick={onCloseMenu}
-                className="flex w-full items-center gap-2 rounded-none px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left text-text-tertiary"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left text-text-tertiary"
               >
                 <Archive size={13} />
                 <span>{isVi ? 'Lưu trữ' : 'Archive'}</span>
@@ -143,8 +143,8 @@ export function CourseCard({
       <div className="border-t border-border/60 p-4 pt-3 space-y-2 bg-surface-subtle/20">
         {course.progress === 100 ? (
           <div>
-            <div className="h-1.5 w-full rounded-none bg-primary/20 overflow-hidden mb-1.5">
-              <div className="h-full w-full bg-primary rounded-none" />
+            <div className="h-1.5 w-full rounded-full bg-primary/20 overflow-hidden mb-1.5">
+              <div className="h-full w-full bg-primary rounded-full" />
             </div>
             <div className="flex items-center justify-between text-[11px] text-text-secondary font-medium">
               <span className="text-primary font-bold flex items-center gap-1">
@@ -158,9 +158,9 @@ export function CourseCard({
           </div>
         ) : (course.progress ?? 0) > 0 ? (
           <div>
-            <div className="h-1.5 w-full rounded-none bg-surface-subtle overflow-hidden mb-1.5">
+            <div className="h-1.5 w-full rounded-full bg-surface-subtle overflow-hidden mb-1.5">
               <div
-                className="h-full bg-primary rounded-none transition-all duration-500"
+                className="h-full bg-primary rounded-full transition-all duration-500"
                 style={{ width: `${course.progress}%` }}
               />
             </div>

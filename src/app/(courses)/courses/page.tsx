@@ -108,9 +108,7 @@ export default function CoursesCatalogPage() {
         selectedCategory === 'all' || c.category === selectedCategory
 
       if (activeTab === 'wishlist') return matchesSearch && wishlist.includes(c.id)
-      if (activeTab === 'certifications')
-        return matchesSearch && c.hasCertificate && c.progress === 100
-      if (activeTab === 'archived') return matchesSearch && c.isArchived
+      if (activeTab === 'my-courses') return matchesSearch && (c.progress !== undefined && c.progress >= 0)
 
       return matchesSearch && matchesCategory
     })
@@ -159,12 +157,12 @@ export default function CoursesCatalogPage() {
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-80 rounded-none bg-surface animate-pulse border border-border"
+                  className="h-80 rounded-2xl bg-surface animate-pulse border border-border"
                 />
               ))}
             </div>
           ) : filteredCourses.length === 0 ? (
-            <div className="py-20 text-center rounded-none border border-dashed border-border bg-surface/50 space-y-3">
+            <div className="py-20 text-center rounded-2xl border border-dashed border-border bg-surface/50 space-y-3">
               <BookOpen className="mx-auto text-text-tertiary" size={40} />
               <h3 className="text-base font-bold text-text-primary">
                 {isVi ? 'Không tìm thấy khóa học phù hợp' : 'No courses found'}

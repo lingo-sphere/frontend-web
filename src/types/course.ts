@@ -215,7 +215,7 @@ export interface Course {
   }
 }
 
-export type CourseTabType = 'all' | 'my-lists' | 'wishlist' | 'certifications' | 'archived' | 'learning-tools'
+export type CourseTabType = 'all' | 'my-courses' | 'wishlist'
 
 export interface CourseCardData {
   id: string

@@ -12,11 +12,8 @@ interface CourseCatalogHeaderProps {
 
 const TABS: { id: CourseTabType; labelVi: string; labelEn: string }[] = [
   { id: 'all', labelVi: 'Tất cả khóa học', labelEn: 'All courses' },
-  { id: 'my-lists', labelVi: 'Danh sách của tôi', labelEn: 'My Lists' },
-  { id: 'wishlist', labelVi: 'Yêu thích', labelEn: 'Wishlist' },
-  { id: 'certifications', labelVi: 'Chứng chỉ', labelEn: 'Certifications' },
-  { id: 'archived', labelVi: 'Đã lưu trữ', labelEn: 'Archived' },
-  { id: 'learning-tools', labelVi: 'Công cụ học tập', labelEn: 'Learning tools' },
+  { id: 'my-courses', labelVi: 'Khóa học của tôi', labelEn: 'My courses' },
+  { id: 'wishlist', labelVi: 'Khóa học tôi đã thích', labelEn: 'Liked courses' },
 ]
 
 export function CourseCatalogHeader({
