@@ -214,3 +214,30 @@ export interface Course {
     result?: TestResult
   }
 }
+
+export type CourseTabType = 'all' | 'my-lists' | 'wishlist' | 'certifications' | 'archived' | 'learning-tools'
+
+export interface CourseCardData {
+  id: string
+  slug?: string
+  title: string
+  instructor: string
+  thumbnail: string
+  category: string
+  level: string
+  description: string
+  duration: string
+  totalLessons: number
+  chapters: number
+  students: number
+  rating: number
+  ratingCount: number
+  price: number
+  discountPrice?: number
+  targetScore?: number
+  badge?: string
+  progress?: number
+  hasCertificate?: boolean
+  isArchived?: boolean
+}
+
