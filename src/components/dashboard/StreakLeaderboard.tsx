@@ -48,8 +48,8 @@ export function StreakLeaderboard({ leaderboard, onAction }: StreakLeaderboardPr
           </TabsList>
           <TabsContent className="mt-3 flex-1" value={period}>
             <div role="table" aria-label={`Streak leaderboard ${periodLabels[period][isVietnamese ? 'vi' : 'en']}`}>
-              {entries.map((entry) => (
-                <div className="flex items-center gap-3 border-b border-border py-2.5 last:border-b-0" key={entry.name} role="row">
+              {entries.map((entry, idx) => (
+                <div className="flex items-center gap-3 border-b border-border py-2.5 last:border-b-0" key={`leaderboard-entry-${entry.rank}-${idx}`} role="row">
                   <span className={`w-5 text-center text-[12px] font-bold ${entry.rank === 1 ? 'text-warning' : entry.rank === 3 ? 'text-warning/80' : 'text-text-tertiary'}`} role="cell">{entry.rank}</span>
                   <span className="flex-1 text-[13px] font-semibold text-text-primary" role="cell">{entry.name}</span>
                   <span className="text-[12px] font-semibold text-text-secondary" role="cell">

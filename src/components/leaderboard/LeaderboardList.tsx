@@ -42,7 +42,7 @@ export function LeaderboardList({ users, type }: LeaderboardListProps) {
       <div className="max-h-[400px] overflow-y-auto">
         {rankedUsers.map((user, idx) => (
           <div
-            key={user.rank}
+            key={`ranked-user-${user.rank}-${idx}`}
             className={`flex items-center gap-4 px-4 py-3 transition-colors ${
               idx % 2 === 0 ? 'bg-surface' : 'bg-surface-subtle/50'
             } ${user.isCurrentUser ? 'border-l-4 border-l-primary' : ''}`}
