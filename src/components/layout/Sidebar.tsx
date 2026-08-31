@@ -1,7 +1,8 @@
+'use client'
 
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, PanelLeftClose, PanelLeft } from 'lucide-react'
-
+import { useNavigate } from '@/lib/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { SidebarNav } from '@/components/layout/SidebarNav'
@@ -16,6 +17,7 @@ interface SidebarProps {
 export function Sidebar({ mobile = false }: SidebarProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const navigate = useNavigate()
   const activeNavItem = useDashboardStore((state) => state.activeNavItem)
   const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
@@ -31,11 +33,16 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const handleProfileClick = () => {
     setActiveNavItem('profile')
     setMobileSidebarOpen(false)
-    window.location.href = '/profile'
+    navigate('/profile')
   }
 
   const sidebarWidth = sidebarCollapsed ? 'w-[72px]' : 'w-[252px]'
-  const displayName = isAuthenticated && user?.full_name ? user.full_name : isVietnamese ? 'Khách / Học viên' : 'Guest Learner'
+  const displayName =
+    isAuthenticated && user?.full_name
+      ? user.full_name
+      : isVietnamese
+      ? 'Khách / Học viên'
+      : 'Guest Learner'
   const userLevel = user?.level || 'A1'
 
   const content = (
@@ -43,9 +50,11 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       <div
         onClick={() => {
           handleNavigate('home')
-          window.location.href = '/home'
+          navigate('/home')
         }}
-        className={`flex items-center gap-3 border-b border-border px-2 pb-5 cursor-pointer hover:opacity-90 transition-opacity ${sidebarCollapsed ? 'justify-center' : ''}`}
+        className={`flex items-center gap-3 border-b border-border px-2 pb-5 cursor-pointer hover:opacity-90 transition-opacity ${
+          sidebarCollapsed ? 'justify-center' : ''
+        }`}
       >
         <img
           alt="LingoSphere logo"
@@ -55,14 +64,28 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           width="36"
         />
         <div className={sidebarCollapsed ? 'hidden' : ''}>
-          <p className="text-[16px] font-bold leading-5 text-text-primary" suppressHydrationWarning>{t('common.appName')}</p>
-          <p className="mt-0.5 text-[11px] font-medium leading-4 text-text-tertiary" suppressHydrationWarning>{isVietnamese ? 'Học tiếng Anh' : 'English learning'}</p>
+          <p className="text-[16px] font-bold leading-5 text-text-primary" suppressHydrationWarning>
+            {t('common.appName')}
+          </p>
+          <p
+            className="mt-0.5 text-[11px] font-medium leading-4 text-text-tertiary"
+            suppressHydrationWarning
+          >
+            {isVietnamese ? 'Học tiếng Anh' : 'English learning'}
+          </p>
         </div>
       </div>
-      <SidebarNav activeItem={activeNavItem} groups={NAV_GROUPS} onNavigate={handleNavigate} collapsed={sidebarCollapsed} />
+      <SidebarNav
+        activeItem={activeNavItem}
+        groups={NAV_GROUPS}
+        onNavigate={handleNavigate}
+        collapsed={sidebarCollapsed}
+      />
       <Button
         aria-label="Open profile"
-        className={`mt-4 h-auto w-full shrink-0 justify-start gap-3 rounded-2xl bg-surface-subtle p-3 text-left hover:bg-surface-hover ${sidebarCollapsed ? '!justify-center !px-0' : ''}`}
+        className={`mt-4 h-auto w-full shrink-0 justify-start gap-3 rounded-2xl bg-surface-subtle p-3 text-left hover:bg-surface-hover ${
+          sidebarCollapsed ? '!justify-center !px-0' : ''
+        }`}
         onClick={handleProfileClick}
         variant="ghost"
       >
@@ -73,15 +96,30 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           </AvatarFallback>
         </Avatar>
         <span className={`min-w-0 flex-1 ${sidebarCollapsed ? 'hidden' : ''}`}>
-          <span className="block truncate text-[13px] font-semibold text-text-primary" suppressHydrationWarning>{displayName}</span>
-          <span className="mt-0.5 block text-[11px] text-text-tertiary" suppressHydrationWarning>{t('dashboard.level')} {userLevel}</span>
+          <span
+            className="block truncate text-[13px] font-semibold text-text-primary"
+            suppressHydrationWarning
+          >
+            {displayName}
+          </span>
+          <span
+            className="mt-0.5 block text-[11px] text-text-tertiary"
+            suppressHydrationWarning
+          >
+            {t('dashboard.level')} {userLevel}
+          </span>
         </span>
-        <ChevronDown aria-hidden="true" className={`h-4 w-4 text-text-tertiary ${sidebarCollapsed ? 'hidden' : ''}`} />
+        <ChevronDown
+          aria-hidden="true"
+          className={`h-4 w-4 text-text-tertiary ${sidebarCollapsed ? 'hidden' : ''}`}
+        />
       </Button>
       {!mobile && (
         <Button
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={`mt-3 h-auto w-full justify-center gap-2 rounded-xl p-2 text-text-tertiary hover:bg-surface-hover hover:text-text-primary ${sidebarCollapsed ? '!px-0' : ''}`}
+          className={`mt-3 h-auto w-full justify-center gap-2 rounded-xl p-2 text-text-tertiary hover:bg-surface-hover hover:text-text-primary ${
+            sidebarCollapsed ? '!px-0' : ''
+          }`}
           onClick={toggleSidebarCollapsed}
           variant="ghost"
         >
@@ -90,7 +128,9 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           ) : (
             <>
               <PanelLeftClose className="h-4 w-4" />
-              <span className="text-[12px] font-medium">{isVietnamese ? 'Thu gọn' : 'Collapse'}</span>
+              <span className="text-[12px] font-medium">
+                {isVietnamese ? 'Thu gọn' : 'Collapse'}
+              </span>
             </>
           )}
         </Button>
@@ -99,11 +139,14 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   )
 
   if (mobile) {
-    return <div className="flex h-full w-full flex-col bg-surface px-4 py-5">{content}</div>
+    return <aside className="flex h-full flex-col bg-surface p-4">{content}</aside>
   }
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-20 hidden h-screen flex-col overflow-hidden border-r border-border bg-surface px-4 py-5 transition-all duration-200 lg:flex ${sidebarWidth}`}>
+    <aside
+      aria-label="Desktop sidebar"
+      className={`fixed inset-y-0 left-0 z-20 hidden flex-col border-r border-border bg-surface p-4 transition-all duration-200 lg:flex ${sidebarWidth}`}
+    >
       {content}
     </aside>
   )

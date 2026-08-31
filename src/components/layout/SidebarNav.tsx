@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useNavigate, useLocation } from '@/lib/navigation'
@@ -6,11 +5,11 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Icon } from '@/components/icons/icon-map'
-import type { NavGroup } from '@/config/navigation.config'
+import type { NavGroup, NavItem } from '@/config/navigation.config'
 
 interface SidebarNavProps {
   groups: NavGroup[]
-  activeItem: string
+  activeItem?: string
   onNavigate: (id: string) => void
   collapsed?: boolean
 }
@@ -40,56 +39,39 @@ const routeMap: Record<string, string> = {
   profile: '/profile',
 }
 
-const navLabels: Record<string, { vi: string; en: string }> = {
-  home: { vi: 'Trang chủ', en: 'Home' },
-  courses: { vi: 'Khóa học', en: 'Courses' },
-  roadmap: { vi: 'Lộ trình', en: 'Roadmap' },
-  vocabulary: { vi: 'Từ vựng', en: 'Vocabulary' },
-  practice: { vi: 'Luyện tập', en: 'Practice' },
-  listening: { vi: 'Nghe', en: 'Listening' },
-  writing: { vi: 'Viết', en: 'Writing' },
-  speaking: { vi: 'Nói', en: 'Speaking' },
-  ipa: { vi: 'IPA', en: 'IPA' },
-  notes: { vi: 'Ghi chú', en: 'Notes' },
-  'ai-learning': { vi: 'AI Learning', en: 'AI Learning' },
-  community: { vi: 'Chat cộng đồng', en: 'Community Chat' },
-  'public-decks': { vi: 'Bộ thẻ công khai', en: 'Public Decks' },
-  topics: { vi: 'Chủ đề', en: 'Topics' },
-  leaderboard: { vi: 'Bảng xếp hạng', en: 'Leaderboard' },
-  progress: { vi: 'Tiến độ', en: 'Progress' },
-  notifications: { vi: 'Thông báo', en: 'Notifications' },
-  settings: { vi: 'Cài đặt', en: 'Settings' },
-  profile: { vi: 'Hồ sơ', en: 'Profile' },
-}
-
-const groupLabels: Record<string, { vi: string; en: string }> = {
-  home: { vi: '', en: '' },
-  learning: { vi: 'HỌC TẬP', en: 'LEARNING' },
-  ai: { vi: '', en: '' },
-  community: { vi: '', en: '' },
-  leaderboard: { vi: '', en: '' },
-  progress: { vi: '', en: '' },
-  system: { vi: '', en: '' },
-}
-
-const accentClasses: Record<string, string> = {
-  ai: 'text-ai',
-  info: 'text-info',
-  neutral: 'text-text-secondary',
-  primary: 'text-primary',
-  yellow: 'text-warning',
-}
-
-export function SidebarNav({ groups, activeItem, onNavigate, collapsed = false }: SidebarNavProps) {
+export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNavProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
   const location = useLocation()
+  const currentPath = location.pathname
+
+  const isItemActive = (item: NavItem) => {
+    const itemRoute = routeMap[item.id] || item.path
+    if (item.id === 'home') {
+      return currentPath === '/home' || currentPath === '/'
+    }
+    if (item.id === 'courses') {
+      return currentPath === '/courses' || currentPath.startsWith('/course/') || currentPath.startsWith('/courses/')
+    }
+    if (item.id === 'vocabulary') {
+      return (
+        currentPath === '/vocabulary' ||
+        currentPath.startsWith('/vocabulary/') ||
+        currentPath === '/topics' ||
+        currentPath.startsWith('/topics/') ||
+        currentPath === '/public-decks' ||
+        currentPath.startsWith('/public-decks/')
+      )
+    }
+    if (item.id === 'toeic') {
+      return currentPath === '/toeic' || currentPath.startsWith('/toeic/')
+    }
+    return currentPath === itemRoute || (itemRoute !== '/' && currentPath.startsWith(`${itemRoute}/`))
+  }
 
   const handleClick = (itemId: string) => {
     onNavigate(itemId)
-
-    if (itemId === 'profile') return
     const route = routeMap[itemId] ?? '/home'
     navigate(route)
   }
@@ -106,12 +88,7 @@ export function SidebarNav({ groups, activeItem, onNavigate, collapsed = false }
           )}
           <div className={collapsed ? 'flex flex-col items-center gap-2' : 'space-y-1'}>
             {group.items.map((item) => {
-              const itemRoute = routeMap[item.id] || item.path
-              const isCurrentPath =
-                location.pathname === itemRoute ||
-                (itemRoute !== '/home' && location.pathname.startsWith(`${itemRoute}/`)) ||
-                (item.id === 'home' && (location.pathname === '/home' || location.pathname === '/'))
-              const isActive = isCurrentPath || activeItem === item.id
+              const isActive = isItemActive(item)
               const iconClass = isActive ? 'text-primary' : 'text-text-secondary'
               const label = isVietnamese ? item.labelVi : item.labelEn
 
