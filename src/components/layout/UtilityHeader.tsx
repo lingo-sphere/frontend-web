@@ -37,7 +37,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
   const { user, isAuthenticated, logout } = useAuthStore()
   const { getTotalItems, fetchCart } = useCartStore()
-  const { items: wishlistItems } = useWishlistStore()
+  const { items: wishlistItems, fetchWishlist } = useWishlistStore()
   const cartItemCount = getTotalItems()
   const wishlistCount = wishlistItems.length
   const navigate = useNavigate()
@@ -46,8 +46,9 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   useEffect(() => {
     if (isAuthenticated) {
       fetchCart()
+      fetchWishlist()
     }
-  }, [isAuthenticated, fetchCart])
+  }, [isAuthenticated, fetchCart, fetchWishlist])
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 

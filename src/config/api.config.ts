@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080',
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   TIMEOUT: 120000,
   STORAGE_KEYS: {
     ACCESS_TOKEN: 'lingosphere_user_access_token',
@@ -53,6 +53,13 @@ export const API_CONFIG = {
       ADD: '/courses/cart/items',
       REMOVE: (courseId: string) => `/courses/cart/items/${courseId}`,
       CLEAR: '/courses/cart/clear',
+    },
+
+    WISHLIST: {
+      GET: '/courses/wishlist',
+      ADD: '/courses/wishlist/items',
+      REMOVE: (courseId: string) => `/courses/wishlist/items/${courseId}`,
+      TOGGLE: (courseId: string) => `/courses/wishlist/toggle/${courseId}`,
     },
 
     VOCABULARY: {
