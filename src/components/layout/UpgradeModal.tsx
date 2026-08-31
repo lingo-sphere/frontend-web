@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { X, Check, Shield, Zap, Loader2, Sparkles, Copy, ArrowLeft, CheckCircle2, Clock, QrCode, FlaskConical, AlertCircle } from 'lucide-react'
+import { X, Check, Shield, Zap, Loader2, Sparkles, Copy, ArrowLeft, CheckCircle2, Clock, QrCode, FlaskConical, AlertCircle, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/auth-store'
 import { subscriptionService, PaymentOrderResponse } from '@/services/subscription.service'
@@ -75,22 +75,31 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
   const [selectedPlan, setSelectedPlan] = useState('12-month')
   const [step, setStep] = useState<'SELECT_PLAN' | 'PAYMENT_QR' | 'SUCCESS'>('SELECT_PLAN')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const [isSimulating, setIsSimulating] = useState(false)
   const [order, setOrder] = useState<PaymentOrderResponse | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(900)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const pollingRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const orderRef = useRef<PaymentOrderResponse | null>(null)
+  orderRef.current = order
 
   const { user, isAuthenticated, setUser } = useAuthStore()
 
   const plans = getPlans()
   const benefits = getBenefits(isVietnamese)
 
-  const stopPolling = useCallback(() => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current)
-      pollingIntervalRef.current = null
+  const stopAllTimers = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
     }
   }, [])
 
@@ -101,14 +110,15 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
   }
 
   const handlePaymentSuccess = useCallback(() => {
-    stopPolling()
+    stopAllTimers()
     setStep('SUCCESS')
 
-    if (user) {
+    const currentUser = useAuthStore.getState().user
+    if (currentUser) {
       const updatedUser = {
-        ...user,
+        ...currentUser,
         is_premium: true,
-        subscription_plan: order?.billing_cycle || 'YEARLY',
+        subscription_plan: orderRef.current?.billing_cycle || 'YEARLY',
       }
       setUser(updatedUser)
       if (typeof window !== 'undefined') {
@@ -120,25 +130,41 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
       setStep('SELECT_PLAN')
       setOrder(null)
       onOpenChange(false)
-    }, 2800)
-  }, [stopPolling, user, order, setUser, onOpenChange])
+    }, 2500)
+  }, [stopAllTimers, setUser, onOpenChange])
+
+  const checkPaymentStatus = useCallback(async () => {
+    const currentOrder = orderRef.current
+    if (!currentOrder?.order_code) return
+
+    try {
+      const res = await subscriptionService.getPaymentOrderStatus(currentOrder.order_code)
+      const status = res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
+      if (status === 'PAID') {
+        handlePaymentSuccess()
+        return true
+      }
+    } catch {}
+    return false
+  }, [handlePaymentSuccess])
 
   useEffect(() => {
+    if (!open) {
+      stopAllTimers()
+      setStep('SELECT_PLAN')
+      setOrder(null)
+      return
+    }
+
     if (step === 'PAYMENT_QR' && order?.order_code) {
-      pollingIntervalRef.current = setInterval(async () => {
-        try {
-          const res = await subscriptionService.getPaymentOrderStatus(order.order_code)
-          if (res.status === 'PAID') {
-            handlePaymentSuccess()
-          }
-        } catch {}
+      pollingRef.current = setInterval(() => {
+        checkPaymentStatus()
       }, 2000)
 
-      const timer = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setTimeLeftSeconds((prev) => {
           if (prev <= 1) {
-            clearInterval(timer)
-            stopPolling()
+            stopAllTimers()
             return 0
           }
           return prev - 1
@@ -146,11 +172,10 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
       }, 1000)
 
       return () => {
-        stopPolling()
-        clearInterval(timer)
+        stopAllTimers()
       }
     }
-  }, [step, order?.order_code, handlePaymentSuccess, stopPolling])
+  }, [open, step, order?.order_code, checkPaymentStatus, stopAllTimers])
 
   if (!open) return null
 
@@ -170,6 +195,7 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
         billing_cycle: currentPlan.cycle,
       })
       setOrder(newOrder)
+      orderRef.current = newOrder
       setTimeLeftSeconds(900)
       setStep('PAYMENT_QR')
     } catch (err: unknown) {
@@ -177,6 +203,15 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
       setErrorMessage(msg)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleManualCheck = async () => {
+    setIsCheckingStatus(true)
+    const isPaid = await checkPaymentStatus()
+    setIsCheckingStatus(false)
+    if (!isPaid && step === 'PAYMENT_QR') {
+      alert(isVietnamese ? 'Hệ thống đang kiểm tra biến động số dư. Nếu bạn đã chuyển khoản, vui lòng đợi vài giây để hệ thống đối soát tự động!' : 'Checking status... If you have made the transfer, please wait a few seconds.')
     }
   }
 
@@ -208,7 +243,7 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
             {step === 'PAYMENT_QR' && (
               <button
                 onClick={() => {
-                  stopPolling()
+                  stopAllTimers()
                   setStep('SELECT_PLAN')
                 }}
                 className="absolute left-4 top-3.5 rounded-full p-1 transition-colors hover:bg-white/20"
@@ -219,7 +254,7 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
 
             <button
               onClick={() => {
-                stopPolling()
+                stopAllTimers()
                 onOpenChange(false)
               }}
               className="absolute right-4 top-3.5 rounded-full p-1 transition-colors hover:bg-white/20"
@@ -251,11 +286,11 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
                 </h3>
                 <p className="mt-2 text-sm text-text-secondary max-w-xs">
                   {isVietnamese
-                    ? 'Hệ thống đã nhận diện thanh toán và mở khóa toàn bộ đặc quyền VIP cho bạn!'
+                    ? 'Hệ thống đã xác nhận thanh toán và mở khóa toàn bộ đặc quyền VIP cho bạn!'
                     : 'Your payment was confirmed and VIP features are now fully active!'}
                 </p>
                 <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200">
-                  <Sparkles size={14} /> {isVietnamese ? 'Chúc bạn học tập hiệu quả!' : 'Enjoy your learning!'}
+                  <Sparkles size={14} /> {isVietnamese ? 'Đang chuyển trang học...' : 'Redirecting...'}
                 </div>
               </div>
             )}
@@ -471,23 +506,43 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
                   <span>{isVietnamese ? 'Đang chờ bạn quét mã thanh toán...' : 'Waiting for payment confirmation...'}</span>
                 </div>
 
-                <div className="mt-3 w-full border-t border-border pt-3 flex flex-col gap-2">
+                <div className="mt-3.5 w-full space-y-2 border-t border-border pt-3">
                   <Button
                     variant="outline"
                     size="sm"
+                    disabled={isCheckingStatus}
+                    onClick={handleManualCheck}
+                    className="w-full h-9 text-xs font-semibold border-amber-300 text-amber-700 hover:bg-amber-50"
+                  >
+                    {isCheckingStatus ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        {isVietnamese ? 'Đang kiểm tra...' : 'Checking...'}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <RefreshCw size={14} />
+                        {isVietnamese ? 'Tôi Đã Chuyển Khoản - Kiểm Tra Ngay' : 'I Have Transferred - Check Now'}
+                      </span>
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={isSimulating}
                     onClick={handleSimulatePayment}
-                    className="w-full text-xs font-medium text-text-secondary hover:text-text-primary border-dashed hover:border-amber-400 hover:bg-amber-50/30"
+                    className="w-full h-8 text-[11px] font-medium text-text-tertiary hover:text-text-primary hover:bg-surface-subtle"
                   >
                     {isSimulating ? (
                       <span className="flex items-center gap-2">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {isVietnamese ? 'Đang mô phỏng thanh toán...' : 'Simulating...'}
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        {isVietnamese ? 'Đang mô phỏng...' : 'Simulating...'}
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1.5 text-amber-600">
-                        <FlaskConical size={14} />
-                        {isVietnamese ? 'Mô Phỏng Thanh Toán Thành Công (Test Mode)' : 'Simulate Successful Payment (Test Mode)'}
+                      <span className="flex items-center gap-1">
+                        <FlaskConical size={13} />
+                        {isVietnamese ? 'Mô phỏng thanh toán thành công (Test Mode)' : 'Simulate Successful Payment (Test Mode)'}
                       </span>
                     )}
                   </Button>

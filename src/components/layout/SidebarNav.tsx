@@ -2,6 +2,7 @@
 
 import { useNavigate, useLocation } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
+import { useMounted } from '@/hooks/use-mounted'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Icon } from '@/components/icons/icon-map'
@@ -41,10 +42,12 @@ const routeMap: Record<string, string> = {
 
 export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNavProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const mounted = useMounted()
   const navigate = useNavigate()
   const location = useLocation()
   const currentPath = location.pathname
+
+  const isVietnamese = mounted ? i18n.language === 'vi' : true
 
   const isItemActive = (item: NavItem) => {
     const itemRoute = routeMap[item.id] || item.path
@@ -82,7 +85,10 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
         <div className={index === 0 ? '' : 'pt-4'} key={group.id}>
           {index > 0 && <Separator className={collapsed ? 'mb-2' : 'mb-4'} />}
           {(group.titleVi || group.titleEn) && (
-            <div className={`mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-text-tertiary ${collapsed ? 'hidden' : ''}`}>
+            <div
+              suppressHydrationWarning
+              className={`mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-text-tertiary ${collapsed ? 'hidden' : ''}`}
+            >
               {isVietnamese ? group.titleVi : group.titleEn}
             </div>
           )}
@@ -108,7 +114,11 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                   variant="ghost"
                 >
                   <Icon className={iconClass} name={item.icon} size={17} />
-                  {!collapsed && <span className="truncate text-left">{label}</span>}
+                  {!collapsed && (
+                    <span suppressHydrationWarning className="truncate text-left">
+                      {label}
+                    </span>
+                  )}
                 </Button>
               )
             })}

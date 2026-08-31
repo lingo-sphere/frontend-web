@@ -3,6 +3,7 @@
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
+import { useMounted } from '@/hooks/use-mounted'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { SidebarNav } from '@/components/layout/SidebarNav'
@@ -16,7 +17,7 @@ interface SidebarProps {
 
 export function Sidebar({ mobile = false }: SidebarProps) {
   const { t, i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const mounted = useMounted()
   const navigate = useNavigate()
   const activeNavItem = useDashboardStore((state) => state.activeNavItem)
   const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
@@ -24,6 +25,8 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const sidebarCollapsed = useDashboardStore((state) => state.sidebarCollapsed)
   const toggleSidebarCollapsed = useDashboardStore((state) => state.toggleSidebarCollapsed)
   const { user, isAuthenticated } = useAuthStore()
+
+  const isVietnamese = mounted ? i18n.language === 'vi' : true
 
   const handleNavigate = (id: string) => {
     setActiveNavItem(id)
@@ -38,12 +41,12 @@ export function Sidebar({ mobile = false }: SidebarProps) {
 
   const sidebarWidth = sidebarCollapsed ? 'w-[72px]' : 'w-[252px]'
   const displayName =
-    isAuthenticated && user?.full_name
+    mounted && isAuthenticated && user?.full_name
       ? user.full_name
-      : isVietnamese
-      ? 'Khách / Học viên'
-      : 'Guest Learner'
-  const userLevel = user?.level || 'A1'
+      : mounted && !isAuthenticated
+      ? (isVietnamese ? 'Khách / Học viên' : 'Guest Learner')
+      : 'Khách / Học viên'
+  const userLevel = mounted && user?.level ? user.level : 'A1'
 
   const content = (
     <>
@@ -91,7 +94,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       >
         <Avatar className="h-9 w-9 rounded-xl" size="default">
           <AvatarImage alt="User avatar" src={user?.avatar_url || ''} />
-          <AvatarFallback className="rounded-xl bg-primary-soft text-primary">
+          <AvatarFallback suppressHydrationWarning className="rounded-xl bg-primary-soft text-primary">
             {displayName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -128,7 +131,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           ) : (
             <>
               <PanelLeftClose className="h-4 w-4" />
-              <span className="text-[12px] font-medium">
+              <span className="text-[12px] font-medium" suppressHydrationWarning>
                 {isVietnamese ? 'Thu gọn' : 'Collapse'}
               </span>
             </>

@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart } from 'lucide-react'
+import { useMounted } from '@/hooks/use-mounted'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,7 +27,8 @@ interface UtilityHeaderProps {
 
 export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const { i18n } = useTranslation()
-  const [language, setLanguage] = useState<'VI' | 'EN'>(i18n.language === 'en' ? 'EN' : 'VI')
+  const mounted = useMounted()
+  const [language, setLanguage] = useState<'VI' | 'EN'>('VI')
   const [dictionaryOpen, setDictionaryOpen] = useState(false)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -42,6 +44,10 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const wishlistCount = wishlistItems.length
   const navigate = useNavigate()
   const [hoveredHeaderMenu, setHoveredHeaderMenu] = useState<'learning' | 'wishlist' | 'cart' | null>(null)
+
+  useEffect(() => {
+    setLanguage(i18n.language === 'en' ? 'EN' : 'VI')
+  }, [i18n.language])
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -84,6 +90,8 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
     localStorage.setItem('i18nextLng', newLang)
   }
 
+  const isVi = mounted ? language === 'VI' : true
+
   return (
     <>
       <header className="sticky top-0 z-10 flex min-h-[72px] items-center justify-between gap-4 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-sm sm:px-6 lg:px-8">
@@ -102,15 +110,15 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             className="group relative flex h-10 min-w-0 max-w-[330px] flex-1 cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-3.5 text-left transition-colors hover:border-primary/50 focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/15"
           >
             <Icon className="shrink-0 text-text-tertiary" name="search" size={18} />
-            <span className="flex-1 truncate text-[13px] text-text-tertiary">
-              {language === 'VI' ? 'Tra từ điển...' : 'Search dictionary...'}
+            <span suppressHydrationWarning className="flex-1 truncate text-[13px] text-text-tertiary">
+              {isVi ? 'Tra từ điển...' : 'Search dictionary...'}
             </span>
           </button>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
           <Button
             className="hidden h-9 gap-2 rounded-xl border border-info/30 bg-gradient-to-br from-info/10 to-info/5 px-3 text-[12px] font-semibold text-info hover:border-info/50 hover:from-info/15 hover:to-info/10 sm:inline-flex"
-            onClick={() => onAction(language === 'VI' ? 'Đã mở Diamonds.' : 'Opened Diamonds.')}
+            onClick={() => onAction(isVi ? 'Đã mở Diamonds.' : 'Opened Diamonds.')}
             variant="ghost"
           >
             <Icon name="diamond" size={16} />
@@ -118,7 +126,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           </Button>
           <Button
             className="hidden h-9 gap-2 rounded-xl border border-warning/30 bg-gradient-to-br from-warning/10 to-warning/5 px-3 text-[12px] font-semibold text-warning hover:border-warning/50 hover:from-warning/15 hover:to-warning/10 sm:inline-flex"
-            onClick={() => onAction(language === 'VI' ? 'Đã mở Streak Details.' : 'Opened Streak Details.')}
+            onClick={() => onAction(isVi ? 'Đã mở Streak Details.' : 'Opened Streak Details.')}
             variant="ghost"
           >
             <Icon name="flame" size={16} />
@@ -126,28 +134,30 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           </Button>
           <Button
             className={`hidden h-9 gap-2 rounded-xl border px-3 text-[12px] font-semibold sm:inline-flex ${
-              user?.is_premium
+              mounted && user?.is_premium
                 ? 'border-amber-500 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 hover:border-amber-600 hover:from-amber-500/30 hover:to-orange-500/30'
                 : 'border-warning bg-gradient-to-r from-warning/20 to-warning/10 text-warning hover:border-warning hover:from-warning/30 hover:to-warning/20'
             }`}
             onClick={() => setUpgradeOpen(true)}
             variant="ghost"
           >
-            <Icon name="crown" size={16} className={user?.is_premium ? 'text-amber-500 fill-amber-500' : ''} />
-            <span>{user?.is_premium ? (language === 'VI' ? 'Premium VIP' : 'Premium VIP') : (language === 'VI' ? 'Nâng cấp' : 'Upgrade')}</span>
+            <Icon name="crown" size={16} className={mounted && user?.is_premium ? 'text-amber-500 fill-amber-500' : ''} />
+            <span suppressHydrationWarning>
+              {mounted && user?.is_premium ? 'Premium VIP' : (isVi ? 'Nâng cấp' : 'Upgrade')}
+            </span>
           </Button>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                aria-label={language === 'VI' ? 'Switch to English' : 'Chuyển sang Tiếng Việt'}
+                aria-label={isVi ? 'Switch to English' : 'Chuyển sang Tiếng Việt'}
                 className="h-9 rounded-xl border-border px-3 text-[12px] font-bold text-text-secondary"
                 onClick={handleLanguageToggle}
                 variant="outline"
               >
-                {language}
+                <span suppressHydrationWarning>{language}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{language === 'VI' ? 'Chuyển sang English' : 'Switch to Tiếng Việt'}</TooltipContent>
+            <TooltipContent>{isVi ? 'Chuyển sang English' : 'Switch to Tiếng Việt'}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -166,7 +176,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
               onClick={() => navigate('/courses')}
               className="h-9 px-3 text-[13px] font-semibold text-text-secondary hover:text-text-primary transition-colors rounded-xl flex items-center gap-1 cursor-pointer"
             >
-              {language === 'VI' ? 'Khóa học của tôi' : 'My learning'}
+              <span suppressHydrationWarning>{isVi ? 'Khóa học của tôi' : 'My learning'}</span>
             </button>
             {hoveredHeaderMenu === 'learning' && <HeaderMyLearningHover />}
           </div>
@@ -186,14 +196,14 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                   variant="outline"
                 >
                   <Heart size={17} />
-                  {wishlistCount > 0 && (
+                  {mounted && wishlistCount > 0 && (
                     <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
                       {wishlistCount > 9 ? '9+' : wishlistCount}
                     </span>
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{language === 'VI' ? 'Yêu thích' : 'Wishlist'}</TooltipContent>
+              <TooltipContent>{isVi ? 'Yêu thích' : 'Wishlist'}</TooltipContent>
             </Tooltip>
             {hoveredHeaderMenu === 'wishlist' && <HeaderWishlistHover />}
           </div>
@@ -219,14 +229,14 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                   variant="outline"
                 >
                   <ShoppingCart size={17} />
-                  {cartItemCount > 0 && (
+                  {mounted && cartItemCount > 0 && (
                     <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white shadow-sm">
                       {cartItemCount > 9 ? '9+' : cartItemCount}
                     </span>
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{language === 'VI' ? 'Giỏ hàng' : 'Shopping Cart'}</TooltipContent>
+              <TooltipContent>{isVi ? 'Giỏ hàng' : 'Shopping Cart'}</TooltipContent>
             </Tooltip>
             {hoveredHeaderMenu === 'cart' && <HeaderCartHover />}
           </div>
@@ -257,10 +267,10 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                 <div className="fixed inset-0 z-40" onClick={() => setNotificationOpen(false)} />
                 <Card className="absolute right-0 top-full z-50 mt-2 w-80 shadow-xl">
                   <div className="flex items-center justify-between border-b border-border p-3">
-                    <span className="font-semibold text-text-primary">{language === 'VI' ? 'Thông báo' : 'Notifications'}</span>
+                    <span suppressHydrationWarning className="font-semibold text-text-primary">{isVi ? 'Thông báo' : 'Notifications'}</span>
                     {unreadCount > 0 && (
                       <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
-                        {unreadCount} {language === 'VI' ? 'mới' : 'new'}
+                        {unreadCount} {isVi ? 'mới' : 'new'}
                       </span>
                     )}
                   </div>
@@ -268,7 +278,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                     {latestNotifications.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-8 text-center">
                         <Icon name="bellOff" size={32} className="mb-2 text-text-tertiary" />
-                        <p className="text-sm text-text-tertiary">{language === 'VI' ? 'Không có thông báo' : 'No notifications'}</p>
+                        <p suppressHydrationWarning className="text-sm text-text-tertiary">{isVi ? 'Không có thông báo' : 'No notifications'}</p>
                       </div>
                     ) : (
                       latestNotifications.map((notif) => (
@@ -317,7 +327,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                         window.location.href = '/notifications'
                       }}
                     >
-                      {language === 'VI' ? 'Xem tất cả thông báo' : 'View all notifications'}
+                      <span suppressHydrationWarning>{isVi ? 'Xem tất cả thông báo' : 'View all notifications'}</span>
                     </Button>
                   </div>
                 </Card>
@@ -325,7 +335,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             )}
           </div>
 
-          {isAuthenticated && user ? (
+          {mounted && isAuthenticated && user ? (
             <div className="flex items-center gap-2 border-l border-border pl-3">
               <button
                 onClick={() => (window.location.href = '/profile')}
@@ -368,7 +378,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
               className="bg-primary hover:bg-primary/90 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm h-9"
             >
               <Icon name="logIn" size={15} className="mr-1.5" />
-              <span>{language === 'VI' ? 'Đăng nhập' : 'Sign in'}</span>
+              <span suppressHydrationWarning>{isVi ? 'Đăng nhập' : 'Sign in'}</span>
             </Button>
           )}
         </div>
