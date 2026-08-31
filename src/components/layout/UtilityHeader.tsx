@@ -324,7 +324,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                       className="w-full text-xs text-primary"
                       onClick={() => {
                         setNotificationOpen(false)
-                        window.location.href = '/notifications'
+                        navigate('/notifications')
                       }}
                     >
                       <span suppressHydrationWarning>{isVi ? 'Xem tất cả thông báo' : 'View all notifications'}</span>
@@ -338,7 +338,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           {mounted && isAuthenticated && user ? (
             <div className="flex items-center gap-2 border-l border-border pl-3">
               <button
-                onClick={() => (window.location.href = '/profile')}
+                onClick={() => navigate('/profile')}
                 className="flex items-center gap-2 rounded-xl p-1 hover:bg-surface-subtle transition-colors text-left"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs ring-2 ring-primary/20 overflow-hidden">

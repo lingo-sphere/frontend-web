@@ -79,7 +79,6 @@ export const authService = {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
-        window.location.href = '/'
       }
     }
   },

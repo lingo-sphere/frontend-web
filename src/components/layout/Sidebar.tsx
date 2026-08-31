@@ -86,27 +86,27 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       />
       <Button
         aria-label="Open profile"
-        className={`mt-4 h-auto w-full shrink-0 justify-start gap-3 rounded-2xl bg-surface-subtle p-3 text-left hover:bg-surface-hover ${
-          sidebarCollapsed ? '!justify-center !px-0' : ''
+        className={`mt-2 h-auto w-full shrink-0 justify-start gap-2.5 rounded-xl bg-surface-subtle px-2.5 py-2 text-left hover:bg-surface-hover ${
+          sidebarCollapsed ? '!justify-center !px-0 !py-2' : ''
         }`}
         onClick={handleProfileClick}
         variant="ghost"
       >
-        <Avatar className="h-9 w-9 rounded-xl" size="default">
+        <Avatar className="h-8 w-8 rounded-lg" size="default">
           <AvatarImage alt="User avatar" src={user?.avatar_url || ''} />
-          <AvatarFallback suppressHydrationWarning className="rounded-xl bg-primary-soft text-primary">
+          <AvatarFallback suppressHydrationWarning className="rounded-lg bg-primary-soft text-primary text-xs font-bold">
             {displayName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <span className={`min-w-0 flex-1 ${sidebarCollapsed ? 'hidden' : ''}`}>
           <span
-            className="block truncate text-[13px] font-semibold text-text-primary"
+            className="block truncate text-[12px] font-semibold text-text-primary leading-tight"
             suppressHydrationWarning
           >
             {displayName}
           </span>
           <span
-            className="mt-0.5 block text-[11px] text-text-tertiary"
+            className="block text-[10px] text-text-tertiary leading-tight"
             suppressHydrationWarning
           >
             {t('dashboard.level')} {userLevel}
@@ -114,24 +114,24 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         </span>
         <ChevronDown
           aria-hidden="true"
-          className={`h-4 w-4 text-text-tertiary ${sidebarCollapsed ? 'hidden' : ''}`}
+          className={`h-3.5 w-3.5 text-text-tertiary ${sidebarCollapsed ? 'hidden' : ''}`}
         />
       </Button>
       {!mobile && (
         <Button
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={`mt-3 h-auto w-full justify-center gap-2 rounded-xl p-2 text-text-tertiary hover:bg-surface-hover hover:text-text-primary ${
+          className={`mt-1 h-8 w-full justify-center gap-2 rounded-lg py-1 text-text-tertiary hover:bg-surface-hover hover:text-text-primary ${
             sidebarCollapsed ? '!px-0' : ''
           }`}
           onClick={toggleSidebarCollapsed}
           variant="ghost"
         >
           {sidebarCollapsed ? (
-            <PanelLeft className="h-5 w-5" />
+            <PanelLeft className="h-4 w-4" />
           ) : (
             <>
-              <PanelLeftClose className="h-4 w-4" />
-              <span className="text-[12px] font-medium" suppressHydrationWarning>
+              <PanelLeftClose className="h-3.5 w-3.5" />
+              <span className="text-[11px] font-medium" suppressHydrationWarning>
                 {isVietnamese ? 'Thu gọn' : 'Collapse'}
               </span>
             </>
