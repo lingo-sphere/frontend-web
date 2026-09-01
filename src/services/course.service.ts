@@ -4,12 +4,16 @@ import type { Course, Chapter, Lesson, CourseEnrollment } from '@/types/api.type
 
 export const courseService = {
 
-  async getAllCourses(params?: { category?: string; level?: string; search?: string; limit?: number }): Promise<Course[]> {
-    const res = await api.get<{ result?: Course[]; data?: Course[]; meta?: unknown } | Course[]>(API_CONFIG.ENDPOINTS.COURSES.LIST, params)
-    if (Array.isArray(res)) return res
-    if (res && Array.isArray((res as { result?: Course[] }).result)) return (res as { result: Course[] }).result
-    if (res && Array.isArray((res as { data?: Course[] }).data)) return (res as { data: Course[] }).data
-    return []
+  async getAllCourses(params?: { category?: string; level?: string; search?: string; limit?: number; is_published?: boolean }): Promise<Course[]> {
+    const res = await api.get<{ result?: Course[]; data?: Course[]; meta?: unknown } | Course[]>(API_CONFIG.ENDPOINTS.COURSES.LIST, {
+      is_published: true,
+      ...params,
+    })
+    let items: Course[] = []
+    if (Array.isArray(res)) items = res
+    else if (res && Array.isArray((res as { result?: Course[] }).result)) items = (res as { result: Course[] }).result
+    else if (res && Array.isArray((res as { data?: Course[] }).data)) items = (res as { data: Course[] }).data
+    return items.filter((c) => c && (c as unknown as { is_published?: boolean }).is_published !== false)
   },
 
   async getCourseById(id: string): Promise<Course> {
