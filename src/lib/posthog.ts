@@ -70,7 +70,7 @@ export function identifyUser(user: {
   posthog.identify(userId, {
     email: user.email,
     name: user.full_name || user.name,
-    role: user.role || 'LEARNER',
+    role: user.role || 'STUDENT',
     app_platform: 'web',
   })
 }

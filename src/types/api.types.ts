@@ -11,7 +11,7 @@ export interface ApiResponse<T = unknown> {
   timestamp?: string
 }
 
-export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'LEARNER' | 'USER'
+export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'STUDENT' | 'USER'
 export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'PENDING'
 
 export interface User {
