@@ -14,6 +14,7 @@ interface CourseLockedPlayerProps {
   isAuthenticated: boolean
   isAlreadyInCart: boolean
   isAddingToCart: boolean
+  onBuyNow?: () => void
   onAddToCart: () => void
   onGoToCart: () => void
   onOpenUpgrade: () => void
@@ -26,6 +27,7 @@ export function CourseLockedPlayer({
   isAuthenticated,
   isAlreadyInCart,
   isAddingToCart,
+  onBuyNow,
   onAddToCart,
   onGoToCart,
   onOpenUpgrade,
@@ -106,7 +108,7 @@ export function CourseLockedPlayer({
                 </button>
               ) : (
                 <button
-                  onClick={onAddToCart}
+                  onClick={onBuyNow || onAddToCart}
                   disabled={isAddingToCart}
                   className="flex-1 min-w-[180px] h-10 sm:h-11 px-5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                 >

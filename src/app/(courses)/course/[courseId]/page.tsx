@@ -20,6 +20,7 @@ import { CourseTestRunnerModal } from '@/components/course/CourseTestRunnerModal
 import { CourseLoadingState } from '@/components/course/CourseLoadingState'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { CourseLockedPlayer } from '@/components/course/CourseLockedPlayer'
+import { CourseCheckoutModal } from '@/components/course/CourseCheckoutModal'
 import { UpgradeModal } from '@/components/layout/UpgradeModal'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth-store'
@@ -66,6 +67,7 @@ export default function CourseDetailPage() {
   const [playerCurrentTime, setPlayerCurrentTime] = useState<number>(0)
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showCourseCheckoutModal, setShowCourseCheckoutModal] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
 
   const [activeTestModal, setActiveTestModal] = useState<{
@@ -1010,6 +1012,7 @@ export default function CourseDetailPage() {
               isAuthenticated={isAuthenticated}
               isAlreadyInCart={isInCart(course.id)}
               isAddingToCart={isAddingToCart}
+              onBuyNow={() => setShowCourseCheckoutModal(true)}
               onAddToCart={handleAddToCart}
               onGoToCart={() => navigate('/cart')}
               onOpenUpgrade={() => setShowUpgradeModal(true)}
@@ -1180,6 +1183,27 @@ export default function CourseDetailPage() {
         <UpgradeModal
           open={showUpgradeModal}
           onOpenChange={setShowUpgradeModal}
+        />
+      )}
+
+      {/* VietQR Bank Transfer Course Checkout Modal */}
+      {showCourseCheckoutModal && course && (
+        <CourseCheckoutModal
+          open={showCourseCheckoutModal}
+          onOpenChange={setShowCourseCheckoutModal}
+          courses={[
+            {
+              id: course.id,
+              title: course.title,
+              price: course.price || 0,
+              thumbnail: course.thumbnail,
+            },
+          ]}
+          onSuccess={() => {
+            setIsEnrolled(true)
+            useEnrollmentStore.getState().addEnrolledCourse(course.id)
+            toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
+          }}
         />
       )}
     </div>

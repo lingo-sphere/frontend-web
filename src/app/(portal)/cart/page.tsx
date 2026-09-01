@@ -13,6 +13,7 @@ import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useEnrollmentStore } from '@/store/enrollment-store'
 import { courseService } from '@/services/course.service'
+import { CourseCheckoutModal, type CheckoutCourseItem } from '@/components/course/CourseCheckoutModal'
 import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
 
@@ -28,7 +29,7 @@ export default function CartPage() {
   const clearCart = useCartStore((state) => state.clearCart)
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
-  const [isCheckingOut, setIsCheckingOut] = useState(false)
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -64,25 +65,17 @@ export default function CartPage() {
     }
   }
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (items.length === 0) return
-    setIsCheckingOut(true)
-    try {
-      await Promise.all(items.map((it) => courseService.enrollCourse(it.course_id)))
-      await clearCart()
-      await useEnrollmentStore.getState().fetchMyEnrollments()
-      toast.success(
-        isVi ? 'Đăng ký các khóa học trong giỏ hàng thành công!' : 'Successfully enrolled in all courses in cart!',
-        isVi ? 'Thanh toán thành công' : 'Checkout Successful'
-      )
-      navigate('/courses')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi thanh toán giỏ hàng'
-      toast.error(msg, isVi ? 'Lỗi thanh toán' : 'Checkout Failed')
-    } finally {
-      setIsCheckingOut(false)
-    }
+    setShowCheckoutModal(true)
   }
+
+  const checkoutCourses: CheckoutCourseItem[] = items.map((it) => ({
+    id: it.course_id,
+    title: it.title,
+    price: it.discount_price && it.discount_price > 0 ? it.discount_price : it.price || 0,
+    thumbnail: (it as unknown as { thumbnail?: string })?.thumbnail,
+  }))
 
   return (
     <Layout>
@@ -274,20 +267,11 @@ export default function CartPage() {
 
                 <button
                   onClick={handleCheckout}
-                  disabled={isCheckingOut || items.length === 0}
+                  disabled={items.length === 0}
                   className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm py-3.5 transition-all shadow-md shadow-purple-600/20 hover:shadow-purple-600/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {isCheckingOut ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>{isVi ? 'Đang xử lý đăng ký...' : 'Processing...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap size={16} />
-                      <span>{isVi ? 'Tiến hành đăng ký học' : 'Proceed to Checkout'}</span>
-                    </>
-                  )}
+                  <Zap size={16} />
+                  <span>{isVi ? 'Thanh toán chuyển khoản VietQR' : 'Proceed to VietQR Checkout'}</span>
                 </button>
               </div>
 
@@ -305,6 +289,18 @@ export default function CartPage() {
           </div>
         )}
       </div>
+
+      {/* VietQR Bank Transfer Course Checkout Modal */}
+      {showCheckoutModal && (
+        <CourseCheckoutModal
+          open={showCheckoutModal}
+          onOpenChange={setShowCheckoutModal}
+          courses={checkoutCourses}
+          onSuccess={() => {
+            navigate('/courses')
+          }}
+        />
+      )}
     </Layout>
   )
 }
