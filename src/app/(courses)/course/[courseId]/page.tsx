@@ -20,6 +20,7 @@ import { CourseTestRunnerModal } from '@/components/course/CourseTestRunnerModal
 import { CourseLoadingState } from '@/components/course/CourseLoadingState'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { courseService } from '@/services/course.service'
+import { useAuthStore } from '@/store/auth-store'
 import { toast } from '@/store/toast-store'
 import type { Chapter, Course, Lesson, CourseReviewItem, NoteItem, QnAItem } from '@/types/course'
 
@@ -46,11 +47,13 @@ export default function CourseDetailPage() {
   const params = useParams<{ courseId: string }>()
   const courseId = params?.courseId || 'toeic-foundation'
   const navigate = useNavigate()
+  const { user, isAuthenticated } = useAuthStore()
 
   const [course, setCourse] = useState<Course | null>(null)
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isEnrolled, setIsEnrolled] = useState<boolean>(false)
   const [expandedChapters, setExpandedChapters] = useState<string[]>(['ch-01', 'ch-02'])
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('overview')
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('content')
@@ -79,7 +82,16 @@ export default function CourseDetailPage() {
     const fetchCourse = async () => {
       setIsLoading(true)
       try {
-        const liveCourseResponse = await courseService.getCourseById(courseId)
+        const [liveCourseResponse, enrollStatus] = await Promise.all([
+          courseService.getCourseById(courseId),
+          courseService.getEnrollmentStatus(courseId).catch(() => ({ is_enrolled: false })),
+        ])
+
+        if (isMounted) {
+          const userIsEnrolled = Boolean(enrollStatus?.is_enrolled || user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR')
+          setIsEnrolled(userIsEnrolled)
+        }
+
         if (isMounted && liveCourseResponse) {
           const raw = liveCourseResponse as unknown as Record<string, unknown>
           const courseObj = (raw.course as Record<string, unknown>) || raw
@@ -641,6 +653,14 @@ export default function CourseDetailPage() {
   // Handle Add Note from player or tab
   const handleAddNoteAtTimestamp = async (timestamp: number, noteContent?: string) => {
     if (!course || !currentLesson) return
+    if (!isAuthenticated || !user) {
+      toast.error('Vui lòng đăng nhập để lưu ghi chú bài học!', 'Chưa đăng nhập')
+      return
+    }
+    if (!isEnrolled) {
+      toast.error('Bạn cần mua hoặc đăng ký khóa học này để tạo ghi chú bài giảng!', 'Chưa sở hữu khóa học')
+      return
+    }
     const formatted = `${Math.floor(timestamp / 60)}:${String(Math.floor(timestamp % 60)).padStart(2, '0')}`
     const content = noteContent || `Ghi chú bài học tại mốc ${formatted}`
 
@@ -672,6 +692,10 @@ export default function CourseDetailPage() {
   }
 
   const handleDeleteNote = async (noteId: string) => {
+    if (!isAuthenticated || !user) {
+      toast.error('Vui lòng đăng nhập để xóa ghi chú!', 'Chưa đăng nhập')
+      return
+    }
     try {
       await courseService.deleteCourseNote(noteId)
       setCourse((prev) =>
@@ -687,6 +711,14 @@ export default function CourseDetailPage() {
   // Handle Q&A
   const handleCreateQnA = async (title: string, body: string) => {
     if (!course || !currentLesson) return
+    if (!isAuthenticated || !user) {
+      toast.error('Vui lòng đăng nhập để đặt câu hỏi!', 'Chưa đăng nhập')
+      return
+    }
+    if (!isEnrolled) {
+      toast.error('Bạn cần mua hoặc đăng ký khóa học để gửi câu hỏi Hỏi & Đáp!', 'Chưa sở hữu khóa học')
+      return
+    }
     try {
       const res = (await courseService.createCourseQnA(String(course.id), {
         lesson_id: currentLesson.id,
@@ -726,6 +758,14 @@ export default function CourseDetailPage() {
   }
 
   const handleAddQnAAnswer = async (qnaId: string, answerText: string) => {
+    if (!isAuthenticated || !user) {
+      toast.error('Vui lòng đăng nhập để trả lời!', 'Chưa đăng nhập')
+      return
+    }
+    if (!isEnrolled) {
+      toast.error('Bạn cần mua hoặc đăng ký khóa học để trả lời câu hỏi!', 'Chưa sở hữu khóa học')
+      return
+    }
     try {
       await courseService.addQnAAnswer(qnaId, { body: answerText })
       const newAns = {
@@ -755,6 +795,14 @@ export default function CourseDetailPage() {
   }
 
   const handleUpvoteQnA = async (qnaId: string) => {
+    if (!isAuthenticated || !user) {
+      toast.error('Vui lòng đăng nhập để bình chọn!', 'Chưa đăng nhập')
+      return
+    }
+    if (!isEnrolled) {
+      toast.error('Bạn cần mua hoặc đăng ký khóa học để bình chọn!', 'Chưa sở hữu khóa học')
+      return
+    }
     try {
       await courseService.toggleQnAUpvote(qnaId)
       setCourse((prev) => {
@@ -775,6 +823,14 @@ export default function CourseDetailPage() {
   // Handle Review
   const handleAddReview = async (rating: number, content: string) => {
     if (!course) return
+    if (!isAuthenticated || !user) {
+      toast.error('Vui lòng đăng nhập để đánh giá khóa học!', 'Chưa đăng nhập')
+      return
+    }
+    if (!isEnrolled) {
+      toast.error('Bạn cần mua hoặc đăng ký khóa học để gửi đánh giá!', 'Chưa sở hữu khóa học')
+      return
+    }
     try {
       const res = (await courseService.createCourseReview(String(course.id), {
         rating,
@@ -875,7 +931,7 @@ export default function CourseDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-text-primary flex flex-col">
+    <div className="min-h-screen bg-background text-text-primary flex flex-col antialiased">
       <CourseWorkspaceHeader
         courseTitle={course.title}
         onBack={handleBack}
@@ -939,6 +995,8 @@ export default function CourseDetailPage() {
               <CourseQnATab
                 qnaList={course.qna || []}
                 currentLessonTitle={currentLesson.title}
+                isEnrolled={isEnrolled}
+                isAuthenticated={isAuthenticated}
                 onCreateQuestion={handleCreateQnA}
                 onAddAnswer={handleAddQnAAnswer}
                 onUpvote={handleUpvoteQnA}
@@ -951,6 +1009,8 @@ export default function CourseDetailPage() {
                 currentLessonId={currentLesson.id}
                 currentLessonTitle={currentLesson.title}
                 currentTime={playerCurrentTime}
+                isEnrolled={isEnrolled}
+                isAuthenticated={isAuthenticated}
                 onSeekTo={() => {}}
                 onAddNote={(content, timestamp, formatted) =>
                   handleAddNoteAtTimestamp(timestamp, content)
@@ -964,6 +1024,8 @@ export default function CourseDetailPage() {
                 reviewsList={course.reviews || []}
                 rating={course.rating}
                 ratingCount={course.ratingCount}
+                isEnrolled={isEnrolled}
+                isAuthenticated={isAuthenticated}
                 onAddReview={handleAddReview}
               />
             )}

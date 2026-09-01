@@ -14,6 +14,8 @@ interface CourseReviewsTabProps {
   reviewsList: CourseReviewItem[]
   rating?: number
   ratingCount?: number
+  isEnrolled?: boolean
+  isAuthenticated?: boolean
   onAddReview?: (rating: number, content: string) => Promise<void>
 }
 
@@ -21,6 +23,8 @@ export function CourseReviewsTab({
   reviewsList,
   rating = 5.0,
   ratingCount = 0,
+  isEnrolled = true,
+  isAuthenticated = true,
   onAddReview,
 }: CourseReviewsTabProps) {
   const [selectedRating, setSelectedRating] = useState<number>(5)
@@ -68,17 +72,23 @@ export function CourseReviewsTab({
           <div className="text-xs font-semibold text-text-tertiary">
             Đánh giá khóa học • {effectiveCount.toLocaleString('en-US')} lượt đánh giá
           </div>
-          {onAddReview && !showReviewForm && (
-            <div className="pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowReviewForm(true)}
-                className="gap-1.5 text-xs font-medium cursor-pointer"
-              >
-                <MessageSquarePlus size={14} />
-                Viết đánh giá của bạn
-              </Button>
+          {isEnrolled && isAuthenticated ? (
+            onAddReview && !showReviewForm && (
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowReviewForm(true)}
+                  className="gap-1.5 text-xs font-medium cursor-pointer"
+                >
+                  <MessageSquarePlus size={14} />
+                  Viết đánh giá của bạn
+                </Button>
+              </div>
+            )
+          ) : (
+            <div className="pt-2 text-[11px] text-text-tertiary">
+              🔒 Đăng ký khóa học để gửi đánh giá
             </div>
           )}
         </div>

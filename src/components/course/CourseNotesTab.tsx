@@ -15,6 +15,8 @@ interface CourseNotesTabProps {
   currentLessonId?: string
   currentLessonTitle?: string
   currentTime?: number
+  isEnrolled?: boolean
+  isAuthenticated?: boolean
   onSeekTo?: (timeInSeconds: number) => void
   onAddNote?: (content: string, timestamp: number, formattedTime: string) => Promise<void> | void
   onDeleteNote?: (noteId: string) => Promise<void> | void
@@ -25,6 +27,8 @@ export function CourseNotesTab({
   currentLessonId = 'l-01-01',
   currentLessonTitle = 'Bài học hiện tại',
   currentTime = 0,
+  isEnrolled = true,
+  isAuthenticated = true,
   onSeekTo,
   onAddNote,
   onDeleteNote,
@@ -84,9 +88,15 @@ export function CourseNotesTab({
 
   return (
     <div className="space-y-6 pt-2 animate-in fade-in duration-150">
+      {!isEnrolled && (
+        <div className="rounded-2xl border border-warning/30 bg-warning-soft/20 p-4 text-xs text-warning flex items-center justify-between">
+          <span>🔒 Chỉ học viên đã đăng ký/mua khóa học và đăng nhập mới có thể lưu và quản lý ghi chú bài học.</span>
+        </div>
+      )}
+
       {/* Add note bar */}
       <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
-        {isAdding ? (
+        {isAdding && isEnrolled && isAuthenticated ? (
           <form onSubmit={handleAddNoteSubmit} className="space-y-3">
             <div className="flex items-center justify-between text-xs font-semibold text-text-secondary">
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary-soft px-2.5 py-1 text-primary font-bold">

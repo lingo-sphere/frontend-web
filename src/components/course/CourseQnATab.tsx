@@ -23,6 +23,8 @@ import type { QnAItem } from '@/types/course'
 interface CourseQnATabProps {
   qnaList: QnAItem[]
   currentLessonTitle?: string
+  isEnrolled?: boolean
+  isAuthenticated?: boolean
   onCreateQuestion?: (title: string, body: string) => Promise<void> | void
   onAddAnswer?: (qnaId: string, answerText: string) => Promise<void> | void
   onUpvote?: (qnaId: string) => Promise<void> | void
@@ -31,6 +33,8 @@ interface CourseQnATabProps {
 export function CourseQnATab({
   qnaList,
   currentLessonTitle,
+  isEnrolled = true,
+  isAuthenticated = true,
   onCreateQuestion,
   onAddAnswer,
   onUpvote,
@@ -125,6 +129,12 @@ export function CourseQnATab({
 
   return (
     <div className="space-y-6 pt-2 animate-in fade-in duration-150">
+      {!isEnrolled && (
+        <div className="rounded-2xl border border-warning/30 bg-warning-soft/20 p-4 text-xs text-warning flex items-center justify-between">
+          <span>🔒 Chỉ học viên đã đăng ký/mua khóa học và đăng nhập mới có thể đặt câu hỏi hoặc trả lời trong mục Hỏi & Đáp.</span>
+        </div>
+      )}
+
       {/* Search & Actions Bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
@@ -137,13 +147,15 @@ export function CourseQnATab({
             className="w-full rounded-xl border border-border bg-surface pl-10 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-xs"
           />
         </div>
-        <Button
-          onClick={() => setShowAskForm(!showAskForm)}
-          className="bg-primary text-white hover:bg-primary-hover shrink-0 gap-2 rounded-xl px-5 cursor-pointer font-bold"
-        >
-          <MessageSquare size={16} />
-          {showAskForm ? 'Đóng form' : 'Đặt câu hỏi mới'}
-        </Button>
+        {isEnrolled && isAuthenticated && (
+          <Button
+            onClick={() => setShowAskForm(!showAskForm)}
+            className="bg-primary text-white hover:bg-primary-hover shrink-0 gap-2 rounded-xl px-5 cursor-pointer font-bold"
+          >
+            <MessageSquare size={16} />
+            {showAskForm ? 'Đóng form' : 'Đặt câu hỏi mới'}
+          </Button>
+        )}
       </div>
 
       {/* Ask Question Form */}

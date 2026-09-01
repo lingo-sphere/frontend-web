@@ -11,6 +11,7 @@ import { ShoppingCart, Trash2, ArrowLeft, ShieldCheck, Award, Zap, CheckCircle2,
 import { Layout } from '@/components/layout/Layout'
 import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
+import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
 
@@ -65,15 +66,20 @@ export default function CartPage() {
   const handleCheckout = async () => {
     if (items.length === 0) return
     setIsCheckingOut(true)
-    setTimeout(() => {
-      setIsCheckingOut(false)
+    try {
+      await Promise.all(items.map((it) => courseService.enrollCourse(it.course_id)))
+      await clearCart()
       toast.success(
         isVi ? 'Đăng ký các khóa học trong giỏ hàng thành công!' : 'Successfully enrolled in all courses in cart!',
         isVi ? 'Thanh toán thành công' : 'Checkout Successful'
       )
-      clearCart()
       navigate('/courses')
-    }, 1200)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi thanh toán giỏ hàng'
+      toast.error(msg, isVi ? 'Lỗi thanh toán' : 'Checkout Failed')
+    } finally {
+      setIsCheckingOut(false)
+    }
   }
 
   return (

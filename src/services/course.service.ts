@@ -45,6 +45,10 @@ export const courseService = {
     return api.get<CourseEnrollment[]>(API_CONFIG.ENDPOINTS.COURSES.MY_ENROLLED)
   },
 
+  async getEnrollmentStatus(courseId: string): Promise<{ is_enrolled: boolean; enrolled_at?: string; role?: string }> {
+    return api.get(`/courses/${courseId}/enrollment-status`)
+  },
+
   async getRecommendedCourses(params?: {
     total_score?: number
     listening_score?: number
