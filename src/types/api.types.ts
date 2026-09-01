@@ -53,6 +53,8 @@ export interface LoginPayload {
   email?: string
   username?: string
   password?: string
+  remember_me?: boolean
+  rememberMe?: boolean
 }
 
 export interface RegisterPayload {
@@ -84,6 +86,8 @@ export interface ResetPasswordPayload {
 export interface SocialLoginPayload {
   provider: 'GOOGLE' | 'FACEBOOK'
   token: string
+  remember_me?: boolean
+  rememberMe?: boolean
 }
 
 export interface Lesson {
