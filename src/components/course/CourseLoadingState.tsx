@@ -50,14 +50,14 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
         {/* Left Column: Player & Tab Content */}
         <div className="flex-1 flex flex-col overflow-y-auto max-h-[calc(100vh-3.5rem)]">
           {/* Video Player Skeleton */}
-          <div className="w-full bg-black relative flex flex-col items-center justify-center overflow-hidden aspect-video max-h-[70vh] shadow-xl">
+          <div className="w-full bg-black relative flex flex-col items-center justify-center overflow-hidden min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] shadow-xl">
             {/* Center Loading Spinner & Icon */}
-            <div className="flex flex-col items-center justify-center gap-3 text-white/70">
+            <div className="flex flex-col items-center justify-center gap-4 text-white/70">
               <div className="relative flex items-center justify-center">
-                <div className="h-14 w-14 rounded-full border-2 border-white/15 border-t-primary animate-spin" />
-                <Play size={20} className="absolute text-white/80 fill-white/80" />
+                <div className="h-16 w-16 rounded-full border-2 border-white/15 border-t-primary animate-spin" />
+                <Play size={22} className="absolute text-white/80 fill-white/80" />
               </div>
-              <div className="h-3 w-36 rounded-md bg-white/20 animate-pulse mt-1" />
+              <div className="h-4 w-48 rounded-md bg-white/20 animate-pulse mt-1" />
             </div>
 
             {/* Bottom YouTube-style Player Bar Skeleton */}

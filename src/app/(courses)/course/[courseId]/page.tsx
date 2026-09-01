@@ -19,8 +19,12 @@ import { CourseRatingModal } from '@/components/course/CourseRatingModal'
 import { CourseTestRunnerModal } from '@/components/course/CourseTestRunnerModal'
 import { CourseLoadingState } from '@/components/course/CourseLoadingState'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
+import { CourseLockedPlayer } from '@/components/course/CourseLockedPlayer'
+import { UpgradeModal } from '@/components/layout/UpgradeModal'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth-store'
+import { useCartStore } from '@/store/cart-store'
+import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
 import type { Chapter, Course, Lesson, CourseReviewItem, NoteItem, QnAItem } from '@/types/course'
 
@@ -48,6 +52,7 @@ export default function CourseDetailPage() {
   const courseId = params?.courseId || 'toeic-foundation'
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
+  const { addToCart, isInCart } = useCartStore()
 
   const [course, setCourse] = useState<Course | null>(null)
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
@@ -60,6 +65,8 @@ export default function CourseDetailPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true)
   const [playerCurrentTime, setPlayerCurrentTime] = useState<number>(0)
   const [showRatingModal, setShowRatingModal] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
 
   const [activeTestModal, setActiveTestModal] = useState<{
     isOpen: boolean
@@ -87,9 +94,15 @@ export default function CourseDetailPage() {
           courseService.getEnrollmentStatus(courseId).catch(() => ({ is_enrolled: false })),
         ])
 
+        const userIsEnrolled = Boolean(enrollStatus?.is_enrolled || user?.is_premium || user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR')
         if (isMounted) {
-          const userIsEnrolled = Boolean(enrollStatus?.is_enrolled || user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR')
           setIsEnrolled(userIsEnrolled)
+          if (userIsEnrolled) {
+            useEnrollmentStore.getState().addEnrolledCourse(courseId)
+            console.log('%c🔓 [LingoSphere] ĐÃ MUA KHÓA HỌC: Mở khóa trình phát Video bài giảng & Tiến độ học tập', 'color: #10b981; font-weight: bold;')
+          } else {
+            console.log('%c🔒 [LingoSphere] CHƯA MUA KHÓA HỌC: Khóa video -> KHÔNG tải media/video/tiến độ bài học', 'color: #f59e0b; font-weight: bold;')
+          }
         }
 
         if (isMounted && liveCourseResponse) {
@@ -100,17 +113,19 @@ export default function CourseDetailPage() {
             (raw.modules as Array<Record<string, unknown>>) ||
             []
 
-          // Fetch user's saved lesson progress from DB
+          // Only fetch user's saved lesson progress if user is enrolled
           let completedLessonIdSet = new Set<string>()
-          try {
-            const progressData = await courseService.getCourseProgressDetail(
-              String(courseObj._id || courseObj.id || courseId)
-            )
-            if (progressData && Array.isArray(progressData.completed_lesson_ids)) {
-              completedLessonIdSet = new Set(progressData.completed_lesson_ids)
+          if (userIsEnrolled) {
+            try {
+              const progressData = await courseService.getCourseProgressDetail(
+                String(courseObj._id || courseObj.id || courseId)
+              )
+              if (progressData && Array.isArray(progressData.completed_lesson_ids)) {
+                completedLessonIdSet = new Set(progressData.completed_lesson_ids)
+              }
+            } catch {
+              // Not authenticated or no progress record yet
             }
-          } catch {
-            // Not authenticated or no progress record yet
           }
 
           let mappedChapters: Chapter[] = []
@@ -133,14 +148,17 @@ export default function CourseDetailPage() {
               const lessonsList: Lesson[] = modLessons.map((les, lesIdx) => {
                 const lesId = String(les._id || les.id || `les-${modIdx + 1}-${lesIdx + 1}`)
                 const lesTitle = String(les.title || `Bài ${lesIdx + 1}`)
-                const vidUrl = String(
-                  les.video_url ||
-                    les.videoUrl ||
-                    les.video_link ||
-                    les.file_url ||
-                    les.url ||
-                    ''
-                )
+                // Only provide videoUrl if user is enrolled to prevent unwanted media preloading
+                const vidUrl = userIsEnrolled
+                  ? String(
+                      les.video_url ||
+                        les.videoUrl ||
+                        les.video_link ||
+                        les.file_url ||
+                        les.url ||
+                        ''
+                    )
+                  : ''
                 const durationSec = Number(
                   les.duration_seconds ||
                     (les.duration_minutes ? Number(les.duration_minutes) * 60 : 600)
@@ -351,11 +369,15 @@ export default function CourseDetailPage() {
                   }+.`,
                 ]
 
-          // Fetch real reviews, notes, and Q&A from database
+          // Fetch real reviews from DB (notes and QnA only fetched if user is enrolled)
           const [reviewsRes, notesRes, qnaRes] = await Promise.all([
             courseService.getCourseReviews(courseId).catch(() => null),
-            courseService.getCourseNotes(courseId).catch(() => []),
-            courseService.getCourseQnA(courseId).catch(() => []),
+            userIsEnrolled && isAuthenticated
+              ? courseService.getCourseNotes(courseId).catch(() => [])
+              : Promise.resolve([]),
+            userIsEnrolled
+              ? courseService.getCourseQnA(courseId).catch(() => [])
+              : Promise.resolve([]),
           ])
 
           const mappedReviews: CourseReviewItem[] = (reviewsRes?.reviews || []).map((r) => ({
@@ -861,10 +883,37 @@ export default function CourseDetailPage() {
     }
   }
 
+  const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      return
+    }
+    if (!course) return
+    if (isInCart(course.id)) {
+      navigate('/cart')
+      return
+    }
+    setIsAddingToCart(true)
+    const result = await addToCart(course.id)
+    setIsAddingToCart(false)
+    if (result.success) {
+      toast.success('Đã thêm khóa học vào giỏ hàng thành công!', 'Giỏ hàng')
+    } else {
+      toast.error(result.message || 'Không thể thêm vào giỏ hàng', 'Lỗi')
+    }
+  }
+
   const handleTakeTest = (
     chapter: Chapter,
     testType: 'challenge' | 'exercise' | 'post-mini'
   ) => {
+    if (!isEnrolled) {
+      toast.warning(
+        'Vui lòng mua khóa học hoặc nâng cấp gói thành viên để làm bài kiểm tra và đề thi này!',
+        'Yêu cầu mở khóa'
+      )
+      return
+    }
     setActiveTestModal({
       isOpen: true,
       chapter,
@@ -942,17 +991,31 @@ export default function CourseDetailPage() {
 
       <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden relative">
         <div className="flex-1 flex flex-col overflow-y-auto max-h-[calc(100vh-3.5rem)] transition-all duration-300">
-          <LessonPlayer
-            lesson={currentLesson}
-            onProgress={handleLessonProgress}
-            onTimeUpdate={(t) => setPlayerCurrentTime(t)}
-            onNextLesson={handleNextLesson}
-            onPrevLesson={handlePrevLesson}
-            hasNextLesson={hasNextLesson}
-            hasPrevLesson={hasPrevLesson}
-            onAddNoteAtTimestamp={handleAddNoteAtTimestamp}
-            onDurationChange={handleLessonDurationChange}
-          />
+          {isEnrolled ? (
+            <LessonPlayer
+              lesson={currentLesson}
+              onProgress={handleLessonProgress}
+              onTimeUpdate={(t) => setPlayerCurrentTime(t)}
+              onNextLesson={handleNextLesson}
+              onPrevLesson={handlePrevLesson}
+              hasNextLesson={hasNextLesson}
+              hasPrevLesson={hasPrevLesson}
+              onAddNoteAtTimestamp={handleAddNoteAtTimestamp}
+              onDurationChange={handleLessonDurationChange}
+            />
+          ) : (
+            <CourseLockedPlayer
+              course={course}
+              currentLesson={currentLesson}
+              isAuthenticated={isAuthenticated}
+              isAlreadyInCart={isInCart(course.id)}
+              isAddingToCart={isAddingToCart}
+              onAddToCart={handleAddToCart}
+              onGoToCart={() => navigate('/cart')}
+              onOpenUpgrade={() => setShowUpgradeModal(true)}
+              onOpenAuth={() => window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))}
+            />
+          )}
 
           <div className="p-4 sm:p-8 space-y-6 max-w-5xl">
             <div className="flex items-center gap-6 border-b border-border text-xs sm:text-sm font-bold tracking-wide overflow-x-auto no-scrollbar">
@@ -1079,6 +1142,7 @@ export default function CourseDetailPage() {
                 chapters={course.chapters}
                 currentLesson={currentLesson}
                 expandedChapters={expandedChapters}
+                isEnrolled={isEnrolled}
                 onToggleChapter={toggleChapter}
                 onSelectLesson={handleSelectLesson}
                 onToggleLessonComplete={handleToggleLessonComplete}
@@ -1108,6 +1172,14 @@ export default function CourseDetailPage() {
           testType={activeTestModal.testType}
           onClose={() => setActiveTestModal({ isOpen: false, chapter: null, testType: 'post-mini' })}
           onComplete={handleTestComplete}
+        />
+      )}
+
+      {/* Premium Upgrade Modal */}
+      {showUpgradeModal && (
+        <UpgradeModal
+          open={showUpgradeModal}
+          onOpenChange={setShowUpgradeModal}
         />
       )}
     </div>

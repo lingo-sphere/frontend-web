@@ -17,13 +17,16 @@ import {
   Trophy,
   HelpCircle,
   Sparkles,
+  Lock,
 } from 'lucide-react'
 import type { Chapter, Lesson } from '@/types/course'
+import { toast } from '@/store/toast-store'
 
 interface CourseSidebarContentProps {
   chapters: Chapter[]
   currentLesson: Lesson
   expandedChapters: string[]
+  isEnrolled?: boolean
   onToggleChapter: (chapterId: string) => void
   onSelectLesson: (chapter: Chapter, lesson: Lesson) => void
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
@@ -34,6 +37,7 @@ export function CourseSidebarContent({
   chapters,
   currentLesson,
   expandedChapters,
+  isEnrolled = true,
   onToggleChapter,
   onSelectLesson,
   onToggleLessonComplete,
@@ -95,7 +99,7 @@ export function CourseSidebarContent({
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                        <Trophy size={14} />
+                        {isEnrolled ? <Trophy size={14} /> : <Lock size={14} />}
                       </div>
                       <div>
                         <div className="text-xs font-bold text-text-primary group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
@@ -106,9 +110,15 @@ export function CourseSidebarContent({
                         </div>
                       </div>
                     </div>
-                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded-md">
-                      Làm bài
-                    </span>
+                    {isEnrolled ? (
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded-md">
+                        Làm bài
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-bold text-slate-400 bg-slate-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Lock size={10} /> Khóa
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -129,7 +139,14 @@ export function CourseSidebarContent({
                       }`}
                     >
                       <button
-                        onClick={(e) => onToggleLessonComplete(lesson.id, e)}
+                        onClick={(e) => {
+                          if (!isEnrolled) {
+                            e.stopPropagation()
+                            toast.warning('Vui lòng mua khóa học để ghi nhận tiến độ bài học!')
+                            return
+                          }
+                          onToggleLessonComplete(lesson.id, e)
+                        }}
                         className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors cursor-pointer ${
                           isDone
                             ? 'bg-primary border-primary text-white'
@@ -150,7 +167,11 @@ export function CourseSidebarContent({
                         </div>
                         <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
                           <span className="flex items-center gap-1">
-                            <PlayCircle size={12} className={isActive ? 'text-primary' : ''} />
+                            {isEnrolled ? (
+                              <PlayCircle size={12} className={isActive ? 'text-primary' : ''} />
+                            ) : (
+                              <Lock size={11} className="text-amber-500/80" />
+                            )}
                             {Math.round(lesson.duration / 60)} phút
                           </span>
 
@@ -159,6 +180,10 @@ export function CourseSidebarContent({
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
+                                  if (!isEnrolled) {
+                                    toast.warning('Vui lòng mua khóa học để tải tài liệu bài học!', 'Yêu cầu mở khóa')
+                                    return
+                                  }
                                   setActiveResourceDropdown(
                                     isResourceOpen ? null : lesson.id
                                   )
@@ -169,7 +194,7 @@ export function CourseSidebarContent({
                                 <span>Tài liệu ({lesson.resources.length})</span>
                               </button>
 
-                              {isResourceOpen && (
+                              {isResourceOpen && isEnrolled && (
                                 <div
                                   onClick={(e) => e.stopPropagation()}
                                   className="absolute left-0 top-6 w-56 rounded-xl border border-border bg-surface p-2 shadow-2xl z-30 space-y-1.5 text-xs animate-in fade-in duration-150"
@@ -208,7 +233,7 @@ export function CourseSidebarContent({
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        <HelpCircle size={14} />
+                        {isEnrolled ? <HelpCircle size={14} /> : <Lock size={14} />}
                       </div>
                       <div>
                         <div className="text-xs font-bold text-text-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
@@ -219,9 +244,15 @@ export function CourseSidebarContent({
                         </div>
                       </div>
                     </div>
-                    <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded-md">
-                      Luyện tập
-                    </span>
+                    {isEnrolled ? (
+                      <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded-md">
+                        Luyện tập
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-bold text-slate-400 bg-slate-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Lock size={10} /> Khóa
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -233,7 +264,7 @@ export function CourseSidebarContent({
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                        <FileCheck2 size={14} />
+                        {isEnrolled ? <FileCheck2 size={14} /> : <Lock size={14} />}
                       </div>
                       <div>
                         <div className="text-xs font-bold text-text-primary group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
@@ -244,10 +275,16 @@ export function CourseSidebarContent({
                         </div>
                       </div>
                     </div>
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
-                      <Sparkles size={11} />
-                      Kiểm tra
-                    </span>
+                    {isEnrolled ? (
+                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Sparkles size={11} />
+                        Kiểm tra
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-bold text-slate-400 bg-slate-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Lock size={10} /> Khóa
+                      </span>
+                    )}
                   </div>
                 )}
               </div>

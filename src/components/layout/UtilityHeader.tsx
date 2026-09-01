@@ -23,6 +23,7 @@ import { useDashboardStore } from '@/store/dashboard-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useCartStore } from '@/store/cart-store'
 import { useWishlistStore } from '@/store/wishlist-store'
+import { useEnrollmentStore } from '@/store/enrollment-store'
 import { useNavigate } from '@/lib/navigation'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification } from '@/types/notification'
@@ -80,6 +81,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
     if (isAuthenticated) {
       fetchCart()
       fetchWishlist()
+      useEnrollmentStore.getState().fetchMyEnrollments()
     }
   }, [isAuthenticated])
 

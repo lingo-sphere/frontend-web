@@ -11,6 +11,7 @@ import { ShoppingCart, Trash2, ArrowLeft, ShieldCheck, Award, Zap, CheckCircle2,
 import { Layout } from '@/components/layout/Layout'
 import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
+import { useEnrollmentStore } from '@/store/enrollment-store'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
@@ -69,6 +70,7 @@ export default function CartPage() {
     try {
       await Promise.all(items.map((it) => courseService.enrollCourse(it.course_id)))
       await clearCart()
+      await useEnrollmentStore.getState().fetchMyEnrollments()
       toast.success(
         isVi ? 'Đăng ký các khóa học trong giỏ hàng thành công!' : 'Successfully enrolled in all courses in cart!',
         isVi ? 'Thanh toán thành công' : 'Checkout Successful'

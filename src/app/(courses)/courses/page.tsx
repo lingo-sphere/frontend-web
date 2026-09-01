@@ -8,7 +8,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from '@/lib/navigation'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, GraduationCap, LogIn, Sparkles, Heart } from 'lucide-react'
 import { Layout } from '@/components/layout/Layout'
 import { courseService } from '@/services/course.service'
 import { userService } from '@/services/user.service'
@@ -20,6 +20,7 @@ import { CourseScheduleModal } from '@/components/course/CourseScheduleModal'
 import { CourseCard } from '@/components/course/CourseCard'
 import { useWishlistStore } from '@/store/wishlist-store'
 import { useAuthStore } from '@/store/auth-store'
+import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
 
 export default function CoursesCatalogPage() {
@@ -28,7 +29,9 @@ export default function CoursesCatalogPage() {
   const navigate = useNavigate()
   const searchParams = useSearchParams()
   const { items: wishlistItems, toggleItem, isInWishlist, fetchWishlist } = useWishlistStore()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
+  const isEnrolled = useEnrollmentStore((state) => state.isEnrolled)
+  const enrolledCourseIds = useEnrollmentStore((state) => state.enrolledCourseIds)
 
   const tabParam = searchParams.get('tab')
   const activeTab: CourseTabType =
@@ -38,21 +41,21 @@ export default function CoursesCatalogPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [showScheduleBanner, setShowScheduleBanner] = useState(false)
-  const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [userSchedule, setUserSchedule] = useState<UserScheduleData | null>(null)
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
 
+  const [showScheduleBanner, setShowScheduleBanner] = useState<boolean>(true)
+  const [showScheduleModal, setShowScheduleModal] = useState<boolean>(false)
+  const [userSchedule, setUserSchedule] = useState<UserScheduleData | null>(null)
+
   useEffect(() => {
-    try {
-      const dismissedUntil = localStorage.getItem('lingosphere_schedule_banner_dismissed_until')
-      if (!dismissedUntil || Date.now() > Number(dismissedUntil)) {
-        setShowScheduleBanner(true)
-      } else {
-        setShowScheduleBanner(false)
+    if (typeof window !== 'undefined') {
+      const dismissedUntil = localStorage.getItem('course_schedule_banner_dismissed_until')
+      if (dismissedUntil) {
+        const untilTime = parseInt(dismissedUntil, 10)
+        if (Date.now() < untilTime) {
+          setShowScheduleBanner(false)
+        }
       }
-    } catch {
-      setShowScheduleBanner(true)
     }
   }, [])
 
@@ -79,23 +82,17 @@ export default function CoursesCatalogPage() {
 
   const handleDismissScheduleBanner = () => {
     setShowScheduleBanner(false)
-    try {
-      localStorage.setItem(
-        'lingosphere_schedule_banner_dismissed_until',
-        (Date.now() + 2 * 60 * 60 * 1000).toString()
-      )
-    } catch {
-      // Ignore storage errors
+    if (typeof window !== 'undefined') {
+      const twoHoursLater = Date.now() + 2 * 60 * 60 * 1000
+      localStorage.setItem('course_schedule_banner_dismissed_until', twoHoursLater.toString())
     }
   }
 
   const handleOpenScheduleModal = () => {
     if (!isAuthenticated) {
       toast.warning(
-        isVi
-          ? 'Tính năng lên lịch nhắc học qua Email chỉ dành cho học viên đã đăng nhập. Vui lòng đăng nhập để tiếp tục!'
-          : 'Study schedule is only available for logged-in users. Please log in to continue!',
-        isVi ? 'Yêu cầu đăng nhập' : 'Login Required'
+        isVi ? 'Vui lòng đăng nhập để sử dụng tính năng lên lịch học!' : 'Please sign in to schedule study reminders!',
+        isVi ? 'Yêu cầu đăng nhập' : 'Authentication required'
       )
       return
     }
@@ -107,12 +104,12 @@ export default function CoursesCatalogPage() {
       await userService.updateMySettings({ is_reminder_enabled: false })
       setUserSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
       toast.info(
-        isVi ? 'Đã hủy lịch nhắc nhở học tập hàng ngày.' : 'Cancelled daily study reminder schedule.',
-        isVi ? 'Đã hủy lịch' : 'Schedule Cancelled'
+        isVi ? 'Đã hủy lịch gửi mail nhắc học thành công.' : 'Cancelled study reminder schedule.',
+        isVi ? 'Lịch học' : 'Study Schedule'
       )
     } catch {
       toast.error(
-        isVi ? 'Không thể hủy lịch học. Vui lòng thử lại.' : 'Failed to cancel schedule.',
+        isVi ? 'Không thể hủy lịch nhắc nhở lúc này.' : 'Failed to cancel schedule.',
         isVi ? 'Lỗi' : 'Error'
       )
     }
@@ -121,6 +118,7 @@ export default function CoursesCatalogPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchWishlist()
+      useEnrollmentStore.getState().fetchMyEnrollments()
     }
   }, [isAuthenticated, fetchWishlist])
 
@@ -216,12 +214,24 @@ export default function CoursesCatalogPage() {
       const matchesCategory =
         selectedCategory === 'all' || c.category === selectedCategory
 
-      if (activeTab === 'wishlist') return matchesSearch && isInWishlist(c.id)
-      if (activeTab === 'my-courses') return matchesSearch && (c.progress !== undefined && c.progress >= 0)
+      if (activeTab === 'wishlist') {
+        if (!isAuthenticated) return false
+        return matchesSearch && isInWishlist(c.id)
+      }
+      if (activeTab === 'my-courses') {
+        if (!isAuthenticated) return false
+        const hasAccess =
+          isEnrolled(c.id) ||
+          (c.slug ? isEnrolled(c.slug) : false) ||
+          Boolean(user?.is_premium) ||
+          user?.role === 'ADMIN' ||
+          user?.role === 'INSTRUCTOR'
+        return matchesSearch && hasAccess
+      }
 
       return matchesSearch && matchesCategory
     })
-  }, [courses, searchQuery, selectedCategory, activeTab, wishlistItems, isInWishlist])
+  }, [courses, searchQuery, selectedCategory, activeTab, wishlistItems, isInWishlist, enrolledCourseIds, isAuthenticated, isEnrolled, user])
 
   const toggleWishlist = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -317,17 +327,92 @@ export default function CoursesCatalogPage() {
               ))}
             </div>
           ) : filteredCourses.length === 0 ? (
-            <div className="py-20 text-center rounded-2xl border border-dashed border-border bg-surface/50 space-y-3">
-              <BookOpen className="mx-auto text-text-tertiary" size={40} />
-              <h3 className="text-base font-bold text-text-primary">
-                {isVi ? 'Không tìm thấy khóa học phù hợp' : 'No courses found'}
-              </h3>
-              <p className="text-xs text-text-secondary">
-                {isVi
-                  ? 'Thử thay đổi từ khóa tìm kiếm hoặc chuyển sang bộ lọc khác.'
-                  : 'Try changing your search keywords or filters.'}
-              </p>
-            </div>
+            activeTab === 'my-courses' && !isAuthenticated ? (
+              <div className="py-16 px-6 text-center rounded-2xl border border-dashed border-border bg-surface/50 max-w-md mx-auto space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                  <GraduationCap size={28} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-text-primary">
+                    {isVi ? 'Bạn chưa đăng nhập' : 'You are not logged in'}
+                  </h3>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    {isVi
+                      ? 'Vui lòng đăng nhập tài khoản để xem các khóa học bạn đã mua và tiếp tục lộ trình học.'
+                      : 'Please log in to see your enrolled courses and continue learning.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-colors cursor-pointer shadow-sm shadow-primary/20 inline-flex items-center gap-2"
+                >
+                  <LogIn size={15} />
+                  <span>{isVi ? 'Đăng nhập ngay' : 'Log in now'}</span>
+                </button>
+              </div>
+            ) : activeTab === 'my-courses' && isAuthenticated ? (
+              <div className="py-16 px-6 text-center rounded-2xl border border-dashed border-border bg-surface/50 max-w-md mx-auto space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                  <BookOpen size={28} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-text-primary">
+                    {isVi ? 'Bạn chưa sở hữu khóa học nào' : 'No enrolled courses yet'}
+                  </h3>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    {isVi
+                      ? 'Hãy khám phá các khóa học TOEIC & Tiếng Anh để bắt đầu lộ trình học tập của bạn.'
+                      : 'Explore TOEIC & English courses to start your learning journey.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/courses')}
+                  className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-colors cursor-pointer shadow-sm shadow-primary/20 inline-flex items-center gap-2"
+                >
+                  <Sparkles size={15} />
+                  <span>{isVi ? 'Khám phá tất cả khóa học' : 'Explore All Courses'}</span>
+                </button>
+              </div>
+            ) : activeTab === 'wishlist' && !isAuthenticated ? (
+              <div className="py-16 px-6 text-center rounded-2xl border border-dashed border-border bg-surface/50 max-w-md mx-auto space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
+                  <Heart size={28} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-text-primary">
+                    {isVi ? 'Danh sách yêu thích' : 'Wishlist'}
+                  </h3>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    {isVi
+                      ? 'Vui lòng đăng nhập để xem danh sách các khóa học bạn đã yêu thích.'
+                      : 'Please log in to view your wishlisted courses.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-colors cursor-pointer shadow-sm shadow-primary/20 inline-flex items-center gap-2"
+                >
+                  <LogIn size={15} />
+                  <span>{isVi ? 'Đăng nhập ngay' : 'Log in now'}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="py-20 text-center rounded-2xl border border-dashed border-border bg-surface/50 space-y-3">
+                <BookOpen className="mx-auto text-text-tertiary" size={40} />
+                <h3 className="text-base font-bold text-text-primary">
+                  {isVi ? 'Không tìm thấy khóa học phù hợp' : 'No courses found'}
+                </h3>
+                <p className="text-xs text-text-secondary">
+                  {isVi
+                    ? 'Thử thay đổi từ khóa tìm kiếm hoặc chuyển sang bộ lọc khác.'
+                    : 'Try changing your search keywords or filters.'}
+                </p>
+              </div>
+            )
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
               {filteredCourses.map((course) => (

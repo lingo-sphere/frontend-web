@@ -11,6 +11,7 @@ import { useNavigate } from '@/lib/navigation'
 import { useWishlistStore } from '@/store/wishlist-store'
 import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
+import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
 
 export function HeaderWishlistHover() {
@@ -19,10 +20,18 @@ export function HeaderWishlistHover() {
   const navigate = useNavigate()
   const { items } = useWishlistStore()
   const { addToCart, isInCart } = useCartStore()
-  const { isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated } = useAuthStore()
+  const isEnrolled = useEnrollmentStore((state) => state.isEnrolled)
+  const isPremiumUser = Boolean(user?.is_premium)
+  const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
 
   const handleAddToCart = async (e: React.MouseEvent, courseId: string) => {
     e.stopPropagation()
+    const hasAccess = isEnrolled(courseId) || isPremiumUser || isPrivilegedUser
+    if (hasAccess) {
+      navigate(`/course/${courseId}`)
+      return
+    }
     if (!isAuthenticated) {
       toast.warning(
         isVi ? 'Vui lòng đăng nhập để thêm vào giỏ hàng!' : 'Please sign in to add to cart!',
@@ -93,16 +102,25 @@ export function HeaderWishlistHover() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={(e) => handleAddToCart(e, course.id)}
-                    className={`w-full rounded-lg border py-1.5 text-xs font-bold transition-colors cursor-pointer text-center ${
-                      inCart
-                        ? 'border-emerald-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
-                        : 'border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30'
-                    }`}
-                  >
-                    {inCart ? (isVi ? 'Đã trong giỏ' : 'In Cart') : 'Add to cart'}
-                  </button>
+                  {isEnrolled(course.id) || isPremiumUser || isPrivilegedUser ? (
+                    <button
+                      onClick={(e) => handleAddToCart(e, course.id)}
+                      className="w-full rounded-lg bg-primary hover:bg-primary-hover text-white py-1.5 text-xs font-bold transition-colors cursor-pointer text-center"
+                    >
+                      {isVi ? 'Vào học' : 'Learn Now'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => handleAddToCart(e, course.id)}
+                      className={`w-full rounded-lg border py-1.5 text-xs font-bold transition-colors cursor-pointer text-center ${
+                        inCart
+                          ? 'border-emerald-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
+                          : 'border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30'
+                      }`}
+                    >
+                      {inCart ? (isVi ? 'Đã trong giỏ' : 'In Cart') : 'Add to cart'}
+                    </button>
+                  )}
                 </div>
               )
             })}

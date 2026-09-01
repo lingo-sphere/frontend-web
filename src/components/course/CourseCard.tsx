@@ -20,6 +20,7 @@ import {
 import type { CourseCardData } from '@/types/course'
 import { useAuthStore } from '@/store/auth-store'
 import { useCartStore } from '@/store/cart-store'
+import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
 
@@ -47,9 +48,14 @@ export function CourseCard({
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
   const { addToCart, isInCart } = useCartStore()
+  const isEnrolled = useEnrollmentStore((state) =>
+    state.isEnrolled(course.id) || (course.slug ? state.isEnrolled(course.slug) : false)
+  )
+  const isPremiumUser = Boolean(user?.is_premium)
+  const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
+  const isAlreadyEnrolled = isEnrolled || isPremiumUser || isPrivilegedUser
   const [isAdding, setIsAdding] = useState(false)
   const isAlreadyInCart = isInCart(course.id)
-  const isPremiumUser = Boolean(user?.is_premium)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -104,7 +110,7 @@ export function CourseCard({
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (isPremiumUser) {
+    if (isAlreadyEnrolled) {
       navigate(`/course/${course.id}`)
       return
     }
@@ -273,10 +279,10 @@ export function CourseCard({
 
       <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between">
         <div className="flex items-baseline gap-2">
-          {isPremiumUser ? (
-            <span className="text-[13px] font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-1">
-              <Crown size={14} className="fill-amber-500 text-amber-500" />
-              {isVi ? 'Gói Premium VIP' : 'Premium VIP'}
+          {isAlreadyEnrolled ? (
+            <span className="text-[13px] font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              <Check size={14} className="text-emerald-500" />
+              {isPremiumUser ? (isVi ? 'Gói Premium VIP' : 'Premium VIP') : (isVi ? 'Đã sở hữu' : 'Enrolled')}
             </span>
           ) : (
             <>
@@ -296,13 +302,13 @@ export function CourseCard({
           )}
         </div>
 
-        {isPremiumUser ? (
+        {isAlreadyEnrolled ? (
           <button
             onClick={handleAddToCart}
-            className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:from-amber-600 hover:to-orange-600 cursor-pointer flex items-center gap-1.5"
+            className="rounded-lg bg-primary hover:bg-primary-hover px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
           >
             <Play size={12} className="fill-white" />
-            <span>{isVi ? 'Học ngay' : 'Learn Now'}</span>
+            <span>{isVi ? 'Vào học' : 'Learn Now'}</span>
           </button>
         ) : (
           <button

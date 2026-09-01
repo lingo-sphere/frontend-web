@@ -1,8 +1,6 @@
-/**
- * @file WelcomeBanner.tsx
- * @description Component giao diện React WelcomeBanner cho học viên
- */
+'use client'
 
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
 import { useAuthStore } from '@/store/auth-store'
@@ -11,8 +9,14 @@ export function WelcomeBanner() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const { user, isAuthenticated } = useAuthStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const getGreeting = () => {
+    if (!mounted) return isVietnamese ? 'Chào bạn' : 'Welcome'
     const hour = new Date().getHours()
     if (isVietnamese) {
       if (hour < 12) return 'Chào buổi sáng'
@@ -24,7 +28,7 @@ export function WelcomeBanner() {
     return 'Good evening'
   }
 
-  const studentName = isAuthenticated && user?.full_name
+  const studentName = mounted && isAuthenticated && user?.full_name
     ? user.full_name.split(' ').pop()
     : isVietnamese ? 'bạn' : 'Learner'
 
@@ -39,7 +43,7 @@ export function WelcomeBanner() {
     >
       <div>
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary">{t('dashboard.continueLearning')}</p>
-        <h1 className="mt-2 text-h1 text-text-primary" id="dashboard-title">
+        <h1 className="mt-2 text-h1 text-text-primary" id="dashboard-title" suppressHydrationWarning>
           {getGreeting()}, {studentName} 👋
         </h1>
         <p className="mt-1 text-[14px] text-text-secondary">

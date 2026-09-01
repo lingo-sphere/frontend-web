@@ -516,8 +516,8 @@ export function LessonPlayer({
         isFullscreen
           ? 'h-full w-full'
           : isTheater
-          ? 'h-[520px] lg:h-[640px]'
-          : 'aspect-video max-h-[calc(100vh-14rem)] min-h-[280px]'
+          ? 'h-[540px] lg:h-[660px]'
+          : 'aspect-video max-h-[calc(100vh-14rem)] min-h-[480px] sm:min-h-[540px] lg:min-h-[580px]'
       }`}
     >
       {/* 🎬 1. Video Layer */}
