@@ -37,9 +37,34 @@ export default function CoursesCatalogPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [showScheduleBanner, setShowScheduleBanner] = useState(true)
+  const [showScheduleBanner, setShowScheduleBanner] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const dismissedUntil = localStorage.getItem('lingosphere_schedule_banner_dismissed_until')
+      if (!dismissedUntil || Date.now() > Number(dismissedUntil)) {
+        setShowScheduleBanner(true)
+      } else {
+        setShowScheduleBanner(false)
+      }
+    } catch {
+      setShowScheduleBanner(true)
+    }
+  }, [])
+
+  const handleDismissScheduleBanner = () => {
+    setShowScheduleBanner(false)
+    try {
+      localStorage.setItem(
+        'lingosphere_schedule_banner_dismissed_until',
+        (Date.now() + 2 * 60 * 60 * 1000).toString()
+      )
+    } catch {
+      // Ignore storage errors
+    }
+  }
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -214,10 +239,10 @@ export default function CoursesCatalogPage() {
             </div>
           </div>
 
-          {showScheduleBanner && (
+          {activeTab === 'all' && showScheduleBanner && (
             <CourseScheduleBanner
               onOpenModal={() => setShowScheduleModal(true)}
-              onDismiss={() => setShowScheduleBanner(false)}
+              onDismiss={handleDismissScheduleBanner}
             />
           )}
 

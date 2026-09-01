@@ -19,7 +19,11 @@ export default function CartPage() {
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
-  const { cart, isLoading, fetchCart, removeFromCart, clearCart } = useCartStore()
+  const cart = useCartStore((state) => state.cart)
+  const isLoading = useCartStore((state) => state.isLoading)
+  const fetchCart = useCartStore((state) => state.fetchCart)
+  const removeFromCart = useCartStore((state) => state.removeFromCart)
+  const clearCart = useCartStore((state) => state.clearCart)
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
   const [isCheckingOut, setIsCheckingOut] = useState(false)

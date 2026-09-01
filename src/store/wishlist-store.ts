@@ -46,19 +46,18 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
   isLoading: false,
 
   fetchWishlist: async () => {
+    if (get().isLoading) return
     set({ isLoading: true })
     try {
       const res = await wishlistService.getWishlist()
       if (res && Array.isArray(res.items)) {
         const mapped = res.items.map(mapWishlistItemToCourseCard)
-        set({ items: mapped })
+        set({ items: mapped, isLoading: false })
       } else {
-        set({ items: [] })
+        set({ items: [], isLoading: false })
       }
     } catch {
-      set({ items: [] })
-    } finally {
-      set({ isLoading: false })
+      set({ items: [], isLoading: false })
     }
   },
 

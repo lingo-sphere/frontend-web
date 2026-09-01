@@ -25,14 +25,13 @@ export const useCartStore = create<CartState>((set, get) => ({
   isLoading: false,
 
   fetchCart: async () => {
+    if (get().isLoading) return
     set({ isLoading: true })
     try {
       const res = await cartService.getCart()
-      set({ cart: res })
+      set({ cart: res, isLoading: false })
     } catch {
-      set({ cart: null })
-    } finally {
-      set({ isLoading: false })
+      set({ cart: null, isLoading: false })
     }
   },
 

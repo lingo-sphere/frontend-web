@@ -44,10 +44,12 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const toggleTheme = useDashboardStore((state) => state.toggleTheme)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
   const { user, isAuthenticated, logout } = useAuthStore()
-  const { getTotalItems, fetchCart } = useCartStore()
-  const { items: wishlistItems, fetchWishlist } = useWishlistStore()
-  const cartItemCount = getTotalItems()
-  const wishlistCount = wishlistItems.length
+  const fetchCart = useCartStore((state) => state.fetchCart)
+  const cart = useCartStore((state) => state.cart)
+  const cartItemCount = cart?.total_items || 0
+  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
+  const wishlistItems = useWishlistStore((state) => state.items)
+  const wishlistCount = wishlistItems?.length || 0
   const navigate = useNavigate()
   const [hoveredHeaderMenu, setHoveredHeaderMenu] = useState<'learning' | 'wishlist' | 'cart' | 'user' | null>(null)
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null)
