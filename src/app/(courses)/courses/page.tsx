@@ -91,7 +91,7 @@ export default function CoursesCatalogPage() {
               slug: c.slug,
               title: c.title,
               instructor: String(
-                raw.author_name || raw.instructor_name || 'LingoSphere Academic Team'
+                raw.author_name || raw.instructor_name || 'Đội ngũ Giảng viên LingoSphere'
               ),
               thumbnail:
                 c.thumbnail_url ||

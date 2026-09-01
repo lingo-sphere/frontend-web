@@ -294,13 +294,34 @@ export default function CourseDetailPage() {
                 : 128,
             chapters: mappedChapters,
             instructor: {
-              name: 'Đội ngũ Giảng viên LingoSphere',
-              title: 'Senior English Master',
-              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-              rating: 4.9,
-              studentsCount: 15400,
+              name: String(
+                courseObj.author_name ||
+                  (courseObj.instructor as Record<string, unknown>)?.name ||
+                  'Đội ngũ Giảng viên LingoSphere'
+              ),
+              title: String(
+                courseObj.author_title ||
+                  (courseObj.instructor as Record<string, unknown>)?.title ||
+                  'Giảng viên chuyên môn'
+              ),
+              avatar: String(
+                courseObj.author_avatar ||
+                  (courseObj.instructor as Record<string, unknown>)?.avatar ||
+                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+              ),
+              rating: typeof courseObj.rating === 'number' ? courseObj.rating : 4.9,
+              studentsCount:
+                typeof courseObj.students_count === 'number'
+                  ? courseObj.students_count
+                  : typeof courseObj.studentsCount === 'number'
+                  ? courseObj.studentsCount
+                  : 1250,
               coursesCount: 8,
-              bio: 'Chuyên gia giảng dạy ngôn ngữ giàu kinh nghiệm thực chiến.',
+              bio: String(
+                courseObj.author_bio ||
+                  (courseObj.instructor as Record<string, unknown>)?.bio ||
+                  'Chuyên gia giảng dạy ngôn ngữ giàu kinh nghiệm thực chiến tại LingoSphere.'
+              ),
             },
             overview: {
               whatYouWillLearn: [
