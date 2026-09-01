@@ -86,13 +86,18 @@ export default function ProfileAppPage() {
 
         if (isMounted) {
           if (prof) {
+            const profileData = (prof as any)?.profile || prof;
             setUser((prev) => ({
               ...prev,
-              id: (prof as any).id || prev.id,
-              email: (prof as any).email || prev.email,
-              username: (prof as any).username || prev.username,
-              displayName: (prof as any).full_name || (prof as any).displayName || prev.displayName,
-              avatar: (prof as any).avatar_url || (prof as any).avatar || prev.avatar,
+              id: profileData?.id || profileData?._id || prev.id,
+              email: profileData?.email || prev.email,
+              username: profileData?.username || prev.username,
+              displayName: profileData?.full_name || profileData?.displayName || prev.displayName,
+              avatar: profileData?.avatar_url || profileData?.avatar || prev.avatar,
+              bio: profileData?.bio || prev.bio,
+              is_premium: Boolean(profileData?.is_premium || (prof as any)?.is_premium || (prof as any)?.subscription),
+              subscription_expires_at: profileData?.subscription_expires_at || (prof as any)?.subscription_expires_at || (prof as any)?.subscription?.expires_at,
+              subscription_plan: profileData?.subscription_plan || (prof as any)?.subscription_plan || (prof as any)?.subscription?.billing_cycle,
               stats: {
                 ...prev.stats,
                 totalXP: (gamify as any)?.total_xp || prev.stats?.totalXP || 0,

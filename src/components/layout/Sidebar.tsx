@@ -6,14 +6,12 @@
  */
 
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, PanelLeftClose, PanelLeft } from 'lucide-react'
+import { PanelLeftClose, PanelLeft } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { useMounted } from '@/hooks/use-mounted'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { SidebarNav } from '@/components/layout/SidebarNav'
 import { NAV_GROUPS } from '@/config/navigation.config'
-import { useAuthStore } from '@/store/auth-store'
 import { useDashboardStore } from '@/store/dashboard-store'
 
 interface SidebarProps {
@@ -29,7 +27,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
   const sidebarCollapsed = useDashboardStore((state) => state.sidebarCollapsed)
   const toggleSidebarCollapsed = useDashboardStore((state) => state.toggleSidebarCollapsed)
-  const { user, isAuthenticated } = useAuthStore()
 
   const isVietnamese = mounted ? i18n.language === 'vi' : true
 
@@ -38,20 +35,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
     setMobileSidebarOpen(false)
   }
 
-  const handleProfileClick = () => {
-    setActiveNavItem('profile')
-    setMobileSidebarOpen(false)
-    navigate('/profile')
-  }
-
   const sidebarWidth = sidebarCollapsed ? 'w-[72px]' : 'w-[252px]'
-  const displayName =
-    mounted && isAuthenticated && user?.full_name
-      ? user.full_name
-      : mounted && !isAuthenticated
-      ? (isVietnamese ? 'Khách / Học viên' : 'Guest Learner')
-      : 'Khách / Học viên'
-  const userLevel = mounted && user?.level ? user.level : 'A1'
 
   const content = (
     <>
@@ -89,43 +73,10 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         onNavigate={handleNavigate}
         collapsed={sidebarCollapsed}
       />
-      <Button
-        aria-label="Open profile"
-        className={`mt-2 h-auto w-full shrink-0 justify-start gap-2.5 rounded-xl bg-surface-subtle px-2.5 py-2 text-left hover:bg-surface-hover ${
-          sidebarCollapsed ? '!justify-center !px-0 !py-2' : ''
-        }`}
-        onClick={handleProfileClick}
-        variant="ghost"
-      >
-        <Avatar className="h-8 w-8 rounded-lg" size="default">
-          <AvatarImage alt="User avatar" src={user?.avatar_url || ''} />
-          <AvatarFallback suppressHydrationWarning className="rounded-lg bg-primary-soft text-primary text-xs font-bold">
-            {displayName.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <span className={`min-w-0 flex-1 ${sidebarCollapsed ? 'hidden' : ''}`}>
-          <span
-            className="block truncate text-[12px] font-semibold text-text-primary leading-tight"
-            suppressHydrationWarning
-          >
-            {displayName}
-          </span>
-          <span
-            className="block text-[10px] text-text-tertiary leading-tight"
-            suppressHydrationWarning
-          >
-            {t('dashboard.level')} {userLevel}
-          </span>
-        </span>
-        <ChevronDown
-          aria-hidden="true"
-          className={`h-3.5 w-3.5 text-text-tertiary ${sidebarCollapsed ? 'hidden' : ''}`}
-        />
-      </Button>
       {!mobile && (
         <Button
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={`mt-1 h-8 w-full justify-center gap-2 rounded-lg py-1 text-text-tertiary hover:bg-surface-hover hover:text-text-primary ${
+          className={`mt-auto h-8 w-full justify-center gap-2 rounded-lg py-1 text-text-tertiary hover:bg-surface-hover hover:text-text-primary ${
             sidebarCollapsed ? '!px-0' : ''
           }`}
           onClick={toggleSidebarCollapsed}

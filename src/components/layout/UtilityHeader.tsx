@@ -3,7 +3,7 @@
  * @description Component giao diện React UtilityHeader cho học viên
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart } from 'lucide-react'
 import { useMounted } from '@/hooks/use-mounted'
@@ -18,6 +18,7 @@ import { AuthModal } from '@/components/auth/AuthModal'
 import { HeaderMyLearningHover } from '@/components/layout/HeaderMyLearningHover'
 import { HeaderWishlistHover } from '@/components/layout/HeaderWishlistHover'
 import { HeaderCartHover } from '@/components/layout/HeaderCartHover'
+import { HeaderUserHover } from '@/components/layout/HeaderUserHover'
 import { useDashboardStore } from '@/store/dashboard-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useCartStore } from '@/store/cart-store'
@@ -48,7 +49,26 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const cartItemCount = getTotalItems()
   const wishlistCount = wishlistItems.length
   const navigate = useNavigate()
-  const [hoveredHeaderMenu, setHoveredHeaderMenu] = useState<'learning' | 'wishlist' | 'cart' | null>(null)
+  const [hoveredHeaderMenu, setHoveredHeaderMenu] = useState<'learning' | 'wishlist' | 'cart' | 'user' | null>(null)
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleMouseEnter = (menu: 'learning' | 'wishlist' | 'cart' | 'user') => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+      hoverTimerRef.current = null
+    }
+    setHoveredHeaderMenu(menu)
+  }
+
+  const handleMouseLeave = () => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+    }
+    hoverTimerRef.current = setTimeout(() => {
+      setHoveredHeaderMenu(null)
+      hoverTimerRef.current = null
+    }, 250)
+  }
 
   useEffect(() => {
     setLanguage(i18n.language === 'en' ? 'EN' : 'VI')
@@ -99,7 +119,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-10 flex min-h-[72px] items-center justify-between gap-4 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-sm sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-30 flex min-h-[72px] items-center justify-between gap-4 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs sm:px-6 lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Button
             aria-label="Open navigation"
@@ -137,20 +157,16 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             <Icon name="flame" size={16} />
             <span>12</span>
           </Button>
-          <Button
-            className={`hidden h-9 gap-2 rounded-xl border px-3 text-[12px] font-semibold sm:inline-flex ${
-              mounted && user?.is_premium
-                ? 'border-amber-500 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 hover:border-amber-600 hover:from-amber-500/30 hover:to-orange-500/30'
-                : 'border-warning bg-gradient-to-r from-warning/20 to-warning/10 text-warning hover:border-warning hover:from-warning/30 hover:to-warning/20'
-            }`}
-            onClick={() => setUpgradeOpen(true)}
-            variant="ghost"
-          >
-            <Icon name="crown" size={16} className={mounted && user?.is_premium ? 'text-amber-500 fill-amber-500' : ''} />
-            <span suppressHydrationWarning>
-              {mounted && user?.is_premium ? 'Premium VIP' : (isVi ? 'Nâng cấp' : 'Upgrade')}
-            </span>
-          </Button>
+          {mounted && !user?.is_premium && (
+            <Button
+              className="hidden h-9 gap-2 rounded-xl border border-warning bg-gradient-to-r from-warning/20 to-warning/10 px-3 text-[12px] font-semibold text-warning hover:border-warning hover:from-warning/30 hover:to-warning/20 sm:inline-flex"
+              onClick={() => setUpgradeOpen(true)}
+              variant="ghost"
+            >
+              <Icon name="crown" size={16} />
+              <span suppressHydrationWarning>{isVi ? 'Nâng cấp' : 'Upgrade'}</span>
+            </Button>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -174,8 +190,8 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           </Tooltip>
           <div
             className="relative hidden md:block"
-            onMouseEnter={() => setHoveredHeaderMenu('learning')}
-            onMouseLeave={() => setHoveredHeaderMenu(null)}
+            onMouseEnter={() => handleMouseEnter('learning')}
+            onMouseLeave={handleMouseLeave}
           >
             <button
               onClick={() => navigate('/courses')}
@@ -188,8 +204,8 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
 
           <div
             className="relative"
-            onMouseEnter={() => setHoveredHeaderMenu('wishlist')}
-            onMouseLeave={() => setHoveredHeaderMenu(null)}
+            onMouseEnter={() => handleMouseEnter('wishlist')}
+            onMouseLeave={handleMouseLeave}
           >
             <Tooltip>
               <TooltipTrigger asChild>
@@ -215,8 +231,8 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
 
           <div
             className="relative"
-            onMouseEnter={() => setHoveredHeaderMenu('cart')}
-            onMouseLeave={() => setHoveredHeaderMenu(null)}
+            onMouseEnter={() => handleMouseEnter('cart')}
+            onMouseLeave={handleMouseLeave}
           >
             <Tooltip>
               <TooltipTrigger asChild>
@@ -341,24 +357,47 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           </div>
 
           {mounted && isAuthenticated && user ? (
-            <div className="flex items-center gap-2 border-l border-border pl-3">
+            <div
+              className="relative flex items-center gap-2 border-l border-border pl-3"
+              onMouseEnter={() => handleMouseEnter('user')}
+              onMouseLeave={handleMouseLeave}
+            >
               <button
                 onClick={() => navigate('/profile')}
-                className="flex items-center gap-2 rounded-xl p-1 hover:bg-surface-subtle transition-colors text-left"
+                className="flex items-center gap-2 rounded-xl p-1 hover:bg-surface-subtle transition-colors text-left cursor-pointer group"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs ring-2 ring-primary/20 overflow-hidden">
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs ring-2 ring-primary/20 overflow-hidden shrink-0 shadow-xs">
                   {user.avatar_url ? (
                     <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
                   ) : (
                     user.full_name?.charAt(0)?.toUpperCase() || 'U'
                   )}
+                  {user.is_premium && (
+                    <div className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white">
+                      <Icon name="crown" size={8} className="fill-white text-white" />
+                    </div>
+                  )}
                 </div>
                 <div className="hidden sm:block">
-                  <div className="text-xs font-bold text-text-primary leading-tight line-clamp-1">
-                    {user.full_name || 'Học viên'}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-text-primary leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+                      {user.full_name || 'Học viên'}
+                    </span>
+                    {user.is_premium && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[9px] font-extrabold text-white shadow-xs">
+                        <Icon name="crown" size={9} className="fill-white text-white" />
+                        VIP
+                      </span>
+                    )}
                   </div>
                   <div className="text-[10px] text-text-tertiary">
-                    {user.email}
+                    {user.is_premium ? (
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                        {getRemainingSubscriptionText(user.subscription_expires_at, user.subscription_plan, isVi)}
+                      </span>
+                    ) : (
+                      user.email
+                    )}
                   </div>
                 </div>
               </button>
@@ -376,6 +415,14 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                 </TooltipTrigger>
                 <TooltipContent>Đăng xuất</TooltipContent>
               </Tooltip>
+
+              {hoveredHeaderMenu === 'user' && (
+                <HeaderUserHover
+                  onClose={() => setHoveredHeaderMenu(null)}
+                  onLanguageToggle={handleLanguageToggle}
+                  currentLanguage={language}
+                />
+              )}
             </div>
           ) : (
             <Button
@@ -455,4 +502,32 @@ function getNotifIcon(type: string): string {
     SYSTEM_MAINTENANCE: 'settings',
   }
   return iconMap[type] || 'bell'
+}
+
+export function getRemainingSubscriptionText(expiresAt?: string, plan?: string, isVi: boolean = true): string {
+  if (plan === 'LIFETIME') {
+    return isVi ? 'Gói Vĩnh Viễn' : 'Lifetime Access'
+  }
+  if (!expiresAt) {
+    return isVi ? 'Gói Premium VIP' : 'Premium VIP'
+  }
+  const exp = new Date(expiresAt).getTime()
+  const diffMs = exp - Date.now()
+  if (diffMs <= 0) {
+    return isVi ? 'VIP đã hết hạn' : 'VIP Expired'
+  }
+
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+
+  if (days > 30) {
+    const months = Math.floor(days / 30)
+    const remDays = days % 30
+    return isVi ? `Còn ${months} tháng ${remDays > 0 ? `${remDays} ngày` : ''}` : `${months}mo ${remDays}d left`
+  }
+  if (days > 0) {
+    return isVi ? `Còn ${days} ngày ${hours > 0 ? `${hours}h` : ''}` : `${days}d ${hours}h left`
+  }
+  const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+  return isVi ? `Còn ${hours}h ${mins}m` : `${hours}h ${mins}m left`
 }
