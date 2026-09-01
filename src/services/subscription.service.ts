@@ -27,7 +27,10 @@ export interface SubscriptionResponse {
 
 export interface CreateOrderPayload {
   plan_slug?: string
-  billing_cycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'LIFETIME'
+  billing_cycle?: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'LIFETIME' | 'ONCE'
+  amount?: number
+  order_type?: 'SUBSCRIPTION' | 'COURSE'
+  course_ids?: string[]
 }
 
 export interface BankInfo {

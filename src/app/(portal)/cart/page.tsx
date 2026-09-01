@@ -48,11 +48,24 @@ export default function CartPage() {
 
   const items = cart?.items || []
 
-  const originalTotal = items.reduce((acc, it) => acc + (it.price || 0), 0)
-  const finalTotal = items.reduce(
-    (acc, it) => acc + (it.discount_price && it.discount_price > 0 ? it.discount_price : it.price || 0),
-    0
-  )
+  const originalTotal = items.reduce((acc, it) => {
+    const rawPrice = it.price || 0
+    const rawDiscount = it.discount_price || 0
+    if (rawDiscount > 0 && rawDiscount < rawPrice) {
+      return acc + rawPrice
+    }
+    return acc + (rawPrice > 0 ? rawPrice : rawDiscount)
+  }, 0)
+
+  const finalTotal = items.reduce((acc, it) => {
+    const rawPrice = it.price || 0
+    const rawDiscount = it.discount_price || 0
+    if (rawDiscount > 0 && rawDiscount < rawPrice) {
+      return acc + rawDiscount
+    }
+    return acc + (rawPrice > 0 ? rawPrice : rawDiscount)
+  }, 0)
+
   const savings = Math.max(0, originalTotal - finalTotal)
 
   const handleApplyPromo = (e: React.FormEvent) => {
@@ -77,12 +90,17 @@ export default function CartPage() {
     setShowCheckoutModal(true)
   }
 
-  const checkoutCourses: CheckoutCourseItem[] = items.map((it) => ({
-    id: it.course_id,
-    title: it.title,
-    price: it.discount_price && it.discount_price > 0 ? it.discount_price : it.price || 0,
-    thumbnail: (it as unknown as { thumbnail?: string })?.thumbnail,
-  }))
+  const checkoutCourses: CheckoutCourseItem[] = items.map((it) => {
+    const rawPrice = it.price || 0
+    const rawDiscount = it.discount_price || 0
+    const effectivePrice = rawDiscount > 0 && rawDiscount < rawPrice ? rawDiscount : (rawPrice > 0 ? rawPrice : rawDiscount)
+    return {
+      id: it.course_id,
+      title: it.title,
+      price: effectivePrice,
+      thumbnail: (it as unknown as { thumbnail?: string })?.thumbnail || it.thumbnail_url,
+    }
+  })
 
   if (!mounted) {
     return (
@@ -164,14 +182,11 @@ export default function CartPage() {
 
               <div className="space-y-3">
                 {items.map((item) => {
-                  const itemSalePrice =
-                    item.discount_price && item.discount_price > 0
-                      ? item.discount_price
-                      : item.price || 0
-                  const itemOriginalPrice =
-                    item.discount_price && item.discount_price < item.price
-                      ? item.price
-                      : null
+                  const rawPrice = item.price || 0
+                  const rawDiscount = item.discount_price || 0
+                  const hasDiscount = rawDiscount > 0 && rawDiscount < rawPrice
+                  const itemSalePrice = hasDiscount ? rawDiscount : (rawPrice > 0 ? rawPrice : rawDiscount)
+                  const itemOriginalPrice = hasDiscount ? rawPrice : null
 
                   return (
                     <div

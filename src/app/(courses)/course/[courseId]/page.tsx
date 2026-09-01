@@ -508,92 +508,91 @@ export default function CourseDetailPage() {
   // Student manual click on checkbox to toggle lesson completion
   const handleToggleLessonComplete = (lessonId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    setCourse((prev) => {
-      if (!prev) return prev
-      const updated = { ...prev }
-      let targetStatus: Lesson['status'] = 'completed'
+    if (!course) return
 
-      updated.chapters = updated.chapters.map((ch) => ({
-        ...ch,
-        lessons: ch.lessons.map((l) => {
-          if (l.id === lessonId) {
-            targetStatus = l.status === 'completed' ? 'available' : 'completed'
-            return {
-              ...l,
-              status: targetStatus,
-              progress: targetStatus === 'completed' ? 100 : 0,
-            }
+    let targetStatus: Lesson['status'] = 'completed'
+    let chapterId = currentChapter?.id || ''
+
+    const nextChapters = course.chapters.map((ch) => ({
+      ...ch,
+      lessons: ch.lessons.map((l) => {
+        if (l.id === lessonId) {
+          targetStatus = l.status === 'completed' ? 'available' : 'completed'
+          if (!chapterId) chapterId = ch.id
+          return {
+            ...l,
+            status: targetStatus,
+            progress: targetStatus === 'completed' ? 100 : 0,
           }
-          return l
-        }),
-      }))
+        }
+        return l
+      }),
+    }))
 
-      if (targetStatus === 'completed') {
-        const curChapId = currentChapter?.id || updated.chapters[0]?.id || ''
-        courseService
-          .completeLesson({
-            course_id: String(prev.id),
-            module_id: curChapId,
-            lesson_id: lessonId,
-            score: 100,
-          })
-          .catch(() => {})
+    setCourse({ ...course, chapters: nextChapters })
 
-        toast.success(
-          'Đã lưu tiến độ hoàn thành bài học vào hệ thống!',
-          'Hoàn thành bài học'
-        )
-      }
+    if (targetStatus === 'completed') {
+      const curChapId = chapterId || course.chapters[0]?.id || ''
+      courseService
+        .completeLesson({
+          course_id: String(course.id),
+          module_id: curChapId,
+          lesson_id: lessonId,
+          score: 100,
+        })
+        .catch(() => {})
 
-      return updated
-    })
+      toast.success(
+        'Đã lưu tiến độ hoàn thành bài học vào hệ thống!',
+        'Hoàn thành bài học'
+      )
+    }
   }
 
   // Auto-complete lesson when watched > 80% video duration
   const handleLessonProgress = (lessonId: string, progress: number) => {
-    setCourse((prev) => {
-      if (!prev) return prev
-      let justCompleted = false
-      const updated = { ...prev }
+    if (!course) return
+    let justCompleted = false
+    let chapterId = currentChapter?.id || ''
+    const isNowCompleted = progress >= 80 || progress >= 100
 
-      updated.chapters = updated.chapters.map((ch) => ({
-        ...ch,
-        lessons: ch.lessons.map((l) => {
-          if (l.id === lessonId) {
-            const isNowCompleted = progress >= 80 || progress >= 100
-            if (isNowCompleted && l.status !== 'completed') {
-              justCompleted = true
-            }
-            return {
-              ...l,
-              progress: isNowCompleted ? 100 : progress,
-              status: isNowCompleted ? 'completed' : progress > 0 ? 'in-progress' : l.status,
-            }
+    const nextChapters = course.chapters.map((ch) => ({
+      ...ch,
+      lessons: ch.lessons.map((l) => {
+        if (l.id === lessonId) {
+          if (!chapterId) chapterId = ch.id
+          if (isNowCompleted && l.status !== 'completed') {
+            justCompleted = true
           }
-          return l
-        }),
-      }))
+          return {
+            ...l,
+            progress: isNowCompleted ? 100 : progress,
+            status: isNowCompleted ? 'completed' : progress > 0 ? 'in-progress' : l.status,
+          }
+        }
+        return l
+      }),
+    }))
 
-      if (justCompleted) {
-        const curChapId = currentChapter?.id || updated.chapters[0]?.id || ''
-        courseService
-          .completeLesson({
-            course_id: String(prev.id),
-            module_id: curChapId,
-            lesson_id: lessonId,
-            score: 100,
-            time_spent_seconds: Math.round(playerCurrentTime),
-          })
-          .catch(() => {})
+    setCourse({ ...course, chapters: nextChapters })
 
-        toast.success(
-          'Bạn đã theo dõi hơn 80% bài giảng! Hệ thống đã tự động đánh dấu hoàn thành.',
-          'Đã hoàn thành bài học'
-        )
-      }
+    if (justCompleted) {
+      const curChapId = chapterId || course.chapters[0]?.id || ''
+      courseService
+        .completeLesson({
+          course_id: String(course.id),
+          module_id: curChapId,
+          lesson_id: lessonId,
+          score: 100,
+          time_spent_seconds: Math.round(playerCurrentTime),
+        })
+        .catch(() => {})
 
-      return updated
-    })
+      toast.success(
+        'Bạn đã theo dõi hơn 80% bài giảng! Hệ thống đã tự động đánh dấu hoàn thành.',
+        'Đã hoàn thành bài học'
+      )
+    }
   }
 
   const allFlatLessons = useMemo(() => {

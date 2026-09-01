@@ -164,8 +164,10 @@ export function CourseCheckoutModal({
         const newOrder = await subscriptionService.createPaymentOrder({
           plan_slug: 'course',
           amount: totalAmount,
-          billing_cycle: 'ONCE' as unknown as 'MONTHLY',
-        } as unknown as { billing_cycle: 'MONTHLY' })
+          order_type: 'COURSE',
+          course_ids: courses.map((c) => c.id),
+          billing_cycle: 'ONCE',
+        })
 
         if (isMounted) {
           setOrder(newOrder)
