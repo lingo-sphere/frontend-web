@@ -11,10 +11,11 @@ import { useNavigate, useSearchParams } from '@/lib/navigation'
 import { BookOpen } from 'lucide-react'
 import { Layout } from '@/components/layout/Layout'
 import { courseService } from '@/services/course.service'
+import { userService } from '@/services/user.service'
 import type { Course } from '@/types/api.types'
 import type { CourseCardData, CourseTabType } from '@/types/course'
 import { CourseSearchBar } from '@/components/course/CourseSearchBar'
-import { CourseScheduleBanner } from '@/components/course/CourseScheduleBanner'
+import { CourseScheduleBanner, type UserScheduleData } from '@/components/course/CourseScheduleBanner'
 import { CourseScheduleModal } from '@/components/course/CourseScheduleModal'
 import { CourseCard } from '@/components/course/CourseCard'
 import { useWishlistStore } from '@/store/wishlist-store'
@@ -39,6 +40,7 @@ export default function CoursesCatalogPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [showScheduleBanner, setShowScheduleBanner] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [userSchedule, setUserSchedule] = useState<UserScheduleData | null>(null)
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -54,6 +56,27 @@ export default function CoursesCatalogPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      userService
+        .getMySettings()
+        .then((settings) => {
+          if (settings) {
+            setUserSchedule({
+              reminder_time: (settings.reminder_time as string) || '20:00',
+              reminder_days: (settings.reminder_days as string[]) || ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+              is_reminder_enabled: Boolean(settings.is_reminder_enabled),
+              study_duration_minutes: (settings.study_duration_minutes as number) || 30,
+              is_email_notification_enabled: Boolean(settings.is_email_notification_enabled ?? true),
+            })
+          }
+        })
+        .catch(() => {})
+    } else {
+      setUserSchedule(null)
+    }
+  }, [isAuthenticated])
+
   const handleDismissScheduleBanner = () => {
     setShowScheduleBanner(false)
     try {
@@ -63,6 +86,35 @@ export default function CoursesCatalogPage() {
       )
     } catch {
       // Ignore storage errors
+    }
+  }
+
+  const handleOpenScheduleModal = () => {
+    if (!isAuthenticated) {
+      toast.warning(
+        isVi
+          ? 'Tính năng lên lịch nhắc học qua Email chỉ dành cho học viên đã đăng nhập. Vui lòng đăng nhập để tiếp tục!'
+          : 'Study schedule is only available for logged-in users. Please log in to continue!',
+        isVi ? 'Yêu cầu đăng nhập' : 'Login Required'
+      )
+      return
+    }
+    setShowScheduleModal(true)
+  }
+
+  const handleCancelScheduleFromBanner = async () => {
+    try {
+      await userService.updateMySettings({ is_reminder_enabled: false })
+      setUserSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
+      toast.info(
+        isVi ? 'Đã hủy lịch nhắc nhở học tập hàng ngày.' : 'Cancelled daily study reminder schedule.',
+        isVi ? 'Đã hủy lịch' : 'Schedule Cancelled'
+      )
+    } catch {
+      toast.error(
+        isVi ? 'Không thể hủy lịch học. Vui lòng thử lại.' : 'Failed to cancel schedule.',
+        isVi ? 'Lỗi' : 'Error'
+      )
     }
   }
 
@@ -241,8 +293,10 @@ export default function CoursesCatalogPage() {
 
           {activeTab === 'all' && showScheduleBanner && (
             <CourseScheduleBanner
-              onOpenModal={() => setShowScheduleModal(true)}
+              schedule={userSchedule}
+              onOpenModal={handleOpenScheduleModal}
               onDismiss={handleDismissScheduleBanner}
+              onCancelSchedule={userSchedule?.is_reminder_enabled ? handleCancelScheduleFromBanner : undefined}
             />
           )}
 
@@ -294,10 +348,13 @@ export default function CoursesCatalogPage() {
 
         {showScheduleModal && (
           <CourseScheduleModal
+            initialSchedule={userSchedule}
             onClose={() => setShowScheduleModal(false)}
-            onSave={() => {
-              setShowScheduleModal(false)
-              setShowScheduleBanner(false)
+            onSaved={(newSchedule) => {
+              setUserSchedule((prev) => ({ ...prev, ...newSchedule, is_reminder_enabled: true }))
+            }}
+            onCancelled={() => {
+              setUserSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
             }}
           />
         )}

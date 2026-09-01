@@ -644,111 +644,165 @@ export default function CourseDetailPage() {
     const formatted = `${Math.floor(timestamp / 60)}:${String(Math.floor(timestamp % 60)).padStart(2, '0')}`
     const content = noteContent || `Ghi chú bài học tại mốc ${formatted}`
 
-    const res = (await courseService
-      .createCourseNote(String(course.id), {
+    try {
+      const res = (await courseService.createCourseNote(String(course.id), {
         lesson_id: currentLesson.id,
         lesson_title: currentLesson.title,
         timestamp,
         formatted_time: formatted,
         content,
-      })
-      .catch(() => null)) as Record<string, unknown>
+      })) as Record<string, unknown>
 
-    const newNote: NoteItem = {
-      id: String(res?._id || `note-${Date.now()}`),
-      lessonId: currentLesson.id,
-      lessonTitle: currentLesson.title,
-      timestamp,
-      formattedTime: formatted,
-      content,
-      createdAt: 'Vừa xong',
+      const newNote: NoteItem = {
+        id: String(res?._id || `note-${Date.now()}`),
+        lessonId: currentLesson.id,
+        lessonTitle: currentLesson.title,
+        timestamp,
+        formattedTime: formatted,
+        content,
+        createdAt: 'Vừa xong',
+      }
+      setCourse((prev) => (prev ? { ...prev, notes: [newNote, ...(prev.notes || [])] } : null))
+      setActiveBottomTab('notes')
+      toast.success(`Đã lưu ghi chú tại mốc ${formatted} vào cơ sở dữ liệu!`, 'Ghi chú bài học')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể lưu ghi chú'
+      toast.error(msg, 'Lỗi lưu ghi chú')
     }
-    setCourse((prev) => (prev ? { ...prev, notes: [newNote, ...(prev.notes || [])] } : null))
-    setActiveBottomTab('notes')
-    toast.success(`Đã lưu ghi chú tại mốc ${formatted} vào cơ sở dữ liệu!`, 'Ghi chú bài học')
   }
 
   const handleDeleteNote = async (noteId: string) => {
-    await courseService.deleteCourseNote(noteId).catch(() => {})
-    setCourse((prev) =>
-      prev ? { ...prev, notes: (prev.notes || []).filter((n) => n.id !== noteId) } : null
-    )
-    toast.success('Đã xóa ghi chú thành công!', 'Xóa ghi chú')
+    try {
+      await courseService.deleteCourseNote(noteId)
+      setCourse((prev) =>
+        prev ? { ...prev, notes: (prev.notes || []).filter((n) => n.id !== noteId) } : null
+      )
+      toast.success('Đã xóa ghi chú thành công!', 'Xóa ghi chú')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể xóa ghi chú'
+      toast.error(msg, 'Lỗi xóa ghi chú')
+    }
   }
 
   // Handle Q&A
   const handleCreateQnA = async (title: string, body: string) => {
     if (!course || !currentLesson) return
-    const res = (await courseService
-      .createCourseQnA(String(course.id), {
+    try {
+      const res = (await courseService.createCourseQnA(String(course.id), {
         lesson_id: currentLesson.id,
         lesson_title: currentLesson.title,
         title,
         body,
-      })
-      .catch(() => null)) as Record<string, unknown>
+      })) as Record<string, unknown>
 
-    const newQnA: QnAItem = {
-      id: String(res?._id || `qna-${Date.now()}`),
-      lessonTitle: currentLesson.title,
-      author: 'Bạn (Học viên)',
-      title,
-      body,
-      createdAt: 'Vừa xong',
-      upvotes: 0,
-      answersCount: 1,
-      isAnswered: true,
-      answers: [
-        {
-          id: `ans-${Date.now()}`,
-          author: 'LingoSphere AI Tutor',
-          authorRole: 'Gia sư AI',
-          body: `Chào bạn! Cảm ơn câu hỏi về "${title}". Giảng viên và Trợ lý AI đã ghi nhận thắc mắc và sẽ phản hồi chi tiết trong giây lát!`,
-          createdAt: 'Vừa xong',
-          upvotes: 0,
-        },
-      ],
+      const newQnA: QnAItem = {
+        id: String(res?._id || `qna-${Date.now()}`),
+        lessonTitle: currentLesson.title,
+        author: 'Bạn (Học viên)',
+        title,
+        body,
+        createdAt: 'Vừa xong',
+        upvotes: 0,
+        answersCount: 1,
+        isAnswered: true,
+        answers: [
+          {
+            id: `ans-${Date.now()}`,
+            author: 'LingoSphere AI Tutor',
+            authorRole: 'Gia sư AI',
+            body: `Chào bạn! Cảm ơn câu hỏi về "${title}". Giảng viên và Trợ lý AI đã ghi nhận thắc mắc và sẽ phản hồi chi tiết trong giây lát!`,
+            createdAt: 'Vừa xong',
+            upvotes: 0,
+          },
+        ],
+      }
+
+      setCourse((prev) => (prev ? { ...prev, qna: [newQnA, ...(prev.qna || [])] } : null))
+      toast.success('Câu hỏi của bạn đã được đăng thành công!', 'Hỏi & Đáp')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể đăng câu hỏi'
+      toast.error(msg, 'Lỗi đăng câu hỏi')
     }
-
-    setCourse((prev) => (prev ? { ...prev, qna: [newQnA, ...(prev.qna || [])] } : null))
-    toast.success('Câu hỏi của bạn đã được đăng thành công!', 'Hỏi & Đáp')
   }
 
   const handleAddQnAAnswer = async (qnaId: string, answerText: string) => {
-    await courseService.addQnAAnswer(qnaId, { body: answerText }).catch(() => {})
-    const newAns = {
-      id: `ans-${Date.now()}`,
-      author: 'Bạn (Học viên)',
-      authorRole: 'Học viên',
-      body: answerText,
-      createdAt: 'Vừa xong',
-      upvotes: 0,
-    }
-    setCourse((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        qna: (prev.qna || []).map((q) =>
-          q.id === qnaId
-            ? { ...q, answers: [...(q.answers || []), newAns], answersCount: (q.answersCount || 0) + 1 }
-            : q
-        ),
+    try {
+      await courseService.addQnAAnswer(qnaId, { body: answerText })
+      const newAns = {
+        id: `ans-${Date.now()}`,
+        author: 'Bạn (Học viên)',
+        authorRole: 'Học viên',
+        body: answerText,
+        createdAt: 'Vừa xong',
+        upvotes: 0,
       }
-    })
-    toast.success('Đã gửi câu trả lời thành công!', 'Hỏi & Đáp')
+      setCourse((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          qna: (prev.qna || []).map((q) =>
+            q.id === qnaId
+              ? { ...q, answers: [...(q.answers || []), newAns], answersCount: (q.answersCount || 0) + 1 }
+              : q
+          ),
+        }
+      })
+      toast.success('Đã gửi câu trả lời thành công!', 'Hỏi & Đáp')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể gửi câu trả lời'
+      toast.error(msg, 'Lỗi trả lời Q&A')
+    }
   }
 
   const handleUpvoteQnA = async (qnaId: string) => {
-    await courseService.toggleQnAUpvote(qnaId).catch(() => {})
-    setCourse((prev) => {
-      if (!prev) return prev
-      return {
-        ...prev,
-        qna: (prev.qna || []).map((q) =>
-          q.id === qnaId ? { ...q, upvotes: (q.upvotes || 0) + 1 } : q
-        ),
+    try {
+      await courseService.toggleQnAUpvote(qnaId)
+      setCourse((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          qna: (prev.qna || []).map((q) =>
+            q.id === qnaId ? { ...q, upvotes: (q.upvotes || 0) + 1 } : q
+          ),
+        }
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể bình chọn'
+      toast.error(msg, 'Lỗi bình chọn')
+    }
+  }
+
+  // Handle Review
+  const handleAddReview = async (rating: number, content: string) => {
+    if (!course) return
+    try {
+      const res = (await courseService.createCourseReview(String(course.id), {
+        rating,
+        content,
+      })) as { review: Record<string, unknown>; rating: number; rating_count: number }
+
+      const newRev: CourseReviewItem = {
+        id: String(res?.review?._id || `rev-${Date.now()}`),
+        author: 'Bạn (Học viên)',
+        rating,
+        date: 'Vừa xong',
+        content,
       }
-    })
+
+      setCourse((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          rating: typeof res?.rating === 'number' ? res.rating : prev.rating,
+          ratingCount: typeof res?.rating_count === 'number' ? res.rating_count : (prev.ratingCount || 0) + 1,
+          reviews: [newRev, ...(prev.reviews || [])],
+        }
+      })
+      toast.success('Cảm ơn bạn đã gửi đánh giá khóa học!', 'Đánh giá thành công')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể gửi đánh giá'
+      toast.error(msg, 'Lỗi đánh giá')
+    }
   }
 
   const handleTakeTest = (
@@ -910,6 +964,7 @@ export default function CourseDetailPage() {
                 reviewsList={course.reviews || []}
                 rating={course.rating}
                 ratingCount={course.ratingCount}
+                onAddReview={handleAddReview}
               />
             )}
           </div>
