@@ -25,13 +25,13 @@ function ToastIcon({ type }: { type: ToastType }) {
 
 const typeStyles: Record<ToastType, string> = {
   success:
-    'border-emerald-500/30 bg-surface/95 text-text-primary shadow-emerald-500/10 dark:bg-zinc-900/95 dark:border-emerald-500/30',
+    'border-emerald-500/30 bg-surface/95 text-text-primary shadow-lg dark:bg-zinc-900/95 dark:border-emerald-500/30',
   error:
-    'border-rose-500/30 bg-surface/95 text-text-primary shadow-rose-500/10 dark:bg-zinc-900/95 dark:border-rose-500/30',
+    'border-rose-500/30 bg-surface/95 text-text-primary shadow-lg dark:bg-zinc-900/95 dark:border-rose-500/30',
   warning:
-    'border-amber-500/30 bg-surface/95 text-text-primary shadow-amber-500/10 dark:bg-zinc-900/95 dark:border-amber-500/30',
+    'border-amber-500/30 bg-surface/95 text-text-primary shadow-lg dark:bg-zinc-900/95 dark:border-amber-500/30',
   info:
-    'border-sky-500/30 bg-surface/95 text-text-primary shadow-sky-500/10 dark:bg-zinc-900/95 dark:border-sky-500/30',
+    'border-sky-500/30 bg-surface/95 text-text-primary shadow-lg dark:bg-zinc-900/95 dark:border-sky-500/30',
 }
 
 const badgeStyles: Record<ToastType, string> = {
@@ -59,7 +59,7 @@ export function ToastContainer() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9, y: -10, transition: { duration: 0.15 } }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className={`pointer-events-auto flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl border backdrop-blur-xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 ${typeStyles[item.type]}`}
+            className={`pointer-events-auto flex items-start gap-3 p-3.5 sm:p-4 rounded-xl border backdrop-blur-md shadow-lg ${typeStyles[item.type]}`}
           >
             <div className={`p-1 rounded-xl ${badgeStyles[item.type]}`}>
               <ToastIcon type={item.type} />
