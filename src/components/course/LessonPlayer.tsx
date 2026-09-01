@@ -285,12 +285,15 @@ export function LessonPlayer({
       setSelectedQuality(qualityId)
       setSettingsSubmenu('main')
       setShowSettingsMenu(false)
+      const qObj = QUALITIES.find((q) => q.id === qualityId)
+      const label = qualityId === 'auto' ? `Tự động (${autoResolvedQuality})` : (qObj?.label || qualityId.toUpperCase())
+      triggerFeedback('speed', `Độ phân giải: ${label}`)
       if (qualityId === 'auto') {
         const detected = detectNetworkQuality()
         setAutoResolvedQuality(detected)
       }
     },
-    []
+    [autoResolvedQuality, triggerFeedback]
   )
 
   // 6. Fullscreen & Native Event Listeners
@@ -526,7 +529,19 @@ export function LessonPlayer({
           ref={videoRef}
           src={effectiveVideoUrl}
           playsInline
-          className="w-full h-full object-contain bg-black cursor-pointer"
+          style={{
+            filter:
+              effectiveQualityKey === '1080p'
+                ? 'contrast(1.02) saturate(1.04)'
+                : effectiveQualityKey === '720p'
+                ? 'none'
+                : effectiveQualityKey === '480p'
+                ? 'blur(0.35px) contrast(0.98)'
+                : effectiveQualityKey === '360p'
+                ? 'blur(0.7px) contrast(0.95)'
+                : 'none',
+          }}
+          className="w-full h-full object-contain bg-black cursor-pointer transition-all duration-300"
           onClick={togglePlay}
           onDoubleClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect()
@@ -608,11 +623,12 @@ export function LessonPlayer({
       {/* ⚡ 3. YouTube Center Ripple Feedback */}
       {actionFeedback && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-30">
-          <div className="flex items-center justify-center h-16 w-16 rounded-full bg-black/60 text-white backdrop-blur-md shadow-2xl animate-out fade-out zoom-out duration-500">
-            {actionFeedback.type === 'play' && <Play className="w-8 h-8 fill-white ml-1" />}
-            {actionFeedback.type === 'pause' && <Pause className="w-8 h-8 fill-white" />}
-            {actionFeedback.type === 'forward' && <FastForward className="w-8 h-8 text-white" />}
-            {actionFeedback.type === 'rewind' && <Rewind className="w-8 h-8 text-white" />}
+          <div className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-black/80 text-white backdrop-blur-md shadow-2xl animate-out fade-out zoom-out duration-500 font-semibold text-xs sm:text-sm border border-white/10">
+            {actionFeedback.type === 'play' && <Play className="w-7 h-7 fill-white ml-0.5" />}
+            {actionFeedback.type === 'pause' && <Pause className="w-7 h-7 fill-white" />}
+            {actionFeedback.type === 'forward' && <FastForward className="w-7 h-7 text-white" />}
+            {actionFeedback.type === 'rewind' && <Rewind className="w-7 h-7 text-white" />}
+            {actionFeedback.text && <span>{actionFeedback.text}</span>}
           </div>
         </div>
       )}
@@ -863,12 +879,17 @@ export function LessonPlayer({
                     setShowSettingsMenu(!showSettingsMenu)
                     setSettingsSubmenu('main')
                   }}
-                  className={`p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer ${
+                  className={`p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer relative ${
                     showSettingsMenu ? 'rotate-45' : ''
                   }`}
                   title="Cài đặt (Tốc độ & Chất lượng)"
                 >
                   <Settings size={18} />
+                  {(effectiveQualityKey === '1080p' || effectiveQualityKey === '720p') && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-[#ff0000] text-white text-[8px] font-black px-1 rounded-sm leading-tight tracking-tighter shadow-sm pointer-events-none">
+                      HD
+                    </span>
+                  )}
                 </button>
 
                 {showSettingsMenu && (
