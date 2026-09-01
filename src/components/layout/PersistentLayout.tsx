@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file PersistentLayout.tsx
+ * @description Component giao diện React PersistentLayout cho học viên
+ */
+
 import { Suspense, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { AppShell } from '@/components/layout/AppShell'

@@ -1,3 +1,8 @@
+/**
+ * @file ElectricBorder.tsx
+ * @description Component giao diện React ElectricBorder cho học viên
+ */
+
 import React, { useEffect, useRef, useCallback, type CSSProperties, type ReactNode } from 'react'
 
 function hexToRgba(hex: string, alpha: number = 1): string {

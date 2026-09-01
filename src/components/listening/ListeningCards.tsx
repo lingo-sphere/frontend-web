@@ -1,3 +1,8 @@
+/**
+ * @file ListeningCards.tsx
+ * @description Component giao diện React ListeningCards cho học viên
+ */
+
 import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'

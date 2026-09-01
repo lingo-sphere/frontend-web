@@ -1,3 +1,7 @@
+/**
+ * @file ComingSoon.tsx
+ * @description Component giao diện React ComingSoon cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 

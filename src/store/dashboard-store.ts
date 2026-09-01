@@ -1,3 +1,7 @@
+/**
+ * @file dashboard-store.ts
+ * @description Mã nguồn thành phần dashboard-store.ts
+ */
 
 import { useSyncExternalStore } from 'react'
 import { createStore } from 'zustand/vanilla'

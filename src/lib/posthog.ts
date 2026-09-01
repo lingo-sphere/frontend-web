@@ -1,3 +1,8 @@
+/**
+ * @file posthog.ts
+ * @description Mã nguồn thành phần posthog.ts
+ */
+
 import posthog from 'posthog-js'
 
 export const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY

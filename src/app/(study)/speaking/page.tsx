@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/speaking
+ */
+
 import { useState, useCallback, useEffect } from 'react'
 import { Layout } from '@/components/layout/Layout'
 import { SpeakingHome } from '@/components/speaking/SpeakingHome'

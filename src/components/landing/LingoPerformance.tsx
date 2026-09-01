@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file LingoPerformance.tsx
+ * @description Component giao diện React LingoPerformance cho học viên
+ */
+
 import { useRef } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
 import {

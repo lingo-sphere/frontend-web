@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file avatar.tsx
+ * @description Component giao diện React avatar cho học viên
+ */
+
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "radix-ui"
 

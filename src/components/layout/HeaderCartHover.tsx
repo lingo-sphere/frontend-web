@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file HeaderCartHover.tsx
+ * @description Component giao diện React HeaderCartHover cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { useCartStore } from '@/store/cart-store'

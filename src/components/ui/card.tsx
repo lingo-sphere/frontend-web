@@ -1,3 +1,8 @@
+/**
+ * @file card.tsx
+ * @description Component giao diện React card cho học viên
+ */
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

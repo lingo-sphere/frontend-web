@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/cart
+ */
+
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ShoppingCart, Trash2, ArrowLeft, ShieldCheck, Award, Zap, CheckCircle2, Loader2 } from 'lucide-react'

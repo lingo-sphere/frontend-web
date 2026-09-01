@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseSidebarContent.tsx
+ * @description Component giao diện React CourseSidebarContent cho học viên
+ */
+
 import { useState } from 'react'
 import {
   Check,

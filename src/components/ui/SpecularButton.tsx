@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file SpecularButton.tsx
+ * @description Component giao diện React SpecularButton cho học viên
+ */
+
 import React, { useRef, useEffect, type CSSProperties, type ReactNode, type MouseEventHandler } from 'react'
 import { Renderer, Program, Mesh, Triangle, Color } from 'ogl'
 

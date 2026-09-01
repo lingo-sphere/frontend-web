@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseNotesTab.tsx
+ * @description Component giao diện React CourseNotesTab cho học viên
+ */
+
 import { useState } from 'react'
 import { Plus, Play, Trash2, Clock, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'

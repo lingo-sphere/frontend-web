@@ -1,3 +1,7 @@
+/**
+ * @file ReverseMultipleChoiceExercise.tsx
+ * @description Component giao diện React ReverseMultipleChoiceExercise cho học viên
+ */
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

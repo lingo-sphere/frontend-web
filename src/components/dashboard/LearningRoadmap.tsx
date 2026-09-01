@@ -1,3 +1,8 @@
+/**
+ * @file LearningRoadmap.tsx
+ * @description Component giao diện React LearningRoadmap cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Check, Lock } from 'lucide-react'
 

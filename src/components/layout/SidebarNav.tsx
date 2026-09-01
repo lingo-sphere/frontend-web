@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file SidebarNav.tsx
+ * @description Component giao diện React SidebarNav cho học viên
+ */
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useLocation } from '@/lib/navigation'

@@ -1,3 +1,8 @@
+/**
+ * @file UserProfileContent.tsx
+ * @description Component giao diện React UserProfileContent cho học viên
+ */
+
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseCertificateModal.tsx
+ * @description Component giao diện React CourseCertificateModal cho học viên
+ */
+
 import { Download, Trophy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 

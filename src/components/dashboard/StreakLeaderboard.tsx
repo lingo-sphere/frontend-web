@@ -1,3 +1,7 @@
+/**
+ * @file StreakLeaderboard.tsx
+ * @description Component giao diện React StreakLeaderboard cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 

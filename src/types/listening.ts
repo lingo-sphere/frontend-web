@@ -1,3 +1,7 @@
+/**
+ * @file listening.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
+ */
 
 export type MediaType = 'AUDIO' | 'VIDEO'
 export type ExerciseType = 'DICTATION' | 'VIDEO_DICTATION' | 'LISTEN_CHOOSE' | 'LISTEN_ORDER'

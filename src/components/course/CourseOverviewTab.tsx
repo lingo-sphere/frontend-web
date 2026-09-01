@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseOverviewTab.tsx
+ * @description Component giao diện React CourseOverviewTab cho học viên
+ */
+
 import { Award, Check, Clock, Globe, Star, Users } from 'lucide-react'
 import type { Course } from '@/types/course'
 

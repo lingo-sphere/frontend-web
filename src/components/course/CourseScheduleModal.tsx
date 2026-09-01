@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseScheduleModal.tsx
+ * @description Component giao diện React CourseScheduleModal cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Calendar, X } from 'lucide-react'
 

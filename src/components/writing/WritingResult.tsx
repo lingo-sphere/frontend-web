@@ -1,3 +1,7 @@
+/**
+ * @file WritingResult.tsx
+ * @description Component giao diện React WritingResult cho học viên
+ */
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

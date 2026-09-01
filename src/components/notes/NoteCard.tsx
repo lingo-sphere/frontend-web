@@ -1,3 +1,8 @@
+/**
+ * @file NoteCard.tsx
+ * @description Component giao diện React NoteCard cho học viên
+ */
+
 import { Icon } from '@/components/icons/icon-map'
 import type { UserNote } from '@/types/notes'
 import { NOTE_TARGET_LABELS } from '@/types/notes'

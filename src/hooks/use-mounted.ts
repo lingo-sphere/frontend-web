@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file use-mounted.ts
+ * @description Custom React hook use-mounted hỗ trợ xử lý logic giao diện Web
+ */
+
 import { useState, useEffect } from 'react'
 
 let isClientMounted = false

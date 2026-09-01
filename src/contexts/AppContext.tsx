@@ -1,3 +1,7 @@
+/**
+ * @file AppContext.tsx
+ * @description Mã nguồn thành phần AppContext.tsx
+ */
 
 'use client'
 

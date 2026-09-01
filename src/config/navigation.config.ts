@@ -1,3 +1,8 @@
+/**
+ * @file navigation.config.ts
+ * @description Mã nguồn thành phần navigation.config.ts
+ */
+
 export interface NavItem {
   id: string
   labelVi: string

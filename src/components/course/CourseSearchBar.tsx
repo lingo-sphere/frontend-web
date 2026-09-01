@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseSearchBar.tsx
+ * @description Component giao diện React CourseSearchBar cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'
 

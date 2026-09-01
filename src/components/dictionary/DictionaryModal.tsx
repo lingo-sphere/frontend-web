@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file DictionaryModal.tsx
+ * @description Component giao diện React DictionaryModal cho học viên
+ */
+
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'

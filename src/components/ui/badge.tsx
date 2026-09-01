@@ -1,3 +1,7 @@
+/**
+ * @file badge.tsx
+ * @description Component giao diện React badge cho học viên
+ */
 
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'

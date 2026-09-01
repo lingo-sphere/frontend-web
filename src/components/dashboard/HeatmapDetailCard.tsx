@@ -1,3 +1,8 @@
+/**
+ * @file HeatmapDetailCard.tsx
+ * @description Component giao diện React HeatmapDetailCard cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Flame } from 'lucide-react'
 

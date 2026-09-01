@@ -1,3 +1,8 @@
+/**
+ * @file course.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
+ */
+
 export type LessonStatus = 'locked' | 'available' | 'in-progress' | 'completed'
 export type ChapterStatus = 'locked' | 'available' | 'in-progress' | 'completed'
 export type TestType = 'challenge' | 'exercise' | 'post-mini' | 'pre' | 'final'

@@ -1,3 +1,8 @@
+/**
+ * @file NotebookWordManager.tsx
+ * @description Component giao diện React NotebookWordManager cho học viên
+ */
+
 import { useState, useEffect } from 'react'
 import { Bookmark, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'

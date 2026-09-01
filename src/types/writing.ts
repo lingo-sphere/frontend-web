@@ -1,3 +1,7 @@
+/**
+ * @file writing.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
+ */
 
 export type WritingLevel = 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
 export type ExerciseType = 'SENTENCE_ARRANGEMENT' | 'SENTENCE_COMPLETION' | 'PARAPHRASING' | 'KEYWORD_WRITING' | 'TOPIC_WRITING' | 'DIARY'

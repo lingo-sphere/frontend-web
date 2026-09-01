@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (courses)/course/[courseId]
+ */
+
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from '@/lib/navigation'
 import { Sparkles } from 'lucide-react'

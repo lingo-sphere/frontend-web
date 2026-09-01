@@ -1,3 +1,7 @@
+/**
+ * @file MultipleChoiceExercise.tsx
+ * @description Component giao diện React MultipleChoiceExercise cho học viên
+ */
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

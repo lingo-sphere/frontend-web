@@ -1,3 +1,8 @@
+/**
+ * @file ContinueLearningCard.tsx
+ * @description Component giao diện React ContinueLearningCard cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Play } from 'lucide-react'
 

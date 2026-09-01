@@ -1,3 +1,8 @@
+/**
+ * @file SpeakingWorkspace.tsx
+ * @description Component giao diện React SpeakingWorkspace cho học viên
+ */
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Mic, MicOff, Play, Pause, Square, RotateCcw, Volume2 } from 'lucide-react'

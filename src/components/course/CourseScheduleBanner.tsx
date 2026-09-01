@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseScheduleBanner.tsx
+ * @description Component giao diện React CourseScheduleBanner cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Clock, X } from 'lucide-react'
 

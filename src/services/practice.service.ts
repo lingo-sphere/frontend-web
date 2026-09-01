@@ -1,3 +1,8 @@
+/**
+ * @file practice.service.ts
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ practice
+ */
+
 import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 import type { SpeechAssessmentResult } from '@/types/api.types'

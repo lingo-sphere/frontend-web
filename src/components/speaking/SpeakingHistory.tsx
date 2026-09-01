@@ -1,3 +1,8 @@
+/**
+ * @file SpeakingHistory.tsx
+ * @description Component giao diện React SpeakingHistory cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Clock, TrendingUp } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseLoadingState.tsx
+ * @description Component giao diện React CourseLoadingState cho học viên
+ */
+
 import { ArrowLeft } from 'lucide-react'
 
 interface CourseLoadingStateProps {

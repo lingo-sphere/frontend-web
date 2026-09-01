@@ -1,3 +1,7 @@
+/**
+ * @file ContextExercise.tsx
+ * @description Component giao diện React ContextExercise cho học viên
+ */
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

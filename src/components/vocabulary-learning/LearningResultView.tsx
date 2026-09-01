@@ -1,3 +1,7 @@
+/**
+ * @file LearningResultView.tsx
+ * @description Component giao diện React LearningResultView cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, RotateCcw, Home } from 'lucide-react'

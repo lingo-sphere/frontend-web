@@ -1,3 +1,8 @@
+/**
+ * @file VocabularyCard.tsx
+ * @description Component giao diện React VocabularyCard cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Volume2, Plus, Trash2 } from 'lucide-react'
 import type { SavedVocabulary, UserDeck, Meaning } from '@/types/vocabulary'

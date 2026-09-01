@@ -1,3 +1,7 @@
+/**
+ * @file Pagination.tsx
+ * @description Component giao diện React Pagination cho học viên
+ */
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file LessonPlayer.tsx
+ * @description Component giao diện React LessonPlayer cho học viên
+ */
+
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import {
   Play,

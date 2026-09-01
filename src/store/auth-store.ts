@@ -1,3 +1,8 @@
+/**
+ * @file auth-store.ts
+ * @description Mã nguồn thành phần auth-store.ts
+ */
+
 import { create } from 'zustand'
 import { authService } from '@/services/auth.service'
 import { API_CONFIG } from '@/config/api.config'

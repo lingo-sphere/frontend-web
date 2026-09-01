@@ -1,3 +1,8 @@
+/**
+ * @file sitemap.ts
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến sitemap.ts
+ */
+
 import type { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {

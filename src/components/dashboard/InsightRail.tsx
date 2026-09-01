@@ -1,3 +1,8 @@
+/**
+ * @file InsightRail.tsx
+ * @description Component giao diện React InsightRail cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Brain, Flame } from 'lucide-react'
 

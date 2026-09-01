@@ -1,3 +1,7 @@
+/**
+ * @file ExploreTopics.tsx
+ * @description Component giao diện React ExploreTopics cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { ArrowUpRight } from 'lucide-react'

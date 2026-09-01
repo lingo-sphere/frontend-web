@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/writing
+ */
+
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { Layout } from '@/components/layout/Layout'

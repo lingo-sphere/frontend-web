@@ -1,3 +1,8 @@
+/**
+ * @file CourseCurriculumList.tsx
+ * @description Component giao diện React CourseCurriculumList cho học viên
+ */
+
 import { ChevronDown, ChevronRight, Lock, Check, Circle } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import type { Chapter, Lesson } from '@/types/course'

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file ToeicCourseRecommendations.tsx
+ * @description Component giao diện React ToeicCourseRecommendations cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { Sparkles, GraduationCap, ArrowRight } from 'lucide-react'

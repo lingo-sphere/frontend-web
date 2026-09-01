@@ -1,3 +1,8 @@
+/**
+ * @file button.tsx
+ * @description Component giao diện React button cho học viên
+ */
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (auth)/verify-email
+ */
+
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from '@/lib/navigation'
 import { motion } from 'motion/react'

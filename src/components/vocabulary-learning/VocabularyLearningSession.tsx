@@ -1,3 +1,7 @@
+/**
+ * @file VocabularyLearningSession.tsx
+ * @description Component giao diện React VocabularyLearningSession cho học viên
+ */
 
 import { useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

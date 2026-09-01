@@ -1,3 +1,8 @@
+/**
+ * @file cart.service.ts
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ cart
+ */
+
 import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 import type { Cart } from '@/types/cart'

@@ -1,3 +1,8 @@
+/**
+ * @file WelcomeBanner.tsx
+ * @description Component giao diện React WelcomeBanner cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
 import { useAuthStore } from '@/store/auth-store'

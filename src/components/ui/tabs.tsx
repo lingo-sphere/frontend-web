@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file tabs.tsx
+ * @description Component giao diện React tabs cho học viên
+ */
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Tabs as TabsPrimitive } from "radix-ui"

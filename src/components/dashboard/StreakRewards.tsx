@@ -1,3 +1,7 @@
+/**
+ * @file StreakRewards.tsx
+ * @description Component giao diện React StreakRewards cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { Gift, Lock } from 'lucide-react'

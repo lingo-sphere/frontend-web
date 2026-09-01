@@ -1,3 +1,8 @@
+/**
+ * @file vocabulary.service.ts
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ vocabulary
+ */
+
 import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 import type { Deck, LexicalItem } from '@/types/api.types'

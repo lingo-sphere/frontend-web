@@ -1,3 +1,8 @@
+/**
+ * @file ToeicQuestionNav.tsx
+ * @description Component giao diện React ToeicQuestionNav cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'

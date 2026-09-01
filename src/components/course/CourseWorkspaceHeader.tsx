@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseWorkspaceHeader.tsx
+ * @description Component giao diện React CourseWorkspaceHeader cho học viên
+ */
+
 import { ArrowLeft, MoreVertical, Share2, Star, Trophy } from 'lucide-react'
 
 interface CourseWorkspaceHeaderProps {

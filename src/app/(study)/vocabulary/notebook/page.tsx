@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/vocabulary/notebook
+ */
+
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseReviewsTab.tsx
+ * @description Component giao diện React CourseReviewsTab cho học viên
+ */
+
 import { Star } from 'lucide-react'
 import type { CourseReviewItem } from '@/types/course'
 

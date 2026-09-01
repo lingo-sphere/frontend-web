@@ -1,3 +1,8 @@
+/**
+ * @file audio-utils.ts
+ * @description Mã nguồn thành phần audio-utils.ts
+ */
+
 import type { VocabularyItem } from '@/types/vocabulary-learn'
 
 export function shuffleArray<T>(array: T[]): T[] {

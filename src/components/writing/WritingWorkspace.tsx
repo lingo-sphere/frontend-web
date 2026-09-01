@@ -1,3 +1,7 @@
+/**
+ * @file WritingWorkspace.tsx
+ * @description Component giao diện React WritingWorkspace cho học viên
+ */
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

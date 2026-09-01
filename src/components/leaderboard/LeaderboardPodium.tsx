@@ -1,3 +1,8 @@
+/**
+ * @file LeaderboardPodium.tsx
+ * @description Component giao diện React LeaderboardPodium cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Crown } from "lucide-react";
 import type {

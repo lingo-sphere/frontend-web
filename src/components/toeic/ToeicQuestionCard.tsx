@@ -1,3 +1,8 @@
+/**
+ * @file ToeicQuestionCard.tsx
+ * @description Component giao diện React ToeicQuestionCard cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Flag, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'

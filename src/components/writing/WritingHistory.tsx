@@ -1,3 +1,7 @@
+/**
+ * @file WritingHistory.tsx
+ * @description Component giao diện React WritingHistory cho học viên
+ */
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

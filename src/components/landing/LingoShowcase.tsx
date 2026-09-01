@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file LingoShowcase.tsx
+ * @description Component giao diện React LingoShowcase cho học viên
+ */
+
 import { useRef, useEffect, useState } from "react"
 import Link from "next/link"
 import { motion, useScroll, useTransform } from "motion/react"

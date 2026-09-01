@@ -1,3 +1,7 @@
+/**
+ * @file toeic.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
+ */
 
 export interface ToeicPart {
   id: string

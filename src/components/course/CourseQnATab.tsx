@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseQnATab.tsx
+ * @description Component giao diện React CourseQnATab cho học viên
+ */
+
 import { useState } from 'react'
 import { MessageSquare, Search, ThumbsUp, Send, CheckCircle2, Bot, Sparkles, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'

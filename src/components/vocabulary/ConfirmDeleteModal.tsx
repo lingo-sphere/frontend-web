@@ -1,3 +1,7 @@
+/**
+ * @file ConfirmDeleteModal.tsx
+ * @description Component giao diện React ConfirmDeleteModal cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'

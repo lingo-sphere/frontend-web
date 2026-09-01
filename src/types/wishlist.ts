@@ -1,3 +1,8 @@
+/**
+ * @file wishlist.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
+ */
+
 export interface WishlistItem {
   course_id: string
   title: string

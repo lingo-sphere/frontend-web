@@ -1,3 +1,8 @@
+/**
+ * @file SpeakingResult.tsx
+ * @description Component giao diện React SpeakingResult cho học viên
+ */
+
 import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Play, Pause, RotateCcw, ChevronRight, CheckCircle2, XCircle, Volume2 } from 'lucide-react'

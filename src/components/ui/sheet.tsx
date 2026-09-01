@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file sheet.tsx
+ * @description Component giao diện React sheet cho học viên
+ */
+
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/ai-learning
+ */
+
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'motion/react'
 import { Layout } from '@/components/layout/Layout'

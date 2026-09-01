@@ -1,3 +1,8 @@
+/**
+ * @file wishlist-store.ts
+ * @description Mã nguồn thành phần wishlist-store.ts
+ */
+
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { wishlistService } from '@/services/wishlist.service'

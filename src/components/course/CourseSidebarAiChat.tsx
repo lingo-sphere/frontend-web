@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseSidebarAiChat.tsx
+ * @description Component giao diện React CourseSidebarAiChat cho học viên
+ */
+
 import { useState } from 'react'
 import { Bot, Send } from 'lucide-react'
 

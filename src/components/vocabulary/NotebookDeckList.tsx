@@ -1,3 +1,8 @@
+/**
+ * @file NotebookDeckList.tsx
+ * @description Component giao diện React NotebookDeckList cho học viên
+ */
+
 import { useState } from 'react'
 import { Plus, Layers3, BookOpen, X } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'

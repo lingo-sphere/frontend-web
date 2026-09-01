@@ -1,3 +1,8 @@
+/**
+ * @file AuthModal.tsx
+ * @description Component giao diện React AuthModal cho học viên
+ */
+
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'

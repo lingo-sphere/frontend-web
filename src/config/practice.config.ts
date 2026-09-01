@@ -1,3 +1,8 @@
+/**
+ * @file practice.config.ts
+ * @description Mã nguồn thành phần practice.config.ts
+ */
+
 export interface PracticeItem {
   id: string
   label: string

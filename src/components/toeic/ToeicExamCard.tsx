@@ -1,3 +1,8 @@
+/**
+ * @file ToeicExamCard.tsx
+ * @description Component giao diện React ToeicExamCard cho học viên
+ */
+
 import { Trophy, Clock, Users, FileText } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { ToeicExam } from '@/types/toeic'

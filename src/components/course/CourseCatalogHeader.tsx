@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseCatalogHeader.tsx
+ * @description Component giao diện React CourseCatalogHeader cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import type { CourseTabType } from '@/types/course'
 

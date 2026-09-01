@@ -1,3 +1,8 @@
+/**
+ * @file user.service.ts
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ user
+ */
+
 import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 import type { User, GamificationProfile, LeaderboardEntry } from '@/types/api.types'

@@ -1,3 +1,8 @@
+/**
+ * @file HeatmapSummaryCard.tsx
+ * @description Component giao diện React HeatmapSummaryCard cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent } from '@/components/ui/card'

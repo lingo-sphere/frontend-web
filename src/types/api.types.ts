@@ -1,3 +1,7 @@
+/**
+ * @file api.types.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
+ */
 
 export interface ApiResponse<T = unknown> {
   statusCode: number

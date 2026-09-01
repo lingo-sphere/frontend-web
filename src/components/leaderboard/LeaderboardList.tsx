@@ -1,3 +1,8 @@
+/**
+ * @file LeaderboardList.tsx
+ * @description Component giao diện React LeaderboardList cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import type { LeaderboardType, MonthlyLeaderboardUser } from '@/types/dashboard'
 

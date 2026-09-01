@@ -1,3 +1,8 @@
+/**
+ * @file SelectDeckModal.tsx
+ * @description Component giao diện React SelectDeckModal cho học viên
+ */
+
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Layers3, Plus, Check } from 'lucide-react'

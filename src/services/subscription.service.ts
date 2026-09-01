@@ -1,3 +1,8 @@
+/**
+ * @file subscription.service.ts
+ * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ subscription
+ */
+
 import { api } from '@/services/api-client'
 import { API_CONFIG } from '@/config/api.config'
 

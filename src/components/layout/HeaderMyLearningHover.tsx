@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file HeaderMyLearningHover.tsx
+ * @description Component giao diện React HeaderMyLearningHover cho học viên
+ */
+
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Loader2 } from 'lucide-react'

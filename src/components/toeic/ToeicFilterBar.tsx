@@ -1,3 +1,8 @@
+/**
+ * @file ToeicFilterBar.tsx
+ * @description Component giao diện React ToeicFilterBar cho học viên
+ */
+
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { FilterChip } from '@/components/toeic/ToeicExamCard'

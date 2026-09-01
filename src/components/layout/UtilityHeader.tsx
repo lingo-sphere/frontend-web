@@ -1,3 +1,8 @@
+/**
+ * @file UtilityHeader.tsx
+ * @description Component giao diện React UtilityHeader cho học viên
+ */
+
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart } from 'lucide-react'

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/profile
+ */
+
 import { useState, useEffect } from 'react'
 import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'

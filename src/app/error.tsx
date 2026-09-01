@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file error.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến error.tsx
+ */
+
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { Layout } from '@/components/layout/Layout'

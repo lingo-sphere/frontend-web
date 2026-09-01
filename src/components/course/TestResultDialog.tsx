@@ -1,3 +1,7 @@
+/**
+ * @file TestResultDialog.tsx
+ * @description Component giao diện React TestResultDialog cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react'

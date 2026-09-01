@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file landing-locales.ts
+ * @description Component giao diện React landing-locales cho học viên
+ */
+
 import { useState, useEffect, useCallback } from "react"
 
 export type LandingLang = "vi" | "en"

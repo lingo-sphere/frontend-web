@@ -1,3 +1,8 @@
+/**
+ * @file tooltip.tsx
+ * @description Component giao diện React tooltip cho học viên
+ */
+
 import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 

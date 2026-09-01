@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file page.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến page.tsx
+ */
+
 import { useEffect, useRef, useState, useMemo } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence, animate, useInView } from "motion/react"

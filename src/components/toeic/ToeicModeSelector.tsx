@@ -1,3 +1,8 @@
+/**
+ * @file ToeicModeSelector.tsx
+ * @description Component giao diện React ToeicModeSelector cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Trophy, Clock, Headphones, BookOpen, Settings, AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'

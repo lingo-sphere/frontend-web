@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseRatingModal.tsx
+ * @description Component giao diện React CourseRatingModal cho học viên
+ */
+
 import { useState } from 'react'
 import { Star, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'

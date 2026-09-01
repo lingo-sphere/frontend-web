@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseToolsTab.tsx
+ * @description Component giao diện React CourseToolsTab cho học viên
+ */
+
 import { Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 

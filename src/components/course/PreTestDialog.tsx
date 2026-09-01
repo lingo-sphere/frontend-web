@@ -1,3 +1,7 @@
+/**
+ * @file PreTestDialog.tsx
+ * @description Component giao diện React PreTestDialog cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'

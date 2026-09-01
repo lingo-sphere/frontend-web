@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file AppClientProvider.tsx
+ * @description Component giao diện React AppClientProvider cho học viên
+ */
+
 import { useEffect, useState, type ReactNode } from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import '@/i18n'

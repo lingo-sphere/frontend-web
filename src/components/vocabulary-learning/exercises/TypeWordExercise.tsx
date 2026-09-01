@@ -1,3 +1,7 @@
+/**
+ * @file TypeWordExercise.tsx
+ * @description Component giao diện React TypeWordExercise cho học viên
+ */
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

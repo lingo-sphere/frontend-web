@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseCard.tsx
+ * @description Component giao diện React CourseCard cho học viên
+ */
+
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {

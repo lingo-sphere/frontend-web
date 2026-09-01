@@ -1,3 +1,7 @@
+/**
+ * @file useLanguage.ts
+ * @description Custom React hook useLanguage hỗ trợ xử lý logic giao diện Web
+ */
 
 import { useTranslation } from 'react-i18next'
 import { useCallback } from 'react'

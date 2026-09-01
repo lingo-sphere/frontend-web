@@ -1,3 +1,8 @@
+/**
+ * @file ToeicExamResult.tsx
+ * @description Component giao diện React ToeicExamResult cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { CheckCircle2, Trophy } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'

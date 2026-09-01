@@ -1,3 +1,8 @@
+/**
+ * @file robots.ts
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến robots.ts
+ */
+
 import type { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {

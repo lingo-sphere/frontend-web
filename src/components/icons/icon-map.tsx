@@ -1,3 +1,8 @@
+/**
+ * @file icon-map.tsx
+ * @description Component giao diện React icon-map cho học viên
+ */
+
 import type { LucideIcon } from 'lucide-react'
 import {
   Activity,

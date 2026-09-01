@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file HeaderWishlistHover.tsx
+ * @description Component giao diện React HeaderWishlistHover cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Heart } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'

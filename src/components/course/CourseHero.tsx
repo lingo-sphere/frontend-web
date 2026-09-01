@@ -1,3 +1,8 @@
+/**
+ * @file CourseHero.tsx
+ * @description Component giao diện React CourseHero cho học viên
+ */
+
 import { Trophy, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'

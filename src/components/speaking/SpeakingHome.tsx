@@ -1,3 +1,8 @@
+/**
+ * @file SpeakingHome.tsx
+ * @description Component giao diện React SpeakingHome cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Mic, TrendingUp, Clock, ChevronRight, Play } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'

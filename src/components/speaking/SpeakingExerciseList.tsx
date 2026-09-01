@@ -1,3 +1,8 @@
+/**
+ * @file SpeakingExerciseList.tsx
+ * @description Component giao diện React SpeakingExerciseList cho học viên
+ */
+
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Search, Clock, ChevronRight } from 'lucide-react'

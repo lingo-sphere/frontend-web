@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file LanguageSkewSwitch.tsx
+ * @description Component giao diện React LanguageSkewSwitch cho học viên
+ */
+
 import React from "react"
 import type { LandingLang } from "@/components/landing/landing-locales"
 

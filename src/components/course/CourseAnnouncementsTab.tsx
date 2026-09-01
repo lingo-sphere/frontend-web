@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file CourseAnnouncementsTab.tsx
+ * @description Component giao diện React CourseAnnouncementsTab cho học viên
+ */
+
 import type { CourseAnnouncement } from '@/types/course'
 
 interface CourseAnnouncementsTabProps {

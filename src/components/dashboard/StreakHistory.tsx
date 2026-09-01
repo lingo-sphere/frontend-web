@@ -1,3 +1,7 @@
+/**
+ * @file StreakHistory.tsx
+ * @description Component giao diện React StreakHistory cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { CalendarDays } from 'lucide-react'

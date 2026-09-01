@@ -1,3 +1,8 @@
+/**
+ * @file UpgradeModal.tsx
+ * @description Component giao diện React UpgradeModal cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Check, Shield, Zap, Loader2, Sparkles, Copy, ArrowLeft, CheckCircle2, Clock, QrCode, FlaskConical, AlertCircle, RefreshCw } from 'lucide-react'

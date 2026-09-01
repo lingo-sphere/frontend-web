@@ -1,3 +1,8 @@
+/**
+ * @file TodaysLearningCard.tsx
+ * @description Component giao diện React TodaysLearningCard cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { ArrowRight } from 'lucide-react'
 

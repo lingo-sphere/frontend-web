@@ -1,3 +1,8 @@
+/**
+ * @file SectionHeading.tsx
+ * @description Component giao diện React SectionHeading cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 

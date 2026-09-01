@@ -1,3 +1,8 @@
+/**
+ * @file WritingHome.tsx
+ * @description Component giao diện React WritingHome cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import {
   Pencil,

@@ -1,3 +1,8 @@
+/**
+ * @file LeaderboardCountdown.tsx
+ * @description Component giao diện React LeaderboardCountdown cho học viên
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Clock3 } from 'lucide-react'
 

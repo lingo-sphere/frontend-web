@@ -1,5 +1,10 @@
 "use client"
 
+/**
+ * @file Lanyard.tsx
+ * @description Component giao diện React Lanyard cho học viên
+ */
+
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import * as THREE from 'three'

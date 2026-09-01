@@ -1,3 +1,8 @@
+/**
+ * @file ClickSpark.tsx
+ * @description Component giao diện React ClickSpark cho học viên
+ */
+
 import React, { useRef, useEffect, useCallback, type ReactNode } from 'react'
 
 export interface ClickSparkProps {

@@ -1,3 +1,8 @@
+/**
+ * @file layout.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến layout.tsx
+ */
+
 import type { Metadata, Viewport } from 'next'
 import { Inter, Newsreader } from 'next/font/google'
 import './globals.css'

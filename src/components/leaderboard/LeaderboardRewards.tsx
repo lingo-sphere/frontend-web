@@ -1,3 +1,7 @@
+/**
+ * @file LeaderboardRewards.tsx
+ * @description Component giao diện React LeaderboardRewards cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { Diamond } from 'lucide-react'

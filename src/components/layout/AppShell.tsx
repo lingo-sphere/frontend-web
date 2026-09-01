@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file AppShell.tsx
+ * @description Component giao diện React AppShell cho học viên
+ */
+
 import type { ReactNode } from 'react'
 
 import { Sheet, SheetContent } from '@/components/ui/sheet'

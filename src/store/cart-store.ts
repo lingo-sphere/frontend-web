@@ -1,3 +1,8 @@
+/**
+ * @file cart-store.ts
+ * @description Mã nguồn thành phần cart-store.ts
+ */
+
 import { create } from 'zustand'
 import { cartService } from '@/services/cart.service'
 import type { Cart, CartItem } from '@/types/cart'

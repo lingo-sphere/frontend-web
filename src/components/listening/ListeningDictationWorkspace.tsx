@@ -1,3 +1,8 @@
+/**
+ * @file ListeningDictationWorkspace.tsx
+ * @description Component giao diện React ListeningDictationWorkspace cho học viên
+ */
+
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'

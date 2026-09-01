@@ -1,3 +1,8 @@
+/**
+ * @file separator.tsx
+ * @description Component giao diện React separator cho học viên
+ */
+
 import * as React from "react"
 import { Separator as SeparatorPrimitive } from "radix-ui"
 

@@ -1,3 +1,7 @@
+/**
+ * @file ListenTypeExercise.tsx
+ * @description Component giao diện React ListenTypeExercise cho học viên
+ */
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

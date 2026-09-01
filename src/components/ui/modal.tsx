@@ -1,3 +1,8 @@
+/**
+ * @file modal.tsx
+ * @description Component giao diện React modal cho học viên
+ */
+
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'

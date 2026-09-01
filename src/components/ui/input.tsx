@@ -1,3 +1,8 @@
+/**
+ * @file input.tsx
+ * @description Component giao diện React input cho học viên
+ */
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

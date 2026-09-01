@@ -1,3 +1,8 @@
+/**
+ * @file not-found.tsx
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến not-found.tsx
+ */
+
 import Link from 'next/link'
 import { Layout } from '@/components/layout/Layout'
 import { Button } from '@/components/ui/button'

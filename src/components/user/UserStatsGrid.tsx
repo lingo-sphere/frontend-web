@@ -1,3 +1,8 @@
+/**
+ * @file UserStatsGrid.tsx
+ * @description Component giao diện React UserStatsGrid cho học viên
+ */
+
 import { Icon } from '@/components/icons/icon-map'
 
 export function StatCard({

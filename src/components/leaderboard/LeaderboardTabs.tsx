@@ -1,3 +1,7 @@
+/**
+ * @file LeaderboardTabs.tsx
+ * @description Component giao diện React LeaderboardTabs cho học viên
+ */
 
 import { useTranslation } from 'react-i18next'
 import { Flame, BookOpen, GraduationCap } from 'lucide-react'

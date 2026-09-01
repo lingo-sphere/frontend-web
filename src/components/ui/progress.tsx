@@ -1,3 +1,8 @@
+/**
+ * @file progress.tsx
+ * @description Component giao diện React progress cho học viên
+ */
+
 import * as React from "react"
 import { Progress as ProgressPrimitive } from "radix-ui"
 
