@@ -279,30 +279,28 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
   }
 
   const handleManualCheck = async () => {
-    setIsCheckingStatus(true)
-    const isPaid = await checkPaymentStatus()
-    setIsCheckingStatus(false)
-    if (!isPaid && step === 'PAYMENT_QR') {
-      toast.info(
-        isVietnamese
-          ? 'Hệ thống đang kiểm tra biến động số dư. Nếu bạn đã chuyển khoản, vui lòng đợi vài giây để hệ thống đối soát tự động!'
-          : 'Checking status... If you have made the transfer, please wait a few seconds.',
-        isVietnamese ? 'Kiểm tra thanh toán' : 'Payment check'
-      )
-    }
-  }
-
-  const handleSimulatePayment = async () => {
     if (!order?.order_code) return
-    setIsSimulating(true)
+    setIsCheckingStatus(true)
     try {
-      await subscriptionService.simulatePayment(order.order_code)
-      handlePaymentSuccess()
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : isVietnamese ? 'Lỗi khi mô phỏng' : 'Simulation error'
-      toast.error(msg, isVietnamese ? 'Lỗi' : 'Error')
+      const res = await subscriptionService.getPaymentOrderStatus(order.order_code)
+      const status = res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
+      if (status === 'PAID') {
+        handlePaymentSuccess()
+      } else {
+        toast.warning(
+          isVietnamese
+            ? 'Hệ thống chưa nhận được thanh toán từ ngân hàng. Nếu bạn vừa chuyển khoản, vui lòng đợi 15-30 giây để ngân hàng đối soát hoặc kiểm tra lại nội dung chuyển khoản!'
+            : 'Payment has not been received yet. Please wait a moment for the bank transfer to clear.',
+          isVietnamese ? 'Chưa nhận được thanh toán' : 'Payment Pending'
+        )
+      }
+    } catch {
+      toast.error(
+        isVietnamese ? 'Không thể kiểm tra trạng thái lúc này. Vui lòng thử lại.' : 'Failed to check status. Please try again.',
+        isVietnamese ? 'Lỗi kết nối' : 'Connection Error'
+      )
     } finally {
-      setIsSimulating(false)
+      setIsCheckingStatus(false)
     }
   }
 
@@ -635,43 +633,22 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
                   <span>{isVietnamese ? 'Đang chờ xác nhận chuyển khoản từ ngân hàng...' : 'Waiting for bank confirmation...'}</span>
                 </div>
 
-                <div className="w-full space-y-2 border-t border-border pt-3">
+                <div className="w-full border-t border-border pt-3">
                   <Button
-                    variant="outline"
                     size="sm"
                     disabled={isCheckingStatus}
                     onClick={handleManualCheck}
-                    className="w-full h-10 text-xs font-bold border-primary/30 text-primary hover:bg-primary-soft cursor-pointer"
+                    className="w-full h-11 text-xs font-bold rounded-xl bg-primary hover:bg-primary-hover text-white cursor-pointer shadow-lg shadow-primary/25 hover:shadow-primary/40 flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {isCheckingStatus ? (
                       <span className="flex items-center gap-2">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {isVietnamese ? 'Đang kiểm tra...' : 'Checking...'}
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {isVietnamese ? 'Đang đối soát chuyển khoản...' : 'Checking with Bank...'}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1.5">
-                        <RefreshCw size={14} />
-                        {isVietnamese ? 'Tôi Đã Chuyển Khoản - Kiểm Tra Ngay' : 'I Have Transferred - Check Now'}
-                      </span>
-                    )}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={isSimulating}
-                    onClick={handleSimulatePayment}
-                    className="w-full h-8 text-[11px] font-medium text-text-tertiary hover:text-text-primary hover:bg-surface-subtle cursor-pointer"
-                  >
-                    {isSimulating ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        {isVietnamese ? 'Đang mô phỏng...' : 'Simulating...'}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1">
-                        <FlaskConical size={13} />
-                        {isVietnamese ? 'Mô phỏng thanh toán thành công (Test Mode)' : 'Simulate Successful Payment (Test Mode)'}
+                        <CheckCircle2 size={15} />
+                        {isVietnamese ? 'Tôi Đã Chuyển Khoản - Kiểm Tra Ngay' : 'I Have Transferred - Verify Payment'}
                       </span>
                     )}
                   </Button>

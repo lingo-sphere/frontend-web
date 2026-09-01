@@ -223,30 +223,28 @@ export function CourseCheckoutModal({
   if (!open) return null
 
   const handleManualCheck = async () => {
-    setIsCheckingStatus(true)
-    const isPaid = await checkPaymentStatus()
-    setIsCheckingStatus(false)
-    if (!isPaid && step === 'PAYMENT_QR') {
-      toast.info(
-        isVi
-          ? 'Hệ thống đang kiểm tra biến động số dư. Nếu bạn đã chuyển khoản, vui lòng đợi vài giây để hệ thống đối soát tự động!'
-          : 'Checking status... Please wait a few seconds.',
-        isVi ? 'Kiểm tra thanh toán' : 'Payment check'
-      )
-    }
-  }
-
-  const handleSimulatePayment = async () => {
     if (!order?.order_code) return
-    setIsSimulating(true)
+    setIsCheckingStatus(true)
     try {
-      await subscriptionService.simulatePayment(order.order_code)
-      handlePaymentSuccess()
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : isVi ? 'Lỗi khi mô phỏng' : 'Simulation error'
-      toast.error(msg, isVi ? 'Lỗi' : 'Error')
+      const res = await subscriptionService.getPaymentOrderStatus(order.order_code)
+      const status = res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
+      if (status === 'PAID') {
+        handlePaymentSuccess()
+      } else {
+        toast.warning(
+          isVi
+            ? 'Hệ thống chưa nhận được thanh toán từ ngân hàng. Nếu bạn vừa chuyển khoản, vui lòng đợi 15-30 giây để ngân hàng đối soát hoặc kiểm tra lại nội dung chuyển khoản!'
+            : 'Payment has not been received yet. Please wait a moment for the bank transfer to clear.',
+          isVi ? 'Chưa nhận được thanh toán' : 'Payment Pending'
+        )
+      }
+    } catch {
+      toast.error(
+        isVi ? 'Không thể kiểm tra trạng thái lúc này. Vui lòng thử lại.' : 'Failed to check status. Please try again.',
+        isVi ? 'Lỗi kết nối' : 'Connection Error'
+      )
     } finally {
-      setIsSimulating(false)
+      setIsCheckingStatus(false)
     }
   }
 
@@ -468,40 +466,21 @@ export function CourseCheckoutModal({
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center gap-3 pt-2">
+                    <div className="pt-2">
                       <Button
                         onClick={handleManualCheck}
                         disabled={isCheckingStatus}
-                        variant="outline"
-                        className="flex-1 h-11 text-xs font-bold rounded-xl cursor-pointer"
+                        className="w-full h-11 text-xs font-bold rounded-xl bg-primary hover:bg-primary-hover text-white cursor-pointer shadow-lg shadow-primary/25 hover:shadow-primary/40 flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         {isCheckingStatus ? (
                           <>
-                            <RefreshCw size={14} className="animate-spin mr-1.5" />
-                            <span>{isVi ? 'Đang kiểm tra...' : 'Checking...'}</span>
+                            <RefreshCw size={15} className="animate-spin" />
+                            <span>{isVi ? 'Đang đối soát chuyển khoản...' : 'Checking with Bank...'}</span>
                           </>
                         ) : (
                           <>
-                            <RefreshCw size={14} className="mr-1.5" />
-                            <span>{isVi ? 'Kiểm tra thanh toán' : 'Check status'}</span>
-                          </>
-                        )}
-                      </Button>
-
-                      <Button
-                        onClick={handleSimulatePayment}
-                        disabled={isSimulating}
-                        className="flex-1 h-11 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-md shadow-emerald-600/20"
-                      >
-                        {isSimulating ? (
-                          <>
-                            <FlaskConical size={14} className="animate-spin mr-1.5" />
-                            <span>{isVi ? 'Đang xử lý...' : 'Processing...'}</span>
-                          </>
-                        ) : (
-                          <>
-                            <FlaskConical size={14} className="mr-1.5" />
-                            <span>{isVi ? 'Mô phỏng thanh toán (Test)' : 'Simulate Paid'}</span>
+                            <CheckCircle2 size={15} />
+                            <span>{isVi ? 'Tôi Đã Chuyển Khoản - Kiểm Tra Ngay' : 'I Have Transferred - Verify Payment'}</span>
                           </>
                         )}
                       </Button>

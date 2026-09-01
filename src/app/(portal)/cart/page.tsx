@@ -30,14 +30,21 @@ export default function CartPage() {
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isAuthenticated && mounted) {
       navigate('/courses')
       return
     }
-    fetchCart()
-  }, [isAuthenticated])
+    if (isAuthenticated) {
+      fetchCart()
+    }
+  }, [isAuthenticated, mounted])
 
   const items = cart?.items || []
 
@@ -77,6 +84,29 @@ export default function CartPage() {
     thumbnail: (it as unknown as { thumbnail?: string })?.thumbnail,
   }))
 
+  if (!mounted) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-background text-text-primary px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 animate-pulse">
+          <div className="flex items-center justify-between border-b border-border pb-5">
+            <div className="space-y-2">
+              <div className="h-4 w-32 bg-surface-subtle rounded-lg" />
+              <div className="h-8 w-64 bg-surface-hover rounded-xl" />
+            </div>
+            <div className="h-5 w-24 bg-surface-subtle rounded-lg" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              <div className="h-28 bg-surface rounded-2xl border border-border" />
+              <div className="h-28 bg-surface rounded-2xl border border-border" />
+            </div>
+            <div className="h-64 bg-surface rounded-2xl border border-border" />
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="min-h-screen bg-background text-text-primary px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
@@ -87,14 +117,14 @@ export default function CartPage() {
               className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-primary transition-colors cursor-pointer mb-2"
             >
               <ArrowLeft size={14} />
-              <span>{isVi ? 'Tiếp tục xem khóa học' : 'Continue shopping'}</span>
+              <span suppressHydrationWarning>{isVi ? 'Tiếp tục xem khóa học' : 'Continue shopping'}</span>
             </button>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary flex items-center gap-3 font-serif">
               <ShoppingCart className="text-purple-600 dark:text-purple-400" size={28} />
-              <span>{isVi ? 'Giỏ hàng của bạn' : 'Shopping Cart'}</span>
+              <span suppressHydrationWarning>{isVi ? 'Giỏ hàng của bạn' : 'Shopping Cart'}</span>
             </h1>
           </div>
-          <div className="text-sm font-semibold text-text-secondary">
+          <div className="text-sm font-semibold text-text-secondary" suppressHydrationWarning>
             {items.length} {isVi ? 'khóa học trong giỏ' : 'courses in cart'}
           </div>
         </div>

@@ -41,6 +41,10 @@ export const courseService = {
     return api.post<CourseEnrollment>(API_CONFIG.ENDPOINTS.COURSES.ENROLL(courseId))
   },
 
+  async unenrollCourse(courseId: string): Promise<{ success: boolean; message: string }> {
+    return api.delete(`/courses/${courseId}/enroll`)
+  },
+
   async getMyEnrolledCourses(): Promise<CourseEnrollment[]> {
     return api.get<CourseEnrollment[]>(API_CONFIG.ENDPOINTS.COURSES.MY_ENROLLED)
   },
