@@ -11,6 +11,7 @@ import { ShoppingCart, Trash2, ArrowLeft, ShieldCheck, Award, Zap, CheckCircle2,
 import { Layout } from '@/components/layout/Layout'
 import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
+import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
 
 export default function CartPage() {
@@ -45,9 +46,15 @@ export default function CartPage() {
     if (!promoCode.trim()) return
     if (promoCode.trim().toUpperCase() === 'LINGO50') {
       setAppliedPromo('LINGO50')
-      alert(isVi ? 'Đã áp dụng mã giảm giá LINGO50 thành công!' : 'Applied promo code LINGO50 successfully!')
+      toast.success(
+        isVi ? 'Đã áp dụng mã giảm giá LINGO50 thành công!' : 'Applied promo code LINGO50 successfully!',
+        isVi ? 'Khuyến mãi' : 'Promo code'
+      )
     } else {
-      alert(isVi ? 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' : 'Invalid or expired promo code.')
+      toast.error(
+        isVi ? 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' : 'Invalid or expired promo code.',
+        isVi ? 'Khuyến mãi' : 'Promo code'
+      )
     }
   }
 
@@ -56,7 +63,10 @@ export default function CartPage() {
     setIsCheckingOut(true)
     setTimeout(() => {
       setIsCheckingOut(false)
-      alert(isVi ? 'Đăng ký các khóa học trong giỏ hàng thành công!' : 'Successfully enrolled in all courses in cart!')
+      toast.success(
+        isVi ? 'Đăng ký các khóa học trong giỏ hàng thành công!' : 'Successfully enrolled in all courses in cart!',
+        isVi ? 'Thanh toán thành công' : 'Checkout Successful'
+      )
       clearCart()
       navigate('/courses')
     }, 1200)

@@ -5,15 +5,13 @@
  * @description Component giao diện React CourseCard cho học viên
  */
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { motion, AnimatePresence } from 'motion/react'
 import {
   Play,
   MoreVertical,
   Heart,
-  Share2,
-  ListPlus,
-  Archive,
   Star,
   Check,
   Loader2,
@@ -22,6 +20,7 @@ import {
 import type { CourseCardData } from '@/types/course'
 import { useAuthStore } from '@/store/auth-store'
 import { useCartStore } from '@/store/cart-store'
+import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
 
 interface CourseCardProps {
@@ -51,6 +50,57 @@ export function CourseCard({
   const [isAdding, setIsAdding] = useState(false)
   const isAlreadyInCart = isInCart(course.id)
   const isPremiumUser = Boolean(user?.is_premium)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isMenuOpen) return
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onCloseMenu()
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCloseMenu()
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('touchstart', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('touchstart', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isMenuOpen, onCloseMenu])
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!isAuthenticated) {
+      toast.warning(
+        isVi
+          ? 'Vui lòng đăng nhập để lưu khóa học vào danh sách yêu thích!'
+          : 'Please sign in to add courses to your wishlist!',
+        isVi ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
+      onCloseMenu()
+      return
+    }
+    onToggleWishlist(course.id, e)
+    onCloseMenu()
+  }
+
+  const handleShareFacebook = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onCloseMenu()
+    const courseUrl = typeof window !== 'undefined' ? `${window.location.origin}/course/${course.id}` : ''
+    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(courseUrl)}`
+    window.open(fbShareUrl, '_blank', 'noopener,noreferrer,width=620,height=580')
+  }
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -59,7 +109,10 @@ export function CourseCard({
       return
     }
     if (!isAuthenticated) {
-      alert(isVi ? 'Vui lòng đăng nhập để thêm khóa học vào giỏ hàng!' : 'Please sign in to add courses to your cart!')
+      toast.warning(
+        isVi ? 'Vui lòng đăng nhập để thêm khóa học vào giỏ hàng!' : 'Please sign in to add courses to your cart!',
+        isVi ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
       return
     }
     if (isAlreadyInCart) {
@@ -70,9 +123,15 @@ export function CourseCard({
     const result = await addToCart(course.id)
     setIsAdding(false)
     if (result.success) {
-      alert(isVi ? 'Đã thêm khóa học vào giỏ hàng thành công!' : 'Course added to cart successfully!')
+      toast.success(
+        isVi ? 'Đã thêm khóa học vào giỏ hàng thành công!' : 'Course added to cart successfully!',
+        isVi ? 'Giỏ hàng' : 'Shopping Cart'
+      )
     } else {
-      alert(result.message || (isVi ? 'Không thể thêm vào giỏ hàng' : 'Failed to add to cart'))
+      toast.error(
+        result.message || (isVi ? 'Không thể thêm vào giỏ hàng' : 'Failed to add to cart'),
+        isVi ? 'Lỗi' : 'Error'
+      )
     }
   }
 
@@ -102,63 +161,69 @@ export function CourseCard({
             </div>
           )}
 
-          <div className="absolute right-2.5 top-2.5 z-10">
+          <div ref={menuRef} className="absolute right-2.5 top-2.5 z-20">
             <button
+              type="button"
               onClick={(e) => onToggleMenu(course.id, e)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/90 text-text-primary shadow-sm backdrop-blur-sm hover:bg-white transition-colors"
+              className={`flex h-7 w-7 items-center justify-center rounded-lg shadow-sm backdrop-blur-sm transition-all duration-200 cursor-pointer ${
+                isMenuOpen
+                  ? 'bg-surface text-primary ring-2 ring-primary/20 shadow-md'
+                  : 'bg-white/90 text-text-primary hover:bg-white dark:bg-zinc-900/90 dark:hover:bg-zinc-800'
+              }`}
               title={isVi ? 'Tùy chọn' : 'Options'}
+              aria-expanded={isMenuOpen}
             >
               <MoreVertical size={14} />
             </button>
 
-            {isMenuOpen && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-8 w-44 rounded-xl border border-border bg-surface p-1.5 shadow-xl z-20 space-y-1 text-xs text-text-primary animate-in fade-in duration-150"
-              >
-                <button
-                  onClick={(e) => onToggleWishlist(course.id, e)}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
+            <AnimatePresence>
+              {isMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 top-8.5 w-48 origin-top-right rounded-xl border border-border/80 bg-surface/95 backdrop-blur-md p-1.5 shadow-2xl z-30 space-y-1 text-xs text-text-primary ring-1 ring-black/5 dark:ring-white/10"
                 >
-                  <Heart size={13} className={isFavorite ? 'text-red-500 fill-red-500' : ''} />
-                  <span>
-                    {isFavorite
-                      ? isVi
-                        ? 'Bỏ yêu thích'
-                        : 'Remove from wishlist'
-                      : isVi
-                      ? 'Thêm yêu thích'
-                      : 'Add to wishlist'}
-                  </span>
-                </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      window.location.origin + `/course/${course.id}`
-                    )
-                    onCloseMenu()
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
-                >
-                  <Share2 size={13} />
-                  <span>{isVi ? 'Chia sẻ khóa học' : 'Share course'}</span>
-                </button>
-                <button
-                  onClick={onCloseMenu}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left"
-                >
-                  <ListPlus size={13} />
-                  <span>{isVi ? 'Tạo danh sách mới' : 'Add to list'}</span>
-                </button>
-                <button
-                  onClick={onCloseMenu}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-surface-hover transition-colors text-left text-text-tertiary"
-                >
-                  <Archive size={13} />
-                  <span>{isVi ? 'Lưu trữ' : 'Archive'}</span>
-                </button>
-              </div>
-            )}
+                  <button
+                    type="button"
+                    onClick={handleWishlistClick}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-surface-hover transition-colors text-left cursor-pointer group/item"
+                  >
+                    <Heart
+                      size={14}
+                      className={`transition-transform duration-200 group-hover/item:scale-110 ${
+                        isFavorite ? 'text-rose-500 fill-rose-500' : 'text-text-secondary group-hover/item:text-rose-500'
+                      }`}
+                    />
+                    <span className={isFavorite ? 'font-semibold text-rose-500' : 'font-medium'}>
+                      {isFavorite
+                        ? isVi
+                          ? 'Bỏ yêu thích'
+                          : 'Remove from wishlist'
+                        : isVi
+                        ? 'Thêm yêu thích'
+                        : 'Add to wishlist'}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleShareFacebook}
+                    className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 hover:bg-surface-hover transition-colors text-left cursor-pointer group/item text-text-primary"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5 shrink-0 fill-[#1877F2] transition-transform duration-200 group-hover/item:scale-110"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                    <span className="font-medium">{isVi ? 'Chia sẻ qua Facebook' : 'Share on Facebook'}</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 

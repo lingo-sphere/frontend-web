@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/auth-store'
 import { subscriptionService, PaymentOrderResponse } from '@/services/subscription.service'
 import { API_CONFIG } from '@/config/api.config'
+import { toast } from '@/store/toast-store'
 
 interface UpgradeModalProps {
   open: boolean
@@ -186,7 +187,10 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
 
   const handleCreateOrder = async () => {
     if (!isAuthenticated || !user) {
-      alert(isVietnamese ? 'Vui lòng đăng nhập để nâng cấp gói Premium!' : 'Please log in to upgrade to Premium!')
+      toast.warning(
+        isVietnamese ? 'Vui lòng đăng nhập để nâng cấp gói Premium!' : 'Please log in to upgrade to Premium!',
+        isVietnamese ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
       return
     }
 
@@ -216,7 +220,10 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
     const isPaid = await checkPaymentStatus()
     setIsCheckingStatus(false)
     if (!isPaid && step === 'PAYMENT_QR') {
-      alert(isVietnamese ? 'Hệ thống đang kiểm tra biến động số dư. Nếu bạn đã chuyển khoản, vui lòng đợi vài giây để hệ thống đối soát tự động!' : 'Checking status... If you have made the transfer, please wait a few seconds.')
+      toast.info(
+        isVietnamese ? 'Hệ thống đang kiểm tra biến động số dư. Nếu bạn đã chuyển khoản, vui lòng đợi vài giây để hệ thống đối soát tự động!' : 'Checking status... If you have made the transfer, please wait a few seconds.',
+        isVietnamese ? 'Kiểm tra thanh toán' : 'Payment check'
+      )
     }
   }
 
@@ -228,7 +235,7 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
       handlePaymentSuccess()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : (isVietnamese ? 'Lỗi khi mô phỏng' : 'Simulation error')
-      alert(msg)
+      toast.error(msg, isVietnamese ? 'Lỗi' : 'Error')
     } finally {
       setIsSimulating(false)
     }

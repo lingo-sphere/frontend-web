@@ -9,6 +9,7 @@ import { ArrowLeft, Mic, MicOff, Play, Pause, Square, RotateCcw, Volume2 } from 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import type { SpeakingExercise, RecordingState, SpeakingExerciseType } from '@/types/speaking'
+import { toast } from '@/store/toast-store'
 
 interface SpeakingWorkspaceProps {
   exercise: SpeakingExercise
@@ -118,7 +119,10 @@ export function SpeakingWorkspace({
       }))
     } catch (error) {
       console.error('Error starting recording:', error)
-      alert(isVietnamese ? 'Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập.' : 'Cannot access microphone. Please check permissions.')
+      toast.error(
+        isVietnamese ? 'Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập.' : 'Cannot access microphone. Please check permissions.',
+        isVietnamese ? 'Microphone' : 'Microphone error'
+      )
     }
   }, [onUpdateRecording, isVietnamese])
 

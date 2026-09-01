@@ -11,6 +11,7 @@ import { useNavigate } from '@/lib/navigation'
 import { useWishlistStore } from '@/store/wishlist-store'
 import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
+import { toast } from '@/store/toast-store'
 
 export function HeaderWishlistHover() {
   const { i18n } = useTranslation()
@@ -23,7 +24,10 @@ export function HeaderWishlistHover() {
   const handleAddToCart = async (e: React.MouseEvent, courseId: string) => {
     e.stopPropagation()
     if (!isAuthenticated) {
-      alert(isVi ? 'Vui lòng đăng nhập để thêm vào giỏ hàng!' : 'Please sign in to add to cart!')
+      toast.warning(
+        isVi ? 'Vui lòng đăng nhập để thêm vào giỏ hàng!' : 'Please sign in to add to cart!',
+        isVi ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
       return
     }
     if (isInCart(courseId)) {
@@ -31,7 +35,10 @@ export function HeaderWishlistHover() {
       return
     }
     await addToCart(courseId)
-    alert(isVi ? 'Đã thêm vào giỏ hàng!' : 'Added to cart!')
+    toast.success(
+      isVi ? 'Đã thêm vào giỏ hàng!' : 'Added to cart!',
+      isVi ? 'Giỏ hàng' : 'Shopping Cart'
+    )
   }
 
   return (
@@ -103,7 +110,7 @@ export function HeaderWishlistHover() {
 
           <div className="p-3 border-t border-border bg-surface-subtle/30">
             <button
-              onClick={() => navigate('/courses')}
+              onClick={() => navigate('/courses?tab=wishlist')}
               className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2.5 transition-colors shadow-sm cursor-pointer"
             >
               {isVi ? 'Đến danh sách yêu thích' : 'Go to wishlist'}

@@ -18,13 +18,16 @@ import { CourseScheduleBanner } from '@/components/course/CourseScheduleBanner'
 import { CourseScheduleModal } from '@/components/course/CourseScheduleModal'
 import { CourseCard } from '@/components/course/CourseCard'
 import { useWishlistStore } from '@/store/wishlist-store'
+import { useAuthStore } from '@/store/auth-store'
+import { toast } from '@/store/toast-store'
 
 export default function CoursesCatalogPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
   const searchParams = useSearchParams()
-  const { items: wishlistItems, toggleItem, isInWishlist } = useWishlistStore()
+  const { items: wishlistItems, toggleItem, isInWishlist, fetchWishlist } = useWishlistStore()
+  const { isAuthenticated } = useAuthStore()
 
   const tabParam = searchParams.get('tab')
   const activeTab: CourseTabType =
@@ -37,6 +40,12 @@ export default function CoursesCatalogPage() {
   const [showScheduleBanner, setShowScheduleBanner] = useState(true)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchWishlist()
+    }
+  }, [isAuthenticated, fetchWishlist])
 
   useEffect(() => {
     let isMounted = true
@@ -137,11 +146,36 @@ export default function CoursesCatalogPage() {
     })
   }, [courses, searchQuery, selectedCategory, activeTab, wishlistItems, isInWishlist])
 
-  const toggleWishlist = (id: string, e: React.MouseEvent) => {
+  const toggleWishlist = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!isAuthenticated) {
+      toast.warning(
+        isVi
+          ? 'Vui lòng đăng nhập để lưu khóa học vào danh sách yêu thích!'
+          : 'Please sign in to add courses to your wishlist!',
+        isVi ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
+      setActiveMenuId(null)
+      return
+    }
     const targetCourse = courses.find((c) => c.id === id)
     if (targetCourse) {
-      toggleItem(targetCourse)
+      const res = await toggleItem(targetCourse)
+      if (res && res.success) {
+        if (res.isWishlisted) {
+          toast.success(
+            isVi ? 'Đã thêm khóa học vào danh sách yêu thích!' : 'Added course to wishlist!',
+            isVi ? 'Yêu thích' : 'Wishlist'
+          )
+        } else {
+          toast.info(
+            isVi ? 'Đã xóa khóa học khỏi danh sách yêu thích.' : 'Removed course from wishlist.',
+            isVi ? 'Yêu thích' : 'Wishlist'
+          )
+        }
+      } else if (res && !res.success && res.message) {
+        toast.error(res.message, isVi ? 'Lỗi' : 'Error')
+      }
     }
     setActiveMenuId(null)
   }

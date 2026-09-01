@@ -16,6 +16,7 @@ import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 
 import { PersistentLayout } from '@/components/layout/PersistentLayout'
+import { ToastContainer } from '@/components/common/ToastContainer'
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
 
@@ -128,6 +129,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       <AppProvider>
         <TooltipProvider>
           <PersistentLayout>{children}</PersistentLayout>
+          <ToastContainer />
 
           <Modal
             open={Boolean(kickoutMessage)}

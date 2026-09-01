@@ -9,6 +9,7 @@ import { ArrowLeft, Clock, Save, Send, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import type { WritingExercise, WritingDraft } from '@/types/writing'
+import { toast } from '@/store/toast-store'
 
 interface WritingWorkspaceProps {
   exercise: WritingExercise
@@ -64,9 +65,12 @@ export function WritingWorkspace({
 
   const handleSubmit = () => {
     if (wordCount > maxWords) {
-      alert(isVietnamese
-        ? `Bài viết vượt quá ${maxWords} từ. Hiện tại: ${wordCount} từ. Vui lòng rút ngắn bài viết.`
-        : `Writing exceeds ${maxWords} words. Current: ${wordCount} words. Please shorten your writing.`)
+      toast.warning(
+        isVietnamese
+          ? `Bài viết vượt quá ${maxWords} từ. Hiện tại: ${wordCount} từ. Vui lòng rút ngắn bài viết.`
+          : `Writing exceeds ${maxWords} words. Current: ${wordCount} words. Please shorten your writing.`,
+        isVietnamese ? 'Giới hạn số từ' : 'Word limit'
+      )
       return
     }
     const writingTimeSeconds = Math.floor((Date.now() - startTime) / 1000)
