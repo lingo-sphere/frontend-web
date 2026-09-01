@@ -67,7 +67,7 @@ export function ChapterAccordion({
             <h3 className="text-[15px] font-semibold text-text-primary">{chapter.title}</h3>
             <p className="text-[12px] text-text-secondary">
               {completedLessons}/{chapter.lessons.length} bài học
-              {chapter.challengeTest.status === 'completed' && ' • Đã qua bài thử thách'}
+              {chapter.challengeTest?.status === 'completed' && ' • Đã qua bài thử thách'}
             </p>
           </div>
         </div>
@@ -83,21 +83,23 @@ export function ChapterAccordion({
 
       {isExpanded && chapter.status !== 'locked' && (
         <div className="border-t border-border bg-surface-subtle/50 p-4">
-          <div
-            className={`mb-3 flex items-center justify-between rounded-lg p-3 ${
-              chapter.challengeTest.status === 'completed' ? 'bg-success-soft/50' : 'bg-surface'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <StatusIcon status={chapter.challengeTest.status} />
-              <span className="text-[13px] font-medium text-text-primary">
-                {chapter.challengeTest.title}
+          {chapter.challengeTest && (
+            <div
+              className={`mb-3 flex items-center justify-between rounded-lg p-3 ${
+                chapter.challengeTest.status === 'completed' ? 'bg-success-soft/50' : 'bg-surface'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <StatusIcon status={chapter.challengeTest.status} />
+                <span className="text-[13px] font-medium text-text-primary">
+                  {chapter.challengeTest.title}
+                </span>
+              </div>
+              <span className="text-[12px] text-text-secondary">
+                {chapter.challengeTest.questionsCount} câu hỏi
               </span>
             </div>
-            <span className="text-[12px] text-text-secondary">
-              {chapter.challengeTest.questionsCount} câu hỏi
-            </span>
-          </div>
+          )}
 
           <div className="space-y-2">
             {chapter.lessons.map((lesson) => (
@@ -149,45 +151,49 @@ export function ChapterAccordion({
             ))}
           </div>
 
-          <div
-            className={`mt-4 flex items-center justify-between rounded-lg p-3 ${
-              chapter.exercise.status === 'locked'
-                ? 'bg-surface opacity-60'
-                : chapter.exercise.status === 'completed'
-                  ? 'bg-success-soft/50'
-                  : 'bg-surface'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <StatusIcon status={chapter.exercise.status} />
-              <span className="text-[13px] font-medium text-text-primary">
-                {chapter.exercise.title}
+          {chapter.exercise && (
+            <div
+              className={`mt-4 flex items-center justify-between rounded-lg p-3 ${
+                chapter.exercise.status === 'locked'
+                  ? 'bg-surface opacity-60'
+                  : chapter.exercise.status === 'completed'
+                    ? 'bg-success-soft/50'
+                    : 'bg-surface'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <StatusIcon status={chapter.exercise.status} />
+                <span className="text-[13px] font-medium text-text-primary">
+                  {chapter.exercise.title}
+                </span>
+              </div>
+              <span className="text-[12px] text-text-secondary">
+                {chapter.exercise.questionsCount} câu hỏi
               </span>
             </div>
-            <span className="text-[12px] text-text-secondary">
-              {chapter.exercise.questionsCount} câu hỏi
-            </span>
-          </div>
+          )}
 
-          <div
-            className={`mt-2 flex items-center justify-between rounded-lg p-3 ${
-              chapter.postMiniTest.status === 'locked'
-                ? 'bg-surface opacity-60'
-                : chapter.postMiniTest.status === 'completed'
-                  ? 'bg-success-soft/50'
-                  : 'bg-surface'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <StatusIcon status={chapter.postMiniTest.status} />
-              <span className="text-[13px] font-medium text-text-primary">
-                {chapter.postMiniTest.title}
+          {chapter.postMiniTest && (
+            <div
+              className={`mt-2 flex items-center justify-between rounded-lg p-3 ${
+                chapter.postMiniTest.status === 'locked'
+                  ? 'bg-surface opacity-60'
+                  : chapter.postMiniTest.status === 'completed'
+                    ? 'bg-success-soft/50'
+                    : 'bg-surface'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <StatusIcon status={chapter.postMiniTest.status} />
+                <span className="text-[13px] font-medium text-text-primary">
+                  {chapter.postMiniTest.title}
+                </span>
+              </div>
+              <span className="text-[12px] text-text-secondary">
+                {chapter.postMiniTest.questionsCount} câu hỏi
               </span>
             </div>
-            <span className="text-[12px] text-text-secondary">
-              {chapter.postMiniTest.questionsCount} câu hỏi
-            </span>
-          </div>
+          )}
         </div>
       )}
     </Card>

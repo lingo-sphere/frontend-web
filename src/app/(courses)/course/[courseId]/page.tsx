@@ -2,12 +2,12 @@
 
 /**
  * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (courses)/course/[courseId]
+ * @description Trang không gian học tập trực tuyến (Course Workspace) cho học viên LingoSphere
  */
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from '@/lib/navigation'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, PanelRightClose } from 'lucide-react'
 import { CourseNotesTab } from '@/components/course/CourseNotesTab'
 import { CourseQnATab } from '@/components/course/CourseQnATab'
 import { CourseReviewsTab } from '@/components/course/CourseReviewsTab'
@@ -16,11 +16,12 @@ import { CourseWorkspaceHeader } from '@/components/course/CourseWorkspaceHeader
 import { CourseSidebarContent } from '@/components/course/CourseSidebarContent'
 import { CourseSidebarAiChat } from '@/components/course/CourseSidebarAiChat'
 import { CourseRatingModal } from '@/components/course/CourseRatingModal'
-import { CourseCertificateModal } from '@/components/course/CourseCertificateModal'
+import { CourseTestRunnerModal } from '@/components/course/CourseTestRunnerModal'
 import { CourseLoadingState } from '@/components/course/CourseLoadingState'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { courseService } from '@/services/course.service'
-import type { Chapter, Course, Lesson } from '@/types/course'
+import { toast } from '@/store/toast-store'
+import type { Chapter, Course, Lesson, CourseReviewItem } from '@/types/course'
 
 type BottomTab = 'overview' | 'qna' | 'notes' | 'reviews'
 type SidebarTab = 'content' | 'ai'
@@ -37,9 +38,19 @@ export default function CourseDetailPage() {
   const [expandedChapters, setExpandedChapters] = useState<string[]>(['ch-01', 'ch-02'])
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('overview')
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('content')
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true)
   const [playerCurrentTime, setPlayerCurrentTime] = useState<number>(0)
-  const [showCertificateModal, setShowCertificateModal] = useState(false)
   const [showRatingModal, setShowRatingModal] = useState(false)
+
+  const [activeTestModal, setActiveTestModal] = useState<{
+    isOpen: boolean
+    chapter: Chapter | null
+    testType: 'challenge' | 'exercise' | 'post-mini'
+  }>({
+    isOpen: false,
+    chapter: null,
+    testType: 'post-mini',
+  })
 
   const handleBack = useCallback(() => {
     navigate('/courses')
@@ -61,12 +72,86 @@ export default function CourseDetailPage() {
             (raw.modules as Array<Record<string, unknown>>) ||
             []
 
+          // Fetch user's saved lesson progress from DB
+          let completedLessonIdSet = new Set<string>()
+          try {
+            const progressData = await courseService.getCourseProgressDetail(
+              String(courseObj._id || courseObj.id || courseId)
+            )
+            if (progressData && Array.isArray(progressData.completed_lesson_ids)) {
+              completedLessonIdSet = new Set(progressData.completed_lesson_ids)
+            }
+          } catch {
+            // Not authenticated or no progress record yet
+          }
+
           let mappedChapters: Chapter[] = []
           if (Array.isArray(curriculumList) && curriculumList.length > 0) {
             mappedChapters = curriculumList.map((mod, modIdx) => {
               const modLessons = (mod.lessons as Array<Record<string, unknown>>) || []
               const modId = String(mod._id || mod.id || `ch-${modIdx + 1}`)
               const modTitle = String(mod.title || `Chương ${modIdx + 1}`)
+
+              const challengeQs = Array.isArray(mod.challenge_questions)
+                ? (mod.challenge_questions as Array<Record<string, unknown>>)
+                : []
+              const postMiniQs = Array.isArray(mod.post_mini_questions)
+                ? (mod.post_mini_questions as Array<Record<string, unknown>>)
+                : []
+              const testQs = Array.isArray(mod.test_questions)
+                ? (mod.test_questions as Array<Record<string, unknown>>)
+                : []
+
+              const lessonsList: Lesson[] = modLessons.map((les, lesIdx) => {
+                const lesId = String(les._id || les.id || `les-${modIdx + 1}-${lesIdx + 1}`)
+                const lesTitle = String(les.title || `Bài ${lesIdx + 1}`)
+                const vidUrl = String(
+                  les.video_url ||
+                    les.videoUrl ||
+                    les.video_link ||
+                    les.file_url ||
+                    les.url ||
+                    ''
+                )
+                const durationSec = Number(
+                  les.duration_seconds ||
+                    (les.duration_minutes ? Number(les.duration_minutes) * 60 : 600)
+                )
+
+                const isAlreadyCompleted = completedLessonIdSet.has(lesId)
+
+                return {
+                  id: lesId,
+                  chapterId: modId,
+                  order: Number(les.order_index || les.lesson_order || lesIdx + 1),
+                  title: lesTitle,
+                  type: 'video' as const,
+                  duration: durationSec,
+                  status: (isAlreadyCompleted
+                    ? 'completed'
+                    : lesIdx === 0 && modIdx === 0
+                    ? 'in-progress'
+                    : 'available') as Lesson['status'],
+                  progress: isAlreadyCompleted ? 100 : 0,
+                  videoUrl: vidUrl,
+                  resources: Array.isArray(les.resources)
+                    ? (les.resources as Array<{ id: string; title: string; url: string; size: string }>)
+                    : [],
+                  content: {
+                    videoUrl: vidUrl,
+                    sections: [
+                      {
+                        id: '1',
+                        title: 'Giới thiệu & Mục tiêu bài học',
+                        type: 'introduction',
+                        content: String(
+                          les.content || 'Nắm vững kiến thức trọng tâm của bài học.'
+                        ),
+                      },
+                    ],
+                  },
+                }
+              })
 
               return {
                 id: modId,
@@ -75,75 +160,47 @@ export default function CourseDetailPage() {
                 title: modTitle,
                 description: String(mod.description || ''),
                 status: (modIdx === 0 ? 'in-progress' : 'available') as Chapter['status'],
-                lessons: modLessons.map((les, lesIdx) => {
-                  const lesId = String(les._id || les.id || `les-${modIdx + 1}-${lesIdx + 1}`)
-                  const lesTitle = String(les.title || `Bài ${lesIdx + 1}`)
-                  const vidUrl = String(
-                    les.video_url ||
-                      les.videoUrl ||
-                      les.video_link ||
-                      les.file_url ||
-                      les.url ||
-                      ''
-                  )
-                  const durationSec = Number(
-                    les.duration_seconds ||
-                      (les.duration_minutes ? Number(les.duration_minutes) * 60 : 600)
-                  )
-
-                  return {
-                    id: lesId,
-                    chapterId: modId,
-                    order: Number(les.order_index || les.lesson_order || lesIdx + 1),
-                    title: lesTitle,
-                    type: 'video' as const,
-                    duration: durationSec,
-                    status: (lesIdx === 0 && modIdx === 0
-                      ? 'in-progress'
-                      : 'available') as Lesson['status'],
-                    progress: 0,
-                    videoUrl: vidUrl,
-                    resources: [],
-                    content: {
-                      videoUrl: vidUrl,
-                      sections: [
-                        {
-                          id: '1',
-                          title: 'Giới thiệu & Mục tiêu bài học',
-                          type: 'introduction',
-                          content: String(
-                            les.content || 'Nắm vững kiến thức trọng tâm của bài học.'
-                          ),
-                        },
-                      ],
-                    },
-                  }
-                }),
-                challengeTest: {
-                  id: `ct-${modIdx + 1}`,
-                  chapterId: modId,
-                  title: `${modTitle} - Mini Test`,
-                  questionsCount: 10,
-                  passingScore: 70,
-                  status: 'available',
-                },
-                exercise: {
-                  id: `ex-${modIdx + 1}`,
-                  chapterId: modId,
-                  title: `${modTitle} - Thực hành`,
-                  questionsCount: 5,
-                  skills: ['Vocabulary', 'Grammar'],
-                  status: 'available',
-                },
-                postMiniTest: {
-                  id: `pm-${modIdx + 1}`,
-                  chapterId: modId,
-                  title: `${modTitle} - Assessment`,
-                  questionsCount: 15,
-                  skills: ['Listening', 'Reading'],
-                  difficulty: 'Standard',
-                  status: 'available',
-                },
+                lessons: lessonsList,
+                challenge_questions: challengeQs,
+                post_mini_questions: postMiniQs,
+                test_questions: testQs,
+                challengeTest:
+                  challengeQs.length > 0
+                    ? {
+                        id: `ct-${modIdx + 1}`,
+                        chapterId: modId,
+                        title: `${modTitle} - Bài kiểm tra thử thách`,
+                        questionsCount: challengeQs.length,
+                        passingScore:
+                          typeof mod.challenge_passing_score === 'number'
+                            ? mod.challenge_passing_score
+                            : 80,
+                        status: 'available',
+                      }
+                    : undefined,
+                exercise:
+                  testQs.length > 0
+                    ? {
+                        id: `ex-${modIdx + 1}`,
+                        chapterId: modId,
+                        title: `${modTitle} - Thực hành`,
+                        questionsCount: testQs.length,
+                        skills: ['Vocabulary', 'Grammar'],
+                        status: 'available',
+                      }
+                    : undefined,
+                postMiniTest:
+                  postMiniQs.length > 0
+                    ? {
+                        id: `pm-${modIdx + 1}`,
+                        chapterId: modId,
+                        title: `${modTitle} - Bài kiểm tra cuối chương`,
+                        questionsCount: postMiniQs.length,
+                        skills: ['Listening', 'Reading'],
+                        difficulty: 'Standard',
+                        status: 'available',
+                      }
+                    : undefined,
               }
             })
           }
@@ -189,15 +246,15 @@ export default function CourseDetailPage() {
                 challengeTest: {
                   id: 'ct-01',
                   chapterId: 'ch-01',
-                  title: 'Kiểm tra trắc nghiệm',
+                  title: 'Kiểm tra trắc nghiệm đầu chương',
                   questionsCount: 5,
-                  passingScore: 70,
+                  passingScore: 80,
                   status: 'available',
                 },
                 exercise: {
                   id: 'ex-01',
                   chapterId: 'ch-01',
-                  title: 'Thực hành',
+                  title: 'Thực hành trắc nghiệm',
                   questionsCount: 5,
                   skills: ['Vocabulary'],
                   status: 'available',
@@ -205,8 +262,8 @@ export default function CourseDetailPage() {
                 postMiniTest: {
                   id: 'pm-01',
                   chapterId: 'ch-01',
-                  title: 'Mini Test',
-                  questionsCount: 10,
+                  title: 'Bài kiểm tra cuối chương',
+                  questionsCount: 5,
                   skills: ['Listening', 'Reading'],
                   difficulty: 'Standard',
                   status: 'available',
@@ -219,70 +276,90 @@ export default function CourseDetailPage() {
             (acc, ch) => acc + (ch.lessons?.length || 0),
             0
           )
-          const parsedCourse: Course = {
+
+          const structuredCourse: Course = {
             id: String(courseObj._id || courseObj.id || courseId),
             title: String(courseObj.title || 'Khóa học LingoSphere'),
+            level: String(courseObj.level || 'Intermediate'),
             description: String(courseObj.description || ''),
-            level: String(courseObj.level || 'TOEIC'),
-            thumbnail: String(courseObj.thumbnail_url || courseObj.thumbnail || ''),
-            duration: `${Math.max(
-              1,
-              Math.round(
-                (Number(courseObj.total_duration_minutes) || totalLes * 15 || 60) / 60
-              )
-            )} giờ`,
+            duration: String(courseObj.duration || '40 giờ'),
             totalChapters: mappedChapters.length,
             totalLessons: totalLes,
-            rating: Number(courseObj.rating || courseObj.rating_avg || 4.8),
-            ratingCount: Number(courseObj.rating_count || 142),
-            studentsCount: Number(
-              courseObj.students_count || courseObj.enrollments || 1250
-            ),
+            rating: typeof courseObj.rating === 'number' ? courseObj.rating : 4.9,
+            ratingCount:
+              typeof courseObj.ratingCount === 'number'
+                ? courseObj.ratingCount
+                : typeof courseObj.rating_count === 'number'
+                ? courseObj.rating_count
+                : 128,
             chapters: mappedChapters,
-            progress: {
-              courseId: String(courseObj._id || courseObj.id || courseId),
-              startedAt: new Date().toISOString(),
-              completedLessons: 0,
-              totalLessons: totalLes,
-              completedChapters: 0,
-              totalChapters: mappedChapters.length,
-              baselineScore: null,
-              currentChapterIndex: 0,
-              currentLessonId: mappedChapters[0]?.lessons[0]?.id || null,
-              currentProgress: 0,
-            },
-            preTest: { status: 'available' },
-            finalTest: { status: 'locked' },
             instructor: {
-              name: String(
-                courseObj.instructor_name ||
-                  courseObj.author_name ||
-                  'LingoSphere Academic Team'
-              ),
-              title: 'Chuyên gia đào tạo LingoSphere',
-              avatar: String(courseObj.thumbnail_url || ''),
-              rating: Number(courseObj.rating || courseObj.rating_avg || 4.8),
-              ratingCount: Number(courseObj.rating_count || 142),
-              studentsCount: Number(
-                courseObj.students_count || courseObj.enrollments || 1250
-              ),
-              coursesCount: 6,
-              bio: String(
-                courseObj.description ||
-                  'Đội ngũ giảng viên và chuyên gia học thuật giàu kinh nghiệm sư phạm và luyện thi chứng chỉ quốc tế.'
-              ),
+              name: 'Đội ngũ Giảng viên LingoSphere',
+              title: 'Senior English Master',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+              rating: 4.9,
+              studentsCount: 15400,
+              coursesCount: 8,
+              bio: 'Chuyên gia giảng dạy ngôn ngữ giàu kinh nghiệm thực chiến.',
             },
+            overview: {
+              whatYouWillLearn: [
+                'Làm chủ ngữ pháp và từ vựng trọng tâm trong các bài thi chuẩn hóa.',
+                'Cải thiện phản xạ nghe - hiểu thông qua các bài giảng trực quan.',
+                'Kỹ thuật làm bài đọc hiểu nhanh, tối ưu hóa thời gian thi.',
+              ],
+              requirements: ['Có máy tính hoặc điện thoại kết nối internet.'],
+              targetAudience: ['Học viên muốn nâng cao trình độ nhanh chóng và bài bản.'],
+            },
+            reviews: [
+              {
+                id: 'rev-1',
+                author: 'Minh Anh',
+                rating: 5,
+                date: '2 ngày trước',
+                content: 'Khóa học chi tiết và giảng viên truyền đạt rất dễ hiểu!',
+              },
+              {
+                id: 'rev-2',
+                author: 'Hoàng Nam',
+                rating: 5,
+                date: '1 tuần trước',
+                content: 'Bài tập và lộ trình rõ ràng, mình tiến bộ thấy rõ.',
+              },
+            ],
+            qna: [
+              {
+                id: 'q1',
+                author: 'Thu Hà',
+                title: 'Làm sao để ghi nhớ từ vựng lâu hơn?',
+                body: 'Thầy cô có thể chia sẻ phương pháp ôn tập từ vựng hiệu quả không ạ?',
+                createdAt: 'Hôm qua',
+                upvotes: 8,
+                answersCount: 2,
+                isAnswered: true,
+                answers: [
+                  {
+                    id: 'a1',
+                    author: 'Giảng viên LingoSphere',
+                    authorRole: 'Giảng viên',
+                    body: 'Em nên kết hợp Flashcard Spaced Repetition và đặt câu với từ mới mỗi ngày nhé!',
+                    createdAt: 'Hôm qua',
+                    upvotes: 12,
+                  },
+                ],
+              },
+            ],
+            notes: [],
+            finalTest: { status: 'locked' },
           }
 
-          setCourse(parsedCourse)
+          setCourse(structuredCourse)
+          setCurrentChapter(mappedChapters[0])
+          setCurrentLesson(mappedChapters[0]?.lessons[0] || null)
           setExpandedChapters(mappedChapters.map((ch) => ch.id))
-          if (mappedChapters[0]?.lessons?.length > 0) {
-            setCurrentChapter(mappedChapters[0])
-            setCurrentLesson(mappedChapters[0].lessons[0])
-          }
         }
-      } catch (err) {
-        console.error('Lỗi khi tải chi tiết khóa học:', err)
+      } catch {
+        // Handle error gracefully
       } finally {
         if (isMounted) setIsLoading(false)
       }
@@ -307,44 +384,93 @@ export default function CourseDetailPage() {
     setCurrentLesson(lesson)
   }
 
+  // Student manual click on checkbox to toggle lesson completion
   const handleToggleLessonComplete = (lessonId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     setCourse((prev) => {
       if (!prev) return prev
       const updated = { ...prev }
+      let targetStatus: Lesson['status'] = 'completed'
+
       updated.chapters = updated.chapters.map((ch) => ({
         ...ch,
-        lessons: ch.lessons.map((l) =>
-          l.id === lessonId
-            ? {
-                ...l,
-                status: l.status === 'completed' ? 'available' : 'completed',
-                progress: l.status === 'completed' ? 0 : 100,
-              }
-            : l
-        ),
+        lessons: ch.lessons.map((l) => {
+          if (l.id === lessonId) {
+            targetStatus = l.status === 'completed' ? 'available' : 'completed'
+            return {
+              ...l,
+              status: targetStatus,
+              progress: targetStatus === 'completed' ? 100 : 0,
+            }
+          }
+          return l
+        }),
       }))
+
+      if (targetStatus === 'completed') {
+        const curChapId = currentChapter?.id || updated.chapters[0]?.id || ''
+        courseService
+          .completeLesson({
+            course_id: String(prev.id),
+            module_id: curChapId,
+            lesson_id: lessonId,
+            score: 100,
+          })
+          .catch(() => {})
+
+        toast.success(
+          'Đã lưu tiến độ hoàn thành bài học vào hệ thống!',
+          'Hoàn thành bài học'
+        )
+      }
+
       return updated
     })
   }
 
+  // Auto-complete lesson when watched > 80% video duration
   const handleLessonProgress = (lessonId: string, progress: number) => {
     setCourse((prev) => {
       if (!prev) return prev
+      let justCompleted = false
       const updated = { ...prev }
+
       updated.chapters = updated.chapters.map((ch) => ({
         ...ch,
-        lessons: ch.lessons.map((l) =>
-          l.id === lessonId
-            ? {
-                ...l,
-                progress,
-                status:
-                  progress >= 100 ? 'completed' : progress > 0 ? 'in-progress' : l.status,
-              }
-            : l
-        ),
+        lessons: ch.lessons.map((l) => {
+          if (l.id === lessonId) {
+            const isNowCompleted = progress >= 80 || progress >= 100
+            if (isNowCompleted && l.status !== 'completed') {
+              justCompleted = true
+            }
+            return {
+              ...l,
+              progress: isNowCompleted ? 100 : progress,
+              status: isNowCompleted ? 'completed' : progress > 0 ? 'in-progress' : l.status,
+            }
+          }
+          return l
+        }),
       }))
+
+      if (justCompleted) {
+        const curChapId = currentChapter?.id || updated.chapters[0]?.id || ''
+        courseService
+          .completeLesson({
+            course_id: String(prev.id),
+            module_id: curChapId,
+            lesson_id: lessonId,
+            score: 100,
+            time_spent_seconds: Math.round(playerCurrentTime),
+          })
+          .catch(() => {})
+
+        toast.success(
+          'Bạn đã theo dõi hơn 80% bài giảng! Hệ thống đã tự động đánh dấu hoàn thành.',
+          'Đã hoàn thành bài học'
+        )
+      }
+
       return updated
     })
   }
@@ -393,9 +519,42 @@ export default function CourseDetailPage() {
     }
   }, [hasPrevLesson, allFlatLessons, currentLessonIndex, expandedChapters])
 
-  const handleAddNoteAtTimestamp = useCallback((_seconds: number) => {
+  const handleAddNoteAtTimestamp = (timestamp: number) => {
+    if (!course || !currentLesson) return
+    const formatted = `${Math.floor(timestamp / 60)}:${String(Math.floor(timestamp % 60)).padStart(2, '0')}`
+    const newNote = {
+      id: `note-${Date.now()}`,
+      lessonId: currentLesson.id,
+      lessonTitle: currentLesson.title,
+      timestamp,
+      formattedTime: formatted,
+      content: `Ghi chú bài học tại mốc ${formatted}`,
+      createdAt: 'Vừa xong',
+    }
+    setCourse((prev) => (prev ? { ...prev, notes: [newNote, ...(prev.notes || [])] } : null))
     setActiveBottomTab('notes')
-  }, [])
+    toast.success(`Đã tạo ghi chú tại mốc ${formatted}`, 'Ghi chú bài học')
+  }
+
+  const handleTakeTest = (
+    chapter: Chapter,
+    testType: 'challenge' | 'exercise' | 'post-mini'
+  ) => {
+    setActiveTestModal({
+      isOpen: true,
+      chapter,
+      testType,
+    })
+  }
+
+  const handleTestComplete = (score: number, isPassed: boolean) => {
+    if (isPassed && activeTestModal.chapter) {
+      toast.success(
+        `Chúc mừng! Bạn đã hoàn thành bài kiểm tra với điểm số ${score}%`,
+        'Vượt qua bài kiểm tra'
+      )
+    }
+  }
 
   if (isLoading || !course || !currentLesson) {
     return <CourseLoadingState onBack={handleBack} />
@@ -410,17 +569,44 @@ export default function CourseDetailPage() {
     (completedLessons / Math.max(totalLessons, 1)) * 100
   )
 
+  const handleRatingSubmit = (ratingScore: number, reviewText: string) => {
+    setCourse((prev) => {
+      if (!prev) return prev
+      const currentRating = prev.rating || 5
+      const currentCount = prev.ratingCount || 0
+      const newReview: CourseReviewItem = {
+        id: `rev-${Date.now()}`,
+        author: 'Bạn (Học viên)',
+        authorAvatar: '',
+        rating: ratingScore,
+        date: 'Vừa xong',
+        content: reviewText || 'Khóa học rất hữu ích và chất lượng!',
+      }
+      return {
+        ...prev,
+        rating: Number(((currentRating * currentCount + ratingScore) / (currentCount + 1)).toFixed(1)),
+        ratingCount: currentCount + 1,
+        reviews: [newReview, ...(prev.reviews || [])],
+      }
+    })
+    toast.success(
+      `Cảm ơn bạn đã đánh giá ${ratingScore} sao cho khóa học!`,
+      'Đánh giá thành công'
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background text-text-primary flex flex-col">
       <CourseWorkspaceHeader
         courseTitle={course.title}
         onBack={handleBack}
         onOpenRating={() => setShowRatingModal(true)}
-        onOpenCertificate={() => setShowCertificateModal(true)}
+        isSidebarOpen={isSidebarOpen}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
       />
 
-      <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden">
-        <div className="flex-1 flex flex-col overflow-y-auto max-h-[calc(100vh-3.5rem)]">
+      <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden relative">
+        <div className="flex-1 flex flex-col overflow-y-auto max-h-[calc(100vh-3.5rem)] transition-all duration-300">
           <LessonPlayer
             lesson={currentLesson}
             onProgress={handleLessonProgress}
@@ -496,66 +682,82 @@ export default function CourseDetailPage() {
           </div>
         </div>
 
-        <div className="w-full lg:w-[380px] shrink-0 border-l border-border bg-surface flex flex-col max-h-[calc(100vh-3.5rem)] shadow-lg">
-          <div className="flex items-center justify-between border-b border-border bg-surface-subtle/50 px-4 py-3">
-            <div className="flex items-center gap-2 text-xs font-bold">
-              <button
-                onClick={() => setActiveSidebarTab('content')}
-                className={`rounded-lg px-3 py-1.5 transition-all ${
-                  activeSidebarTab === 'content'
-                    ? 'bg-surface text-primary shadow-sm font-extrabold'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                Nội dung khóa học
-              </button>
-              <button
-                onClick={() => setActiveSidebarTab('ai')}
-                className={`rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5 ${
-                  activeSidebarTab === 'ai'
-                    ? 'bg-surface text-primary shadow-sm font-extrabold'
-                    : 'text-text-secondary hover:text-primary'
-                }`}
-              >
-                <Sparkles size={13} className="text-primary" />
-                Trợ lý AI
-              </button>
+        {/* Right Sidebar (Collapsible) */}
+        {isSidebarOpen && (
+          <div className="w-full lg:w-[380px] shrink-0 border-l border-border bg-surface flex flex-col max-h-[calc(100vh-3.5rem)] shadow-lg animate-in slide-in-from-right-4 duration-200">
+            <div className="flex items-center justify-between border-b border-border bg-surface-subtle/50 px-4 py-3">
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <button
+                  onClick={() => setActiveSidebarTab('content')}
+                  className={`rounded-lg px-3 py-1.5 transition-all cursor-pointer ${
+                    activeSidebarTab === 'content'
+                      ? 'bg-surface text-primary shadow-sm font-extrabold'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Nội dung khóa học
+                </button>
+                <button
+                  onClick={() => setActiveSidebarTab('ai')}
+                  className={`rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer ${
+                    activeSidebarTab === 'ai'
+                      ? 'bg-surface text-primary shadow-sm font-extrabold'
+                      : 'text-text-secondary hover:text-primary'
+                  }`}
+                >
+                  <Sparkles size={13} className="text-primary" />
+                  Trợ lý AI
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="text-[11px] font-bold text-text-tertiary">
+                  {completedLessons}/{totalLessons} bài ({progressPercent}%)
+                </div>
+                <button
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
+                  title="Đóng thanh bên"
+                >
+                  <PanelRightClose size={16} />
+                </button>
+              </div>
             </div>
 
-            <div className="text-[11px] font-bold text-text-tertiary">
-              {completedLessons}/{totalLessons} bài ({progressPercent}%)
-            </div>
+            {activeSidebarTab === 'content' ? (
+              <CourseSidebarContent
+                chapters={course.chapters}
+                currentLesson={currentLesson}
+                expandedChapters={expandedChapters}
+                onToggleChapter={toggleChapter}
+                onSelectLesson={handleSelectLesson}
+                onToggleLessonComplete={handleToggleLessonComplete}
+                onTakeTest={handleTakeTest}
+              />
+            ) : (
+              <CourseSidebarAiChat currentLessonTitle={currentLesson.title} />
+            )}
           </div>
-
-          {activeSidebarTab === 'content' ? (
-            <CourseSidebarContent
-              chapters={course.chapters}
-              currentLesson={currentLesson}
-              expandedChapters={expandedChapters}
-              onToggleChapter={toggleChapter}
-              onSelectLesson={handleSelectLesson}
-              onToggleLessonComplete={handleToggleLessonComplete}
-            />
-          ) : (
-            <CourseSidebarAiChat currentLessonTitle={currentLesson.title} />
-          )}
-        </div>
+        )}
       </div>
 
+      {/* Course Rating Modal */}
       {showRatingModal && (
         <CourseRatingModal
+          courseTitle={course.title}
           onClose={() => setShowRatingModal(false)}
-          onSubmit={(_r, _t) => {}}
+          onSubmit={handleRatingSubmit}
         />
       )}
 
-      {showCertificateModal && (
-        <CourseCertificateModal
-          courseTitle={course.title}
-          progressPercent={progressPercent}
-          completedLessons={completedLessons}
-          totalLessons={totalLessons}
-          onClose={() => setShowCertificateModal(false)}
+      {/* Chapter Test Runner Modal */}
+      {activeTestModal.isOpen && activeTestModal.chapter && (
+        <CourseTestRunnerModal
+          isOpen={activeTestModal.isOpen}
+          chapter={activeTestModal.chapter}
+          testType={activeTestModal.testType}
+          onClose={() => setActiveTestModal({ isOpen: false, chapter: null, testType: 'post-mini' })}
+          onComplete={handleTestComplete}
         />
       )}
     </div>

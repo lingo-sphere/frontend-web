@@ -71,4 +71,29 @@ export const courseService = {
 
     return api.get(API_CONFIG.ENDPOINTS.COURSES.RECOMMENDATIONS, queryParams)
   },
+
+  async completeLesson(data: {
+    course_id: string
+    module_id: string
+    lesson_id: string
+    score?: number
+    time_spent_seconds?: number
+  }): Promise<unknown> {
+    return api.post('/progress/lessons/complete', data)
+  },
+
+  async getCourseProgressDetail(courseId: string): Promise<{
+    course_progress?: {
+      completed_lessons_count?: number
+      total_lessons_count?: number
+      progress_percentage?: number
+    }
+    modules_progress?: Array<{
+      module_id: string
+      status: string
+    }>
+    completed_lesson_ids?: string[]
+  }> {
+    return api.get(`/progress/courses/${courseId}/detail`)
+  },
 }

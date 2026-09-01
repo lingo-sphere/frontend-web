@@ -43,7 +43,7 @@ export interface TestResult {
 export interface LessonResource {
   id: string
   title: string
-  type: 'pdf' | 'audio' | 'doc' | 'code' | 'external'
+  type?: 'pdf' | 'audio' | 'doc' | 'code' | 'external'
   url: string
   size?: string
 }
@@ -113,9 +113,12 @@ export interface Chapter {
   title: string
   description: string
   lessons: Lesson[]
-  exercise: ChapterExercise
-  postMiniTest: PostMiniTest
-  challengeTest: ChallengeTest
+  exercise?: ChapterExercise
+  postMiniTest?: PostMiniTest
+  challengeTest?: ChallengeTest
+  challenge_questions?: Array<Record<string, unknown>>
+  post_mini_questions?: Array<Record<string, unknown>>
+  test_questions?: Array<Record<string, unknown>>
   status: ChapterStatus
 }
 
@@ -201,7 +204,12 @@ export interface Course {
   language?: string
   instructor?: CourseInstructor
   whatYouWillLearn?: string[]
-  progress: CourseProgress
+  overview?: {
+    whatYouWillLearn?: string[]
+    requirements?: string[]
+    targetAudience?: string[]
+  }
+  progress?: CourseProgress
   chapters: Chapter[]
   thumbnail?: string
   thumbnail_url?: string
@@ -210,11 +218,11 @@ export interface Course {
   notes?: NoteItem[]
   reviews?: CourseReviewItem[]
   announcements?: CourseAnnouncement[]
-  preTest: {
+  preTest?: {
     status: LessonStatus
     result?: TestResult
   }
-  finalTest: {
+  finalTest?: {
     status: LessonStatus
     result?: TestResult
   }

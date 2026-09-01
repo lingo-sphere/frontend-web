@@ -2,7 +2,7 @@
 
 /**
  * @file CourseSidebarContent.tsx
- * @description Component giao diện React CourseSidebarContent cho học viên
+ * @description Component giao diện React CourseSidebarContent hiển thị danh sách bài học, bài tập và bài kiểm tra chương cho học viên
  */
 
 import { useState } from 'react'
@@ -13,6 +13,10 @@ import {
   Download,
   FolderDown,
   PlayCircle,
+  FileCheck2,
+  Trophy,
+  HelpCircle,
+  Sparkles,
 } from 'lucide-react'
 import type { Chapter, Lesson } from '@/types/course'
 
@@ -23,6 +27,7 @@ interface CourseSidebarContentProps {
   onToggleChapter: (chapterId: string) => void
   onSelectLesson: (chapter: Chapter, lesson: Lesson) => void
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
+  onTakeTest?: (chapter: Chapter, testType: 'challenge' | 'exercise' | 'post-mini') => void
 }
 
 export function CourseSidebarContent({
@@ -32,6 +37,7 @@ export function CourseSidebarContent({
   onToggleChapter,
   onSelectLesson,
   onToggleLessonComplete,
+  onTakeTest,
 }: CourseSidebarContentProps) {
   const [activeResourceDropdown, setActiveResourceDropdown] = useState<string | null>(null)
 
@@ -41,6 +47,22 @@ export function CourseSidebarContent({
         const isExpanded = expandedChapters.includes(chapter.id)
         const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
         const chTotal = chapter.lessons.length
+
+        // Check if chapter has teacher-uploaded questions or tests
+        const challengeQuestionsCount =
+          Array.isArray(chapter.challenge_questions) && chapter.challenge_questions.length > 0
+            ? chapter.challenge_questions.length
+            : chapter.challengeTest?.questionsCount || 0
+
+        const postMiniQuestionsCount =
+          Array.isArray(chapter.post_mini_questions) && chapter.post_mini_questions.length > 0
+            ? chapter.post_mini_questions.length
+            : chapter.postMiniTest?.questionsCount || 0
+
+        const testQuestionsCount =
+          Array.isArray(chapter.test_questions) && chapter.test_questions.length > 0
+            ? chapter.test_questions.length
+            : chapter.exercise?.questionsCount || 0
 
         return (
           <div key={chapter.id} className="bg-surface">
@@ -65,6 +87,32 @@ export function CourseSidebarContent({
 
             {isExpanded && (
               <div className="bg-surface-subtle/40 divide-y divide-border/60">
+                {/* 1. Challenge Test (Bài kiểm tra đầu chương) */}
+                {challengeQuestionsCount > 0 && (
+                  <div
+                    onClick={() => onTakeTest?.(chapter, 'challenge')}
+                    className="flex items-center justify-between p-3.5 pl-5 hover:bg-amber-500/10 transition-colors cursor-pointer group border-l-4 border-amber-500/60"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                        <Trophy size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-text-primary group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                          Bài kiểm tra thử thách (Challenge Test)
+                        </div>
+                        <div className="text-[10px] text-text-tertiary">
+                          {challengeQuestionsCount} câu hỏi • Điểm đạt: 80%
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded-md">
+                      Làm bài
+                    </span>
+                  </div>
+                )}
+
+                {/* 2. Lessons List */}
                 {chapter.lessons.map((lesson) => {
                   const isActive = currentLesson.id === lesson.id
                   const isDone = lesson.status === 'completed'
@@ -82,7 +130,7 @@ export function CourseSidebarContent({
                     >
                       <button
                         onClick={(e) => onToggleLessonComplete(lesson.id, e)}
-                        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
+                        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors cursor-pointer ${
                           isDone
                             ? 'bg-primary border-primary text-white'
                             : 'border-border bg-surface hover:border-primary'
@@ -115,7 +163,7 @@ export function CourseSidebarContent({
                                     isResourceOpen ? null : lesson.id
                                   )
                                 }}
-                                className="flex items-center gap-1 text-primary hover:underline font-semibold"
+                                className="flex items-center gap-1 text-primary hover:underline font-semibold cursor-pointer"
                               >
                                 <FolderDown size={11} />
                                 <span>Tài liệu ({lesson.resources.length})</span>
@@ -151,6 +199,57 @@ export function CourseSidebarContent({
                     </div>
                   )
                 })}
+
+                {/* 3. Practice Exercise (Bài thực hành trắc nghiệm) */}
+                {testQuestionsCount > 0 && (
+                  <div
+                    onClick={() => onTakeTest?.(chapter, 'exercise')}
+                    className="flex items-center justify-between p-3.5 pl-5 hover:bg-indigo-500/10 transition-colors cursor-pointer group border-l-4 border-indigo-500/60"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                        <HelpCircle size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-text-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                          Bài tập trắc nghiệm thực hành
+                        </div>
+                        <div className="text-[10px] text-text-tertiary">
+                          {testQuestionsCount} câu hỏi trắc nghiệm
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded-md">
+                      Luyện tập
+                    </span>
+                  </div>
+                )}
+
+                {/* 4. Post-Mini Test (Bài kiểm tra cuối chương) */}
+                {postMiniQuestionsCount > 0 && (
+                  <div
+                    onClick={() => onTakeTest?.(chapter, 'post-mini')}
+                    className="flex items-center justify-between p-3.5 pl-5 hover:bg-emerald-500/10 transition-colors cursor-pointer group border-l-4 border-emerald-500/60"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                        <FileCheck2 size={14} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-text-primary group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                          Bài kiểm tra cuối chương (Post-Mini Test)
+                        </div>
+                        <div className="text-[10px] text-text-tertiary">
+                          {postMiniQuestionsCount} câu hỏi • Đánh giá hoàn thành chương
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <Sparkles size={11} />
+                      Kiểm tra
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
