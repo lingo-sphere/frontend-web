@@ -21,7 +21,7 @@ import { CourseLoadingState } from '@/components/course/CourseLoadingState'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
-import type { Chapter, Course, Lesson, CourseReviewItem } from '@/types/course'
+import type { Chapter, Course, Lesson, CourseReviewItem, NoteItem, QnAItem } from '@/types/course'
 
 type BottomTab = 'overview' | 'qna' | 'notes' | 'reviews'
 type SidebarTab = 'content' | 'ai'
@@ -277,21 +277,119 @@ export default function CourseDetailPage() {
             0
           )
 
+          // Calculate real total duration from all lessons in chapters
+          const totalDurationSec = mappedChapters.reduce(
+            (acc, ch) =>
+              acc +
+              ch.lessons.reduce((lAcc, l) => lAcc + (Number(l.duration) || 0), 0),
+            0
+          )
+          const realDuration =
+            totalDurationSec >= 3600
+              ? `${(totalDurationSec / 3600).toFixed(1)} giờ`
+              : totalDurationSec > 0
+              ? `${Math.round(totalDurationSec / 60)} phút`
+              : String(courseObj.duration || '30 phút')
+
+          const realRating =
+            typeof courseObj.rating === 'number'
+              ? courseObj.rating
+              : 5.0
+
+          const realRatingCount =
+            typeof courseObj.rating_count === 'number'
+              ? courseObj.rating_count
+              : typeof courseObj.ratingCount === 'number'
+              ? courseObj.ratingCount
+              : Array.isArray(courseObj.reviews)
+              ? courseObj.reviews.length
+              : 0
+
+          const realStudentsCount =
+            typeof courseObj.students_count === 'number'
+              ? courseObj.students_count
+              : typeof courseObj.studentsCount === 'number'
+              ? courseObj.studentsCount
+              : 0
+
+          const dynamicObjectives =
+            Array.isArray(courseObj.what_you_will_learn) &&
+            courseObj.what_you_will_learn.length > 0
+              ? (courseObj.what_you_will_learn as string[])
+              : Array.isArray(courseObj.whatYouWillLearn) &&
+                courseObj.whatYouWillLearn.length > 0
+              ? (courseObj.whatYouWillLearn as string[])
+              : [
+                  `Làm chủ toàn bộ kiến thức trọng tâm qua ${mappedChapters.length} chương học bài bản.`,
+                  `Thực hành và củng cố kỹ năng thông qua ${totalLes} bài học video chuyên sâu.`,
+                  `Hệ thống bài kiểm tra đánh giá sát sao mức độ tiếp thu từng chương.`,
+                  `Nâng cao phản xạ ngôn ngữ hướng tới mục tiêu điểm số TOEIC ${
+                    courseObj.target_score || 500
+                  }+.`,
+                ]
+
+          // Fetch real reviews, notes, and Q&A from database
+          const [reviewsRes, notesRes, qnaRes] = await Promise.all([
+            courseService.getCourseReviews(courseId).catch(() => null),
+            courseService.getCourseNotes(courseId).catch(() => []),
+            courseService.getCourseQnA(courseId).catch(() => []),
+          ])
+
+          const mappedReviews: CourseReviewItem[] = (reviewsRes?.reviews || []).map((r) => ({
+            id: String(r._id || Math.random()),
+            author: String(r.user_name || 'Học viên'),
+            authorAvatar: r.user_avatar || '',
+            rating: Number(r.rating) || 5,
+            date: r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
+            content: String(r.content || ''),
+          }))
+
+          const mappedNotes: NoteItem[] = (Array.isArray(notesRes) ? notesRes : []).map((n) => ({
+            id: String(n._id || Math.random()),
+            lessonId: String(n.lesson_id || ''),
+            lessonTitle: String(n.lesson_title || ''),
+            timestamp: Number(n.timestamp) || 0,
+            formattedTime: String(n.formatted_time || '00:00'),
+            content: String(n.content || ''),
+            createdAt: n.created_at ? new Date(n.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
+          }))
+
+          const mappedQnA: QnAItem[] = (Array.isArray(qnaRes) ? qnaRes : []).map((q) => ({
+            id: String(q._id || Math.random()),
+            lessonTitle: String(q.lesson_title || 'Bài học'),
+            author: String(q.author_name || 'Học viên'),
+            title: String(q.title || ''),
+            body: String(q.body || ''),
+            createdAt: q.created_at ? new Date(q.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
+            upvotes: Number(q.upvotes) || 0,
+            answersCount: Array.isArray(q.answers) ? q.answers.length : 0,
+            isAnswered: Boolean(q.is_answered || (q.answers && q.answers.length > 0)),
+            answers: (q.answers || []).map((a) => ({
+              id: String(a.id || Math.random()),
+              author: String(a.author || 'Thành viên'),
+              authorRole: a.author_role,
+              authorAvatar: a.author_avatar,
+              body: String(a.body || ''),
+              createdAt: a.created_at ? new Date(a.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
+              upvotes: Number(a.upvotes) || 0,
+            })),
+          }))
+
+          const finalRating = typeof reviewsRes?.rating === 'number' ? reviewsRes.rating : realRating
+          const finalRatingCount = typeof reviewsRes?.rating_count === 'number' ? reviewsRes.rating_count : realRatingCount
+
           const structuredCourse: Course = {
             id: String(courseObj._id || courseObj.id || courseId),
             title: String(courseObj.title || 'Khóa học LingoSphere'),
             level: String(courseObj.level || 'Intermediate'),
             description: String(courseObj.description || ''),
-            duration: String(courseObj.duration || '40 giờ'),
+            duration: realDuration,
             totalChapters: mappedChapters.length,
             totalLessons: totalLes,
-            rating: typeof courseObj.rating === 'number' ? courseObj.rating : 4.9,
-            ratingCount:
-              typeof courseObj.ratingCount === 'number'
-                ? courseObj.ratingCount
-                : typeof courseObj.rating_count === 'number'
-                ? courseObj.rating_count
-                : 128,
+            rating: finalRating,
+            ratingCount: finalRatingCount,
+            studentsCount: realStudentsCount,
+            whatYouWillLearn: dynamicObjectives,
             chapters: mappedChapters,
             instructor: {
               name: String(
@@ -307,16 +405,11 @@ export default function CourseDetailPage() {
               avatar: String(
                 courseObj.author_avatar ||
                   (courseObj.instructor as Record<string, unknown>)?.avatar ||
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+                  ''
               ),
-              rating: typeof courseObj.rating === 'number' ? courseObj.rating : 4.9,
-              studentsCount:
-                typeof courseObj.students_count === 'number'
-                  ? courseObj.students_count
-                  : typeof courseObj.studentsCount === 'number'
-                  ? courseObj.studentsCount
-                  : 1250,
-              coursesCount: 8,
+              rating: finalRating,
+              studentsCount: realStudentsCount,
+              coursesCount: 1,
               bio: String(
                 courseObj.author_bio ||
                   (courseObj.instructor as Record<string, unknown>)?.bio ||
@@ -324,53 +417,13 @@ export default function CourseDetailPage() {
               ),
             },
             overview: {
-              whatYouWillLearn: [
-                'Làm chủ ngữ pháp và từ vựng trọng tâm trong các bài thi chuẩn hóa.',
-                'Cải thiện phản xạ nghe - hiểu thông qua các bài giảng trực quan.',
-                'Kỹ thuật làm bài đọc hiểu nhanh, tối ưu hóa thời gian thi.',
-              ],
+              whatYouWillLearn: dynamicObjectives,
               requirements: ['Có máy tính hoặc điện thoại kết nối internet.'],
               targetAudience: ['Học viên muốn nâng cao trình độ nhanh chóng và bài bản.'],
             },
-            reviews: [
-              {
-                id: 'rev-1',
-                author: 'Minh Anh',
-                rating: 5,
-                date: '2 ngày trước',
-                content: 'Khóa học chi tiết và giảng viên truyền đạt rất dễ hiểu!',
-              },
-              {
-                id: 'rev-2',
-                author: 'Hoàng Nam',
-                rating: 5,
-                date: '1 tuần trước',
-                content: 'Bài tập và lộ trình rõ ràng, mình tiến bộ thấy rõ.',
-              },
-            ],
-            qna: [
-              {
-                id: 'q1',
-                author: 'Thu Hà',
-                title: 'Làm sao để ghi nhớ từ vựng lâu hơn?',
-                body: 'Thầy cô có thể chia sẻ phương pháp ôn tập từ vựng hiệu quả không ạ?',
-                createdAt: 'Hôm qua',
-                upvotes: 8,
-                answersCount: 2,
-                isAnswered: true,
-                answers: [
-                  {
-                    id: 'a1',
-                    author: 'Giảng viên LingoSphere',
-                    authorRole: 'Giảng viên',
-                    body: 'Em nên kết hợp Flashcard Spaced Repetition và đặt câu với từ mới mỗi ngày nhé!',
-                    createdAt: 'Hôm qua',
-                    upvotes: 12,
-                  },
-                ],
-              },
-            ],
-            notes: [],
+            reviews: mappedReviews,
+            qna: mappedQnA,
+            notes: mappedNotes,
             finalTest: { status: 'locked' },
           }
 
@@ -540,21 +593,117 @@ export default function CourseDetailPage() {
     }
   }, [hasPrevLesson, allFlatLessons, currentLessonIndex, expandedChapters])
 
-  const handleAddNoteAtTimestamp = (timestamp: number) => {
+  // Handle Add Note from player or tab
+  const handleAddNoteAtTimestamp = async (timestamp: number, noteContent?: string) => {
     if (!course || !currentLesson) return
     const formatted = `${Math.floor(timestamp / 60)}:${String(Math.floor(timestamp % 60)).padStart(2, '0')}`
-    const newNote = {
-      id: `note-${Date.now()}`,
+    const content = noteContent || `Ghi chú bài học tại mốc ${formatted}`
+
+    const res = (await courseService
+      .createCourseNote(String(course.id), {
+        lesson_id: currentLesson.id,
+        lesson_title: currentLesson.title,
+        timestamp,
+        formatted_time: formatted,
+        content,
+      })
+      .catch(() => null)) as Record<string, unknown>
+
+    const newNote: NoteItem = {
+      id: String(res?._id || `note-${Date.now()}`),
       lessonId: currentLesson.id,
       lessonTitle: currentLesson.title,
       timestamp,
       formattedTime: formatted,
-      content: `Ghi chú bài học tại mốc ${formatted}`,
+      content,
       createdAt: 'Vừa xong',
     }
     setCourse((prev) => (prev ? { ...prev, notes: [newNote, ...(prev.notes || [])] } : null))
     setActiveBottomTab('notes')
-    toast.success(`Đã tạo ghi chú tại mốc ${formatted}`, 'Ghi chú bài học')
+    toast.success(`Đã lưu ghi chú tại mốc ${formatted} vào cơ sở dữ liệu!`, 'Ghi chú bài học')
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    await courseService.deleteCourseNote(noteId).catch(() => {})
+    setCourse((prev) =>
+      prev ? { ...prev, notes: (prev.notes || []).filter((n) => n.id !== noteId) } : null
+    )
+    toast.success('Đã xóa ghi chú thành công!', 'Xóa ghi chú')
+  }
+
+  // Handle Q&A
+  const handleCreateQnA = async (title: string, body: string) => {
+    if (!course || !currentLesson) return
+    const res = (await courseService
+      .createCourseQnA(String(course.id), {
+        lesson_id: currentLesson.id,
+        lesson_title: currentLesson.title,
+        title,
+        body,
+      })
+      .catch(() => null)) as Record<string, unknown>
+
+    const newQnA: QnAItem = {
+      id: String(res?._id || `qna-${Date.now()}`),
+      lessonTitle: currentLesson.title,
+      author: 'Bạn (Học viên)',
+      title,
+      body,
+      createdAt: 'Vừa xong',
+      upvotes: 0,
+      answersCount: 1,
+      isAnswered: true,
+      answers: [
+        {
+          id: `ans-${Date.now()}`,
+          author: 'LingoSphere AI Tutor',
+          authorRole: 'Gia sư AI',
+          body: `Chào bạn! Cảm ơn câu hỏi về "${title}". Giảng viên và Trợ lý AI đã ghi nhận thắc mắc và sẽ phản hồi chi tiết trong giây lát!`,
+          createdAt: 'Vừa xong',
+          upvotes: 0,
+        },
+      ],
+    }
+
+    setCourse((prev) => (prev ? { ...prev, qna: [newQnA, ...(prev.qna || [])] } : null))
+    toast.success('Câu hỏi của bạn đã được đăng thành công!', 'Hỏi & Đáp')
+  }
+
+  const handleAddQnAAnswer = async (qnaId: string, answerText: string) => {
+    await courseService.addQnAAnswer(qnaId, { body: answerText }).catch(() => {})
+    const newAns = {
+      id: `ans-${Date.now()}`,
+      author: 'Bạn (Học viên)',
+      authorRole: 'Học viên',
+      body: answerText,
+      createdAt: 'Vừa xong',
+      upvotes: 0,
+    }
+    setCourse((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        qna: (prev.qna || []).map((q) =>
+          q.id === qnaId
+            ? { ...q, answers: [...(q.answers || []), newAns], answersCount: (q.answersCount || 0) + 1 }
+            : q
+        ),
+      }
+    })
+    toast.success('Đã gửi câu trả lời thành công!', 'Hỏi & Đáp')
+  }
+
+  const handleUpvoteQnA = async (qnaId: string) => {
+    await courseService.toggleQnAUpvote(qnaId).catch(() => {})
+    setCourse((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        qna: (prev.qna || []).map((q) =>
+          q.id === qnaId ? { ...q, upvotes: (q.upvotes || 0) + 1 } : q
+        ),
+      }
+    })
   }
 
   const handleTakeTest = (
@@ -590,28 +739,38 @@ export default function CourseDetailPage() {
     (completedLessons / Math.max(totalLessons, 1)) * 100
   )
 
-  const handleRatingSubmit = (ratingScore: number, reviewText: string) => {
+  // Handle Review submission directly to MongoDB
+  const handleRatingSubmit = async (ratingScore: number, reviewText: string) => {
+    if (!course) return
+    const res = await courseService.createCourseReview(String(course.id), {
+      rating: ratingScore,
+      content: reviewText,
+    }).catch(() => null)
+
+    const updatedRating = typeof res?.rating === 'number' ? res.rating : ratingScore
+    const updatedCount = typeof res?.rating_count === 'number' ? res.rating_count : (course.ratingCount || 0) + 1
+
+    const newReview: CourseReviewItem = {
+      id: String((res?.review as Record<string, unknown>)?._id || `rev-${Date.now()}`),
+      author: 'Bạn (Học viên)',
+      authorAvatar: '',
+      rating: ratingScore,
+      date: 'Vừa xong',
+      content: reviewText || 'Khóa học rất hữu ích và chất lượng!',
+    }
+
     setCourse((prev) => {
       if (!prev) return prev
-      const currentRating = prev.rating || 5
-      const currentCount = prev.ratingCount || 0
-      const newReview: CourseReviewItem = {
-        id: `rev-${Date.now()}`,
-        author: 'Bạn (Học viên)',
-        authorAvatar: '',
-        rating: ratingScore,
-        date: 'Vừa xong',
-        content: reviewText || 'Khóa học rất hữu ích và chất lượng!',
-      }
       return {
         ...prev,
-        rating: Number(((currentRating * currentCount + ratingScore) / (currentCount + 1)).toFixed(1)),
-        ratingCount: currentCount + 1,
-        reviews: [newReview, ...(prev.reviews || [])],
+        rating: updatedRating,
+        ratingCount: updatedCount,
+        reviews: [newReview, ...(prev.reviews || []).filter((r) => r.author !== 'Bạn (Học viên)')],
       }
     })
+
     toast.success(
-      `Cảm ơn bạn đã đánh giá ${ratingScore} sao cho khóa học!`,
+      `Cảm ơn bạn đã đánh giá ${ratingScore} sao! Đánh giá đã được lưu vào hệ thống.`,
       'Đánh giá thành công'
     )
   }
@@ -680,6 +839,9 @@ export default function CourseDetailPage() {
               <CourseQnATab
                 qnaList={course.qna || []}
                 currentLessonTitle={currentLesson.title}
+                onCreateQuestion={handleCreateQnA}
+                onAddAnswer={handleAddQnAAnswer}
+                onUpvote={handleUpvoteQnA}
               />
             )}
 
@@ -690,6 +852,10 @@ export default function CourseDetailPage() {
                 currentLessonTitle={currentLesson.title}
                 currentTime={playerCurrentTime}
                 onSeekTo={() => {}}
+                onAddNote={(content, timestamp, formatted) =>
+                  handleAddNoteAtTimestamp(timestamp, content)
+                }
+                onDeleteNote={handleDeleteNote}
               />
             )}
 

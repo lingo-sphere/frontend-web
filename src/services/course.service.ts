@@ -96,4 +96,128 @@ export const courseService = {
   }> {
     return api.get(`/progress/courses/${courseId}/detail`)
   },
+
+  // ==================== 1. REVIEWS (ĐÁNH GIÁ) ====================
+  async getCourseReviews(courseId: string): Promise<{
+    reviews: Array<{
+      _id: string
+      course_id: string
+      user_name: string
+      user_avatar?: string
+      rating: number
+      content: string
+      created_at: string
+    }>
+    rating: number
+    rating_count: number
+    distribution: Array<{ stars: number; count: number; percent: number }>
+  }> {
+    return api.get(`/courses/${courseId}/reviews`)
+  },
+
+  async createCourseReview(
+    courseId: string,
+    data: { rating: number; content?: string }
+  ): Promise<{
+    review: Record<string, unknown>
+    rating: number
+    rating_count: number
+  }> {
+    return api.post(`/courses/${courseId}/reviews`, data)
+  },
+
+  // ==================== 2. NOTES (GHI CHÚ) ====================
+  async getCourseNotes(
+    courseId: string,
+    lessonId?: string
+  ): Promise<
+    Array<{
+      _id: string
+      course_id: string
+      lesson_id: string
+      lesson_title: string
+      timestamp: number
+      formatted_time: string
+      content: string
+      created_at: string
+    }>
+  > {
+    const qs = lessonId ? `?lesson_id=${lessonId}` : ''
+    return api.get(`/courses/${courseId}/notes${qs}`)
+  },
+
+  async createCourseNote(
+    courseId: string,
+    data: {
+      lesson_id: string
+      lesson_title?: string
+      timestamp: number
+      formatted_time?: string
+      content: string
+    }
+  ): Promise<Record<string, unknown>> {
+    return api.post(`/courses/${courseId}/notes`, data)
+  },
+
+  async deleteCourseNote(noteId: string): Promise<unknown> {
+    return api.delete(`/courses/notes/${noteId}`)
+  },
+
+  // ==================== 3. Q&A (HỎI & ĐÁP) ====================
+  async getCourseQnA(
+    courseId: string,
+    lessonId?: string
+  ): Promise<
+    Array<{
+      _id: string
+      course_id: string
+      lesson_id?: string
+      lesson_title?: string
+      author_name: string
+      author_avatar?: string
+      title: string
+      body: string
+      upvotes: number
+      upvoted_user_ids?: string[]
+      is_answered: boolean
+      answers: Array<{
+        id: string
+        author: string
+        author_role?: string
+        author_avatar?: string
+        body: string
+        created_at: string
+        upvotes: number
+      }>
+      created_at: string
+    }>
+  > {
+    const qs = lessonId ? `?lesson_id=${lessonId}` : ''
+    return api.get(`/courses/${courseId}/qna${qs}`)
+  },
+
+  async createCourseQnA(
+    courseId: string,
+    data: {
+      lesson_id?: string
+      lesson_title?: string
+      title: string
+      body?: string
+    }
+  ): Promise<Record<string, unknown>> {
+    return api.post(`/courses/${courseId}/qna`, data)
+  },
+
+  async addQnAAnswer(
+    qnaId: string,
+    data: {
+      body: string
+    }
+  ): Promise<Record<string, unknown>> {
+    return api.post(`/courses/qna/${qnaId}/answers`, data)
+  },
+
+  async toggleQnAUpvote(qnaId: string): Promise<Record<string, unknown>> {
+    return api.post(`/courses/qna/${qnaId}/upvote`)
+  },
 }
