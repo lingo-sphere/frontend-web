@@ -5,6 +5,7 @@
 
 import { create } from 'zustand'
 import { authService } from '@/services/auth.service'
+import { userService } from '@/services/user.service'
 import { API_CONFIG } from '@/config/api.config'
 import type { User, LoginPayload, RegisterPayload, SocialLoginPayload } from '@/types/api.types'
 
@@ -32,7 +33,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
   error: null,
 
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setUser: (user) => {
+    if (typeof window !== 'undefined' && user) {
+      localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(user))
+    }
+    set({ user, isAuthenticated: !!user })
+  },
 
   clearError: () => set({ error: null }),
 
@@ -40,8 +46,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await authService.login(payload)
+      let isPremium = Boolean(res.user?.is_premium)
+      try {
+        const profileRes: any = await userService.getProfile()
+        if (profileRes?.is_premium || profileRes?.profile?.is_premium) {
+          isPremium = true
+        }
+      } catch {}
+      const finalUser = { ...res.user, is_premium: isPremium }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
+      }
       set({
-        user: res.user,
+        user: finalUser,
         isAuthenticated: true,
         isLoading: false,
       })
@@ -56,8 +73,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await authService.socialLogin(payload)
+      let isPremium = Boolean(res.user?.is_premium)
+      try {
+        const profileRes: any = await userService.getProfile()
+        if (profileRes?.is_premium || profileRes?.profile?.is_premium) {
+          isPremium = true
+        }
+      } catch {}
+      const finalUser = { ...res.user, is_premium: isPremium }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
+      }
       set({
-        user: res.user,
+        user: finalUser,
         isAuthenticated: true,
         isLoading: false,
       })
@@ -149,7 +177,18 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       const user = await authService.getCurrentUser()
-      set({ user, isAuthenticated: true })
+      let isPremium = Boolean(user?.is_premium)
+      try {
+        const profileRes: any = await userService.getProfile()
+        if (profileRes?.is_premium || profileRes?.profile?.is_premium) {
+          isPremium = true
+        }
+      } catch {}
+      const finalUser = { ...user, is_premium: isPremium }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
+      }
+      set({ user: finalUser, isAuthenticated: true })
     } catch {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
