@@ -81,7 +81,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
       fetchCart()
       fetchWishlist()
     }
-  }, [isAuthenticated, fetchCart, fetchWishlist])
+  }, [isAuthenticated])
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 

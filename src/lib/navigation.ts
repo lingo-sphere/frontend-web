@@ -5,6 +5,7 @@
  * @description Mã nguồn thành phần navigation.ts
  */
 
+import { useCallback } from 'react'
 import {
   useRouter as useNextRouter,
   useParams as useNextParams,
@@ -14,18 +15,21 @@ import {
 
 export function useNavigate() {
   const router = useNextRouter()
-  return (to: string | number, options?: { replace?: boolean }) => {
-    if (typeof to === 'number') {
-      if (to === -1) window.history.back()
-      else if (to === 1) window.history.forward()
-      return
-    }
-    if (options?.replace) {
-      router.replace(to)
-    } else {
-      router.push(to)
-    }
-  }
+  return useCallback(
+    (to: string | number, options?: { replace?: boolean }) => {
+      if (typeof to === 'number') {
+        if (to === -1) window.history.back()
+        else if (to === 1) window.history.forward()
+        return
+      }
+      if (options?.replace) {
+        router.replace(to)
+      } else {
+        router.push(to)
+      }
+    },
+    [router]
+  )
 }
 
 export function useParams<

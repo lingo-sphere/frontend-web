@@ -35,7 +35,7 @@ export default function CartPage() {
       return
     }
     fetchCart()
-  }, [isAuthenticated, fetchCart, navigate])
+  }, [isAuthenticated])
 
   const items = cart?.items || []
 
