@@ -12,8 +12,6 @@ import { CourseNotesTab } from '@/components/course/CourseNotesTab'
 import { CourseQnATab } from '@/components/course/CourseQnATab'
 import { CourseReviewsTab } from '@/components/course/CourseReviewsTab'
 import { CourseOverviewTab } from '@/components/course/CourseOverviewTab'
-import { CourseAnnouncementsTab } from '@/components/course/CourseAnnouncementsTab'
-import { CourseToolsTab } from '@/components/course/CourseToolsTab'
 import { CourseWorkspaceHeader } from '@/components/course/CourseWorkspaceHeader'
 import { CourseSidebarContent } from '@/components/course/CourseSidebarContent'
 import { CourseSidebarAiChat } from '@/components/course/CourseSidebarAiChat'
@@ -24,7 +22,7 @@ import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { courseService } from '@/services/course.service'
 import type { Chapter, Course, Lesson } from '@/types/course'
 
-type BottomTab = 'overview' | 'qna' | 'notes' | 'announcements' | 'reviews' | 'tools'
+type BottomTab = 'overview' | 'qna' | 'notes' | 'reviews'
 type SidebarTab = 'content' | 'ai'
 
 export default function CourseDetailPage() {
@@ -450,9 +448,7 @@ export default function CourseDetailPage() {
                     course.notes?.length ? `(${course.notes.length})` : ''
                   }`,
                 },
-                { id: 'announcements', label: 'Thông báo' },
                 { id: 'reviews', label: 'Đánh giá (Reviews)' },
-                { id: 'tools', label: 'Công cụ học tập' },
               ].map((tab) => {
                 const isActive = activeBottomTab === tab.id
                 return (
@@ -497,12 +493,6 @@ export default function CourseDetailPage() {
                 ratingCount={course.ratingCount}
               />
             )}
-
-            {activeBottomTab === 'announcements' && (
-              <CourseAnnouncementsTab announcements={course.announcements} />
-            )}
-
-            {activeBottomTab === 'tools' && <CourseToolsTab />}
           </div>
         </div>
 
