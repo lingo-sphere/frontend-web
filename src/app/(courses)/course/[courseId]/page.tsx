@@ -26,6 +26,22 @@ import type { Chapter, Course, Lesson, CourseReviewItem, NoteItem, QnAItem } fro
 type BottomTab = 'overview' | 'qna' | 'notes' | 'reviews'
 type SidebarTab = 'content' | 'ai'
 
+function formatExactDuration(totalSeconds: number): string {
+  const sec = Math.max(0, Math.floor(Number(totalSeconds) || 0))
+  if (sec === 0) return '0 giây'
+
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  const s = sec % 60
+
+  const parts: string[] = []
+  if (h > 0) parts.push(`${h} giờ`)
+  if (m > 0) parts.push(`${m} phút`)
+  if (s > 0 || parts.length === 0) parts.push(`${s} giây`)
+
+  return parts.join(' ')
+}
+
 export default function CourseDetailPage() {
   const params = useParams<{ courseId: string }>()
   const courseId = params?.courseId || 'toeic-foundation'
@@ -277,19 +293,14 @@ export default function CourseDetailPage() {
             0
           )
 
-          // Calculate real total duration from all lessons in chapters
+          // Calculate real total duration accurately in hours, minutes, seconds
           const totalDurationSec = mappedChapters.reduce(
             (acc, ch) =>
               acc +
               ch.lessons.reduce((lAcc, l) => lAcc + (Number(l.duration) || 0), 0),
             0
           )
-          const realDuration =
-            totalDurationSec >= 3600
-              ? `${(totalDurationSec / 3600).toFixed(1)} giờ`
-              : totalDurationSec > 0
-              ? `${Math.round(totalDurationSec / 60)} phút`
-              : String(courseObj.duration || '30 phút')
+          const realDuration = formatExactDuration(totalDurationSec)
 
           const realRating =
             typeof courseObj.rating === 'number'
@@ -593,6 +604,40 @@ export default function CourseDetailPage() {
     }
   }, [hasPrevLesson, allFlatLessons, currentLessonIndex, expandedChapters])
 
+  // Dynamically update lesson duration & total course duration in exact hours/minutes/seconds
+  const handleLessonDurationChange = useCallback((lessonId: string, durationSec: number) => {
+    if (durationSec <= 0) return
+    setCourse((prev) => {
+      if (!prev) return prev
+      let changed = false
+      const updatedChapters = prev.chapters.map((ch) => {
+        const updatedLessons = ch.lessons.map((les) => {
+          if (les.id === lessonId && les.duration !== durationSec) {
+            changed = true
+            return { ...les, duration: durationSec }
+          }
+          return les
+        })
+        return { ...ch, lessons: updatedLessons }
+      })
+
+      if (!changed) return prev
+
+      const newTotalSec = updatedChapters.reduce(
+        (acc, ch) =>
+          acc +
+          ch.lessons.reduce((lAcc, l) => lAcc + (Number(l.duration) || 0), 0),
+        0
+      )
+
+      return {
+        ...prev,
+        chapters: updatedChapters,
+        duration: formatExactDuration(newTotalSec),
+      }
+    })
+  }, [])
+
   // Handle Add Note from player or tab
   const handleAddNoteAtTimestamp = async (timestamp: number, noteContent?: string) => {
     if (!course || !currentLesson) return
@@ -796,6 +841,7 @@ export default function CourseDetailPage() {
             hasNextLesson={hasNextLesson}
             hasPrevLesson={hasPrevLesson}
             onAddNoteAtTimestamp={handleAddNoteAtTimestamp}
+            onDurationChange={handleLessonDurationChange}
           />
 
           <div className="p-4 sm:p-8 space-y-6 max-w-5xl">

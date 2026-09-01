@@ -42,6 +42,7 @@ interface LessonPlayerProps {
   hasNextLesson?: boolean
   hasPrevLesson?: boolean
   onAddNoteAtTimestamp?: (seconds: number) => void
+  onDurationChange?: (lessonId: string, durationSec: number) => void
 }
 
 const PLAYBACK_SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
@@ -113,6 +114,7 @@ export function LessonPlayer({
   hasNextLesson = false,
   hasPrevLesson = false,
   onAddNoteAtTimestamp,
+  onDurationChange,
 }: LessonPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -563,7 +565,11 @@ export function LessonPlayer({
             }
           }}
           onLoadedMetadata={(e) => {
-            setDuration(e.currentTarget.duration || 0)
+            const dur = e.currentTarget.duration || 0
+            setDuration(dur)
+            if (dur > 0 && onDurationChange) {
+              onDurationChange(lesson.id, Math.round(dur))
+            }
             if (lastTimeBeforeSwitchRef.current > 0) {
               e.currentTarget.currentTime = lastTimeBeforeSwitchRef.current
               lastTimeBeforeSwitchRef.current = 0

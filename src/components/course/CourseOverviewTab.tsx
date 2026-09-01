@@ -16,7 +16,7 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
   const ratingValue = Number(course.rating || 5).toFixed(1)
   const ratingCount = course.ratingCount || 0
   const studentsCount = course.studentsCount || 0
-  const duration = course.duration || '30 phút'
+  const duration = course.duration || '0 giây'
 
   const objectives =
     course.whatYouWillLearn ||
