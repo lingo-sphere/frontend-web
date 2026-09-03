@@ -277,7 +277,7 @@ export function CourseSidebarContent({
                             >
                               {lesson.title}
                             </div>
-                            {Boolean(lesson.is_free_preview || lesson.is_preview) && (
+                            {!isEnrolled && Boolean(lesson.is_free_preview || lesson.is_preview) && (
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold shrink-0 shadow-xs">
                                 <Sparkles size={9} className="text-emerald-600 dark:text-emerald-400" />
                                 <span>Học thử</span>

@@ -637,10 +637,17 @@ export default function CourseDetailPage() {
     } catch {}
   }
 
-  // Student manual click on checkbox to toggle lesson completion
   const handleToggleLessonComplete = (lessonId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     if (!course) return
+
+    if (!isEnrolled) {
+      toast.warning(
+        'Bạn đang trong chế độ học thử. Hãy đăng ký khóa học để lưu tiến độ hoàn thành bài học nhé!',
+        'Chế độ học thử'
+      )
+      return
+    }
 
     let targetStatus: Lesson['status'] = 'completed'
     let chapterId = currentChapter?.id || ''
@@ -686,9 +693,8 @@ export default function CourseDetailPage() {
     }
   }
 
-  // Auto-complete lesson when watched > 80% video duration
   const handleLessonProgress = (lessonId: string, progress: number) => {
-    if (!course) return
+    if (!course || !isEnrolled) return
     let justCompleted = false
     let chapterId = currentChapter?.id || ''
     const isNowCompleted = progress >= 80 || progress >= 100
@@ -1183,6 +1189,8 @@ export default function CourseDetailPage() {
               )}
               <LessonPlayer
                 lesson={currentLesson}
+                isTrial={!isEnrolled}
+                onOpenCheckout={() => setShowCourseCheckoutModal(true)}
                 onProgress={handleLessonProgress}
                 onTimeUpdate={(t) => setPlayerCurrentTime(t)}
                 onNextLesson={handleNextLesson}
