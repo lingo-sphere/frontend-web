@@ -71,6 +71,10 @@ export const authService = {
     return api.post<{ message: string }>(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD, payload)
   },
 
+  async changePassword(userId: string, payload: { old_password: string; new_password: string }): Promise<{ message: string }> {
+    return api.post<{ message: string }>(`/auth/change-password/${userId}`, payload)
+  },
+
   async getCurrentUser(): Promise<User> {
     return api.get<User>(API_CONFIG.ENDPOINTS.AUTH.ME)
   },

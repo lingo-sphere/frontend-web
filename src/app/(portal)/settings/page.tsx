@@ -2,18 +2,32 @@
 
 /**
  * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/settings
+ * @description Trang cài đặt hệ thống chính điều phối các tab chức năng độc lập
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { User, Layers, ExternalLink } from 'lucide-react'
+
 import { Layout } from '@/components/layout/Layout'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
-import { Icon } from '@/components/icons/icon-map'
+import { useAuthStore } from '@/store/auth-store'
+import { dashboardStore } from '@/store/dashboard-store'
+import { userService } from '@/services/user.service'
+import { toast } from '@/store/toast-store'
+import { UpgradeModal } from '@/components/layout/UpgradeModal'
+import { useNavigate } from '@/lib/navigation'
+import { getRemainingSubscriptionText } from '@/components/layout/header-utils'
 import type { UserPreferences } from '@/types/user'
+
+import { SettingsSidebar, type SettingsTab } from '@/components/settings/SettingsSidebar'
+import { SettingsAccountTab } from '@/components/settings/SettingsAccountTab'
+import { SettingsLearningTab } from '@/components/settings/SettingsLearningTab'
+import { SettingsNotificationsTab } from '@/components/settings/SettingsNotificationsTab'
+import { SettingsAppearanceTab } from '@/components/settings/SettingsAppearanceTab'
+import { SettingsPrivacyTab } from '@/components/settings/SettingsPrivacyTab'
+import { SettingsVipTab } from '@/components/settings/SettingsVipTab'
+import { SettingsActionBar } from '@/components/settings/SettingsActionBar'
 
 const defaultPreferences: UserPreferences = {
   language: 'vi',
@@ -25,27 +39,21 @@ const defaultPreferences: UserPreferences = {
     push: true,
     sound: true,
     sms: false,
-    quietHoursEnabled: false,
+    quietHoursEnabled: true,
     quietHoursStart: '22:00',
     quietHoursEnd: '08:00',
     categories: {
-      auth: { push: true, email: true, inApp: true },
-      subscription: { push: true, email: true, inApp: true },
-      user: { push: true, email: false, inApp: true },
-      vocabulary: { push: true, email: false, inApp: true },
-      practice: { push: true, email: false, inApp: true },
-      exam: { push: true, email: true, inApp: true },
-      course: { push: false, email: false, inApp: true },
-      ai: { push: false, email: false, inApp: true },
-      gamification: { push: true, email: false, inApp: true },
-      marketing: { push: false, email: false, inApp: false },
+      streak: { push: true, email: true, inApp: true },
+      courses: { push: true, email: false, inApp: true },
+      exams: { push: true, email: true, inApp: true },
+      vip: { push: true, email: true, inApp: true },
     },
   },
   learning: {
     autoPlayAudio: true,
     showPhonetic: true,
     defaultExerciseDifficulty: 'medium',
-    dailyGoal: 20,
+    dailyGoal: 30,
   },
   privacy: {
     showProfile: true,
@@ -54,420 +62,265 @@ const defaultPreferences: UserPreferences = {
   },
 }
 
-const categoryConfig: Record<
-  string,
-  { label: { vi: string; en: string }; description: { vi: string; en: string }; icon: string }
-> = {
-  auth: {
-    label: { vi: 'Bảo mật', en: 'Auth & Security' },
-    description: { vi: 'Đăng nhập, mật khẩu, 2FA', en: 'Login, password, 2FA, account' },
-    icon: 'shield',
-  },
-  subscription: {
-    label: { vi: 'Đăng ký', en: 'Subscription' },
-    description: { vi: 'Gói, thanh toán', en: 'Plans, billing, payments' },
-    icon: 'credit-card',
-  },
-  user: {
-    label: { vi: 'Người dùng', en: 'User' },
-    description: { vi: 'Hồ sơ, cài đặt', en: 'Profile, settings, activity' },
-    icon: 'user',
-  },
-  vocabulary: {
-    label: { vi: 'Từ vựng', en: 'Vocabulary' },
-    description: { vi: 'Từ, SRS, flashcards', en: 'Words, SRS, flashcards, decks' },
-    icon: 'book',
-  },
-  practice: {
-    label: { vi: 'Luyện tập', en: 'Practice' },
-    description: { vi: 'Nói, viết, nghe', en: 'Speaking, writing, listening' },
-    icon: 'activity',
-  },
-  exam: {
-    label: { vi: 'Bài thi', en: 'Exam' },
-    description: { vi: 'TOEIC, bài kiểm tra', en: 'TOEIC, tests, results' },
-    icon: 'file-text',
-  },
-  course: {
-    label: { vi: 'Khóa học', en: 'Course' },
-    description: { vi: 'Khóa, bài học', en: 'Courses, lessons, progress' },
-    icon: 'library',
-  },
-  ai: {
-    label: { vi: 'AI', en: 'AI' },
-    description: { vi: 'Tính năng AI', en: 'AI features, quotas' },
-    icon: 'sparkles',
-  },
-  gamification: {
-    label: { vi: 'Gamification', en: 'Gamification' },
-    description: { vi: 'Streak, XP, thành tựu', en: 'Streak, XP, achievements' },
-    icon: 'trophy',
-  },
-  marketing: {
-    label: { vi: 'Marketing', en: 'Marketing' },
-    description: { vi: 'Khuyến mãi', en: 'Promotions, campaigns' },
-    icon: 'megaphone',
-  },
-}
-
-const channels = [
-  { key: 'push', label: { vi: 'Push', en: 'Push' } },
-  { key: 'email', label: { vi: 'Email', en: 'Email' } },
-  { key: 'inApp', label: { vi: 'App', en: 'In-App' } },
-]
-
 export default function SettingsAppPage() {
-  const { t, i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
-  const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const { i18n } = useTranslation()
+  const isVi = i18n.language === 'vi'
+  const navigate = useNavigate()
+  const { user: authUser, setUser: setAuthUser } = useAuthStore()
 
-  const toggleMasterNotification = () => {
-    setPreferences({
-      ...preferences,
-      notifications: {
-        ...preferences.notifications,
-        allEnabled: !preferences.notifications.allEnabled,
-      },
-    })
-  }
+  const [activeTab, setActiveTab] = useState<SettingsTab>('account')
+  const [preferences, setPreferences] = useState<UserPreferences>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('lingosphere_user_preferences')
+        if (saved) return JSON.parse(saved)
+      } catch {}
+    }
+    return defaultPreferences
+  })
 
-  const toggleChannel = (key: keyof typeof preferences.notifications) => {
-    if (typeof preferences.notifications[key] === 'boolean') {
-      setPreferences({
-        ...preferences,
-        notifications: {
-          ...preferences.notifications,
-          [key]: !preferences.notifications[key],
-        },
+  const [isSaving, setIsSaving] = useState(false)
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
+
+  const [fullName, setFullName] = useState(authUser?.full_name || '')
+  const [phoneNumber, setPhoneNumber] = useState((authUser as any)?.phone_number || '')
+
+  useEffect(() => {
+    if (authUser) {
+      setFullName(authUser.full_name || '')
+      setPhoneNumber((authUser as any)?.phone_number || '')
+    }
+  }, [authUser])
+
+  useEffect(() => {
+    let isMounted = true
+    const loadSettingsFromBackend = async () => {
+      try {
+        const res: any = await userService.getMySettings()
+        const backendSettings = res?.data || res
+        if (isMounted && backendSettings) {
+          setPreferences((prev) => ({
+            ...prev,
+            theme: backendSettings.dark_mode_enabled ? 'dark' : prev.theme,
+            learning: {
+              ...prev.learning,
+              dailyGoal: backendSettings.study_duration_minutes || prev.learning.dailyGoal,
+            },
+            notifications: {
+              ...prev.notifications,
+              allEnabled: backendSettings.is_reminder_enabled !== undefined ? backendSettings.is_reminder_enabled : prev.notifications.allEnabled,
+              email: backendSettings.is_email_notification_enabled !== undefined ? backendSettings.is_email_notification_enabled : prev.notifications.email,
+              push: backendSettings.is_push_notification_enabled !== undefined ? backendSettings.is_push_notification_enabled : prev.notifications.push,
+              sound: backendSettings.sound_effects_enabled !== undefined ? backendSettings.sound_effects_enabled : prev.notifications.sound,
+              quietHoursStart: backendSettings.reminder_time || prev.notifications.quietHoursStart,
+            },
+          }))
+        }
+      } catch (err) {
+      }
+    }
+    loadSettingsFromBackend()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const handleSavePreferences = async () => {
+    setIsSaving(true)
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lingosphere_user_preferences', JSON.stringify(preferences))
+      }
+
+      await userService.updateMySettings({
+        is_reminder_enabled: preferences.notifications.allEnabled,
+        is_push_notification_enabled: preferences.notifications.push,
+        is_email_notification_enabled: preferences.notifications.email,
+        sound_effects_enabled: preferences.notifications.sound,
+        dark_mode_enabled: preferences.theme === 'dark',
+        study_duration_minutes: preferences.learning.dailyGoal,
+        reminder_time: preferences.notifications.quietHoursStart || '22:00',
       })
+
+      if (authUser?.id) {
+        await userService.updateProfile({
+          full_name: fullName,
+          phone_number: phoneNumber,
+          learning_goal_minutes_per_day: preferences.learning.dailyGoal,
+        } as any)
+        if (authUser) {
+          setAuthUser({
+            ...authUser,
+            full_name: fullName,
+          })
+        }
+      }
+
+      toast.success(
+        isVi ? 'Đã lưu mọi thay đổi cài đặt lên máy chủ thành công!' : 'Settings updated on server successfully!',
+        isVi ? 'Cài đặt hệ thống' : 'System Settings'
+      )
+    } catch (error) {
+      toast.error(
+        isVi ? 'Không thể lưu cài đặt. Vui lòng thử lại!' : 'Failed to save settings. Please try again!',
+        isVi ? 'Lỗi' : 'Error'
+      )
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  const toggleCategoryChannel = (category: string, channel: string) => {
-    if (!preferences.notifications.categories) return
-    const prevCat = preferences.notifications.categories[category] || {
-      push: true,
-      email: true,
-      inApp: true,
+  const handleResetDefaults = () => {
+    setPreferences(defaultPreferences)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lingosphere_user_preferences', JSON.stringify(defaultPreferences))
     }
-    const channelKey = channel as keyof { push: boolean; email: boolean; inApp: boolean }
-    setPreferences({
-      ...preferences,
-      notifications: {
-        ...preferences.notifications,
-        categories: {
-          ...preferences.notifications.categories,
-          [category]: {
-            ...prevCat,
-            [channelKey]: !prevCat[channelKey],
-          },
-        },
-      },
-    })
+    toast.info(
+      isVi ? 'Đã khôi phục cài đặt về mặc định của hệ thống.' : 'Restored system default settings.',
+      isVi ? 'Khôi phục' : 'Reset'
+    )
   }
 
-  const toggleCategoryAll = (category: string) => {
-    if (!preferences.notifications.categories) return
-    const cat = preferences.notifications.categories[category]
-    if (!cat) return
-    const allEnabled = cat.push && cat.email && cat.inApp
-    setPreferences({
-      ...preferences,
-      notifications: {
-        ...preferences.notifications,
-        categories: {
-          ...preferences.notifications.categories,
-          [category]: { push: !allEnabled, email: !allEnabled, inApp: !allEnabled },
-        },
-      },
-    })
-  }
-
-  const toggleQuietHours = () => {
-    setPreferences({
-      ...preferences,
-      notifications: {
-        ...preferences.notifications,
-        quietHoursEnabled: !preferences.notifications.quietHoursEnabled,
-      },
-    })
-  }
-
-  const toggleLearning = (key: keyof typeof preferences.learning) => {
-    if (typeof preferences.learning[key] === 'boolean') {
-      setPreferences({
-        ...preferences,
-        learning: { ...preferences.learning, [key]: !preferences.learning[key] },
-      })
+  const handleSelectTheme = (newTheme: 'light' | 'dark' | 'system') => {
+    setPreferences((prev) => ({ ...prev, theme: newTheme }))
+    if (newTheme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      dashboardStore.getState().setTheme(prefersDark ? 'dark' : 'light')
+    } else {
+      dashboardStore.getState().setTheme(newTheme)
     }
   }
 
-  const learningLabels: Record<string, { vi: string; en: string }> = {
-    autoPlayAudio: { vi: 'Tự động phát âm', en: 'Auto-play audio' },
-    showPhonetic: { vi: 'Hiển thị IPA', en: 'Show IPA phonetic' },
+  const handleSelectLanguage = (lang: 'vi' | 'en') => {
+    setPreferences((prev) => ({ ...prev, language: lang }))
+    i18n.changeLanguage(lang)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('i18nextLng', lang)
+    }
   }
+
+  const isPremium = Boolean(authUser?.is_premium || authUser?.subscription_expires_at)
+  const remainingSubText = isPremium
+    ? getRemainingSubscriptionText(authUser?.subscription_expires_at, authUser?.subscription_plan, isVi)
+    : ''
+
+  const initials = (authUser?.full_name || 'U')
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
 
   return (
     <Layout>
-      <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-        <SectionHeading
-          eyebrow={t('settings.title') || 'Cài đặt'}
-          title={isVietnamese ? 'Cài đặt tài khoản' : 'Account Settings'}
-          description={
-            isVietnamese
-              ? 'Quản lý thông báo và cài đặt học tập'
-              : 'Manage notifications and learning preferences'
-          }
-        />
-
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <h3 className="mb-4 flex items-center gap-2 font-semibold text-text-primary">
-              <Icon name="user" size={18} />
-              {t('settings.account') || 'Tài khoản'}
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-text-primary">user@lingosphere.edu.vn</div>
-                  <div className="text-sm text-text-tertiary">
-                    {isVietnamese ? 'Email đăng nhập' : 'Login email'}
-                  </div>
-                </div>
-              </div>
-              <div className="border-t border-surface-subtle pt-2">
-                <Button variant="outline" onClick={() => setShowPasswordModal(true)}>
-                  <Icon name="lock" size={16} />
-                  <span className="ml-2">{t('settings.changePassword') || 'Đổi mật khẩu'}</span>
-                </Button>
-              </div>
+      <main className="w-full min-h-screen bg-background text-text-primary px-4 py-6 sm:px-6 sm:py-8 lg:px-10 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold text-primary mb-1 uppercase tracking-wider">
+              <Layers size={14} />
+              <span>{isVi ? 'Trung tâm cài đặt' : 'Control Center'}</span>
             </div>
-          </CardContent>
-        </Card>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary">
+              {isVi ? 'Cài đặt hệ thống' : 'Account & App Settings'}
+            </h1>
+            <p className="text-xs sm:text-sm text-text-secondary mt-1">
+              {isVi
+                ? 'Tùy chỉnh thông tin tài khoản, bảo mật, thông báo và trải nghiệm học tập của bạn.'
+                : 'Personalize your account credentials, security, notifications, and study experience.'}
+            </p>
+          </div>
 
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  <Icon name="bell" size={20} className="text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-text-primary">
-                    {t('settings.notifications') || 'Thông báo'}
-                  </h3>
-                  <p className="text-xs text-text-tertiary">
-                    {isVietnamese
-                      ? 'Bật/tắt tất cả thông báo từ hệ thống'
-                      : 'Toggle all system notifications'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={toggleMasterNotification}
-                className={`relative h-6 w-11 rounded-full transition-colors ${
-                  preferences.notifications.allEnabled ? 'bg-primary' : 'bg-surface-subtle'
-                }`}
-              >
-                <div
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                    preferences.notifications.allEnabled ? 'translate-x-5' : 'translate-x-0.5'
-                  }`}
-                />
-              </button>
-            </div>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/profile')}
+              className="rounded-xl border-border hover:bg-surface-subtle text-xs font-semibold gap-1.5 h-10 px-3.5 cursor-pointer shadow-xs"
+            >
+              <User size={15} />
+              <span>{isVi ? 'Xem trang hồ sơ' : 'View Profile'}</span>
+              <ExternalLink size={13} className="text-text-tertiary" />
+            </Button>
+          </div>
+        </div>
 
-            <div className="mb-6 grid grid-cols-3 gap-3">
-              {channels.map((ch) => {
-                const isEnabled =
-                  preferences.notifications[ch.key as keyof typeof preferences.notifications]
-                return (
-                  <button
-                    key={ch.key}
-                    onClick={() =>
-                      toggleChannel(ch.key as keyof typeof preferences.notifications)
-                    }
-                    className={`flex flex-col items-center justify-center rounded-xl border p-3 transition-colors ${
-                      isEnabled ? 'border-primary bg-primary/5' : 'border-surface-subtle'
-                    }`}
-                  >
-                    <span className="text-xs font-medium text-text-primary">
-                      {ch.label[isVietnamese ? 'vi' : 'en']}
-                    </span>
-                    <span className="mt-1 text-[11px] text-text-tertiary">
-                      {isEnabled
-                        ? isVietnamese
-                          ? 'Đang bật'
-                          : 'Enabled'
-                        : isVietnamese
-                        ? 'Đang tắt'
-                        : 'Disabled'}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 pt-6 sm:pt-8 items-start">
+          <SettingsSidebar
+            activeTab={activeTab}
+            onSelectTab={setActiveTab}
+            isVi={isVi}
+            isPremium={isPremium}
+          />
 
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-text-secondary">
-                {isVietnamese ? 'Danh mục thông báo' : 'Notification Categories'}
-              </h4>
-              {Object.entries(categoryConfig).map(([key, config]) => {
-                const cat = (preferences.notifications.categories as Record<string, any>)?.[key]
-                if (!cat) return null
-                const hasAnyEnabled = cat.push || cat.email || cat.inApp
+          <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+            {activeTab === 'account' && (
+              <SettingsAccountTab
+                fullName={fullName}
+                setFullName={setFullName}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={setPhoneNumber}
+                authUser={authUser}
+                isVi={isVi}
+                initials={initials}
+              />
+            )}
 
-                return (
-                  <div
-                    key={key}
-                    className={`rounded-xl border p-4 transition-colors ${
-                      hasAnyEnabled ? 'border-primary/30 bg-primary/5' : 'border-surface-subtle'
-                    }`}
-                  >
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Icon name={config.icon} size={16} className="text-text-tertiary" />
-                        <div>
-                          <div className="font-medium text-text-primary">
-                            {config.label[isVietnamese ? 'vi' : 'en']}
-                          </div>
-                          <div className="text-xs text-text-tertiary">
-                            {config.description[isVietnamese ? 'vi' : 'en']}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => toggleCategoryAll(key)}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        {hasAnyEnabled
-                          ? isVietnamese
-                            ? 'Tắt hết'
-                            : 'Disable all'
-                          : isVietnamese
-                          ? 'Bật hết'
-                          : 'Enable all'}
-                      </button>
-                    </div>
+            {activeTab === 'learning' && (
+              <SettingsLearningTab
+                preferences={preferences}
+                setPreferences={setPreferences}
+                isVi={isVi}
+              />
+            )}
 
-                    <div className="flex gap-4">
-                      {channels.map((ch) => (
-                        <label
-                          key={ch.key}
-                          className="flex cursor-pointer items-center gap-1.5 text-xs text-text-secondary"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={cat[ch.key]}
-                            onChange={() => toggleCategoryChannel(key, ch.key)}
-                            className="rounded border-surface-subtle text-primary focus:ring-primary"
-                          />
-                          {ch.label[isVietnamese ? 'vi' : 'en']}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
+            {activeTab === 'notifications' && (
+              <SettingsNotificationsTab
+                preferences={preferences}
+                setPreferences={setPreferences}
+                isVi={isVi}
+              />
+            )}
 
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <h3 className="mb-4 flex items-center gap-2 font-semibold text-text-primary">
-              <Icon name="book" size={18} />
-              {t('settings.learning') || 'Học tập'}
-            </h3>
-            <div className="space-y-4">
-              {Object.entries(preferences.learning)
-                .filter(
-                  ([key]) =>
-                    typeof preferences.learning[key as keyof typeof preferences.learning] ===
-                    'boolean'
-                )
-                .map(([key, value]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <span className="text-sm text-text-secondary">
-                      {learningLabels[key]?.[isVietnamese ? 'vi' : 'en'] || key}
-                    </span>
-                    <button
-                      onClick={() => toggleLearning(key as keyof typeof preferences.learning)}
-                      className={`relative h-6 w-11 rounded-full transition-colors ${
-                        value ? 'bg-primary' : 'bg-surface-subtle'
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                          value ? 'translate-x-5' : 'translate-x-0.5'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                ))}
+            {activeTab === 'appearance' && (
+              <SettingsAppearanceTab
+                preferences={preferences}
+                onSelectTheme={handleSelectTheme}
+                onSelectLanguage={handleSelectLanguage}
+                currentLanguage={i18n.language}
+                isVi={isVi}
+              />
+            )}
 
-              <div className="flex items-center justify-between border-t border-surface-subtle pt-4">
-                <div>
-                  <div className="text-sm text-text-secondary">
-                    {t('settings.dailyGoal') || 'Mục tiêu học'}
-                  </div>
-                  <div className="text-xs text-text-tertiary">
-                    {isVietnamese ? 'Số phút học mỗi ngày' : 'Minutes to study each day'}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min={5}
-                    max={180}
-                    value={preferences.learning.dailyGoal}
-                    onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        learning: {
-                          ...preferences.learning,
-                          dailyGoal: parseInt(e.target.value) || 30,
-                        },
-                      })
-                    }
-                    className="w-20 text-center"
-                  />
-                  <span className="text-sm text-text-tertiary">min</span>
-                </div>
-              </div>
+            {activeTab === 'privacy' && (
+              <SettingsPrivacyTab
+                preferences={preferences}
+                setPreferences={setPreferences}
+                isVi={isVi}
+              />
+            )}
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-text-secondary">
-                    {t('settings.defaultDifficulty') || 'Độ khó mặc định'}
-                  </div>
-                  <div className="text-xs text-text-tertiary">
-                    {isVietnamese ? 'Cấp độ khi bắt đầu' : 'Exercise level when starting'}
-                  </div>
-                </div>
-                <select
-                  value={preferences.learning.defaultExerciseDifficulty}
-                  onChange={(e) =>
-                    setPreferences({
-                      ...preferences,
-                      learning: {
-                        ...preferences.learning,
-                        defaultExerciseDifficulty: e.target.value as 'easy' | 'medium' | 'hard',
-                      },
-                    })
-                  }
-                  className="rounded-lg border border-surface-subtle bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="easy">{t('settings.easy') || 'Dễ'}</option>
-                  <option value="medium">{t('settings.medium') || 'Trung bình'}</option>
-                  <option value="hard">{t('settings.hard') || 'Khó'}</option>
-                </select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            {activeTab === 'vip' && (
+              <SettingsVipTab
+                isPremium={isPremium}
+                remainingSubText={remainingSubText}
+                onOpenUpgrade={() => setUpgradeModalOpen(true)}
+                isVi={isVi}
+              />
+            )}
+
+            <SettingsActionBar
+              onReset={handleResetDefaults}
+              onSave={handleSavePreferences}
+              isSaving={isSaving}
+              isVi={isVi}
+            />
+          </div>
+        </div>
       </main>
+
+      <UpgradeModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+      />
     </Layout>
   )
 }
