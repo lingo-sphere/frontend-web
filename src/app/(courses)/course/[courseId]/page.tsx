@@ -206,8 +206,8 @@ export default function CourseDetailPage() {
               const lessonsList: Lesson[] = modLessons.map((les, lesIdx) => {
                 const lesId = String(les._id || les.id || `les-${modIdx + 1}-${lesIdx + 1}`)
                 const lesTitle = String(les.title || `Bài ${lesIdx + 1}`)
-                // Only provide videoUrl if user is enrolled to prevent unwanted media preloading
-                const vidUrl = userIsEnrolled
+                const isLessonFreePreview = Boolean(les.is_free_preview || les.is_preview)
+                const vidUrl = (userIsEnrolled || isLessonFreePreview)
                   ? String(
                       les.video_url ||
                         les.videoUrl ||
@@ -231,6 +231,8 @@ export default function CourseDetailPage() {
                   title: lesTitle,
                   type: 'video' as const,
                   duration: durationSec,
+                  is_free_preview: isLessonFreePreview,
+                  is_preview: isLessonFreePreview,
                   status: (isAlreadyCompleted
                     ? 'completed'
                     : lesIdx === 0 && modIdx === 0
@@ -1089,18 +1091,35 @@ export default function CourseDetailPage() {
 
       <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden relative">
         <div className="flex-1 flex flex-col overflow-y-auto max-h-[calc(100vh-3.5rem)] transition-all duration-300">
-          {isEnrolled ? (
-            <LessonPlayer
-              lesson={currentLesson}
-              onProgress={handleLessonProgress}
-              onTimeUpdate={(t) => setPlayerCurrentTime(t)}
-              onNextLesson={handleNextLesson}
-              onPrevLesson={handlePrevLesson}
-              hasNextLesson={hasNextLesson}
-              hasPrevLesson={hasPrevLesson}
-              onAddNoteAtTimestamp={handleAddNoteAtTimestamp}
-              onDurationChange={handleLessonDurationChange}
-            />
+          {isEnrolled || Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) ? (
+            <div className="flex flex-col">
+              {!isEnrolled && Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) && (
+                <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">✨</span>
+                    <span>Bạn đang học thử miễn phí: <strong>{currentLesson?.title}</strong></span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCourseCheckoutModal(true)}
+                    className="px-3 py-1 rounded-lg bg-white text-emerald-800 hover:bg-emerald-50 text-[11px] font-extrabold shadow-xs transition-all cursor-pointer"
+                  >
+                    Đăng ký mua khóa học để mở khóa toàn bộ bài học & đề thi
+                  </button>
+                </div>
+              )}
+              <LessonPlayer
+                lesson={currentLesson}
+                onProgress={handleLessonProgress}
+                onTimeUpdate={(t) => setPlayerCurrentTime(t)}
+                onNextLesson={handleNextLesson}
+                onPrevLesson={handlePrevLesson}
+                hasNextLesson={hasNextLesson}
+                hasPrevLesson={hasPrevLesson}
+                onAddNoteAtTimestamp={handleAddNoteAtTimestamp}
+                onDurationChange={handleLessonDurationChange}
+              />
+            </div>
           ) : (
             <CourseLockedPlayer
               course={course}

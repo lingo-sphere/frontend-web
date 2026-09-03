@@ -194,7 +194,8 @@ export const api = {
 
   async upload<T>(url: string, file: File | Blob, additionalData?: Record<string, string>): Promise<T> {
     const formData = new FormData()
-    formData.append('file', file)
+    const fileName = file instanceof File ? file.name : 'audio_recording.webm'
+    formData.append('file', file, fileName)
     if (additionalData) {
       Object.entries(additionalData).forEach(([k, v]) => formData.append(k, v))
     }

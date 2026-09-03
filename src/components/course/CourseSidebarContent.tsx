@@ -269,18 +269,26 @@ export function CourseSidebarContent({
                         </button>
 
                         <div className="flex-1 min-w-0 space-y-1">
-                          <div
-                            className={`text-xs leading-snug line-clamp-2 ${
-                              isActive ? 'font-bold text-primary' : 'font-medium text-text-primary'
-                            }`}
-                          >
-                            {lesson.title}
+                          <div className="flex items-start justify-between gap-1.5">
+                            <div
+                              className={`text-xs leading-snug line-clamp-2 ${
+                                isActive ? 'font-bold text-primary' : 'font-medium text-text-primary'
+                              }`}
+                            >
+                              {lesson.title}
+                            </div>
+                            {Boolean(lesson.is_free_preview || lesson.is_preview) && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold shrink-0 shadow-xs">
+                                <Sparkles size={9} className="text-emerald-600 dark:text-emerald-400" />
+                                <span>Học thử</span>
+                              </span>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
                             <span className="flex items-center gap-1 shrink-0">
-                              {isEnrolled ? (
-                                <PlayCircle size={12} className={isActive ? 'text-primary' : ''} />
+                              {isEnrolled || Boolean(lesson.is_free_preview || lesson.is_preview) ? (
+                                <PlayCircle size={12} className={isActive ? 'text-primary' : Boolean(lesson.is_free_preview || lesson.is_preview) && !isEnrolled ? 'text-emerald-600 dark:text-emerald-400' : ''} />
                               ) : (
                                 <Lock size={11} className="text-amber-500/80" />
                               )}

@@ -58,6 +58,8 @@ export interface Lesson {
   status: LessonStatus
   progress: number 
   videoUrl?: string
+  is_free_preview?: boolean
+  is_preview?: boolean
   qualities?: Record<string, string>
   resources?: LessonResource[]
   content: LessonContent

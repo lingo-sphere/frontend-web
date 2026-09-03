@@ -168,6 +168,10 @@ export function CourseTestRunnerModal({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const animFrameRef = useRef<number | null>(null)
+  const [micVolume, setMicVolume] = useState<number>(0)
 
   const [essayText, setEssayText] = useState('')
   const [isSubmittingWriting, setIsSubmittingWriting] = useState(false)
@@ -177,6 +181,12 @@ export function CourseTestRunnerModal({
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
+      }
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current)
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {})
       }
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop()
@@ -340,25 +350,79 @@ export function CourseTestRunnerModal({
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      })
+
+      const audioTrack = stream.getAudioTracks()[0]
+      if (audioTrack) {
+        audioTrack.enabled = true
+      }
+
       audioChunksRef.current = []
-      const recorder = new MediaRecorder(stream)
+
+      const mimeType = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/mp4',
+        'audio/aac',
+      ].find((type) => MediaRecorder.isTypeSupported(type)) || ''
+
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       mediaRecorderRef.current = recorder
 
       recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
+        if (e.data && e.data.size > 0) {
           audioChunksRef.current.push(e.data)
         }
       }
 
       recorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        setRecordedBlob(blob)
-        setRecordedUrl(URL.createObjectURL(blob))
+        const finalMime = recorder.mimeType || mimeType || 'audio/webm'
+        const blob = new Blob(audioChunksRef.current, { type: finalMime })
+        if (blob.size > 0) {
+          setRecordedBlob(blob)
+          setRecordedUrl(URL.createObjectURL(blob))
+        } else {
+          toast.warning('Bản thu âm bị rỗng hoặc chưa nhận tín hiệu âm thanh từ micro.')
+        }
         stream.getTracks().forEach((t) => t.stop())
       }
 
-      recorder.start()
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+        if (AudioCtx) {
+          const audioCtx = new AudioCtx()
+          audioContextRef.current = audioCtx
+          const source = audioCtx.createMediaStreamSource(stream)
+          const analyser = audioCtx.createAnalyser()
+          analyser.fftSize = 256
+          source.connect(analyser)
+          analyserRef.current = analyser
+
+          const dataArray = new Uint8Array(analyser.frequencyBinCount)
+          const checkVolume = () => {
+            if (analyserRef.current) {
+              analyserRef.current.getByteFrequencyData(dataArray)
+              let sum = 0
+              for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i]
+              }
+              const avg = sum / dataArray.length
+              setMicVolume(Math.min(100, Math.round((avg / 128) * 100)))
+              animFrameRef.current = requestAnimationFrame(checkVolume)
+            }
+          }
+          checkVolume()
+        }
+      } catch {}
+
+      recorder.start(250)
       setIsRecording(true)
       setRecordingSeconds(0)
       timerIntervalRef.current = setInterval(() => {
@@ -370,7 +434,22 @@ export function CourseTestRunnerModal({
   }
 
   const stopRecording = () => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current)
+      animFrameRef.current = null
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {})
+      audioContextRef.current = null
+    }
+    setMicVolume(0)
+
     if (mediaRecorderRef.current && isRecording) {
+      try {
+        if (mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.requestData()
+        }
+      } catch {}
       mediaRecorderRef.current.stop()
       setIsRecording(false)
       if (timerIntervalRef.current) {
@@ -403,6 +482,15 @@ export function CourseTestRunnerModal({
   }
 
   const resetRecording = () => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current)
+      animFrameRef.current = null
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {})
+      audioContextRef.current = null
+    }
+    setMicVolume(0)
     if (isRecording) stopRecording()
     setRecordedBlob(null)
     setRecordedUrl(null)
@@ -417,8 +505,13 @@ export function CourseTestRunnerModal({
     setIsSubmittingSpeaking(true)
     try {
       let uploadedAudioUrl = 'https://res.lingosphere.com/audio/sample_speaking.mp3'
+      const uploadFile = recordedBlob instanceof File
+        ? recordedBlob
+        : new File([recordedBlob], `speaking_${Date.now()}.webm`, {
+            type: recordedBlob.type || 'audio/webm',
+          })
       try {
-        const uploadRes = await api.upload<{ file_url: string }>('/media/upload', recordedBlob, {
+        const uploadRes = await api.upload<{ file_url: string }>('/media/upload', uploadFile, {
           folder: 'speaking-submissions',
         })
         if (uploadRes?.file_url) {
@@ -944,6 +1037,18 @@ export function CourseTestRunnerModal({
                       <span>Đang thu âm: {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')}</span>
                     </div>
 
+                    <div className="flex flex-col items-center gap-1.5 w-full max-w-xs">
+                      <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
+                        <div
+                          className="bg-emerald-500 h-full rounded-full transition-all duration-75"
+                          style={{ width: `${Math.max(6, micVolume)}%` }}
+                        />
+                      </div>
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        {micVolume > 6 ? `Tín hiệu âm thanh micro: ${micVolume}% (Tốt)` : 'Hãy nói vào micro...'}
+                      </span>
+                    </div>
+
                     <button
                       type="button"
                       onClick={stopRecording}
@@ -969,7 +1074,13 @@ export function CourseTestRunnerModal({
                       </button>
                     </div>
 
-                    <audio controls src={recordedUrl} className="w-full h-9" />
+                    <audio
+                      key={recordedUrl}
+                      controls
+                      src={recordedUrl}
+                      className="w-full h-10 rounded-xl"
+                      preload="auto"
+                    />
 
                     {!speakingResult && (
                       <Button
