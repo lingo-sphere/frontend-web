@@ -6,11 +6,12 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Icon } from '@/components/icons/icon-map'
-import { aiService, type AiChatMessage } from '@/services/ai.service'
+import { aiService, type AiChatMessage, type UserAiQuotaSummary } from '@/services/ai.service'
 import { useAuthStore } from '@/store/auth-store'
 
 const SUGGESTED_PROMPTS = [
@@ -25,12 +26,29 @@ export default function AiLearningAppPage() {
   const [messages, setMessages] = useState<AiChatMessage[]>([
     {
       role: 'assistant',
-      content: 'Xin chào! Tôi là Gia sư AI LingoSphere (chạy trên mô hình Gemma 2b). Bạn cần tôi giải đáp thắc mắc ngữ pháp, luyện giao tiếp, hay sửa lỗi bài viết tiếng Anh nào hôm nay?',
+      content: 'Xin chào! Tôi là Gia sư AI LingoSphere. Tôi chuyên hỗ trợ giải đáp ngữ pháp, tra cứu từ vựng, sửa lỗi câu và luyện thi TOEIC/IELTS bằng tiếng Anh. Bạn có câu hỏi nào hôm nay không?',
     },
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [quota, setQuota] = useState<UserAiQuotaSummary | null>(null)
+  const [errorBanner, setErrorBanner] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+
+  const isPremiumUser = Boolean(user?.is_premium || quota?.is_premium)
+  const chatRemaining = quota ? (isPremiumUser ? 999999 : quota.chat.remaining) : 5
+  const isOutOfQuota = !isPremiumUser && chatRemaining <= 0
+
+  const fetchQuota = async () => {
+    try {
+      const q = await aiService.getAiQuota()
+      if (q) setQuota(q)
+    } catch {}
+  }
+
+  useEffect(() => {
+    fetchQuota()
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -44,24 +62,51 @@ export default function AiLearningAppPage() {
     const query = textToSend || input
     if (!query.trim() || isLoading) return
 
+    if (isOutOfQuota) {
+      setErrorBanner('Bạn đã sử dụng hết 5 câu hỏi miễn phí của Gia sư AI. Vui lòng nâng cấp gói Premium để tiếp tục học tập không giới hạn!')
+      return
+    }
+
     const userMsg: AiChatMessage = { role: 'user', content: query }
     setMessages((prev) => [...prev, userMsg])
     if (!textToSend) setInput('')
     setIsLoading(true)
+    setErrorBanner(null)
 
     try {
       const res = await aiService.chatWithAiTutor(query, messages)
       const aiReply = res?.response || 'Xin lỗi, tôi gặp trục trặc khi kết nối với máy chủ AI. Vui lòng thử lại sau.'
       setMessages((prev) => [...prev, { role: 'assistant', content: aiReply }])
-    } catch (err) {
-      console.error('AI chat error:', err)
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: 'Hệ thống AI đang bận hoặc gặp sự cố kết nối. Vui lòng thử lại sau giây lát nhé.',
-        },
-      ])
+      if (res?.quota) {
+        setQuota((prev) =>
+          prev
+            ? {
+                ...prev,
+                is_premium: res.quota!.is_premium,
+                chat: {
+                  ...prev.chat,
+                  remaining: res.quota!.remaining,
+                  used: (prev.chat.used || 0) + 1,
+                },
+              }
+            : null
+        )
+      } else {
+        fetchQuota()
+      }
+    } catch (err: any) {
+      const errMsg = err?.message || ''
+      if (errMsg.includes('hết') || errMsg.includes('Premium') || errMsg.includes('hạn ngạch')) {
+        setErrorBanner(errMsg)
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: 'Hệ thống AI đang bận hoặc gặp sự cố kết nối. Vui lòng thử lại sau giây lát nhé.',
+          },
+        ])
+      }
     } finally {
       setIsLoading(false)
     }
@@ -70,7 +115,7 @@ export default function AiLearningAppPage() {
   return (
     <>
       <main className="flex h-[calc(100vh-4rem)] w-full flex-col px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="flex flex-wrap items-center justify-between border-b border-border pb-3 gap-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-accent text-white shadow-md">
               <Icon name="sparkles" size={20} />
@@ -80,30 +125,58 @@ export default function AiLearningAppPage() {
                 Gia Sư AI LingoSphere
                 <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  Groq Cloud LPU
+                  Học Tiếng Anh 24/7
                 </span>
               </h1>
               <p className="text-xs text-text-tertiary">
-                Trợ lý học tiếng Anh thông minh 24/7
+                Chỉ giải đáp và hỗ trợ nội dung liên quan đến học tập tiếng Anh
               </p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setMessages([
-                {
-                  role: 'assistant',
-                  content: 'Cuộc trò chuyện mới đã được bắt đầu! Bạn muốn hỏi gì nào?',
-                },
-              ])
-            }
-            className="text-xs gap-1.5 h-8 rounded-xl"
-          >
-            <Icon name="rotateCcw" size={13} />
-            Làm mới hội thoại
-          </Button>
+
+          <div className="flex items-center gap-2.5">
+            {isPremiumUser ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-bold shadow-xs">
+                <Icon name="award" size={14} className="text-amber-500" />
+                <span>VIP Premium • Không giới hạn câu hỏi</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs ${
+                  chatRemaining > 1
+                    ? 'bg-surface-subtle border-border text-text-secondary'
+                    : 'bg-destructive/10 border-destructive/30 text-destructive'
+                }`}>
+                  <Icon name="zap" size={13} className={chatRemaining > 1 ? 'text-primary' : 'text-destructive'} />
+                  <span>Gói Miễn phí: Còn {Math.max(0, chatRemaining)}/5 câu (1k context)</span>
+                </div>
+                <Link href="/settings">
+                  <Button size="sm" variant="default" className="h-8 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs gap-1 shadow-xs">
+                    <Icon name="sparkles" size={13} />
+                    Nâng cấp VIP
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setMessages([
+                  {
+                    role: 'assistant',
+                    content: 'Cuộc trò chuyện mới đã được bắt đầu! Hãy hỏi tôi về từ vựng, ngữ pháp hoặc đề thi tiếng Anh nào.',
+                  },
+                ])
+                setErrorBanner(null)
+              }}
+              className="text-xs gap-1.5 h-8 rounded-xl cursor-pointer"
+            >
+              <Icon name="rotateCcw" size={13} />
+              Làm mới
+            </Button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
@@ -151,7 +224,7 @@ export default function AiLearningAppPage() {
                 <span className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
                 <span className="h-2 w-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
                 <span className="h-2 w-2 rounded-full bg-primary animate-bounce" />
-                <span className="text-xs text-text-tertiary ml-2">AI đang phân tích câu trả lời...</span>
+                <span className="text-xs text-text-tertiary ml-2">Gia sư AI đang soạn câu trả lời...</span>
               </div>
             </motion.div>
           )}
@@ -159,13 +232,27 @@ export default function AiLearningAppPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {messages.length === 1 && (
+        {errorBanner && (
+          <div className="mb-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-200">
+            <div className="flex items-center gap-2">
+              <Icon name="alertCircle" size={16} className="text-amber-500 shrink-0" />
+              <span>{errorBanner}</span>
+            </div>
+            <Link href="/settings" className="shrink-0">
+              <Button size="sm" className="h-7 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px]">
+                Nâng cấp VIP ngay
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {messages.length === 1 && !isOutOfQuota && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
             {SUGGESTED_PROMPTS.map((p, i) => (
               <button
                 key={i}
                 onClick={() => handleSend(p.text)}
-                className="flex items-center gap-2.5 rounded-xl border border-border bg-surface p-2.5 text-left text-xs text-text-secondary hover:border-primary hover:text-primary transition-all hover:bg-surface-subtle group"
+                className="flex items-center gap-2.5 rounded-xl border border-border bg-surface p-2.5 text-left text-xs text-text-secondary hover:border-primary hover:text-primary transition-all hover:bg-surface-subtle group cursor-pointer"
               >
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-surface-subtle group-hover:bg-primary/10 text-primary">
                   <Icon name={p.icon} size={14} />
@@ -189,14 +276,18 @@ export default function AiLearningAppPage() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Hỏi bất kỳ câu hỏi ngữ pháp, từ vựng hoặc giao tiếp..."
-            disabled={isLoading}
-            className="flex-1 rounded-xl bg-surface border-border focus-visible:ring-primary h-11 text-sm"
+            placeholder={
+              isOutOfQuota
+                ? 'Bạn đã hết 5 câu hỏi miễn phí. Nâng cấp VIP để tiếp tục hỏi không giới hạn...'
+                : 'Hỏi Gia sư AI về từ vựng, ngữ pháp, đề thi hoặc giao tiếp tiếng Anh...'
+            }
+            disabled={isLoading || isOutOfQuota}
+            className="flex-1 rounded-xl bg-surface border-border focus-visible:ring-primary h-11 text-sm disabled:opacity-60"
           />
           <Button
             type="submit"
-            disabled={!input.trim() || isLoading}
-            className="h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold shadow-md shrink-0"
+            disabled={!input.trim() || isLoading || isOutOfQuota}
+            className="h-11 px-5 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold shadow-md shrink-0 cursor-pointer disabled:cursor-not-allowed"
           >
             <Icon name="send" size={16} className="mr-1.5" />
             Gửi

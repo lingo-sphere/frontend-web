@@ -5,61 +5,90 @@
  * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/translate
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon-map'
-import { api } from '@/services/api-client'
-
-interface TranslationResult {
-  translated_text: string
-  source_lang: string
-  target_lang: string
-  key_vocabulary?: Array<{ word: string; meaning: string; part_of_speech?: string }>
-  grammar_notes?: string[]
-}
+import { aiService, type TranslationResponse, type UserAiQuotaSummary } from '@/services/ai.service'
+import { useAuthStore } from '@/store/auth-store'
 
 export default function AiTranslationAppPage() {
+  const { user } = useAuthStore()
   const [sourceText, setSourceText] = useState<string>(
     'The rapid advancement of artificial intelligence is fundamentally transforming the landscape of modern education.',
   )
   const [sourceLang, setSourceLang] = useState<string>('en')
   const [targetLang, setTargetLang] = useState<string>('vi')
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [result, setResult] = useState<TranslationResult | null>(null)
+  const [result, setResult] = useState<TranslationResponse | null>(null)
+  const [quota, setQuota] = useState<UserAiQuotaSummary | null>(null)
+  const [errorBanner, setErrorBanner] = useState<string | null>(null)
+
+  const isPremiumUser = Boolean(user?.is_premium || quota?.is_premium)
+  const transRemaining = quota ? (isPremiumUser ? 999999 : quota.translation.remaining) : 5
+  const isOutOfQuota = !isPremiumUser && transRemaining <= 0
+
+  const fetchQuota = async () => {
+    try {
+      const q = await aiService.getAiQuota()
+      if (q) setQuota(q)
+    } catch {}
+  }
+
+  useEffect(() => {
+    fetchQuota()
+  }, [])
 
   const handleTranslate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!sourceText.trim()) return
+    if (!sourceText.trim() || isLoading) return
+
+    if (isOutOfQuota) {
+      setErrorBanner('Bạn đã sử dụng hết 5 lượt dịch thuật miễn phí. Vui lòng nâng cấp gói Premium để dịch thuật không giới hạn!')
+      return
+    }
+
+    if (!isPremiumUser && sourceText.length > 3500) {
+      setErrorBanner('Văn bản vượt quá giới hạn 1.000 tokens (~3.500 ký tự) của gói Miễn phí. Vui lòng rút gọn nội dung hoặc nâng cấp VIP.')
+      return
+    }
 
     setIsLoading(true)
+    setErrorBanner(null)
+
     try {
-      const res = await api.post<TranslationResult>('/ai/translations/translate', {
+      const res = await aiService.translate({
         text: sourceText,
         source_lang: sourceLang,
         target_lang: targetLang,
       })
       if (res && res.translated_text) {
         setResult(res)
-      } else {
-        throw new Error('No translation returned')
+        if (res.quota) {
+          setQuota((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  is_premium: res.quota!.is_premium,
+                  translation: {
+                    ...prev.translation,
+                    remaining: res.quota!.remaining,
+                    used: (prev.translation.used || 0) + 1,
+                  },
+                }
+              : null
+          )
+        } else {
+          fetchQuota()
+        }
       }
-    } catch {
-      setResult({
-        translated_text:
-          'Sự phát triển nhanh chóng của trí tuệ nhân tạo đang làm thay đổi căn bản diện mạo của nền giáo dục hiện đại.',
-        source_lang: sourceLang,
-        target_lang: targetLang,
-        key_vocabulary: [
-          { word: 'advancement', meaning: 'sự tiến bộ, phát triển', part_of_speech: 'noun' },
-          { word: 'fundamentally', meaning: 'về cơ bản, căn bản', part_of_speech: 'adverb' },
-          { word: 'transform', meaning: 'biến đổi, thay đổi diện mạo', part_of_speech: 'verb' },
-          { word: 'landscape', meaning: 'diện mạo, bối cảnh', part_of_speech: 'noun' },
-        ],
-        grammar_notes: [
-          'Thì Hiện tại tiếp diễn (Present Continuous) "is transforming" diễn tả một xu thế đang diễn ra ở hiện tại.',
-          'Trạng từ "fundamentally" bổ nghĩa cho động từ chính "transforming".',
-        ],
-      })
+    } catch (err: any) {
+      const errMsg = err?.message || ''
+      if (errMsg.includes('hết') || errMsg.includes('Premium') || errMsg.includes('hạn ngạch') || errMsg.includes('1.000 tokens')) {
+        setErrorBanner(errMsg)
+      } else {
+        setErrorBanner('Dịch vụ AI đang bận hoặc xảy ra lỗi kết nối. Vui lòng thử lại sau.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -86,21 +115,63 @@ export default function AiTranslationAppPage() {
   return (
     <>
       <div className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
-        <div className="border-b border-border pb-5">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
-              <Icon name="sparkles" size={13} />
-              AI Contextual Translation
-            </span>
-            <span className="text-xs text-text-tertiary">Dịch thuật & Bóc tách ngữ cảnh</span>
+        <div className="flex flex-wrap items-center justify-between border-b border-border pb-5 gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
+                <Icon name="sparkles" size={13} />
+                AI Contextual Translation
+              </span>
+              <span className="text-xs text-text-tertiary">Chuyên sâu Tiếng Anh ⇋ Tiếng Việt</span>
+            </div>
+            <h1 className="text-2xl font-extrabold text-text-primary tracking-tight mt-1.5">
+              Dịch Thuật Song Ngữ Thông Minh
+            </h1>
+            <p className="text-sm text-text-secondary mt-1">
+              Phân tích cấu trúc ngữ pháp và trích xuất từ vựng trọng tâm trong từng câu dịch
+            </p>
           </div>
-          <h1 className="text-2xl font-extrabold text-text-primary tracking-tight mt-1.5">
-            Dịch Thuật Song Ngữ Thông Minh
-          </h1>
-          <p className="text-sm text-text-secondary mt-1">
-            Không chỉ dịch nghĩa, AI còn phân tích cấu trúc ngữ pháp và từ vựng trọng tâm trong câu
-          </p>
+
+          <div className="flex items-center gap-2">
+            {isPremiumUser ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-bold shadow-xs">
+                <Icon name="award" size={14} className="text-amber-500" />
+                <span>VIP Premium • Dịch không giới hạn</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs ${
+                  transRemaining > 1
+                    ? 'bg-surface-subtle border-border text-text-secondary'
+                    : 'bg-destructive/10 border-destructive/30 text-destructive'
+                }`}>
+                  <Icon name="zap" size={13} className={transRemaining > 1 ? 'text-primary' : 'text-destructive'} />
+                  <span>Gói Miễn phí: Còn {Math.max(0, transRemaining)}/5 lượt dịch (1k context)</span>
+                </div>
+                <Link href="/settings">
+                  <Button size="sm" className="h-8 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs gap-1 shadow-xs cursor-pointer">
+                    <Icon name="sparkles" size={13} />
+                    Nâng cấp VIP
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
+
+        {errorBanner && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-200 shadow-xs">
+            <div className="flex items-center gap-2">
+              <Icon name="alertCircle" size={16} className="text-amber-500 shrink-0" />
+              <span>{errorBanner}</span>
+            </div>
+            <Link href="/settings" className="shrink-0">
+              <Button size="sm" className="h-7 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] cursor-pointer">
+                Nâng cấp VIP ngay
+              </Button>
+            </Link>
+          </div>
+        )}
 
         <div className="rounded-2xl bg-surface border border-border shadow-md overflow-hidden">
           <div className="flex items-center justify-between border-b border-border bg-surface-subtle px-4 py-2.5">
@@ -123,9 +194,9 @@ export default function AiTranslationAppPage() {
 
             <Button
               onClick={handleTranslate}
-              disabled={isLoading || !sourceText.trim()}
+              disabled={isLoading || !sourceText.trim() || isOutOfQuota}
               size="sm"
-              className="bg-primary hover:bg-primary/90 text-white cursor-pointer"
+              className="bg-primary hover:bg-primary/90 text-white font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Đang dịch...' : 'Dịch Ngay'}
             </Button>
@@ -153,6 +224,14 @@ export default function AiTranslationAppPage() {
                 placeholder="Nhập câu tiếng Anh hoặc đoạn văn cần dịch..."
                 className="w-full bg-transparent border-0 outline-none text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:ring-0"
               />
+              {!isPremiumUser && (
+                <div className="text-[11px] text-text-tertiary flex items-center justify-between pt-1 border-t border-border/50">
+                  <span>Giới hạn gói Miễn phí: tối đa 1.000 tokens (~3.500 ký tự)</span>
+                  <span className={sourceText.length > 3500 ? 'text-destructive font-bold' : ''}>
+                    {sourceText.length}/3500 ký tự
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="p-4 bg-surface-subtle/40 space-y-3">
@@ -169,7 +248,7 @@ export default function AiTranslationAppPage() {
                   </button>
                 )}
               </div>
-              <p className="text-sm font-medium text-text-primary leading-relaxed min-h-[100px]">
+              <p className="text-sm font-medium text-text-primary leading-relaxed min-h-[100px] whitespace-pre-wrap">
                 {result ? (
                   result.translated_text
                 ) : (
