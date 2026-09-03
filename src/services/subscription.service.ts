@@ -58,6 +58,10 @@ export interface PaymentOrderStatusResponse {
 }
 
 export const subscriptionService = {
+  async getPlans(): Promise<any[]> {
+    return api.get(API_CONFIG.ENDPOINTS.SUBSCRIPTION.PLANS)
+  },
+
   async subscribe(payload: SubscribePayload): Promise<SubscriptionResponse> {
     return api.post<SubscriptionResponse>(API_CONFIG.ENDPOINTS.SUBSCRIPTION.SUBSCRIBE, payload)
   },

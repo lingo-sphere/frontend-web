@@ -14,7 +14,7 @@ import { subscriptionService, type PaymentOrderResponse } from '@/services/subsc
 import { API_CONFIG } from '@/config/api.config'
 import { toast } from '@/store/toast-store'
 import { getRemainingSubscriptionText } from '@/components/layout/header.utils'
-import { getPlans } from '@/components/upgrade/upgrade.data'
+import { getPlans, type Plan } from '@/components/upgrade/upgrade.data'
 import { UpgradeSelectPlanStep } from '@/components/upgrade/upgrade.plan'
 import { UpgradePaymentQrStep } from '@/components/upgrade/upgrade.qr'
 
@@ -41,7 +41,54 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
   orderRef.current = order
 
   const { user, isAuthenticated, setUser } = useAuthStore()
-  const plans = getPlans()
+  const [plans, setPlans] = useState<Plan[]>(getPlans())
+
+  useEffect(() => {
+    let isMounted = true
+    subscriptionService
+      .getPlans()
+      .then((dbPlans) => {
+        if (!isMounted || !Array.isArray(dbPlans) || dbPlans.length === 0) return
+        setPlans((prev) =>
+          prev.map((p) => {
+            const match = dbPlans.find(
+              (dp: any) =>
+                dp.billing_cycle === p.cycle ||
+                (p.cycle === 'MONTHLY' && dp.slug === 'vip-1-month') ||
+                (p.cycle === 'QUARTERLY' && dp.slug === 'vip-3-month') ||
+                (p.cycle === 'YEARLY' && dp.slug === 'vip-1-year') ||
+                (p.cycle === 'LIFETIME' && dp.slug === 'vip-lifetime')
+            )
+            if (match && typeof match.price === 'number') {
+              const formattedPerMonth =
+                p.cycle === 'MONTHLY'
+                  ? `${new Intl.NumberFormat('vi-VN').format(match.price)}đ/tháng`
+                  : p.cycle === 'QUARTERLY'
+                  ? `~${new Intl.NumberFormat('vi-VN').format(Math.round(match.price / 3))}đ/tháng`
+                  : p.cycle === 'YEARLY'
+                  ? `~${new Intl.NumberFormat('vi-VN').format(Math.round(match.price / 12))}đ/tháng`
+                  : 'Trọn đời'
+              return {
+                ...p,
+                price: match.price,
+                originalPrice: match.original_price || p.originalPrice,
+                discount: match.discount || p.discount,
+                recommended: match.is_popular !== undefined ? match.is_popular : p.recommended,
+                perMonth: {
+                  en: formattedPerMonth,
+                  vi: formattedPerMonth,
+                },
+              }
+            }
+            return p
+          })
+        )
+      })
+      .catch(() => {})
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const isPremium = Boolean(user?.is_premium || user?.subscription_expires_at)
   const remainingTimeText = isPremium
