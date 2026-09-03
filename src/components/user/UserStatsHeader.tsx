@@ -9,6 +9,7 @@ import type { User } from '@/types/user'
 
 interface UserAvatarProps {
   src?: string
+  name?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
   editable?: boolean
   onClick?: () => void
@@ -16,6 +17,7 @@ interface UserAvatarProps {
 
 export function UserAvatar({
   src,
+  name,
   size = 'md',
   editable = false,
   onClick,
@@ -27,6 +29,15 @@ export function UserAvatar({
     xl: 'w-28 h-28',
   }
 
+  const initials = name
+    ? name
+        .split(' ')
+        .map((w) => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : ''
+
   return (
     <div className="relative group">
       {src ? (
@@ -37,12 +48,18 @@ export function UserAvatar({
         />
       ) : (
         <div
-          className={`${sizeClasses[size]} rounded-full bg-primary-20 flex items-center justify-center`}
+          className={`${sizeClasses[size]} rounded-full bg-slate-900 dark:bg-slate-800 text-white font-bold flex items-center justify-center shadow-md ring-2 ring-primary/20`}
         >
-          <Icon
-            name="user"
-            size={size === 'xl' ? 40 : size === 'lg' ? 24 : 16}
-          />
+          {initials ? (
+            <span className={size === 'xl' ? 'text-2xl font-bold' : size === 'lg' ? 'text-lg font-bold' : 'text-xs font-semibold'}>
+              {initials}
+            </span>
+          ) : (
+            <Icon
+              name="user"
+              size={size === 'xl' ? 40 : size === 'lg' ? 24 : 16}
+            />
+          )}
         </div>
       )}
       {editable && (
@@ -128,7 +145,7 @@ export function UserStatsHeader({ user, onEditClick }: UserStatsHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6">
       <div className="relative">
-        <UserAvatar src={user.avatar} size="xl" />
+        <UserAvatar src={user.avatar} name={user.displayName} size="xl" />
         {isPremium && (
           <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md ring-2 ring-background">
             <Icon name="crown" size={15} className="fill-white" />
