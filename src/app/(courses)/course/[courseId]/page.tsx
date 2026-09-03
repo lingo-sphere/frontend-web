@@ -85,6 +85,14 @@ export default function CourseDetailPage() {
       total_score_growth?: number
       total_growth_percentage?: number
       final_test_score?: number
+      final_test_attempts?: Array<{
+        attempt_id: string
+        score: number
+        is_passed: boolean
+        correct_count?: number
+        total_questions?: number
+        submitted_at?: any
+      }>
       growth_chart_data?: Array<{ stage: string; score: number; timestamp: string }>
     }
     modules_progress?: Array<{
@@ -95,6 +103,15 @@ export default function CourseDetailPage() {
       challenge_taken?: boolean
       is_passed_by_challenge?: boolean
       post_mini_score?: number
+      attempts?: Array<{
+        attempt_id: string
+        test_type?: string
+        score: number
+        is_passed: boolean
+        correct_count?: number
+        total_questions?: number
+        submitted_at?: any
+      }>
       progression_comparison?: {
         previous_stage: string
         previous_score: number
@@ -116,6 +133,35 @@ export default function CourseDetailPage() {
     chapter: null,
     testType: 'post-mini',
   })
+
+  const currentTestModalData = useMemo(() => {
+    if (!activeTestModal.isOpen) return { highestScore: 0, attempts: [] }
+    if (activeTestModal.testType === 'final-test') {
+      const highest = progressDetail?.course_progress?.final_test_score || 0
+      const attempts = (progressDetail?.course_progress as any)?.final_test_attempts || []
+      return { highestScore: highest, attempts }
+    }
+    if (activeTestModal.chapter) {
+      const chId = activeTestModal.chapter.id
+      const chOrder = Number(activeTestModal.chapter.order || 1)
+      const mod = progressDetail?.modules_progress?.find(
+        (m: any) =>
+          m.module_id === chId ||
+          String(m.module_id) === String(chId) ||
+          Number(m.order_index) === chOrder
+      )
+      if (activeTestModal.testType === 'challenge') {
+        const highest = mod?.challenge_score || 0
+        const attempts = (mod?.attempts || []).filter((a: any) => a.test_type === 'challenge')
+        return { highestScore: highest, attempts }
+      } else {
+        const highest = mod?.post_mini_score || 0
+        const attempts = (mod?.attempts || []).filter((a: any) => a.test_type !== 'challenge')
+        return { highestScore: highest, attempts }
+      }
+    }
+    return { highestScore: 0, attempts: [] }
+  }, [activeTestModal, progressDetail])
 
   const handleBack = useCallback(() => {
     navigate('/courses')
@@ -1121,13 +1167,25 @@ export default function CourseDetailPage() {
 
   const handleTestComplete = async (score: number, isPassed: boolean, resultData?: unknown) => {
     if (activeTestModal.testType === 'final-test') {
-      setProgressDetail((prev: any) => ({
-        ...(prev || {}),
-        course_progress: {
-          ...(prev?.course_progress || {}),
-          final_test_score: score,
-        },
-      }))
+      setProgressDetail((prev: any) => {
+        const currentFinalAttempts = Array.isArray(prev?.course_progress?.final_test_attempts)
+          ? [...prev.course_progress.final_test_attempts]
+          : []
+        const newAttempt = {
+          attempt_id: `att_${Date.now()}`,
+          score,
+          is_passed: isPassed,
+          submitted_at: new Date(),
+        }
+        return {
+          ...(prev || {}),
+          course_progress: {
+            ...(prev?.course_progress || {}),
+            final_test_score: Math.max(prev?.course_progress?.final_test_score || 0, score),
+            final_test_attempts: [newAttempt, ...currentFinalAttempts],
+          },
+        }
+      })
     }
 
     if (activeTestModal.chapter) {
@@ -1141,13 +1199,29 @@ export default function CourseDetailPage() {
             String(m.module_id) === String(finishedChId) ||
             Number(m.order_index) === finishedChOrder
         )
+        const prevMod = modIdx >= 0 ? existingMods[modIdx] : null
+        const currentAttempts = Array.isArray(prevMod?.attempts) ? [...prevMod.attempts] : []
+        const newAttempt = {
+          attempt_id: `att_${Date.now()}`,
+          test_type: activeTestModal.testType,
+          score,
+          is_passed: isPassed,
+          submitted_at: new Date(),
+        }
         const updatedMod = {
           module_id: finishedChId,
           order_index: finishedChOrder,
           status: 'COMPLETED',
+          attempts: [newAttempt, ...currentAttempts],
           ...(activeTestModal.testType === 'challenge'
-            ? { challenge_score: score, is_passed_by_challenge: true, challenge_taken: true }
-            : { post_mini_score: score }),
+            ? {
+                challenge_score: Math.max(prevMod?.challenge_score || 0, score),
+                is_passed_by_challenge: isPassed,
+                challenge_taken: true,
+              }
+            : {
+                post_mini_score: Math.max(prevMod?.post_mini_score || 0, score),
+              }),
         }
         if (modIdx >= 0) {
           existingMods[modIdx] = { ...existingMods[modIdx], ...updatedMod }
@@ -1192,8 +1266,14 @@ export default function CourseDetailPage() {
                   ...serverMods[modIdx],
                   status: 'COMPLETED',
                   ...(activeTestModal.testType === 'challenge'
-                    ? { challenge_score: currentScore, is_passed_by_challenge: true, challenge_taken: true }
-                    : { post_mini_score: currentScore }),
+                    ? {
+                        challenge_score: Math.max(serverMods[modIdx]?.challenge_score || 0, currentScore),
+                        is_passed_by_challenge: isPassed,
+                        challenge_taken: true,
+                      }
+                    : {
+                        post_mini_score: Math.max(serverMods[modIdx]?.post_mini_score || 0, currentScore),
+                      }),
                 }
               }
             }
@@ -1523,6 +1603,7 @@ export default function CourseDetailPage() {
                 modulesProgress={progressDetail?.modules_progress}
                 finalTestQuestionsCount={course.final_test_questions?.length || 0}
                 finalTestScore={progressDetail?.course_progress?.final_test_score}
+                finalTestAttempts={(progressDetail?.course_progress as any)?.final_test_attempts}
                 onToggleChapter={toggleChapter}
                 onSelectLesson={handleSelectLesson}
                 onToggleLessonComplete={handleToggleLessonComplete}
@@ -1554,6 +1635,8 @@ export default function CourseDetailPage() {
           finalTestQuestions={course.final_test_questions as any}
           category={course.category}
           skills={course.skills}
+          highestScore={currentTestModalData.highestScore}
+          previousAttempts={currentTestModalData.attempts}
           onClose={() => setActiveTestModal({ isOpen: false, chapter: null, testType: 'post-mini' })}
           onComplete={handleTestComplete}
         />

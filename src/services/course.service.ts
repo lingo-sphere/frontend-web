@@ -130,12 +130,21 @@ export const courseService = {
   async submitModuleChallenge(
     courseId: string,
     moduleId: string,
-    data: { score: number; passing_score?: number; challenge_attempt_id?: string; order_index?: number }
+    data: {
+      score: number
+      correct_count?: number
+      total_questions?: number
+      passing_score?: number
+      challenge_attempt_id?: string
+      order_index?: number
+    }
   ): Promise<{
     is_passed: boolean
     score: number
+    highest_score?: number
     passing_score: number
     status: string
+    attempts?: any[]
     message: string
   }> {
     return api.post(`/progress/courses/${courseId}/modules/${moduleId}/challenge`, data)
@@ -144,11 +153,20 @@ export const courseService = {
   async submitModulePostMini(
     courseId: string,
     moduleId: string,
-    data: { score: number; post_mini_attempt_id?: string; order_index?: number }
+    data: {
+      score: number
+      correct_count?: number
+      total_questions?: number
+      post_mini_attempt_id?: string
+      order_index?: number
+    }
   ): Promise<{
     message: string
     module_id: string
     score: number
+    highest_score?: number
+    is_new_high_score?: boolean
+    attempts?: any[]
     progression_comparison?: {
       previous_stage: string
       previous_score: number
@@ -164,11 +182,19 @@ export const courseService = {
 
   async submitCourseFinalTest(
     courseId: string,
-    data: { score: number; final_test_attempt_id?: string }
+    data: {
+      score: number
+      correct_count?: number
+      total_questions?: number
+      final_test_attempt_id?: string
+    }
   ): Promise<{
     message: string
     course_id: string
     final_test_score: number
+    highest_score?: number
+    is_new_high_score?: boolean
+    final_test_attempts?: any[]
     baseline_score: number
     total_score_growth: number
     total_growth_percentage: number
