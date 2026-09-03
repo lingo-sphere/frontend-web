@@ -13,6 +13,7 @@ import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
+import { buildCourseUrl } from '@/lib/course.url'
 
 export function HeaderWishlistHover() {
   const { i18n } = useTranslation()
@@ -34,7 +35,8 @@ export function HeaderWishlistHover() {
     e.stopPropagation()
     const hasAccess = isEnrolled(courseId) || isPremiumUser || isPrivilegedUser
     if (hasAccess) {
-      navigate(`/course/${courseId}`)
+      const courseItem = items.find((c) => c.id === courseId)
+      navigate(courseItem ? buildCourseUrl(courseItem) : `/course/${courseId}`)
       return
     }
     if (!isAuthenticated) {
@@ -105,7 +107,7 @@ export function HeaderWishlistHover() {
               return (
                 <div
                   key={course.id}
-                  onClick={() => navigate(`/course/${course.id}`)}
+                  onClick={() => navigate(buildCourseUrl(course))}
                   className="p-3 hover:bg-surface-subtle/70 transition-colors cursor-pointer group relative flex items-start gap-3"
                 >
                   <img
@@ -140,7 +142,7 @@ export function HeaderWishlistHover() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              navigate(`/course/${course.id}`)
+                              navigate(buildCourseUrl(course))
                             }}
                             className="h-7 px-2.5 text-[11px] font-bold rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all cursor-pointer"
                           >

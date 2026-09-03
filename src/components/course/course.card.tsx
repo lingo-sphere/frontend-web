@@ -23,6 +23,7 @@ import { useCartStore } from '@/store/cart-store'
 import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
+import { buildCourseUrl } from '@/lib/course.url'
 
 interface CourseCardProps {
   course: CourseCardData
@@ -103,7 +104,7 @@ export function CourseCard({
   const handleShareFacebook = (e: React.MouseEvent) => {
     e.stopPropagation()
     onCloseMenu()
-    const courseUrl = typeof window !== 'undefined' ? `${window.location.origin}/course/${course.id}` : ''
+    const courseUrl = typeof window !== 'undefined' ? `${window.location.origin}${buildCourseUrl(course)}` : ''
     const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(courseUrl)}`
     window.open(fbShareUrl, '_blank', 'noopener,noreferrer,width=620,height=580')
   }
@@ -111,7 +112,7 @@ export function CourseCard({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (isAlreadyEnrolled) {
-      navigate(`/course/${course.id}`)
+      navigate(buildCourseUrl(course))
       return
     }
     if (!isAuthenticated) {

@@ -15,6 +15,7 @@ import { courseService } from '@/services/course.service'
 import { CourseCheckoutModal, type CheckoutCourseItem } from '@/components/course/course.checkout.modal'
 import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
+import { buildCourseUrl } from '@/lib/course.url'
 
 export default function CartPage() {
   const { i18n } = useTranslation()
@@ -203,7 +204,7 @@ export default function CartPage() {
                         />
                         <div className="space-y-1 min-w-0 flex-1">
                           <h3
-                            onClick={() => navigate(`/course/${item.course_id}`)}
+                            onClick={() => navigate(buildCourseUrl({ id: item.course_id, title: item.title }))}
                             className="text-sm font-bold text-text-primary line-clamp-2 hover:text-purple-600 dark:hover:text-purple-400 transition-colors cursor-pointer leading-snug"
                           >
                             {item.title}

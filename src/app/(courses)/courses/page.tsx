@@ -21,6 +21,7 @@ import { useWishlistStore } from '@/store/wishlist-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
+import { buildCourseUrl } from '@/lib/course.url'
 
 export default function CoursesCatalogPage() {
   const { i18n } = useTranslation()
@@ -422,7 +423,7 @@ export default function CoursesCatalogPage() {
                   isMenuOpen={activeMenuId === course.id}
                   onToggleMenu={toggleMenu}
                   onToggleWishlist={toggleWishlist}
-                  onClick={(id) => navigate(`/course/${id}`)}
+                  onClick={() => navigate(buildCourseUrl(course))}
                   onCloseMenu={() => setActiveMenuId(null)}
                 />
               ))}

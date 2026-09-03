@@ -28,6 +28,7 @@ import { useAuthStore } from '@/store/auth-store'
 import { useCartStore } from '@/store/cart-store'
 import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
+import { extractCourseId, buildCourseUrl } from '@/lib/course.url'
 import type { Chapter, Course, Lesson, CourseReviewItem, NoteItem, QnAItem } from '@/types/course'
 
 type BottomTab = 'overview' | 'progress' | 'qna' | 'notes' | 'reviews'
@@ -51,7 +52,8 @@ function formatExactDuration(totalSeconds: number): string {
 
 export default function CourseDetailPage() {
   const params = useParams<{ courseId: string }>()
-  const courseId = params?.courseId || 'toeic-foundation'
+  const rawParam = params?.courseId || 'toeic-foundation'
+  const courseId = useMemo(() => extractCourseId(rawParam), [rawParam])
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
   const { addToCart, isInCart } = useCartStore()
@@ -144,6 +146,16 @@ export default function CourseDetailPage() {
         if (isMounted && liveCourseResponse) {
           const raw = liveCourseResponse as unknown as Record<string, unknown>
           const courseObj = (raw.course as Record<string, unknown>) || raw
+
+          const canonicalUrl = buildCourseUrl({
+            id: String(courseObj._id || courseObj.id || courseId),
+            slug: String(courseObj.slug || ''),
+            title: String(courseObj.title || ''),
+          })
+          if (typeof window !== 'undefined' && window.location.pathname !== canonicalUrl) {
+            window.history.replaceState(null, '', canonicalUrl)
+          }
+
           const curriculumList =
             (raw.curriculum as Array<Record<string, unknown>>) ||
             (raw.modules as Array<Record<string, unknown>>) ||

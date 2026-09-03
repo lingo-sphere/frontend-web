@@ -11,6 +11,7 @@ import { BookOpen, Loader2 } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth-store'
+import { buildCourseUrl } from '@/lib/course.url'
 import type { Course } from '@/types/api.types'
 
 interface LearningCourseItem {
@@ -111,7 +112,7 @@ export function HeaderMyLearningHover() {
             {courses.map((course) => (
               <div
                 key={course.id}
-                onClick={() => navigate(`/course/${course.id}`)}
+                onClick={() => navigate(buildCourseUrl(course))}
                 className="flex items-start gap-3 p-3.5 hover:bg-surface-subtle transition-colors cursor-pointer group"
               >
                 <img
