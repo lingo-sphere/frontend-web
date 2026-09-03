@@ -114,35 +114,40 @@ export default function AiLearningAppPage() {
 
   return (
     <>
-      <main className="flex h-[calc(100vh-4rem)] w-full flex-col px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between border-b border-border pb-3 gap-3">
+      <main className="flex h-[calc(100vh-72px)] w-full flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="flex flex-wrap items-center justify-between border-b border-border pb-5 gap-4 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-accent text-white shadow-md">
-              <Icon name="sparkles" size={20} />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-accent text-white shadow-md shrink-0">
+              <Icon name="sparkles" size={22} />
             </div>
             <div>
-              <h1 className="text-base font-bold text-text-primary flex items-center gap-2">
-                Gia Sư AI LingoSphere
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-text-tertiary">
+                  AI TUTOR & CHAT
+                </span>
                 <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                  Học Tiếng Anh 24/7
+                  Trực tuyến 24/7
                 </span>
+              </div>
+              <h1 className="mt-0.5 text-[20px] font-bold text-text-primary">
+                Gia Sư AI LingoSphere
               </h1>
-              <p className="text-xs text-text-tertiary">
-                Chỉ giải đáp và hỗ trợ nội dung liên quan đến học tập tiếng Anh
+              <p className="mt-0.5 text-[13px] text-text-secondary">
+                Giải đáp ngữ pháp, tra cứu từ vựng và luyện tập tiếng Anh thông minh
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {isPremiumUser ? (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-bold shadow-xs">
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-bold shadow-xs">
                 <Icon name="award" size={14} className="text-amber-500" />
                 <span>VIP Premium • Không giới hạn câu hỏi</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs ${
+                <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-semibold shadow-xs ${
                   chatRemaining > 1
                     ? 'bg-surface-subtle border-border text-text-secondary'
                     : 'bg-destructive/10 border-destructive/30 text-destructive'
@@ -151,7 +156,7 @@ export default function AiLearningAppPage() {
                   <span>Gói Miễn phí: Còn {Math.max(0, chatRemaining)}/5 câu (1k context)</span>
                 </div>
                 <Link href="/settings">
-                  <Button size="sm" variant="default" className="h-8 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs gap-1 shadow-xs">
+                  <Button size="sm" variant="default" className="h-8 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs gap-1 shadow-xs cursor-pointer">
                     <Icon name="sparkles" size={13} />
                     Nâng cấp VIP
                   </Button>

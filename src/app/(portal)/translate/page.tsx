@@ -115,32 +115,36 @@ export default function AiTranslationAppPage() {
   return (
     <>
       <div className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
-        <div className="flex flex-wrap items-center justify-between border-b border-border pb-5 gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-accent/10 text-accent border border-accent/20">
-                <Icon name="sparkles" size={13} />
-                AI Contextual Translation
-              </span>
-              <span className="text-xs text-text-tertiary">Chuyên sâu Tiếng Anh ⇋ Tiếng Việt</span>
+        <div className="flex flex-wrap items-center justify-between border-b border-border pb-5 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-accent text-white shadow-md shrink-0">
+              <Icon name="sparkles" size={22} />
             </div>
-            <h1 className="text-2xl font-extrabold text-text-primary tracking-tight mt-1.5">
-              Dịch Thuật Song Ngữ Thông Minh
-            </h1>
-            <p className="text-sm text-text-secondary mt-1">
-              Phân tích cấu trúc ngữ pháp và trích xuất từ vựng trọng tâm trong từng câu dịch
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-text-tertiary">
+                  AI CONTEXTUAL TRANSLATION
+                </span>
+                <span className="text-xs text-text-tertiary">• Song ngữ Anh ⇋ Việt</span>
+              </div>
+              <h1 className="mt-0.5 text-[20px] font-bold text-text-primary">
+                Dịch Thuật Song Ngữ Thông Minh
+              </h1>
+              <p className="mt-0.5 text-[13px] text-text-secondary">
+                Phân tích cấu trúc ngữ pháp và trích xuất từ vựng trọng tâm trong từng câu dịch
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {isPremiumUser ? (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-bold shadow-xs">
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-bold shadow-xs">
                 <Icon name="award" size={14} className="text-amber-500" />
                 <span>VIP Premium • Dịch không giới hạn</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs ${
+                <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-semibold shadow-xs ${
                   transRemaining > 1
                     ? 'bg-surface-subtle border-border text-text-secondary'
                     : 'bg-destructive/10 border-destructive/30 text-destructive'
