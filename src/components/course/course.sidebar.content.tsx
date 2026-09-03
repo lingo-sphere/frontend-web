@@ -74,8 +74,13 @@ export function CourseSidebarContent({
         const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
         const chTotal = chapter.lessons.length
 
+        const currentOrder = Number(chapter.order || chIdx + 1)
         const modProgress = modulesProgress?.find(
-          (m) => m.module_id === chapter.id || m.order_index === (chapter.order || chIdx + 1)
+          (m) =>
+            m.module_id === chapter.id ||
+            String(m.module_id) === String(chapter.id) ||
+            Number(m.order_index) === currentOrder ||
+            Number(m.order_index) === chIdx + 1
         )
 
         const isPassedByChallenge = Boolean(
@@ -90,9 +95,9 @@ export function CourseSidebarContent({
           (modProgress?.challenge_score !== undefined && modProgress.challenge_score >= 0)
         )
 
-        const postMiniScore = modProgress?.post_mini_score ?? 0
+        const postMiniScore = Number(modProgress?.post_mini_score ?? 0)
         const isPostMiniTaken = Boolean(
-          (modProgress?.post_mini_score !== undefined) ||
+          (modProgress?.post_mini_score !== undefined && modProgress.post_mini_score !== null) ||
           modProgress?.status === 'COMPLETED' ||
           (chapter.status === 'completed' && !isPassedByChallenge)
         )
@@ -100,9 +105,14 @@ export function CourseSidebarContent({
         const isChapterCompleted = isPassedByChallenge || isPassedByPostMini || (chTotal > 0 && chCompleted === chTotal)
 
         const prevChapter = chIdx > 0 ? chapters[chIdx - 1] : null
+        const prevOrder = Number(prevChapter?.order || chIdx)
         const prevModProgress = prevChapter
           ? modulesProgress?.find(
-              (m) => m.module_id === prevChapter.id || m.order_index === (prevChapter.order || chIdx)
+              (m) =>
+                m.module_id === prevChapter.id ||
+                String(m.module_id) === String(prevChapter.id) ||
+                Number(m.order_index) === prevOrder ||
+                Number(m.order_index) === chIdx
             )
           : null
         const prevPassedChallenge = Boolean(

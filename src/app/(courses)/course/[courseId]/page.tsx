@@ -167,9 +167,14 @@ export default function CourseDetailPage() {
           let progressDataResult: any = null
           if (userIsEnrolled) {
             try {
-              const progressData = await courseService.getCourseProgressDetail(
-                String(courseObj._id || courseObj.id || courseId)
-              )
+              const primaryCourseKey = String(courseObj._id || courseObj.id || courseId)
+              let progressData = await courseService.getCourseProgressDetail(primaryCourseKey)
+              if ((!progressData?.modules_progress || progressData.modules_progress.length === 0) && courseId && courseId !== primaryCourseKey) {
+                const fallbackProgress = await courseService.getCourseProgressDetail(courseId).catch(() => null)
+                if (fallbackProgress?.modules_progress && fallbackProgress.modules_progress.length > 0) {
+                  progressData = fallbackProgress
+                }
+              }
               if (progressData) {
                 progressDataResult = progressData
                 setProgressDetail(progressData)
@@ -203,7 +208,11 @@ export default function CourseDetailPage() {
               let chStatus: Chapter['status'] = (modIdx === 0 ? 'in-progress' : 'available') as Chapter['status']
               if (progressDataResult && Array.isArray(progressDataResult.modules_progress)) {
                 const foundMod = progressDataResult.modules_progress.find(
-                  (m: any) => m.module_id === modId || m.order_index === modOrder
+                  (m: any) =>
+                    m.module_id === modId ||
+                    String(m.module_id) === String(modId) ||
+                    Number(m.order_index) === modOrder ||
+                    Number(m.order_index) === modIdx + 1
                 )
                 if (foundMod) {
                   if (foundMod.status === 'COMPLETED' || foundMod.status === 'SKIPPED_BY_CHALLENGE') {
@@ -1108,13 +1117,26 @@ export default function CourseDetailPage() {
   }
 
   const handleTestComplete = async (score: number, isPassed: boolean, resultData?: unknown) => {
+    if (activeTestModal.testType === 'final-test') {
+      setProgressDetail((prev: any) => ({
+        ...(prev || {}),
+        course_progress: {
+          ...(prev?.course_progress || {}),
+          final_test_score: score,
+        },
+      }))
+    }
+
     if (activeTestModal.chapter) {
       const finishedChId = activeTestModal.chapter.id
-      const finishedChOrder = activeTestModal.chapter.order || 1
+      const finishedChOrder = Number(activeTestModal.chapter.order || 1)
       setProgressDetail((prev: any) => {
         const existingMods = Array.isArray(prev?.modules_progress) ? [...prev.modules_progress] : []
         const modIdx = existingMods.findIndex(
-          (m: any) => m.module_id === finishedChId || m.order_index === finishedChOrder
+          (m: any) =>
+            m.module_id === finishedChId ||
+            String(m.module_id) === String(finishedChId) ||
+            Number(m.order_index) === finishedChOrder
         )
         const updatedMod = {
           module_id: finishedChId,
@@ -1137,7 +1159,9 @@ export default function CourseDetailPage() {
       setCourse((prev) => {
         if (!prev) return null
         const nextChapters = prev.chapters.map((ch) =>
-          ch.id === finishedChId ? { ...ch, status: 'completed' as const } : ch
+          ch.id === finishedChId || String(ch.id) === String(finishedChId) || Number(ch.order) === finishedChOrder
+            ? { ...ch, status: 'completed' as const }
+            : ch
         )
         return { ...prev, chapters: nextChapters }
       })
@@ -1150,15 +1174,15 @@ export default function CourseDetailPage() {
           setProgressDetail(updatedProgress)
           if (Array.isArray(updatedProgress.modules_progress)) {
             const modStatusMap = new Map(
-              updatedProgress.modules_progress.map((m: any) => [m.module_id, m.status])
+              updatedProgress.modules_progress.map((m: any) => [String(m.module_id), m.status])
             )
             const modOrderMap = new Map(
-              updatedProgress.modules_progress.map((m: any) => [m.order_index, m.status])
+              updatedProgress.modules_progress.map((m: any) => [Number(m.order_index), m.status])
             )
             setCourse((prev) => {
               if (!prev) return null
               const nextChapters = prev.chapters.map((ch, idx) => {
-                const foundStatus = modStatusMap.get(ch.id) || modOrderMap.get(ch.order || idx + 1)
+                const foundStatus = modStatusMap.get(String(ch.id)) || modOrderMap.get(Number(ch.order || idx + 1))
                 let chStatus: Chapter['status'] = ch.status
                 if (foundStatus === 'COMPLETED' || foundStatus === 'SKIPPED_BY_CHALLENGE') {
                   chStatus = 'completed'
