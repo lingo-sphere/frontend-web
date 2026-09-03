@@ -2,7 +2,7 @@
 
 /**
  * @file CourseScheduleBanner.tsx
- * @description Component giao diện React CourseScheduleBanner cho học viên
+ * @description Component giao diện React CourseScheduleBanner hiển thị trạng thái lịch học kèm định dạng đa ngôn ngữ
  */
 
 import { useTranslation } from 'react-i18next'
@@ -14,6 +14,56 @@ export interface UserScheduleData {
   is_reminder_enabled?: boolean
   study_duration_minutes?: number
   is_email_notification_enabled?: boolean
+}
+
+export function formatReminderDays(days?: string[], isVi: boolean = true): string {
+  if (!days || days.length === 0 || days.length === 7) {
+    return isVi ? 'Hàng ngày' : 'Every day'
+  }
+  const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6']
+  const weekends = ['T7', 'CN']
+  if (days.length === 5 && weekdays.every((d) => days.includes(d))) {
+    return isVi ? 'Các ngày trong tuần (T2 - T6)' : 'Weekdays (Mon - Fri)'
+  }
+  if (days.length === 2 && weekends.every((d) => days.includes(d))) {
+    return isVi ? 'Cuối tuần (T7, CN)' : 'Weekends (Sat, Sun)'
+  }
+  const labelMapVi: Record<string, string> = {
+    T2: 'Thứ 2',
+    T3: 'Thứ 3',
+    T4: 'Thứ 4',
+    T5: 'Thứ 5',
+    T6: 'Thứ 6',
+    T7: 'Thứ 7',
+    CN: 'Chủ nhật',
+  }
+  const labelMapEn: Record<string, string> = {
+    T2: 'Mon',
+    T3: 'Tue',
+    T4: 'Wed',
+    T5: 'Thu',
+    T6: 'Fri',
+    T7: 'Sat',
+    CN: 'Sun',
+  }
+  return days.map((d) => (isVi ? labelMapVi[d] || d : labelMapEn[d] || d)).join(', ')
+}
+
+export function formatReminderTime(time?: string, isVi: boolean = true): string {
+  if (!time) return ''
+  const [hStr, mStr] = time.split(':')
+  const h = parseInt(hStr || '20', 10)
+  const m = parseInt(mStr || '00', 10)
+  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  const isPM = h >= 12
+  if (isVi) {
+    const period = isPM ? 'CH' : 'SA'
+    return `${pad(h)}:${pad(m)} (${pad(h12)}:${pad(m)} ${period})`
+  } else {
+    const period = isPM ? 'PM' : 'AM'
+    return `${pad(h12)}:${pad(m)} ${period}`
+  }
 }
 
 interface CourseScheduleBannerProps {
@@ -33,6 +83,8 @@ export function CourseScheduleBanner({
   const isVi = i18n.language === 'vi'
 
   const hasActiveSchedule = Boolean(schedule?.is_reminder_enabled && schedule?.reminder_time)
+  const formattedDays = formatReminderDays(schedule?.reminder_days, isVi)
+  const formattedTime = formatReminderTime(schedule?.reminder_time, isVi)
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative transition-all">
@@ -56,7 +108,7 @@ export function CourseScheduleBanner({
             {hasActiveSchedule && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                 <BellRing size={12} className="animate-pulse" />
-                {schedule?.reminder_time}
+                {formattedTime}
               </span>
             )}
           </div>
@@ -65,19 +117,15 @@ export function CourseScheduleBanner({
               isVi ? (
                 <>
                   Hệ thống sẽ gửi email nhắc học vào lúc{' '}
-                  <strong className="text-text-primary font-bold">{schedule?.reminder_time}</strong> các ngày (
-                  {schedule?.reminder_days && schedule.reminder_days.length > 0
-                    ? schedule.reminder_days.join(', ')
-                    : 'Hàng ngày'}
+                  <strong className="text-text-primary font-bold">{formattedTime}</strong> các ngày (
+                  <span className="text-primary font-bold">{formattedDays}</span>
                   ) để giúp bạn duy trì thói quen học ngắt quãng và đạt điểm TOEIC cao hơn 68%.
                 </>
               ) : (
                 <>
                   Reminders will be sent to your email at{' '}
-                  <strong className="text-text-primary font-bold">{schedule?.reminder_time}</strong> on (
-                  {schedule?.reminder_days && schedule.reminder_days.length > 0
-                    ? schedule.reminder_days.join(', ')
-                    : 'Daily'}
+                  <strong className="text-text-primary font-bold">{formattedTime}</strong> on (
+                  <span className="text-primary font-bold">{formattedDays}</span>
                   ) to help maintain your study streak.
                 </>
               )
