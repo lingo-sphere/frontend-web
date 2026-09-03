@@ -85,12 +85,12 @@ export function HeaderMyLearningHover() {
     <div className="absolute right-0 top-full mt-2 w-80 sm:w-[340px] rounded-2xl border border-border bg-surface shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 text-left">
       {loading ? (
         <div className="p-8 text-center flex items-center justify-center gap-2 text-xs text-text-secondary">
-          <Loader2 size={16} className="animate-spin text-purple-600" />
+          <Loader2 size={16} className="animate-spin text-primary" />
           <span>{isVi ? 'Đang tải khóa học...' : 'Loading courses...'}</span>
         </div>
       ) : courses.length === 0 ? (
         <div className="p-6 text-center space-y-3">
-          <div className="h-12 w-12 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
+          <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
             <BookOpen size={22} />
           </div>
           <p className="text-xs text-text-secondary">
@@ -100,7 +100,7 @@ export function HeaderMyLearningHover() {
           </p>
           <button
             onClick={() => navigate('/courses')}
-            className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 transition-colors cursor-pointer"
+            className="rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs px-4 py-2 transition-colors shadow-sm shadow-primary/20 cursor-pointer"
           >
             {isVi ? 'Khám phá khóa học ngay' : 'Explore Courses'}
           </button>
@@ -120,20 +120,20 @@ export function HeaderMyLearningHover() {
                   className="h-12 w-12 rounded-xl object-cover shrink-0 border border-border/60"
                 />
                 <div className="flex-1 space-y-1.5 min-w-0">
-                  <h4 className="text-xs font-bold text-text-primary line-clamp-2 leading-snug group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  <h4 className="text-xs font-bold text-text-primary line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                     {course.title}
                   </h4>
                   {course.progress > 0 ? (
                     <div className="space-y-1">
-                      <div className="h-1.5 w-full rounded-full bg-purple-100 dark:bg-purple-950/40 overflow-hidden">
+                      <div className="h-1.5 w-full rounded-full bg-primary/15 overflow-hidden">
                         <div
-                          className="h-full bg-purple-600 rounded-full"
+                          className="h-full bg-primary rounded-full"
                           style={{ width: `${course.progress}%` }}
                         />
                       </div>
                     </div>
                   ) : (
-                    <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 block">
+                    <span className="text-[11px] font-bold text-primary block">
                       {isVi ? 'Bắt đầu học' : 'Start learning'}
                     </span>
                   )}
@@ -145,7 +145,7 @@ export function HeaderMyLearningHover() {
           <div className="p-3 border-t border-border bg-surface-subtle/30">
             <button
               onClick={() => navigate('/courses')}
-              className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2.5 transition-colors shadow-sm cursor-pointer"
+              className="w-full rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs py-2.5 transition-colors shadow-sm shadow-primary/20 cursor-pointer"
             >
               {isVi ? 'Đến Khóa học của tôi' : 'Go to My learning'}
             </button>

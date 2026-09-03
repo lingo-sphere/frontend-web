@@ -114,7 +114,7 @@ export function HeaderUserHover({ onClose, onLanguageToggle, currentLanguage = '
         >
           <span>{isVi ? 'Giỏ hàng của tôi' : 'My cart'}</span>
           {cartItemCount > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
               {cartItemCount}
             </span>
           )}
@@ -156,7 +156,7 @@ export function HeaderUserHover({ onClose, onLanguageToggle, currentLanguage = '
           className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-subtle hover:text-text-primary transition-colors cursor-pointer"
         >
           <span>{isVi ? 'Tin nhắn' : 'Messages'}</span>
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
             1
           </span>
         </button>

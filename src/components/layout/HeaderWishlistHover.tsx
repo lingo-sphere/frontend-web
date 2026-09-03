@@ -60,7 +60,7 @@ export function HeaderWishlistHover() {
           </p>
           <button
             onClick={() => navigate('/courses')}
-            className="text-xs font-bold text-purple-600 hover:underline cursor-pointer"
+            className="text-xs font-bold text-primary hover:underline cursor-pointer"
           >
             {isVi ? 'Khám phá khóa học' : 'Explore courses'}
           </button>
@@ -83,7 +83,7 @@ export function HeaderWishlistHover() {
                       className="h-14 w-14 rounded-xl object-cover shrink-0 border border-border/60"
                     />
                     <div className="flex-1 space-y-0.5 min-w-0">
-                      <h4 className="text-xs font-bold text-text-primary line-clamp-2 leading-snug group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                      <h4 className="text-xs font-bold text-text-primary line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                         {course.title}
                       </h4>
                       <p className="text-[10px] text-text-tertiary line-clamp-1">
@@ -105,7 +105,7 @@ export function HeaderWishlistHover() {
                   {isEnrolled(course.id) || isPremiumUser || isPrivilegedUser ? (
                     <button
                       onClick={(e) => handleAddToCart(e, course.id)}
-                      className="w-full rounded-lg bg-primary hover:bg-primary-hover text-white py-1.5 text-xs font-bold transition-colors cursor-pointer text-center"
+                      className="w-full rounded-lg bg-primary hover:bg-primary-hover text-white py-1.5 text-xs font-bold transition-colors cursor-pointer text-center shadow-xs"
                     >
                       {isVi ? 'Vào học' : 'Learn Now'}
                     </button>
@@ -115,7 +115,7 @@ export function HeaderWishlistHover() {
                       className={`w-full rounded-lg border py-1.5 text-xs font-bold transition-colors cursor-pointer text-center ${
                         inCart
                           ? 'border-emerald-600 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
-                          : 'border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30'
+                          : 'border-primary text-primary hover:bg-primary/10'
                       }`}
                     >
                       {inCart ? (isVi ? 'Đã trong giỏ' : 'In Cart') : 'Add to cart'}
@@ -129,7 +129,7 @@ export function HeaderWishlistHover() {
           <div className="p-3 border-t border-border bg-surface-subtle/30">
             <button
               onClick={() => navigate('/courses?tab=wishlist')}
-              className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2.5 transition-colors shadow-sm cursor-pointer"
+              className="w-full rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs py-2.5 transition-colors shadow-sm shadow-primary/20 cursor-pointer"
             >
               {isVi ? 'Đến danh sách yêu thích' : 'Go to wishlist'}
             </button>

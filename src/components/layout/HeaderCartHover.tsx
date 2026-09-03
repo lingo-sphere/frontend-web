@@ -30,7 +30,7 @@ export function HeaderCartHover() {
           </p>
           <button
             onClick={() => navigate('/courses')}
-            className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer block mx-auto"
+            className="text-xs font-bold text-primary hover:underline cursor-pointer block mx-auto"
           >
             {isVi ? 'Khám phá khóa học' : 'Keep shopping'}
           </button>
@@ -59,7 +59,7 @@ export function HeaderCartHover() {
                     className="h-12 w-12 rounded-xl object-cover shrink-0 border border-border/60"
                   />
                   <div className="flex-1 space-y-1 min-w-0">
-                    <h4 className="text-xs font-bold text-text-primary line-clamp-2 leading-snug group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    <h4 className="text-xs font-bold text-text-primary line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                       {item.title}
                     </h4>
                     <span className="text-xs font-extrabold text-text-primary block">
@@ -76,14 +76,14 @@ export function HeaderCartHover() {
               <span className="font-semibold text-text-secondary">
                 {isVi ? 'Tổng thanh toán:' : 'Total:'}
               </span>
-              <span className="text-sm font-extrabold text-purple-600 dark:text-purple-400">
+              <span className="text-sm font-extrabold text-primary">
                 ₫{totalAmount.toLocaleString('vi-VN')}
               </span>
             </div>
 
             <button
               onClick={() => navigate('/cart')}
-              className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2.5 transition-colors shadow-sm cursor-pointer text-center"
+              className="w-full rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs py-2.5 transition-colors shadow-sm shadow-primary/20 cursor-pointer text-center"
             >
               {isVi ? 'Đến giỏ hàng' : 'Go to cart'}
             </button>

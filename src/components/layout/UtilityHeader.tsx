@@ -255,7 +255,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                 >
                   <ShoppingCart size={17} />
                   {mounted && cartItemCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white shadow-sm">
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm">
                       {cartItemCount > 9 ? '9+' : cartItemCount}
                     </span>
                   )}
