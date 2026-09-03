@@ -47,44 +47,97 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
     let isMounted = true
     subscriptionService
       .getPlans()
-      .then((dbPlans) => {
-        if (!isMounted || !Array.isArray(dbPlans) || dbPlans.length === 0) return
-        setPlans((prev) =>
-          prev.map((p) => {
-            const match = dbPlans.find(
-              (dp: any) =>
-                dp.billing_cycle === p.cycle ||
-                (p.cycle === 'MONTHLY' && dp.slug === 'vip-1-month') ||
-                (p.cycle === 'QUARTERLY' && dp.slug === 'vip-3-month') ||
-                (p.cycle === 'YEARLY' && dp.slug === 'vip-1-year') ||
-                (p.cycle === 'LIFETIME' && dp.slug === 'vip-lifetime')
-            )
-            if (match && typeof match.price === 'number') {
-              const formattedPerMonth =
-                p.cycle === 'MONTHLY'
-                  ? `${new Intl.NumberFormat('vi-VN').format(match.price)}đ/tháng`
-                  : p.cycle === 'QUARTERLY'
-                  ? `~${new Intl.NumberFormat('vi-VN').format(Math.round(match.price / 3))}đ/tháng`
-                  : p.cycle === 'YEARLY'
-                  ? `~${new Intl.NumberFormat('vi-VN').format(Math.round(match.price / 12))}đ/tháng`
-                  : 'Trọn đời'
-              return {
-                ...p,
-                price: match.price,
-                originalPrice: match.original_price || p.originalPrice,
-                discount: match.discount || p.discount,
-                recommended: match.is_popular !== undefined ? match.is_popular : p.recommended,
-                perMonth: {
-                  en: formattedPerMonth,
-                  vi: formattedPerMonth,
-                },
-              }
-            }
-            return p
-          })
-        )
+      .then((raw: any) => {
+        if (!isMounted) return
+        const dbPlans = Array.isArray(raw) ? raw : raw?.data || []
+        if (!Array.isArray(dbPlans) || dbPlans.length === 0) return
+
+        const activePaidPlans = dbPlans
+          .filter(
+            (dp: any) =>
+              dp.slug !== 'free' &&
+              dp.plan_type !== 'FREE' &&
+              dp.tier > 0 &&
+              dp.is_active !== false
+          )
+          .sort((a: any, b: any) => (a.tier || 0) - (b.tier || 0))
+
+        if (activePaidPlans.length === 0) return
+
+        const mappedPlans: Plan[] = activePaidPlans.map((dp: any) => {
+          const isMonthly = dp.slug === 'vip-1-month' || dp.billing_cycle === 'MONTHLY'
+          const isQuarterly = dp.slug === 'vip-3-month' || dp.billing_cycle === 'QUARTERLY'
+          const isYearly = dp.slug === 'vip-1-year' || dp.billing_cycle === 'YEARLY'
+          const isLifetime = dp.slug === 'vip-lifetime' || dp.billing_cycle === 'LIFETIME'
+
+          const id = isMonthly
+            ? '1-month'
+            : isQuarterly
+            ? '3-month'
+            : isYearly
+            ? '12-month'
+            : isLifetime
+            ? 'lifetime'
+            : dp.slug
+
+          const cycle: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'LIFETIME' = isMonthly
+            ? 'MONTHLY'
+            : isQuarterly
+            ? 'QUARTERLY'
+            : isYearly
+            ? 'YEARLY'
+            : 'LIFETIME'
+
+          const duration =
+            isLifetime || dp.duration_days >= 36500
+              ? { en: 'Lifetime', vi: 'Vĩnh viễn' }
+              : isYearly || dp.duration_days >= 365
+              ? { en: '1 Year', vi: '1 năm' }
+              : isQuarterly || dp.duration_days >= 90
+              ? { en: '3 Months', vi: '3 tháng' }
+              : { en: '1 Month', vi: '1 tháng' }
+
+          const formattedPerMonth = isMonthly
+            ? `${new Intl.NumberFormat('vi-VN').format(dp.price)}đ/tháng`
+            : isQuarterly
+            ? `~${new Intl.NumberFormat('vi-VN').format(Math.round(dp.price / 3))}đ/tháng`
+            : isYearly
+            ? `~${new Intl.NumberFormat('vi-VN').format(Math.round(dp.price / 12))}đ/tháng`
+            : 'Trọn đời'
+
+          return {
+            id,
+            cycle,
+            duration,
+            price: Number(dp.price),
+            originalPrice:
+              dp.original_price && Number(dp.original_price) > Number(dp.price)
+                ? Number(dp.original_price)
+                : undefined,
+            perMonth: {
+              en: formattedPerMonth,
+              vi: formattedPerMonth,
+            },
+            discount:
+              dp.discount ||
+              (dp.original_price && Number(dp.original_price) > Number(dp.price)
+                ? `-${Math.round(((dp.original_price - dp.price) / dp.original_price) * 100)}%`
+                : undefined),
+            recommended: Boolean(dp.is_popular),
+          }
+        })
+
+        setPlans(mappedPlans)
+
+        setSelectedPlan((curr) => {
+          const stillExists = mappedPlans.some((p) => p.id === curr)
+          if (stillExists) return curr
+          const popular = mappedPlans.find((p) => p.recommended)
+          return popular ? popular.id : mappedPlans[0]?.id || '12-month'
+        })
       })
       .catch(() => {})
+
     return () => {
       isMounted = false
     }
