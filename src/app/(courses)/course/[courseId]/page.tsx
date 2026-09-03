@@ -533,10 +533,68 @@ export default function CourseDetailPage() {
             finalTest: { status: userIsEnrolled ? 'available' : 'locked' },
           }
 
+          const flatLessons: Array<{ chapter: Chapter; lesson: Lesson; isCompleted: boolean }> = []
+          mappedChapters.forEach((ch) => {
+            ch.lessons.forEach((l) => {
+              const isComp = l.status === 'completed' || completedLessonIdSet.has(l.id)
+              flatLessons.push({
+                chapter: ch,
+                lesson: l,
+                isCompleted: isComp,
+              })
+            })
+          })
+
+          let targetItem: { chapter: Chapter; lesson: Lesson } | null = null
+          let lastCompletedIndex = -1
+          for (let i = 0; i < flatLessons.length; i++) {
+            if (flatLessons[i].isCompleted) {
+              lastCompletedIndex = i
+            }
+          }
+
+          if (lastCompletedIndex >= 0) {
+            if (lastCompletedIndex + 1 < flatLessons.length) {
+              targetItem = flatLessons[lastCompletedIndex + 1]
+            } else {
+              const firstUncompletedItem = flatLessons.find((item) => !item.isCompleted)
+              if (firstUncompletedItem) {
+                targetItem = firstUncompletedItem
+              } else {
+                targetItem = flatLessons[flatLessons.length - 1]
+              }
+            }
+          } else {
+            try {
+              const savedLessonId = localStorage.getItem(`course_last_watched_${courseId}`)
+              if (savedLessonId) {
+                const foundIdx = flatLessons.findIndex((item) => item.lesson.id === savedLessonId)
+                if (foundIdx >= 0) {
+                  if (foundIdx + 1 < flatLessons.length) {
+                    targetItem = flatLessons[foundIdx + 1]
+                  } else {
+                    targetItem = flatLessons[foundIdx]
+                  }
+                }
+              }
+            } catch {}
+          }
+
+          if (!targetItem && flatLessons.length > 0) {
+            targetItem = flatLessons[0]
+          }
+
+          const initialChapter = targetItem?.chapter || mappedChapters[0] || null
+          const initialLesson = targetItem?.lesson || mappedChapters[0]?.lessons[0] || null
+
           setCourse(structuredCourse)
-          setCurrentChapter(mappedChapters[0])
-          setCurrentLesson(mappedChapters[0]?.lessons[0] || null)
-          setExpandedChapters(mappedChapters.map((ch) => ch.id))
+          setCurrentChapter(initialChapter)
+          setCurrentLesson(initialLesson)
+          setExpandedChapters(
+            initialChapter
+              ? Array.from(new Set([...mappedChapters.map((ch) => ch.id), initialChapter.id]))
+              : mappedChapters.map((ch) => ch.id)
+          )
         }
       } catch {
         // Handle error gracefully
@@ -562,6 +620,9 @@ export default function CourseDetailPage() {
   const handleSelectLesson = (chapter: Chapter, lesson: Lesson) => {
     setCurrentChapter(chapter)
     setCurrentLesson(lesson)
+    try {
+      localStorage.setItem(`course_last_watched_${courseId}`, lesson.id)
+    } catch {}
   }
 
   // Student manual click on checkbox to toggle lesson completion
