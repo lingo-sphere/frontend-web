@@ -139,29 +139,13 @@ export function CourseTestRunnerModal({
         return finalTestQuestions as CourseTestQuestion[]
       }
     }
-    if (testType === 'challenge') {
-      if (Array.isArray(chapter?.challenge_questions) && chapter.challenge_questions.length > 0) {
-        return chapter.challenge_questions as CourseTestQuestion[]
-      }
-      if (Array.isArray(chapter?.test_questions) && chapter.test_questions.length > 0) {
-        return chapter.test_questions as CourseTestQuestion[]
-      }
-    }
-    if (testType === 'post-mini') {
-      if (Array.isArray(chapter?.post_mini_questions) && chapter.post_mini_questions.length > 0) {
-        return chapter.post_mini_questions as CourseTestQuestion[]
-      }
-      if (Array.isArray(chapter?.test_questions) && chapter.test_questions.length > 0) {
-        return chapter.test_questions as CourseTestQuestion[]
-      }
-    }
-    if (testType === 'exercise') {
-      if (Array.isArray(chapter?.test_questions) && chapter.test_questions.length > 0) {
-        return chapter.test_questions as CourseTestQuestion[]
-      }
-      if (Array.isArray(chapter?.post_mini_questions) && chapter.post_mini_questions.length > 0) {
-        return chapter.post_mini_questions as CourseTestQuestion[]
-      }
+    if (testType === 'challenge' || testType === 'post-mini' || testType === 'exercise') {
+      const qList =
+        (Array.isArray(chapter?.test_questions) && chapter.test_questions.length > 0 ? chapter.test_questions : null) ||
+        (Array.isArray(chapter?.post_mini_questions) && chapter.post_mini_questions.length > 0 ? chapter.post_mini_questions : null) ||
+        (Array.isArray(chapter?.challenge_questions) && chapter.challenge_questions.length > 0 ? chapter.challenge_questions : null) ||
+        []
+      return qList as CourseTestQuestion[]
     }
     return []
   }, [chapter, testType, finalTestQuestions])
@@ -380,20 +364,28 @@ export function CourseTestRunnerModal({
                       <div>
                         <h4 className="text-base font-extrabold">
                           {scoreResult.isPassed
-                            ? '🎉 Chúc mừng! Bạn đã vượt qua bài test!'
+                            ? testType === 'challenge'
+                              ? '🎉 Xuất sắc! Bạn đã vượt cấp thành công!'
+                              : '🎉 Chúc mừng! Bạn đã hoàn thành bài test!'
+                            : testType === 'challenge'
+                            ? '⚡ Chưa đạt điểm vượt cấp (Đã sử dụng 1 lượt thử)'
                             : '⚡ Chưa đạt điểm chuẩn!'}
                         </h4>
                         <p className="text-xs opacity-90 mt-0.5">
                           Đúng {scoreResult.correctCount}/{scoreResult.totalQuestions} câu (
                           {scoreResult.score}%).{' '}
                           {scoreResult.isPassed
-                            ? 'Tiến độ và điểm số đã được tự động lưu vào hệ thống!'
-                            : `Cần đạt tối thiểu ${passingScore}% để vượt qua.`}
+                            ? testType === 'challenge'
+                              ? 'Chương đã được vượt cấp, mở khóa chương kế tiếp!'
+                              : 'Tiến độ và điểm số đã được tự động lưu vào hệ thống!'
+                            : testType === 'challenge'
+                            ? `Cần đạt tối thiểu ${passingScore}%. Hãy hoàn thành các bài giảng và làm bài test ở cuối chương nhé!`
+                            : `Cần đạt tối thiểu ${passingScore}% để vượt qua. Bạn có thể làm lại bài này nhiều lần.`}
                         </p>
                       </div>
                     </div>
 
-                    {!scoreResult.isPassed && (
+                    {!scoreResult.isPassed && testType !== 'challenge' && (
                       <Button
                         onClick={handleRetry}
                         variant="outline"

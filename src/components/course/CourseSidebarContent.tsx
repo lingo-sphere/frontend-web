@@ -2,8 +2,10 @@
 
 /**
  * @file CourseSidebarContent.tsx
- * @description Component thanh bên hiển thị danh sách chương, bài học, Challenge Test,
- * Post-mini Test và Final Test với giao diện thẻ hiện đại, chống rớt chữ, bố cục thoáng đãng.
+ * @description Component thanh bên hiển thị danh sách bài giảng và bài kiểm tra chương:
+ * Mỗi chương có 1 bộ câu hỏi kiểm tra:
+ * - Đầu chương: Thử thách vượt cấp (Challenge Test) - Chỉ được làm 1 lần duy nhất để qua chương.
+ * - Cuối chương: Bài kiểm tra đánh giá (Post-Mini Test) - Được làm lại nhiều lần cho đến khi đạt.
  */
 
 import { useState } from 'react'
@@ -16,12 +18,12 @@ import {
   PlayCircle,
   FileCheck2,
   Trophy,
-  HelpCircle,
   Sparkles,
   Lock,
   CheckCircle2,
   Award,
   Zap,
+  RotateCcw,
 } from 'lucide-react'
 import type { Chapter, Lesson } from '@/types/course'
 import { toast } from '@/store/toast-store'
@@ -31,6 +33,15 @@ interface CourseSidebarContentProps {
   currentLesson: Lesson
   expandedChapters: string[]
   isEnrolled?: boolean
+  modulesProgress?: Array<{
+    module_id: string
+    order_index?: number
+    status: string
+    challenge_score?: number
+    challenge_taken?: boolean
+    is_passed_by_challenge?: boolean
+    post_mini_score?: number
+  }>
   finalTestQuestionsCount?: number
   onToggleChapter: (chapterId: string) => void
   onSelectLesson: (chapter: Chapter, lesson: Lesson) => void
@@ -43,6 +54,7 @@ export function CourseSidebarContent({
   currentLesson,
   expandedChapters,
   isEnrolled = true,
+  modulesProgress,
   finalTestQuestionsCount = 0,
   onToggleChapter,
   onSelectLesson,
@@ -57,23 +69,38 @@ export function CourseSidebarContent({
         const isExpanded = expandedChapters.includes(chapter.id)
         const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
         const chTotal = chapter.lessons.length
-        const isChapterCompleted = chapter.status === 'completed' || (chTotal > 0 && chCompleted === chTotal)
 
-        // Check teacher-uploaded questions or tests
-        const challengeQuestionsCount =
-          Array.isArray(chapter.challenge_questions) && chapter.challenge_questions.length > 0
-            ? chapter.challenge_questions.length
-            : chapter.challengeTest?.questionsCount || 0
+        // Lấy thông tin tiến độ của chương từ backend
+        const modProgress = modulesProgress?.find(
+          (m) => m.module_id === chapter.id || m.order_index === (chapter.order || chIdx + 1)
+        )
 
-        const postMiniQuestionsCount =
-          Array.isArray(chapter.post_mini_questions) && chapter.post_mini_questions.length > 0
-            ? chapter.post_mini_questions.length
-            : chapter.postMiniTest?.questionsCount || 0
+        // Kiểm tra xem chương đã được vượt cấp bằng Challenge Test chưa
+        const isPassedByChallenge = Boolean(
+          modProgress?.is_passed_by_challenge ||
+          modProgress?.status === 'SKIPPED_BY_CHALLENGE' ||
+          chapter.status === 'completed' && (modProgress?.challenge_score || 0) >= (chapter.challengeTest?.passingScore || 80)
+        )
 
-        const testQuestionsCount =
-          Array.isArray(chapter.test_questions) && chapter.test_questions.length > 0
-            ? chapter.test_questions.length
-            : chapter.exercise?.questionsCount || 0
+        // Kiểm tra xem học viên đã từng làm bài Challenge Test của chương này chưa (chỉ được 1 lần)
+        const isChallengeTaken = Boolean(
+          modProgress?.challenge_taken ||
+          isPassedByChallenge ||
+          (modProgress?.challenge_score !== undefined && modProgress.challenge_score > 0)
+        )
+
+        const postMiniScore = modProgress?.post_mini_score || 0
+        const isPassedByPostMini = postMiniScore >= 70
+        const isChapterCompleted = isPassedByChallenge || isPassedByPostMini || (chTotal > 0 && chCompleted === chTotal)
+
+        // Bộ câu hỏi kiểm tra của chương (1 bộ đề duy nhất do giảng viên tạo)
+        const chapterQuestions =
+          (Array.isArray(chapter.test_questions) && chapter.test_questions.length > 0 ? chapter.test_questions : null) ||
+          (Array.isArray(chapter.post_mini_questions) && chapter.post_mini_questions.length > 0 ? chapter.post_mini_questions : null) ||
+          (Array.isArray(chapter.challenge_questions) && chapter.challenge_questions.length > 0 ? chapter.challenge_questions : null) ||
+          []
+        const questionsCount = chapterQuestions.length
+        const passingScore = chapter.challengeTest?.passingScore || 80
 
         return (
           <div key={chapter.id} className="bg-surface">
@@ -87,12 +114,18 @@ export function CourseSidebarContent({
                   <span className="text-[11px] font-black uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                     Chương {chapter.order || chIdx + 1}
                   </span>
-                  {isChapterCompleted && (
+
+                  {isPassedByChallenge ? (
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 flex items-center gap-1">
+                      <Zap size={10} />
+                      Đã vượt cấp ({modProgress?.challenge_score || 80}%)
+                    </span>
+                  ) : isChapterCompleted ? (
                     <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                       <CheckCircle2 size={10} />
-                      Đã xong
+                      Đã hoàn thành
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors leading-snug line-clamp-1">
@@ -112,45 +145,94 @@ export function CourseSidebarContent({
             {/* Chapter Collapsible Body */}
             {isExpanded && (
               <div className="bg-surface-subtle/30 p-2.5 space-y-2">
-                {/* 1. Challenge Test Card */}
-                {challengeQuestionsCount > 0 && (
-                  <div
-                    onClick={() => onTakeTest?.(chapter, 'challenge')}
-                    className="p-3 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-surface hover:border-amber-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs shadow-amber-500/20">
-                        {isEnrolled ? <Trophy size={15} /> : <Lock size={14} />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs font-bold text-text-primary group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors whitespace-nowrap">
-                            Challenge Test
-                          </span>
-                          <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
-                            Vượt cấp
-                          </span>
+                {/* 1. ĐẦU CHƯƠNG: BÀI KIỂM TRA THỬ THÁCH (CHALLENGE TEST - LÀM 1 LẦN) */}
+                {questionsCount > 0 && (
+                  <>
+                    {isPassedByChallenge ? (
+                      /* Đã vượt cấp bằng Challenge Test */
+                      <div className="p-3 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 to-transparent flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
+                            <Zap size={16} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-black text-amber-900 dark:text-amber-200">
+                                Đã vượt cấp bằng Challenge Test
+                              </span>
+                              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-800 dark:text-amber-300">
+                                {modProgress?.challenge_score || 80}%
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-amber-800/80 dark:text-amber-300/80 mt-0.5">
+                              Đã hoàn thành thử thách và mở khóa chương tiếp theo
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
-                          {challengeQuestionsCount} câu • Điểm đạt: {chapter.challengeTest?.passingScore || 80}%
-                        </p>
                       </div>
-                    </div>
-
-                    {isEnrolled ? (
-                      <span className="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
-                        <Zap size={11} />
-                        Làm bài
-                      </span>
+                    ) : isChallengeTaken ? (
+                      /* Đã thử sức 1 lần nhưng chưa đạt -> Khóa thử thách, học các bài giảng */
+                      <div className="p-2.5 rounded-2xl border border-border/80 bg-surface-subtle/60 flex items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                            <Zap size={13} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-bold text-text-primary">
+                                Challenge Test: {modProgress?.challenge_score || 0}%
+                              </span>
+                              <span className="text-[9px] font-semibold text-text-tertiary">
+                                (Đã dùng 1 lần)
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-text-tertiary mt-0.5">
+                              Chưa đạt điểm vượt cấp. Hãy học các bài giảng và làm bài test ở cuối chương!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
-                      <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
-                        <Lock size={11} /> Khóa
-                      </span>
+                      /* Chưa làm Challenge Test -> Cho phép thử sức duy nhất 1 lần để qua chương */
+                      <div
+                        onClick={() => onTakeTest?.(chapter, 'challenge')}
+                        className="p-3 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-surface hover:border-amber-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs shadow-amber-500/20">
+                            {isEnrolled ? <Trophy size={15} /> : <Lock size={14} />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-bold text-text-primary group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors whitespace-nowrap">
+                                Thử thách đầu chương
+                              </span>
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
+                                Vượt cấp 1 lần
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
+                              {questionsCount} câu • Đạt {passingScore}% để qua thẳng chương
+                            </p>
+                          </div>
+                        </div>
+
+                        {isEnrolled ? (
+                          <span className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
+                            <Zap size={11} />
+                            <span>Làm bài</span>
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
+                            <Lock size={11} /> Khóa
+                          </span>
+                        )}
+                      </div>
                     )}
-                  </div>
+                  </>
                 )}
 
-                {/* 2. Lessons List */}
+                {/* 2. GIỮA CHƯƠNG: DANH SÁCH CÁC BÀI GIẢNG VIDEO */}
                 <div className="space-y-1">
                   {chapter.lessons.map((lesson) => {
                     const isActive = currentLesson.id === lesson.id
@@ -252,68 +334,45 @@ export function CourseSidebarContent({
                   })}
                 </div>
 
-                {/* 3. Practice Exercise Card */}
-                {testQuestionsCount > 0 && (
-                  <div
-                    onClick={() => onTakeTest?.(chapter, 'exercise')}
-                    className="p-3 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/10 via-indigo-500/5 to-surface hover:border-indigo-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-500 text-white shadow-xs shadow-indigo-500/20">
-                        {isEnrolled ? <HelpCircle size={15} /> : <Lock size={14} />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-xs font-bold text-text-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate block">
-                          Luyện tập trắc nghiệm
-                        </span>
-                        <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
-                          {testQuestionsCount} câu thực hành
-                        </p>
-                      </div>
-                    </div>
-
-                    {isEnrolled ? (
-                      <span className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0">
-                        Luyện tập
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
-                        <Lock size={11} /> Khóa
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* 4. Post-Mini Test Card */}
-                {postMiniQuestionsCount > 0 && (
+                {/* 3. CUỐI CHƯƠNG: BÀI KIỂM TRA CUỐI CHƯƠNG (POST-MINI TEST - ĐƯỢC LÀM NHIỀU LẦN) */}
+                {questionsCount > 0 && (
                   <div
                     onClick={() => onTakeTest?.(chapter, 'post-mini')}
                     className="p-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-surface hover:border-emerald-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
                   >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-xs shadow-emerald-500/20">
                         {isEnrolled ? <FileCheck2 size={15} /> : <Lock size={14} />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-bold text-text-primary group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors whitespace-nowrap">
-                            Post-Mini Test
+                            Bài kiểm tra cuối chương
                           </span>
                           <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
-                            Cuối chương
+                            {postMiniScore > 0 ? `${postMiniScore}%` : 'Đánh giá'}
                           </span>
                         </div>
                         <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
-                          {postMiniQuestionsCount} câu • Đánh giá hoàn thành
+                          {postMiniScore > 0
+                            ? `Điểm cao nhất: ${postMiniScore}% • Được làm lại nhiều lần`
+                            : `${questionsCount} câu hỏi • Đánh giá hoàn thành chương`}
                         </p>
                       </div>
                     </div>
 
                     {isEnrolled ? (
-                      <span className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
-                        <Sparkles size={11} />
-                        <span>Kiểm tra</span>
-                      </span>
+                      postMiniScore >= 70 || isPassedByChallenge ? (
+                        <span className="px-3 py-1.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-500/30 transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
+                          <RotateCcw size={11} />
+                          <span>Làm lại</span>
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
+                          <Sparkles size={11} />
+                          <span>{postMiniScore > 0 ? 'Thi lại' : 'Kiểm tra'}</span>
+                        </span>
+                      )
                     ) : (
                       <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
                         <Lock size={11} /> Khóa
@@ -327,7 +386,7 @@ export function CourseSidebarContent({
         )
       })}
 
-      {/* 5. Final Test (Bài thi tốt nghiệp cuối khóa) */}
+      {/* 4. Final Test (Bài thi tốt nghiệp cuối khóa) */}
       {finalTestQuestionsCount > 0 && (
         <div className="p-3.5 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border-t border-emerald-500/20">
           <div

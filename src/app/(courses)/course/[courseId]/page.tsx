@@ -1280,6 +1280,7 @@ export default function CourseDetailPage() {
                 currentLesson={currentLesson}
                 expandedChapters={expandedChapters}
                 isEnrolled={isEnrolled}
+                modulesProgress={progressDetail?.modules_progress}
                 finalTestQuestionsCount={course.final_test_questions?.length || 0}
                 onToggleChapter={toggleChapter}
                 onSelectLesson={handleSelectLesson}
