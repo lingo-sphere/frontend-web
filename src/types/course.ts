@@ -211,6 +211,8 @@ export interface Course {
   }
   progress?: CourseProgress
   chapters: Chapter[]
+  category?: string
+  skills?: string[]
   thumbnail?: string
   thumbnail_url?: string
   price?: number

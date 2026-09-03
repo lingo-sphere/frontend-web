@@ -1311,6 +1311,8 @@ export default function CourseDetailPage() {
           chapter={activeTestModal.chapter}
           testType={activeTestModal.testType}
           finalTestQuestions={course.final_test_questions as any}
+          category={course.category}
+          skills={course.skills}
           onClose={() => setActiveTestModal({ isOpen: false, chapter: null, testType: 'post-mini' })}
           onComplete={handleTestComplete}
         />

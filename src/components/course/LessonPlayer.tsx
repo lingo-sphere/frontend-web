@@ -479,15 +479,7 @@ export function LessonPlayer({
     if (showEndedScreen && autoPlayNext && onNextLesson && hasNextLesson) {
       setCountdownSeconds(5)
       countdownIntervalRef.current = setInterval(() => {
-        setCountdownSeconds((prev) => {
-          if (prev <= 1) {
-            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
-            setShowEndedScreen(false)
-            onNextLesson()
-            return 5
-          }
-          return prev - 1
-        })
+        setCountdownSeconds((prev) => Math.max(0, prev - 1))
       }, 1000)
     }
 
@@ -496,14 +488,26 @@ export function LessonPlayer({
     }
   }, [showEndedScreen, autoPlayNext, onNextLesson, hasNextLesson])
 
-  // Reset when lesson changes
+  useEffect(() => {
+    if (showEndedScreen && autoPlayNext && countdownSeconds === 0 && onNextLesson && hasNextLesson) {
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
+      setShowEndedScreen(false)
+      onNextLesson()
+    }
+  }, [showEndedScreen, autoPlayNext, countdownSeconds, onNextLesson, hasNextLesson])
+
   useEffect(() => {
     setShowEndedScreen(false)
-    setIsPlaying(false)
     setCurrentTime(0)
     setShowSettingsMenu(false)
     if (videoRef.current) {
       videoRef.current.currentTime = 0
+      const playPromise = videoRef.current.play()
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch(() => setIsPlaying(false))
+      }
     }
   }, [lesson?.id, baseVideoSource])
 
@@ -528,6 +532,7 @@ export function LessonPlayer({
         <video
           ref={videoRef}
           src={effectiveVideoUrl}
+          autoPlay
           playsInline
           style={{
             filter:
@@ -562,6 +567,12 @@ export function LessonPlayer({
           onPause={() => setIsPlaying(false)}
           onWaiting={() => setIsBuffering(true)}
           onPlaying={() => setIsBuffering(false)}
+          onCanPlay={(e) => {
+            const playPromise = e.currentTarget.play()
+            if (playPromise !== undefined) {
+              playPromise.then(() => setIsPlaying(true)).catch(() => {})
+            }
+          }}
           onTimeUpdate={(e) => {
             const current = e.currentTarget.currentTime
             const dur = e.currentTarget.duration || 1
@@ -591,6 +602,8 @@ export function LessonPlayer({
               if (wasPlayingBeforeSwitchRef.current) {
                 e.currentTarget.play().catch(() => {})
               }
+            } else {
+              e.currentTarget.play().catch(() => {})
             }
           }}
           onEnded={() => {

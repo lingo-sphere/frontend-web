@@ -31,6 +31,8 @@ import {
   Send,
   BookOpen,
   Headphones,
+  UploadCloud,
+  FileAudio,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Chapter } from '@/types/course'
@@ -56,6 +58,8 @@ interface CourseTestRunnerModalProps {
   chapter: Chapter | null
   testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   finalTestQuestions?: CourseTestQuestion[]
+  category?: string
+  skills?: string[]
   onClose: () => void
   onComplete?: (score: number, isPassed: boolean, resultData?: unknown) => void
 }
@@ -94,10 +98,28 @@ export function CourseTestRunnerModal({
   chapter,
   testType,
   finalTestQuestions,
+  category,
+  skills,
   onClose,
   onComplete,
 }: CourseTestRunnerModalProps) {
+  const is4Skills = useMemo(() => {
+    if (category === 'TOEIC_4_SKILLS') return true
+    if (Array.isArray(skills) && (skills.includes('SPEAKING') || skills.includes('WRITING'))) return true
+    return false
+  }, [category, skills])
+
   const [activeSection, setActiveSection] = useState<'QUIZ' | 'SPEAKING' | 'WRITING'>('QUIZ')
+
+  useEffect(() => {
+    if (!is4Skills && activeSection !== 'QUIZ') {
+      setActiveSection('QUIZ')
+    }
+  }, [is4Skills, activeSection])
+
+  const [speakingInputMode, setSpeakingInputMode] = useState<'RECORD' | 'UPLOAD'>('RECORD')
+  const [uploadedAudioName, setUploadedAudioName] = useState<string | null>(null)
+  const audioFileInputRef = useRef<HTMLInputElement>(null)
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -357,12 +379,37 @@ export function CourseTestRunnerModal({
     }
   }
 
+  const handleAudioFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!/\.(mp3|wav|m4a|ogg|webm)$/i.test(file.name)) {
+      toast.error('Chỉ chấp nhận file âm thanh (.mp3, .wav, .m4a, .ogg, .webm)')
+      return
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Dung lượng file âm thanh không được vượt quá 50MB')
+      return
+    }
+
+    if (isRecording) stopRecording()
+    setRecordedBlob(file)
+    setRecordedUrl(URL.createObjectURL(file))
+    setUploadedAudioName(file.name)
+    setRecordingSeconds(0)
+    setSpeakingResult(null)
+    toast.success(`Đã chọn file ghi âm: ${file.name}`)
+  }
+
   const resetRecording = () => {
     if (isRecording) stopRecording()
     setRecordedBlob(null)
     setRecordedUrl(null)
+    setUploadedAudioName(null)
     setRecordingSeconds(0)
     setSpeakingResult(null)
+    if (audioFileInputRef.current) audioFileInputRef.current.value = ''
   }
 
   const handleSubmitSpeaking = async () => {
@@ -441,56 +488,58 @@ export function CourseTestRunnerModal({
           </button>
         </div>
 
-        <div className="flex items-center gap-2 px-6 py-2.5 border-b border-border/70 bg-surface-subtle/30 overflow-x-auto">
-          <button
-            type="button"
-            onClick={() => setActiveSection('QUIZ')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-              activeSection === 'QUIZ'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface'
-            }`}
-          >
-            <BookOpen size={13} />
-            <span>Trắc nghiệm & Nghe hiểu ({rawQuestions.length})</span>
-          </button>
+        {is4Skills && (
+          <div className="flex items-center gap-2 px-6 py-2.5 border-b border-border/70 bg-surface-subtle/30 overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setActiveSection('QUIZ')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                activeSection === 'QUIZ'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+              }`}
+            >
+              <BookOpen size={13} />
+              <span>Trắc nghiệm & Nghe hiểu ({rawQuestions.length})</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveSection('SPEAKING')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-              activeSection === 'SPEAKING'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface'
-            }`}
-          >
-            <Mic size={13} />
-            <span>Luyện Nói (Whisper AI)</span>
-            {speakingResult && (
-              <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-black">
-                {speakingResult.ai_score}đ
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveSection('SPEAKING')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                activeSection === 'SPEAKING'
+                  ? 'bg-amber-500 text-white shadow-xs'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+              }`}
+            >
+              <Mic size={13} />
+              <span>Luyện Nói (Whisper AI)</span>
+              {speakingResult && (
+                <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-black">
+                  {speakingResult.ai_score}đ
+                </span>
+              )}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveSection('WRITING')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-              activeSection === 'WRITING'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface'
-            }`}
-          >
-            <PenTool size={13} />
-            <span>Viết Luận (Writing)</span>
-            {writingResult && (
-              <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-black">
-                {writingResult.ai_score}đ
-              </span>
-            )}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setActiveSection('WRITING')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                activeSection === 'WRITING'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+              }`}
+            >
+              <PenTool size={13} />
+              <span>Viết Luận (Writing)</span>
+              {writingResult && (
+                <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-black">
+                  {writingResult.ai_score}đ
+                </span>
+              )}
+            </button>
+          </div>
+        )}
 
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
           {activeSection === 'QUIZ' && (
@@ -821,8 +870,49 @@ export function CourseTestRunnerModal({
                 </p>
               </div>
 
+              <div className="flex items-center justify-center gap-2 p-1.5 rounded-2xl bg-surface-subtle/80 border border-border/80 max-w-sm mx-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSpeakingInputMode('RECORD')
+                    if (!recordedUrl) resetRecording()
+                  }}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    speakingInputMode === 'RECORD'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  <Mic size={13} />
+                  <span>Thu âm trực tiếp</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSpeakingInputMode('UPLOAD')
+                    if (!recordedUrl) resetRecording()
+                  }}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    speakingInputMode === 'UPLOAD'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  <UploadCloud size={13} />
+                  <span>Tải file có sẵn</span>
+                </button>
+              </div>
+
               <div className="flex flex-col items-center justify-center p-8 rounded-2xl border border-dashed border-border bg-surface-subtle/40 space-y-4">
-                {!isRecording && !recordedUrl && (
+                <input
+                  ref={audioFileInputRef}
+                  type="file"
+                  accept="audio/*,.mp3,.wav,.ogg,.m4a,.webm"
+                  onChange={handleAudioFileSelect}
+                  className="hidden"
+                />
+
+                {!isRecording && !recordedUrl && speakingInputMode === 'RECORD' && (
                   <button
                     type="button"
                     onClick={startRecording}
@@ -830,6 +920,20 @@ export function CourseTestRunnerModal({
                   >
                     <Mic className="h-8 w-8" />
                     <span className="text-xs font-black">Bấm để thu âm</span>
+                  </button>
+                )}
+
+                {!isRecording && !recordedUrl && speakingInputMode === 'UPLOAD' && (
+                  <button
+                    type="button"
+                    onClick={() => audioFileInputRef.current?.click()}
+                    className="flex flex-col items-center gap-2.5 p-6 rounded-3xl border-2 border-dashed border-amber-400 bg-amber-50/50 hover:bg-amber-50 dark:bg-amber-950/20 dark:border-amber-700/60 dark:hover:bg-amber-950/40 text-amber-900 dark:text-amber-200 transition-all cursor-pointer"
+                  >
+                    <FileAudio className="h-9 w-9 text-amber-500" />
+                    <div className="text-center">
+                      <span className="text-xs font-bold block">Bấm để chọn file ghi âm từ thiết bị</span>
+                      <span className="text-[11px] text-amber-700/80 dark:text-amber-300/80 block mt-0.5">Hỗ trợ .mp3, .wav, .m4a, .ogg, .webm (tối đa 50MB)</span>
+                    </div>
                   </button>
                 )}
 
@@ -854,14 +958,14 @@ export function CourseTestRunnerModal({
                 {recordedUrl && (
                   <div className="w-full max-w-md space-y-3">
                     <div className="flex items-center justify-between text-xs font-bold text-text-secondary">
-                      <span>Bản thu của bạn ({recordingSeconds}s):</span>
+                      <span>{uploadedAudioName ? `Tệp đã chọn: ${uploadedAudioName}` : `Bản thu của bạn (${recordingSeconds}s):`}</span>
                       <button
                         type="button"
                         onClick={resetRecording}
                         className="flex items-center gap-1 text-rose-500 hover:underline cursor-pointer"
                       >
                         <RotateCcw size={12} />
-                        <span>Thu lại</span>
+                        <span>{uploadedAudioName ? 'Đổi tệp khác' : 'Thu lại'}</span>
                       </button>
                     </div>
 
