@@ -348,4 +348,52 @@ export const courseService = {
   async toggleQnAUpvote(qnaId: string): Promise<Record<string, unknown>> {
     return api.post(`/courses/qna/${qnaId}/upvote`)
   },
+
+  async submitSpeakingSubmission(
+    courseId: string,
+    data: {
+      audio_url: string
+      module_id?: string
+      test_type?: string
+      prompt?: string
+    }
+  ): Promise<{
+    _id: string
+    ai_score: number
+    whisper_transcript: string
+    ai_feedback: {
+      pronunciation_score: number
+      fluency_score: number
+      grammar_score: number
+      vocabulary_score: number
+      detailed_comment: string
+      improvement_tips: string[]
+    }
+    status: string
+  }> {
+    return api.post(`/progress/courses/${courseId}/speaking`, data)
+  },
+
+  async submitWritingSubmission(
+    courseId: string,
+    data: {
+      essay_text: string
+      module_id?: string
+      test_type?: string
+      prompt?: string
+    }
+  ): Promise<{
+    _id: string
+    ai_score: number
+    ai_feedback: {
+      fluency_score: number
+      grammar_score: number
+      vocabulary_score: number
+      detailed_comment: string
+      improvement_tips: string[]
+    }
+    status: string
+  }> {
+    return api.post(`/progress/courses/${courseId}/writing`, data)
+  },
 }
