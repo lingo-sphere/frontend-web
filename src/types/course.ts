@@ -149,9 +149,11 @@ export interface QnAItem {
   id: string
   lessonId?: string
   lessonTitle?: string
+  userId?: string
   author: string
   authorAvatar?: string
   authorRole?: string
+  isAnonymous?: boolean
   title: string
   body: string
   createdAt: string

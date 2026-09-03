@@ -533,8 +533,12 @@ export default function CourseDetailPage() {
 
           const mappedQnA: QnAItem[] = (Array.isArray(qnaRes) ? qnaRes : []).map((q) => ({
             id: String(q._id || Math.random()),
+            lessonId: q.lesson_id,
             lessonTitle: String(q.lesson_title || 'Bài học'),
-            author: String(q.author_name || 'Học viên'),
+            userId: q.user_id,
+            isAnonymous: Boolean(q.is_anonymous),
+            author: q.is_anonymous ? 'Học viên ẩn danh' : String(q.author_name || 'Học viên'),
+            authorAvatar: q.is_anonymous ? undefined : q.author_avatar,
             title: String(q.title || ''),
             body: String(q.body || ''),
             createdAt: q.created_at ? new Date(q.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
@@ -975,7 +979,7 @@ export default function CourseDetailPage() {
   }
 
   // Handle Q&A
-  const handleCreateQnA = async (title: string, body: string) => {
+  const handleCreateQnA = async (title: string, body: string, isAnonymous?: boolean) => {
     if (!course || !currentLesson) return
     if (!isAuthenticated || !user) {
       toast.error('Vui lòng đăng nhập để đặt câu hỏi!', 'Chưa đăng nhập')
@@ -991,12 +995,15 @@ export default function CourseDetailPage() {
         lesson_title: currentLesson.title,
         title,
         body,
+        is_anonymous: isAnonymous,
       })) as Record<string, unknown>
 
       const newQnA: QnAItem = {
         id: String(res?._id || `qna-${Date.now()}`),
         lessonTitle: currentLesson.title,
-        author: 'Bạn (Học viên)',
+        userId: user.id || user.user_id,
+        isAnonymous: Boolean(isAnonymous),
+        author: isAnonymous ? 'Bạn (Ẩn danh)' : (user.full_name || 'Bạn (Học viên)'),
         title,
         body,
         createdAt: 'Vừa xong',
@@ -1016,7 +1023,12 @@ export default function CourseDetailPage() {
       }
 
       setCourse((prev) => (prev ? { ...prev, qna: [newQnA, ...(prev.qna || [])] } : null))
-      toast.success('Câu hỏi của bạn đã được đăng thành công!', 'Hỏi & Đáp')
+      toast.success(
+        isAnonymous
+          ? 'Câu hỏi ẩn danh của bạn đã được đăng thành công!'
+          : 'Câu hỏi của bạn đã được đăng thành công!',
+        'Hỏi & Đáp'
+      )
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Không thể đăng câu hỏi'
       toast.error(msg, 'Lỗi đăng câu hỏi')
@@ -1510,6 +1522,8 @@ export default function CourseDetailPage() {
                 currentLessonTitle={currentLesson.title}
                 isEnrolled={isEnrolled}
                 isAuthenticated={isAuthenticated}
+                currentUserRole={user?.role}
+                currentUserId={user?.id || user?.user_id}
                 onCreateQuestion={handleCreateQnA}
                 onAddAnswer={handleAddQnAAnswer}
                 onUpvote={handleUpvoteQnA}
