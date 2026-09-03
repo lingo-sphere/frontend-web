@@ -177,18 +177,26 @@ export function LessonPlayer({
 
   const effectiveVideoUrl = useMemo(() => {
     if (!baseVideoSource) return ''
+    let source = baseVideoSource
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
+    if (source.includes('pub-') || source.includes('r2.cloudflarestorage.com') || source.includes('.r2.dev')) {
+      try {
+        const parsed = new URL(source)
+        source = `${apiBase}/media/stream${parsed.pathname}`
+      } catch {}
+    }
     if (isHlsStream) {
-      return baseVideoSource
+      return source
     }
-    if (baseVideoSource.includes('r2.cloudflarestorage.com') || baseVideoSource.includes('pub-')) {
-      if (effectiveQualityKey === '720p' && baseVideoSource.includes('/1080p/')) {
-        return baseVideoSource.replace('/1080p/', '/720p/')
+    if (source.includes('/1080p/')) {
+      if (effectiveQualityKey === '720p') {
+        return source.replace('/1080p/', '/720p/')
       }
-      if (effectiveQualityKey === '360p' && baseVideoSource.includes('/1080p/')) {
-        return baseVideoSource.replace('/1080p/', '/360p/')
+      if (effectiveQualityKey === '360p') {
+        return source.replace('/1080p/', '/360p/')
       }
     }
-    return baseVideoSource
+    return source
   }, [baseVideoSource, effectiveQualityKey, isHlsStream])
 
   useEffect(() => {
