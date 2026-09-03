@@ -44,6 +44,7 @@ interface CourseSidebarContentProps {
     challenge_taken?: boolean
     is_passed_by_challenge?: boolean
     post_mini_score?: number
+    post_mini_attempt_id?: string
     attempts?: Array<{
       attempt_id: string
       test_type?: string
@@ -99,22 +100,26 @@ export function CourseSidebarContent({
         const isPassedByChallenge = Boolean(
           modProgress?.is_passed_by_challenge ||
           modProgress?.status === 'SKIPPED_BY_CHALLENGE' ||
-          chapter.status === 'completed' && (modProgress?.challenge_score || 0) >= (chapter.challengeTest?.passingScore || 80)
+          (Boolean(modProgress?.challenge_taken) && (modProgress?.challenge_score || 0) >= (chapter.challengeTest?.passingScore || 80))
         )
 
         const isChallengeTaken = Boolean(
           modProgress?.challenge_taken ||
           isPassedByChallenge ||
-          (modProgress?.challenge_score !== undefined && modProgress.challenge_score >= 0)
+          (Array.isArray(modProgress?.attempts) && modProgress.attempts.some((a) => a.test_type === 'challenge'))
         )
 
         const postMiniScore = Number(modProgress?.post_mini_score ?? 0)
-        const isPostMiniTaken = Boolean(
-          (modProgress?.post_mini_score !== undefined && modProgress.post_mini_score !== null) ||
-          modProgress?.status === 'COMPLETED' ||
-          (chapter.status === 'completed' && !isPassedByChallenge)
+        const hasPostMiniAttempt = Boolean(
+          (modProgress as any)?.post_mini_attempt_id ||
+          (Array.isArray(modProgress?.attempts) && modProgress.attempts.some((a) => a.test_type !== 'challenge')) ||
+          postMiniScore > 0
         )
-        const isPassedByPostMini = isPostMiniTaken || postMiniScore >= 70
+        const isPostMiniTaken = Boolean(
+          hasPostMiniAttempt &&
+          (modProgress?.status === 'COMPLETED' || postMiniScore > 0 || (modProgress as any)?.post_mini_attempt_id)
+        )
+        const isPassedByPostMini = (isPostMiniTaken && postMiniScore >= 70) || modProgress?.status === 'COMPLETED'
         const isChapterCompleted = isPassedByChallenge || isPassedByPostMini || (chTotal > 0 && chCompleted === chTotal)
 
         const prevChapter = chIdx > 0 ? chapters[chIdx - 1] : null
@@ -131,15 +136,12 @@ export function CourseSidebarContent({
         const prevPassedChallenge = Boolean(
           prevModProgress?.is_passed_by_challenge ||
           prevModProgress?.status === 'SKIPPED_BY_CHALLENGE' ||
-          prevModProgress?.challenge_taken ||
-          (prevModProgress?.challenge_score !== undefined && prevModProgress.challenge_score > 0) ||
-          (prevModProgress?.challenge_score || 0) >= (prevChapter?.challengeTest?.passingScore || 80)
+          (Boolean(prevModProgress?.challenge_taken) && (prevModProgress?.challenge_score || 0) >= (prevChapter?.challengeTest?.passingScore || 80))
         )
         const prevPassedPostMini = Boolean(
           prevChapter?.status === 'completed' ||
           prevModProgress?.status === 'COMPLETED' ||
-          (prevModProgress?.post_mini_score !== undefined) ||
-          (prevModProgress?.post_mini_score || 0) > 0
+          ((prevModProgress?.post_mini_score || 0) >= 70)
         )
         const isChapterLocked = lockedChapterIds
           ? lockedChapterIds.has(chapter.id)
@@ -175,7 +177,7 @@ export function CourseSidebarContent({
                       <CheckCircle2 size={10} className="text-emerald-500" />
                       Đã vượt cấp ({modProgress?.challenge_score || 80}%)
                     </span>
-                  ) : isPostMiniTaken ? (
+                  ) : isPostMiniTaken && postMiniScore > 0 ? (
                     <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                       <Crown size={10} className="text-amber-500 shrink-0" />
                       Kỷ lục: {postMiniScore}%

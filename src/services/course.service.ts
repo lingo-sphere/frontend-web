@@ -113,6 +113,7 @@ export const courseService = {
       challenge_taken?: boolean
       is_passed_by_challenge?: boolean
       post_mini_score?: number
+      post_mini_attempt_id?: string
       progression_comparison?: {
         previous_stage: string
         previous_score: number

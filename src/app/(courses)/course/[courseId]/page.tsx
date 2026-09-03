@@ -103,6 +103,7 @@ export default function CourseDetailPage() {
       challenge_taken?: boolean
       is_passed_by_challenge?: boolean
       post_mini_score?: number
+      post_mini_attempt_id?: string
       attempts?: Array<{
         attempt_id: string
         test_type?: string
@@ -704,15 +705,12 @@ export default function CourseDetailPage() {
       const passedChallenge = Boolean(
         prevMod?.is_passed_by_challenge ||
         prevMod?.status === 'SKIPPED_BY_CHALLENGE' ||
-        prevMod?.challenge_taken ||
-        (prevMod?.challenge_score !== undefined && prevMod.challenge_score > 0) ||
-        (prevMod?.challenge_score || 0) >= (prevCh.challengeTest?.passingScore || 80)
+        (Boolean(prevMod?.challenge_taken) && (prevMod?.challenge_score || 0) >= (prevCh.challengeTest?.passingScore || 80))
       )
       const passedPostMini = Boolean(
         prevCh.status === 'completed' ||
         prevMod?.status === 'COMPLETED' ||
-        (prevMod?.post_mini_score !== undefined) ||
-        (prevMod?.post_mini_score || 0) > 0
+        ((prevMod?.post_mini_score || 0) >= 70)
       )
       if (!passedChallenge && !passedPostMini) {
         set.add(course.chapters[i].id)
