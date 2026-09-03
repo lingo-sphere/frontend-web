@@ -7,7 +7,6 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon-map'
@@ -120,7 +119,7 @@ export default function NotificationsAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -244,6 +243,6 @@ export default function NotificationsAppPage() {
           </div>
         )}
       </main>
-    </Layout>
+    </>
   )
 }

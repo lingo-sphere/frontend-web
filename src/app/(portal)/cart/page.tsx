@@ -8,7 +8,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ShoppingCart, Trash2, ArrowLeft, ShieldCheck, Award, Zap, CheckCircle2, Loader2 } from 'lucide-react'
-import { Layout } from '@/components/layout/Layout'
 import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useEnrollmentStore } from '@/store/enrollment-store'
@@ -104,7 +103,7 @@ export default function CartPage() {
 
   if (!mounted) {
     return (
-      <Layout>
+      <>
         <div className="min-h-screen bg-background text-text-primary px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 animate-pulse">
           <div className="flex items-center justify-between border-b border-border pb-5">
             <div className="space-y-2">
@@ -121,12 +120,12 @@ export default function CartPage() {
             <div className="h-64 bg-surface rounded-2xl border border-border" />
           </div>
         </div>
-      </Layout>
+      </>
     )
   }
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-background text-text-primary px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
         <div className="flex items-center justify-between border-b border-border pb-5">
           <div className="space-y-1">
@@ -346,6 +345,6 @@ export default function CartPage() {
           }}
         />
       )}
-    </Layout>
+    </>
   )
 }

@@ -7,7 +7,6 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
-import { Layout } from '@/components/layout/Layout'
 import { useApp } from '@/contexts/AppContext'
 import { WritingHome } from '@/components/writing/WritingHome'
 import { WritingExerciseList } from '@/components/writing/WritingExerciseList'
@@ -321,5 +320,5 @@ export default function WritingAppPage() {
     }
   }
 
-  return <Layout>{renderContent()}</Layout>
+  return <>{renderContent()}</>
 }

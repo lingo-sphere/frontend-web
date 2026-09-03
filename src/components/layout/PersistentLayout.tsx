@@ -2,17 +2,23 @@
 
 /**
  * @file PersistentLayout.tsx
- * @description Component giao diện React PersistentLayout cho học viên
+ * @description Layout tổng thể bọc sidebar, header và nội dung chính của ứng dụng
  */
 
 import { Suspense, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
-import { AppShell } from '@/components/layout/AppShell'
+import { Sheet, SheetContent } from '@/components/ui/sheet'
+import { Sidebar } from '@/components/layout/Sidebar'
+import { UtilityHeader } from '@/components/layout/UtilityHeader'
+import { useDashboardStore } from '@/store/dashboard-store'
 import { useApp } from '@/contexts/AppContext'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
   const { showAction } = useApp()
+  const mobileSidebarOpen = useDashboardStore((state) => state.mobileSidebarOpen)
+  const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
+  const sidebarCollapsed = useDashboardStore((state) => state.sidebarCollapsed)
 
   const isStandalone =
     pathname === '/' ||
@@ -24,10 +30,21 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
     return <>{children}</>
   }
 
+  const sidebarMargin = sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[252px]'
+
   return (
-    <AppShell onAction={showAction}>
-      {children}
-    </AppShell>
+    <div className="min-h-screen bg-background text-text-primary">
+      <Sidebar />
+      <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+        <SheetContent className="w-[min(86vw,320px)] border-border bg-surface p-0" side="left">
+          <Sidebar mobile />
+        </SheetContent>
+      </Sheet>
+      <div className={`min-h-screen ${sidebarMargin} transition-[margin] duration-200 ease-in-out`}>
+        <UtilityHeader onAction={showAction} />
+        {children}
+      </div>
+    </div>
   )
 }
 

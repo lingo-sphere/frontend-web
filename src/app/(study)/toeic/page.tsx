@@ -9,7 +9,6 @@ import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { Trophy, Headphones, BookOpen } from 'lucide-react'
-import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { examService, type BackendToeicExam } from '@/services/exam.service'
@@ -80,7 +79,7 @@ export default function ToeicHubPage() {
   }, [exams, searchQuery, filters])
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow={t('toeic.title') || 'Luyện thi TOEIC'}
@@ -167,6 +166,6 @@ export default function ToeicHubPage() {
           </div>
         )}
       </main>
-    </Layout>
+    </>
   )
 }

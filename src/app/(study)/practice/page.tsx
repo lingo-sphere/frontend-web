@@ -7,7 +7,6 @@
 
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { Icon } from '@/components/icons/icon-map'
@@ -46,7 +45,7 @@ export default function PracticeHubAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow={t('practice.title')}
@@ -89,6 +88,6 @@ export default function PracticeHubAppPage() {
           ))}
         </div>
       </main>
-    </Layout>
+    </>
   )
 }

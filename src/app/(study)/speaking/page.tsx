@@ -6,7 +6,6 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import { Layout } from '@/components/layout/Layout'
 import { SpeakingHome } from '@/components/speaking/SpeakingHome'
 import { SpeakingExerciseList } from '@/components/speaking/SpeakingExerciseList'
 import { SpeakingWorkspace } from '@/components/speaking/SpeakingWorkspace'
@@ -324,5 +323,5 @@ export default function SpeakingAppPage() {
     }
   }
 
-  return <Layout>{renderContent()}</Layout>
+  return <>{renderContent()}</>
 }

@@ -7,7 +7,6 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Layout } from '@/components/layout/Layout'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { Icon } from '@/components/icons/icon-map'
 import { Input } from '@/components/ui/input'
@@ -154,7 +153,7 @@ export default function ListeningAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow={t('listening.title')}
@@ -266,6 +265,6 @@ export default function ListeningAppPage() {
           )}
         </section>
       </main>
-    </Layout>
+    </>
   )
 }

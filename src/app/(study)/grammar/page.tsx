@@ -7,7 +7,6 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -158,7 +157,7 @@ export default function GrammarAppPage() {
   }, [filteredGrammarPoints, currentPage])
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow={t('practice.title')}
@@ -234,6 +233,6 @@ export default function GrammarAppPage() {
           </div>
         )}
       </main>
-    </Layout>
+    </>
   )
 }

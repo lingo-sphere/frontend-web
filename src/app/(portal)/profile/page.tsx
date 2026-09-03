@@ -6,7 +6,6 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { Icon } from '@/components/icons/icon-map'
@@ -187,7 +186,7 @@ export default function ProfileAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow="Hồ sơ cá nhân"
@@ -336,6 +335,6 @@ export default function ProfileAppPage() {
           />
         )}
       </main>
-    </Layout>
+    </>
   )
 }

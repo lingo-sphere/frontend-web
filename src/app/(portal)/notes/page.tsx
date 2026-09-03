@@ -7,7 +7,6 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Layout } from '@/components/layout/Layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
@@ -137,7 +136,7 @@ export default function NotesAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <SectionHeading
@@ -264,6 +263,6 @@ export default function NotesAppPage() {
           />
         )}
       </main>
-    </Layout>
+    </>
   )
 }

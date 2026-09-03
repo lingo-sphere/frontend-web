@@ -9,7 +9,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from '@/lib/navigation'
 import { BookOpen, GraduationCap, LogIn, Sparkles, Heart } from 'lucide-react'
-import { Layout } from '@/components/layout/Layout'
 import { courseService } from '@/services/course.service'
 import { userService } from '@/services/user.service'
 import type { Course } from '@/types/api.types'
@@ -273,7 +272,7 @@ export default function CoursesCatalogPage() {
   }
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-background text-text-primary">
         <main className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
@@ -444,6 +443,6 @@ export default function CoursesCatalogPage() {
           />
         )}
       </div>
-    </Layout>
+    </>
   )
 }

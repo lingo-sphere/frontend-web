@@ -8,7 +8,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, Star } from 'lucide-react'
-import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
@@ -70,7 +69,7 @@ export default function TopicsAppPage() {
   const featuredTopics = topicList.filter((t) => t.is_featured)
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow={t('topics.title')}
@@ -200,6 +199,6 @@ export default function TopicsAppPage() {
           </div>
         )}
       </main>
-    </Layout>
+    </>
   )
 }

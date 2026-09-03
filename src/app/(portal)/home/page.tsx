@@ -7,7 +7,6 @@
 
 import { useState, useEffect } from 'react'
 import { useApp } from '@/contexts/AppContext'
-import { Layout } from '@/components/layout/Layout'
 import { ContinueLearningCard } from '@/components/dashboard/ContinueLearningCard'
 import { ExploreTopics } from '@/components/dashboard/ExploreTopics'
 import { InsightRail } from '@/components/dashboard/InsightRail'
@@ -163,7 +162,7 @@ export default function HomeAppPage() {
   ]
 
   return (
-    <Layout>
+    <>
       <main
         aria-labelledby="dashboard-title"
         className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
@@ -186,6 +185,6 @@ export default function HomeAppPage() {
           <ExploreTopics onAction={showAction} topics={topics} />
         </section>
       </main>
-    </Layout>
+    </>
   )
 }

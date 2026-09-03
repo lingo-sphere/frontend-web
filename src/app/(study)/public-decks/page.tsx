@@ -10,7 +10,6 @@ import { useTranslation } from 'react-i18next'
 import { Bookmark, Eye, Search, Filter } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 
-import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
@@ -94,7 +93,7 @@ export default function PublicDecksAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow={t('practice.title')}
@@ -235,6 +234,6 @@ export default function PublicDecksAppPage() {
           </div>
         )}
       </main>
-    </Layout>
+    </>
   )
 }

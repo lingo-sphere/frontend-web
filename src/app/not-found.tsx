@@ -4,13 +4,12 @@
  */
 
 import Link from 'next/link'
-import { Layout } from '@/components/layout/Layout'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon-map'
 
 export default function NotFound() {
   return (
-    <Layout>
+    <>
       <main className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-4 py-16 text-center">
         <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/10 text-primary shadow-inner">
           <Icon name="helpCircle" size={48} />
@@ -47,6 +46,6 @@ export default function NotFound() {
           </Link>
         </div>
       </main>
-    </Layout>
+    </>
   )
 }

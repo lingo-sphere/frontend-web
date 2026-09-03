@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X, ArrowLeft, Crown } from 'lucide-react'
+import { X, ArrowLeft, Crown, CheckCircle2, Sparkles } from 'lucide-react'
 
 import { useAuthStore } from '@/store/auth-store'
 import { subscriptionService, type PaymentOrderResponse } from '@/services/subscription.service'
@@ -17,7 +17,6 @@ import { getRemainingSubscriptionText } from '@/components/layout/header-utils'
 import { getPlans } from '@/components/upgrade/upgrade-data'
 import { UpgradeSelectPlanStep } from '@/components/upgrade/UpgradeSelectPlanStep'
 import { UpgradePaymentQrStep } from '@/components/upgrade/UpgradePaymentQrStep'
-import { UpgradeSuccessStep } from '@/components/upgrade/UpgradeSuccessStep'
 
 interface UpgradeModalProps {
   open: boolean
@@ -292,7 +291,23 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
 
           <div className="p-5 sm:p-6 max-h-[80vh] overflow-y-auto space-y-5">
             {step === 'SUCCESS' && (
-              <UpgradeSuccessStep isVi={isVietnamese} />
+              <div className="flex flex-col items-center justify-center py-8 text-center animate-in zoom-in-90 duration-300">
+                <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 ring-8 ring-emerald-500/5">
+                  <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-bounce" />
+                </div>
+                <h3 className="text-xl font-extrabold text-text-primary">
+                  {isVietnamese ? 'KÍCH HOẠT VIP THÀNH CÔNG!' : 'UPGRADE SUCCESSFUL!'}
+                </h3>
+                <p className="mt-2 text-xs sm:text-sm text-text-secondary max-w-xs leading-relaxed">
+                  {isVietnamese
+                    ? 'Hệ thống đã xác nhận thanh toán và mở khóa toàn bộ đặc quyền VIP cho bạn!'
+                    : 'Your payment was confirmed and VIP features are now fully active!'}
+                </p>
+                <div className="mt-4 flex items-center gap-2 text-xs font-bold text-amber-600 bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/20">
+                  <Sparkles size={14} />
+                  <span>{isVietnamese ? 'Đang chuyển đến khóa học...' : 'Redirecting...'}</span>
+                </div>
+              </div>
             )}
 
             {step === 'SELECT_PLAN' && (

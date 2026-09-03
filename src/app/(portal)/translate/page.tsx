@@ -6,7 +6,6 @@
  */
 
 import { useState } from 'react'
-import { Layout } from '@/components/layout/Layout'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon-map'
 import { api } from '@/services/api-client'
@@ -85,7 +84,7 @@ export default function AiTranslationAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <div className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
         <div className="border-b border-border pb-5">
           <div className="flex items-center gap-2">
@@ -226,6 +225,6 @@ export default function AiTranslationAppPage() {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   )
 }

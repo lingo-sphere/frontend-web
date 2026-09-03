@@ -7,7 +7,6 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { Layout } from '@/components/layout/Layout'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon-map'
 
@@ -23,7 +22,7 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <Layout>
+    <>
       <main className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-4 py-16 text-center">
         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-error/15 text-error shadow-inner">
           <Icon name="alertTriangle" size={40} />
@@ -58,6 +57,6 @@ export default function GlobalError({
           </Link>
         </div>
       </main>
-    </Layout>
+    </>
   )
 }

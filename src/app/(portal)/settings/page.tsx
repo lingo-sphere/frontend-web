@@ -7,9 +7,8 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { User, Layers, ExternalLink } from 'lucide-react'
+import { User, Layers, ExternalLink, RotateCcw, Save, Loader2 } from 'lucide-react'
 
-import { Layout } from '@/components/layout/Layout'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/auth-store'
 import { dashboardStore } from '@/store/dashboard-store'
@@ -27,7 +26,6 @@ import { SettingsNotificationsTab } from '@/components/settings/SettingsNotifica
 import { SettingsAppearanceTab } from '@/components/settings/SettingsAppearanceTab'
 import { SettingsPrivacyTab } from '@/components/settings/SettingsPrivacyTab'
 import { SettingsVipTab } from '@/components/settings/SettingsVipTab'
-import { SettingsActionBar } from '@/components/settings/SettingsActionBar'
 
 const defaultPreferences: UserPreferences = {
   language: 'vi',
@@ -212,7 +210,7 @@ export default function SettingsAppPage() {
     .toUpperCase()
 
   return (
-    <Layout>
+    <>
       <main className="w-full min-h-screen bg-background text-text-primary px-4 py-6 sm:px-6 sm:py-8 lg:px-10 max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
           <div>
@@ -307,12 +305,34 @@ export default function SettingsAppPage() {
               />
             )}
 
-            <SettingsActionBar
-              onReset={handleResetDefaults}
-              onSave={handleSavePreferences}
-              isSaving={isSaving}
-              isVi={isVi}
-            />
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border">
+              <Button
+                variant="ghost"
+                onClick={handleResetDefaults}
+                className="w-full sm:w-auto text-xs text-text-secondary hover:text-text-primary rounded-xl cursor-pointer"
+              >
+                <RotateCcw size={14} className="mr-1.5" />
+                <span>{isVi ? 'Khôi phục mặc định' : 'Reset to Default'}</span>
+              </Button>
+
+              <Button
+                onClick={handleSavePreferences}
+                disabled={isSaving}
+                className="w-full sm:w-auto rounded-xl bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-bold px-6 h-11 transition-all shadow-md shadow-primary/20 cursor-pointer"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin mr-2" />
+                    <span>{isVi ? 'Đang lưu cài đặt...' : 'Saving...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} className="mr-2" />
+                    <span>{isVi ? 'Lưu mọi thay đổi' : 'Save Changes'}</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </main>
@@ -321,6 +341,6 @@ export default function SettingsAppPage() {
         open={upgradeModalOpen}
         onOpenChange={setUpgradeModalOpen}
       />
-    </Layout>
+    </>
   )
 }

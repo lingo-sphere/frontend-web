@@ -10,7 +10,6 @@ import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Layers3, Star, Globe, Info, Plus, Users, GraduationCap, Bookmark, HelpCircle } from 'lucide-react'
 
-import { Layout } from '@/components/layout/Layout'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
@@ -74,7 +73,7 @@ export default function VocabularyAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -353,7 +352,7 @@ export default function VocabularyAppPage() {
           )}
         </section>
       </main>
-    </Layout>
+    </>
   )
 }
 

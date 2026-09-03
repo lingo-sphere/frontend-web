@@ -9,7 +9,6 @@ import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { Layers3, Bookmark } from 'lucide-react'
-import { Layout } from '@/components/layout/Layout'
 import { SectionHeading } from '@/components/dashboard/SectionHeading'
 import { useDashboardStore } from '@/store/dashboard-store'
 import { useApp } from '@/contexts/AppContext'
@@ -203,7 +202,7 @@ export default function NotebookAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
           eyebrow={t('vocabulary.title')}
@@ -303,6 +302,6 @@ export default function NotebookAppPage() {
           isVietnamese={isVietnamese}
         />
       </main>
-    </Layout>
+    </>
   )
 }

@@ -7,7 +7,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'motion/react'
-import { Layout } from '@/components/layout/Layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Icon } from '@/components/icons/icon-map'
@@ -69,7 +68,7 @@ export default function AiLearningAppPage() {
   }
 
   return (
-    <Layout>
+    <>
       <main className="flex h-[calc(100vh-4rem)] w-full flex-col px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-3">
@@ -204,6 +203,6 @@ export default function AiLearningAppPage() {
           </Button>
         </form>
       </main>
-    </Layout>
+    </>
   )
 }
