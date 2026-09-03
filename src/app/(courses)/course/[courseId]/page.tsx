@@ -128,64 +128,68 @@ export default function CourseDetailPage() {
     const fetchCourse = async () => {
       setIsLoading(true)
       try {
-        const [liveCourseResponse, enrollStatus] = await Promise.all([
-          courseService.getCourseById(courseId),
-          courseService.getEnrollmentStatus(courseId).catch(() => ({ is_enrolled: false })),
+        const liveCourseResponse = await courseService.getCourseById(courseId)
+        if (!isMounted || !liveCourseResponse) return
+
+        const raw = liveCourseResponse as unknown as Record<string, unknown>
+        const courseObj = (raw.course as Record<string, unknown>) || raw
+        const primaryCourseKey = String(courseObj._id || courseObj.id || courseId)
+
+        const [enrollStatus, progressDataDirect] = await Promise.all([
+          courseService.getEnrollmentStatus(primaryCourseKey).catch(() =>
+            courseId !== primaryCourseKey
+              ? courseService.getEnrollmentStatus(courseId).catch(() => ({ is_enrolled: false }))
+              : { is_enrolled: false }
+          ),
+          courseService.getCourseProgressDetail(primaryCourseKey).catch(() =>
+            courseId !== primaryCourseKey
+              ? courseService.getCourseProgressDetail(courseId).catch(() => null)
+              : null
+          ),
         ])
 
-        const userIsEnrolled = Boolean(enrollStatus?.is_enrolled || user?.is_premium || user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR')
-        if (isMounted) {
-          setIsEnrolled(userIsEnrolled)
-          if (userIsEnrolled) {
-            useEnrollmentStore.getState().addEnrolledCourse(courseId)
-            console.log('%c🔓 [LingoSphere] ĐÃ MUA KHÓA HỌC: Mở khóa trình phát Video bài giảng & Tiến độ học tập', 'color: #10b981; font-weight: bold;')
-          } else {
-            console.log('%c🔒 [LingoSphere] CHƯA MUA KHÓA HỌC: Khóa video -> KHÔNG tải media/video/tiến độ bài học', 'color: #f59e0b; font-weight: bold;')
-          }
+        const hasProgress = Boolean(
+          progressDataDirect?.course_progress ||
+          (Array.isArray(progressDataDirect?.modules_progress) && progressDataDirect.modules_progress.length > 0) ||
+          (Array.isArray(progressDataDirect?.completed_lesson_ids) && progressDataDirect.completed_lesson_ids.length > 0)
+        )
+
+        const userIsEnrolled = Boolean(
+          enrollStatus?.is_enrolled ||
+          hasProgress ||
+          user?.is_premium ||
+          user?.role === 'ADMIN' ||
+          user?.role === 'INSTRUCTOR'
+        )
+
+        setIsEnrolled(userIsEnrolled)
+        if (userIsEnrolled) {
+          useEnrollmentStore.getState().addEnrolledCourse(primaryCourseKey)
+          useEnrollmentStore.getState().addEnrolledCourse(courseId)
         }
 
-        if (isMounted && liveCourseResponse) {
-          const raw = liveCourseResponse as unknown as Record<string, unknown>
-          const courseObj = (raw.course as Record<string, unknown>) || raw
+        const canonicalUrl = buildCourseUrl({
+          id: primaryCourseKey,
+          slug: String(courseObj.slug || ''),
+          title: String(courseObj.title || ''),
+        })
+        if (typeof window !== 'undefined' && window.location.pathname !== canonicalUrl) {
+          window.history.replaceState(null, '', canonicalUrl)
+        }
 
-          const canonicalUrl = buildCourseUrl({
-            id: String(courseObj._id || courseObj.id || courseId),
-            slug: String(courseObj.slug || ''),
-            title: String(courseObj.title || ''),
-          })
-          if (typeof window !== 'undefined' && window.location.pathname !== canonicalUrl) {
-            window.history.replaceState(null, '', canonicalUrl)
+        const curriculumList =
+          (raw.curriculum as Array<Record<string, unknown>>) ||
+          (raw.modules as Array<Record<string, unknown>>) ||
+          []
+
+        let completedLessonIdSet = new Set<string>()
+        let progressDataResult: any = progressDataDirect
+        if (progressDataDirect) {
+          setProgressDetail(progressDataDirect)
+          if (Array.isArray(progressDataDirect.completed_lesson_ids)) {
+            completedLessonIdSet = new Set(progressDataDirect.completed_lesson_ids)
           }
-
-          const curriculumList =
-            (raw.curriculum as Array<Record<string, unknown>>) ||
-            (raw.modules as Array<Record<string, unknown>>) ||
-            []
-
-          // Only fetch user's saved lesson progress if user is enrolled
-          let completedLessonIdSet = new Set<string>()
-          let progressDataResult: any = null
-          if (userIsEnrolled) {
-            try {
-              const primaryCourseKey = String(courseObj._id || courseObj.id || courseId)
-              let progressData = await courseService.getCourseProgressDetail(primaryCourseKey)
-              if ((!progressData?.modules_progress || progressData.modules_progress.length === 0) && courseId && courseId !== primaryCourseKey) {
-                const fallbackProgress = await courseService.getCourseProgressDetail(courseId).catch(() => null)
-                if (fallbackProgress?.modules_progress && fallbackProgress.modules_progress.length > 0) {
-                  progressData = fallbackProgress
-                }
-              }
-              if (progressData) {
-                progressDataResult = progressData
-                setProgressDetail(progressData)
-                if (Array.isArray(progressData.completed_lesson_ids)) {
-                  completedLessonIdSet = new Set(progressData.completed_lesson_ids)
-                }
-              }
-            } catch {
-              // Not authenticated or no progress record yet
-            }
-          }
+        }
 
           let mappedChapters: Chapter[] = []
           if (Array.isArray(curriculumList) && curriculumList.length > 0) {
@@ -617,7 +621,6 @@ export default function CourseDetailPage() {
               ? Array.from(new Set([...mappedChapters.map((ch) => ch.id), initialChapter.id]))
               : mappedChapters.map((ch) => ch.id)
           )
-        }
       } catch {
         // Handle error gracefully
       } finally {
@@ -1169,9 +1172,36 @@ export default function CourseDetailPage() {
 
     if (course?.id) {
       try {
-        const updatedProgress = await courseService.getCourseProgressDetail(String(course.id))
-        if (updatedProgress) {
-          setProgressDetail(updatedProgress)
+        const primaryKey = String(course.id)
+        const updatedProgress = await courseService.getCourseProgressDetail(primaryKey)
+        if (updatedProgress && (updatedProgress.course_progress || (Array.isArray(updatedProgress.modules_progress) && updatedProgress.modules_progress.length > 0))) {
+          setProgressDetail((prev: any) => {
+            const serverMods = Array.isArray(updatedProgress.modules_progress) ? [...updatedProgress.modules_progress] : []
+            if (activeTestModal.chapter) {
+              const finishedChId = activeTestModal.chapter.id
+              const finishedChOrder = Number(activeTestModal.chapter.order || 1)
+              const modIdx = serverMods.findIndex(
+                (m: any) =>
+                  m.module_id === finishedChId ||
+                  String(m.module_id) === String(finishedChId) ||
+                  Number(m.order_index) === finishedChOrder
+              )
+              const currentScore = score
+              if (modIdx >= 0) {
+                serverMods[modIdx] = {
+                  ...serverMods[modIdx],
+                  status: 'COMPLETED',
+                  ...(activeTestModal.testType === 'challenge'
+                    ? { challenge_score: currentScore, is_passed_by_challenge: true, challenge_taken: true }
+                    : { post_mini_score: currentScore }),
+                }
+              }
+            }
+            return {
+              ...updatedProgress,
+              modules_progress: serverMods,
+            }
+          })
           if (Array.isArray(updatedProgress.modules_progress)) {
             const modStatusMap = new Map(
               updatedProgress.modules_progress.map((m: any) => [String(m.module_id), m.status])
@@ -1182,6 +1212,16 @@ export default function CourseDetailPage() {
             setCourse((prev) => {
               if (!prev) return null
               const nextChapters = prev.chapters.map((ch, idx) => {
+                const isThisCompleted =
+                  activeTestModal.chapter &&
+                  (ch.id === activeTestModal.chapter.id ||
+                    String(ch.id) === String(activeTestModal.chapter.id) ||
+                    Number(ch.order) === Number(activeTestModal.chapter.order || 1))
+
+                if (isThisCompleted) {
+                  return { ...ch, status: 'completed' as const }
+                }
+
                 const foundStatus = modStatusMap.get(String(ch.id)) || modOrderMap.get(Number(ch.order || idx + 1))
                 let chStatus: Chapter['status'] = ch.status
                 if (foundStatus === 'COMPLETED' || foundStatus === 'SKIPPED_BY_CHALLENGE') {
