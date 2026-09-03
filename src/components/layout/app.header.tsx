@@ -13,16 +13,16 @@ import { useMounted } from '@/hooks/use-mounted'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Icon } from '@/components/icons/icon-map'
-import { DictionaryModal } from '@/components/dictionary/DictionaryModal'
-import { UpgradeModal } from '@/components/layout/UpgradeModal'
-import { AuthModal } from '@/components/auth/AuthModal'
-import { HeaderMyLearningHover } from '@/components/layout/HeaderMyLearningHover'
-import { HeaderWishlistHover } from '@/components/layout/HeaderWishlistHover'
-import { HeaderCartHover } from '@/components/layout/HeaderCartHover'
-import { HeaderSearchDictionary } from '@/components/layout/HeaderSearchDictionary'
-import { HeaderStatsBadges } from '@/components/layout/HeaderStatsBadges'
-import { HeaderNotificationDropdown } from '@/components/layout/HeaderNotificationDropdown'
-import { HeaderUserSection } from '@/components/layout/HeaderUserSection'
+import { DictionaryModal } from '@/components/dictionary/dictionary.modal'
+import { UpgradeModal } from '@/components/upgrade/upgrade.modal'
+import { AuthModal } from '@/components/auth/auth.modal'
+import { HeaderMyLearningHover } from '@/components/layout/header.learning'
+import { HeaderWishlistHover } from '@/components/layout/header.wishlist'
+import { HeaderCartHover } from '@/components/layout/header.cart'
+import { HeaderSearchDictionary } from '@/components/layout/header.search'
+import { HeaderStatsBadges } from '@/components/layout/header.stats'
+import { HeaderNotificationDropdown } from '@/components/layout/header.notification'
+import { HeaderUserSection } from '@/components/layout/header.user'
 import { useDashboardStore } from '@/store/dashboard-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useCartStore } from '@/store/cart-store'
@@ -31,7 +31,7 @@ import { useEnrollmentStore } from '@/store/enrollment-store'
 import { useNavigate } from '@/lib/navigation'
 import type { Notification } from '@/types/notification'
 
-export { getRemainingSubscriptionText } from '@/components/layout/header-utils'
+export { getRemainingSubscriptionText } from '@/components/layout/header.utils'
 
 interface UtilityHeaderProps {
   onAction: (message: string) => void
@@ -171,25 +171,20 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             onMouseEnter={() => handleMouseEnter('wishlist')}
             onMouseLeave={handleMouseLeave}
           >
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  aria-label="Wishlist"
-                  className="relative h-9 w-9 rounded-xl border-border cursor-pointer"
-                  onClick={() => navigate('/courses?tab=wishlist')}
-                  size="icon"
-                  variant="outline"
-                >
-                  <Heart size={17} />
-                  {mounted && wishlistCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
-                      {wishlistCount > 9 ? '9+' : wishlistCount}
-                    </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{isVi ? 'Yêu thích' : 'Wishlist'}</TooltipContent>
-            </Tooltip>
+            <Button
+              aria-label={isVi ? 'Danh sách yêu thích' : 'Wishlist'}
+              className="relative h-9 w-9 rounded-xl border-border cursor-pointer"
+              onClick={() => navigate('/courses?tab=wishlist')}
+              size="icon"
+              variant="outline"
+            >
+              <Heart size={17} />
+              {mounted && wishlistCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                  {wishlistCount > 9 ? '9+' : wishlistCount}
+                </span>
+              )}
+            </Button>
             {hoveredHeaderMenu === 'wishlist' && <HeaderWishlistHover />}
           </div>
 
@@ -198,31 +193,26 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             onMouseEnter={() => handleMouseEnter('cart')}
             onMouseLeave={handleMouseLeave}
           >
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  aria-label="Shopping Cart"
-                  className="relative h-9 w-9 rounded-xl border-border cursor-pointer"
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      setAuthModalOpen(true)
-                    } else {
-                      navigate('/cart')
-                    }
-                  }}
-                  size="icon"
-                  variant="outline"
-                >
-                  <ShoppingCart size={17} />
-                  {mounted && cartItemCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm">
-                      {cartItemCount > 9 ? '9+' : cartItemCount}
-                    </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{isVi ? 'Giỏ hàng' : 'Shopping Cart'}</TooltipContent>
-            </Tooltip>
+            <Button
+              aria-label={isVi ? 'Giỏ hàng' : 'Shopping Cart'}
+              className="relative h-9 w-9 rounded-xl border-border cursor-pointer"
+              onClick={() => {
+                if (!isAuthenticated) {
+                  setAuthModalOpen(true)
+                } else {
+                  navigate('/cart')
+                }
+              }}
+              size="icon"
+              variant="outline"
+            >
+              <ShoppingCart size={17} />
+              {mounted && cartItemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm">
+                  {cartItemCount > 9 ? '9+' : cartItemCount}
+                </span>
+              )}
+            </Button>
             {hoveredHeaderMenu === 'cart' && <HeaderCartHover />}
           </div>
 

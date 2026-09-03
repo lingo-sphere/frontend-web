@@ -8,12 +8,12 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/AppContext'
-import { WritingHome } from '@/components/writing/WritingHome'
-import { WritingExerciseList } from '@/components/writing/WritingExerciseList'
-import { WritingExerciseDetail } from '@/components/writing/WritingExerciseDetail'
-import { WritingWorkspace } from '@/components/writing/WritingWorkspace'
-import { WritingResult } from '@/components/writing/WritingResult'
-import { WritingHistory } from '@/components/writing/WritingHistory'
+import { WritingHome } from '@/components/writing/writing.home'
+import { WritingExerciseList } from '@/components/writing/writing.exercise.list'
+import { WritingExerciseDetail } from '@/components/writing/writing.exercise.detail'
+import { WritingWorkspace } from '@/components/writing/writing.workspace'
+import { WritingResult } from '@/components/writing/writing.result'
+import { WritingHistory } from '@/components/writing/writing.history'
 import { practiceService, type BackendWritingExercise } from '@/services/practice.service'
 import type {
   WritingExercise,

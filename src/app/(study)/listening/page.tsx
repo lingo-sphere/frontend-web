@@ -7,14 +7,14 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon-map'
 import { Input } from '@/components/ui/input'
 import { practiceService, type BackendListeningExercise } from '@/services/practice.service'
 import type { ListeningExercise, ListeningAttempt } from '@/types/listening'
-import { ExerciseCard, FilterChip } from '@/components/listening/ListeningCards'
-import { VideoDictationView } from '@/components/listening/ListeningDictationWorkspace'
-import { ResultView, ReviewView } from '@/components/listening/ListeningResultModal'
+import { ExerciseCard, FilterChip } from '@/components/listening/listening.cards'
+import { VideoDictationView } from '@/components/listening/listening.dictation.workspace'
+import { ResultView, ReviewView } from '@/components/listening/listening.result.modal'
 
 type ViewMode = 'list' | 'exercise' | 'result' | 'review'
 

@@ -12,7 +12,7 @@ import { useAuthStore } from '@/store/auth-store'
 import { useCartStore } from '@/store/cart-store'
 import { useWishlistStore } from '@/store/wishlist-store'
 import { Icon } from '@/components/icons/icon-map'
-import { getRemainingSubscriptionText } from '@/components/layout/UtilityHeader'
+import { getRemainingSubscriptionText } from '@/components/layout/app.header'
 
 interface HeaderUserHoverProps {
   onClose?: () => void

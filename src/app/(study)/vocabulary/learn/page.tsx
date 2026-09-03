@@ -11,13 +11,13 @@ import { GraduationCap } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { useApp } from '@/contexts/AppContext'
 import { vocabularyService } from '@/services/vocabulary.service'
 import type { VocabularyDeck, LearningResult } from '@/types/vocabulary-learn'
 import type { Deck } from '@/types/api.types'
-import { VocabularyLearningSession } from '@/components/vocabulary-learning/VocabularyLearningSession'
-import { LearningResultView } from '@/components/vocabulary-learning/LearningResultView'
+import { VocabularyLearningSession } from '@/components/vocabulary-learning/vocabulary.learning.session'
+import { LearningResultView } from '@/components/vocabulary-learning/learning.result.view'
 
 type ViewMode = 'home' | 'session' | 'result'
 

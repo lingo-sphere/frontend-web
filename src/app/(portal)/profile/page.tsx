@@ -7,16 +7,16 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon-map'
 import { userService } from '@/services/user.service'
 import type { User, EditProfileForm } from '@/types/user'
 import { useAuthStore } from '@/store/auth-store'
-import { UserStatsHeader } from '@/components/user/UserStatsHeader'
-import { StatCard, XPProgress } from '@/components/user/UserStatsGrid'
-import { UserBadgesList } from '@/components/user/UserBadgesList'
-import { UserActivityList } from '@/components/user/UserActivityList'
-import { EditProfileModal } from '@/components/user/UserProfileEditModal'
+import { UserStatsHeader } from '@/components/user/user.header'
+import { StatCard, XPProgress } from '@/components/user/user.stats'
+import { UserBadgesList } from '@/components/user/user.badges'
+import { UserActivityList } from '@/components/user/user.activities'
+import { EditProfileModal } from '@/components/user/user.edit.modal'
 
 export default function ProfileAppPage() {
   const { user: authUser } = useAuthStore()

@@ -12,7 +12,7 @@ import { BookOpen, Layers3, Star, Globe, Info, Plus, Users, GraduationCap, Bookm
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon-map'
 import { useDashboardStore } from '@/store/dashboard-store'
 import { useApp } from '@/contexts/AppContext'

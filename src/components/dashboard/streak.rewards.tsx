@@ -9,7 +9,7 @@ import { Gift, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Icon } from '@/components/icons/icon-map'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import type { StreakMilestone } from '@/types/dashboard'
 
 interface StreakRewardsProps {

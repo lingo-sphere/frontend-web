@@ -13,11 +13,11 @@ import type {
   MonthlyLeaderboardUser,
   MonthlyReward,
 } from '@/types/dashboard'
-import { LeaderboardCountdown } from '@/components/leaderboard/LeaderboardCountdown'
-import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs'
-import { LeaderboardPodium } from '@/components/leaderboard/LeaderboardPodium'
-import { LeaderboardList } from '@/components/leaderboard/LeaderboardList'
-import { LeaderboardRewards } from '@/components/leaderboard/LeaderboardRewards'
+import { LeaderboardCountdown } from '@/components/leaderboard/leaderboard.countdown'
+import { LeaderboardTabs } from '@/components/leaderboard/leaderboard.tabs'
+import { LeaderboardPodium } from '@/components/leaderboard/leaderboard.podium'
+import { LeaderboardList } from '@/components/leaderboard/leaderboard.list'
+import { LeaderboardRewards } from '@/components/leaderboard/leaderboard.rewards'
 
 const avatarColors = [
   'bg-primary-soft text-primary',

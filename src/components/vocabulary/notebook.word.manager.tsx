@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { Bookmark, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { VocabularyCard } from '@/components/vocabulary/VocabularyCard'
+import { VocabularyCard } from '@/components/vocabulary/vocabulary.card'
 import type { SavedVocabulary, UserDeck } from '@/types/vocabulary'
 
 interface VocabularyTabProps {

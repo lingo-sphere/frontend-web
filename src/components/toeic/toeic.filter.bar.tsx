@@ -5,7 +5,7 @@
 
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { FilterChip } from '@/components/toeic/ToeicExamCard'
+import { FilterChip } from '@/components/toeic/toeic.exam.card'
 import type { ToeicExamFilters } from '@/types/toeic'
 
 export const toeicSeriesFilters = [

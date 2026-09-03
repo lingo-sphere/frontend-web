@@ -16,7 +16,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { getBenefits, type Plan } from '@/components/upgrade/upgrade-data'
+import { getBenefits, type Plan } from '@/components/upgrade/upgrade.data'
 
 interface UpgradeSelectPlanStepProps {
   plans: Plan[]

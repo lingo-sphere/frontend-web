@@ -15,8 +15,8 @@ import { API_CONFIG } from '@/config/api.config'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 
-import { PersistentLayout } from '@/components/layout/PersistentLayout'
-import { ToastContainer } from '@/components/common/ToastContainer'
+import { PersistentLayout } from '@/components/layout/persistent.layout'
+import { ToastContainer } from '@/components/common/toast.container'
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
 

@@ -11,7 +11,7 @@ import { Calendar, Clock, X, Mail, Check, Trash2, Loader2, Sparkles, BellRing } 
 import { useAuthStore } from '@/store/auth-store'
 import { userService } from '@/services/user.service'
 import { toast } from '@/store/toast-store'
-import type { UserScheduleData } from '@/components/course/CourseScheduleBanner'
+import type { UserScheduleData } from '@/components/course/course.schedule.banner'
 
 const DAYS_OF_WEEK = [
   { id: 'T2', labelVi: 'Thứ 2', labelEn: 'Mon' },

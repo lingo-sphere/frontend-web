@@ -12,7 +12,7 @@ import { useCartStore } from '@/store/cart-store'
 import { useAuthStore } from '@/store/auth-store'
 import { useEnrollmentStore } from '@/store/enrollment-store'
 import { courseService } from '@/services/course.service'
-import { CourseCheckoutModal, type CheckoutCourseItem } from '@/components/course/CourseCheckoutModal'
+import { CourseCheckoutModal, type CheckoutCourseItem } from '@/components/course/course.checkout.modal'
 import { toast } from '@/store/toast-store'
 import { useNavigate } from '@/lib/navigation'
 

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import {
   ToeicCourseRecommendations,
   type RecommendedCourseItem,
-} from '@/components/toeic/ToeicCourseRecommendations'
+} from '@/components/toeic/toeic.course.recommendations'
 
 export interface ExamResultMetrics {
   correct: number

@@ -9,13 +9,13 @@ import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon-map'
-import { Pagination } from '@/components/common/Pagination'
+import { Pagination } from '@/components/common/pagination'
 import type { UserNote, NoteTargetType, CreateNoteForm } from '@/types/notes'
 import { NOTE_TARGET_LABELS, NOTE_TARGET_ICONS } from '@/types/notes'
-import { NoteCard } from '@/components/notes/NoteCard'
-import { NoteModal } from '@/components/notes/NoteModal'
+import { NoteCard } from '@/components/notes/note.card'
+import { NoteModal } from '@/components/notes/note.modal'
 
 const ITEMS_PER_PAGE = 9
 

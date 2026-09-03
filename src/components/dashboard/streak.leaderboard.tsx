@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Icon } from '@/components/icons/icon-map'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { useDashboardStore } from '@/store/dashboard-store'
 import type { LeaderboardData, LeaderboardPeriod } from '@/types/dashboard'
 

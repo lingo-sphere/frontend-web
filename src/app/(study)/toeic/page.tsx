@@ -10,11 +10,11 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { Trophy, Headphones, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { examService, type BackendToeicExam } from '@/services/exam.service'
 import type { ToeicExam, ToeicExamFilters } from '@/types/toeic'
-import { ExamCard } from '@/components/toeic/ToeicExamCard'
-import { ToeicFilterBar } from '@/components/toeic/ToeicFilterBar'
+import { ExamCard } from '@/components/toeic/toeic.exam.card'
+import { ToeicFilterBar } from '@/components/toeic/toeic.filter.bar'
 
 export default function ToeicHubPage() {
   const { t, i18n } = useTranslation()

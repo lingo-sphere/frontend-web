@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Icon } from '@/components/icons/icon-map'
-import { UserAvatar } from '@/components/user/UserStatsHeader'
+import { UserAvatar } from '@/components/user/user.header'
 import type { User, EditProfileForm } from '@/types/user'
 
 interface EditProfileModalProps {

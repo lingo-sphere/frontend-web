@@ -12,7 +12,7 @@ import { Icon } from '@/components/icons/icon-map'
 import { useNavigate } from '@/lib/navigation'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification } from '@/types/notification'
-import { getNotifIcon, formatNotifTime } from '@/components/layout/header-utils'
+import { getNotifIcon, formatNotifTime } from '@/components/layout/header.utils'
 
 interface HeaderNotificationDropdownProps {
   notifications: Notification[]

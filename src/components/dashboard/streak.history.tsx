@@ -7,9 +7,9 @@ import { useTranslation } from 'react-i18next'
 import { CalendarDays } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { HeatmapDetailCard } from '@/components/dashboard/HeatmapDetailCard'
-import { HeatmapGrid } from '@/components/dashboard/HeatmapGrid'
-import { HeatmapSummaryCard } from '@/components/dashboard/HeatmapSummaryCard'
+import { HeatmapDetailCard } from '@/components/dashboard/heatmap.detail.card'
+import { HeatmapGrid } from '@/components/dashboard/heatmap.grid'
+import { HeatmapSummaryCard } from '@/components/dashboard/heatmap.summary.card'
 import { useDashboardStore } from '@/store/dashboard-store'
 import type { HeatmapDay, HeatmapSummary } from '@/types/dashboard'
 

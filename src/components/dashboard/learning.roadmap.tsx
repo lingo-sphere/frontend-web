@@ -8,7 +8,7 @@ import { Check, Lock } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import type { RoadmapUnit } from '@/types/dashboard'
 
 interface LearningRoadmapProps {

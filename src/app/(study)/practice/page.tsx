@@ -8,7 +8,7 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { Card, CardContent } from '@/components/ui/card'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon-map'
 import { useApp } from '@/contexts/AppContext'
 import { PRACTICE_CATEGORIES } from '@/config/practice.config'

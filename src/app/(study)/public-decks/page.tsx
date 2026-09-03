@@ -12,7 +12,7 @@ import { useNavigate } from '@/lib/navigation'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { useApp } from '@/contexts/AppContext'
 import { vocabularyService } from '@/services/vocabulary.service'
 import type { Deck } from '@/types/api.types'

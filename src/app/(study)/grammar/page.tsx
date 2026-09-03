@@ -10,9 +10,9 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SectionHeading } from '@/components/dashboard/SectionHeading'
+import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon-map'
-import { Pagination } from '@/components/common/Pagination'
+import { Pagination } from '@/components/common/pagination'
 import { vocabularyService, type BackendGrammarPoint } from '@/services/vocabulary.service'
 
 const ITEMS_PER_PAGE = 12

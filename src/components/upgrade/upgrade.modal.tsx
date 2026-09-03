@@ -13,10 +13,10 @@ import { useAuthStore } from '@/store/auth-store'
 import { subscriptionService, type PaymentOrderResponse } from '@/services/subscription.service'
 import { API_CONFIG } from '@/config/api.config'
 import { toast } from '@/store/toast-store'
-import { getRemainingSubscriptionText } from '@/components/layout/header-utils'
-import { getPlans } from '@/components/upgrade/upgrade-data'
-import { UpgradeSelectPlanStep } from '@/components/upgrade/UpgradeSelectPlanStep'
-import { UpgradePaymentQrStep } from '@/components/upgrade/UpgradePaymentQrStep'
+import { getRemainingSubscriptionText } from '@/components/layout/header.utils'
+import { getPlans } from '@/components/upgrade/upgrade.data'
+import { UpgradeSelectPlanStep } from '@/components/upgrade/upgrade.plan'
+import { UpgradePaymentQrStep } from '@/components/upgrade/upgrade.qr'
 
 interface UpgradeModalProps {
   open: boolean

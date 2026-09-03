@@ -6,11 +6,11 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
-import { SpeakingHome } from '@/components/speaking/SpeakingHome'
-import { SpeakingExerciseList } from '@/components/speaking/SpeakingExerciseList'
-import { SpeakingWorkspace } from '@/components/speaking/SpeakingWorkspace'
-import { SpeakingResult } from '@/components/speaking/SpeakingResult'
-import { SpeakingHistory } from '@/components/speaking/SpeakingHistory'
+import { SpeakingHome } from '@/components/speaking/speaking.home'
+import { SpeakingExerciseList } from '@/components/speaking/speaking.exercise.list'
+import { SpeakingWorkspace } from '@/components/speaking/speaking.workspace'
+import { SpeakingResult } from '@/components/speaking/speaking.result'
+import { SpeakingHistory } from '@/components/speaking/speaking.history'
 import { practiceService, type BackendSpeakingExercise } from '@/services/practice.service'
 import type { SpeakingExercise, SpeakingAttempt, RecordingState, SpeakingStats, SpeakingProgress } from '@/types/speaking'
 import type { SpeechAssessmentResult } from '@/types/api.types'
