@@ -2,7 +2,8 @@
 
 /**
  * @file CourseSidebarContent.tsx
- * @description Component giao diện React CourseSidebarContent hiển thị danh sách bài học, bài tập và bài kiểm tra chương cho học viên
+ * @description Component thanh bên hiển thị danh sách chương, bài học, Challenge Test,
+ * Post-mini Test và Final Test với giao diện thẻ hiện đại, chống rớt chữ, bố cục thoáng đãng.
  */
 
 import { useState } from 'react'
@@ -18,6 +19,9 @@ import {
   HelpCircle,
   Sparkles,
   Lock,
+  CheckCircle2,
+  Award,
+  Zap,
 } from 'lucide-react'
 import type { Chapter, Lesson } from '@/types/course'
 import { toast } from '@/store/toast-store'
@@ -48,13 +52,14 @@ export function CourseSidebarContent({
   const [activeResourceDropdown, setActiveResourceDropdown] = useState<string | null>(null)
 
   return (
-    <div className="flex-1 overflow-y-auto divide-y divide-border">
-      {chapters.map((chapter) => {
+    <div className="flex-1 overflow-y-auto divide-y divide-border/60">
+      {chapters.map((chapter, chIdx) => {
         const isExpanded = expandedChapters.includes(chapter.id)
         const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
         const chTotal = chapter.lessons.length
+        const isChapterCompleted = chapter.status === 'completed' || (chTotal > 0 && chCompleted === chTotal)
 
-        // Check if chapter has teacher-uploaded questions or tests
+        // Check teacher-uploaded questions or tests
         const challengeQuestionsCount =
           Array.isArray(chapter.challenge_questions) && chapter.challenge_questions.length > 0
             ? chapter.challenge_questions.length
@@ -72,219 +77,246 @@ export function CourseSidebarContent({
 
         return (
           <div key={chapter.id} className="bg-surface">
+            {/* Chapter Header Button */}
             <button
               onClick={() => onToggleChapter(chapter.id)}
-              className="flex w-full items-center justify-between p-4 text-left hover:bg-surface-hover transition-colors group cursor-pointer"
+              className="flex w-full items-center justify-between p-4 text-left hover:bg-surface-subtle/70 transition-colors group cursor-pointer"
             >
-              <div className="space-y-1 flex-1 pr-3">
-                <div className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors leading-snug">
+              <div className="space-y-1.5 flex-1 pr-3 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                    Chương {chapter.order || chIdx + 1}
+                  </span>
+                  {isChapterCompleted && (
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 size={10} />
+                      Đã xong
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors leading-snug line-clamp-1">
                   {chapter.title}
                 </div>
-                <div className="text-[11px] text-text-tertiary">
+
+                <div className="text-[11px] text-text-tertiary font-medium">
                   {chCompleted}/{chTotal} bài • ~{Math.round(chTotal * 8)} phút
                 </div>
               </div>
-              {isExpanded ? (
-                <ChevronUp size={16} className="text-text-tertiary shrink-0" />
-              ) : (
-                <ChevronDown size={16} className="text-text-tertiary shrink-0" />
-              )}
+
+              <div className="p-1 rounded-lg text-text-tertiary group-hover:text-text-primary group-hover:bg-surface transition-colors shrink-0">
+                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </div>
             </button>
 
+            {/* Chapter Collapsible Body */}
             {isExpanded && (
-              <div className="bg-surface-subtle/40 divide-y divide-border/60">
-                {/* 1. Challenge Test (Bài kiểm tra đầu chương) */}
+              <div className="bg-surface-subtle/30 p-2.5 space-y-2">
+                {/* 1. Challenge Test Card */}
                 {challengeQuestionsCount > 0 && (
                   <div
                     onClick={() => onTakeTest?.(chapter, 'challenge')}
-                    className="flex items-center justify-between p-3.5 pl-5 hover:bg-amber-500/10 transition-colors cursor-pointer group border-l-4 border-amber-500/60"
+                    className="p-3 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-surface hover:border-amber-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                        {isEnrolled ? <Trophy size={14} /> : <Lock size={14} />}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs shadow-amber-500/20">
+                        {isEnrolled ? <Trophy size={15} /> : <Lock size={14} />}
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-text-primary group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                          Bài kiểm tra thử thách (Challenge Test)
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-text-primary group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors whitespace-nowrap">
+                            Challenge Test
+                          </span>
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0">
+                            Vượt cấp
+                          </span>
                         </div>
-                        <div className="text-[10px] text-text-tertiary">
-                          {challengeQuestionsCount} câu hỏi • Điểm đạt: 80%
-                        </div>
+                        <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
+                          {challengeQuestionsCount} câu • Điểm đạt: {chapter.challengeTest?.passingScore || 80}%
+                        </p>
                       </div>
                     </div>
+
                     {isEnrolled ? (
-                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded-md">
+                      <span className="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
+                        <Zap size={11} />
                         Làm bài
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold text-slate-400 bg-slate-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <Lock size={10} /> Khóa
+                      <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
+                        <Lock size={11} /> Khóa
                       </span>
                     )}
                   </div>
                 )}
 
                 {/* 2. Lessons List */}
-                {chapter.lessons.map((lesson) => {
-                  const isActive = currentLesson.id === lesson.id
-                  const isDone = lesson.status === 'completed'
-                  const isResourceOpen = activeResourceDropdown === lesson.id
+                <div className="space-y-1">
+                  {chapter.lessons.map((lesson) => {
+                    const isActive = currentLesson.id === lesson.id
+                    const isDone = lesson.status === 'completed'
+                    const isResourceOpen = activeResourceDropdown === lesson.id
 
-                  return (
-                    <div
-                      key={lesson.id}
-                      onClick={() => onSelectLesson(chapter, lesson)}
-                      className={`flex items-start gap-3 p-3.5 pl-5 transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-primary-soft/60 border-l-4 border-primary text-primary'
-                          : 'hover:bg-surface-hover text-text-primary'
-                      }`}
-                    >
-                      <button
-                        onClick={(e) => {
-                          if (!isEnrolled) {
-                            e.stopPropagation()
-                            toast.warning('Vui lòng mua khóa học để ghi nhận tiến độ bài học!')
-                            return
-                          }
-                          onToggleLessonComplete(lesson.id, e)
-                        }}
-                        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors cursor-pointer ${
-                          isDone
-                            ? 'bg-primary border-primary text-white'
-                            : 'border-border bg-surface hover:border-primary'
+                    return (
+                      <div
+                        key={lesson.id}
+                        onClick={() => onSelectLesson(chapter, lesson)}
+                        className={`p-2.5 rounded-xl transition-all cursor-pointer flex items-start gap-2.5 ${
+                          isActive
+                            ? 'bg-primary/10 border border-primary/30 text-primary shadow-xs'
+                            : 'hover:bg-surface text-text-primary border border-transparent'
                         }`}
-                        title={isDone ? 'Đánh dấu chưa hoàn thành' : 'Đánh dấu đã hoàn thành'}
                       >
-                        {isDone && <Check size={11} strokeWidth={3} />}
-                      </button>
-
-                      <div className="flex-1 space-y-1">
-                        <div
-                          className={`text-xs leading-snug font-medium ${
-                            isActive ? 'font-bold text-primary' : 'text-text-primary'
+                        <button
+                          onClick={(e) => {
+                            if (!isEnrolled) {
+                              e.stopPropagation()
+                              toast.warning('Vui lòng mua khóa học để ghi nhận tiến độ bài học!')
+                              return
+                            }
+                            onToggleLessonComplete(lesson.id, e)
+                          }}
+                          className={`mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-md border transition-all cursor-pointer ${
+                            isDone
+                              ? 'bg-primary border-primary text-white shadow-xs'
+                              : 'border-border/80 bg-surface hover:border-primary'
                           }`}
+                          title={isDone ? 'Đánh dấu chưa hoàn thành' : 'Đánh dấu đã hoàn thành'}
                         >
-                          {lesson.title}
-                        </div>
-                        <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
-                          <span className="flex items-center gap-1">
-                            {isEnrolled ? (
-                              <PlayCircle size={12} className={isActive ? 'text-primary' : ''} />
-                            ) : (
-                              <Lock size={11} className="text-amber-500/80" />
-                            )}
-                            {Math.round(lesson.duration / 60)} phút
-                          </span>
+                          {isDone && <Check size={11} strokeWidth={3} />}
+                        </button>
 
-                          {lesson.resources && lesson.resources.length > 0 && (
-                            <div className="relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  if (!isEnrolled) {
-                                    toast.warning('Vui lòng mua khóa học để tải tài liệu bài học!', 'Yêu cầu mở khóa')
-                                    return
-                                  }
-                                  setActiveResourceDropdown(
-                                    isResourceOpen ? null : lesson.id
-                                  )
-                                }}
-                                className="flex items-center gap-1 text-primary hover:underline font-semibold cursor-pointer"
-                              >
-                                <FolderDown size={11} />
-                                <span>Tài liệu ({lesson.resources.length})</span>
-                              </button>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div
+                            className={`text-xs leading-snug line-clamp-2 ${
+                              isActive ? 'font-bold text-primary' : 'font-medium text-text-primary'
+                            }`}
+                          >
+                            {lesson.title}
+                          </div>
 
-                              {isResourceOpen && isEnrolled && (
-                                <div
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="absolute left-0 top-6 w-56 rounded-xl border border-border bg-surface p-2 shadow-2xl z-30 space-y-1.5 text-xs animate-in fade-in duration-150"
-                                >
-                                  <div className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary px-2 py-0.5">
-                                    Tải tài liệu bài học:
-                                  </div>
-                                  {lesson.resources.map((res) => (
-                                    <a
-                                      key={res.id}
-                                      href={res.url}
-                                      download
-                                      className="flex items-center justify-between gap-2 rounded-lg p-2 hover:bg-surface-hover text-text-primary transition-colors"
-                                    >
-                                      <span className="truncate flex-1 text-[11px]">
-                                        {res.title}
-                                      </span>
-                                      <Download size={12} className="text-primary shrink-0" />
-                                    </a>
-                                  ))}
-                                </div>
+                          <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
+                            <span className="flex items-center gap-1 shrink-0">
+                              {isEnrolled ? (
+                                <PlayCircle size={12} className={isActive ? 'text-primary' : ''} />
+                              ) : (
+                                <Lock size={11} className="text-amber-500/80" />
                               )}
-                            </div>
-                          )}
+                              {Math.round(lesson.duration / 60)} phút
+                            </span>
+
+                            {lesson.resources && lesson.resources.length > 0 && (
+                              <div className="relative shrink-0">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (!isEnrolled) {
+                                      toast.warning('Vui lòng mua khóa học để tải tài liệu!', 'Yêu cầu mở khóa')
+                                      return
+                                    }
+                                    setActiveResourceDropdown(isResourceOpen ? null : lesson.id)
+                                  }}
+                                  className="flex items-center gap-1 text-primary hover:underline font-semibold cursor-pointer text-[10px]"
+                                >
+                                  <FolderDown size={11} />
+                                  <span>Tài liệu ({lesson.resources.length})</span>
+                                </button>
+
+                                {isResourceOpen && isEnrolled && (
+                                  <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute left-0 top-6 w-56 rounded-xl border border-border bg-surface p-2 shadow-2xl z-30 space-y-1.5 text-xs animate-in fade-in duration-150"
+                                  >
+                                    <div className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary px-2 py-0.5">
+                                      Tài liệu bài học:
+                                    </div>
+                                    {lesson.resources.map((res) => (
+                                      <a
+                                        key={res.id}
+                                        href={res.url}
+                                        download
+                                        className="flex items-center justify-between gap-2 rounded-lg p-2 hover:bg-surface-hover text-text-primary transition-colors"
+                                      >
+                                        <span className="truncate flex-1 text-[11px]">{res.title}</span>
+                                        <Download size={12} className="text-primary shrink-0" />
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
 
-                {/* 3. Practice Exercise (Bài thực hành trắc nghiệm) */}
+                {/* 3. Practice Exercise Card */}
                 {testQuestionsCount > 0 && (
                   <div
                     onClick={() => onTakeTest?.(chapter, 'exercise')}
-                    className="flex items-center justify-between p-3.5 pl-5 hover:bg-indigo-500/10 transition-colors cursor-pointer group border-l-4 border-indigo-500/60"
+                    className="p-3 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/10 via-indigo-500/5 to-surface hover:border-indigo-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        {isEnrolled ? <HelpCircle size={14} /> : <Lock size={14} />}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-500 text-white shadow-xs shadow-indigo-500/20">
+                        {isEnrolled ? <HelpCircle size={15} /> : <Lock size={14} />}
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-text-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          Bài tập trắc nghiệm thực hành
-                        </div>
-                        <div className="text-[10px] text-text-tertiary">
-                          {testQuestionsCount} câu hỏi trắc nghiệm
-                        </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-bold text-text-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate block">
+                          Luyện tập trắc nghiệm
+                        </span>
+                        <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
+                          {testQuestionsCount} câu thực hành
+                        </p>
                       </div>
                     </div>
+
                     {isEnrolled ? (
-                      <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded-md">
+                      <span className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0">
                         Luyện tập
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold text-slate-400 bg-slate-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <Lock size={10} /> Khóa
+                      <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
+                        <Lock size={11} /> Khóa
                       </span>
                     )}
                   </div>
                 )}
 
-                {/* 4. Post-Mini Test (Bài kiểm tra cuối chương) */}
+                {/* 4. Post-Mini Test Card */}
                 {postMiniQuestionsCount > 0 && (
                   <div
                     onClick={() => onTakeTest?.(chapter, 'post-mini')}
-                    className="flex items-center justify-between p-3.5 pl-5 hover:bg-emerald-500/10 transition-colors cursor-pointer group border-l-4 border-emerald-500/60"
+                    className="p-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-surface hover:border-emerald-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                        {isEnrolled ? <FileCheck2 size={14} /> : <Lock size={14} />}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-xs shadow-emerald-500/20">
+                        {isEnrolled ? <FileCheck2 size={15} /> : <Lock size={14} />}
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-text-primary group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                          Bài kiểm tra cuối chương (Post-Mini Test)
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-text-primary group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors whitespace-nowrap">
+                            Post-Mini Test
+                          </span>
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
+                            Cuối chương
+                          </span>
                         </div>
-                        <div className="text-[10px] text-text-tertiary">
-                          {postMiniQuestionsCount} câu hỏi • Đánh giá hoàn thành chương
-                        </div>
+                        <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
+                          {postMiniQuestionsCount} câu • Đánh giá hoàn thành
+                        </p>
                       </div>
                     </div>
+
                     {isEnrolled ? (
-                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <span className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
                         <Sparkles size={11} />
-                        Kiểm tra
+                        <span>Kiểm tra</span>
                       </span>
                     ) : (
-                      <span className="text-[11px] font-bold text-slate-400 bg-slate-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <Lock size={10} /> Khóa
+                      <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
+                        <Lock size={11} /> Khóa
                       </span>
                     )}
                   </div>
@@ -297,31 +329,35 @@ export function CourseSidebarContent({
 
       {/* 5. Final Test (Bài thi tốt nghiệp cuối khóa) */}
       {finalTestQuestionsCount > 0 && (
-        <div className="p-4 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border-t border-emerald-500/20">
+        <div className="p-3.5 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border-t border-emerald-500/20">
           <div
             onClick={() => onTakeTest?.(null, 'final-test')}
-            className="flex items-center justify-between p-3.5 rounded-2xl bg-surface border border-emerald-500/40 hover:border-emerald-500 transition-all cursor-pointer shadow-xs group"
+            className="p-3.5 rounded-2xl bg-surface border border-emerald-500/40 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group"
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
-                <Trophy size={16} />
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20">
+                <Award size={18} />
               </div>
-              <div>
-                <h4 className="text-xs font-black text-text-primary group-hover:text-emerald-600 transition-colors">
-                  Bài thi tốt nghiệp (Final Test)
-                </h4>
-                <p className="text-[10px] text-text-tertiary">
-                  {finalTestQuestionsCount} câu • Đánh giá năng lực cuối khóa
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-xs font-black text-text-primary group-hover:text-emerald-600 transition-colors truncate">
+                    Final Test tốt nghiệp
+                  </h4>
+                </div>
+                <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
+                  {finalTestQuestionsCount} câu • Đánh giá năng lực toàn khóa
                 </p>
               </div>
             </div>
+
             {isEnrolled ? (
-              <span className="text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded-xl shadow-xs">
-                Làm bài
+              <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
+                <Trophy size={12} />
+                <span>Làm bài</span>
               </span>
             ) : (
-              <span className="text-[11px] font-bold text-slate-400 bg-slate-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
-                <Lock size={10} /> Khóa
+              <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-xs flex items-center gap-1 whitespace-nowrap shrink-0">
+                <Lock size={11} /> Khóa
               </span>
             )}
           </div>

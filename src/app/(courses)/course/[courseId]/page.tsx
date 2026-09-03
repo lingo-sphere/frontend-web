@@ -7,7 +7,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from '@/lib/navigation'
-import { Sparkles, PanelRightClose } from 'lucide-react'
+import { Sparkles, PanelRightClose, CheckCircle2 } from 'lucide-react'
 import { CourseNotesTab } from '@/components/course/CourseNotesTab'
 import { CourseQnATab } from '@/components/course/CourseQnATab'
 import { CourseReviewsTab } from '@/components/course/CourseReviewsTab'
@@ -1228,43 +1228,49 @@ export default function CourseDetailPage() {
 
         {/* Right Sidebar (Collapsible) */}
         {isSidebarOpen && (
-          <div className="w-full lg:w-[380px] shrink-0 border-l border-border bg-surface flex flex-col max-h-[calc(100vh-3.5rem)] shadow-lg animate-in slide-in-from-right-4 duration-200">
-            <div className="flex items-center justify-between border-b border-border bg-surface-subtle/50 px-4 py-3">
-              <div className="flex items-center gap-2 text-xs font-bold">
-                <button
-                  onClick={() => setActiveSidebarTab('content')}
-                  className={`rounded-lg px-3 py-1.5 transition-all cursor-pointer ${
-                    activeSidebarTab === 'content'
-                      ? 'bg-surface text-primary shadow-sm font-extrabold'
-                      : 'text-text-secondary hover:text-text-primary'
-                  }`}
-                >
-                  Nội dung khóa học
-                </button>
-                <button
-                  onClick={() => setActiveSidebarTab('ai')}
-                  className={`rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer ${
-                    activeSidebarTab === 'ai'
-                      ? 'bg-surface text-primary shadow-sm font-extrabold'
-                      : 'text-text-secondary hover:text-primary'
-                  }`}
-                >
-                  <Sparkles size={13} className="text-primary" />
-                  Trợ lý AI
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="text-[11px] font-bold text-text-tertiary">
-                  {completedLessons}/{totalLessons} bài ({progressPercent}%)
+          <div className="w-full lg:w-[420px] xl:w-[440px] shrink-0 border-l border-border bg-surface flex flex-col max-h-[calc(100vh-3.5rem)] shadow-xl animate-in slide-in-from-right-4 duration-200">
+            <div className="border-b border-border bg-surface-subtle/40 px-4 py-3 space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1 p-1 rounded-xl bg-surface border border-border/80 shadow-xs">
+                  <button
+                    onClick={() => setActiveSidebarTab('content')}
+                    className={`rounded-lg px-3 py-1.5 text-xs transition-all cursor-pointer ${
+                      activeSidebarTab === 'content'
+                        ? 'bg-primary text-white shadow-xs font-bold'
+                        : 'text-text-secondary hover:text-text-primary font-medium'
+                    }`}
+                  >
+                    Nội dung khóa học
+                  </button>
+                  <button
+                    onClick={() => setActiveSidebarTab('ai')}
+                    className={`rounded-lg px-3 py-1.5 text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                      activeSidebarTab === 'ai'
+                        ? 'bg-purple-600 text-white shadow-xs font-bold'
+                        : 'text-text-secondary hover:text-text-primary font-medium'
+                    }`}
+                  >
+                    <Sparkles size={13} />
+                    <span>Trợ lý AI</span>
+                  </button>
                 </div>
+
                 <button
                   onClick={() => setIsSidebarOpen(false)}
-                  className="p-1 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
+                  className="p-1.5 rounded-xl text-text-tertiary hover:text-text-primary hover:bg-surface transition-colors cursor-pointer"
                   title="Đóng thanh bên"
                 >
                   <PanelRightClose size={16} />
                 </button>
+              </div>
+
+              {/* Progress Summary Pill */}
+              <div className="flex items-center justify-between gap-2 pt-0.5">
+                <span className="text-[11px] font-bold text-text-secondary">Tiến độ bài học</span>
+                <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+                  <CheckCircle2 size={12} />
+                  <span>{completedLessons}/{totalLessons} bài ({progressPercent}%)</span>
+                </div>
               </div>
             </div>
 
