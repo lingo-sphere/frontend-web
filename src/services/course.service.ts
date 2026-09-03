@@ -84,6 +84,7 @@ export const courseService = {
     course_id: string
     module_id: string
     lesson_id: string
+    is_completed?: boolean
     score?: number
     time_spent_seconds?: number
   }): Promise<unknown> {
@@ -95,14 +96,133 @@ export const courseService = {
       completed_lessons_count?: number
       total_lessons_count?: number
       progress_percentage?: number
+      status?: string
+      baseline_source?: string
+      baseline_score?: number
+      is_baseline_established?: boolean
+      total_score_growth?: number
+      total_growth_percentage?: number
+      final_test_score?: number
+      growth_chart_data?: Array<{ stage: string; score: number; timestamp: string }>
     }
     modules_progress?: Array<{
       module_id: string
+      order_index?: number
       status: string
+      challenge_score?: number
+      is_passed_by_challenge?: boolean
+      post_mini_score?: number
+      progression_comparison?: {
+        previous_stage: string
+        previous_score: number
+        current_score: number
+        score_diff: number
+        percentage_improvement: number
+        comparison_note: string
+      }
     }>
     completed_lesson_ids?: string[]
   }> {
     return api.get(`/progress/courses/${courseId}/detail`)
+  },
+
+  async submitModuleChallenge(
+    courseId: string,
+    moduleId: string,
+    data: { score: number; passing_score?: number; challenge_attempt_id?: string }
+  ): Promise<{
+    is_passed: boolean
+    score: number
+    passing_score: number
+    status: string
+    message: string
+  }> {
+    return api.post(`/progress/courses/${courseId}/modules/${moduleId}/challenge`, data)
+  },
+
+  async submitModulePostMini(
+    courseId: string,
+    moduleId: string,
+    data: { score: number; post_mini_attempt_id?: string }
+  ): Promise<{
+    message: string
+    module_id: string
+    score: number
+    progression_comparison?: {
+      previous_stage: string
+      previous_score: number
+      current_score: number
+      score_diff: number
+      percentage_improvement: number
+      comparison_note: string
+    }
+    next_module_unlocked?: string | null
+  }> {
+    return api.post(`/progress/courses/${courseId}/modules/${moduleId}/post-mini`, data)
+  },
+
+  async submitCourseFinalTest(
+    courseId: string,
+    data: { score: number; final_test_attempt_id?: string }
+  ): Promise<{
+    message: string
+    course_id: string
+    final_test_score: number
+    baseline_score: number
+    total_score_growth: number
+    total_growth_percentage: number
+    growth_chart_data: Array<{ stage: string; score: number; timestamp: string }>
+    status: string
+  }> {
+    return api.post(`/progress/courses/${courseId}/final-test`, data)
+  },
+
+  async explainTestMistakes(
+    courseId: string,
+    data: {
+      test_title?: string
+      test_type?: string
+      wrong_questions: Array<{
+        question_number?: number
+        question_text?: string
+        user_selected_answer?: string
+        correct_answer?: string
+        category?: string
+      }>
+    }
+  ): Promise<{
+    summary?: string
+    overall_advice?: string
+    explanations: Array<{
+      question_number: number
+      question_text: string
+      user_selected: string
+      correct_answer: string
+      why_wrong: string
+      why_correct: string
+      recommended_topic: string
+    }>
+  }> {
+    return api.post(`/progress/courses/${courseId}/explain-errors`, data)
+  },
+
+  async establishBaseline(
+    courseId: string,
+    data: { baseline_source: string; baseline_score: number; baseline_skills?: Record<string, number> }
+  ): Promise<unknown> {
+    return api.post(`/progress/courses/${courseId}/baseline`, data)
+  },
+
+  async getGrowthChart(courseId: string): Promise<{
+    course_id: string
+    baseline_source?: string
+    baseline_score?: number
+    is_baseline_established?: boolean
+    total_score_growth?: number
+    total_growth_percentage?: number
+    growth_chart_data?: Array<{ stage: string; score: number; timestamp: string }>
+  }> {
+    return api.get(`/progress/courses/${courseId}/growth-chart`)
   },
 
   // ==================== 1. REVIEWS (ĐÁNH GIÁ) ====================

@@ -27,10 +27,11 @@ interface CourseSidebarContentProps {
   currentLesson: Lesson
   expandedChapters: string[]
   isEnrolled?: boolean
+  finalTestQuestionsCount?: number
   onToggleChapter: (chapterId: string) => void
   onSelectLesson: (chapter: Chapter, lesson: Lesson) => void
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
-  onTakeTest?: (chapter: Chapter, testType: 'challenge' | 'exercise' | 'post-mini') => void
+  onTakeTest?: (chapter: Chapter | null, testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test') => void
 }
 
 export function CourseSidebarContent({
@@ -38,6 +39,7 @@ export function CourseSidebarContent({
   currentLesson,
   expandedChapters,
   isEnrolled = true,
+  finalTestQuestionsCount = 0,
   onToggleChapter,
   onSelectLesson,
   onToggleLessonComplete,
@@ -292,6 +294,39 @@ export function CourseSidebarContent({
           </div>
         )
       })}
+
+      {/* 5. Final Test (Bài thi tốt nghiệp cuối khóa) */}
+      {finalTestQuestionsCount > 0 && (
+        <div className="p-4 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border-t border-emerald-500/20">
+          <div
+            onClick={() => onTakeTest?.(null, 'final-test')}
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-surface border border-emerald-500/40 hover:border-emerald-500 transition-all cursor-pointer shadow-xs group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
+                <Trophy size={16} />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-text-primary group-hover:text-emerald-600 transition-colors">
+                  Bài thi tốt nghiệp (Final Test)
+                </h4>
+                <p className="text-[10px] text-text-tertiary">
+                  {finalTestQuestionsCount} câu • Đánh giá năng lực cuối khóa
+                </p>
+              </div>
+            </div>
+            {isEnrolled ? (
+              <span className="text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded-xl shadow-xs">
+                Làm bài
+              </span>
+            ) : (
+              <span className="text-[11px] font-bold text-slate-400 bg-slate-500/15 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <Lock size={10} /> Khóa
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

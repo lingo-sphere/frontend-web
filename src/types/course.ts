@@ -218,6 +218,7 @@ export interface Course {
   notes?: NoteItem[]
   reviews?: CourseReviewItem[]
   announcements?: CourseAnnouncement[]
+  final_test_questions?: Array<Record<string, unknown>>
   preTest?: {
     status: LessonStatus
     result?: TestResult

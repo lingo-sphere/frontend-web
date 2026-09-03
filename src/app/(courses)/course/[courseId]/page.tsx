@@ -17,6 +17,7 @@ import { CourseSidebarContent } from '@/components/course/CourseSidebarContent'
 import { CourseSidebarAiChat } from '@/components/course/CourseSidebarAiChat'
 import { CourseRatingModal } from '@/components/course/CourseRatingModal'
 import { CourseTestRunnerModal } from '@/components/course/CourseTestRunnerModal'
+import { CourseGrowthChart } from '@/components/course/CourseGrowthChart'
 import { CourseLoadingState } from '@/components/course/CourseLoadingState'
 import { LessonPlayer } from '@/components/course/LessonPlayer'
 import { CourseLockedPlayer } from '@/components/course/CourseLockedPlayer'
@@ -29,7 +30,7 @@ import { useEnrollmentStore } from '@/store/enrollment-store'
 import { toast } from '@/store/toast-store'
 import type { Chapter, Course, Lesson, CourseReviewItem, NoteItem, QnAItem } from '@/types/course'
 
-type BottomTab = 'overview' | 'qna' | 'notes' | 'reviews'
+type BottomTab = 'overview' | 'progress' | 'qna' | 'notes' | 'reviews'
 type SidebarTab = 'content' | 'ai'
 
 function formatExactDuration(totalSeconds: number): string {
@@ -70,10 +71,43 @@ export default function CourseDetailPage() {
   const [showCourseCheckoutModal, setShowCourseCheckoutModal] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
 
+  const [progressDetail, setProgressDetail] = useState<{
+    course_progress?: {
+      completed_lessons_count?: number
+      total_lessons_count?: number
+      progress_percentage?: number
+      status?: string
+      baseline_source?: string
+      baseline_score?: number
+      is_baseline_established?: boolean
+      total_score_growth?: number
+      total_growth_percentage?: number
+      final_test_score?: number
+      growth_chart_data?: Array<{ stage: string; score: number; timestamp: string }>
+    }
+    modules_progress?: Array<{
+      module_id: string
+      order_index?: number
+      status: string
+      challenge_score?: number
+      is_passed_by_challenge?: boolean
+      post_mini_score?: number
+      progression_comparison?: {
+        previous_stage: string
+        previous_score: number
+        current_score: number
+        score_diff: number
+        percentage_improvement: number
+        comparison_note: string
+      }
+    }>
+    completed_lesson_ids?: string[]
+  } | null>(null)
+
   const [activeTestModal, setActiveTestModal] = useState<{
     isOpen: boolean
     chapter: Chapter | null
-    testType: 'challenge' | 'exercise' | 'post-mini'
+    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   }>({
     isOpen: false,
     chapter: null,
@@ -117,13 +151,18 @@ export default function CourseDetailPage() {
 
           // Only fetch user's saved lesson progress if user is enrolled
           let completedLessonIdSet = new Set<string>()
+          let progressDataResult: any = null
           if (userIsEnrolled) {
             try {
               const progressData = await courseService.getCourseProgressDetail(
                 String(courseObj._id || courseObj.id || courseId)
               )
-              if (progressData && Array.isArray(progressData.completed_lesson_ids)) {
-                completedLessonIdSet = new Set(progressData.completed_lesson_ids)
+              if (progressData) {
+                progressDataResult = progressData
+                setProgressDetail(progressData)
+                if (Array.isArray(progressData.completed_lesson_ids)) {
+                  completedLessonIdSet = new Set(progressData.completed_lesson_ids)
+                }
               }
             } catch {
               // Not authenticated or no progress record yet
@@ -136,6 +175,7 @@ export default function CourseDetailPage() {
               const modLessons = (mod.lessons as Array<Record<string, unknown>>) || []
               const modId = String(mod._id || mod.id || `ch-${modIdx + 1}`)
               const modTitle = String(mod.title || `Chương ${modIdx + 1}`)
+              const modOrder = Number(mod.order_index || mod.module_order || modIdx + 1)
 
               const challengeQs = Array.isArray(mod.challenge_questions)
                 ? (mod.challenge_questions as Array<Record<string, unknown>>)
@@ -146,6 +186,22 @@ export default function CourseDetailPage() {
               const testQs = Array.isArray(mod.test_questions)
                 ? (mod.test_questions as Array<Record<string, unknown>>)
                 : []
+
+              let chStatus: Chapter['status'] = (modIdx === 0 ? 'in-progress' : 'available') as Chapter['status']
+              if (progressDataResult && Array.isArray(progressDataResult.modules_progress)) {
+                const foundMod = progressDataResult.modules_progress.find(
+                  (m: any) => m.module_id === modId || m.order_index === modOrder
+                )
+                if (foundMod) {
+                  if (foundMod.status === 'COMPLETED' || foundMod.status === 'SKIPPED_BY_CHALLENGE') {
+                    chStatus = 'completed'
+                  } else if (foundMod.status === 'IN_PROGRESS') {
+                    chStatus = 'in-progress'
+                  } else if (foundMod.status === 'LOCKED') {
+                    chStatus = 'locked'
+                  }
+                }
+              }
 
               const lessonsList: Lesson[] = modLessons.map((les, lesIdx) => {
                 const lesId = String(les._id || les.id || `les-${modIdx + 1}-${lesIdx + 1}`)
@@ -204,10 +260,10 @@ export default function CourseDetailPage() {
               return {
                 id: modId,
                 courseId: String(courseObj._id || courseObj.id || courseId),
-                order: Number(mod.order_index || mod.module_order || modIdx + 1),
+                order: modOrder,
                 title: modTitle,
                 description: String(mod.description || ''),
-                status: (modIdx === 0 ? 'in-progress' : 'available') as Chapter['status'],
+                status: chStatus,
                 lessons: lessonsList,
                 challenge_questions: challengeQs,
                 post_mini_questions: postMiniQs,
@@ -471,7 +527,8 @@ export default function CourseDetailPage() {
             reviews: mappedReviews,
             qna: mappedQnA,
             notes: mappedNotes,
-            finalTest: { status: 'locked' },
+            final_test_questions: (courseObj.final_test_questions as Array<Record<string, unknown>>) || [],
+            finalTest: { status: userIsEnrolled ? 'available' : 'locked' },
           }
 
           setCourse(structuredCourse)
@@ -531,21 +588,26 @@ export default function CourseDetailPage() {
 
     setCourse({ ...course, chapters: nextChapters })
 
-    if (targetStatus === 'completed') {
-      const curChapId = chapterId || course.chapters[0]?.id || ''
-      courseService
-        .completeLesson({
-          course_id: String(course.id),
-          module_id: curChapId,
-          lesson_id: lessonId,
-          score: 100,
-        })
-        .catch(() => {})
+    const curChapId = chapterId || course.chapters[0]?.id || ''
+    const isNowCompleted = targetStatus === 'completed'
 
+    courseService
+      .completeLesson({
+        course_id: String(course.id),
+        module_id: curChapId,
+        lesson_id: lessonId,
+        is_completed: isNowCompleted,
+        score: isNowCompleted ? 100 : 0,
+      })
+      .catch(() => {})
+
+    if (isNowCompleted) {
       toast.success(
         'Đã lưu tiến độ hoàn thành bài học vào hệ thống!',
         'Hoàn thành bài học'
       )
+    } else {
+      toast.info('Đã hủy hoàn thành bài học', 'Cập nhật tiến độ')
     }
   }
 
@@ -905,8 +967,8 @@ export default function CourseDetailPage() {
   }
 
   const handleTakeTest = (
-    chapter: Chapter,
-    testType: 'challenge' | 'exercise' | 'post-mini'
+    chapter: Chapter | null,
+    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   ) => {
     if (!isEnrolled) {
       toast.warning(
@@ -922,8 +984,43 @@ export default function CourseDetailPage() {
     })
   }
 
-  const handleTestComplete = (score: number, isPassed: boolean) => {
-    if (isPassed && activeTestModal.chapter) {
+  const handleTestComplete = async (score: number, isPassed: boolean, resultData?: unknown) => {
+    if (course?.id) {
+      try {
+        const updatedProgress = await courseService.getCourseProgressDetail(String(course.id))
+        if (updatedProgress) {
+          setProgressDetail(updatedProgress)
+          if (Array.isArray(updatedProgress.modules_progress)) {
+            const modStatusMap = new Map(
+              updatedProgress.modules_progress.map((m: any) => [m.module_id, m.status])
+            )
+            const modOrderMap = new Map(
+              updatedProgress.modules_progress.map((m: any) => [m.order_index, m.status])
+            )
+            setCourse((prev) => {
+              if (!prev) return null
+              const nextChapters = prev.chapters.map((ch, idx) => {
+                const foundStatus = modStatusMap.get(ch.id) || modOrderMap.get(ch.order || idx + 1)
+                let chStatus: Chapter['status'] = ch.status
+                if (foundStatus === 'COMPLETED' || foundStatus === 'SKIPPED_BY_CHALLENGE') {
+                  chStatus = 'completed'
+                } else if (foundStatus === 'IN_PROGRESS') {
+                  chStatus = 'in-progress'
+                } else if (foundStatus === 'LOCKED') {
+                  chStatus = 'locked'
+                }
+                return { ...ch, status: chStatus }
+              })
+              return { ...prev, chapters: nextChapters }
+            })
+          }
+        }
+      } catch (err) {
+        console.warn('Error refreshing progress after test:', err)
+      }
+    }
+
+    if (isPassed) {
       toast.success(
         `Chúc mừng! Bạn đã hoàn thành bài kiểm tra với điểm số ${score}%`,
         'Vượt qua bài kiểm tra'
@@ -1020,9 +1117,27 @@ export default function CourseDetailPage() {
           )}
 
           <div className="p-4 sm:p-8 space-y-6 max-w-5xl">
+            {/* Baseline Notice Banner */}
+            {isEnrolled && progressDetail && !progressDetail.course_progress?.is_baseline_established && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-950 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-300">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">🎯</span>
+                  <div className="text-xs">
+                    <p className="font-extrabold text-sm text-amber-900 dark:text-amber-100">
+                      Thiết lập mốc năng lực ban đầu (Baseline)
+                    </p>
+                    <p className="text-amber-800/90 dark:text-amber-200/80 mt-0.5">
+                      Bạn chưa có điểm mốc Baseline để so sánh mức độ cải thiện. Hệ thống sẽ tự động lấy kết quả Post-mini Test của Chương 1 làm mốc ban đầu, hoặc bạn có thể cập nhật trong Hồ sơ cá nhân!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-6 border-b border-border text-xs sm:text-sm font-bold tracking-wide overflow-x-auto no-scrollbar">
               {[
                 { id: 'overview', label: 'Tổng quan (Overview)' },
+                { id: 'progress', label: 'Tiến độ & Tăng trưởng' },
                 {
                   id: 'qna',
                   label: `Hỏi & Đáp (Q&A) ${
@@ -1055,6 +1170,20 @@ export default function CourseDetailPage() {
             </div>
 
             {activeBottomTab === 'overview' && <CourseOverviewTab course={course} />}
+
+            {activeBottomTab === 'progress' && (
+              <div className="space-y-6">
+                <CourseGrowthChart
+                  growthData={progressDetail?.course_progress?.growth_chart_data}
+                  baselineScore={progressDetail?.course_progress?.baseline_score}
+                  baselineSource={progressDetail?.course_progress?.baseline_source}
+                  isBaselineEstablished={progressDetail?.course_progress?.is_baseline_established}
+                  totalScoreGrowth={progressDetail?.course_progress?.total_score_growth}
+                  totalGrowthPercentage={progressDetail?.course_progress?.total_growth_percentage}
+                  finalTestScore={progressDetail?.course_progress?.final_test_score}
+                />
+              </div>
+            )}
 
             {activeBottomTab === 'qna' && (
               <CourseQnATab
@@ -1145,6 +1274,7 @@ export default function CourseDetailPage() {
                 currentLesson={currentLesson}
                 expandedChapters={expandedChapters}
                 isEnrolled={isEnrolled}
+                finalTestQuestionsCount={course.final_test_questions?.length || 0}
                 onToggleChapter={toggleChapter}
                 onSelectLesson={handleSelectLesson}
                 onToggleLessonComplete={handleToggleLessonComplete}
@@ -1166,12 +1296,14 @@ export default function CourseDetailPage() {
         />
       )}
 
-      {/* Chapter Test Runner Modal */}
-      {activeTestModal.isOpen && activeTestModal.chapter && (
+      {/* Chapter & Final Test Runner Modal */}
+      {activeTestModal.isOpen && (
         <CourseTestRunnerModal
           isOpen={activeTestModal.isOpen}
+          courseId={String(course.id)}
           chapter={activeTestModal.chapter}
           testType={activeTestModal.testType}
+          finalTestQuestions={course.final_test_questions as any}
           onClose={() => setActiveTestModal({ isOpen: false, chapter: null, testType: 'post-mini' })}
           onComplete={handleTestComplete}
         />
