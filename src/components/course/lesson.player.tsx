@@ -6,6 +6,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import Hls from 'hls.js'
 import {
   Play,
   Pause,
@@ -51,11 +52,10 @@ const QUALITIES = [
   { id: 'auto', label: 'Tự động (Auto)', badge: 'Thích ứng' },
   { id: '1080p', label: '1080p (Full HD)', badge: 'HD' },
   { id: '720p', label: '720p (HD)', badge: 'HD' },
-  { id: '480p', label: '480p (Tiêu chuẩn)' },
   { id: '360p', label: '360p (Tiết kiệm)' },
 ]
 
-function detectNetworkQuality(): '1080p' | '720p' | '480p' | '360p' {
+function detectNetworkQuality(): '1080p' | '720p' | '360p' {
   if (typeof window === 'undefined') return '1080p'
   const nav = navigator as unknown as {
     connection?: {
@@ -67,7 +67,7 @@ function detectNetworkQuality(): '1080p' | '720p' | '480p' | '360p' {
 
   const conn = nav.connection
   if (!conn) return '1080p'
-  if (conn.saveData) return '480p'
+  if (conn.saveData) return '360p'
   if (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') return '360p'
   if (conn.effectiveType === '3g') return conn.downlink && conn.downlink < 0.4 ? '360p' : '720p'
   return '1080p'
@@ -118,6 +118,7 @@ export function LessonPlayer({
 }: LessonPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const hlsRef = useRef<Hls | null>(null)
   const progressBarRef = useRef<HTMLDivElement | null>(null)
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -132,7 +133,7 @@ export function LessonPlayer({
   const [isMuted, setIsMuted] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
   const [selectedQuality, setSelectedQuality] = useState<string>('auto')
-  const [autoResolvedQuality, setAutoResolvedQuality] = useState<'1080p' | '720p' | '480p' | '360p'>('1080p')
+  const [autoResolvedQuality, setAutoResolvedQuality] = useState<'1080p' | '720p' | '360p'>('1080p')
   const [isTheater, setIsTheater] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [, setIsPipActive] = useState(false)
@@ -167,27 +168,97 @@ export function LessonPlayer({
     return (lesson?.videoUrl || lesson?.content?.videoUrl || '').trim()
   }, [lesson])
 
+  const isHlsStream = useMemo(() => {
+    return Boolean(baseVideoSource && (baseVideoSource.includes('.m3u8') || baseVideoSource.includes('manifest')))
+  }, [baseVideoSource])
+
   const effectiveQualityKey = selectedQuality === 'auto' ? autoResolvedQuality : selectedQuality
   const isDirectVideo = useMemo(() => isDirectVideoUrl(baseVideoSource), [baseVideoSource])
 
   const effectiveVideoUrl = useMemo(() => {
     if (!baseVideoSource) return ''
-    if (baseVideoSource.includes('.m3u8') || baseVideoSource.includes('manifest')) {
+    if (isHlsStream) {
       return baseVideoSource
     }
     if (baseVideoSource.includes('r2.cloudflarestorage.com') || baseVideoSource.includes('pub-')) {
       if (effectiveQualityKey === '720p' && baseVideoSource.includes('/1080p/')) {
         return baseVideoSource.replace('/1080p/', '/720p/')
       }
-      if (effectiveQualityKey === '480p' && baseVideoSource.includes('/1080p/')) {
-        return baseVideoSource.replace('/1080p/', '/480p/')
-      }
       if (effectiveQualityKey === '360p' && baseVideoSource.includes('/1080p/')) {
         return baseVideoSource.replace('/1080p/', '/360p/')
       }
     }
     return baseVideoSource
-  }, [baseVideoSource, effectiveQualityKey])
+  }, [baseVideoSource, effectiveQualityKey, isHlsStream])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !effectiveVideoUrl) return
+
+    if (isHlsStream) {
+      if (Hls.isSupported()) {
+        if (hlsRef.current) {
+          hlsRef.current.destroy()
+        }
+        const hls = new Hls({
+          capLevelToPlayerSize: false,
+          autoStartLoad: true,
+          startLevel: -1,
+        })
+        hlsRef.current = hls
+
+        hls.loadSource(effectiveVideoUrl)
+        hls.attachMedia(video)
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (selectedQuality === 'auto') {
+            hls.currentLevel = -1
+          } else {
+            const targetIdx = hls.levels.findIndex((lvl) => `${lvl.height}p` === selectedQuality)
+            if (targetIdx !== -1) {
+              hls.currentLevel = targetIdx
+            }
+          }
+          if (lastTimeBeforeSwitchRef.current > 0) {
+            video.currentTime = lastTimeBeforeSwitchRef.current
+            lastTimeBeforeSwitchRef.current = 0
+          }
+          video.play().catch(() => {})
+        })
+
+        hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+          const lvl = hls.levels[data.level]
+          if (lvl) {
+            setAutoResolvedQuality(`${lvl.height}p` as any)
+          }
+        })
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = effectiveVideoUrl
+        if (lastTimeBeforeSwitchRef.current > 0) {
+          video.currentTime = lastTimeBeforeSwitchRef.current
+          lastTimeBeforeSwitchRef.current = 0
+        }
+        video.play().catch(() => {})
+      }
+    } else {
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+      video.src = effectiveVideoUrl
+      if (lastTimeBeforeSwitchRef.current > 0) {
+        video.currentTime = lastTimeBeforeSwitchRef.current
+        lastTimeBeforeSwitchRef.current = 0
+      }
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+    }
+  }, [effectiveVideoUrl, isHlsStream, selectedQuality])
 
   const triggerFeedback = useCallback(
     (type: 'forward' | 'rewind' | 'play' | 'pause' | 'speed' | 'volume', text?: string) => {
@@ -288,7 +359,18 @@ export function LessonPlayer({
       const qObj = QUALITIES.find((q) => q.id === qualityId)
       const label = qualityId === 'auto' ? `Tự động (${autoResolvedQuality})` : (qObj?.label || qualityId.toUpperCase())
       triggerFeedback('speed', `Độ phân giải: ${label}`)
-      if (qualityId === 'auto') {
+
+      const hls = hlsRef.current
+      if (hls && hls.levels && hls.levels.length > 0) {
+        if (qualityId === 'auto') {
+          hls.currentLevel = -1
+        } else {
+          const targetIdx = hls.levels.findIndex((lvl) => `${lvl.height}p` === qualityId)
+          if (targetIdx !== -1) {
+            hls.currentLevel = targetIdx
+          }
+        }
+      } else if (qualityId === 'auto') {
         const detected = detectNetworkQuality()
         setAutoResolvedQuality(detected)
       }
@@ -531,7 +613,7 @@ export function LessonPlayer({
       {isDirectVideo ? (
         <video
           ref={videoRef}
-          src={effectiveVideoUrl}
+          src={isHlsStream ? undefined : effectiveVideoUrl}
           autoPlay
           playsInline
           style={{
