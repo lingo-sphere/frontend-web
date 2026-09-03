@@ -1400,7 +1400,7 @@ export default function CourseDetailPage() {
       />
 
       <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden relative">
-        <div className="flex-1 flex flex-col overflow-y-auto max-h-[calc(100vh-3.5rem)] transition-all duration-300">
+        <div className="flex-1 flex flex-col overflow-y-auto scroll-smooth max-h-[calc(100vh-3.5rem)] transition-all duration-300">
           {isEnrolled || Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) ? (
             <div className="flex flex-col">
               {!isEnrolled && Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) && (
@@ -1447,7 +1447,7 @@ export default function CourseDetailPage() {
             />
           )}
 
-          <div className="p-4 sm:p-8 space-y-6 max-w-5xl">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 w-full max-w-7xl">
             {/* Baseline Notice Banner */}
             {isEnrolled && progressDetail && !progressDetail.course_progress?.is_baseline_established && (
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-950 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-300">
