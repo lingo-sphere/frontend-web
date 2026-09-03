@@ -92,6 +92,7 @@ export default function CourseDetailPage() {
       order_index?: number
       status: string
       challenge_score?: number
+      challenge_taken?: boolean
       is_passed_by_challenge?: boolean
       post_mini_score?: number
       progression_comparison?: {
@@ -629,7 +630,43 @@ export default function CourseDetailPage() {
     )
   }
 
+  const lockedChapterIdSet = useMemo(() => {
+    const set = new Set<string>()
+    if (!course?.chapters || !isEnrolled) return set
+
+    for (let i = 1; i < course.chapters.length; i++) {
+      const prevCh = course.chapters[i - 1]
+      const prevMod = progressDetail?.modules_progress?.find(
+        (m: any) => m.module_id === prevCh.id || m.order_index === (prevCh.order || i)
+      )
+      const passedChallenge = Boolean(
+        prevMod?.is_passed_by_challenge ||
+        prevMod?.status === 'SKIPPED_BY_CHALLENGE' ||
+        prevMod?.challenge_taken ||
+        (prevMod?.challenge_score !== undefined && prevMod.challenge_score > 0) ||
+        (prevMod?.challenge_score || 0) >= (prevCh.challengeTest?.passingScore || 80)
+      )
+      const passedPostMini = Boolean(
+        prevCh.status === 'completed' ||
+        prevMod?.status === 'COMPLETED' ||
+        (prevMod?.post_mini_score !== undefined) ||
+        (prevMod?.post_mini_score || 0) > 0
+      )
+      if (!passedChallenge && !passedPostMini) {
+        set.add(course.chapters[i].id)
+      }
+    }
+    return set
+  }, [course?.chapters, isEnrolled, progressDetail?.modules_progress])
+
   const handleSelectLesson = (chapter: Chapter, lesson: Lesson) => {
+    if (lockedChapterIdSet.has(chapter.id)) {
+      toast.warning(
+        'Chương này đang bị khóa! Bạn cần làm xong bài kiểm tra cuối chương hoặc vượt qua bài thử thách của chương trước để mở khóa nhé.',
+        'Chương đang khóa'
+      )
+      return
+    }
     setCurrentChapter(chapter)
     setCurrentLesson(lesson)
     try {
@@ -730,11 +767,6 @@ export default function CourseDetailPage() {
           time_spent_seconds: Math.round(playerCurrentTime),
         })
         .catch(() => {})
-
-      toast.success(
-        'Bạn đã theo dõi hơn 80% bài giảng! Hệ thống đã tự động đánh dấu hoàn thành.',
-        'Đã hoàn thành bài học'
-      )
     }
   }
 
@@ -757,19 +789,29 @@ export default function CourseDetailPage() {
   }, [allFlatLessons, currentLesson?.id])
 
   const hasNextLesson =
-    currentLessonIndex >= 0 && currentLessonIndex < allFlatLessons.length - 1
+    currentLessonIndex >= 0 &&
+    currentLessonIndex < allFlatLessons.length - 1 &&
+    (!allFlatLessons[currentLessonIndex + 1] ||
+      !lockedChapterIdSet.has(allFlatLessons[currentLessonIndex + 1].chapter.id))
   const hasPrevLesson = currentLessonIndex > 0
 
   const handleNextLesson = useCallback(() => {
     if (hasNextLesson) {
       const nextItem = allFlatLessons[currentLessonIndex + 1]
+      if (lockedChapterIdSet.has(nextItem.chapter.id)) {
+        toast.warning(
+          'Chương tiếp theo đang bị khóa! Bạn cần làm xong bài kiểm tra cuối chương hoặc vượt qua bài thử thách của chương trước để mở khóa.',
+          'Chương đang khóa'
+        )
+        return
+      }
       setCurrentChapter(nextItem.chapter)
       setCurrentLesson(nextItem.lesson)
       if (!expandedChapters.includes(nextItem.chapter.id)) {
         setExpandedChapters((prev) => [...prev, nextItem.chapter.id])
       }
     }
-  }, [hasNextLesson, allFlatLessons, currentLessonIndex, expandedChapters])
+  }, [hasNextLesson, allFlatLessons, currentLessonIndex, expandedChapters, lockedChapterIdSet])
 
   const handlePrevLesson = useCallback(() => {
     if (hasPrevLesson) {
@@ -1066,6 +1108,41 @@ export default function CourseDetailPage() {
   }
 
   const handleTestComplete = async (score: number, isPassed: boolean, resultData?: unknown) => {
+    if (activeTestModal.chapter) {
+      const finishedChId = activeTestModal.chapter.id
+      const finishedChOrder = activeTestModal.chapter.order || 1
+      setProgressDetail((prev: any) => {
+        const existingMods = Array.isArray(prev?.modules_progress) ? [...prev.modules_progress] : []
+        const modIdx = existingMods.findIndex(
+          (m: any) => m.module_id === finishedChId || m.order_index === finishedChOrder
+        )
+        const updatedMod = {
+          module_id: finishedChId,
+          order_index: finishedChOrder,
+          status: 'COMPLETED',
+          ...(activeTestModal.testType === 'challenge'
+            ? { challenge_score: score, is_passed_by_challenge: true, challenge_taken: true }
+            : { post_mini_score: score }),
+        }
+        if (modIdx >= 0) {
+          existingMods[modIdx] = { ...existingMods[modIdx], ...updatedMod }
+        } else {
+          existingMods.push(updatedMod)
+        }
+        return {
+          ...(prev || {}),
+          modules_progress: existingMods,
+        }
+      })
+      setCourse((prev) => {
+        if (!prev) return null
+        const nextChapters = prev.chapters.map((ch) =>
+          ch.id === finishedChId ? { ...ch, status: 'completed' as const } : ch
+        )
+        return { ...prev, chapters: nextChapters }
+      })
+    }
+
     if (course?.id) {
       try {
         const updatedProgress = await courseService.getCourseProgressDetail(String(course.id))
@@ -1101,12 +1178,10 @@ export default function CourseDetailPage() {
       }
     }
 
-    if (isPassed) {
-      toast.success(
-        `Chúc mừng! Bạn đã hoàn thành bài kiểm tra với điểm số ${score}%`,
-        'Vượt qua bài kiểm tra'
-      )
-    }
+    toast.success(
+      `Chúc mừng! Bạn đã hoàn thành bài kiểm tra với điểm số ${score}% và mở khóa chương tiếp theo!`,
+      'Hoàn thành bài kiểm tra'
+    )
   }
 
   if (isLoading || !course || !currentLesson) {
@@ -1380,8 +1455,10 @@ export default function CourseDetailPage() {
                 currentLesson={currentLesson}
                 expandedChapters={expandedChapters}
                 isEnrolled={isEnrolled}
+                lockedChapterIds={lockedChapterIdSet}
                 modulesProgress={progressDetail?.modules_progress}
                 finalTestQuestionsCount={course.final_test_questions?.length || 0}
+                finalTestScore={progressDetail?.course_progress?.final_test_score}
                 onToggleChapter={toggleChapter}
                 onSelectLesson={handleSelectLesson}
                 onToggleLessonComplete={handleToggleLessonComplete}

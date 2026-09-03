@@ -33,6 +33,7 @@ interface CourseSidebarContentProps {
   currentLesson: Lesson
   expandedChapters: string[]
   isEnrolled?: boolean
+  lockedChapterIds?: Set<string>
   modulesProgress?: Array<{
     module_id: string
     order_index?: number
@@ -43,6 +44,7 @@ interface CourseSidebarContentProps {
     post_mini_score?: number
   }>
   finalTestQuestionsCount?: number
+  finalTestScore?: number
   onToggleChapter: (chapterId: string) => void
   onSelectLesson: (chapter: Chapter, lesson: Lesson) => void
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
@@ -54,8 +56,10 @@ export function CourseSidebarContent({
   currentLesson,
   expandedChapters,
   isEnrolled = true,
+  lockedChapterIds,
   modulesProgress,
   finalTestQuestionsCount = 0,
+  finalTestScore,
   onToggleChapter,
   onSelectLesson,
   onToggleLessonComplete,
@@ -70,30 +74,54 @@ export function CourseSidebarContent({
         const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
         const chTotal = chapter.lessons.length
 
-        // Lấy thông tin tiến độ của chương từ backend
         const modProgress = modulesProgress?.find(
           (m) => m.module_id === chapter.id || m.order_index === (chapter.order || chIdx + 1)
         )
 
-        // Kiểm tra xem chương đã được vượt cấp bằng Challenge Test chưa
         const isPassedByChallenge = Boolean(
           modProgress?.is_passed_by_challenge ||
           modProgress?.status === 'SKIPPED_BY_CHALLENGE' ||
           chapter.status === 'completed' && (modProgress?.challenge_score || 0) >= (chapter.challengeTest?.passingScore || 80)
         )
 
-        // Kiểm tra xem học viên đã từng làm bài Challenge Test của chương này chưa (chỉ được 1 lần)
         const isChallengeTaken = Boolean(
           modProgress?.challenge_taken ||
           isPassedByChallenge ||
-          (modProgress?.challenge_score !== undefined && modProgress.challenge_score > 0)
+          (modProgress?.challenge_score !== undefined && modProgress.challenge_score >= 0)
         )
 
-        const postMiniScore = modProgress?.post_mini_score || 0
-        const isPassedByPostMini = postMiniScore >= 70
+        const postMiniScore = modProgress?.post_mini_score ?? 0
+        const isPostMiniTaken = Boolean(
+          (modProgress?.post_mini_score !== undefined) ||
+          modProgress?.status === 'COMPLETED' ||
+          (chapter.status === 'completed' && !isPassedByChallenge)
+        )
+        const isPassedByPostMini = isPostMiniTaken || postMiniScore >= 70
         const isChapterCompleted = isPassedByChallenge || isPassedByPostMini || (chTotal > 0 && chCompleted === chTotal)
 
-        // Bộ câu hỏi kiểm tra của chương (1 bộ đề duy nhất do giảng viên tạo)
+        const prevChapter = chIdx > 0 ? chapters[chIdx - 1] : null
+        const prevModProgress = prevChapter
+          ? modulesProgress?.find(
+              (m) => m.module_id === prevChapter.id || m.order_index === (prevChapter.order || chIdx)
+            )
+          : null
+        const prevPassedChallenge = Boolean(
+          prevModProgress?.is_passed_by_challenge ||
+          prevModProgress?.status === 'SKIPPED_BY_CHALLENGE' ||
+          prevModProgress?.challenge_taken ||
+          (prevModProgress?.challenge_score !== undefined && prevModProgress.challenge_score > 0) ||
+          (prevModProgress?.challenge_score || 0) >= (prevChapter?.challengeTest?.passingScore || 80)
+        )
+        const prevPassedPostMini = Boolean(
+          prevChapter?.status === 'completed' ||
+          prevModProgress?.status === 'COMPLETED' ||
+          (prevModProgress?.post_mini_score !== undefined) ||
+          (prevModProgress?.post_mini_score || 0) > 0
+        )
+        const isChapterLocked = lockedChapterIds
+          ? lockedChapterIds.has(chapter.id)
+          : (isEnrolled && chIdx > 0 && !prevPassedChallenge && !prevPassedPostMini)
+
         const chapterQuestions =
           (Array.isArray(chapter.test_questions) && chapter.test_questions.length > 0 ? chapter.test_questions : null) ||
           (Array.isArray(chapter.post_mini_questions) && chapter.post_mini_questions.length > 0 ? chapter.post_mini_questions : null) ||
@@ -104,7 +132,6 @@ export function CourseSidebarContent({
 
         return (
           <div key={chapter.id} className="bg-surface">
-            {/* Chapter Header Button */}
             <button
               onClick={() => onToggleChapter(chapter.id)}
               className="flex w-full items-center justify-between p-4 text-left hover:bg-surface-subtle/70 transition-colors group cursor-pointer"
@@ -115,10 +142,20 @@ export function CourseSidebarContent({
                     Chương {chapter.order || chIdx + 1}
                   </span>
 
-                  {isPassedByChallenge ? (
-                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 flex items-center gap-1">
-                      <Zap size={10} />
+                  {isChapterLocked ? (
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                      <Lock size={10} />
+                      Đang khóa
+                    </span>
+                  ) : isPassedByChallenge ? (
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                      <CheckCircle2 size={10} className="text-emerald-500" />
                       Đã vượt cấp ({modProgress?.challenge_score || 80}%)
+                    </span>
+                  ) : isPostMiniTaken ? (
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                      <CheckCircle2 size={10} className="text-emerald-500" />
+                      Đã kiểm tra ({postMiniScore}%)
                     </span>
                   ) : isChapterCompleted ? (
                     <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
@@ -149,45 +186,45 @@ export function CourseSidebarContent({
                 {questionsCount > 0 && (
                   <>
                     {isPassedByChallenge ? (
-                      /* Đã vượt cấp bằng Challenge Test */
-                      <div className="p-3 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 to-transparent flex items-center justify-between gap-3">
+                      <div className="p-3 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface flex items-center justify-between gap-3 shadow-xs">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
-                            <Zap size={16} />
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-xs">
+                            <CheckCircle2 size={16} />
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-xs font-black text-amber-900 dark:text-amber-200">
-                                Đã vượt cấp bằng Challenge Test
+                              <span className="text-xs font-black text-emerald-900 dark:text-emerald-200">
+                                Thử thách đầu chương
                               </span>
-                              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-800 dark:text-amber-300">
-                                {modProgress?.challenge_score || 80}%
+                              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                                <CheckCircle2 size={10} className="text-emerald-600 dark:text-emerald-400" />
+                                <span>Đã vượt cấp ({modProgress?.challenge_score || 80}%)</span>
                               </span>
                             </div>
-                            <p className="text-[10px] text-amber-800/80 dark:text-amber-300/80 mt-0.5">
-                              Đã hoàn thành thử thách và mở khóa chương tiếp theo
+                            <p className="text-[10px] text-emerald-700 dark:text-emerald-400 mt-0.5">
+                              ✓ Bạn đã làm và hoàn thành thử thách • Đã mở khóa chương sau
                             </p>
                           </div>
                         </div>
                       </div>
                     ) : isChallengeTaken ? (
-                      /* Đã thử sức 1 lần nhưng chưa đạt -> Khóa thử thách, học các bài giảng */
-                      <div className="p-2.5 rounded-2xl border border-border/80 bg-surface-subtle/60 flex items-center justify-between gap-2.5">
+                      <div className="p-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 flex items-center justify-between gap-2.5">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                            <Zap size={13} />
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                            <CheckCircle2 size={14} className="text-amber-500" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[11px] font-bold text-text-primary">
-                                Challenge Test: {modProgress?.challenge_score || 0}%
+                                Thử thách đầu chương
                               </span>
-                              <span className="text-[9px] font-semibold text-text-tertiary">
-                                (Đã dùng 1 lần)
+                              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+                                <CheckCircle2 size={9} />
+                                <span>Đã làm ({modProgress?.challenge_score || 0}%)</span>
                               </span>
                             </div>
                             <p className="text-[10px] text-text-tertiary mt-0.5">
-                              Chưa đạt điểm vượt cấp. Hãy học các bài giảng và làm bài test ở cuối chương!
+                              ✓ Bạn đã làm bài thử thách này. Hãy học các bài giảng và làm bài test cuối chương nhé!
                             </p>
                           </div>
                         </div>
@@ -195,12 +232,21 @@ export function CourseSidebarContent({
                     ) : (
                       /* Chưa làm Challenge Test -> Cho phép thử sức duy nhất 1 lần để qua chương */
                       <div
-                        onClick={() => onTakeTest?.(chapter, 'challenge')}
+                        onClick={() => {
+                          if (isChapterLocked) {
+                            toast.warning(
+                              `Chương này đang bị khóa! Bạn cần làm xong bài kiểm tra cuối chương hoặc vượt qua bài thử thách của Chương ${prevChapter?.order || chIdx} để mở khóa nhé.`,
+                              'Chương đang khóa'
+                            )
+                            return
+                          }
+                          onTakeTest?.(chapter, 'challenge')
+                        }}
                         className="p-3 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-surface hover:border-amber-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
                       >
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs shadow-amber-500/20">
-                            {isEnrolled ? <Trophy size={15} /> : <Lock size={14} />}
+                            {isChapterLocked ? <Lock size={14} /> : isEnrolled ? <Trophy size={15} /> : <Lock size={14} />}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
@@ -217,7 +263,11 @@ export function CourseSidebarContent({
                           </div>
                         </div>
 
-                        {isEnrolled ? (
+                        {isChapterLocked ? (
+                          <span className="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
+                            <Lock size={11} /> Khóa
+                          </span>
+                        ) : isEnrolled ? (
                           <span className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
                             <Zap size={11} />
                             <span>Làm bài</span>
@@ -242,7 +292,16 @@ export function CourseSidebarContent({
                     return (
                       <div
                         key={lesson.id}
-                        onClick={() => onSelectLesson(chapter, lesson)}
+                        onClick={() => {
+                          if (isChapterLocked) {
+                            toast.warning(
+                              `Chương này đang bị khóa! Bạn cần làm xong bài kiểm tra cuối chương hoặc vượt qua bài thử thách của Chương ${prevChapter?.order || chIdx} để mở khóa nhé.`,
+                              'Chương đang khóa'
+                            )
+                            return
+                          }
+                          onSelectLesson(chapter, lesson)
+                        }}
                         className={`p-2.5 rounded-xl transition-all cursor-pointer flex items-start gap-2.5 ${
                           isActive
                             ? 'bg-primary/10 border border-primary/30 text-primary shadow-xs'
@@ -254,6 +313,11 @@ export function CourseSidebarContent({
                             if (!isEnrolled) {
                               e.stopPropagation()
                               toast.warning('Vui lòng mua khóa học để ghi nhận tiến độ bài học!')
+                              return
+                            }
+                            if (isChapterLocked) {
+                              e.stopPropagation()
+                              toast.warning('Chương này đang bị khóa!')
                               return
                             }
                             onToggleLessonComplete(lesson.id, e)
@@ -287,7 +351,9 @@ export function CourseSidebarContent({
 
                           <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
                             <span className="flex items-center gap-1 shrink-0">
-                              {isEnrolled || Boolean(lesson.is_free_preview || lesson.is_preview) ? (
+                              {isChapterLocked ? (
+                                <Lock size={11} className="text-amber-500/80" />
+                              ) : isEnrolled || Boolean(lesson.is_free_preview || lesson.is_preview) ? (
                                 <PlayCircle size={12} className={isActive ? 'text-primary' : Boolean(lesson.is_free_preview || lesson.is_preview) && !isEnrolled ? 'text-emerald-600 dark:text-emerald-400' : ''} />
                               ) : (
                                 <Lock size={11} className="text-amber-500/80" />
@@ -345,40 +411,78 @@ export function CourseSidebarContent({
                 {/* 3. CUỐI CHƯƠNG: BÀI KIỂM TRA CUỐI CHƯƠNG (POST-MINI TEST - ĐƯỢC LÀM NHIỀU LẦN) */}
                 {questionsCount > 0 && (
                   <div
-                    onClick={() => onTakeTest?.(chapter, 'post-mini')}
-                    className="p-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-surface hover:border-emerald-500/60 hover:shadow-xs transition-all cursor-pointer flex items-center justify-between gap-3 group"
+                    onClick={() => {
+                      if (isChapterLocked) {
+                        toast.warning(
+                          `Chương này đang bị khóa! Bạn cần làm xong bài kiểm tra cuối chương hoặc vượt qua bài thử thách của Chương ${prevChapter?.order || chIdx} để mở khóa nhé.`,
+                          'Chương đang khóa'
+                        )
+                        return
+                      }
+                      onTakeTest?.(chapter, 'post-mini')
+                    }}
+                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
+                      isPostMiniTaken
+                        ? 'border-emerald-500/50 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/70 shadow-xs'
+                        : 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-surface hover:border-emerald-500/60 hover:shadow-xs'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-xs shadow-emerald-500/20">
-                        {isEnrolled ? <FileCheck2 size={15} /> : <Lock size={14} />}
+                      <div
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white shadow-xs ${
+                          isPostMiniTaken
+                            ? 'bg-emerald-600 shadow-emerald-600/30'
+                            : 'bg-emerald-500 shadow-emerald-500/20'
+                        }`}
+                      >
+                        {isChapterLocked ? (
+                          <Lock size={14} />
+                        ) : isPostMiniTaken ? (
+                          <CheckCircle2 size={16} />
+                        ) : isEnrolled ? (
+                          <FileCheck2 size={15} />
+                        ) : (
+                          <Lock size={14} />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-bold text-text-primary group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors whitespace-nowrap">
                             Bài kiểm tra cuối chương
                           </span>
-                          <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">
-                            {postMiniScore > 0 ? `${postMiniScore}%` : 'Đánh giá'}
-                          </span>
+                          {isPostMiniTaken ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shrink-0">
+                              <CheckCircle2 size={10} className="text-emerald-600 dark:text-emerald-400" />
+                              <span>Đã làm ({postMiniScore}%)</span>
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 shrink-0">
+                              Chưa làm
+                            </span>
+                          )}
                         </div>
                         <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
-                          {postMiniScore > 0
-                            ? `Điểm cao nhất: ${postMiniScore}% • Được làm lại nhiều lần`
-                            : `${questionsCount} câu hỏi • Đánh giá hoàn thành chương`}
+                          {isPostMiniTaken
+                            ? `✓ Đã hoàn thành bài kiểm tra • Điểm cao nhất: ${postMiniScore}% • Bấm để làm lại`
+                            : `${questionsCount} câu hỏi • Làm xong để mở khóa chương tiếp theo`}
                         </p>
                       </div>
                     </div>
 
-                    {isEnrolled ? (
-                      postMiniScore >= 70 || isPassedByChallenge ? (
-                        <span className="px-3 py-1.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-500/30 transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
+                    {isChapterLocked ? (
+                      <span className="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap shrink-0">
+                        <Lock size={11} /> Khóa
+                      </span>
+                    ) : isEnrolled ? (
+                      isPostMiniTaken ? (
+                        <span className="px-3 py-1.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] border border-emerald-500/30 transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-2xs">
                           <RotateCcw size={11} />
                           <span>Làm lại</span>
                         </span>
                       ) : (
                         <span className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
                           <Sparkles size={11} />
-                          <span>{postMiniScore > 0 ? 'Thi lại' : 'Kiểm tra'}</span>
+                          <span>Bắt đầu làm</span>
                         </span>
                       )
                     ) : (
@@ -394,34 +498,52 @@ export function CourseSidebarContent({
         )
       })}
 
-      {/* 4. Final Test (Bài thi tốt nghiệp cuối khóa) */}
       {finalTestQuestionsCount > 0 && (
         <div className="p-3.5 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border-t border-emerald-500/20">
           <div
             onClick={() => onTakeTest?.(null, 'final-test')}
-            className="p-3.5 rounded-2xl bg-surface border border-emerald-500/40 hover:border-emerald-500 hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group"
+            className={`p-3.5 rounded-2xl bg-surface border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
+              finalTestScore !== undefined && finalTestScore > 0
+                ? 'border-emerald-500/60 shadow-xs'
+                : 'border-emerald-500/40 hover:border-emerald-500 hover:shadow-md'
+            }`}
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20">
-                <Award size={18} />
+                {finalTestScore !== undefined && finalTestScore > 0 ? <CheckCircle2 size={18} /> : <Award size={18} />}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <h4 className="text-xs font-black text-text-primary group-hover:text-emerald-600 transition-colors truncate">
                     Final Test tốt nghiệp
                   </h4>
+                  {finalTestScore !== undefined && finalTestScore > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shrink-0">
+                      <CheckCircle2 size={10} className="text-emerald-600 dark:text-emerald-400" />
+                      <span>Đã làm ({finalTestScore}%)</span>
+                    </span>
+                  )}
                 </div>
                 <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
-                  {finalTestQuestionsCount} câu • Đánh giá năng lực toàn khóa
+                  {finalTestScore !== undefined && finalTestScore > 0
+                    ? `✓ Đã hoàn thành thi tốt nghiệp • Điểm đạt: ${finalTestScore}% • Bấm để thi lại`
+                    : `${finalTestQuestionsCount} câu • Đánh giá năng lực toàn khóa`}
                 </p>
               </div>
             </div>
 
             {isEnrolled ? (
-              <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
-                <Trophy size={12} />
-                <span>Làm bài</span>
-              </span>
+              finalTestScore !== undefined && finalTestScore > 0 ? (
+                <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-emerald-500/30 transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
+                  <RotateCcw size={12} />
+                  <span>Thi lại</span>
+                </span>
+              ) : (
+                <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
+                  <Trophy size={12} />
+                  <span>Bắt đầu làm</span>
+                </span>
+              )
             ) : (
               <span className="px-2.5 py-1 rounded-xl bg-slate-500/15 text-slate-400 font-bold text-xs flex items-center gap-1 whitespace-nowrap shrink-0">
                 <Lock size={11} /> Khóa

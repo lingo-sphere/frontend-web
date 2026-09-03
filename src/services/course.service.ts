@@ -110,6 +110,7 @@ export const courseService = {
       order_index?: number
       status: string
       challenge_score?: number
+      challenge_taken?: boolean
       is_passed_by_challenge?: boolean
       post_mini_score?: number
       progression_comparison?: {
@@ -129,7 +130,7 @@ export const courseService = {
   async submitModuleChallenge(
     courseId: string,
     moduleId: string,
-    data: { score: number; passing_score?: number; challenge_attempt_id?: string }
+    data: { score: number; passing_score?: number; challenge_attempt_id?: string; order_index?: number }
   ): Promise<{
     is_passed: boolean
     score: number
@@ -143,7 +144,7 @@ export const courseService = {
   async submitModulePostMini(
     courseId: string,
     moduleId: string,
-    data: { score: number; post_mini_attempt_id?: string }
+    data: { score: number; post_mini_attempt_id?: string; order_index?: number }
   ): Promise<{
     message: string
     module_id: string

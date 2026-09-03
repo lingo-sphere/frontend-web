@@ -289,6 +289,8 @@ export function CourseTestRunnerModal({
         backendResult = await courseService.submitModuleChallenge(courseId, String(chapter.id), {
           score: scorePercent,
           passing_score: passingScore,
+          challenge_attempt_id: `att_ch_${Date.now()}`,
+          order_index: chapter?.order || 1,
         })
         if (backendResult?.message) {
           setProgressionNote(backendResult.message)
@@ -296,6 +298,8 @@ export function CourseTestRunnerModal({
       } else if ((testType === 'post-mini' || testType === 'exercise') && chapter?.id) {
         backendResult = await courseService.submitModulePostMini(courseId, String(chapter.id), {
           score: scorePercent,
+          post_mini_attempt_id: `att_pm_${Date.now()}`,
+          order_index: chapter?.order || 1,
         })
         if (backendResult?.progression_comparison) {
           const comp = backendResult.progression_comparison
@@ -308,6 +312,7 @@ export function CourseTestRunnerModal({
       } else if (testType === 'final-test') {
         backendResult = await courseService.submitCourseFinalTest(courseId, {
           score: scorePercent,
+          final_test_attempt_id: `att_fin_${Date.now()}`,
         })
         if (backendResult?.total_score_growth !== undefined) {
           setGrowthDiff({
