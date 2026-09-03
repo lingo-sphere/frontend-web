@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
-import { useApp } from '@/contexts/AppContext'
+import { useApp } from '@/contexts/app.context'
 import { WritingHome } from '@/components/writing/writing.home'
 import { WritingExerciseList } from '@/components/writing/writing.exercise.list'
 import { WritingExerciseDetail } from '@/components/writing/writing.exercise.detail'

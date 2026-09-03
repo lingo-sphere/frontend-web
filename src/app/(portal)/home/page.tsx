@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useApp } from '@/contexts/AppContext'
+import { useApp } from '@/contexts/app.context'
 import { ContinueLearningCard } from '@/components/dashboard/continue.learning.card'
 import { ExploreTopics } from '@/components/dashboard/explore.topics'
 import { InsightRail } from '@/components/dashboard/insight.rail'

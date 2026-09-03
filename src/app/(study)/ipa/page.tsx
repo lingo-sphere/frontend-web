@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon-map'
-import { useApp } from '@/contexts/AppContext'
+import { useApp } from '@/contexts/app.context'
 import { vocabularyService, type BackendIpaSymbol } from '@/services/vocabulary.service'
 
 export default function IpaAppPage() {

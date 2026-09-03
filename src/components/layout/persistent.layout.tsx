@@ -11,7 +11,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Sidebar } from '@/components/layout/app.sidebar'
 import { UtilityHeader } from '@/components/layout/app.header'
 import { useDashboardStore } from '@/store/dashboard-store'
-import { useApp } from '@/contexts/AppContext'
+import { useApp } from '@/contexts/app.context'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'

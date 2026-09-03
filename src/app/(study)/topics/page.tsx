@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Pagination } from '@/components/common/pagination'
-import { useApp } from '@/contexts/AppContext'
+import { useApp } from '@/contexts/app.context'
 import { vocabularyService, type BackendTopic } from '@/services/vocabulary.service'
 
 const ITEMS_PER_PAGE = 6

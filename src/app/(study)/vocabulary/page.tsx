@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon-map'
 import { useDashboardStore } from '@/store/dashboard-store'
-import { useApp } from '@/contexts/AppContext'
+import { useApp } from '@/contexts/app.context'
 import { vocabularyService } from '@/services/vocabulary.service'
 import type { Deck } from '@/types/api.types'
 

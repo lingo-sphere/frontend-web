@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
-import { useApp } from '@/contexts/AppContext'
+import { useApp } from '@/contexts/app.context'
 import { vocabularyService } from '@/services/vocabulary.service'
 import type { VocabularyDeck, LearningResult, VocabularyItem } from '@/types/vocabulary-learn'
 import { VocabularyLearningSession } from '@/components/vocabulary-learning/vocabulary.learning.session'
