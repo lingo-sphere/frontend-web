@@ -5,7 +5,7 @@
  * @description Component giao diện React AppClientProvider cho học viên
  */
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import '@/i18n'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -29,9 +29,15 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   const setUser = useAuthStore((s) => s.setUser)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [kickoutMessage, setKickoutMessage] = useState<string | null>(null)
+  const lastVerifiedAt = useRef<number>(0)
 
   const triggerKickout = (message?: string) => {
     if (typeof window === 'undefined') return
+    if (Date.now() - lastVerifiedAt.current < 8000) {
+      // Just verified in another tab on the same browser, keep session in sync seamlessly
+      checkAuth()
+      return
+    }
     setUser(null)
     setKickoutMessage(
       message ||
@@ -47,6 +53,8 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       channel = new BroadcastChannel('lingo_auth_channel')
       channel.onmessage = (event) => {
         if (event.data?.type === 'EMAIL_VERIFIED_SUCCESS') {
+          lastVerifiedAt.current = Date.now()
+          setKickoutMessage(null)
           if (event.data?.user) {
             setUser(event.data.user)
           } else {

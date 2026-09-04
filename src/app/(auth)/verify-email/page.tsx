@@ -70,19 +70,17 @@ function VerifyEmailContent() {
   useEffect(() => {
     if (state !== 'SUCCESS') return
 
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          navigate('/home')
-          return 0
-        }
-        return prev - 1
-      })
+    if (countdown <= 0) {
+      navigate('/home')
+      return
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1)
     }, 1000)
 
-    return () => clearInterval(timer)
-  }, [state, navigate])
+    return () => clearTimeout(timer)
+  }, [state, countdown, navigate])
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4 relative overflow-hidden font-sans">
