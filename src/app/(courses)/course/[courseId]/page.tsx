@@ -386,8 +386,12 @@ export default function CourseDetailPage() {
                 test_audio_url: String(mod.test_audio_url || mod.challenge_audio_url || mod.audio_url || ''),
                 challenge_audio_url: String(mod.challenge_audio_url || mod.test_audio_url || mod.audio_url || ''),
                 audio_url: String(mod.audio_url || mod.test_audio_url || mod.challenge_audio_url || ''),
+                speaking_prompt: String(mod.speaking_prompt || ''),
+                speaking_file_url: String(mod.speaking_file_url || ''),
+                writing_prompt: String(mod.writing_prompt || ''),
+                writing_file_url: String(mod.writing_file_url || ''),
                 challengeTest:
-                  unifiedChallengeQuestions.length > 0
+                  unifiedChallengeQuestions.length > 0 || Boolean(mod.speaking_prompt || mod.speaking_file_url || mod.writing_prompt || mod.writing_file_url)
                     ? {
                         id: `ct-${modIdx + 1}`,
                         chapterId: modId,
@@ -628,6 +632,10 @@ export default function CourseDetailPage() {
             notes: mappedNotes,
             final_test_questions: (courseObj.final_test_questions as Array<Record<string, unknown>>) || [],
             final_test_audio_url: String(courseObj.final_test_audio_url || ''),
+            final_test_speaking_prompt: String((courseObj as any).final_test_speaking_prompt || ''),
+            final_test_speaking_file_url: String((courseObj as any).final_test_speaking_file_url || ''),
+            final_test_writing_prompt: String((courseObj as any).final_test_writing_prompt || ''),
+            final_test_writing_file_url: String((courseObj as any).final_test_writing_file_url || ''),
             category: String(courseObj.category || ''),
             skills: Array.isArray(courseObj.skills) ? (courseObj.skills as string[]) : [],
             finalTest: { status: userIsEnrolled ? 'available' : 'locked' },
@@ -1659,6 +1667,10 @@ export default function CourseDetailPage() {
                 finalTestScore={progressDetail?.course_progress?.final_test_score}
                 finalTestAttempts={(progressDetail?.course_progress as any)?.final_test_attempts}
                 finalTestAudioUrl={course.final_test_audio_url}
+                finalTestSpeakingPrompt={(course as any).final_test_speaking_prompt}
+                finalTestSpeakingFileUrl={(course as any).final_test_speaking_file_url}
+                finalTestWritingPrompt={(course as any).final_test_writing_prompt}
+                finalTestWritingFileUrl={(course as any).final_test_writing_file_url}
                 onToggleChapter={toggleChapter}
                 onSelectLesson={handleSelectLesson}
                 onToggleLessonComplete={handleToggleLessonComplete}

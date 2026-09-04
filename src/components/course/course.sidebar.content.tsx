@@ -27,6 +27,8 @@ import {
   Crown,
   History,
   Volume2,
+  Mic,
+  FileText,
 } from 'lucide-react'
 import type { Chapter, Lesson } from '@/types/course'
 import { toast } from '@/store/toast-store'
@@ -60,6 +62,10 @@ interface CourseSidebarContentProps {
   finalTestScore?: number
   finalTestAttempts?: any[]
   finalTestAudioUrl?: string
+  finalTestSpeakingPrompt?: string
+  finalTestSpeakingFileUrl?: string
+  finalTestWritingPrompt?: string
+  finalTestWritingFileUrl?: string
   onToggleChapter: (chapterId: string) => void
   onSelectLesson: (chapter: Chapter, lesson: Lesson) => void
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
@@ -77,6 +83,10 @@ export function CourseSidebarContent({
   finalTestScore,
   finalTestAttempts = [],
   finalTestAudioUrl,
+  finalTestSpeakingPrompt,
+  finalTestSpeakingFileUrl,
+  finalTestWritingPrompt,
+  finalTestWritingFileUrl,
   onToggleChapter,
   onSelectLesson,
   onToggleLessonComplete,
@@ -425,6 +435,18 @@ export function CourseSidebarContent({
                               <span>Audio bài thi</span>
                             </span>
                           )}
+                          {Boolean(chapter.test_speaking_prompt || (chapter as any).test_speaking_file_url) && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-pink-50 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200/60 shrink-0">
+                              <Mic size={9} className="text-pink-500" />
+                              <span>Speaking</span>
+                            </span>
+                          )}
+                          {Boolean(chapter.test_writing_prompt || (chapter as any).test_writing_file_url) && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 shrink-0">
+                              <FileText size={9} className="text-purple-500" />
+                              <span>Writing</span>
+                            </span>
+                          )}
                         </div>
                         <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
                           {isChapterLocked
@@ -472,48 +494,57 @@ export function CourseSidebarContent({
         )
       })}
 
+      {/* 3. BÀI THI TỐT NGHIỆP TOÀN KHÓA HỌC (EXIT EXAM / FINAL TEST) */}
       {finalTestQuestionsCount > 0 && (
-        <div className="p-3.5 bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent border-t border-emerald-500/20">
+        <div className="pt-2">
           <div
             onClick={() => {
               if (!allChaptersPassed) {
                 toast.warning(
-                  'Bạn cần hoàn thành và vượt qua bài test thử thách của 100% các chương để mở khóa bài thi tốt nghiệp cuối khóa!',
-                  'Chưa đủ điều kiện thi tốt nghiệp'
+                  'Bạn cần hoàn thành và đạt bài kiểm tra thử thách của tất cả các chương trước khi làm bài thi tốt nghiệp!',
+                  'Chưa đủ điều kiện'
                 )
                 return
               }
               onTakeTest?.(null, 'final-test')
             }}
-            className={`p-3.5 rounded-2xl bg-surface border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
+            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
               !allChaptersPassed
-                ? 'border-border/60 opacity-85 hover:border-amber-500/40'
+                ? 'border-amber-500/25 bg-amber-500/5 opacity-80'
                 : finalTestScore !== undefined && finalTestScore > 0
-                ? 'border-emerald-500/60 shadow-xs'
-                : 'border-emerald-500/40 hover:border-emerald-500 hover:shadow-md'
+                ? 'border-emerald-500/50 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/70 shadow-xs'
+                : 'border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/60 shadow-xs'
             }`}
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
               <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-md ${
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white shadow-xs ${
                   !allChaptersPassed
-                    ? 'bg-slate-500 shadow-slate-500/20'
-                    : 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-500/20'
+                    ? 'bg-amber-500/80'
+                    : finalTestScore !== undefined && finalTestScore > 0
+                    ? 'bg-emerald-600 shadow-emerald-600/30'
+                    : 'bg-emerald-600 shadow-emerald-600/30'
                 }`}
               >
                 {!allChaptersPassed ? (
-                  <Lock size={16} />
+                  <Lock size={14} />
                 ) : finalTestScore !== undefined && finalTestScore > 0 ? (
-                  <CheckCircle2 size={18} />
+                  <CheckCircle2 size={16} />
                 ) : (
-                  <Award size={18} />
+                  <Trophy size={16} />
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h4 className="text-xs font-black text-text-primary group-hover:text-emerald-600 transition-colors truncate">
+                  <span
+                    className={`text-xs font-bold transition-colors whitespace-nowrap ${
+                      finalTestScore !== undefined && finalTestScore > 0
+                        ? 'text-emerald-700 dark:text-emerald-300'
+                        : 'text-text-primary group-hover:text-emerald-600'
+                    }`}
+                  >
                     Bài thi tốt nghiệp cuối khóa (Exit Test)
-                  </h4>
+                  </span>
                   {!allChaptersPassed ? (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
                       <Lock size={9} />
@@ -529,6 +560,18 @@ export function CourseSidebarContent({
                     <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 shrink-0">
                       <Volume2 size={9} className="text-indigo-500" />
                       <span>Audio đề thi</span>
+                    </span>
+                  )}
+                  {Boolean(finalTestSpeakingPrompt || finalTestSpeakingFileUrl) && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-pink-50 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200/60 shrink-0">
+                      <Mic size={9} className="text-pink-500" />
+                      <span>Speaking</span>
+                    </span>
+                  )}
+                  {Boolean(finalTestWritingPrompt || finalTestWritingFileUrl) && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 shrink-0">
+                      <FileText size={9} className="text-purple-500" />
+                      <span>Writing</span>
                     </span>
                   )}
                 </div>

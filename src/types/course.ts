@@ -128,6 +128,10 @@ export interface Chapter {
   speaking_file_url?: string
   writing_prompt?: string
   writing_file_url?: string
+  test_speaking_prompt?: string
+  test_speaking_file_url?: string
+  test_writing_prompt?: string
+  test_writing_file_url?: string
   status: ChapterStatus
 }
 
