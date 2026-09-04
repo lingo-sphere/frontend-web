@@ -229,6 +229,8 @@ export const courseService = {
       why_wrong: string
       why_correct: string
       recommended_topic: string
+      study_focus?: string
+      trap_identified?: string
     }>
   }> {
     return api.post(`/progress/courses/${courseId}/explain-errors`, data)

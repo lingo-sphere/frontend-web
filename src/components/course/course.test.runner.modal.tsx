@@ -36,6 +36,9 @@ import {
   History,
   Crown,
   Medal,
+  Target,
+  XCircle,
+  CheckCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Chapter } from '@/types/course'
@@ -182,6 +185,8 @@ export function CourseTestRunnerModal({
       why_wrong: string
       why_correct: string
       recommended_topic: string
+      study_focus?: string
+      trap_identified?: string
     }>
   } | null>(null)
   const [wrongQuestionsList, setWrongQuestionsList] = useState<
@@ -317,6 +322,29 @@ export function CourseTestRunnerModal({
     })
     setIsSubmitted(true)
 
+    // Tự động kích hoạt Gia sư AI phân tích lý do sai & nội dung nên chú trọng học thêm
+    if (wrongs.length > 0) {
+      setIsLoadingAi(true)
+      setShowAiDetails(true)
+      courseService
+        .explainTestMistakes(courseId, {
+          test_title: chapter?.title || 'Bài kiểm tra',
+          test_type: testType,
+          wrong_questions: wrongs,
+        })
+        .then((res) => {
+          if (res) {
+            setAiExplanations(res)
+          }
+        })
+        .catch((err) => {
+          console.error('Lỗi khi tự động giải thích câu sai bằng AI:', err)
+        })
+        .finally(() => {
+          setIsLoadingAi(false)
+        })
+    }
+
     if (scorePercent > bestScore) {
       setIsNewHighScore(true)
       setBestScore(scorePercent)
@@ -415,20 +443,22 @@ export function CourseTestRunnerModal({
     }
   }
 
-  const handleExplainMistakes = async () => {
-    if (wrongQuestionsList.length === 0) return
+  const handleExplainMistakes = async (overrideWrongs?: typeof wrongQuestionsList) => {
+    const list = overrideWrongs || wrongQuestionsList
+    if (list.length === 0) return
     setIsLoadingAi(true)
     setShowAiDetails(true)
     try {
       const res = await courseService.explainTestMistakes(courseId, {
+        test_title: chapter?.title || 'Bài kiểm tra',
         test_type: testType,
-        wrong_questions: wrongQuestionsList,
+        wrong_questions: list,
       })
       if (res) {
         setAiExplanations(res)
       }
     } catch (err) {
-      console.error(err)
+      console.error('Lỗi khi gọi Gia sư AI giải thích câu sai:', err)
     } finally {
       setIsLoadingAi(false)
     }
@@ -867,89 +897,137 @@ export function CourseTestRunnerModal({
                       )}
 
                       {wrongQuestionsList.length > 0 && (
-                        <div className="p-4 rounded-2xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 space-y-3">
+                        <div className="p-4 rounded-2xl bg-purple-50/90 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 space-y-3">
                           <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1.5 rounded-xl bg-purple-600 text-white shadow-xs">
-                                <Bot size={16} />
+                            <div className="flex items-center gap-2.5">
+                              <div className="p-2 rounded-xl bg-purple-600 text-white shadow-xs">
+                                <Bot size={18} />
                               </div>
                               <div>
-                                <h5 className="text-xs font-bold text-purple-950 dark:text-purple-200">
-                                  Gia sư AI giải thích lỗi sai & đề xuất ôn tập
+                                <h5 className="text-xs font-bold text-purple-950 dark:text-purple-200 flex items-center gap-2">
+                                  <span>Gia sư AI: Giải thích lỗi sai & Hướng dẫn học tập</span>
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-200/80 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 font-semibold">
+                                    {wrongQuestionsList.length} câu chưa đúng
+                                  </span>
                                 </h5>
                                 <p className="text-[11px] text-purple-700 dark:text-purple-300 mt-0.5">
-                                  Bạn có {wrongQuestionsList.length} câu trả lời chưa chính xác
+                                  {isLoadingAi
+                                    ? 'Đang phân tích nguyên nhân sai và đề xuất nội dung bạn nên chú trọng học thêm...'
+                                    : aiExplanations?.summary || 'Hệ thống đã phân tích chi tiết lỗi sai và chủ điểm kiến thức cần ôn tập.'}
                                 </p>
                               </div>
                             </div>
 
-                            {!aiExplanations ? (
+                            <div className="flex items-center gap-2 shrink-0">
                               <Button
-                                onClick={handleExplainMistakes}
+                                onClick={() => handleExplainMistakes()}
                                 disabled={isLoadingAi}
+                                variant="outline"
                                 size="sm"
-                                className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-sm cursor-pointer"
+                                className="rounded-xl border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 text-xs font-semibold cursor-pointer h-8 px-2.5"
+                                title="Phân tích lại bằng AI"
                               >
-                                {isLoadingAi ? (
-                                  <>
-                                    <Loader2 size={13} className="animate-spin" />
-                                    <span>Đang phân tích...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Sparkles size={13} />
-                                    <span>Giải thích bằng AI</span>
-                                  </>
-                                )}
+                                <RotateCcw size={12} className={isLoadingAi ? 'animate-spin' : ''} />
+                                <span className="hidden sm:inline">Phân tích lại</span>
                               </Button>
-                            ) : (
-                              <Button
-                                onClick={() => setShowAiDetails(!showAiDetails)}
-                                variant="ghost"
-                                size="sm"
-                                className="rounded-xl text-purple-700 dark:text-purple-300 text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer"
-                              >
-                                <span>{showAiDetails ? 'Thu gọn' : 'Xem chi tiết'}</span>
-                                {showAiDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                              </Button>
-                            )}
+                              {aiExplanations && (
+                                <Button
+                                  onClick={() => setShowAiDetails(!showAiDetails)}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="rounded-xl text-purple-700 dark:text-purple-300 text-xs font-bold shrink-0 flex items-center gap-1 cursor-pointer h-8 px-2.5"
+                                >
+                                  <span>{showAiDetails ? 'Thu gọn' : 'Xem toàn bộ'}</span>
+                                  {showAiDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                </Button>
+                              )}
+                            </div>
                           </div>
 
-                          {showAiDetails && aiExplanations && (
-                            <div className="pt-3 border-t border-purple-200/60 dark:border-purple-800/40 space-y-3 animate-in fade-in duration-200">
+                          {/* Đang gọi AI */}
+                          {isLoadingAi && !aiExplanations && (
+                            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white/80 dark:bg-slate-900/60 border border-purple-200/60 text-xs text-purple-800 dark:text-purple-300 animate-pulse">
+                              <Loader2 size={15} className="animate-spin text-purple-600 dark:text-purple-400 shrink-0" />
+                              <span>Gia sư AI đang đối chiếu đáp án, bóc tách nguyên nhân sai và đề xuất các chủ điểm bạn nên chú trọng học thêm...</span>
+                            </div>
+                          )}
+
+                          {/* Nội dung tư vấn từ AI */}
+                          {aiExplanations && (
+                            <div className="space-y-3 animate-in fade-in duration-200">
+                              {/* Lời khuyên tổng thể: Nên chú trọng học thêm chỗ nào */}
                               {aiExplanations.overall_advice && (
-                                <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/60 border border-purple-200/50 text-xs text-purple-900 dark:text-purple-200 font-medium">
-                                  💡 <strong>Lời khuyên tổng thể:</strong> {aiExplanations.overall_advice}
+                                <div className="p-3.5 rounded-xl bg-gradient-to-r from-purple-100/90 to-indigo-100/90 dark:from-purple-900/40 dark:to-indigo-900/40 border border-purple-300/80 dark:border-purple-700/60 text-xs space-y-1.5 shadow-xs">
+                                  <div className="flex items-center gap-1.5 font-bold text-purple-950 dark:text-purple-100">
+                                    <Target size={15} className="text-purple-600 dark:text-purple-400 shrink-0" />
+                                    <span>🎯 Nên chú trọng học thêm chỗ nào (Định hướng từ AI):</span>
+                                  </div>
+                                  <p className="text-[12px] text-purple-950 dark:text-purple-200 leading-relaxed font-medium pl-5">
+                                    {aiExplanations.overall_advice}
+                                  </p>
                                 </div>
                               )}
 
-                              <div className="space-y-2.5">
-                                {aiExplanations.explanations.map((item, exIdx) => (
-                                  <div
-                                    key={exIdx}
-                                    className="p-3.5 rounded-xl bg-white/90 dark:bg-slate-900/80 border border-purple-200/60 dark:border-purple-800/50 space-y-2 text-xs"
-                                  >
-                                    <div className="flex items-center justify-between font-bold text-text-primary">
-                                      <span>Câu {item.question_number}: {item.question_text}</span>
-                                      {item.recommended_topic && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300">
-                                          {item.recommended_topic}
+                              {showAiDetails && (
+                                <div className="pt-2 border-t border-purple-200/60 dark:border-purple-800/40 space-y-2.5">
+                                  <span className="text-[11px] font-bold text-purple-900 dark:text-purple-300 block uppercase tracking-wider">
+                                    Danh sách chi tiết các câu sai & Chủ điểm kiến thức:
+                                  </span>
+                                  {aiExplanations.explanations.map((item, exIdx) => (
+                                    <div
+                                      key={exIdx}
+                                      className="p-3.5 rounded-xl bg-white/95 dark:bg-slate-900/85 border border-purple-200/70 dark:border-purple-800/50 space-y-2 text-xs shadow-xs"
+                                    >
+                                      <div className="flex flex-wrap items-center justify-between gap-2 font-bold text-text-primary">
+                                        <span className="text-purple-950 dark:text-purple-200">
+                                          Câu {item.question_number}: {item.question_text}
                                         </span>
+                                        {item.recommended_topic && (
+                                          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/70 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-700 flex items-center gap-1">
+                                            <Target size={10} className="text-purple-600 dark:text-purple-400" />
+                                            <span>Chủ điểm: {item.recommended_topic}</span>
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                        <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-800/50 text-rose-800 dark:text-rose-200 space-y-0.5">
+                                          <div className="flex items-center gap-1 font-bold text-rose-700 dark:text-rose-300">
+                                            <XCircle size={12} className="shrink-0" />
+                                            <span>❌ Bạn đã chọn: {item.user_selected}</span>
+                                          </div>
+                                          <p className="leading-relaxed opacity-95 pl-4">{item.why_wrong}</p>
+                                        </div>
+                                        <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/50 text-emerald-800 dark:text-emerald-200 space-y-0.5">
+                                          <div className="flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300">
+                                            <CheckCircle size={12} className="shrink-0" />
+                                            <span>✅ Đáp án đúng: {item.correct_answer}</span>
+                                          </div>
+                                          <p className="leading-relaxed opacity-95 pl-4">{item.why_correct}</p>
+                                        </div>
+                                      </div>
+
+                                      {/* Nên chú trọng học thêm chỗ nào */}
+                                      {(item.study_focus || item.recommended_topic) && (
+                                        <div className="p-2.5 rounded-lg bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/60 text-indigo-950 dark:text-indigo-200 text-[11px] leading-relaxed flex items-start gap-1.5">
+                                          <Target size={12} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                                          <div>
+                                            <strong>Nên chú trọng học thêm: </strong>
+                                            {item.study_focus || `Cần ôn lại kỹ chủ điểm "${item.recommended_topic}" và luyện tập thêm bài tập liên quan.`}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {item.trap_identified && (
+                                        <div className="px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 text-amber-900 dark:text-amber-200 text-[11px] flex items-center gap-1.5">
+                                          <span className="font-bold">⚠️ Bẫy cần tránh:</span>
+                                          <span>{item.trap_identified}</span>
+                                        </div>
                                       )}
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                                      <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200/50 text-rose-700 dark:text-rose-300">
-                                        <span className="font-bold block">Bạn đã chọn: {item.user_selected}</span>
-                                        <span className="opacity-90">{item.why_wrong}</span>
-                                      </div>
-                                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/50 text-emerald-700 dark:text-emerald-300">
-                                        <span className="font-bold block">Đáp án đúng: {item.correct_answer}</span>
-                                        <span className="opacity-90">{item.why_correct}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1072,12 +1150,97 @@ export function CourseTestRunnerModal({
                           })}
                         </div>
 
-                        {isSubmitted && q.explanation && (
-                          <div className="mt-3.5 ml-9 p-3 rounded-xl bg-surface-subtle/80 border border-border/80 text-xs text-text-secondary">
-                            <span className="font-bold text-primary">💡 Giải thích: </span>
-                            {q.explanation}
-                          </div>
-                        )}
+                        {isSubmitted && (() => {
+                          const isWrong = chosenIdx !== correctIdx
+                          const matchingAiExp = aiExplanations?.explanations?.find(
+                            (e) => e.question_number === qIdx + 1
+                          )
+
+                          if (isWrong) {
+                            return (
+                              <div className="mt-4 ml-0 sm:ml-9 p-4 rounded-2xl bg-purple-50/90 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 shadow-xs space-y-3 animate-in fade-in duration-200">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-purple-200/60 dark:border-purple-800/40 pb-2.5">
+                                  <div className="flex items-center gap-1.5 text-xs font-bold text-purple-950 dark:text-purple-200">
+                                    <Bot size={15} className="text-purple-600 dark:text-purple-400" />
+                                    <span>Gia sư AI: Phân tích câu sai & Định hướng học tập</span>
+                                  </div>
+                                  {(matchingAiExp?.recommended_topic || chapter?.title) && (
+                                    <span className="text-[10.5px] px-2.5 py-0.5 rounded-full bg-purple-200/80 dark:bg-purple-900/70 text-purple-900 dark:text-purple-200 font-semibold flex items-center gap-1">
+                                      <Target size={11} className="text-purple-600 dark:text-purple-400" />
+                                      <span>Chủ điểm: {matchingAiExp?.recommended_topic || chapter?.title}</span>
+                                    </span>
+                                  )}
+                                </div>
+
+                                {isLoadingAi && !matchingAiExp ? (
+                                  <div className="flex items-center gap-2 py-2 text-xs text-purple-700 dark:text-purple-300 animate-pulse">
+                                    <Loader2 size={14} className="animate-spin text-purple-600 dark:text-purple-400 shrink-0" />
+                                    <span>Gia sư AI đang phân tích lý do sai và đề xuất nội dung bạn nên chú trọng học thêm...</span>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+                                      {/* TẠI SAO SAI */}
+                                      <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-800/50 space-y-1">
+                                        <div className="flex items-center gap-1.5 font-bold text-rose-800 dark:text-rose-300">
+                                          <XCircle size={13} className="shrink-0" />
+                                          <span>❌ Tại sao bạn chọn sai:</span>
+                                        </div>
+                                        <p className="text-[11.5px] text-rose-950 dark:text-rose-200 leading-relaxed font-medium pl-4.5">
+                                          {matchingAiExp?.why_wrong || `Bạn đã chọn "${chosenIdx !== undefined ? options[chosenIdx] : 'Chưa chọn'}". Lựa chọn này chưa đúng với quy tắc ngữ pháp hoặc ngữ cảnh của câu.`}
+                                        </p>
+                                      </div>
+
+                                      {/* TẠI SAO ĐÚNG */}
+                                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/50 space-y-1">
+                                        <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300">
+                                          <CheckCircle size={13} className="shrink-0" />
+                                          <span>✅ Tại sao đáp án đúng:</span>
+                                        </div>
+                                        <p className="text-[11.5px] text-emerald-950 dark:text-emerald-200 leading-relaxed font-medium pl-4.5">
+                                          {matchingAiExp?.why_correct || (q.explanation ? q.explanation : `Đáp án đúng là "${options[correctIdx]}". Cần lưu ý các dấu hiệu nhận biết then chốt trong câu.`)}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    {/* NÊN CHÚ TRỌNG HỌC THÊM CHỖ NÀO */}
+                                    <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-50/90 to-purple-50/90 dark:from-indigo-950/40 dark:to-purple-950/40 border border-indigo-200/70 dark:border-indigo-800/60 space-y-1">
+                                      <div className="flex items-center gap-1.5 font-bold text-indigo-950 dark:text-indigo-200 text-xs">
+                                        <Target size={13} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
+                                        <span>🎯 Nên chú trọng học thêm chỗ nào:</span>
+                                      </div>
+                                      <p className="text-[11.5px] text-indigo-950 dark:text-indigo-200 leading-relaxed pl-5 font-semibold">
+                                        {matchingAiExp?.study_focus || (
+                                          matchingAiExp?.recommended_topic
+                                            ? `Bạn nên chú trọng học thêm phần "${matchingAiExp.recommended_topic}". Hãy ôn lại các dạng bài tập tương tự để nắm chắc bản chất.`
+                                            : `Bạn nên chú trọng học thêm các bài học trong chương "${chapter?.title || 'này'}", ôn lại từ vựng và cấu trúc tương ứng.`
+                                        )}
+                                      </p>
+                                    </div>
+
+                                    {matchingAiExp?.trap_identified && (
+                                      <div className="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-1.5">
+                                        <span className="font-bold shrink-0">⚠️ Cạm bẫy cần tránh:</span>
+                                        <span className="opacity-95">{matchingAiExp.trap_identified}</span>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            )
+                          }
+
+                          if (q.explanation) {
+                            return (
+                              <div className="mt-3.5 ml-9 p-3 rounded-xl bg-surface-subtle/80 border border-border/80 text-xs text-text-secondary">
+                                <span className="font-bold text-primary">💡 Giải thích: </span>
+                                {q.explanation}
+                              </div>
+                            )
+                          }
+
+                          return null
+                        })()}
                       </div>
                     )
                   })}
