@@ -75,6 +75,7 @@ interface CourseTestRunnerModalProps {
   chapter: Chapter | null
   testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   finalTestQuestions?: CourseTestQuestion[]
+  finalTestAudioUrl?: string
   category?: string
   skills?: string[]
   highestScore?: number
@@ -117,6 +118,7 @@ export function CourseTestRunnerModal({
   chapter,
   testType,
   finalTestQuestions,
+  finalTestAudioUrl,
   category,
   skills,
   highestScore = 0,
@@ -250,6 +252,34 @@ export function CourseTestRunnerModal({
     }
     return []
   }, [chapter, testType, finalTestQuestions])
+
+  const testAudioUrl = useMemo(() => {
+    if (testType === 'final-test') {
+      if (finalTestAudioUrl) return finalTestAudioUrl
+      return (
+        rawQuestions.find(
+          (q) =>
+            q.media_url &&
+            (q.media_url.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ||
+              q.media_url.includes('audio') ||
+              q.media_url.includes('quiz-audio'))
+        )?.media_url || ''
+      )
+    }
+    return (
+      chapter?.test_audio_url ||
+      chapter?.challenge_audio_url ||
+      chapter?.audio_url ||
+      rawQuestions.find(
+        (q) =>
+          q.media_url &&
+          (q.media_url.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ||
+            q.media_url.includes('audio') ||
+            q.media_url.includes('quiz-audio'))
+      )?.media_url ||
+      ''
+    )
+  }, [testType, finalTestAudioUrl, chapter, rawQuestions])
 
   if (!isOpen) return null
 
@@ -1035,32 +1065,18 @@ export function CourseTestRunnerModal({
                     </div>
                   )}
 
-                  {rawQuestions.some(
-                    (q) =>
-                      q.media_url &&
-                      (q.media_url.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ||
-                        q.media_url.includes('audio') ||
-                        q.media_url.includes('quiz-audio'))
-                  ) && (
+                  {Boolean(testAudioUrl) && (
                     <div className="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/40 flex items-center gap-3 shadow-xs">
                       <div className="p-2 rounded-xl bg-indigo-500 text-white shadow-xs shrink-0">
                         <Volume2 size={18} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200 block mb-1">
-                          Audio bài thi Nghe (Listening) • Nhấn để phát:
+                          Audio bài thi Nghe (Listening) • Phát âm thanh toàn bộ đề:
                         </span>
                         <audio
                           controls
-                          src={
-                            rawQuestions.find(
-                              (q) =>
-                                q.media_url &&
-                                (q.media_url.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ||
-                                  q.media_url.includes('audio') ||
-                                  q.media_url.includes('quiz-audio'))
-                            )?.media_url
-                          }
+                          src={testAudioUrl}
                           className="w-full h-8"
                         />
                       </div>
@@ -1091,21 +1107,24 @@ export function CourseTestRunnerModal({
                             <p className="text-sm font-semibold text-text-primary leading-relaxed">
                               {q.question_text || q.question || `Câu hỏi ${qIdx + 1}`}
                             </p>
-                            {q.media_url && (
-                              <div className="mt-2.5 max-w-md rounded-xl overflow-hidden border border-border">
-                                {q.media_url.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ||
-                                q.media_url.includes('audio') ||
-                                q.media_url.includes('quiz-audio') ? (
-                                  <audio controls src={q.media_url} className="w-full" />
-                                ) : (
+                            {q.media_url &&
+                              (q.media_url.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ||
+                              q.media_url.includes('audio') ||
+                              q.media_url.includes('quiz-audio') ? (
+                                q.media_url !== testAudioUrl ? (
+                                  <div className="mt-2.5 max-w-md rounded-xl overflow-hidden border border-border">
+                                    <audio controls src={q.media_url} className="w-full" />
+                                  </div>
+                                ) : null
+                              ) : (
+                                <div className="mt-2.5 max-w-md rounded-xl overflow-hidden border border-border">
                                   <img
                                     src={q.media_url}
                                     alt={`Question ${qIdx + 1}`}
                                     className="w-full object-cover max-h-56"
                                   />
-                                )}
-                              </div>
-                            )}
+                                </div>
+                              ))}
                           </div>
                         </div>
 

@@ -121,6 +121,9 @@ export interface Chapter {
   challenge_questions?: Array<Record<string, unknown>>
   post_mini_questions?: Array<Record<string, unknown>>
   test_questions?: Array<Record<string, unknown>>
+  test_audio_url?: string
+  challenge_audio_url?: string
+  audio_url?: string
   status: ChapterStatus
 }
 
@@ -225,6 +228,7 @@ export interface Course {
   reviews?: CourseReviewItem[]
   announcements?: CourseAnnouncement[]
   final_test_questions?: Array<Record<string, unknown>>
+  final_test_audio_url?: string
   preTest?: {
     status: LessonStatus
     result?: TestResult

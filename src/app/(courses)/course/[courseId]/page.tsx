@@ -383,6 +383,9 @@ export default function CourseDetailPage() {
                 challenge_questions: unifiedChallengeQuestions,
                 post_mini_questions: postMiniQs,
                 test_questions: testQs,
+                test_audio_url: String(mod.test_audio_url || mod.challenge_audio_url || mod.audio_url || ''),
+                challenge_audio_url: String(mod.challenge_audio_url || mod.test_audio_url || mod.audio_url || ''),
+                audio_url: String(mod.audio_url || mod.test_audio_url || mod.challenge_audio_url || ''),
                 challengeTest:
                   unifiedChallengeQuestions.length > 0
                     ? {
@@ -624,6 +627,7 @@ export default function CourseDetailPage() {
             qna: mappedQnA,
             notes: mappedNotes,
             final_test_questions: (courseObj.final_test_questions as Array<Record<string, unknown>>) || [],
+            final_test_audio_url: String(courseObj.final_test_audio_url || ''),
             finalTest: { status: userIsEnrolled ? 'available' : 'locked' },
           }
 
@@ -1663,6 +1667,7 @@ export default function CourseDetailPage() {
           chapter={activeTestModal.chapter}
           testType={activeTestModal.testType}
           finalTestQuestions={course.final_test_questions as any}
+          finalTestAudioUrl={course.final_test_audio_url}
           category={course.category}
           skills={course.skills}
           highestScore={currentTestModalData.highestScore}
