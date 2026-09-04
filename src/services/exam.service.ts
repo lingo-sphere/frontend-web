@@ -17,6 +17,9 @@ export interface BackendToeicExam {
   total_questions: number
   audio_full_url?: string
   is_published: boolean
+  is_system_placement?: boolean
+  skills_enabled?: string
+  placement_type?: string
   attempts_count?: number
   parts?: Array<{
     part_number: number

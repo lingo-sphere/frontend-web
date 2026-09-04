@@ -86,7 +86,7 @@ export function WritingWorkspace({
 
   return (
     <main className="flex h-[calc(100vh-4rem)] flex-col">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
+      <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
             <ArrowLeft size={18} />

@@ -107,7 +107,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex min-h-[72px] items-center justify-between gap-4 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-40 flex min-h-[72px] shrink-0 items-center justify-between gap-4 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs sm:px-6 lg:px-8">
         <HeaderSearchDictionary
           onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
           onOpenDictionary={() => setDictionaryOpen(true)}

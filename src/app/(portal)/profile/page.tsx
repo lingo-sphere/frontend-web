@@ -17,93 +17,125 @@ import { StatCard, XPProgress } from '@/components/user/user.stats'
 import { UserBadgesList } from '@/components/user/user.badges'
 import { UserActivityList } from '@/components/user/user.activities'
 import { EditProfileModal } from '@/components/user/user.edit.modal'
+import { UserScoreCard } from '@/components/user/user.score.card'
+import { RecommendedCoursesSection } from '@/components/course/RecommendedCoursesSection'
+
+function formatNumber(val?: number): string {
+  if (val === undefined || val === null) return '0'
+  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
 
 export default function ProfileAppPage() {
   const { user: authUser } = useAuthStore()
 
-  const [user, setUser] = useState<User>(() => {
-    const currentAuth = useAuthStore.getState().user
-    let cachedStats: any = null
-    try {
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('lingo_cached_profile_stats')
-        if (stored) cachedStats = JSON.parse(stored)
-      }
-    } catch {}
-
-    return {
-      id: currentAuth?.id || 'current_user',
-      email: currentAuth?.email || '',
-      username: (currentAuth as any)?.username || currentAuth?.email?.split('@')[0] || 'learner',
-      displayName: currentAuth?.full_name || 'Học viên',
-      avatar: currentAuth?.avatar_url || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      role: (currentAuth?.role?.toLowerCase() as any) || 'student',
-      isVerified: true,
-      isActive: true,
-      is_premium: Boolean(currentAuth?.is_premium),
-      subscription_expires_at: currentAuth?.subscription_expires_at,
-      subscription_plan: currentAuth?.subscription_plan,
-      stats: {
-        totalExercises: cachedStats?.totalExercises || 0,
-        totalListeningExercises: cachedStats?.totalListeningExercises || 0,
-        totalVocabularyLearned: cachedStats?.totalVocabularyLearned || 0,
-        totalListeningTime: cachedStats?.totalListeningTime || 0,
-        totalSpeakingTime: cachedStats?.totalSpeakingTime || 0,
-        currentStreak: cachedStats?.currentStreak || 0,
-        longestStreak: cachedStats?.longestStreak || 0,
-        totalXP: cachedStats?.totalXP || 0,
-        level: cachedStats?.level || 1,
-        badges: cachedStats?.badges || [],
-        averageAccuracy: cachedStats?.averageAccuracy || 0,
-        totalCorrectAnswers: cachedStats?.totalCorrectAnswers || 0,
-        totalWrongAnswers: cachedStats?.totalWrongAnswers || 0,
-        totalStudyTime: cachedStats?.totalStudyTime || 0,
-        weeklyStudyTime: cachedStats?.weeklyStudyTime || 0,
-        monthlyStudyTime: cachedStats?.monthlyStudyTime || 0,
+  const [user, setUser] = useState<User>({
+    id: 'current_user',
+    email: '',
+    username: 'learner',
+    displayName: 'Học viên',
+    avatar: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    role: 'student',
+    isVerified: true,
+    isActive: true,
+    is_premium: false,
+    stats: {
+      totalExercises: 0,
+      totalListeningExercises: 0,
+      totalVocabularyLearned: 0,
+      totalListeningTime: 0,
+      totalSpeakingTime: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      totalXP: 0,
+      level: 1,
+      badges: [],
+      averageAccuracy: 0,
+      totalCorrectAnswers: 0,
+      totalWrongAnswers: 0,
+      totalStudyTime: 0,
+      weeklyStudyTime: 0,
+      monthlyStudyTime: 0,
+    },
+    preferences: {
+      language: 'vi',
+      theme: 'system',
+      notifications: {
+        allEnabled: true,
+        email: true,
+        push: true,
+        sound: true,
       },
-      preferences: {
-        language: 'vi',
-        theme: 'system',
-        notifications: {
-          allEnabled: true,
-          email: true,
-          push: true,
-          sound: true,
-        },
-        learning: {
-          autoPlayAudio: true,
-          showPhonetic: true,
-          defaultExerciseDifficulty: 'medium',
-          dailyGoal: 20,
-        },
-        privacy: {
-          showProfile: true,
-          showProgress: true,
-          allowFriendRequests: true,
-        },
+      learning: {
+        autoPlayAudio: true,
+        showPhonetic: true,
+        defaultExerciseDifficulty: 'medium',
+        dailyGoal: 20,
       },
-    }
+      privacy: {
+        showProfile: true,
+        showProgress: true,
+        allowFriendRequests: true,
+      },
+    },
   })
 
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'activity'>('overview')
   const [leaderboard, setLeaderboard] = useState<any[]>([])
 
+  const [userScores, setUserScores] = useState({
+    totalScore: 540,
+    listeningScore: 290,
+    readingScore: 250,
+    speakingScore: 120,
+    writingScore: 130,
+    targetScore: 750,
+    skillsType: '2SKILLS',
+    isManuallyEdited: false,
+    testedAt: new Date().toISOString(),
+  })
+
   useEffect(() => {
-    if (authUser) {
+    // Client-side hydration sync
+    let cachedStats: any = null
+    let localScore: any = null
+    try {
+      if (typeof window !== 'undefined') {
+        const storedStats = localStorage.getItem('lingo_cached_profile_stats')
+        if (storedStats) cachedStats = JSON.parse(storedStats)
+        const storedScore = localStorage.getItem('lingo_user_placement_score')
+        if (storedScore) localScore = JSON.parse(storedScore)
+      }
+    } catch {}
+
+    const auth = authUser || (useAuthStore.getState().user as any)
+    if (auth) {
       setUser((prev) => ({
         ...prev,
-        id: authUser.id || prev.id,
-        email: authUser.email || prev.email,
-        username: (authUser as any)?.username || prev.username,
-        displayName: authUser.full_name || prev.displayName,
-        avatar: authUser.avatar_url || prev.avatar,
-        is_premium: Boolean(authUser.is_premium),
-        subscription_expires_at: authUser.subscription_expires_at || prev.subscription_expires_at,
-        subscription_plan: authUser.subscription_plan || prev.subscription_plan,
+        id: auth.id || prev.id,
+        email: auth.email || prev.email,
+        username: auth.username || auth.email?.split('@')[0] || prev.username,
+        displayName: auth.full_name || prev.displayName,
+        avatar: auth.avatar_url || prev.avatar,
+        is_premium: Boolean(auth.is_premium),
+        subscription_expires_at: auth.subscription_expires_at || prev.subscription_expires_at,
+        subscription_plan: auth.subscription_plan || prev.subscription_plan,
+        stats: cachedStats ? { ...prev.stats, ...cachedStats } : prev.stats,
       }))
+
+      setUserScores({
+        totalScore: localScore?.placement_test_score || auth?.placement_test_score || auth?.current_estimated_score || 540,
+        listeningScore: localScore?.placement_listening_score || auth?.placement_listening_score || 290,
+        readingScore: localScore?.placement_reading_score || auth?.placement_reading_score || 250,
+        speakingScore: localScore?.placement_speaking_score || auth?.placement_speaking_score || 120,
+        writingScore: localScore?.placement_writing_score || auth?.placement_writing_score || 130,
+        targetScore: localScore?.target_toeic_score || auth?.target_toeic_score || 750,
+        skillsType: localScore?.placement_skills_type || auth?.placement_skills_type || '2SKILLS',
+        isManuallyEdited: localScore?.is_score_manually_edited ?? auth?.is_score_manually_edited ?? false,
+        testedAt: localScore?.placement_tested_at || auth?.placement_tested_at || new Date().toISOString(),
+      })
     }
   }, [authUser])
 
@@ -208,7 +240,7 @@ export default function ProfileAppPage() {
               <StatCard
                 icon="zap"
                 label="Tổng kinh nghiệm"
-                value={`${(user.stats?.totalXP || 0).toLocaleString()} XP`}
+                value={`${formatNumber(user.stats?.totalXP || 0)} XP`}
                 color="warning"
               />
               <StatCard
@@ -264,50 +296,64 @@ export default function ProfileAppPage() {
         </div>
 
         {activeTab === 'overview' && (
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-6 lg:col-span-2">
-              <XPProgress currentXP={user.stats?.totalXP || 0} />
-              <Card className="dashboard-card">
-                <CardContent className="p-6">
-                  <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-text-primary">
-                    <Icon name="award" size={18} className="text-primary" />
-                    Thành tích nổi bật
-                  </h3>
-                  <UserBadgesList achievements={[]} />
-                </CardContent>
-              </Card>
+          <div className="space-y-6">
+            <UserScoreCard
+              userScores={userScores}
+              onScoresUpdated={(updated) => {
+                setUserScores((prev: any) => ({ ...prev, ...updated }))
+              }}
+            />
+
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="space-y-6 lg:col-span-2">
+                <XPProgress currentXP={user.stats?.totalXP || 0} />
+                <Card className="dashboard-card">
+                  <CardContent className="p-6">
+                    <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-text-primary">
+                      <Icon name="award" size={18} className="text-primary" />
+                      Thành tích nổi bật
+                    </h3>
+                    <UserBadgesList achievements={[]} />
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="space-y-6">
+                <Card className="dashboard-card">
+                  <CardContent className="p-6">
+                    <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-text-primary">
+                      <Icon name="trending-up" size={18} className="text-warning" />
+                      Bảng xếp hạng tuần
+                    </h3>
+                    <div className="space-y-3">
+                      {leaderboard.slice(0, 5).map((entry, idx) => (
+                        <div
+                          key={entry.user_id || idx}
+                          className="flex items-center gap-3 rounded-xl bg-surface-subtle p-2.5 transition-colors"
+                        >
+                          <span className="w-5 text-center text-xs font-bold text-text-tertiary">
+                            {idx + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-bold text-text-primary">
+                              {entry.full_name || entry.username || entry.user_name || `Học viên #${idx + 1}`}
+                            </p>
+                            <p suppressHydrationWarning className="text-[11px] text-text-tertiary">
+                              {formatNumber(entry.xp_total || entry.xp || 100)} XP
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
-            <div className="space-y-6">
-              <Card className="dashboard-card">
-                <CardContent className="p-6">
-                  <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-text-primary">
-                    <Icon name="trending-up" size={18} className="text-warning" />
-                    Bảng xếp hạng tuần
-                  </h3>
-                  <div className="space-y-3">
-                    {leaderboard.slice(0, 5).map((entry, idx) => (
-                      <div
-                        key={entry.user_id || idx}
-                        className="flex items-center gap-3 rounded-xl bg-surface-subtle p-2.5 transition-colors"
-                      >
-                        <span className="w-5 text-center text-xs font-bold text-text-tertiary">
-                          {idx + 1}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-bold text-text-primary">
-                            {entry.full_name || entry.username || entry.user_name || `Học viên #${idx + 1}`}
-                          </p>
-                          <p className="text-[11px] text-text-tertiary">
-                            {(entry.xp_total || entry.xp || 100).toLocaleString()} XP
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <RecommendedCoursesSection
+              currentScore={userScores.totalScore}
+              targetScore={userScores.targetScore}
+            />
           </div>
         )}
 

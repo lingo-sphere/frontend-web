@@ -12,6 +12,8 @@ import { ArrowLeft, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { courseService } from '@/services/course.service'
 import { examService, type BackendToeicExam } from '@/services/exam.service'
+import { userService } from '@/services/user.service'
+import { useAuthStore } from '@/store/auth-store'
 import type { Course } from '@/types/api.types'
 import type { ToeicQuestion } from '@/types/toeic'
 import { ToeicModeSelector, type PracticeMode } from '@/components/toeic/toeic.mode.selector'
@@ -86,13 +88,34 @@ export default function ToeicExamAppPage() {
 
   useEffect(() => {
     if (!examId) return
+    const isPlacement2Skills = examId.includes('placement_2skills')
+    const isPlacement4Skills = examId.includes('placement_4skills')
+    if (isPlacement2Skills || isPlacement4Skills) {
+      setExamData({
+        _id: examId,
+        title: isPlacement4Skills
+          ? 'Bài Test Năng Lực Đầu Vào Toàn Hệ Thống (TOEIC 4 Kỹ Năng)'
+          : 'Bài Test Năng Lực Đầu Vào Toàn Hệ Thống (TOEIC 2 Kỹ Năng LR)',
+        slug: examId,
+        description: isPlacement4Skills
+          ? 'Đánh giá toàn diện 4 kỹ năng Listening, Reading, Speaking & Writing chuẩn quốc tế'
+          : 'Đánh giá năng lực trình độ Listening & Reading từ 10 - 990 điểm chuẩn cấu trúc ETS mới nhất',
+        exam_type: 'DIAGNOSTIC_TEST',
+        duration_minutes: isPlacement4Skills ? 90 : 60,
+        total_questions: isPlacement4Skills ? 120 : 100,
+        is_published: true,
+        is_system_placement: true,
+        skills_enabled: isPlacement4Skills ? 'ALL' : 'LR',
+      })
+    }
+
     examService
       .getExamById(examId)
       .then((data) => {
         if (data) setExamData(data)
       })
       .catch((err) => {
-        console.error('Failed to load exam by ID:', err)
+        console.warn('Exam not yet in backend DB, using dynamic test generator:', err?.message || err)
       })
   }, [examId])
 
@@ -238,6 +261,40 @@ export default function ToeicExamAppPage() {
       readingScore: res.estimatedReading,
       mode: state.timedMode ? 'timed' : 'practice',
     })
+
+    // Auto save placement score to profile if this is a diagnostic/placement test
+    const isDiagnostic = Boolean(
+      examData?.exam_type === 'DIAGNOSTIC_TEST' ||
+      examId?.includes('placement') ||
+      examData?.is_system_placement
+    )
+
+    const is4Skills = Boolean(
+      examId?.includes('4skills') ||
+      examData?.skills_enabled === 'ALL'
+    )
+
+    const placementData = {
+      placement_test_score: res.estimatedTotal,
+      placement_listening_score: res.estimatedListening,
+      placement_reading_score: res.estimatedReading,
+      placement_speaking_score: is4Skills ? 140 : undefined,
+      placement_writing_score: is4Skills ? 150 : undefined,
+      placement_skills_type: is4Skills ? '4SKILLS' : '2SKILLS',
+      target_toeic_score: Math.min(990, res.estimatedTotal + 150),
+      current_estimated_score: res.estimatedTotal,
+      is_score_manually_edited: false,
+      placement_tested_at: new Date().toISOString(),
+    }
+
+    try {
+      localStorage.setItem('lingo_user_placement_score', JSON.stringify(placementData))
+      userService.updateProfile(placementData as any).catch(() => null)
+      const { user, setUser } = useAuthStore.getState()
+      if (user) {
+        setUser({ ...user, ...placementData } as any)
+      }
+    } catch {}
 
     setIsLoadingRecommendations(true)
 
@@ -392,7 +449,7 @@ export default function ToeicExamAppPage() {
 
   return (
     <div className="min-h-screen bg-surface-secondary">
-      <header className="sticky top-0 z-10 border-b border-border bg-surface">
+      <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-md shadow-xs">
         <div className="w-full flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => setShowModeSelector(true)}>

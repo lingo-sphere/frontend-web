@@ -22,6 +22,7 @@ import { CourseLoadingState } from '@/components/course/course.loading.state'
 import { LessonPlayer } from '@/components/course/lesson.player'
 import { CourseLockedPlayer } from '@/components/course/course.locked.player'
 import { CourseCheckoutModal } from '@/components/course/course.checkout.modal'
+import { CoursePlacementPromptModal } from '@/components/course/CoursePlacementPromptModal'
 import { UpgradeModal } from '@/components/upgrade/upgrade.modal'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth-store'
@@ -71,7 +72,37 @@ export default function CourseDetailPage() {
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showCourseCheckoutModal, setShowCourseCheckoutModal] = useState(false)
+  const [showPlacementPromptModal, setShowPlacementPromptModal] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+
+  const handleInitiateEnrollOrBuy = () => {
+    if (!isAuthenticated) {
+      window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      return
+    }
+
+    let hasPlacementScore = Boolean(
+      (user as any)?.placement_test_score ||
+      (user as any)?.current_estimated_score ||
+      (user as any)?.placement_tested_at
+    )
+
+    if (!hasPlacementScore) {
+      try {
+        const stored = localStorage.getItem('lingo_user_placement_score')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed?.placement_test_score > 0) hasPlacementScore = true
+        }
+      } catch {}
+    }
+
+    if (!hasPlacementScore) {
+      setShowPlacementPromptModal(true)
+    } else {
+      setShowCourseCheckoutModal(true)
+    }
+  }
 
   const [progressDetail, setProgressDetail] = useState<{
     course_progress?: {
@@ -1409,7 +1440,7 @@ export default function CourseDetailPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowCourseCheckoutModal(true)}
+                    onClick={handleInitiateEnrollOrBuy}
                     className="px-3 py-1 rounded-lg bg-white text-emerald-800 hover:bg-emerald-50 text-[11px] font-extrabold shadow-xs transition-all cursor-pointer"
                   >
                     Đăng ký mua khóa học để mở khóa toàn bộ bài học & đề thi
@@ -1419,7 +1450,7 @@ export default function CourseDetailPage() {
               <LessonPlayer
                 lesson={currentLesson}
                 isTrial={!isEnrolled}
-                onOpenCheckout={() => setShowCourseCheckoutModal(true)}
+                onOpenCheckout={handleInitiateEnrollOrBuy}
                 onProgress={handleLessonProgress}
                 onTimeUpdate={(t) => setPlayerCurrentTime(t)}
                 onNextLesson={handleNextLesson}
@@ -1437,7 +1468,7 @@ export default function CourseDetailPage() {
               isAuthenticated={isAuthenticated}
               isAlreadyInCart={isInCart(course.id)}
               isAddingToCart={isAddingToCart}
-              onBuyNow={() => setShowCourseCheckoutModal(true)}
+              onBuyNow={handleInitiateEnrollOrBuy}
               onAddToCart={handleAddToCart}
               onGoToCart={() => navigate('/cart')}
               onOpenUpgrade={() => setShowUpgradeModal(true)}
@@ -1680,6 +1711,16 @@ export default function CourseDetailPage() {
             useEnrollmentStore.getState().addEnrolledCourse(course.id)
             toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
           }}
+        />
+      )}
+
+      {/* Placement Test Prompt Modal for Unassessed Learners */}
+      {showPlacementPromptModal && (
+        <CoursePlacementPromptModal
+          open={showPlacementPromptModal}
+          onOpenChange={setShowPlacementPromptModal}
+          onProceedPurchase={() => setShowCourseCheckoutModal(true)}
+          courseTitle={course?.title}
         />
       )}
     </div>

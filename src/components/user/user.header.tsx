@@ -51,7 +51,10 @@ export function UserAvatar({
           className={`${sizeClasses[size]} rounded-full bg-slate-900 dark:bg-slate-800 text-white font-bold flex items-center justify-center shadow-md ring-2 ring-primary/20`}
         >
           {initials ? (
-            <span className={size === 'xl' ? 'text-2xl font-bold' : size === 'lg' ? 'text-lg font-bold' : 'text-xs font-semibold'}>
+            <span
+              suppressHydrationWarning
+              className={size === 'xl' ? 'text-2xl font-bold' : size === 'lg' ? 'text-lg font-bold' : 'text-xs font-semibold'}
+            >
               {initials}
             </span>
           ) : (
@@ -155,7 +158,7 @@ export function UserStatsHeader({ user, onEditClick }: UserStatsHeaderProps) {
 
       <div className="flex-1 text-center sm:text-left">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
-          <h2 className="text-xl font-bold text-text-primary">
+          <h2 suppressHydrationWarning className="text-xl font-bold text-text-primary">
             {user.displayName}
           </h2>
           <span className="text-xs px-2.5 py-0.5 bg-primary-10 text-primary font-semibold rounded-full w-fit mx-auto sm:mx-0">
@@ -168,7 +171,7 @@ export function UserStatsHeader({ user, onEditClick }: UserStatsHeaderProps) {
             </span>
           )}
         </div>
-        <p className="text-sm text-text-secondary mb-2">{user.email}</p>
+        <p suppressHydrationWarning className="text-sm text-text-secondary mb-2">{user.email}</p>
         
         {/* VIP Subscription Details Card */}
         {isPremium && (
