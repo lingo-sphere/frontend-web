@@ -500,6 +500,22 @@ export function LessonPlayer({
         return
       }
 
+      // Numeric keys 0-9: Jump to percentage of video duration (0% - 90%)
+      if (/^[0-9]$/.test(e.key)) {
+        if (!videoRef.current) return
+        e.preventDefault()
+        const digit = parseInt(e.key, 10)
+        const percent = digit * 10
+        const duration = videoRef.current.duration || 0
+        if (duration > 0) {
+          const targetTime = (percent / 100) * duration
+          videoRef.current.currentTime = targetTime
+          setCurrentTime(targetTime)
+          triggerFeedback('forward', `${percent}%`)
+        }
+        return
+      }
+
       switch (e.key.toLowerCase()) {
         case ' ':
         case 'k':
@@ -515,6 +531,23 @@ export function LessonPlayer({
         case 'l':
           e.preventDefault()
           seekRelative(5)
+          break
+        case 'home':
+          if (videoRef.current) {
+            e.preventDefault()
+            videoRef.current.currentTime = 0
+            setCurrentTime(0)
+            triggerFeedback('forward', '0%')
+          }
+          break
+        case 'end':
+          if (videoRef.current && videoRef.current.duration) {
+            e.preventDefault()
+            const endTarget = Math.max(0, videoRef.current.duration - 1)
+            videoRef.current.currentTime = endTarget
+            setCurrentTime(endTarget)
+            triggerFeedback('forward', '100%')
+          }
           break
         case 'arrowup':
           e.preventDefault()
