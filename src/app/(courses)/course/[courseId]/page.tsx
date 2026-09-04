@@ -363,6 +363,15 @@ export default function CourseDetailPage() {
                 }
               })
 
+              const unifiedChallengeQuestions =
+                challengeQs.length > 0
+                  ? challengeQs
+                  : testQs.length > 0
+                  ? testQs
+                  : postMiniQs.length > 0
+                  ? postMiniQs
+                  : []
+
               return {
                 id: modId,
                 courseId: String(courseObj._id || courseObj.id || courseId),
@@ -371,43 +380,20 @@ export default function CourseDetailPage() {
                 description: String(mod.description || ''),
                 status: chStatus,
                 lessons: lessonsList,
-                challenge_questions: challengeQs,
+                challenge_questions: unifiedChallengeQuestions,
                 post_mini_questions: postMiniQs,
                 test_questions: testQs,
                 challengeTest:
-                  challengeQs.length > 0
+                  unifiedChallengeQuestions.length > 0
                     ? {
                         id: `ct-${modIdx + 1}`,
                         chapterId: modId,
-                        title: `${modTitle} - Bài kiểm tra thử thách`,
-                        questionsCount: challengeQs.length,
+                        title: `${modTitle} - Bài test thử thách cuối chương`,
+                        questionsCount: unifiedChallengeQuestions.length,
                         passingScore:
                           typeof mod.challenge_passing_score === 'number'
                             ? mod.challenge_passing_score
                             : 80,
-                        status: 'available',
-                      }
-                    : undefined,
-                exercise:
-                  testQs.length > 0
-                    ? {
-                        id: `ex-${modIdx + 1}`,
-                        chapterId: modId,
-                        title: `${modTitle} - Thực hành`,
-                        questionsCount: testQs.length,
-                        skills: ['Vocabulary', 'Grammar'],
-                        status: 'available',
-                      }
-                    : undefined,
-                postMiniTest:
-                  postMiniQs.length > 0
-                    ? {
-                        id: `pm-${modIdx + 1}`,
-                        chapterId: modId,
-                        title: `${modTitle} - Bài kiểm tra cuối chương`,
-                        questionsCount: postMiniQs.length,
-                        skills: ['Listening', 'Reading'],
-                        difficulty: 'Standard',
                         status: 'available',
                       }
                     : undefined,
@@ -733,17 +719,15 @@ export default function CourseDetailPage() {
       const prevMod = progressDetail?.modules_progress?.find(
         (m: any) => m.module_id === prevCh.id || m.order_index === (prevCh.order || i)
       )
+      const prevPassingScore = prevCh.challengeTest?.passingScore || (prevCh as any)?.challenge_passing_score || 80
+      const prevScore = Number(prevMod?.challenge_score ?? prevMod?.post_mini_score ?? 0)
       const passedChallenge = Boolean(
         prevMod?.is_passed_by_challenge ||
-        prevMod?.status === 'SKIPPED_BY_CHALLENGE' ||
-        (Boolean(prevMod?.challenge_taken) && (prevMod?.challenge_score || 0) >= (prevCh.challengeTest?.passingScore || 80))
-      )
-      const passedPostMini = Boolean(
-        prevCh.status === 'completed' ||
         prevMod?.status === 'COMPLETED' ||
-        ((prevMod?.post_mini_score || 0) >= 70)
+        prevMod?.status === 'SKIPPED_BY_CHALLENGE' ||
+        (Boolean(prevMod?.challenge_taken) && prevScore >= prevPassingScore)
       )
-      if (!passedChallenge && !passedPostMini) {
+      if (!passedChallenge) {
         set.add(course.chapters[i].id)
       }
     }
@@ -753,7 +737,7 @@ export default function CourseDetailPage() {
   const handleSelectLesson = (chapter: Chapter, lesson: Lesson) => {
     if (lockedChapterIdSet.has(chapter.id)) {
       toast.warning(
-        'Chương này đang bị khóa! Bạn cần làm xong bài kiểm tra cuối chương hoặc vượt qua bài thử thách của chương trước để mở khóa nhé.',
+        'Chương này đang bị khóa! Bạn cần hoàn thành và vượt qua bài test thử thách của chương trước để mở khóa nhé.',
         'Chương đang khóa'
       )
       return
@@ -891,7 +875,7 @@ export default function CourseDetailPage() {
       const nextItem = allFlatLessons[currentLessonIndex + 1]
       if (lockedChapterIdSet.has(nextItem.chapter.id)) {
         toast.warning(
-          'Chương tiếp theo đang bị khóa! Bạn cần làm xong bài kiểm tra cuối chương hoặc vượt qua bài thử thách của chương trước để mở khóa.',
+          'Chương tiếp theo đang bị khóa! Bạn cần hoàn thành và vượt qua bài test thử thách của chương trước để mở khóa.',
           'Chương đang khóa'
         )
         return
@@ -1252,23 +1236,32 @@ export default function CourseDetailPage() {
         const updatedMod = {
           module_id: finishedChId,
           order_index: finishedChOrder,
-          status: 'COMPLETED',
+          status: isPassed ? 'COMPLETED' : (prevMod?.status || 'IN_PROGRESS'),
           attempts: [newAttempt, ...currentAttempts],
-          ...(activeTestModal.testType === 'challenge'
-            ? {
-                challenge_score: Math.max(prevMod?.challenge_score || 0, score),
-                is_passed_by_challenge: isPassed,
-                challenge_taken: true,
-              }
-            : {
-                post_mini_score: Math.max(prevMod?.post_mini_score || 0, score),
-              }),
+          challenge_score: Math.max(prevMod?.challenge_score || 0, score),
+          is_passed_by_challenge: isPassed || Boolean(prevMod?.is_passed_by_challenge),
+          challenge_taken: true,
         }
         if (modIdx >= 0) {
           existingMods[modIdx] = { ...existingMods[modIdx], ...updatedMod }
         } else {
           existingMods.push(updatedMod)
         }
+
+        // If passed, immediately unlock next module in optimistic local state
+        if (isPassed) {
+          const nextOrder = finishedChOrder + 1
+          const nextModIdx = existingMods.findIndex(
+            (m: any) => Number(m.order_index) === nextOrder
+          )
+          if (nextModIdx >= 0) {
+            existingMods[nextModIdx] = {
+              ...existingMods[nextModIdx],
+              status: 'IN_PROGRESS',
+            }
+          }
+        }
+
         return {
           ...(prev || {}),
           modules_progress: existingMods,
@@ -1278,7 +1271,7 @@ export default function CourseDetailPage() {
         if (!prev) return null
         const nextChapters = prev.chapters.map((ch) =>
           ch.id === finishedChId || String(ch.id) === String(finishedChId) || Number(ch.order) === finishedChOrder
-            ? { ...ch, status: 'completed' as const }
+            ? { ...ch, status: (isPassed ? 'completed' : (ch.status || 'in-progress')) as Chapter['status'] }
             : ch
         )
         return { ...prev, chapters: nextChapters }
@@ -1305,16 +1298,10 @@ export default function CourseDetailPage() {
               if (modIdx >= 0) {
                 serverMods[modIdx] = {
                   ...serverMods[modIdx],
-                  status: 'COMPLETED',
-                  ...(activeTestModal.testType === 'challenge'
-                    ? {
-                        challenge_score: Math.max(serverMods[modIdx]?.challenge_score || 0, currentScore),
-                        is_passed_by_challenge: isPassed,
-                        challenge_taken: true,
-                      }
-                    : {
-                        post_mini_score: Math.max(serverMods[modIdx]?.post_mini_score || 0, currentScore),
-                      }),
+                  status: isPassed ? 'COMPLETED' : (serverMods[modIdx]?.status || 'IN_PROGRESS'),
+                  challenge_score: Math.max(serverMods[modIdx]?.challenge_score || 0, currentScore),
+                  is_passed_by_challenge: isPassed || Boolean(serverMods[modIdx]?.is_passed_by_challenge),
+                  challenge_taken: true,
                 }
               }
             }

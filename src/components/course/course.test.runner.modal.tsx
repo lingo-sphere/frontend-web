@@ -237,9 +237,9 @@ export function CourseTestRunnerModal({
     }
     if (testType === 'challenge' || testType === 'post-mini' || testType === 'exercise') {
       const qList =
+        (Array.isArray(chapter?.challenge_questions) && chapter.challenge_questions.length > 0 ? chapter.challenge_questions : null) ||
         (Array.isArray(chapter?.test_questions) && chapter.test_questions.length > 0 ? chapter.test_questions : null) ||
         (Array.isArray(chapter?.post_mini_questions) && chapter.post_mini_questions.length > 0 ? chapter.post_mini_questions : null) ||
-        (Array.isArray(chapter?.challenge_questions) && chapter.challenge_questions.length > 0 ? chapter.challenge_questions : null) ||
         []
       return qList as CourseTestQuestion[]
     }
@@ -250,18 +250,18 @@ export function CourseTestRunnerModal({
 
   const passingScore =
     testType === 'challenge'
-      ? chapter?.challengeTest?.passingScore || 80
+      ? chapter?.challengeTest?.passingScore || (chapter as any)?.challenge_passing_score || 80
       : testType === 'final-test'
       ? 70
-      : 60
+      : 80
 
   const testTitle =
     testType === 'challenge'
-      ? `Bài kiểm tra đầu chương (Challenge Test)`
+      ? `Bài test thử thách cuối chương - ${chapter?.title || ''}`
       : testType === 'post-mini'
-      ? `Bài kiểm tra cuối chương (Post-Mini Test)`
+      ? `Bài kiểm tra cuối chương - ${chapter?.title || ''}`
       : testType === 'final-test'
-      ? `Bài thi tốt nghiệp khóa học (Final Test)`
+      ? `Bài thi tốt nghiệp khóa học (Exit Test)`
       : `Bài luyện tập trắc nghiệm (${chapter?.title || ''})`
 
   const handleSelectOption = (questionIndex: number, optionIndex: number) => {
@@ -777,10 +777,12 @@ export function CourseTestRunnerModal({
                               <h4 className="text-base font-extrabold">
                                 {scoreResult.isPassed
                                   ? testType === 'challenge'
-                                    ? '🎉 Xuất sắc! Bạn đã vượt cấp thành công!'
+                                    ? '🎉 Xuất sắc! Bạn đã vượt qua bài test thử thách của chương!'
+                                    : testType === 'final-test'
+                                    ? '🎉 Chúc mừng bạn đã hoàn thành bài thi tốt nghiệp cuối khóa!'
                                     : '🎉 Chúc mừng! Bạn đã hoàn thành bài test!'
                                   : testType === 'challenge'
-                                  ? '⚡ Chưa đạt điểm vượt cấp (Đã sử dụng 1 lượt thử)'
+                                  ? `⚡ Chưa đạt yêu cầu để mở khóa chương sau (Cần tối thiểu ${passingScore}%)`
                                   : '⚡ Chưa đạt điểm chuẩn!'}
                               </h4>
                               {isNewHighScore && (
@@ -791,7 +793,7 @@ export function CourseTestRunnerModal({
                             </div>
                             <p className="text-xs opacity-90 mt-0.5">
                               Lần thi này: Đúng {scoreResult.correctCount}/{scoreResult.totalQuestions} câu (
-                              <strong>{scoreResult.score}%</strong>) • 👑 Điểm cao nhất:{' '}
+                              <strong>{scoreResult.score}%</strong>) • Điểm yêu cầu: <strong>{passingScore}%</strong> • 👑 Điểm cao nhất:{' '}
                               <strong>{bestScore}%</strong>
                             </p>
                           </div>
@@ -809,17 +811,19 @@ export function CourseTestRunnerModal({
                             <span>Lịch sử ({attemptsList.length})</span>
                           </Button>
 
-                          {!scoreResult.isPassed && testType !== 'challenge' && (
-                            <Button
-                              onClick={handleRetry}
-                              variant="outline"
-                              size="sm"
-                              className="rounded-xl border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 shrink-0 flex items-center gap-1.5 cursor-pointer text-xs"
-                            >
-                              <RotateCcw size={14} />
-                              <span>Làm lại</span>
-                            </Button>
-                          )}
+                          <Button
+                            onClick={handleRetry}
+                            variant="outline"
+                            size="sm"
+                            className={`rounded-xl shrink-0 flex items-center gap-1.5 cursor-pointer text-xs font-bold ${
+                              scoreResult.isPassed
+                                ? 'border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10'
+                                : 'border-amber-500/60 text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 ring-1 ring-amber-500/30'
+                            }`}
+                          >
+                            <RotateCcw size={14} />
+                            <span>{scoreResult.isPassed ? 'Luyện tập lại' : 'Làm lại thử thách ngay'}</span>
+                          </Button>
                         </div>
                       </div>
 
