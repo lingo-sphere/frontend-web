@@ -1656,6 +1656,7 @@ export default function CourseDetailPage() {
                 finalTestQuestionsCount={course.final_test_questions?.length || 0}
                 finalTestScore={progressDetail?.course_progress?.final_test_score}
                 finalTestAttempts={(progressDetail?.course_progress as any)?.final_test_attempts}
+                finalTestAudioUrl={course.final_test_audio_url}
                 onToggleChapter={toggleChapter}
                 onSelectLesson={handleSelectLesson}
                 onToggleLessonComplete={handleToggleLessonComplete}

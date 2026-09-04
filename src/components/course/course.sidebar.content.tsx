@@ -26,6 +26,7 @@ import {
   RotateCcw,
   Crown,
   History,
+  Volume2,
 } from 'lucide-react'
 import type { Chapter, Lesson } from '@/types/course'
 import { toast } from '@/store/toast-store'
@@ -58,6 +59,7 @@ interface CourseSidebarContentProps {
   finalTestQuestionsCount?: number
   finalTestScore?: number
   finalTestAttempts?: any[]
+  finalTestAudioUrl?: string
   onToggleChapter: (chapterId: string) => void
   onSelectLesson: (chapter: Chapter, lesson: Lesson) => void
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
@@ -73,7 +75,8 @@ export function CourseSidebarContent({
   modulesProgress,
   finalTestQuestionsCount = 0,
   finalTestScore,
-  finalTestAttempts,
+  finalTestAttempts = [],
+  finalTestAudioUrl,
   onToggleChapter,
   onSelectLesson,
   onToggleLessonComplete,
@@ -416,6 +419,12 @@ export function CourseSidebarContent({
                               Yêu cầu {passingScore}%
                             </span>
                           )}
+                          {Boolean(chapter.test_audio_url || chapter.challenge_audio_url || chapter.audio_url) && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 shrink-0">
+                              <Volume2 size={9} className="text-indigo-500" />
+                              <span>Audio bài thi</span>
+                            </span>
+                          )}
                         </div>
                         <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
                           {isChapterLocked
@@ -516,6 +525,12 @@ export function CourseSidebarContent({
                       <span>Kỷ lục: {finalTestScore}%</span>
                     </span>
                   ) : null}
+                  {Boolean(finalTestAudioUrl) && (
+                    <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 shrink-0">
+                      <Volume2 size={9} className="text-indigo-500" />
+                      <span>Audio đề thi</span>
+                    </span>
+                  )}
                 </div>
                 <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
                   {!allChaptersPassed

@@ -257,19 +257,24 @@ export function CourseTestRunnerModal({
     if (testType === 'final-test') {
       if (finalTestAudioUrl) return finalTestAudioUrl
       return (
+        chapter?.test_audio_url ||
+        chapter?.challenge_audio_url ||
+        chapter?.audio_url ||
         rawQuestions.find(
           (q) =>
             q.media_url &&
             (q.media_url.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ||
               q.media_url.includes('audio') ||
               q.media_url.includes('quiz-audio'))
-        )?.media_url || ''
+        )?.media_url ||
+        ''
       )
     }
     return (
       chapter?.test_audio_url ||
       chapter?.challenge_audio_url ||
       chapter?.audio_url ||
+      finalTestAudioUrl ||
       rawQuestions.find(
         (q) =>
           q.media_url &&
