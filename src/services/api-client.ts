@@ -198,16 +198,31 @@ export const api = {
     return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
   },
 
-  async upload<T>(url: string, file: File | Blob, additionalData?: Record<string, string>): Promise<T> {
+  async upload<T>(
+    url: string,
+    file: File | Blob,
+    additionalData?: Record<string, string>,
+    onProgress?: (percent: number, loaded: number, total: number) => void
+  ): Promise<T> {
     const formData = new FormData()
     const fileName = file instanceof File ? file.name : 'audio_recording.webm'
     formData.append('file', file, fileName)
     if (additionalData) {
       Object.entries(additionalData).forEach(([k, v]) => formData.append(k, v))
     }
+    const fileSize = file instanceof File ? file.size : file.size || 0
     const res = await apiClient.post<ApiResponse<T> | T>(url, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        const loaded = progressEvent.loaded
+        const total = progressEvent.total || fileSize
+        if (total > 0) {
+          const percent = Math.min(99, Math.round((loaded * 100) / total))
+          onProgress?.(percent, loaded, total)
+        }
+      },
     })
+    onProgress?.(100, fileSize, fileSize)
     return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
   },
 }
