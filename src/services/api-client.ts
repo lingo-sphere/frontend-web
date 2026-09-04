@@ -160,6 +160,12 @@ apiClient.interceptors.response.use(
       cleanMessage = 'Hệ thống đang bận hoặc xảy ra sự cố khi xử lý dữ liệu. Vui lòng thử lại sau.'
     } else if (cleanMessage.includes('<!DOCTYPE') || cleanMessage.includes('<html')) {
       cleanMessage = 'Dịch vụ tạm thời không phản hồi. Vui lòng thử lại sau ít phút.'
+    } else if (cleanMessage.includes('Request failed with status code 401')) {
+      cleanMessage = 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!'
+    } else if (cleanMessage.includes('Request failed with status code 403')) {
+      cleanMessage = 'Bạn không có quyền thực hiện thao tác này.'
+    } else if (cleanMessage.includes('Request failed with status code 404')) {
+      cleanMessage = 'Không tìm thấy dữ liệu yêu cầu.'
     }
 
     return Promise.reject(new Error(cleanMessage))
