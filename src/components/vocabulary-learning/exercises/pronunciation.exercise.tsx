@@ -28,22 +28,73 @@ export function PronunciationExercise({ word, isAnswered, onAnswer, onNext, onSp
   const [hasRecorded, setHasRecorded] = useState(false)
   const [pronunciationScore, setPronunciationScore] = useState<number | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const recognitionRef = useRef<any>(null)
+  const transcriptRef = useRef<string>('')
 
   useEffect(() => {
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch {}
+      }
+    }
   }, [])
 
   const handleStartRecording = () => {
     setIsRecording(true)
     setRecordingTime(0)
-    timerRef.current = setInterval(() => setRecordingTime(prev => prev + 1), 1000)
+    transcriptRef.current = ''
+    timerRef.current = setInterval(() => setRecordingTime((prev) => prev + 1), 1000)
+
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (SpeechRec) {
+      try {
+        const recognition = new SpeechRec()
+        recognition.lang = 'en-US'
+        recognition.interimResults = false
+        recognition.maxAlternatives = 1
+        recognition.onresult = (event: any) => {
+          const text = event.results?.[0]?.[0]?.transcript || ''
+          transcriptRef.current = text.trim().toLowerCase()
+        }
+        recognition.onerror = () => {}
+        recognition.start()
+        recognitionRef.current = recognition
+      } catch {
+        // Fallback if browser audio permission denied
+      }
+    }
   }
 
   const handleStopRecording = () => {
     if (timerRef.current) clearInterval(timerRef.current)
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch {}
+    }
     setIsRecording(false)
     setHasRecorded(true)
-    const score = Math.floor(Math.random() * 30) + 70
+
+    const targetWord = word.word.trim().toLowerCase()
+    const spoken = transcriptRef.current.trim().toLowerCase()
+
+    let score = 0
+    if (spoken && (spoken.includes(targetWord) || targetWord.includes(spoken))) {
+      score = targetWord === spoken ? 95 : 85
+    } else if (spoken.length > 0) {
+      let matches = 0
+      for (let i = 0; i < Math.min(targetWord.length, spoken.length); i++) {
+        if (targetWord[i] === spoken[i]) matches++
+      }
+      const similarity = matches / Math.max(targetWord.length, spoken.length)
+      score = Math.round(similarity * 70)
+    } else {
+      score = recordingTime >= 1 ? 75 : 0
+    }
+
     setPronunciationScore(score)
     onAnswer(score >= 70, `${score}%`)
   }
