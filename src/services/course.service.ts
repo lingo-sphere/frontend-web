@@ -364,6 +364,8 @@ export const courseService = {
       title: string
       body?: string
       is_anonymous?: boolean
+      author_name?: string
+      author_avatar?: string
     }
   ): Promise<Record<string, unknown>> {
     return api.post(`/courses/${courseId}/qna`, data)
@@ -373,6 +375,9 @@ export const courseService = {
     qnaId: string,
     data: {
       body: string
+      author?: string
+      author_role?: string
+      author_avatar?: string
     }
   ): Promise<Record<string, unknown>> {
     return api.post(`/courses/qna/${qnaId}/answers`, data)

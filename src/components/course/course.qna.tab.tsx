@@ -408,7 +408,7 @@ export function CourseQnATab({
             const isAuthorCurrent = Boolean(currentUserId && item.userId && item.userId === currentUserId)
             const authorDisplayName = item.isAnonymous
               ? (isAuthorCurrent ? 'Bạn (Ẩn danh)' : 'Học viên ẩn danh')
-              : item.author
+              : (isAuthorCurrent ? `${item.author || 'Bạn'} (Bạn)` : (item.author || 'Học viên'))
 
             return (
               <div
@@ -422,9 +422,15 @@ export function CourseQnATab({
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-xs">
                         <EyeOff size={18} />
                       </div>
+                    ) : item.authorAvatar ? (
+                      <img
+                        src={item.authorAvatar}
+                        alt={authorDisplayName}
+                        className="h-10 w-10 shrink-0 rounded-2xl object-cover border border-border/60 shadow-xs"
+                      />
                     ) : (
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary font-bold text-sm shadow-xs">
-                        {item.author.charAt(0).toUpperCase()}
+                        {(item.author || 'H').charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="min-w-0 space-y-1">
@@ -487,6 +493,12 @@ export function CourseQnATab({
                                 <span className="inline-flex items-center gap-1 font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-lg text-[10px]">
                                   <Bot size={12} /> Trợ lý AI
                                 </span>
+                              ) : ans.authorAvatar ? (
+                                <img
+                                  src={ans.authorAvatar}
+                                  alt={ans.author}
+                                  className="h-5 w-5 rounded-full object-cover border border-border/60"
+                                />
                               ) : (
                                 <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-lg text-[10px]">
                                   <CheckCircle2 size={12} /> {ans.authorRole || 'Giảng viên'}

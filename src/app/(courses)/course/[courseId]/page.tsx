@@ -1007,12 +1007,20 @@ export default function CourseDetailPage() {
       return
     }
     try {
+      const userPayload = user as unknown as Record<string, unknown>
+      const authorName = isAnonymous
+        ? 'Học viên ẩn danh'
+        : (user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || 'Học viên')
+      const authorAvatar = isAnonymous ? '' : (user.avatar_url || (userPayload?.avatar as string) || '')
+
       const res = (await courseService.createCourseQnA(String(course.id), {
         lesson_id: currentLesson.id,
         lesson_title: currentLesson.title,
         title,
         body,
         is_anonymous: isAnonymous,
+        author_name: authorName,
+        author_avatar: authorAvatar,
       })) as Record<string, unknown>
 
       const newQnA: QnAItem = {
@@ -1020,7 +1028,8 @@ export default function CourseDetailPage() {
         lessonTitle: currentLesson.title,
         userId: user.id || user.user_id,
         isAnonymous: Boolean(isAnonymous),
-        author: isAnonymous ? 'Bạn (Ẩn danh)' : (user.full_name || 'Bạn (Học viên)'),
+        author: authorName,
+        authorAvatar: authorAvatar || undefined,
         title,
         body,
         createdAt: 'Vừa xong',
@@ -1062,11 +1071,20 @@ export default function CourseDetailPage() {
       return
     }
     try {
-      await courseService.addQnAAnswer(qnaId, { body: answerText })
+      const userPayload = user as unknown as Record<string, unknown>
+      const authorName = user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || 'Học viên'
+      const authorAvatar = user.avatar_url || (userPayload?.avatar as string) || ''
+
+      await courseService.addQnAAnswer(qnaId, {
+        body: answerText,
+        author: authorName,
+        author_avatar: authorAvatar,
+      })
       const newAns = {
         id: `ans-${Date.now()}`,
-        author: 'Bạn (Học viên)',
+        author: authorName,
         authorRole: 'Học viên',
+        authorAvatar: authorAvatar || undefined,
         body: answerText,
         createdAt: 'Vừa xong',
         upvotes: 0,
