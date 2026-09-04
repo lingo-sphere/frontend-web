@@ -71,6 +71,20 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
     const handleUnauthorized = () => {
       setUser(null)
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname
+        const isProtected =
+          path.startsWith('/profile') ||
+          path.startsWith('/settings') ||
+          path.startsWith('/cart') ||
+          path.startsWith('/ai-learning') ||
+          path.startsWith('/notes') ||
+          path.startsWith('/journal') ||
+          path.startsWith('/progress')
+        if (isProtected) {
+          window.location.href = '/'
+        }
+      }
     }
 
     window.addEventListener('storage', handleStorageChange)

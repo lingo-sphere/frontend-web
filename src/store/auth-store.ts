@@ -193,6 +193,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (typeof window !== 'undefined') {
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
+        window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
       }
       set({ user: null, isAuthenticated: false })
     }
