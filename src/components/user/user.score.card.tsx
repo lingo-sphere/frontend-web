@@ -33,7 +33,8 @@ interface UserScoreCardProps {
     targetScore?: number
     skillsType?: '2SKILLS' | '4SKILLS' | string
     isManuallyEdited?: boolean
-    testedAt?: string
+    hasTested?: boolean
+    testedAt?: string | null
   }
   onScoresUpdated?: (newScores: any) => void
 }
@@ -42,14 +43,32 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
   const router = useRouter()
   const [showEditModal, setShowEditModal] = useState<boolean>(false)
 
-  const totalScore = userScores.totalScore || (userScores.listeningScore || 0) + (userScores.readingScore || 0) || 450
-  const listeningScore = userScores.listeningScore || 240
-  const readingScore = userScores.readingScore || 210
+  const rawTotal = userScores.totalScore || 0
+  const listeningScore = userScores.listeningScore || 0
+  const readingScore = userScores.readingScore || 0
+  const speakingScore = userScores.speakingScore || 0
+  const writingScore = userScores.writingScore || 0
   const targetScore = userScores.targetScore || 650
   const is4Skills = userScores.skillsType === '4SKILLS'
   const isManuallyEdited = userScores.isManuallyEdited ?? false
+  const hasTested = Boolean(
+    rawTotal > 0 ||
+    listeningScore > 0 ||
+    readingScore > 0 ||
+    speakingScore > 0 ||
+    writingScore > 0 ||
+    userScores.testedAt
+  )
+  const totalScore = hasTested ? (rawTotal || listeningScore + readingScore) : 0
 
   const getLevelInfo = (score: number) => {
+    if (!hasTested || score === 0) {
+      return {
+        name: 'Chưa xác định cấp độ',
+        desc: 'Hãy làm bài kiểm tra đầu vào hoặc tự điền điểm để nhận lộ trình phù hợp.',
+        badgeColor: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+      }
+    }
     if (score < 450) {
       return {
         name: 'Mất Gốc / Nền Tảng (Beginner)',
@@ -94,7 +113,12 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                     Điểm Đánh Giá Năng Lực Đầu Vào
                   </h3>
-                  {isManuallyEdited ? (
+                  {!hasTested ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      <AlertCircle className="w-3 h-3 text-slate-400" />
+                      <span>Chưa có điểm kiểm tra</span>
+                    </span>
+                  ) : isManuallyEdited ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                       <AlertCircle className="w-3 h-3 text-amber-500" />
                       <span>Học viên tự cập nhật</span>
@@ -131,7 +155,13 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                 Tổng điểm hiện tại:
               </span>
               <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
-                {totalScore} <span className="text-xs font-normal text-slate-400">/ 990</span>
+                {hasTested ? (
+                  <>
+                    {totalScore} <span className="text-xs font-normal text-slate-400">/ 990</span>
+                  </>
+                ) : (
+                  <span className="text-base font-bold text-slate-400">Chưa thiết lập</span>
+                )}
               </div>
               <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
                 {level.name}
@@ -147,7 +177,13 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                 {targetScore} <span className="text-xs font-normal text-slate-400">/ 990</span>
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                Cần tích lũy thêm: <strong>{Math.max(0, targetScore - totalScore)} điểm</strong>
+                {hasTested ? (
+                  <>
+                    Cần tích lũy thêm: <strong>{Math.max(0, targetScore - totalScore)} điểm</strong>
+                  </>
+                ) : (
+                  <span>Mục tiêu đầu ra dự kiến</span>
+                )}
               </div>
             </div>
 
@@ -176,7 +212,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                   <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Listening</span>
                 </div>
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {listeningScore} / 495
+                  {hasTested ? `${listeningScore} / 495` : 'Chưa có'}
                 </span>
               </div>
 
@@ -186,7 +222,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                   <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Reading</span>
                 </div>
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {readingScore} / 495
+                  {hasTested ? `${readingScore} / 495` : 'Chưa có'}
                 </span>
               </div>
 
@@ -198,7 +234,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                       <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Speaking</span>
                     </div>
                     <span className="text-xs font-bold text-teal-700 dark:text-teal-300">
-                      {userScores.speakingScore || 110} / 200
+                      {hasTested ? `${speakingScore} / 200` : 'Chưa có'}
                     </span>
                   </div>
 
@@ -208,7 +244,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                       <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Writing</span>
                     </div>
                     <span className="text-xs font-bold text-teal-700 dark:text-teal-300">
-                      {userScores.writingScore || 110} / 200
+                      {hasTested ? `${writingScore} / 200` : 'Chưa có'}
                     </span>
                   </div>
                 </>

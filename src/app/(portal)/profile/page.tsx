@@ -86,15 +86,16 @@ export default function ProfileAppPage() {
   const [leaderboard, setLeaderboard] = useState<any[]>([])
 
   const [userScores, setUserScores] = useState({
-    totalScore: 540,
-    listeningScore: 290,
-    readingScore: 250,
-    speakingScore: 120,
-    writingScore: 130,
-    targetScore: 750,
+    totalScore: 0,
+    listeningScore: 0,
+    readingScore: 0,
+    speakingScore: 0,
+    writingScore: 0,
+    targetScore: 650,
     skillsType: '2SKILLS',
     isManuallyEdited: false,
-    testedAt: new Date().toISOString(),
+    hasTested: false,
+    testedAt: null as string | null,
   })
 
   useEffect(() => {
@@ -125,16 +126,24 @@ export default function ProfileAppPage() {
         stats: cachedStats ? { ...prev.stats, ...cachedStats } : prev.stats,
       }))
 
+      const sTotal = localScore?.placement_test_score ?? auth?.placement_test_score ?? auth?.current_estimated_score ?? 0
+      const sList = localScore?.placement_listening_score ?? auth?.placement_listening_score ?? 0
+      const sRead = localScore?.placement_reading_score ?? auth?.placement_reading_score ?? 0
+      const sSpk = localScore?.placement_speaking_score ?? auth?.placement_speaking_score ?? 0
+      const sWrt = localScore?.placement_writing_score ?? auth?.placement_writing_score ?? 0
+      const hasScores = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
+
       setUserScores({
-        totalScore: localScore?.placement_test_score || auth?.placement_test_score || auth?.current_estimated_score || 540,
-        listeningScore: localScore?.placement_listening_score || auth?.placement_listening_score || 290,
-        readingScore: localScore?.placement_reading_score || auth?.placement_reading_score || 250,
-        speakingScore: localScore?.placement_speaking_score || auth?.placement_speaking_score || 120,
-        writingScore: localScore?.placement_writing_score || auth?.placement_writing_score || 130,
-        targetScore: localScore?.target_toeic_score || auth?.target_toeic_score || 750,
+        totalScore: sTotal,
+        listeningScore: sList,
+        readingScore: sRead,
+        speakingScore: sSpk,
+        writingScore: sWrt,
+        targetScore: localScore?.target_toeic_score || auth?.target_toeic_score || 650,
         skillsType: localScore?.placement_skills_type || auth?.placement_skills_type || '2SKILLS',
         isManuallyEdited: localScore?.is_score_manually_edited ?? auth?.is_score_manually_edited ?? false,
-        testedAt: localScore?.placement_tested_at || auth?.placement_tested_at || new Date().toISOString(),
+        hasTested: hasScores,
+        testedAt: localScore?.placement_tested_at || auth?.placement_tested_at || null,
       })
     }
   }, [authUser])
@@ -179,6 +188,29 @@ export default function ProfileAppPage() {
                 stats: updatedStats,
               }
             })
+
+            if (profileData && (profileData.placement_test_score !== undefined || profileData.current_estimated_score !== undefined)) {
+              const sTotal = profileData.placement_test_score ?? profileData.current_estimated_score ?? 0
+              const sList = profileData.placement_listening_score ?? 0
+              const sRead = profileData.placement_reading_score ?? 0
+              const sSpk = profileData.placement_speaking_score ?? 0
+              const sWrt = profileData.placement_writing_score ?? 0
+              const sHas = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
+
+              setUserScores((prev) => ({
+                ...prev,
+                totalScore: sTotal,
+                listeningScore: sList,
+                readingScore: sRead,
+                speakingScore: sSpk,
+                writingScore: sWrt,
+                targetScore: profileData.target_toeic_score || prev.targetScore || 650,
+                skillsType: profileData.placement_skills_type || prev.skillsType || '2SKILLS',
+                isManuallyEdited: profileData.is_score_manually_edited ?? prev.isManuallyEdited ?? false,
+                hasTested: sHas,
+                testedAt: profileData.placement_tested_at || prev.testedAt,
+              }))
+            }
           }
           if (Array.isArray(lb)) {
             setLeaderboard(lb)
