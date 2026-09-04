@@ -124,6 +124,10 @@ export interface Chapter {
   test_audio_url?: string
   challenge_audio_url?: string
   audio_url?: string
+  speaking_prompt?: string
+  speaking_file_url?: string
+  writing_prompt?: string
+  writing_file_url?: string
   status: ChapterStatus
 }
 
@@ -229,6 +233,10 @@ export interface Course {
   announcements?: CourseAnnouncement[]
   final_test_questions?: Array<Record<string, unknown>>
   final_test_audio_url?: string
+  final_test_speaking_prompt?: string
+  final_test_speaking_file_url?: string
+  final_test_writing_prompt?: string
+  final_test_writing_file_url?: string
   preTest?: {
     status: LessonStatus
     result?: TestResult
