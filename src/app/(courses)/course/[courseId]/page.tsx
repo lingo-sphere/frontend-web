@@ -390,6 +390,8 @@ export default function CourseDetailPage() {
                 speaking_file_url: String(mod.speaking_file_url || ''),
                 writing_prompt: String(mod.writing_prompt || ''),
                 writing_file_url: String(mod.writing_file_url || ''),
+                challenge_duration_minutes: Number(mod.challenge_duration_minutes || mod.post_mini_duration_minutes || mod.duration_minutes) || 15,
+                duration_minutes: Number(mod.challenge_duration_minutes || mod.post_mini_duration_minutes || mod.duration_minutes) || 15,
                 challengeTest:
                   unifiedChallengeQuestions.length > 0 || Boolean(mod.speaking_prompt || mod.speaking_file_url || mod.writing_prompt || mod.writing_file_url)
                     ? {
@@ -401,6 +403,8 @@ export default function CourseDetailPage() {
                           typeof mod.challenge_passing_score === 'number'
                             ? mod.challenge_passing_score
                             : 80,
+                        durationMinutes:
+                          Number(mod.challenge_duration_minutes || mod.post_mini_duration_minutes || mod.duration_minutes) || 15,
                         status: 'available',
                       }
                     : undefined,
@@ -631,6 +635,7 @@ export default function CourseDetailPage() {
             qna: mappedQnA,
             notes: mappedNotes,
             final_test_questions: (courseObj.final_test_questions as Array<Record<string, unknown>>) || [],
+            final_test_duration_minutes: Number((courseObj as any).final_test_duration_minutes || (courseObj as any).final_test_duration || (courseObj as any).duration_minutes) || 60,
             final_test_audio_url: String(courseObj.final_test_audio_url || ''),
             final_test_speaking_prompt: String((courseObj as any).final_test_speaking_prompt || ''),
             final_test_speaking_file_url: String((courseObj as any).final_test_speaking_file_url || ''),
@@ -1392,6 +1397,58 @@ export default function CourseDetailPage() {
     return <CourseLoadingState onBack={handleBack} />
   }
 
+  // Khi học viên làm bài kiểm tra, mở toàn màn hình trang thi chuyên dụng thay vì modal popup
+  if (activeTestModal.isOpen) {
+    const durationMins =
+      activeTestModal.testType === 'final-test'
+        ? Number((course as any).final_test_duration_minutes || (course as any).duration_minutes || 60)
+        : Number(
+            activeTestModal.chapter?.challenge_duration_minutes ||
+              (activeTestModal.chapter as any)?.challengeTest?.durationMinutes ||
+              (activeTestModal.chapter as any)?.duration_minutes ||
+              15
+          )
+
+    return (
+      <CourseTestRunnerModal
+        isOpen={activeTestModal.isOpen}
+        courseId={String(course.id)}
+        courseTitle={course.title}
+        chapter={activeTestModal.chapter}
+        testType={activeTestModal.testType}
+        durationMinutes={durationMins}
+        finalTestQuestions={course.final_test_questions as any}
+        finalTestAudioUrl={course.final_test_audio_url}
+        speakingPrompt={
+          activeTestModal.testType === 'final-test'
+            ? ((course as any).final_test_speaking_prompt || activeTestModal.chapter?.speaking_prompt)
+            : activeTestModal.chapter?.speaking_prompt
+        }
+        speakingFileUrl={
+          activeTestModal.testType === 'final-test'
+            ? ((course as any).final_test_speaking_file_url || activeTestModal.chapter?.speaking_file_url)
+            : activeTestModal.chapter?.speaking_file_url
+        }
+        writingPrompt={
+          activeTestModal.testType === 'final-test'
+            ? ((course as any).final_test_writing_prompt || activeTestModal.chapter?.writing_prompt)
+            : activeTestModal.chapter?.writing_prompt
+        }
+        writingFileUrl={
+          activeTestModal.testType === 'final-test'
+            ? ((course as any).final_test_writing_file_url || activeTestModal.chapter?.writing_file_url)
+            : activeTestModal.chapter?.writing_file_url
+        }
+        category={course.category}
+        skills={course.skills}
+        highestScore={currentTestModalData.highestScore}
+        previousAttempts={currentTestModalData.attempts}
+        onClose={() => setActiveTestModal({ isOpen: false, chapter: null, testType: 'post-mini' })}
+        onComplete={handleTestComplete}
+      />
+    )
+  }
+
   const totalLessons = course.chapters.reduce((acc, ch) => acc + ch.lessons.length, 0)
   const completedLessons = course.chapters.reduce(
     (acc, ch) => acc + ch.lessons.filter((l) => l.status === 'completed').length,
@@ -1692,43 +1749,7 @@ export default function CourseDetailPage() {
         />
       )}
 
-      {/* Chapter & Final Test Runner Modal */}
-      {activeTestModal.isOpen && (
-        <CourseTestRunnerModal
-          isOpen={activeTestModal.isOpen}
-          courseId={String(course.id)}
-          chapter={activeTestModal.chapter}
-          testType={activeTestModal.testType}
-          finalTestQuestions={course.final_test_questions as any}
-          finalTestAudioUrl={course.final_test_audio_url}
-          speakingPrompt={
-            activeTestModal.testType === 'final-test'
-              ? ((course as any).final_test_speaking_prompt || activeTestModal.chapter?.speaking_prompt)
-              : activeTestModal.chapter?.speaking_prompt
-          }
-          speakingFileUrl={
-            activeTestModal.testType === 'final-test'
-              ? ((course as any).final_test_speaking_file_url || activeTestModal.chapter?.speaking_file_url)
-              : activeTestModal.chapter?.speaking_file_url
-          }
-          writingPrompt={
-            activeTestModal.testType === 'final-test'
-              ? ((course as any).final_test_writing_prompt || activeTestModal.chapter?.writing_prompt)
-              : activeTestModal.chapter?.writing_prompt
-          }
-          writingFileUrl={
-            activeTestModal.testType === 'final-test'
-              ? ((course as any).final_test_writing_file_url || activeTestModal.chapter?.writing_file_url)
-              : activeTestModal.chapter?.writing_file_url
-          }
-          category={course.category}
-          skills={course.skills}
-          highestScore={currentTestModalData.highestScore}
-          previousAttempts={currentTestModalData.attempts}
-          onClose={() => setActiveTestModal({ isOpen: false, chapter: null, testType: 'post-mini' })}
-          onComplete={handleTestComplete}
-        />
-      )}
+
 
       {/* Premium Upgrade Modal */}
       {showUpgradeModal && (

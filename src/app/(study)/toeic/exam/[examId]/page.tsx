@@ -21,6 +21,7 @@ import { ToeicExamResult, type ExamResultMetrics } from '@/components/toeic/toei
 import { ToeicQuestionCard } from '@/components/toeic/toeic.question.card'
 import { ToeicQuestionNav } from '@/components/toeic/toeic.question.nav'
 import { Analytics } from '@/lib/posthog'
+import { toast } from '@/store/toast-store'
 
 interface ExamState {
   mode: PracticeMode
@@ -352,6 +353,7 @@ export default function ToeicExamAppPage() {
       setState((prev) => {
         if (prev.timeRemaining <= 1) {
           clearInterval(timerRef.current as NodeJS.Timeout)
+          toast.warning('Hết thời gian làm bài! Hệ thống đã tự động thu bài và chấm điểm các câu bạn đã làm.')
           return { ...prev, timeRemaining: 0, submitted: true, showAnswer: true }
         }
         return { ...prev, timeRemaining: prev.timeRemaining - 1 }
@@ -369,7 +371,9 @@ export default function ToeicExamAppPage() {
 
     let time = 0
     if (timed) {
-      if (mode === 'FULL') time = 120 * 60
+      if (typeof examData?.duration_minutes === 'number' && examData.duration_minutes > 0) {
+        time = examData.duration_minutes * 60
+      } else if (mode === 'FULL') time = 120 * 60
       else if (mode === 'LISTENING') time = 45 * 60
       else if (mode === 'READING') time = 75 * 60
       else {

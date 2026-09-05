@@ -104,6 +104,7 @@ export interface ChallengeTest {
   title: string
   questionsCount: number
   passingScore: number
+  durationMinutes?: number
   status: LessonStatus
   result?: TestResult
 }
@@ -118,6 +119,8 @@ export interface Chapter {
   exercise?: ChapterExercise
   postMiniTest?: PostMiniTest
   challengeTest?: ChallengeTest
+  challenge_duration_minutes?: number
+  duration_minutes?: number
   challenge_questions?: Array<Record<string, unknown>>
   post_mini_questions?: Array<Record<string, unknown>>
   test_questions?: Array<Record<string, unknown>>
@@ -236,6 +239,7 @@ export interface Course {
   reviews?: CourseReviewItem[]
   announcements?: CourseAnnouncement[]
   final_test_questions?: Array<Record<string, unknown>>
+  final_test_duration_minutes?: number
   final_test_audio_url?: string
   final_test_speaking_prompt?: string
   final_test_speaking_file_url?: string
