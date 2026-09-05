@@ -1,27 +1,13 @@
 'use client'
 
 /**
- * @file CourseCheckoutModal.tsx
+ * @file course.checkout.modal.tsx
  * @description Modal thanh toán chuyển khoản ngân hàng qua VietQR kèm xác thực tự động cho Khóa học LingoSphere
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  X,
-  CheckCircle2,
-  Copy,
-  Clock,
-  QrCode,
-  FlaskConical,
-  AlertCircle,
-  RefreshCw,
-  Sparkles,
-  BookOpen,
-  ShieldCheck,
-  ArrowRight,
-  GraduationCap,
-} from 'lucide-react'
+import { X, CheckCircle2, AlertCircle, RefreshCw, GraduationCap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/auth-store'
 import { useCartStore } from '@/store/cart-store'
@@ -29,6 +15,9 @@ import { useEnrollmentStore } from '@/store/enrollment-store'
 import { courseService } from '@/services/course.service'
 import { subscriptionService, type PaymentOrderResponse } from '@/services/subscription.service'
 import { toast } from '@/store/toast-store'
+import { CheckoutOrderSummary } from './checkout/checkout.order.summary'
+import { CheckoutQrCard } from './checkout/checkout.qr.card'
+import { CheckoutSuccessView } from './checkout/checkout.success.view'
 
 export interface CheckoutCourseItem {
   id: string
@@ -57,9 +46,8 @@ export function CourseCheckoutModal({
   const [step, setStep] = useState<'PAYMENT_QR' | 'SUCCESS'>('PAYMENT_QR')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
-  const [isSimulating, setIsSimulating] = useState(false)
   const [order, setOrder] = useState<PaymentOrderResponse | null>(null)
-  const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [, setCopiedField] = useState<string | null>(null)
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(900)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -69,7 +57,8 @@ export function CourseCheckoutModal({
   orderRef.current = order
 
   const totalAmount = courses.reduce((acc, c) => acc + (c.price || 0), 0)
-  const formattedTotal = totalAmount > 0 ? `₫${totalAmount.toLocaleString('vi-VN')}` : 'Miễn phí'
+  const formattedTotal =
+    totalAmount > 0 ? `₫${totalAmount.toLocaleString('vi-VN')}` : 'Miễn phí'
 
   const stopAllTimers = useCallback(() => {
     if (pollingRef.current) {
@@ -97,17 +86,16 @@ export function CourseCheckoutModal({
     setStep('SUCCESS')
 
     try {
-
       await Promise.all(courses.map((c) => courseService.enrollCourse(c.id).catch(() => null)))
-
       courses.forEach((c) => useEnrollmentStore.getState().addEnrolledCourse(c.id))
       await useEnrollmentStore.getState().fetchMyEnrollments()
-
       await useCartStore.getState().clearCart().catch(() => null)
     } catch {}
 
     toast.success(
-      isVi ? 'Đã kích hoạt khóa học thành công! Chúc bạn học tốt!' : 'Course enrolled successfully!',
+      isVi
+        ? 'Đã kích hoạt khóa học thành công! Chúc bạn học tốt!'
+        : 'Course enrolled successfully!',
       isVi ? 'Thanh toán thành công' : 'Payment Success'
     )
 
@@ -125,7 +113,8 @@ export function CourseCheckoutModal({
 
     try {
       const res = await subscriptionService.getPaymentOrderStatus(currentOrder.order_code)
-      const status = res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
+      const status =
+        res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
       if (status === 'PAID') {
         handlePaymentSuccess()
         return true
@@ -177,8 +166,8 @@ export function CourseCheckoutModal({
             err instanceof Error
               ? err.message
               : isVi
-              ? 'Có lỗi xảy ra khi tạo đơn hàng'
-              : 'Failed to create payment order'
+                ? 'Có lỗi xảy ra khi tạo đơn hàng'
+                : 'Failed to create payment order'
           setErrorMessage(msg)
         }
       } finally {
@@ -194,7 +183,16 @@ export function CourseCheckoutModal({
       isMounted = false
       stopAllTimers()
     }
-  }, [open, courses.length, totalAmount, isAuthenticated, user, isVi, onOpenChange, stopAllTimers])
+  }, [
+    open,
+    courses.length,
+    totalAmount,
+    isAuthenticated,
+    user,
+    isVi,
+    onOpenChange,
+    stopAllTimers,
+  ])
 
   useEffect(() => {
     if (open && step === 'PAYMENT_QR' && order?.order_code) {
@@ -225,7 +223,8 @@ export function CourseCheckoutModal({
     setIsCheckingStatus(true)
     try {
       const res = await subscriptionService.getPaymentOrderStatus(order.order_code)
-      const status = res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
+      const status =
+        res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
       if (status === 'PAID') {
         handlePaymentSuccess()
       } else {
@@ -238,7 +237,9 @@ export function CourseCheckoutModal({
       }
     } catch {
       toast.error(
-        isVi ? 'Không thể kiểm tra trạng thái lúc này. Vui lòng thử lại.' : 'Failed to check status. Please try again.',
+        isVi
+          ? 'Không thể kiểm tra trạng thái lúc này. Vui lòng thử lại.'
+          : 'Failed to check status. Please try again.',
         isVi ? 'Lỗi kết nối' : 'Connection Error'
       )
     } finally {
@@ -252,14 +253,13 @@ export function CourseCheckoutModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      
       <div className="absolute inset-0 bg-black/65 backdrop-blur-md transition-opacity" />
 
       <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-200">
         <div className="overflow-hidden rounded-3xl bg-surface shadow-2xl border border-border">
-          
           <div className="relative px-6 pt-6 pb-4 border-b border-border/60 bg-surface">
             <button
+              type="button"
               onClick={() => {
                 stopAllTimers()
                 onOpenChange(false)
@@ -279,33 +279,16 @@ export function CourseCheckoutModal({
                   {isVi ? 'Thanh toán Khóa học' : 'Course Checkout'}
                 </h2>
                 <p className="text-xs text-text-secondary mt-0.5 leading-relaxed truncate">
-                  {isVi ? 'Quét mã VietQR chuyển khoản tự động xác thực' : 'Scan VietQR for instant activation'}
+                  {isVi
+                    ? 'Quét mã VietQR chuyển khoản tự động xác thực'
+                    : 'Scan VietQR for instant activation'}
                 </p>
               </div>
             </div>
           </div>
 
-          
           <div className="p-5 sm:p-6 max-h-[82vh] overflow-y-auto space-y-5">
-            {step === 'SUCCESS' && (
-              <div className="flex flex-col items-center justify-center py-8 text-center animate-in zoom-in-90 duration-300">
-                <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 ring-8 ring-emerald-500/5">
-                  <CheckCircle2 className="h-10 w-10 text-emerald-600 animate-bounce" />
-                </div>
-                <h3 className="text-xl font-extrabold text-text-primary">
-                  {isVi ? 'THANH TOÁN THÀNH CÔNG!' : 'CHECKOUT SUCCESSFUL!'}
-                </h3>
-                <p className="mt-2 text-xs sm:text-sm text-text-secondary max-w-xs leading-relaxed">
-                  {isVi
-                    ? 'Hệ thống đã xác nhận chuyển khoản và mở khóa toàn bộ bài giảng cho bạn!'
-                    : 'Your payment was verified. Courses are now unlocked!'}
-                </p>
-                <div className="mt-4 flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20">
-                  <Sparkles size={14} />
-                  <span>{isVi ? 'Đang chuyển đến khóa học...' : 'Redirecting...'}</span>
-                </div>
-              </div>
-            )}
+            {step === 'SUCCESS' && <CheckoutSuccessView isVi={isVi} />}
 
             {step === 'PAYMENT_QR' && (
               <>
@@ -316,36 +299,12 @@ export function CourseCheckoutModal({
                   </div>
                 )}
 
-                
-                <div className="rounded-2xl border border-border bg-surface-subtle/50 p-3.5 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs font-bold text-text-secondary uppercase tracking-wider">
-                    <span>{isVi ? 'Khóa học đăng ký' : 'Selected Courses'}</span>
-                    <span className="text-primary">{courses.length} {isVi ? 'khóa' : 'items'}</span>
-                  </div>
+                <CheckoutOrderSummary
+                  courses={courses}
+                  formattedTotal={formattedTotal}
+                  isVi={isVi}
+                />
 
-                  <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
-                    {courses.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between gap-3 text-xs">
-                        <span className="font-semibold text-text-primary truncate flex-1 flex items-center gap-1.5">
-                          <BookOpen size={12} className="text-primary shrink-0" />
-                          <span className="truncate">{c.title}</span>
-                        </span>
-                        <span className="font-bold text-text-secondary shrink-0">
-                          ₫{c.price.toLocaleString('vi-VN')}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-border pt-2 flex items-center justify-between">
-                    <span className="text-xs font-bold text-text-primary">{isVi ? 'Tổng thanh toán:' : 'Total:'}</span>
-                    <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400">
-                      {formattedTotal}
-                    </span>
-                  </div>
-                </div>
-
-                
                 {isSubmitting || !order ? (
                   <div className="flex flex-col items-center justify-center py-12 space-y-3">
                     <RefreshCw className="h-8 w-8 text-primary animate-spin" />
@@ -355,115 +314,15 @@ export function CourseCheckoutModal({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    
-                    <div className="flex items-center justify-between rounded-xl bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 text-xs text-amber-700 dark:text-amber-400">
-                      <div className="flex items-center gap-2 font-medium">
-                        <Clock size={14} className="animate-pulse text-amber-600 dark:text-amber-400" />
-                        <span>{isVi ? 'Mã QR hết hạn sau:' : 'QR expires in:'}</span>
-                      </div>
-                      <span className="font-mono font-extrabold text-sm tracking-wider">
-                        {formattedTime}
-                      </span>
-                    </div>
+                    <CheckoutQrCard
+                      order={order}
+                      formattedTime={formattedTime}
+                      formattedTotal={formattedTotal}
+                      totalAmount={totalAmount}
+                      isVi={isVi}
+                      onCopy={handleCopy}
+                    />
 
-                    
-                    <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-white p-4 shadow-inner">
-                      <div className="relative aspect-square w-52 sm:w-56 overflow-hidden rounded-xl bg-white p-2">
-                        <img
-                          src={order.qr_url}
-                          alt="VietQR Payment"
-                          className="h-full w-full object-contain"
-                        />
-                      </div>
-                      <div className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
-                        <QrCode size={13} />
-                        <span>{isVi ? 'Mở App Ngân hàng bất kỳ để quét mã' : 'Open any Banking App to scan'}</span>
-                      </div>
-                    </div>
-
-                    
-                    <div className="rounded-2xl border border-border bg-surface divide-y divide-border text-xs">
-                      
-                      <div className="flex items-center justify-between p-3">
-                        <span className="text-text-secondary">{isVi ? 'Ngân hàng' : 'Bank'}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-text-primary">{order.bank_info?.bank_name || 'MB Bank'}</span>
-                          <button
-                            onClick={() => handleCopy(order.bank_info?.bank_name || 'MB Bank', 'bank')}
-                            className="p-1 text-text-tertiary hover:text-primary transition-colors cursor-pointer"
-                            title="Sao chép"
-                          >
-                            <Copy size={13} />
-                          </button>
-                        </div>
-                      </div>
-
-                      
-                      <div className="flex items-center justify-between p-3 bg-surface-subtle/30">
-                        <span className="text-text-secondary">{isVi ? 'Số tài khoản' : 'Account number'}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-extrabold text-primary text-sm">
-                            {order.bank_info?.account_number || '0987654321'}
-                          </span>
-                          <button
-                            onClick={() => handleCopy(order.bank_info?.account_number || '0987654321', 'acc')}
-                            className="p-1 text-primary hover:scale-110 transition-transform cursor-pointer"
-                            title="Sao chép"
-                          >
-                            <Copy size={13} />
-                          </button>
-                        </div>
-                      </div>
-
-                      
-                      <div className="flex items-center justify-between p-3">
-                        <span className="text-text-secondary">{isVi ? 'Chủ tài khoản' : 'Account name'}</span>
-                        <span className="font-bold text-text-primary uppercase">
-                          {order.bank_info?.account_name || 'LINGOSPHERE EDUCATION'}
-                        </span>
-                      </div>
-
-                      
-                      <div className="flex items-center justify-between p-3 bg-amber-500/5">
-                        <div>
-                          <span className="text-text-secondary block">{isVi ? 'Nội dung chuyển khoản' : 'Transfer Memo'}</span>
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                            {isVi ? '*Bắt buộc giữ nguyên' : '*Must be exact'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-extrabold text-amber-600 dark:text-amber-400 text-sm tracking-wide bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                            {order.order_code}
-                          </span>
-                          <button
-                            onClick={() => handleCopy(order.order_code, 'memo')}
-                            className="p-1 text-amber-600 hover:scale-110 transition-transform cursor-pointer"
-                            title="Sao chép nội dung"
-                          >
-                            <Copy size={13} />
-                          </button>
-                        </div>
-                      </div>
-
-                      
-                      <div className="flex items-center justify-between p-3">
-                        <span className="text-text-secondary">{isVi ? 'Số tiền' : 'Amount'}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">
-                            {formattedTotal}
-                          </span>
-                          <button
-                            onClick={() => handleCopy(String(totalAmount), 'amount')}
-                            className="p-1 text-text-tertiary hover:text-emerald-600 transition-colors cursor-pointer"
-                            title="Sao chép số tiền"
-                          >
-                            <Copy size={13} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    
                     <div className="pt-2">
                       <Button
                         onClick={handleManualCheck}
@@ -473,12 +332,20 @@ export function CourseCheckoutModal({
                         {isCheckingStatus ? (
                           <>
                             <RefreshCw size={15} className="animate-spin" />
-                            <span>{isVi ? 'Đang đối soát chuyển khoản...' : 'Checking with Bank...'}</span>
+                            <span>
+                              {isVi
+                                ? 'Đang đối soát chuyển khoản...'
+                                : 'Checking with Bank...'}
+                            </span>
                           </>
                         ) : (
                           <>
                             <CheckCircle2 size={15} />
-                            <span>{isVi ? 'Tôi Đã Chuyển Khoản - Kiểm Tra Ngay' : 'I Have Transferred - Verify Payment'}</span>
+                            <span>
+                              {isVi
+                                ? 'Tôi Đã Chuyển Khoản - Kiểm Tra Ngay'
+                                : 'I Have Transferred - Verify Payment'}
+                            </span>
                           </>
                         )}
                       </Button>
