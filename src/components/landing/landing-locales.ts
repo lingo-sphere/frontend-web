@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from "react"
 
 export type LandingLang = "vi" | "en"
+export type LandingLocale = typeof landingLocales.vi
 
 export const landingLocales = {
   vi: {

@@ -2,14 +2,12 @@
 
 /**
  * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/toeic/exam/[examId]
+ * @description Trang làm bài thi TOEIC trực tuyến (TOEIC Exam Workspace)
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from '@/lib/navigation'
-import { ArrowLeft, Clock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { courseService } from '@/services/course.service'
 import { examService, type BackendToeicExam } from '@/services/exam.service'
 import { userService } from '@/services/user.service'
@@ -20,6 +18,8 @@ import { ToeicModeSelector, type PracticeMode } from '@/components/toeic/toeic.m
 import { ToeicExamResult, type ExamResultMetrics } from '@/components/toeic/toeic.exam.result'
 import { ToeicQuestionCard } from '@/components/toeic/toeic.question.card'
 import { ToeicQuestionNav } from '@/components/toeic/toeic.question.nav'
+import { ToeicExamHeader } from '@/components/toeic/toeic.exam.header'
+import { PART_TIMINGS, PART_TIPS } from '@/components/toeic/toeic.constants'
 import { Analytics } from '@/lib/posthog'
 import { toast } from '@/store/toast-store'
 
@@ -34,26 +34,6 @@ interface ExamState {
   submitted: boolean
   showAnswer: boolean
   timedMode: boolean
-}
-
-const PART_TIMINGS: Record<number, { questions: number; timeMinutes: number; description: string }> = {
-  1: { questions: 6, timeMinutes: 3, description: 'Phần nghe mô tả tranh (Part 1)' },
-  2: { questions: 25, timeMinutes: 9, description: 'Phần nghe câu hỏi - đáp (Part 2)' },
-  3: { questions: 39, timeMinutes: 17, description: 'Phần nghe đoạn hội thoại (Part 3)' },
-  4: { questions: 30, timeMinutes: 14, description: 'Phần nghe bài nói ngắn (Part 4)' },
-  5: { questions: 30, timeMinutes: 12, description: 'Hoàn thành câu ngữ pháp & từ vựng (Part 5)' },
-  6: { questions: 16, timeMinutes: 8, description: 'Hoàn thành đoạn văn (Part 6)' },
-  7: { questions: 54, timeMinutes: 55, description: 'Đọc hiểu đoạn đơn & đoạn kép (Part 7)' },
-}
-
-const PART_TIPS: Record<number, string> = {
-  1: 'Quan sát kỹ hành động của người, đồ vật và bối cảnh xung quanh trước khi nghe.',
-  2: 'Tập trung bắt từ để hỏi (Who, Where, When, Why, How) và tránh bẫy từ đồng âm.',
-  3: 'Đọc lướt 3 câu hỏi trước khi audio phát để định vị sẵn thông tin cần nghe.',
-  4: 'Xác định nhanh bối cảnh (sân bay, thông báo công ty, bản tin thời tiết).',
-  5: 'Xác định từ loại trước và sau chỗ trống trước khi xét đến nghĩa của từ.',
-  6: 'Đọc lướt cả đoạn văn để nắm mạch nội dung trước khi chọn câu điền phù hợp.',
-  7: 'Đọc câu hỏi trước -> Tìm từ khóa (keywords) -> Quét đoạn văn để tìm đáp án.',
 }
 
 export default function ToeicExamAppPage() {
@@ -123,7 +103,6 @@ export default function ToeicExamAppPage() {
 
   const generateQuestionsForParts = useCallback((parts: number[]): ToeicQuestion[] => {
     if (!examData || !examData.parts) {
-
       const qs: ToeicQuestion[] = []
       let qIndex = 1
       parts.forEach((partNum) => {
@@ -172,8 +151,8 @@ export default function ToeicExamAppPage() {
             explanationEn: q.explanation,
             imageMediaId: q.image_url,
             audioMediaId: q.audio_url,
-            hasImage: !!q.image_url,
-            hasAudio: !!q.audio_url,
+            hasImage: Boolean(q.image_url),
+            hasAudio: Boolean(q.audio_url),
             difficultyLevel: 'MEDIUM',
             skillType: p.part_number <= 4 ? 'LISTENING' : 'READING',
             hasPassage: p.part_number >= 6,
@@ -264,16 +243,7 @@ export default function ToeicExamAppPage() {
       mode: state.timedMode ? 'timed' : 'practice',
     })
 
-    const isDiagnostic = Boolean(
-      examData?.exam_type === 'DIAGNOSTIC_TEST' ||
-      examId?.includes('placement') ||
-      examData?.is_system_placement
-    )
-
-    const is4Skills = Boolean(
-      examId?.includes('4skills') ||
-      examData?.skills_enabled === 'ALL'
-    )
+    const is4Skills = Boolean(examId?.includes('4skills') || examData?.skills_enabled === 'ALL')
 
     const placementData = {
       placement_test_score: res.estimatedTotal,
@@ -424,12 +394,6 @@ export default function ToeicExamAppPage() {
     setState((prev) => ({ ...prev, submitted: true, showAnswer: true }))
   }
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-
   if (showModeSelector) {
     return (
       <ToeicModeSelector
@@ -474,37 +438,16 @@ export default function ToeicExamAppPage() {
 
   return (
     <div className="min-h-screen bg-surface-secondary">
-      <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-md shadow-xs">
-        <div className="w-full flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setShowModeSelector(true)}>
-              <ArrowLeft size={20} />
-            </Button>
-            <div>
-              <h1 className="text-[14px] font-semibold text-text-primary">{examData?.title || 'TOEIC Exam'}</h1>
-              <p className="text-[11px] text-text-tertiary">
-                {isVietnamese ? 'Câu' : 'Question'} {state.currentQuestionIndex + 1} / {allQuestions.length}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {state.timedMode && state.timeRemaining > 0 && (
-              <div
-                className={`flex items-center gap-2 rounded-lg px-3 py-1.5 ${
-                  state.timeRemaining < 300 ? 'bg-red-100 text-red-600' : 'bg-surface-subtle'
-                }`}
-              >
-                <Clock size={16} />
-                <span className="font-mono text-[14px] font-semibold">{formatTime(state.timeRemaining)}</span>
-              </div>
-            )}
-            <Button size="sm" className="gap-1 bg-primary hover:bg-primary-hover" onClick={handleSubmit}>
-              {isVietnamese ? 'Nộp bài' : 'Submit'}
-            </Button>
-          </div>
-        </div>
-      </header>
+      <ToeicExamHeader
+        title={examData?.title || 'TOEIC Exam'}
+        currentQuestionIndex={state.currentQuestionIndex}
+        totalQuestions={allQuestions.length}
+        timedMode={state.timedMode}
+        timeRemaining={state.timeRemaining}
+        isVietnamese={isVietnamese}
+        onBackToModeSelect={() => setShowModeSelector(true)}
+        onSubmit={handleSubmit}
+      />
 
       <div className="w-full grid gap-6 p-4 sm:p-6 lg:p-8 lg:grid-cols-[1fr_320px]">
         {currentQuestion && (

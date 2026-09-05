@@ -32,8 +32,8 @@ interface PlayerControlsBarProps {
   isMuted: boolean
   playbackSpeed: number
   selectedQuality: string
-  autoResolvedQuality: '1080p' | '720p' | '360p'
-  effectiveQualityKey: string
+  autoResolvedQuality?: '1080p' | '720p' | '360p'
+  effectiveQualityKey?: string
   showSettingsMenu: boolean
   isTheater: boolean
   isFullscreen: boolean
@@ -42,8 +42,10 @@ interface PlayerControlsBarProps {
   hasNextLesson: boolean
   hoverTime: number | null
   hoverPosition: number
+  isTrial?: boolean
   progressBarRef: RefObject<HTMLDivElement | null>
-  onTimelineMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void
+  onTimelineMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void
+  onTimelineClick?: (e: React.MouseEvent<HTMLDivElement>) => void
   onTimelineMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void
   onTimelineMouseLeave: () => void
   onTogglePlay: () => void
@@ -52,12 +54,17 @@ interface PlayerControlsBarProps {
   onToggleMute: () => void
   onVolumeChange: (vol: number) => void
   onToggleAutoPlay: () => void
-  onToggleSettingsMenu: () => void
+  onToggleSettingsMenu?: () => void
+  onToggleSettings?: () => void
   onSpeedChange: (speed: number) => void
   onQualityChange: (qualityId: string) => void
   onTogglePip: () => void
   onToggleTheater: () => void
   onToggleFullscreen: () => void
+  onSeekRelative?: (seconds: number) => void
+  onOpenShortcutsModal?: () => void
+  onAddNoteAtTimestamp?: () => void
+  onOpenCheckout?: () => void
 }
 
 export function PlayerControlsBar({
@@ -70,8 +77,8 @@ export function PlayerControlsBar({
   isMuted,
   playbackSpeed,
   selectedQuality,
-  autoResolvedQuality,
-  effectiveQualityKey,
+  autoResolvedQuality = '1080p',
+  effectiveQualityKey = 'auto',
   showSettingsMenu,
   isTheater,
   isFullscreen,
@@ -82,6 +89,7 @@ export function PlayerControlsBar({
   hoverPosition,
   progressBarRef,
   onTimelineMouseDown,
+  onTimelineClick,
   onTimelineMouseMove,
   onTimelineMouseLeave,
   onTogglePlay,
@@ -91,6 +99,7 @@ export function PlayerControlsBar({
   onVolumeChange,
   onToggleAutoPlay,
   onToggleSettingsMenu,
+  onToggleSettings,
   onSpeedChange,
   onQualityChange,
   onTogglePip,
@@ -98,6 +107,8 @@ export function PlayerControlsBar({
   onToggleFullscreen,
 }: PlayerControlsBarProps) {
   const playedPercent = duration > 0 ? (currentTime / duration) * 100 : 0
+  const handleTimelineMouseDown = onTimelineMouseDown || onTimelineClick || (() => {})
+  const handleToggleSettingsMenu = onToggleSettingsMenu || onToggleSettings || (() => {})
 
   return (
     <div
@@ -105,10 +116,9 @@ export function PlayerControlsBar({
         showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
-      
       <div
         ref={progressBarRef}
-        onMouseDown={onTimelineMouseDown}
+        onMouseDown={handleTimelineMouseDown}
         onMouseMove={onTimelineMouseMove}
         onMouseLeave={onTimelineMouseLeave}
         className="group/timeline relative w-full h-4 cursor-pointer flex items-center mb-1"
@@ -249,7 +259,7 @@ export function PlayerControlsBar({
             selectedQuality={selectedQuality}
             autoResolvedQuality={autoResolvedQuality}
             effectiveQualityKey={effectiveQualityKey}
-            onToggleMenu={onToggleSettingsMenu}
+            onToggleMenu={handleToggleSettingsMenu}
             onSpeedChange={onSpeedChange}
             onQualityChange={onQualityChange}
           />

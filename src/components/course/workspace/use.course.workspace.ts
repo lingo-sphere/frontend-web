@@ -1,72 +1,59 @@
-'use client'
-
 /**
  * @file use.course.workspace.ts
- * @description Hook quản lý trạng thái, nạp dữ liệu khóa học, tiến độ và các tác vụ tương tác trong không gian học tập.
+ * @description Custom hook điều phối tổng thể không gian học tập (khóa học, chương bài, tiến độ và điều hướng bài học)
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth-store'
-import { useCartStore } from '@/store/cart-store'
 import { useEnrollmentStore } from '@/store/enrollment-store'
+import { useCartStore } from '@/store/cart-store'
 import { toast } from '@/store/toast-store'
-import type { Chapter, Course, Lesson, CourseReviewItem, NoteItem, QnAItem } from '@/types/course'
-import { BottomTab } from './course.workspace.tabs'
-import { SidebarTab } from './course.workspace.sidebar'
+import type { Course, Chapter, Lesson, NoteItem, QnAItem, CourseReviewItem } from '@/types/course'
+import { useCourseNotes } from './use.course.notes'
+import { useCourseQnA } from './use.course.qna'
+import { useCourseReviews } from './use.course.reviews'
+import { useCourseTests } from './use.course.tests'
+import type { BottomTab } from './course.workspace.tabs'
+import type { SidebarTab } from './course.workspace.sidebar'
 
-function formatExactDuration(totalSeconds: number): string {
-  const sec = Math.max(0, Math.floor(Number(totalSeconds) || 0))
-  if (sec === 0) return '0 giây'
-
-  const h = Math.floor(sec / 3600)
-  const m = Math.floor((sec % 3600) / 60)
-  const s = sec % 60
-
-  const parts: string[] = []
-  if (h > 0) parts.push(`${h} giờ`)
-  if (m > 0) parts.push(`${m} phút`)
-  if (s > 0 || parts.length === 0) parts.push(`${s} giây`)
-
-  return parts.join(' ')
+function formatExactDuration(seconds: number): string {
+  if (!seconds || seconds <= 0) return '0 phút'
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (h > 0) return `${h} giờ ${m > 0 ? `${m} phút` : ''}`.trim()
+  return `${m} phút`
 }
 
 export function useCourseWorkspace(courseId: string) {
-  const { user, isAuthenticated } = useAuthStore()
-  const { addToCart, isInCart } = useCartStore()
+  const user = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const addToCart = useCartStore((s) => s.addToCart)
+  const isInCart = useCartStore((s) => s.isInCart)
 
   const [course, setCourse] = useState<Course | null>(null)
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [isEnrolled, setIsEnrolled] = useState<boolean>(false)
-  const [expandedChapters, setExpandedChapters] = useState<string[]>(['ch-01', 'ch-02'])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isEnrolled, setIsEnrolled] = useState(false)
+  const [expandedChapters, setExpandedChapters] = useState<string[]>([])
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('overview')
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('content')
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true)
-  const [playerCurrentTime, setPlayerCurrentTime] = useState<number>(0)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [playerCurrentTime, setPlayerCurrentTime] = useState(0)
+
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showCourseCheckoutModal, setShowCourseCheckoutModal] = useState(false)
   const [showPlacementPromptModal, setShowPlacementPromptModal] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
 
-  const [activeTestModal, setActiveTestModal] = useState<{
-    isOpen: boolean
-    chapter: Chapter | null
-    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
-  }>({
-    isOpen: false,
-    chapter: null,
-    testType: 'post-mini',
-  })
-
   const [progressDetail, setProgressDetail] = useState<any>(null)
 
   useEffect(() => {
     let isMounted = true
-
     async function fetchCourse() {
+      if (!courseId) return
       setIsLoading(true)
       try {
         const fetchedCourse = await courseService.getCourseById(courseId)
@@ -167,47 +154,46 @@ export function useCourseWorkspace(courseId: string) {
           userIsEnrolled && isAuthenticated
             ? courseService.getCourseNotes(courseId).catch(() => [])
             : Promise.resolve([]),
-          userIsEnrolled ? courseService.getCourseQnA(courseId).catch(() => []) : Promise.resolve([]),
+          courseService.getCourseQnA(courseId).catch(() => []),
         ])
 
         const mappedReviews: CourseReviewItem[] = (reviewsRes?.reviews || []).map((r: any) => ({
-          id: String(r._id || Math.random()),
-          author: String(r.user_name || 'Học viên'),
-          authorAvatar: r.user_avatar || '',
+          id: String(r._id || r.id),
+          author: String(r.author_name || r.author || 'Học viên'),
+          avatar: r.author_avatar || '',
           rating: Number(r.rating) || 5,
           date: r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
           content: String(r.content || ''),
         }))
 
         const mappedNotes: NoteItem[] = (Array.isArray(notesRes) ? notesRes : []).map((n: any) => ({
-          id: String(n._id || Math.random()),
-          lessonId: String(n.lesson_id || ''),
-          lessonTitle: String(n.lesson_title || ''),
+          id: String(n._id || n.id),
+          lessonId: String(n.lesson_id),
+          lessonTitle: String(n.lesson_title || 'Bài học'),
           timestamp: Number(n.timestamp) || 0,
-          formattedTime: String(n.formatted_time || '00:00'),
+          formattedTime: String(n.formatted_time || '0:00'),
           content: String(n.content || ''),
           createdAt: n.created_at ? new Date(n.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
         }))
 
         const mappedQnA: QnAItem[] = (Array.isArray(qnaRes) ? qnaRes : []).map((q: any) => ({
-          id: String(q._id || Math.random()),
-          lessonId: q.lesson_id,
+          id: String(q._id || q.id),
           lessonTitle: String(q.lesson_title || 'Bài học'),
-          userId: q.user_id,
+          userId: q.user_id ? String(q.user_id) : undefined,
           isAnonymous: Boolean(q.is_anonymous),
-          author: q.is_anonymous ? 'Học viên ẩn danh' : String(q.author_name || 'Học viên'),
-          authorAvatar: q.is_anonymous ? undefined : q.author_avatar,
+          author: String(q.author_name || (q.is_anonymous ? 'Học viên ẩn danh' : 'Học viên')),
+          authorAvatar: q.author_avatar || undefined,
           title: String(q.title || ''),
           body: String(q.body || ''),
           createdAt: q.created_at ? new Date(q.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
           upvotes: Number(q.upvotes) || 0,
           answersCount: Array.isArray(q.answers) ? q.answers.length : 0,
-          isAnswered: Boolean(q.is_answered || (q.answers && q.answers.length > 0)),
+          isAnswered: Array.isArray(q.answers) && q.answers.length > 0,
           answers: (q.answers || []).map((a: any) => ({
-            id: String(a.id || Math.random()),
-            author: String(a.author || 'Thành viên'),
-            authorRole: a.author_role,
-            authorAvatar: a.author_avatar,
+            id: String(a._id || a.id),
+            author: String(a.author_name || 'Học viên'),
+            authorRole: a.author_role || (a.is_tutor ? 'Gia sư AI' : 'Học viên'),
+            authorAvatar: a.author_avatar || undefined,
             body: String(a.body || ''),
             createdAt: a.created_at ? new Date(a.created_at).toLocaleDateString('vi-VN') : 'Gần đây',
             upvotes: Number(a.upvotes) || 0,
@@ -500,239 +486,45 @@ export function useCourseWorkspace(courseId: string) {
     })
   }, [])
 
-  const handleAddNoteAtTimestamp = async (timestamp: number, noteContent?: string) => {
-    if (!course || !currentLesson) return
-    if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để lưu ghi chú bài học!', 'Chưa đăng nhập')
-      return
-    }
-    if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học này để tạo ghi chú bài giảng!', 'Chưa sở hữu khóa học')
-      return
-    }
-    const formatted = `${Math.floor(timestamp / 60)}:${String(Math.floor(timestamp % 60)).padStart(2, '0')}`
-    const content = noteContent || `Ghi chú bài học tại mốc ${formatted}`
+  const { handleAddNoteAtTimestamp, handleDeleteNote } = useCourseNotes({
+    course,
+    setCourse,
+    currentLesson,
+    isAuthenticated,
+    user,
+    isEnrolled,
+    setActiveBottomTab,
+  })
 
-    try {
-      const res = (await courseService.createCourseNote(String(course.id), {
-        lesson_id: currentLesson.id,
-        lesson_title: currentLesson.title,
-        timestamp,
-        formatted_time: formatted,
-        content,
-      })) as Record<string, unknown>
+  const { handleCreateQnA, handleAddQnAAnswer, handleUpvoteQnA } = useCourseQnA({
+    course,
+    setCourse,
+    currentLesson,
+    isAuthenticated,
+    user,
+    isEnrolled,
+  })
 
-      const newNote: NoteItem = {
-        id: String(res?._id || `note-${Date.now()}`),
-        lessonId: currentLesson.id,
-        lessonTitle: currentLesson.title,
-        timestamp,
-        formattedTime: formatted,
-        content,
-        createdAt: 'Vừa xong',
-      }
-      setCourse((prev) => (prev ? { ...prev, notes: [newNote, ...(prev.notes || [])] } : null))
-      setActiveBottomTab('notes')
-      toast.success(`Đã lưu ghi chú tại mốc ${formatted} vào cơ sở dữ liệu!`, 'Ghi chú bài học')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể lưu ghi chú'
-      toast.error(msg, 'Lỗi lưu ghi chú')
-    }
-  }
+  const { handleAddReview } = useCourseReviews({
+    course,
+    setCourse,
+    isAuthenticated,
+    user,
+    isEnrolled,
+  })
 
-  const handleDeleteNote = async (noteId: string) => {
-    if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để xóa ghi chú!', 'Chưa đăng nhập')
-      return
-    }
-    try {
-      await courseService.deleteCourseNote(noteId)
-      setCourse((prev) =>
-        prev ? { ...prev, notes: (prev.notes || []).filter((n) => n.id !== noteId) } : null
-      )
-      toast.success('Đã xóa ghi chú thành công!', 'Xóa ghi chú')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể xóa ghi chú'
-      toast.error(msg, 'Lỗi xóa ghi chú')
-    }
-  }
-
-  const handleCreateQnA = async (title: string, body: string, isAnonymous?: boolean) => {
-    if (!course || !currentLesson) return
-    if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để đặt câu hỏi!', 'Chưa đăng nhập')
-      return
-    }
-    if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học để gửi câu hỏi Hỏi & Đáp!', 'Chưa sở hữu khóa học')
-      return
-    }
-    try {
-      const userPayload = user as unknown as Record<string, unknown>
-      const authorName = isAnonymous
-        ? 'Học viên ẩn danh'
-        : user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || 'Học viên'
-      const authorAvatar = isAnonymous ? '' : user.avatar_url || (userPayload?.avatar as string) || ''
-
-      const res = (await courseService.createCourseQnA(String(course.id), {
-        lesson_id: currentLesson.id,
-        lesson_title: currentLesson.title,
-        title,
-        body,
-        is_anonymous: isAnonymous,
-        author_name: authorName,
-        author_avatar: authorAvatar,
-      })) as Record<string, unknown>
-
-      const newQnA: QnAItem = {
-        id: String(res?._id || `qna-${Date.now()}`),
-        lessonTitle: currentLesson.title,
-        userId: user.id || user.user_id,
-        isAnonymous: Boolean(isAnonymous),
-        author: authorName,
-        authorAvatar: authorAvatar || undefined,
-        title,
-        body,
-        createdAt: 'Vừa xong',
-        upvotes: 0,
-        answersCount: 1,
-        isAnswered: true,
-        answers: [
-          {
-            id: `ans-${Date.now()}`,
-            author: 'LingoSphere AI Tutor',
-            authorRole: 'Gia sư AI',
-            body: `Chào bạn! Cảm ơn câu hỏi về "${title}". Giảng viên và Trợ lý AI đã ghi nhận thắc mắc và sẽ phản hồi chi tiết trong giây lát!`,
-            createdAt: 'Vừa xong',
-            upvotes: 0,
-          },
-        ],
-      }
-
-      setCourse((prev) => (prev ? { ...prev, qna: [newQnA, ...(prev.qna || [])] } : null))
-      toast.success(
-        isAnonymous
-          ? 'Câu hỏi ẩn danh của bạn đã được đăng thành công!'
-          : 'Câu hỏi của bạn đã được đăng thành công!',
-        'Hỏi & Đáp'
-      )
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể đăng câu hỏi'
-      toast.error(msg, 'Lỗi đăng câu hỏi')
-    }
-  }
-
-  const handleAddQnAAnswer = async (qnaId: string, answerText: string) => {
-    if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để trả lời!', 'Chưa đăng nhập')
-      return
-    }
-    if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học để trả lời câu hỏi!', 'Chưa sở hữu khóa học')
-      return
-    }
-    try {
-      const userPayload = user as unknown as Record<string, unknown>
-      const authorName = user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || 'Học viên'
-      const authorAvatar = user.avatar_url || (userPayload?.avatar as string) || ''
-
-      await courseService.addQnAAnswer(qnaId, {
-        body: answerText,
-        author: authorName,
-        author_avatar: authorAvatar,
-      })
-      const newAns = {
-        id: `ans-${Date.now()}`,
-        author: authorName,
-        authorRole: 'Học viên',
-        authorAvatar: authorAvatar || undefined,
-        body: answerText,
-        createdAt: 'Vừa xong',
-        upvotes: 0,
-      }
-      setCourse((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          qna: (prev.qna || []).map((q) =>
-            q.id === qnaId
-              ? { ...q, answers: [...(q.answers || []), newAns], answersCount: (q.answersCount || 0) + 1 }
-              : q
-          ),
-        }
-      })
-      toast.success('Đã gửi câu trả lời thành công!', 'Hỏi & Đáp')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể gửi câu trả lời'
-      toast.error(msg, 'Lỗi trả lời Q&A')
-    }
-  }
-
-  const handleUpvoteQnA = async (qnaId: string) => {
-    if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để bình chọn!', 'Chưa đăng nhập')
-      return
-    }
-    if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học để bình chọn!', 'Chưa sở hữu khóa học')
-      return
-    }
-    try {
-      await courseService.toggleQnAUpvote(qnaId)
-      setCourse((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          qna: (prev.qna || []).map((q) =>
-            q.id === qnaId ? { ...q, upvotes: (q.upvotes || 0) + 1 } : q
-          ),
-        }
-      })
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể bình chọn'
-      toast.error(msg, 'Lỗi bình chọn')
-    }
-  }
-
-  const handleAddReview = async (rating: number, content: string) => {
-    if (!course) return
-    if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để đánh giá khóa học!', 'Chưa đăng nhập')
-      return
-    }
-    if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học để gửi đánh giá!', 'Chưa sở hữu khóa học')
-      return
-    }
-    try {
-      const res = (await courseService.createCourseReview(String(course.id), {
-        rating,
-        content,
-      })) as { review: Record<string, unknown>; rating: number; rating_count: number }
-
-      const newRev: CourseReviewItem = {
-        id: String(res?.review?._id || `rev-${Date.now()}`),
-        author: 'Bạn (Học viên)',
-        rating,
-        date: 'Vừa xong',
-        content,
-      }
-
-      setCourse((prev) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          rating: typeof res?.rating === 'number' ? res.rating : prev.rating,
-          ratingCount: typeof res?.rating_count === 'number' ? res.rating_count : (prev.ratingCount || 0) + 1,
-          reviews: [newRev, ...(prev.reviews || [])],
-        }
-      })
-      toast.success('Cảm ơn bạn đã gửi đánh giá khóa học!', 'Đánh giá thành công')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể gửi đánh giá'
-      toast.error(msg, 'Lỗi đánh giá')
-    }
-  }
+  const {
+    activeTestModal,
+    setActiveTestModal,
+    handleTakeTest,
+    handleTestComplete,
+    currentTestModalData,
+  } = useCourseTests({
+    isEnrolled,
+    progressDetail,
+    setProgressDetail,
+    setCourse,
+  })
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -752,136 +544,6 @@ export function useCourseWorkspace(courseId: string) {
       toast.error(result.message || 'Không thể thêm vào giỏ hàng', 'Lỗi')
     }
   }
-
-  const handleTakeTest = (
-    chapter: Chapter | null,
-    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
-  ) => {
-    if (!isEnrolled) {
-      toast.warning(
-        'Vui lòng mua khóa học hoặc nâng cấp gói thành viên để làm bài kiểm tra và đề thi này!',
-        'Yêu cầu mở khóa'
-      )
-      return
-    }
-    setActiveTestModal({
-      isOpen: true,
-      chapter,
-      testType,
-    })
-  }
-
-  const handleTestComplete = async (score: number, isPassed: boolean) => {
-    if (activeTestModal.testType === 'final-test') {
-      setProgressDetail((prev: any) => {
-        const currentFinalAttempts = Array.isArray(prev?.course_progress?.final_test_attempts)
-          ? [...prev.course_progress.final_test_attempts]
-          : []
-        const newAttempt = {
-          attempt_id: `att_${Date.now()}`,
-          score,
-          is_passed: isPassed,
-          submitted_at: new Date(),
-        }
-        return {
-          ...(prev || {}),
-          course_progress: {
-            ...(prev?.course_progress || {}),
-            final_test_score: Math.max(prev?.course_progress?.final_test_score || 0, score),
-            final_test_attempts: [newAttempt, ...currentFinalAttempts],
-          },
-        }
-      })
-    }
-
-    if (activeTestModal.chapter) {
-      const finishedChId = activeTestModal.chapter.id
-      const finishedChOrder = Number(activeTestModal.chapter.order || 1)
-      setProgressDetail((prev: any) => {
-        const existingMods = Array.isArray(prev?.modules_progress) ? [...prev.modules_progress] : []
-        const modIdx = existingMods.findIndex(
-          (m: any) =>
-            m.module_id === finishedChId ||
-            String(m.module_id) === String(finishedChId) ||
-            Number(m.order_index) === finishedChOrder
-        )
-        const prevMod = modIdx >= 0 ? existingMods[modIdx] : null
-        const currentAttempts = Array.isArray(prevMod?.attempts) ? [...prevMod.attempts] : []
-        const newAttempt = {
-          attempt_id: `att_${Date.now()}`,
-          test_type: activeTestModal.testType,
-          score,
-          is_passed: isPassed,
-          submitted_at: new Date(),
-        }
-        const updatedMod = {
-          module_id: finishedChId,
-          order_index: finishedChOrder,
-          status: isPassed ? 'COMPLETED' : prevMod?.status || 'IN_PROGRESS',
-          attempts: [newAttempt, ...currentAttempts],
-          challenge_score: Math.max(prevMod?.challenge_score || 0, score),
-          is_passed_by_challenge: isPassed || Boolean(prevMod?.is_passed_by_challenge),
-          challenge_taken: true,
-        }
-        if (modIdx >= 0) {
-          existingMods[modIdx] = { ...existingMods[modIdx], ...updatedMod }
-        } else {
-          existingMods.push(updatedMod)
-        }
-
-        if (isPassed) {
-          const nextOrder = finishedChOrder + 1
-          const nextModIdx = existingMods.findIndex((m: any) => Number(m.order_index) === nextOrder)
-          if (nextModIdx >= 0) {
-            existingMods[nextModIdx] = {
-              ...existingMods[nextModIdx],
-              status: 'IN_PROGRESS',
-            }
-          }
-        }
-
-        return {
-          ...(prev || {}),
-          modules_progress: existingMods,
-        }
-      })
-      setCourse((prev) => {
-        if (!prev) return null
-        const nextChapters = prev.chapters.map((ch) =>
-          ch.id === finishedChId || String(ch.id) === String(finishedChId) || Number(ch.order) === finishedChOrder
-            ? { ...ch, status: (isPassed ? 'completed' : ch.status || 'in-progress') as Chapter['status'] }
-            : ch
-        )
-        return { ...prev, chapters: nextChapters }
-      })
-    }
-  }
-
-  const currentTestModalData = useMemo(() => {
-    if (activeTestModal.testType === 'final-test') {
-      const finalAttempts = progressDetail?.course_progress?.final_test_attempts || []
-      const finalBest = progressDetail?.course_progress?.final_test_score || 0
-      return {
-        attempts: finalAttempts,
-        highestScore: finalBest,
-      }
-    }
-    if (activeTestModal.chapter) {
-      const mod = progressDetail?.modules_progress?.find(
-        (m: any) =>
-          m.module_id === activeTestModal.chapter?.id ||
-          String(m.module_id) === String(activeTestModal.chapter?.id) ||
-          Number(m.order_index) === Number(activeTestModal.chapter?.order)
-      )
-      const attempts = mod?.attempts || []
-      const highestScore = mod?.challenge_score ?? mod?.post_mini_score ?? 0
-      return {
-        attempts,
-        highestScore,
-      }
-    }
-    return { attempts: [], highestScore: 0 }
-  }, [activeTestModal, progressDetail])
 
   return {
     course,
