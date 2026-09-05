@@ -5,14 +5,14 @@
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { User, GamificationProfile, LeaderboardEntry } from '@/types/api.types'
+import type { User, UserProfileResponse, UpdateUserProfilePayload, GamificationProfile, LeaderboardEntry } from '@/types/api.types'
 
 export const userService = {
-  async getProfile(): Promise<User> {
-    return api.get<User>(API_CONFIG.ENDPOINTS.USERS.PROFILE)
+  async getProfile(): Promise<UserProfileResponse> {
+    return api.get<UserProfileResponse>(API_CONFIG.ENDPOINTS.USERS.PROFILE)
   },
 
-  async updateProfile(data: Partial<User>): Promise<User> {
+  async updateProfile(data: UpdateUserProfilePayload): Promise<User> {
     return api.put<User>(API_CONFIG.ENDPOINTS.USERS.PROFILE, data)
   },
 

@@ -22,6 +22,8 @@ export interface User {
   full_name: string
   phone_number?: string
   avatar_url?: string
+  date_of_birth?: string
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string
   role: UserRole
   status: AccountStatus
   is_email_verified?: boolean
@@ -35,6 +37,27 @@ export interface User {
   subscription_plan?: string
   created_at?: string
   updated_at?: string
+}
+
+export interface UserProfileResponse {
+  profile: User
+  is_premium: boolean
+  subscription_expires_at?: string
+  subscription_plan?: string
+  gamification?: GamificationProfile
+  settings?: Record<string, unknown>
+  subscription?: Record<string, unknown>
+}
+
+export interface UpdateUserProfilePayload {
+  full_name?: string
+  avatar_url?: string
+  phone_number?: string
+  gender?: 'MALE' | 'FEMALE' | 'OTHER'
+  date_of_birth?: string
+  target_toeic_score?: number
+  learning_goal_minutes_per_day?: number
+  bio?: string
 }
 
 export interface AuthTokens {
@@ -227,16 +250,23 @@ export interface LexicalItem {
 }
 
 export interface Deck {
-  id: string
-  _id?: string
-  title: string
+  _id: string
+  id?: string
+  name: string
+  name_vi?: string
+  title?: string
   description?: string
+  description_vi?: string
   thumbnail_url?: string
   cefr_level?: string
-  total_cards: number
-  is_public: boolean
+  card_count: number
+  total_cards?: number
+  visibility?: 'PUBLIC' | 'PRIVATE' | string
+  is_public?: boolean
   creator_id?: string
   cards?: LexicalItem[]
+  tags?: string[]
+  category?: string
 }
 
 export interface SpacedRepetitionReviewPayload {
@@ -301,13 +331,15 @@ export interface ExamResult {
 }
 
 export interface GamificationProfile {
-  xp: number
+  total_xp: number
+  weekly_xp?: number
+  monthly_xp?: number
   level: number
-  streak_days: number
-  freeze_streak_count: number
-  rank_title: string
-  rank_tier: string
-  weekly_xp: number
+  current_streak: number
+  longest_streak: number
+  streak_freezes_left?: number
+  gems?: number
+  league?: string
 }
 
 export interface LeaderboardEntry {

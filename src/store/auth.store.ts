@@ -48,8 +48,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const res = await authService.login(payload)
       let isPremium = Boolean(res.user?.is_premium)
       try {
-        const profileRes: any = await userService.getProfile()
-        if (profileRes?.is_premium || profileRes?.profile?.is_premium) {
+        const profileRes = await userService.getProfile()
+        if (profileRes.is_premium) {
           isPremium = true
         }
       } catch {}
@@ -75,8 +75,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const res = await authService.socialLogin(payload)
       let isPremium = Boolean(res.user?.is_premium)
       try {
-        const profileRes: any = await userService.getProfile()
-        if (profileRes?.is_premium || profileRes?.profile?.is_premium) {
+        const profileRes = await userService.getProfile()
+        if (profileRes.is_premium) {
           isPremium = true
         }
       } catch {}
@@ -179,8 +179,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const user = await authService.getCurrentUser()
       let isPremium = Boolean(user?.is_premium)
       try {
-        const profileRes: any = await userService.getProfile()
-        if (profileRes?.is_premium || profileRes?.profile?.is_premium) {
+        const profileRes = await userService.getProfile()
+        if (profileRes.is_premium) {
           isPremium = true
         }
       } catch {}

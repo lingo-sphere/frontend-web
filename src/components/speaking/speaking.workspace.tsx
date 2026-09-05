@@ -35,7 +35,8 @@ export function SpeakingWorkspace({
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  const [, setTranscription] = useState('')
+  const [transcription, setTranscription] = useState('')
+  const speechRecognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const audioBlobRef = useRef<Blob | null>(null)
@@ -101,6 +102,26 @@ export function SpeakingWorkspace({
         stream.getTracks().forEach((track) => track.stop())
       }
 
+      const win = typeof window !== 'undefined' ? (window as unknown as { SpeechRecognition?: new () => any; webkitSpeechRecognition?: new () => any }) : {}
+      const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition
+      if (SpeechRec) {
+        try {
+          const recognition = new SpeechRec()
+          recognition.continuous = true
+          recognition.interimResults = true
+          recognition.lang = 'en-US'
+          recognition.onresult = (evt: any) => {
+            let text = ''
+            for (let i = 0; i < evt.results.length; i++) {
+              text += evt.results[i][0].transcript + ' '
+            }
+            setTranscription(text.trim())
+          }
+          recognition.start()
+          speechRecognitionRef.current = recognition
+        } catch {}
+      }
+
       mediaRecorder.start(250)
       onUpdateRecording((prev: RecordingState) => ({
         ...prev,
@@ -119,6 +140,12 @@ export function SpeakingWorkspace({
   }, [onUpdateRecording, isVietnamese])
 
   const stopRecording = useCallback(() => {
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop()
+      } catch {}
+      speechRecognitionRef.current = null
+    }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try {
         if (mediaRecorderRef.current.state === 'recording') {
@@ -193,13 +220,8 @@ export function SpeakingWorkspace({
   }
 
   const handleSubmit = () => {
-    const mockTranscription =
-      exercise.exercise_type === 'PRONUNCIATION'
-        ? exercise.source_text || 'ship sheep sheet walk talk'
-        : 'This is a sample transcription of your speaking response.'
-
-    setTranscription(mockTranscription)
-    onSubmit(mockTranscription, duration, audioBlobRef.current || undefined)
+    const userTranscription = transcription.trim()
+    onSubmit(userTranscription, duration, audioBlobRef.current || undefined)
   }
 
   const handleReset = () => {

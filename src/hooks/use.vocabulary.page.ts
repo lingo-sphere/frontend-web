@@ -49,7 +49,7 @@ export function useVocabularyPage() {
     }
   }, [])
 
-  const filteredPacks = publicDecks.filter((d: any) => {
+  const filteredPacks = publicDecks.filter((d: Deck) => {
     if (activeTag === 'all') return true
     const deckTags = d.tags || []
     return (
@@ -59,14 +59,14 @@ export function useVocabularyPage() {
   })
 
   const totalCards = publicDecks.reduce(
-    (sum: number, d: any) => sum + (d.card_count || d.total_cards || 0),
+    (sum: number, d: Deck) => sum + (d.card_count || 0),
     0
   )
 
   const handleDeckClick = (deck: Deck) => {
     setActiveNavItem('vocabulary')
-    navigate(`/vocabulary/learn/${deck.id || deck._id}`)
-    showAction(`Bắt đầu học bộ thẻ "${deck.title || (deck as any).name}"`)
+    navigate(`/vocabulary/learn/${deck._id || deck.id}`)
+    showAction(`Bắt đầu học bộ thẻ "${deck.name || deck.title}"`)
   }
 
   return {

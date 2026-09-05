@@ -18,10 +18,10 @@ export function useProfileData() {
 
   const [user, setUser] = useState<User>({
     id: 'current_user',
+    user_id: '',
     email: '',
-    username: 'learner',
-    displayName: 'Học viên',
-    avatar: '',
+    full_name: 'Học viên',
+    avatar_url: '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     role: 'student',
@@ -98,26 +98,26 @@ export function useProfileData() {
       }
     } catch {}
 
-    const auth = authUser || (useAuthStore.getState().user as any)
+    const auth = authUser || useAuthStore.getState().user
     if (auth) {
       setUser((prev) => ({
         ...prev,
-        id: auth.id || prev.id,
+        id: auth.id || auth.user_id || prev.id,
+        user_id: auth.user_id || prev.user_id,
         email: auth.email || prev.email,
-        username: auth.username || auth.email?.split('@')[0] || prev.username,
-        displayName: auth.full_name || prev.displayName,
-        avatar: auth.avatar_url || prev.avatar,
+        full_name: auth.full_name || prev.full_name,
+        avatar_url: auth.avatar_url || prev.avatar_url,
         is_premium: Boolean(auth.is_premium),
         subscription_expires_at: auth.subscription_expires_at || prev.subscription_expires_at,
         subscription_plan: auth.subscription_plan || prev.subscription_plan,
         stats: cachedStats ? { ...prev.stats, ...cachedStats } : prev.stats,
       }))
 
-      const sTotal = localScore?.placement_test_score ?? auth?.placement_test_score ?? auth?.current_estimated_score ?? 0
-      const sList = localScore?.placement_listening_score ?? auth?.placement_listening_score ?? 0
-      const sRead = localScore?.placement_reading_score ?? auth?.placement_reading_score ?? 0
-      const sSpk = localScore?.placement_speaking_score ?? auth?.placement_speaking_score ?? 0
-      const sWrt = localScore?.placement_writing_score ?? auth?.placement_writing_score ?? 0
+      const sTotal = localScore?.placement_test_score ?? auth?.target_score ?? 0
+      const sList = localScore?.placement_listening_score ?? 0
+      const sRead = localScore?.placement_reading_score ?? 0
+      const sSpk = localScore?.placement_speaking_score ?? 0
+      const sWrt = localScore?.placement_writing_score ?? 0
       const hasScores = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
 
       setUserScores({
@@ -126,11 +126,11 @@ export function useProfileData() {
         readingScore: sRead,
         speakingScore: sSpk,
         writingScore: sWrt,
-        targetScore: localScore?.target_toeic_score || auth?.target_toeic_score || 650,
-        skillsType: localScore?.placement_skills_type || auth?.placement_skills_type || '2SKILLS',
-        isManuallyEdited: localScore?.is_score_manually_edited ?? auth?.is_score_manually_edited ?? false,
+        targetScore: localScore?.target_toeic_score || 650,
+        skillsType: localScore?.placement_skills_type || '2SKILLS',
+        isManuallyEdited: localScore?.is_score_manually_edited ?? false,
         hasTested: hasScores,
-        testedAt: localScore?.placement_tested_at || auth?.placement_tested_at || null,
+        testedAt: localScore?.placement_tested_at || null,
       })
     }
   }, [authUser])
@@ -147,13 +147,13 @@ export function useProfileData() {
 
         if (isMounted) {
           if (prof) {
-            const profileData = (prof as any)?.profile || prof
+            const profileData = prof.profile
             setUser((prev) => {
               const updatedStats = {
                 ...prev.stats,
-                totalXP: (gamify as any)?.total_xp ?? prev.stats?.totalXP ?? 0,
-                currentStreak: (gamify as any)?.streak_days ?? prev.stats?.currentStreak ?? 0,
-                longestStreak: (gamify as any)?.longest_streak ?? prev.stats?.longestStreak ?? 0,
+                totalXP: gamify?.total_xp ?? prev.stats?.totalXP ?? 0,
+                currentStreak: gamify?.current_streak ?? prev.stats?.currentStreak ?? 0,
+                longestStreak: gamify?.longest_streak ?? prev.stats?.longestStreak ?? 0,
               }
               try {
                 if (typeof window !== 'undefined') {
@@ -164,24 +164,28 @@ export function useProfileData() {
               return {
                 ...prev,
                 id: profileData?.id || profileData?._id || prev.id,
+                user_id: profileData?.user_id || prev.user_id,
                 email: profileData?.email || prev.email,
-                username: profileData?.username || prev.username,
-                displayName: profileData?.full_name || profileData?.displayName || prev.displayName,
-                avatar: profileData?.avatar_url || profileData?.avatar || prev.avatar,
+                full_name: profileData?.full_name || prev.full_name,
+                avatar_url: profileData?.avatar_url || prev.avatar_url,
                 bio: profileData?.bio || prev.bio,
-                is_premium: Boolean(profileData?.is_premium || (prof as any)?.is_premium || (prof as any)?.subscription || prev.is_premium),
-                subscription_expires_at: profileData?.subscription_expires_at || (prof as any)?.subscription_expires_at || (prof as any)?.subscription?.expires_at || prev.subscription_expires_at,
-                subscription_plan: profileData?.subscription_plan || (prof as any)?.subscription_plan || (prof as any)?.subscription?.billing_cycle || prev.subscription_plan,
+                phone_number: profileData?.phone_number || prev.phone_number,
+                date_of_birth: profileData?.date_of_birth ? String(profileData.date_of_birth) : prev.date_of_birth,
+                is_premium: Boolean(prof.is_premium || profileData?.is_premium || prev.is_premium),
+                subscription_expires_at: prof.subscription_expires_at || profileData?.subscription_expires_at || prev.subscription_expires_at,
+                subscription_plan: prof.subscription_plan || profileData?.subscription_plan || prev.subscription_plan,
                 stats: updatedStats,
               }
             })
 
-            if (profileData && (profileData.placement_test_score !== undefined || profileData.current_estimated_score !== undefined)) {
-              const sTotal = profileData.placement_test_score ?? profileData.current_estimated_score ?? 0
-              const sList = profileData.placement_listening_score ?? 0
-              const sRead = profileData.placement_reading_score ?? 0
-              const sSpk = profileData.placement_speaking_score ?? 0
-              const sWrt = profileData.placement_writing_score ?? 0
+            const pEstimate = (profileData as unknown as { current_estimated_score?: number })?.current_estimated_score
+            const pPlacement = (profileData as unknown as { placement_test_score?: number })?.placement_test_score
+            if (pPlacement !== undefined || pEstimate !== undefined) {
+              const sTotal = pPlacement ?? pEstimate ?? 0
+              const sList = (profileData as unknown as { placement_listening_score?: number })?.placement_listening_score ?? 0
+              const sRead = (profileData as unknown as { placement_reading_score?: number })?.placement_reading_score ?? 0
+              const sSpk = (profileData as unknown as { placement_speaking_score?: number })?.placement_speaking_score ?? 0
+              const sWrt = (profileData as unknown as { placement_writing_score?: number })?.placement_writing_score ?? 0
               const sHas = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
 
               setUserScores((prev) => ({
@@ -191,11 +195,8 @@ export function useProfileData() {
                 readingScore: sRead,
                 speakingScore: sSpk,
                 writingScore: sWrt,
-                targetScore: profileData.target_toeic_score || prev.targetScore || 650,
-                skillsType: profileData.placement_skills_type || prev.skillsType || '2SKILLS',
-                isManuallyEdited: profileData.is_score_manually_edited ?? prev.isManuallyEdited ?? false,
+                targetScore: profileData?.target_score || prev.targetScore || 650,
                 hasTested: sHas,
-                testedAt: profileData.placement_tested_at || prev.testedAt,
               }))
             }
           }
@@ -216,16 +217,19 @@ export function useProfileData() {
   const handleSaveProfile = async (formData: EditProfileForm) => {
     try {
       await userService.updateProfile({
-        full_name: formData.displayName,
-        phone_number: formData.phone,
-      } as any)
+        full_name: formData.full_name,
+        phone_number: formData.phone_number,
+        date_of_birth: formData.date_of_birth,
+        gender: formData.gender ? (formData.gender as 'MALE' | 'FEMALE' | 'OTHER') : undefined,
+        bio: formData.bio,
+      })
       setUser((prev) => ({
         ...prev,
-        displayName: formData.displayName,
+        full_name: formData.full_name,
         bio: formData.bio,
-        phone: formData.phone,
-        dateOfBirth: formData.dateOfBirth,
-        gender: formData.gender ? (formData.gender as User['gender']) : undefined,
+        phone_number: formData.phone_number,
+        date_of_birth: formData.date_of_birth,
+        gender: formData.gender || undefined,
         address: formData.address,
         city: formData.city,
         country: formData.country,

@@ -170,9 +170,25 @@ export default function SpeakingAppPage() {
         }
       }
 
+      let backendAttempt: Record<string, unknown> | null = null
+      try {
+        backendAttempt = await practiceService.submitSpeakingAttempt({
+          exercise_id: selectedExercise.id,
+          recording_media_id: `rec_${selectedExercise.id}_${Date.now()}`,
+          recording_duration_seconds: duration,
+          transcription: finalTranscript,
+          pronunciation_score: pronunciationScore,
+          fluency_score: fluencyScore,
+          overall_score: overallScore,
+        })
+      } catch (submitErr) {
+        console.error('Submit speaking attempt error:', submitErr)
+      }
+
+      const attemptId = String(backendAttempt?._id || backendAttempt?.id || `sa-${Date.now()}`)
       const newSubmission: SpeakingAttempt = {
-        id: `sa-${Date.now()}`,
-        user_id: 'current_user',
+        id: attemptId,
+        user_id: String(backendAttempt?.user_id || 'current_user'),
         exercise_id: selectedExercise.id,
         attempt_number: 1,
         is_best_attempt: true,

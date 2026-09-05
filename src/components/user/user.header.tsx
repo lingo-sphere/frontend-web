@@ -148,7 +148,7 @@ export function UserStatsHeader({ user, onEditClick }: UserStatsHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6">
       <div className="relative">
-        <UserAvatar src={user.avatar} name={user.displayName} size="xl" />
+        <UserAvatar src={user.avatar_url} name={user.full_name} size="xl" />
         {isPremium && (
           <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-md ring-2 ring-background">
             <Icon name="crown" size={15} className="fill-white" />
@@ -159,7 +159,7 @@ export function UserStatsHeader({ user, onEditClick }: UserStatsHeaderProps) {
       <div className="flex-1 text-center sm:text-left">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
           <h2 suppressHydrationWarning className="text-xl font-bold text-text-primary">
-            {user.displayName}
+            {user.full_name}
           </h2>
           <span className="text-xs px-2.5 py-0.5 bg-primary-10 text-primary font-semibold rounded-full w-fit mx-auto sm:mx-0">
             Level {user.stats?.level || 1}

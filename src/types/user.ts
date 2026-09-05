@@ -5,14 +5,14 @@
 
 export interface User {
   id: string
+  user_id?: string
   email: string
-  username: string
-  displayName: string
-  avatar?: string
+  full_name: string
+  avatar_url?: string
   bio?: string
-  phone?: string
-  dateOfBirth?: string 
-  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say'
+  phone_number?: string
+  date_of_birth?: string
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string
   address?: string
   city?: string
   country?: string
@@ -21,7 +21,7 @@ export interface User {
 
   preferences: UserPreferences
 
-  role: 'student' | 'teacher' | 'admin'
+  role: 'student' | 'teacher' | 'admin' | string
   isVerified: boolean
   isActive: boolean
   is_premium?: boolean
@@ -129,18 +129,18 @@ export interface Activity {
 }
 
 export interface EditProfileForm {
-  displayName: string
+  full_name: string
   bio: string
-  phone: string
-  dateOfBirth: string
-  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | ''
+  phone_number: string
+  date_of_birth: string
+  gender: 'MALE' | 'FEMALE' | 'OTHER' | ''
   address: string
   city: string
   country: string
 }
 
 export interface ChangePasswordForm {
-  currentPassword: string
-  newPassword: string
-  confirmPassword: string
+  old_password: string
+  new_password: string
+  confirm_password?: string
 }

@@ -23,11 +23,11 @@ export function EditProfileModal({
   onSave,
 }: EditProfileModalProps) {
   const [form, setForm] = useState<EditProfileForm>({
-    displayName: user.displayName,
+    full_name: user.full_name,
     bio: user.bio || '',
-    phone: user.phone || '',
-    dateOfBirth: user.dateOfBirth || '',
-    gender: user.gender || '',
+    phone_number: user.phone_number || '',
+    date_of_birth: user.date_of_birth || '',
+    gender: (user.gender as EditProfileForm['gender']) || '',
     address: user.address || '',
     city: user.city || '',
     country: user.country || '',
@@ -48,7 +48,7 @@ export function EditProfileModal({
           </div>
 
           <div className="flex justify-center mb-6">
-            <UserAvatar src={user.avatar} size="xl" editable />
+            <UserAvatar src={user.avatar_url} size="xl" editable />
           </div>
 
           <div className="space-y-4">
@@ -57,9 +57,9 @@ export function EditProfileModal({
                 Tên hiển thị
               </label>
               <Input
-                value={form.displayName}
+                value={form.full_name}
                 onChange={(e) =>
-                  setForm({ ...form, displayName: e.target.value })
+                  setForm({ ...form, full_name: e.target.value })
                 }
                 placeholder="Nhập tên hiển thị"
               />
@@ -83,8 +83,8 @@ export function EditProfileModal({
                   Số điện thoại
                 </label>
                 <Input
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  value={form.phone_number}
+                  onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
                   placeholder="Nhập số điện thoại"
                 />
               </div>
@@ -94,9 +94,9 @@ export function EditProfileModal({
                 </label>
                 <Input
                   type="date"
-                  value={form.dateOfBirth}
+                  value={form.date_of_birth}
                   onChange={(e) =>
-                    setForm({ ...form, dateOfBirth: e.target.value })
+                    setForm({ ...form, date_of_birth: e.target.value })
                   }
                 />
               </div>
