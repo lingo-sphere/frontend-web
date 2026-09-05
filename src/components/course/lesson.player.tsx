@@ -823,24 +823,70 @@ export function LessonPlayer({
                 </div>
               </div>
             ) : hasNextLesson && autoPlayNext ? (
-              <div className="space-y-3 pt-1">
-                <p className="text-xs text-zinc-300">
-                  Tự động chuyển bài tiếp theo sau{' '}
-                  <span className="font-mono font-bold text-[#ff0000] text-sm">{countdownSeconds}s</span>...
-                </p>
-                <div className="flex items-center justify-center gap-2.5">
+              <div className="space-y-4 pt-1 flex flex-col items-center">
+                {/* Circular Animated Countdown */}
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-white/20"
+                      strokeWidth="3"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className="text-[#ff0000] transition-all duration-1000 ease-linear"
+                      strokeDasharray={`${(countdownSeconds / 5) * 100}, 100`}
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <span className="absolute font-mono font-black text-white text-lg drop-shadow-md">
+                    {countdownSeconds}s
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-center">
+                  <p className="text-xs font-semibold text-white/90">
+                    Tự động chuyển bài tiếp theo sau{' '}
+                    <span className="font-mono font-bold text-[#ff3333]">{countdownSeconds} giây</span>
+                  </p>
+                  <p className="text-[11px] text-zinc-400">
+                    Sẵn sàng tiếp thu kiến thức mới một cách liền mạch!
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
                   <button
+                    type="button"
                     onClick={() => {
                       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
                       setShowEndedScreen(false)
                       onNextLesson?.()
                     }}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#ff0000] hover:bg-[#cc0000] px-4 py-2 text-xs font-bold text-white shadow-lg transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-xl bg-[#ff0000] hover:bg-[#cc0000] px-4 py-2 text-xs font-extrabold text-white shadow-lg shadow-red-600/30 transition-all transform hover:scale-105 cursor-pointer"
                   >
-                    <span>Bài tiếp theo</span>
+                    <span>Chuyển bài ngay</span>
                     <ChevronRight size={15} />
                   </button>
+
                   <button
+                    type="button"
+                    onClick={() => {
+                      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
+                      setAutoPlayNext(false)
+                    }}
+                    className="flex items-center gap-1 rounded-xl bg-white/10 hover:bg-white/20 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer border border-white/10"
+                  >
+                    <X size={13} />
+                    <span>Dừng chuyển</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => {
                       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
                       setShowEndedScreen(false)
@@ -849,27 +895,50 @@ export function LessonPlayer({
                         videoRef.current.play()
                       }
                     }}
-                    className="flex items-center gap-1.5 rounded-lg bg-white/15 hover:bg-white/25 px-3.5 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-xl bg-white/15 hover:bg-white/25 px-3 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
                   >
-                    <ReplayIcon size={14} />
+                    <ReplayIcon size={13} />
                     <span>Xem lại</span>
                   </button>
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => {
-                  setShowEndedScreen(false)
-                  if (videoRef.current) {
-                    videoRef.current.currentTime = 0
-                    videoRef.current.play()
-                  }
-                }}
-                className="flex items-center gap-2 rounded-lg bg-[#ff0000] hover:bg-[#cc0000] px-5 py-2.5 text-xs font-bold text-white shadow-lg transition-colors cursor-pointer mx-auto"
-              >
-                <ReplayIcon size={15} />
-                <span>Xem lại bài học</span>
-              </button>
+              <div className="space-y-3 pt-2">
+                <p className="text-xs text-zinc-300">
+                  {hasNextLesson
+                    ? 'Bạn đã hoàn thành bài học này. Nhấn nút bên dưới để chuyển bài hoặc xem lại.'
+                    : '🎉 Chúc mừng bạn đã hoàn thành bài học cuối cùng trong danh sách!'}
+                </p>
+                <div className="flex items-center justify-center gap-2.5">
+                  {hasNextLesson && onNextLesson && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEndedScreen(false)
+                        onNextLesson()
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl bg-[#ff0000] hover:bg-[#cc0000] px-4 py-2 text-xs font-bold text-white shadow-lg transition-colors cursor-pointer"
+                    >
+                      <span>Bài tiếp theo</span>
+                      <ChevronRight size={15} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEndedScreen(false)
+                      if (videoRef.current) {
+                        videoRef.current.currentTime = 0
+                        videoRef.current.play()
+                      }
+                    }}
+                    className="flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 text-xs font-bold text-white shadow-lg transition-colors cursor-pointer"
+                  >
+                    <ReplayIcon size={14} />
+                    <span>Xem lại bài học</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

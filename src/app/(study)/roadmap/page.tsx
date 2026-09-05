@@ -33,6 +33,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { progressService } from '@/services/progress.service'
 import { courseService } from '@/services/course.service'
+import { toast } from '@/store/toast-store'
 import type { UserRoadmapProgress, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
 
 export default function RoadmapAppPage() {
@@ -75,26 +76,42 @@ export default function RoadmapAppPage() {
         baseline_score: 350,
       })
       setProgress(result)
+      toast.success('Đã kích hoạt Lộ trình học tập thành công!')
     } catch (err) {
       console.error('Lỗi khi đăng ký lộ trình:', err)
+      toast.error('Không thể kích hoạt lộ trình lúc này.')
     }
   }
 
   const handleRecordCheckpoint = async () => {
-    if (!progress || !activeCheckpointStage) return
+    if (!progress || activeCheckpointStage === null) return
+
+    if (checkpointScoreInput < 70) {
+      toast.warning(
+        `Điểm thi đạt ${checkpointScoreInput}% (chưa đạt ngưỡng tối thiểu 70% để vượt cấp). Hãy ôn luyện kỹ các bài học của Chặng ${activeCheckpointStage} để nắm chắc kiến thức trước nhé!`,
+        'Chưa Đạt Ngưỡng Vượt Cấp'
+      )
+      return
+    }
 
     setIsSubmittingCheckpoint(true)
     try {
       const updated = await progressService.recordCheckpointResult({
         roadmap_id: progress.roadmap_id,
         stage_order: activeCheckpointStage,
-        exam_id: `exam-stage-${activeCheckpointStage}`,
-        score: checkpointScoreInput,
+        course_id: `course-stage-${activeCheckpointStage}`,
+        checkpoint_score: checkpointScoreInput,
       })
       setProgress(updated)
       setActiveCheckpointStage(null)
+      toast.success(
+        `🎉 Chúc mừng bạn đã hoàn thành bài thi Chặng ${activeCheckpointStage} xuất sắc (${checkpointScoreInput}%)! Chặng tiếp theo đã được mở khóa.`,
+        'Vượt Cấp Thành Công'
+      )
+      loadData()
     } catch (err) {
       console.error('Lỗi khi cập nhật bài kiểm tra chặng:', err)
+      toast.error('Không thể ghi nhận kết quả bài thi lúc này. Vui lòng thử lại sau.')
     } finally {
       setIsSubmittingCheckpoint(false)
     }
@@ -566,9 +583,23 @@ export default function RoadmapAppPage() {
                       )}
 
                       {isLocked && (
-                        <div className="flex items-center gap-1.5 text-xs text-text-tertiary font-medium">
-                          <Lock className="w-3.5 h-3.5" />
-                          <span>Mở khóa khi xong Chặng {stageOrder - 1}</span>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+                          <div className="flex items-center gap-1.5 text-xs text-text-tertiary font-medium">
+                            <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span>Điều kiện: Đạt bài test Chặng {stageOrder - 1}</span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setActiveCheckpointStage(stageOrder - 1)
+                              setCheckpointScoreInput(80)
+                            }}
+                            className="gap-1.5 border-indigo-400/50 bg-indigo-50/60 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 dark:text-indigo-300 text-xs font-bold cursor-pointer transition-all shadow-xs"
+                          >
+                            <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                            <span>⚡ Thi Vượt Cấp Chặng {stageOrder - 1}</span>
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -580,20 +611,42 @@ export default function RoadmapAppPage() {
         </div>
       </div>
 
-      {/* Checkpoint Submission Modal */}
+      {/* Checkpoint / Test-out Submission Modal */}
       {activeCheckpointStage !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-surface border border-border p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2 text-indigo-600">
-              <FileCheck2 className="w-6 h-6" />
-              <h4 className="text-base font-bold text-text-primary">
-                Ghi Nhận Kết Quả Checkpoint Chặng {activeCheckpointStage}
-              </h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-md rounded-3xl bg-surface border border-border p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between gap-3 border-b border-border pb-3.5">
+              <div className="flex items-center gap-2.5 text-indigo-600 dark:text-indigo-400">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center">
+                  <FileCheck2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-text-primary">
+                    Đánh Giá / Thi Vượt Cấp Chặng {activeCheckpointStage}
+                  </h4>
+                  <p className="text-xs text-text-tertiary">
+                    Xác nhận kết quả bài kiểm tra để mở khóa chặng tiếp theo
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveCheckpointStage(null)}
+                className="text-text-tertiary hover:text-text-primary p-1 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
 
-            <p className="text-xs text-text-secondary leading-relaxed">
-              Nhập kết quả bài kiểm tra chặng của bạn. Nếu đạt từ 70% trở lên, hệ thống sẽ mở khóa chặng tiếp theo và ghi nhận số điểm tăng trưởng vào biểu đồ hành trình!
-            </p>
+            <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>Cơ Chế Thi Vượt Cấp Chuẩn Sư Phạm</span>
+              </div>
+              <p className="text-[11.5px] text-indigo-900/80 dark:text-indigo-200/80 leading-relaxed">
+                Nếu đạt từ <strong>70%</strong> trở lên, bạn được công nhận đã nắm vững kiến thức Chặng {activeCheckpointStage}. Hệ thống sẽ tự động mở khóa chặng tiếp theo và ghi nhận điểm tăng trưởng vào Biểu đồ hành trình!
+              </p>
+            </div>
 
             <div className="space-y-2">
               <label className="block text-xs font-bold text-text-primary">
@@ -604,27 +657,34 @@ export default function RoadmapAppPage() {
                 min={0}
                 max={100}
                 value={checkpointScoreInput}
-                onChange={(e) => setCheckpointScoreInput(Number(e.target.value))}
+                onChange={(e) => setCheckpointScoreInput(Math.min(100, Math.max(0, Number(e.target.value))))}
                 className="w-full px-3.5 py-2.5 bg-surface-subtle border border-border rounded-xl text-sm font-bold text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
+              <div className="flex items-center justify-between text-[11px] text-text-tertiary pt-0.5">
+                <span>Ngưỡng tối thiểu: <strong>70%</strong></span>
+                <span className={checkpointScoreInput >= 70 ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}>
+                  {checkpointScoreInput >= 70 ? '✓ Đủ điều kiện vượt cấp' : '⚠ Chưa đủ điều kiện'}
+                </span>
+              </div>
             </div>
 
-            <div className="pt-2 flex items-center justify-end gap-2">
+            <div className="pt-3 flex items-center justify-end gap-2 border-t border-border">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveCheckpointStage(null)}
-                className="text-xs font-semibold"
+                className="text-xs font-semibold cursor-pointer"
               >
-                Hủy
+                Hủy bỏ
               </Button>
               <Button
                 size="sm"
                 disabled={isSubmittingCheckpoint}
                 onClick={handleRecordCheckpoint}
-                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer"
+                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer transition-all shadow-xs"
               >
-                {isSubmittingCheckpoint ? 'Đang Ghi Nhận...' : 'Xác Nhận Qua Chặng'}
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{isSubmittingCheckpoint ? 'Đang Ghi Nhận...' : 'Xác Nhận & Mở Khóa Chặng'}</span>
               </Button>
             </div>
           </div>

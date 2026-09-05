@@ -12,6 +12,7 @@ import { CourseNotesTab } from '@/components/course/course.notes.tab'
 import { CourseQnATab } from '@/components/course/course.qna.tab'
 import { CourseReviewsTab } from '@/components/course/course.reviews.tab'
 import { CourseOverviewTab } from '@/components/course/course.overview.tab'
+import { CourseResourcesTab } from '@/components/course/course.resources.tab'
 import { CourseWorkspaceHeader } from '@/components/course/course.workspace.header'
 import { CourseSidebarContent } from '@/components/course/course.sidebar.content'
 import { CourseSidebarAiChat } from '@/components/course/course.sidebar.ai.chat'
@@ -32,7 +33,7 @@ import { toast } from '@/store/toast-store'
 import { extractCourseId, buildCourseUrl } from '@/lib/course.url'
 import type { Chapter, Course, Lesson, CourseReviewItem, NoteItem, QnAItem } from '@/types/course'
 
-type BottomTab = 'overview' | 'progress' | 'qna' | 'notes' | 'reviews'
+type BottomTab = 'overview' | 'progress' | 'resources' | 'qna' | 'notes' | 'reviews'
 type SidebarTab = 'content' | 'ai'
 
 function formatExactDuration(totalSeconds: number): string {
@@ -1575,6 +1576,12 @@ export default function CourseDetailPage() {
                 { id: 'overview', label: 'Tổng quan (Overview)' },
                 { id: 'progress', label: 'Tiến độ & Tăng trưởng' },
                 {
+                  id: 'resources',
+                  label: `Tài liệu (Resources) ${
+                    (currentLesson?.resources?.length || 0) > 0 ? `(${currentLesson?.resources?.length})` : ''
+                  }`,
+                },
+                {
                   id: 'qna',
                   label: `Hỏi & Đáp (Q&A) ${
                     course.qna?.length ? `(${course.qna.length})` : ''
@@ -1619,6 +1626,15 @@ export default function CourseDetailPage() {
                   finalTestScore={progressDetail?.course_progress?.final_test_score}
                 />
               </div>
+            )}
+
+            {activeBottomTab === 'resources' && (
+              <CourseResourcesTab
+                currentLesson={currentLesson}
+                course={course}
+                isEnrolled={isEnrolled}
+                onOpenCheckout={handleInitiateEnrollOrBuy}
+              />
             )}
 
             {activeBottomTab === 'qna' && (

@@ -35,9 +35,16 @@ export const progressService = {
   async recordCheckpointResult(data: {
     roadmap_id: string
     stage_order: number
-    exam_id: string
-    score: number
+    exam_id?: string
+    course_id?: string
+    score?: number
+    checkpoint_score?: number
   }): Promise<UserRoadmapProgress> {
-    return api.post<UserRoadmapProgress>(API_CONFIG.ENDPOINTS.PROGRESS.ROADMAP_CHECKPOINT, data)
+    const payload = {
+      ...data,
+      score: data.score ?? data.checkpoint_score ?? 80,
+      checkpoint_score: data.checkpoint_score ?? data.score ?? 80,
+    }
+    return api.post<UserRoadmapProgress>(API_CONFIG.ENDPOINTS.PROGRESS.ROADMAP_CHECKPOINT, payload)
   },
 }
