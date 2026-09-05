@@ -7,15 +7,13 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ShoppingCart, Trash2, ArrowLeft, ShieldCheck, Award, Zap, CheckCircle2, Loader2 } from 'lucide-react'
+import { ShoppingCart, ArrowLeft, ShieldCheck, Award, Zap } from 'lucide-react'
 import { useCartStore } from '@/store/cart.store'
 import { useAuthStore } from '@/store/auth.store'
-import { useEnrollmentStore } from '@/store/enrollment.store'
-import { courseService } from '@/services/course.service'
 import { CourseCheckoutModal, type CheckoutCourseItem } from '@/components/course/course.checkout.modal'
 import { toast } from '@/store/toast.store'
 import { useNavigate } from '@/lib/navigation'
-import { buildCourseUrl } from '@/lib/course.url'
+import { CartItemCard } from './cart.item.card'
 
 export default function CartPage() {
   const { i18n } = useTranslation()
@@ -23,7 +21,6 @@ export default function CartPage() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
   const cart = useCartStore((state) => state.cart)
-  const isLoading = useCartStore((state) => state.isLoading)
   const fetchCart = useCartStore((state) => state.fetchCart)
   const removeFromCart = useCartStore((state) => state.removeFromCart)
   const clearCart = useCartStore((state) => state.clearCart)
@@ -44,7 +41,7 @@ export default function CartPage() {
     if (isAuthenticated) {
       fetchCart()
     }
-  }, [isAuthenticated, mounted])
+  }, [isAuthenticated, mounted, fetchCart, navigate])
 
   const items = cart?.items || []
 
@@ -93,7 +90,8 @@ export default function CartPage() {
   const checkoutCourses: CheckoutCourseItem[] = items.map((it) => {
     const rawPrice = it.price || 0
     const rawDiscount = it.discount_price || 0
-    const effectivePrice = rawDiscount > 0 && rawDiscount < rawPrice ? rawDiscount : (rawPrice > 0 ? rawPrice : rawDiscount)
+    const effectivePrice =
+      rawDiscount > 0 && rawDiscount < rawPrice ? rawDiscount : rawPrice > 0 ? rawPrice : rawDiscount
     return {
       id: it.course_id,
       title: it.title,
@@ -104,24 +102,22 @@ export default function CartPage() {
 
   if (!mounted) {
     return (
-      <>
-        <div className="min-h-screen bg-background text-text-primary px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 animate-pulse">
-          <div className="flex items-center justify-between border-b border-border pb-5">
-            <div className="space-y-2">
-              <div className="h-4 w-32 bg-surface-subtle rounded-lg" />
-              <div className="h-8 w-64 bg-surface-hover rounded-xl" />
-            </div>
-            <div className="h-5 w-24 bg-surface-subtle rounded-lg" />
+      <div className="min-h-screen bg-background text-text-primary px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 animate-pulse">
+        <div className="flex items-center justify-between border-b border-border pb-5">
+          <div className="space-y-2">
+            <div className="h-4 w-32 bg-surface-subtle rounded-lg" />
+            <div className="h-8 w-64 bg-surface-hover rounded-xl" />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-4">
-              <div className="h-28 bg-surface rounded-2xl border border-border" />
-              <div className="h-28 bg-surface rounded-2xl border border-border" />
-            </div>
-            <div className="h-64 bg-surface rounded-2xl border border-border" />
-          </div>
+          <div className="h-5 w-24 bg-surface-subtle rounded-lg" />
         </div>
-      </>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="h-28 bg-surface rounded-2xl border border-border" />
+            <div className="h-28 bg-surface rounded-2xl border border-border" />
+          </div>
+          <div className="h-64 bg-surface rounded-2xl border border-border" />
+        </div>
+      </div>
     )
   }
 
@@ -181,74 +177,15 @@ export default function CartPage() {
               </div>
 
               <div className="space-y-3">
-                {items.map((item) => {
-                  const rawPrice = item.price || 0
-                  const rawDiscount = item.discount_price || 0
-                  const hasDiscount = rawDiscount > 0 && rawDiscount < rawPrice
-                  const itemSalePrice = hasDiscount ? rawDiscount : (rawPrice > 0 ? rawPrice : rawDiscount)
-                  const itemOriginalPrice = hasDiscount ? rawPrice : null
-
-                  return (
-                    <div
-                      key={item.course_id}
-                      className="rounded-2xl border border-border/80 bg-surface p-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center transition-all hover:shadow-sm"
-                    >
-                      <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                        <img
-                          src={
-                            item.thumbnail_url ||
-                            'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600'
-                          }
-                          alt={item.title}
-                          className="h-20 w-32 rounded-xl object-cover shrink-0 border border-border/60"
-                        />
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <h3
-                            onClick={() => navigate(buildCourseUrl({ id: item.course_id, title: item.title }))}
-                            className="text-sm font-bold text-text-primary line-clamp-2 hover:text-purple-600 dark:hover:text-purple-400 transition-colors cursor-pointer leading-snug"
-                          >
-                            {item.title}
-                          </h3>
-                          <div className="text-xs text-text-tertiary">
-                            {item.instructor_name || 'LingoSphere Academic Team'}
-                          </div>
-                          <div className="flex items-center gap-3 pt-1 text-[11px] text-text-secondary">
-                            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                              <CheckCircle2 size={12} />
-                              {isVi ? 'Truy cập trọn đời' : 'Lifetime access'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 shrink-0 border-t sm:border-t-0 border-border/40 pt-2 sm:pt-0">
-                        <div className="flex sm:flex-col items-baseline sm:items-end gap-1.5">
-                          <span className="text-base font-extrabold text-text-primary">
-                            {itemSalePrice > 0
-                              ? `₫${itemSalePrice.toLocaleString('vi-VN')}`
-                              : isVi
-                              ? 'Miễn phí'
-                              : 'Free'}
-                          </span>
-                          {itemOriginalPrice && (
-                            <span className="text-xs text-text-tertiary line-through">
-                              ₫{itemOriginalPrice.toLocaleString('vi-VN')}
-                            </span>
-                          )}
-                        </div>
-
-                        <button
-                          onClick={() => removeFromCart(item.course_id)}
-                          className="flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
-                          title={isVi ? 'Xóa khỏi giỏ hàng' : 'Remove from cart'}
-                        >
-                          <Trash2 size={14} />
-                          <span className="text-[11px] font-semibold">{isVi ? 'Xóa' : 'Remove'}</span>
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
+                {items.map((item) => (
+                  <CartItemCard
+                    key={item.course_id}
+                    item={item}
+                    isVi={isVi}
+                    onNavigate={navigate}
+                    onRemove={removeFromCart}
+                  />
+                ))}
               </div>
             </div>
 
@@ -335,7 +272,6 @@ export default function CartPage() {
         )}
       </div>
 
-      
       {showCheckoutModal && (
         <CourseCheckoutModal
           open={showCheckoutModal}

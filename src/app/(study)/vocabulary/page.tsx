@@ -5,7 +5,6 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Layers3, Star, Globe, Info, Plus, Users, GraduationCap, Bookmark, HelpCircle } from 'lucide-react'
@@ -16,8 +15,19 @@ import { SectionHeading } from '@/components/dashboard/section.heading'
 import { Icon } from '@/components/icons/icon.map'
 import { useDashboardStore } from '@/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService } from '@/services/vocabulary.service'
-import type { Deck } from '@/types/api.types'
+import { useVocabularyPage } from '@/hooks/use.vocabulary.page'
+
+function StatItem({ icon, label, value }: { icon: string; label: string; value: string | number }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-[20px] font-bold text-text-primary">{value}</span>
+      <span className="flex items-center gap-1 text-[11px] text-text-secondary">
+        <Icon name={icon} size={12} />
+        {label}
+      </span>
+    </div>
+  )
+}
 
 export default function VocabularyAppPage() {
   const { t, i18n } = useTranslation()
@@ -25,52 +35,18 @@ export default function VocabularyAppPage() {
   const navigate = useNavigate()
   const { showAction } = useApp()
   const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
-  const [activeTag, setActiveTag] = useState('all')
-  const [publicDecks, setPublicDecks] = useState<Deck[]>([])
-  const [myDecks, setMyDecks] = useState<Deck[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchVocabularyData = async () => {
-      try {
-        setIsLoading(true)
-        const [pubDecks, myEnrollments] = await Promise.all([
-          vocabularyService.getPublicDecks(),
-          vocabularyService.getMyEnrollments().catch(() => []),
-        ])
-        if (isMounted) {
-          if (Array.isArray(pubDecks)) setPublicDecks(pubDecks)
-          if (Array.isArray(myEnrollments)) setMyDecks(myEnrollments)
-        }
-      } catch (err) {
-        console.error('Error loading vocabulary data:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchVocabularyData()
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  const tags = ['all', 'TOEIC', 'General', 'Business', 'Communication', 'Basic']
-
-  const filteredPacks = publicDecks.filter((d: any) => {
-    if (activeTag === 'all') return true
-    const deckTags = d.tags || []
-    return deckTags.some((t: string) => t.toLowerCase() === activeTag.toLowerCase()) ||
-      (d.category && d.category.toLowerCase() === activeTag.toLowerCase())
-  })
-
-  const totalCards = publicDecks.reduce((sum: number, d: any) => sum + (d.card_count || d.total_cards || 0), 0)
-
-  const handleDeckClick = (deck: Deck) => {
-    setActiveNavItem('vocabulary')
-    navigate(`/vocabulary/learn/${deck.id || deck._id}`)
-    showAction(`Bắt đầu học bộ thẻ "${deck.title || (deck as any).name}"`)
-  }
+  const {
+    publicDecks,
+    myDecks,
+    isLoading,
+    activeTag,
+    setActiveTag,
+    tags,
+    filteredPacks,
+    totalCards,
+    handleDeckClick,
+  } = useVocabularyPage()
 
   return (
     <>
@@ -353,17 +329,5 @@ export default function VocabularyAppPage() {
         </section>
       </main>
     </>
-  )
-}
-
-function StatItem({ icon, label, value }: { icon: string; label: string; value: string | number }) {
-  return (
-    <div className="flex flex-col">
-      <span className="text-[20px] font-bold text-text-primary">{value}</span>
-      <span className="flex items-center gap-1 text-[11px] text-text-secondary">
-        <Icon name={icon} size={12} />
-        {label}
-      </span>
-    </div>
   )
 }
