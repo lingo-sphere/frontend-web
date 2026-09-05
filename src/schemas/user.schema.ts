@@ -1,0 +1,79 @@
+/**
+ * @file user.schema.ts
+ * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ user và auth
+ */
+
+import { z } from 'zod'
+
+export const UserRoleSchema = z.enum(['ADMIN', 'INSTRUCTOR', 'STUDENT', 'USER'])
+export const AccountStatusSchema = z.enum(['ACTIVE', 'INACTIVE', 'BLOCKED', 'PENDING'])
+
+export const UserSchema = z.object({
+  _id: z.string().optional(),
+  id: z.string().default(''),
+  user_id: z.string().optional(),
+  email: z.string(),
+  full_name: z.string(),
+  phone_number: z.string().optional(),
+  avatar_url: z.string().optional(),
+  date_of_birth: z.string().optional(),
+  gender: z.string().optional(),
+  role: UserRoleSchema.default('STUDENT'),
+  status: AccountStatusSchema.default('ACTIVE'),
+  is_email_verified: z.boolean().optional(),
+  bio: z.string().optional(),
+  level: z.string().optional(),
+  target_score: z.number().optional(),
+  xp: z.number().optional(),
+  streak_count: z.number().optional(),
+  is_premium: z.boolean().optional(),
+  subscription_expires_at: z.string().optional(),
+  subscription_plan: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+})
+
+export const GamificationProfileSchema = z.object({
+  total_xp: z.number().default(0),
+  weekly_xp: z.number().optional(),
+  monthly_xp: z.number().optional(),
+  level: z.number().default(1),
+  current_streak: z.number().default(0),
+  longest_streak: z.number().default(0),
+  streak_freezes_left: z.number().optional(),
+  gems: z.number().optional(),
+  league: z.string().optional(),
+}).passthrough()
+
+export const LeaderboardEntrySchema = z.object({
+  rank: z.number(),
+  user_id: z.string(),
+  user_name: z.string(),
+  user_avatar: z.string().optional(),
+  xp: z.number(),
+  is_current_user: z.boolean().optional(),
+}).passthrough()
+
+export const LeaderboardListSchema = z.array(LeaderboardEntrySchema)
+
+export const UserProfileResponseSchema = z.object({
+  profile: UserSchema,
+  is_premium: z.boolean().default(false),
+  subscription_expires_at: z.string().optional(),
+  subscription_plan: z.string().optional(),
+  gamification: GamificationProfileSchema.optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
+  subscription: z.record(z.string(), z.unknown()).optional(),
+}).passthrough()
+
+export const AuthResponseSchema = z.object({
+  user: UserSchema,
+  access_token: z.string(),
+  refresh_token: z.string().optional(),
+}).passthrough()
+
+export type User = z.infer<typeof UserSchema>
+export type GamificationProfile = z.infer<typeof GamificationProfileSchema>
+export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>
+export type UserProfileResponse = z.infer<typeof UserProfileResponseSchema>
+export type AuthResponse = z.infer<typeof AuthResponseSchema>

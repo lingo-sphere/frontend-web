@@ -6,11 +6,19 @@
 import { api } from '@/services/api.client'
 import { apiClient } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { User, LoginPayload, RegisterPayload, AuthResponse, SocialLoginPayload } from '@/types/api.types'
+import type { LoginPayload, RegisterPayload, SocialLoginPayload } from '@/types/api.types'
+import {
+  AuthResponseSchema,
+  UserSchema,
+  type AuthResponse,
+  type User,
+} from '@/schemas/user.schema'
+
+export type { AuthResponse, User }
 
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
-    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, payload)
+    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, payload, AuthResponseSchema)
     if (typeof window !== 'undefined' && res.access_token) {
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {
@@ -21,7 +29,7 @@ export const authService = {
   },
 
   async socialLogin(payload: SocialLoginPayload): Promise<AuthResponse> {
-    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.SOCIAL_LOGIN, payload)
+    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.SOCIAL_LOGIN, payload, AuthResponseSchema)
     if (typeof window !== 'undefined' && res.access_token) {
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {
@@ -32,11 +40,11 @@ export const authService = {
   },
 
   async register(payload: RegisterPayload): Promise<AuthResponse> {
-    return api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.REGISTER, payload)
+    return api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.REGISTER, payload, AuthResponseSchema)
   },
 
   async verifyEmailOtp(payload: { email: string; otp: string }): Promise<AuthResponse> {
-    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_OTP, payload)
+    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_OTP, payload, AuthResponseSchema)
     if (typeof window !== 'undefined' && res.access_token) {
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {
@@ -47,7 +55,7 @@ export const authService = {
   },
 
   async verifyEmailToken(payload: { email: string; token: string }): Promise<AuthResponse> {
-    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_TOKEN, payload)
+    const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_TOKEN, payload, AuthResponseSchema)
     if (typeof window !== 'undefined' && res.access_token) {
       localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {
@@ -76,7 +84,7 @@ export const authService = {
   },
 
   async getCurrentUser(): Promise<User> {
-    return api.get<User>(API_CONFIG.ENDPOINTS.AUTH.ME)
+    return api.get<User>(API_CONFIG.ENDPOINTS.AUTH.ME, undefined, UserSchema)
   },
 
   async logout(): Promise<void> {

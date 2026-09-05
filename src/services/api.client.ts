@@ -6,6 +6,7 @@
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { API_CONFIG } from '@/config/api.config'
 import type { ApiResponse } from '@/types/api.types'
+import type { ZodType } from 'zod'
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -172,37 +173,56 @@ apiClient.interceptors.response.use(
   },
 )
 
+function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): T {
+  if (!schema) return data as T
+  const parsed = schema.safeParse(data)
+  if (!parsed.success) {
+    const errorDetails = parsed.error.issues
+      .map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`)
+      .join('; ')
+    console.error(`[ZodValidationError] Endpoint ${endpoint}:`, parsed.error.format())
+    throw new Error(`Dữ liệu từ máy chủ không đúng định dạng (${endpoint}): ${errorDetails}`)
+  }
+  return parsed.data
+}
+
 export const api = {
-  async get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+  async get<T>(url: string, params?: Record<string, unknown>, schema?: ZodType<T>): Promise<T> {
     const res = await apiClient.get<ApiResponse<T> | T>(url, { params })
-    return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    const raw = (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    return parseWithSchema<T>(raw, schema, url)
   },
 
-  async post<T>(url: string, data?: unknown): Promise<T> {
+  async post<T>(url: string, data?: unknown, schema?: ZodType<T>): Promise<T> {
     const res = await apiClient.post<ApiResponse<T> | T>(url, data)
-    return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    const raw = (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    return parseWithSchema<T>(raw, schema, url)
   },
 
-  async put<T>(url: string, data?: unknown): Promise<T> {
+  async put<T>(url: string, data?: unknown, schema?: ZodType<T>): Promise<T> {
     const res = await apiClient.put<ApiResponse<T> | T>(url, data)
-    return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    const raw = (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    return parseWithSchema<T>(raw, schema, url)
   },
 
-  async patch<T>(url: string, data?: unknown): Promise<T> {
+  async patch<T>(url: string, data?: unknown, schema?: ZodType<T>): Promise<T> {
     const res = await apiClient.patch<ApiResponse<T> | T>(url, data)
-    return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    const raw = (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    return parseWithSchema<T>(raw, schema, url)
   },
 
-  async delete<T>(url: string): Promise<T> {
+  async delete<T>(url: string, schema?: ZodType<T>): Promise<T> {
     const res = await apiClient.delete<ApiResponse<T> | T>(url)
-    return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    const raw = (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    return parseWithSchema<T>(raw, schema, url)
   },
 
   async upload<T>(
     url: string,
     file: File | Blob,
     additionalData?: Record<string, string>,
-    onProgress?: (percent: number, loaded: number, total: number) => void
+    onProgress?: (percent: number, loaded: number, total: number) => void,
+    schema?: ZodType<T>
   ): Promise<T> {
     const formData = new FormData()
     const fileName = file instanceof File ? file.name : 'audio_recording.webm'
@@ -223,6 +243,7 @@ export const api = {
       },
     })
     onProgress?.(100, fileSize, fileSize)
-    return (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    const raw = (res.data as ApiResponse<T>)?.data !== undefined ? (res.data as ApiResponse<T>).data : (res.data as T)
+    return parseWithSchema<T>(raw, schema, url)
   },
 }

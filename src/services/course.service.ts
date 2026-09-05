@@ -6,6 +6,7 @@
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { Course, Chapter, Lesson, CourseEnrollment, LearningRoadmap } from '@/types/api.types'
+import { CourseSchema, LessonSchema } from '@/schemas/course.schema'
 
 export const courseService = {
 
@@ -22,7 +23,7 @@ export const courseService = {
   },
 
   async getCourseById(id: string): Promise<Course> {
-    return api.get<Course>(API_CONFIG.ENDPOINTS.COURSES.BY_ID(id))
+    return api.get<Course>(API_CONFIG.ENDPOINTS.COURSES.BY_ID(id), undefined, CourseSchema)
   },
 
   async getCourseChapters(courseId: string): Promise<Chapter[]> {
@@ -34,7 +35,7 @@ export const courseService = {
   },
 
   async getLessonById(lessonId: string): Promise<Lesson> {
-    return api.get<Lesson>(API_CONFIG.ENDPOINTS.COURSES.LESSON_BY_ID(lessonId))
+    return api.get<Lesson>(API_CONFIG.ENDPOINTS.COURSES.LESSON_BY_ID(lessonId), undefined, LessonSchema)
   },
 
   async enrollCourse(courseId: string): Promise<CourseEnrollment> {

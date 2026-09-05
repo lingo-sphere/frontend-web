@@ -5,33 +5,37 @@
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { UserRoadmapProgress } from '@/types/api.types'
+import {
+  UserRoadmapProgressSchema,
+  type UserRoadmapProgress,
+} from '@/schemas/course.schema'
+
+export type { UserRoadmapProgress }
 
 export const progressService = {
-  /**
-   * Lấy tiến độ lộ trình học tập hiện tại của người dùng
-   */
   async getMyRoadmapProgress(): Promise<UserRoadmapProgress | null> {
     try {
-      return await api.get<UserRoadmapProgress>(API_CONFIG.ENDPOINTS.PROGRESS.ROADMAP_MY)
+      return await api.get<UserRoadmapProgress>(
+        API_CONFIG.ENDPOINTS.PROGRESS.ROADMAP_MY,
+        undefined,
+        UserRoadmapProgressSchema
+      )
     } catch {
       return null
     }
   },
 
-  /**
-   * Đăng ký tham gia một lộ trình học tập trọn gói
-   */
   async enrollRoadmap(data: {
     roadmap_id: string
     baseline_score?: number
   }): Promise<UserRoadmapProgress> {
-    return api.post<UserRoadmapProgress>(API_CONFIG.ENDPOINTS.PROGRESS.ROADMAP_ENROLL, data)
+    return api.post<UserRoadmapProgress>(
+      API_CONFIG.ENDPOINTS.PROGRESS.ROADMAP_ENROLL,
+      data,
+      UserRoadmapProgressSchema
+    )
   },
 
-  /**
-   * Ghi nhận kết quả bài kiểm tra chặng (Checkpoint Exam) để cập nhật tăng trưởng
-   */
   async recordCheckpointResult(data: {
     roadmap_id: string
     stage_order: number
