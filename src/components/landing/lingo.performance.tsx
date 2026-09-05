@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 /**
  * @file LingoPerformance.tsx
@@ -34,7 +34,6 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
     offset: ["start end", "end start"],
   })
 
-  // 🚀 Parallax Exploded Floating Card Transforms (Wide & Grand Expansive Fly-Out)
   const p1X = useTransform(scrollYProgress, [0.15, 0.52], [-40, -520])
   const p1Y = useTransform(scrollYProgress, [0.15, 0.52], [40, -230])
   const p1Rotate = useTransform(scrollYProgress, [0.15, 0.52], [0, -8])
@@ -79,11 +78,11 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
       id="performance"
       className="relative z-20 w-full max-w-full overflow-hidden bg-[oklch(20%_0.08_280)] pt-14 pb-28 px-4 sm:px-6"
     >
-      {/* Ambient background glow */}
+      
       <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[800px] w-[1200px] rounded-full bg-[radial-gradient(circle,_rgba(72,201,176,0.16)_0%,_transparent_70%)] blur-[160px]" />
 
       <div className="mx-auto max-w-[1500px]">
-        {/* Title Header */}
+        
         <div className="text-center mb-2.5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -108,9 +107,9 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
           </motion.h2>
         </div>
 
-        {/* 🌌 Grand 3D Parallax Exploded Stage */}
+        
         <div className="relative h-[660px] sm:h-[760px] md:h-[840px] w-full flex items-center justify-center -mt-6 sm:-mt-8">
-          {/* 🌟 Center Core */}
+          
           <motion.div
             style={{ scale: centerScale }}
             className="relative z-10 flex flex-col items-center justify-center h-72 w-72 sm:h-88 sm:w-88 rounded-full border border-[#48c9b0]/50 bg-black/75 backdrop-blur-3xl shadow-[0_0_80px_rgba(72,201,176,0.45),inset_0_0_40px_rgba(72,201,176,0.25)] text-center p-8"
@@ -130,7 +129,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
             </div>
           </motion.div>
 
-          {/* 🃏 Card 1: Top Left - Spaced Repetition SRS Flashcard */}
+          
           <motion.div
             style={{
               x: p1X,
@@ -160,7 +159,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
             </div>
           </motion.div>
 
-          {/* 🎙️ Card 2: Top Right - Whisper STT Phoneme Accuracy */}
+          
           <motion.div
             style={{
               x: p2X,
@@ -196,7 +195,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
             </div>
           </motion.div>
 
-          {/* 🏆 Card 3: Mid Right - ETS TOEIC Exam Certificate */}
+          
           <motion.div
             style={{
               x: p3X,
@@ -226,7 +225,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
             </div>
           </motion.div>
 
-          {/* ⚡ Card 4: Bottom Right - Groq LPU Hybrid AI Tutor */}
+          
           <motion.div
             style={{
               x: p4X,
@@ -253,7 +252,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
             </div>
           </motion.div>
 
-          {/* 📖 Card 5: Mid Left - LingoThinking Logic Syntax Breakdown */}
+          
           <motion.div
             style={{
               x: p5X,
@@ -288,7 +287,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
             </p>
           </motion.div>
 
-          {/* 🔥 Card 6: Bottom Left - Gamification & Streak */}
+          
           <motion.div
             style={{
               x: p6X,

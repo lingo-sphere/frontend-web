@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file test.runner.result.view.tsx
+ * @description Thành phần mã nguồn test.runner.result.view.tsx
+ */
+
 import {
   CheckCircle2,
   AlertCircle,

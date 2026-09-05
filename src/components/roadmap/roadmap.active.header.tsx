@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file roadmap.active.header.tsx
+ * @description Thành phần mã nguồn roadmap.active.header.tsx
+ */
+
 import type { UserRoadmapProgress } from '@/types/api.types'
 
 interface RoadmapActiveHeaderProps {
@@ -38,7 +43,7 @@ export function RoadmapActiveHeader({ progress, roadmapStats }: RoadmapActiveHea
           </p>
         </div>
 
-        {/* Overall Progress Circle / Stats */}
+        
         <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 shrink-0">
           <div className="text-center">
             <div className="text-2xl font-black text-emerald-400">
@@ -60,7 +65,7 @@ export function RoadmapActiveHeader({ progress, roadmapStats }: RoadmapActiveHea
         </div>
       </div>
 
-      {/* Progress Bar */}
+      
       <div className="mt-6 pt-4 border-t border-indigo-500/20">
         <div className="flex items-center justify-between text-xs text-indigo-200 mb-1.5 font-semibold">
           <span>Tiến trình hoàn thành toàn lộ trình:</span>

@@ -302,7 +302,7 @@ export default function CoursesCatalogPage() {
             </div>
           </div>
 
-          {/* Placement Test Assessment Banner (Cách 3) */}
+          
           {activeTab === 'all' && (
             <CoursePlacementBanner />
           )}

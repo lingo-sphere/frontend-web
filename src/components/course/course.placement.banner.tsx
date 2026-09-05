@@ -35,7 +35,7 @@ export function CoursePlacementBanner() {
   } | null>(null)
 
   useEffect(() => {
-    // 1. Check user profile
+
     const rawUser = user as any
     if (rawUser?.placement_test_score) {
       setPlacementData({
@@ -50,7 +50,6 @@ export function CoursePlacementBanner() {
       return
     }
 
-    // 2. Fallback to localStorage
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('lingo_user_placement_score')
       if (stored) {
@@ -72,7 +71,6 @@ export function CoursePlacementBanner() {
     }
   }, [user])
 
-  // CASE 1: Học viên đã có điểm Baseline đầu vào -> Banner hiển thị trình độ & gợi ý
   if (placementData && placementData.score > 0) {
     const is4Skills = placementData.skillsType === '4SKILLS' || (placementData.speaking && placementData.speaking > 0)
 
@@ -172,7 +170,6 @@ export function CoursePlacementBanner() {
     )
   }
 
-  // CASE 2: Học viên CHƯA làm bài test đầu vào -> Banner mời làm bài test 2KN / 4KN
   return (
     <>
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-900 text-white p-6 sm:p-8 border border-indigo-400/30 shadow-2xl shadow-indigo-950/30 animate-in fade-in duration-300">

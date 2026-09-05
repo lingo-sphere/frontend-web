@@ -63,7 +63,7 @@ export function PronunciationExercise({ word, isAnswered, onAnswer, onNext, onSp
         recognition.start()
         recognitionRef.current = recognition
       } catch {
-        // Fallback if browser audio permission denied
+
       }
     }
   }

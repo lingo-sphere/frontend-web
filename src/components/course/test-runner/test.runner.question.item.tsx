@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file test.runner.question.item.tsx
+ * @description Thành phần mã nguồn test.runner.question.item.tsx
+ */
+
 import { AlertCircle, Bot, Target, XCircle, CheckCircle, Loader2 } from 'lucide-react'
 import {
   CourseTestQuestion,
@@ -161,7 +166,7 @@ export function TestRunnerQuestionItem({
                 ) : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                      {/* TẠI SAO SAI */}
+                      
                       <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-800/50 space-y-1">
                         <div className="flex items-center gap-1.5 font-bold text-rose-800 dark:text-rose-300">
                           <XCircle size={13} className="shrink-0" />
@@ -175,7 +180,7 @@ export function TestRunnerQuestionItem({
                         </p>
                       </div>
 
-                      {/* TẠI SAO ĐÚNG */}
+                      
                       <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/50 space-y-1">
                         <div className="flex items-center gap-1.5 font-bold text-emerald-800 dark:text-emerald-300">
                           <CheckCircle size={13} className="shrink-0" />
@@ -190,7 +195,7 @@ export function TestRunnerQuestionItem({
                       </div>
                     </div>
 
-                    {/* NÊN CHÚ TRỌNG HỌC THÊM CHỖ NÀO */}
+                    
                     <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-50/90 to-purple-50/90 dark:from-indigo-950/40 dark:to-purple-950/40 border border-indigo-200/70 dark:border-indigo-800/60 space-y-1">
                       <div className="flex items-center gap-1.5 font-bold text-indigo-950 dark:text-indigo-200 text-xs">
                         <Target size={13} className="text-indigo-600 dark:text-indigo-400 shrink-0" />

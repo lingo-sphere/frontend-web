@@ -286,7 +286,6 @@ export const courseService = {
     return api.get(`/progress/courses/${courseId}/growth-chart`)
   },
 
-  // ==================== 1. REVIEWS (ĐÁNH GIÁ) ====================
   async getCourseReviews(courseId: string): Promise<{
     reviews: Array<{
       _id: string
@@ -315,7 +314,6 @@ export const courseService = {
     return api.post(`/courses/${courseId}/reviews`, data)
   },
 
-  // ==================== 2. NOTES (GHI CHÚ) ====================
   async getCourseNotes(
     courseId: string,
     lessonId?: string
@@ -352,7 +350,6 @@ export const courseService = {
     return api.delete(`/courses/notes/${noteId}`)
   },
 
-  // ==================== 3. Q&A (HỎI & ĐÁP) ====================
   async getCourseQnA(
     courseId: string,
     lessonId?: string

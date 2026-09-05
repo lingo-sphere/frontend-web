@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 /**
  * @file Lanyard.tsx
@@ -174,7 +174,6 @@ export function Lanyard({
     }
   }, [destinationUrl, onUnlock, router])
 
-  // 1. Update Card Texture in-place when language changes (0ms, no WebGL tear-down)
   useEffect(() => {
     if (cardCanvasRef.current && cardTextureRef.current) {
       drawCardCanvas(cardCanvasRef.current, lang)
@@ -182,7 +181,6 @@ export function Lanyard({
     }
   }, [lang])
 
-  // 2. Initialize Three.js Hardware Accelerated Physics Scene Once
   useEffect(() => {
     const container = mountRef.current
     if (!container) return
@@ -210,7 +208,6 @@ export function Lanyard({
     renderer.toneMappingExposure = 1.2
     container.appendChild(renderer.domElement)
 
-    // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.2)
     scene.add(ambientLight)
 
@@ -226,7 +223,6 @@ export function Lanyard({
     topLight.position.set(0, 6, 4)
     scene.add(topLight)
 
-    // Card Canvas & Texture
     const cardCanvas = document.createElement('canvas')
     cardCanvas.width = 1024
     cardCanvas.height = 1440
@@ -238,7 +234,6 @@ export function Lanyard({
     cardTexture.anisotropy = 8
     cardTextureRef.current = cardTexture
 
-    // Ribbon Texture
     const ribbonCanvas = document.createElement('canvas')
     ribbonCanvas.width = 1024
     ribbonCanvas.height = 128
@@ -260,7 +255,6 @@ export function Lanyard({
     ribbonTexture.wrapT = THREE.RepeatWrapping
     ribbonTexture.repeat.set(2, 1)
 
-    // 3D Card Mesh with Metallic Clip
     const cardGroup = new THREE.Group()
 
     const cardWidth = 1.9
@@ -301,7 +295,6 @@ export function Lanyard({
 
     scene.add(cardGroup)
 
-    // Physics Rope Simulation Nodes
     const numJoints = 5
     const anchorY = 2.55
     const ropeLength = 0.75
@@ -316,7 +309,6 @@ export function Lanyard({
       })
     }
 
-    // Ribbon Mesh
     const ribbonSegments = 20
     const ribbonVertexCount = (ribbonSegments + 1) * 2
     const ribbonIndicesCount = ribbonSegments * 6
@@ -381,7 +373,6 @@ export function Lanyard({
       ribbonGeo.computeVertexNormals()
     }
 
-    // Wide-Range Drag Interaction
     let isDragging = false
     let currentPull = 0
     const pointer = new THREE.Vector2()
@@ -467,7 +458,6 @@ export function Lanyard({
     window.addEventListener('touchmove', onPointerMove, { passive: true })
     window.addEventListener('touchend', onPointerUp)
 
-    // Continuous Physics Loop
     let animId: number
     const gravity = new THREE.Vector3(0, -9.8, 0)
     const damping = 0.98
@@ -524,7 +514,6 @@ export function Lanyard({
 
     animate()
 
-    // Full-Width Responsive Resize
     const handleResize = () => {
       if (!container) return
       const w = container.clientWidth || window.innerWidth || 1200
@@ -553,10 +542,10 @@ export function Lanyard({
 
   return (
     <div className={`relative w-full h-[620px] sm:h-[720px] mx-auto flex flex-col items-center justify-start select-none touch-none overflow-hidden ${className}`}>
-      {/* Three.js Hardware Accelerated WebGL Canvas */}
+      
       <div ref={mountRef} className="w-full h-full" />
 
-      {/* Tension Pull Indicator & Visual Prompt */}
+      
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[340px] text-center z-30 pointer-events-none px-4">
         {isUnlockedState ? (
           <div className="inline-flex items-center gap-2 rounded-full bg-[#2f7f78] border border-[#5eead4] px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_35px_rgba(94,234,212,0.95)] animate-pulse">
@@ -565,7 +554,7 @@ export function Lanyard({
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2.5">
-            {/* Tension Progress Bar */}
+            
             <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/20 backdrop-blur-md">
               <div
                 ref={progressBarRef}

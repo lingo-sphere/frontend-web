@@ -69,7 +69,7 @@ export function ToeicCourseRecommendations({
       })
       navigate('/roadmap')
     } catch {
-      // Navigate to roadmap anyway
+
       navigate('/roadmap')
     } finally {
       setIsEnrollingRoadmap(false)
@@ -78,14 +78,14 @@ export function ToeicCourseRecommendations({
 
   return (
     <div className="space-y-6">
-      {/* 🌟 Option 1: Đề Xuất Lộ Trình Toàn Diện (Recommended Roadmap) */}
+      
       {recommendedRoadmap && (
         <div className="relative overflow-hidden rounded-3xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
           <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
           <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl" />
 
           <div className="relative z-10 space-y-6">
-            {/* Header */}
+            
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-500/20 pb-4">
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-xs font-bold text-indigo-300">
@@ -101,7 +101,7 @@ export function ToeicCourseRecommendations({
                 </p>
               </div>
 
-              {/* Target Badge */}
+              
               <div className="flex flex-col items-end">
                 <div className="text-[11px] uppercase tracking-wider text-indigo-300 font-bold">Cam Kết Đầu Ra</div>
                 <div className="text-2xl font-black text-teal-400">
@@ -110,7 +110,7 @@ export function ToeicCourseRecommendations({
               </div>
             </div>
 
-            {/* Stages Stepper Flow */}
+            
             <div className="space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-2">
                 <Layers className="w-4 h-4 text-indigo-400" />
@@ -155,7 +155,7 @@ export function ToeicCourseRecommendations({
               </div>
             </div>
 
-            {/* Pricing & CTA Banner */}
+            
             <div className="rounded-2xl bg-indigo-950/80 border border-indigo-500/30 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="space-y-1 text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2">
@@ -196,7 +196,7 @@ export function ToeicCourseRecommendations({
         </div>
       )}
 
-      {/* 🌟 Option 2: Học Tự Do - Chọn Mua Từng Khóa Lẻ (Individual Courses) */}
+      
       <Card className="dashboard-card border-slate-200/80 dark:border-slate-800 bg-surface p-6 shadow-sm">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-border pb-4">
           <div className="flex items-center gap-2.5">

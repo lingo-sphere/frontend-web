@@ -62,7 +62,7 @@ export function HeaderUserHover({
   return (
     <div className="absolute right-0 top-full pt-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
       <div className="w-72 sm:w-80 max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl text-left divide-y divide-border scrollbar-thin">
-        {/* 1. Header Profile Box */}
+        
         <div
           onClick={() => handleItemClick('/profile')}
           className="p-4 flex items-center gap-3.5 cursor-pointer hover:bg-surface-subtle transition-colors group"
@@ -106,7 +106,7 @@ export function HeaderUserHover({
           </div>
         </div>
 
-        {/* 2. Group 1: Learning & Shopping */}
+        
         <div className="py-1.5 text-xs text-text-secondary font-medium">
           <button
             onClick={() => handleItemClick('/courses?tab=my-courses')}
@@ -160,7 +160,7 @@ export function HeaderUserHover({
           </button>
         </div>
 
-        {/* 3. Group 2: Progress & Notifications */}
+        
         <div className="py-1.5 text-xs text-text-secondary font-medium">
           <button
             onClick={() => handleItemClick('/progress')}
@@ -176,7 +176,7 @@ export function HeaderUserHover({
           </button>
         </div>
 
-        {/* 4. Group 3: Profile & Settings */}
+        
         <div className="py-1.5 text-xs text-text-secondary font-medium">
           <button
             onClick={() => handleItemClick('/profile')}
@@ -192,7 +192,7 @@ export function HeaderUserHover({
           </button>
         </div>
 
-        {/* 5. Group 4: Language Switcher */}
+        
         <div className="py-1.5 text-xs text-text-secondary font-medium">
           <button
             onClick={() => {
@@ -208,7 +208,7 @@ export function HeaderUserHover({
           </button>
         </div>
 
-        {/* 6. Group 5: Logout */}
+        
         <div className="py-1.5 text-xs text-text-secondary font-medium">
           <button
             onClick={() => handleItemClick(undefined, () => logout())}

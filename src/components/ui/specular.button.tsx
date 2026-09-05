@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 /**
  * @file SpecularButton.tsx
@@ -99,12 +99,8 @@ void main() {
   float d = shapeSDF(p);
   vec2 L = vec2(cos(uAngle), sin(uAngle));
 
-  // Dark base stroke hugging the edge for a sense of thickness
   float base = (1.0 - smoothstep(0.0, uBaseWidth, abs(d))) * 0.45;
 
-  // Symmetric specular: the edges facing toward/away from the light both
-  // catch a streak. The angular window (size + fade) is measured with an
-  // elliptical normal so it varies continuously along straight edges.
   vec2 nEll = normalize(p / (uHalfSize * uHalfSize) + 1e-6);
   float phi = acos(clamp(abs(dot(nEll, L)), 0.0, 1.0));
   float rim = 1.0 - smoothstep(uShineSize - uShineFade, uShineSize + uShineFade + 1e-4, phi);

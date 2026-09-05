@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file test.runner.writing.section.tsx
+ * @description Thành phần mã nguồn test.runner.writing.section.tsx
+ */
+
 import { useState, useRef } from 'react'
 import {
   PenTool,

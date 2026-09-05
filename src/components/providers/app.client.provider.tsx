@@ -34,7 +34,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   const triggerKickout = (message?: string) => {
     if (typeof window === 'undefined') return
     if (Date.now() - lastVerifiedAt.current < 8000) {
-      // Just verified in another tab on the same browser, keep session in sync seamlessly
+
       checkAuth()
       return
     }
@@ -63,7 +63,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
         }
       }
     } catch {
-      // BroadcastChannel fallback
+
     }
 
     const handleStorageChange = (e: StorageEvent) => {
@@ -134,11 +134,11 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
             triggerKickout(data.message)
           }
         } catch {
-          // ignore parse error
+
         }
       }
     } catch {
-      // EventSource fallback
+
     }
 
     return () => {

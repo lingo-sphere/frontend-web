@@ -335,7 +335,7 @@ export default function CartPage() {
         )}
       </div>
 
-      {/* VietQR Bank Transfer Course Checkout Modal */}
+      
       {showCheckoutModal && (
         <CourseCheckoutModal
           open={showCheckoutModal}

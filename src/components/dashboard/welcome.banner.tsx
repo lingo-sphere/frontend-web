@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file welcome.banner.tsx
+ * @description Thành phần mã nguồn welcome.banner.tsx
+ */
+
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'

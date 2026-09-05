@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file player.shortcuts.modal.tsx
+ * @description Modal dialog giao diện player.shortcuts
+ */
+
 import { Keyboard, X } from 'lucide-react'
 
 interface PlayerShortcutsModalProps {

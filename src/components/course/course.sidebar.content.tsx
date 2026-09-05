@@ -94,7 +94,6 @@ export function CourseSidebarContent({
 }: CourseSidebarContentProps) {
   const [activeResourceDropdown, setActiveResourceDropdown] = useState<string | null>(null)
 
-  // Check if 100% of chapters have passed their challenge test before unlocking the Course Final Exam
   const allChaptersPassed =
     chapters.length > 0 &&
     chapters.every((ch, idx) => {
@@ -224,10 +223,10 @@ export function CourseSidebarContent({
               </div>
             </button>
 
-            {/* Chapter Collapsible Body */}
+            
             {isExpanded && (
               <div className="bg-surface-subtle/30 p-2.5 space-y-2">
-                {/* 1. DANH SÁCH CÁC BÀI GIẢNG VIDEO TRONG CHƯƠNG */}
+                
                 <div className="space-y-1">
                   {chapter.lessons.map((lesson) => {
                     const isActive = currentLesson?.id === lesson.id
@@ -354,7 +353,7 @@ export function CourseSidebarContent({
                   })}
                 </div>
 
-                {/* 2. CUỐI CHƯƠNG: BÀI TEST THỬ THÁCH (CHALLENGE TEST - ĐIỀU KIỆN MỞ KHÓA CHƯƠNG SAU) */}
+                
                 {questionsCount > 0 && (
                   <div
                     onClick={() => {
@@ -494,7 +493,7 @@ export function CourseSidebarContent({
         )
       })}
 
-      {/* 3. BÀI THI TỐT NGHIỆP TOÀN KHÓA HỌC (EXIT EXAM / FINAL TEST) */}
+      
       {finalTestQuestionsCount > 0 && (
         <div className="pt-2">
           <div

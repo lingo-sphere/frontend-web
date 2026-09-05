@@ -62,7 +62,7 @@ export function CourseRatingModal({ courseTitle, onClose, onSubmit }: CourseRati
           Đánh giá của bạn giúp giảng viên hoàn thiện bài giảng và hỗ trợ các học viên khác lựa chọn khóa học phù hợp!
         </p>
 
-        {/* 1 - 5 Star Selection */}
+        
         <div className="flex flex-col items-center justify-center py-3 bg-surface-subtle/50 rounded-2xl border border-border/50 space-y-2">
           <div className="flex items-center gap-2">
             {[1, 2, 3, 4, 5].map((star) => {
@@ -93,7 +93,7 @@ export function CourseRatingModal({ courseTitle, onClose, onSubmit }: CourseRati
           </span>
         </div>
 
-        {/* Comment Textarea */}
+        
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-text-secondary">Nhận xét chi tiết (Tùy chọn):</label>
           <textarea

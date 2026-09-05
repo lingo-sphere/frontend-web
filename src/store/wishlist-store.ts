@@ -1,14 +1,18 @@
+/**
+ * @file wishlist-store.ts
+ * @description Zustand store quản lý trạng thái cho wishlist
+ */
+
 import { create } from 'zustand'
 import { wishlistService } from '@/services/wishlist.service'
 import type { CourseCardData } from '@/types/course'
 import type { WishlistItem } from '@/types/wishlist'
 
-// Clean up legacy localStorage key if present
 if (typeof window !== 'undefined') {
   try {
     localStorage.removeItem('lingosphere-user-wishlist')
   } catch {
-    // Ignore storage access errors
+
   }
 }
 

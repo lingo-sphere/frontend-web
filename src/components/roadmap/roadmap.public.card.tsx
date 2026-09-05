@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file roadmap.public.card.tsx
+ * @description Card thành phần hiển thị roadmap.public.card.tsx
+ */
+
 import { Layers, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { LearningRoadmap } from '@/types/api.types'

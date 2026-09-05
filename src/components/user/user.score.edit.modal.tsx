@@ -95,7 +95,6 @@ export function UserScoreEditModal({
 
       await userService.updateProfile(payload as any).catch(() => null)
 
-      // Update local auth store
       const { user, setUser } = useAuthStore.getState()
       if (user) {
         setUser({
@@ -104,7 +103,6 @@ export function UserScoreEditModal({
         } as any)
       }
 
-      // Save to local storage for instant sync
       try {
         localStorage.setItem('lingo_user_placement_score', JSON.stringify(payload))
       } catch {}
@@ -153,7 +151,7 @@ export function UserScoreEditModal({
           </button>
         </div>
 
-        {/* Advisory Warning Note */}
+        
         <div className="p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
@@ -164,7 +162,7 @@ export function UserScoreEditModal({
           </p>
         </div>
 
-        {/* Form Inputs */}
+        
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -285,7 +283,7 @@ export function UserScoreEditModal({
           </div>
         </div>
 
-        {/* Footer Actions */}
+        
         <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"

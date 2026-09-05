@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 /**
  * @file LingoShowcase.tsx
@@ -24,7 +24,6 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
 
   const t = landingLocales[lang]?.showcase || landingLocales.vi.showcase
 
-  // 🎬 Seamless Video Loop Cross-fade Engine
   useEffect(() => {
     const v1 = v1Ref.current
     const v2 = v2Ref.current
@@ -76,10 +75,10 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
       id="showcase"
       className="relative z-20 w-full max-w-full overflow-x-hidden bg-[oklch(20%_0.08_280)] pt-[62px] pb-24"
     >
-      {/* Background ambient lighting */}
+      
       <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[900px] rounded-full bg-[radial-gradient(circle,_rgba(72,201,176,0.15)_0%,_transparent_70%)] blur-[140px]" />
 
-      {/* Top Header */}
+      
       <div className="mx-auto max-w-7xl px-6 text-center mb-14">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -103,7 +102,7 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
         </motion.h2>
       </div>
 
-      {/* 🎬 1. Full-Width Edge-to-Edge Video Cutout Mask Showcase */}
+      
       <div className="relative w-full max-w-full h-[220px] sm:h-[280px] md:h-[340px] overflow-hidden bg-[oklch(20%_0.08_280)] mb-5">
         <motion.div style={{ scale: videoScale }} className="absolute inset-0 h-full w-full">
           <video
@@ -163,10 +162,10 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
         </motion.div>
       </div>
 
-      {/* 📊 2. Narrative Content & Performance Columns */}
+      
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Column: Narrative */}
+          
           <div className="lg:col-span-7 space-y-6 text-left">
             <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-tight">
               {t.heading} <span className="text-[#5eead4]">{t.headingHighlight}</span>
@@ -200,7 +199,7 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
             </div>
           </div>
 
-          {/* Right Column: Performance Stats Grid */}
+          
           <div className="lg:col-span-5 grid grid-cols-2 gap-4">
             <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-left shadow-lg hover:border-[#48c9b0]/40 transition-colors">
               <div className="flex items-center gap-2 text-[#48c9b0] mb-3 font-mono text-xs font-bold">

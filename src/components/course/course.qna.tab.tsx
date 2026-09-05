@@ -207,7 +207,7 @@ export function CourseQnATab({
         </div>
       )}
 
-      {/* Top Search & Actions Bar */}
+      
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" size={16} />
@@ -252,7 +252,7 @@ export function CourseQnATab({
         )}
       </div>
 
-      {/* Refined Question Composer with Smooth Expand / Collapse Animation */}
+      
       <div
         className={`grid transition-all duration-300 ease-in-out ${
           showAskForm
@@ -308,7 +308,7 @@ export function CourseQnATab({
               />
             </div>
 
-            {/* Composer Footer: Sleek Anonymous Toggle + Actions */}
+            
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-border/70">
               <button
                 type="button"
@@ -355,7 +355,7 @@ export function CourseQnATab({
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      
       <div className="flex items-center justify-between border-b border-border pb-3">
         <div className="flex items-center gap-1 sm:gap-2">
           <button
@@ -391,7 +391,7 @@ export function CourseQnATab({
         </div>
       </div>
 
-      {/* Question Cards List */}
+      
       <div className="space-y-4">
         {filteredQnA.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 text-center rounded-3xl border border-dashed border-border bg-surface p-8 space-y-3">
@@ -415,7 +415,7 @@ export function CourseQnATab({
                 key={item.id}
                 className="rounded-3xl border border-border bg-surface p-5 sm:p-6 shadow-xs space-y-4 hover:border-border-hover transition-all"
               >
-                {/* Question Header */}
+                
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
                     {item.isAnonymous ? (
@@ -473,7 +473,7 @@ export function CourseQnATab({
                   </p>
                 )}
 
-                {/* Answers Section (Mô hình 2 cấp phẳng - Phản hồi từ Giảng viên / AI) */}
+                
                 {item.answers && item.answers.length > 0 && (
                   <div className="space-y-3 pt-3 border-t border-border/60 pl-0 sm:pl-13">
                     {item.answers.map((ans) => {
@@ -517,7 +517,7 @@ export function CourseQnATab({
                   </div>
                 )}
 
-                {/* Footer status / Teacher reply trigger */}
+                
                 <div className="pl-0 sm:pl-13 pt-1">
                   {isTeacherOrAdmin ? (
                     replyingQnaId === item.id ? (

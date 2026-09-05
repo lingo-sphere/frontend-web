@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file player.settings.menu.tsx
+ * @description Thành phần mã nguồn player.settings.menu.tsx
+ */
+
 import { useState } from 'react'
 import {
   Settings,

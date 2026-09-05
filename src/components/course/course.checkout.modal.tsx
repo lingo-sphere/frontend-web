@@ -97,14 +97,12 @@ export function CourseCheckoutModal({
     setStep('SUCCESS')
 
     try {
-      // Enroll in all purchased courses
+
       await Promise.all(courses.map((c) => courseService.enrollCourse(c.id).catch(() => null)))
 
-      // Add to enrollment store
       courses.forEach((c) => useEnrollmentStore.getState().addEnrolledCourse(c.id))
       await useEnrollmentStore.getState().fetchMyEnrollments()
 
-      // If cart has these courses, clear cart
       await useCartStore.getState().clearCart().catch(() => null)
     } catch {}
 
@@ -136,7 +134,6 @@ export function CourseCheckoutModal({
     return false
   }, [handlePaymentSuccess])
 
-  // Initialize payment order when modal opens
   useEffect(() => {
     if (!open || courses.length === 0) {
       stopAllTimers()
@@ -199,7 +196,6 @@ export function CourseCheckoutModal({
     }
   }, [open, courses.length, totalAmount, isAuthenticated, user, isVi, onOpenChange, stopAllTimers])
 
-  // Polling timer when QR is active
   useEffect(() => {
     if (open && step === 'PAYMENT_QR' && order?.order_code) {
       pollingRef.current = setInterval(() => {
@@ -256,12 +252,12 @@ export function CourseCheckoutModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      
       <div className="absolute inset-0 bg-black/65 backdrop-blur-md transition-opacity" />
 
       <div className="relative z-10 w-full max-w-lg animate-in fade-in zoom-in-95 duration-200">
         <div className="overflow-hidden rounded-3xl bg-surface shadow-2xl border border-border">
-          {/* Header */}
+          
           <div className="relative px-6 pt-6 pb-4 border-b border-border/60 bg-surface">
             <button
               onClick={() => {
@@ -289,7 +285,7 @@ export function CourseCheckoutModal({
             </div>
           </div>
 
-          {/* Modal Body */}
+          
           <div className="p-5 sm:p-6 max-h-[82vh] overflow-y-auto space-y-5">
             {step === 'SUCCESS' && (
               <div className="flex flex-col items-center justify-center py-8 text-center animate-in zoom-in-90 duration-300">
@@ -320,7 +316,7 @@ export function CourseCheckoutModal({
                   </div>
                 )}
 
-                {/* Purchased Courses Summary Card */}
+                
                 <div className="rounded-2xl border border-border bg-surface-subtle/50 p-3.5 space-y-2.5">
                   <div className="flex items-center justify-between text-xs font-bold text-text-secondary uppercase tracking-wider">
                     <span>{isVi ? 'Khóa học đăng ký' : 'Selected Courses'}</span>
@@ -349,7 +345,7 @@ export function CourseCheckoutModal({
                   </div>
                 </div>
 
-                {/* QR Code and Bank Details */}
+                
                 {isSubmitting || !order ? (
                   <div className="flex flex-col items-center justify-center py-12 space-y-3">
                     <RefreshCw className="h-8 w-8 text-primary animate-spin" />
@@ -359,7 +355,7 @@ export function CourseCheckoutModal({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {/* Countdown Timer */}
+                    
                     <div className="flex items-center justify-between rounded-xl bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 text-xs text-amber-700 dark:text-amber-400">
                       <div className="flex items-center gap-2 font-medium">
                         <Clock size={14} className="animate-pulse text-amber-600 dark:text-amber-400" />
@@ -370,7 +366,7 @@ export function CourseCheckoutModal({
                       </span>
                     </div>
 
-                    {/* QR Image Box */}
+                    
                     <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-white p-4 shadow-inner">
                       <div className="relative aspect-square w-52 sm:w-56 overflow-hidden rounded-xl bg-white p-2">
                         <img
@@ -385,9 +381,9 @@ export function CourseCheckoutModal({
                       </div>
                     </div>
 
-                    {/* Bank Info Fields */}
+                    
                     <div className="rounded-2xl border border-border bg-surface divide-y divide-border text-xs">
-                      {/* Bank Name */}
+                      
                       <div className="flex items-center justify-between p-3">
                         <span className="text-text-secondary">{isVi ? 'Ngân hàng' : 'Bank'}</span>
                         <div className="flex items-center gap-2">
@@ -402,7 +398,7 @@ export function CourseCheckoutModal({
                         </div>
                       </div>
 
-                      {/* Account Number */}
+                      
                       <div className="flex items-center justify-between p-3 bg-surface-subtle/30">
                         <span className="text-text-secondary">{isVi ? 'Số tài khoản' : 'Account number'}</span>
                         <div className="flex items-center gap-2">
@@ -419,7 +415,7 @@ export function CourseCheckoutModal({
                         </div>
                       </div>
 
-                      {/* Account Holder */}
+                      
                       <div className="flex items-center justify-between p-3">
                         <span className="text-text-secondary">{isVi ? 'Chủ tài khoản' : 'Account name'}</span>
                         <span className="font-bold text-text-primary uppercase">
@@ -427,7 +423,7 @@ export function CourseCheckoutModal({
                         </span>
                       </div>
 
-                      {/* Transfer Content */}
+                      
                       <div className="flex items-center justify-between p-3 bg-amber-500/5">
                         <div>
                           <span className="text-text-secondary block">{isVi ? 'Nội dung chuyển khoản' : 'Transfer Memo'}</span>
@@ -449,7 +445,7 @@ export function CourseCheckoutModal({
                         </div>
                       </div>
 
-                      {/* Amount */}
+                      
                       <div className="flex items-center justify-between p-3">
                         <span className="text-text-secondary">{isVi ? 'Số tiền' : 'Amount'}</span>
                         <div className="flex items-center gap-2">
@@ -467,7 +463,7 @@ export function CourseCheckoutModal({
                       </div>
                     </div>
 
-                    {/* Action buttons */}
+                    
                     <div className="pt-2">
                       <Button
                         onClick={handleManualCheck}

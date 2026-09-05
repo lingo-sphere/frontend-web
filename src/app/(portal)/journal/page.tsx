@@ -48,7 +48,7 @@ export default function DailyJournalAppPage() {
           })
         }
       } catch {
-        // Fallback default prompt
+
       }
     }
     fetchPrompt()

@@ -49,7 +49,7 @@ export function CourseWorkspaceHeader({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 shrink-0 text-xs font-semibold">
-        {/* Nút Đánh giá */}
+        
         <button
           onClick={onOpenRating}
           className="flex items-center gap-1.5 rounded-lg border border-white/20 px-3 py-1.5 text-white/90 hover:bg-white/10 hover:border-white/40 transition-colors cursor-pointer"
@@ -59,7 +59,7 @@ export function CourseWorkspaceHeader({
           <span>Đánh giá</span>
         </button>
 
-        {/* Nút Chia sẻ Facebook */}
+        
         <button
           onClick={handleShareFacebook}
           className="flex items-center gap-1.5 rounded-lg border border-white/20 px-3 py-1.5 text-white/90 hover:bg-white/10 hover:border-white/40 transition-colors cursor-pointer"
@@ -69,7 +69,7 @@ export function CourseWorkspaceHeader({
           <span>Chia sẻ</span>
         </button>
 
-        {/* Nút Đóng / Mở Sidebar bên phải */}
+        
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}

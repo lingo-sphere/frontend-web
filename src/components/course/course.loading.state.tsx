@@ -14,7 +14,7 @@ interface CourseLoadingStateProps {
 export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
   return (
     <div className="min-h-screen bg-background text-text-primary flex flex-col animate-in fade-in duration-150">
-      {/* 1. Header Skeleton */}
+      
       <header className="flex h-14 w-full items-center justify-between border-b border-border bg-surface px-4 sm:px-6 shadow-xs shrink-0">
         <div className="flex items-center gap-3 flex-1 min-w-0 pr-4">
           <button
@@ -30,7 +30,7 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
           </div>
         </div>
 
-        {/* Header Right Actions */}
+        
         <div className="flex items-center gap-2 shrink-0">
           <div className="hidden sm:flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border bg-surface-subtle animate-pulse">
             <Star size={13} className="text-text-tertiary" />
@@ -45,13 +45,13 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
         </div>
       </header>
 
-      {/* 2. Main Workspace Layout */}
+      
       <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden">
-        {/* Left Column: Player & Tab Content */}
+        
         <div className="flex-1 flex flex-col overflow-y-auto max-h-[calc(100vh-3.5rem)]">
-          {/* Video Player Skeleton */}
+          
           <div className="w-full bg-black relative flex flex-col items-center justify-center overflow-hidden min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] shadow-xl">
-            {/* Center Loading Spinner & Icon */}
+            
             <div className="flex flex-col items-center justify-center gap-4 text-white/70">
               <div className="relative flex items-center justify-center">
                 <div className="h-16 w-16 rounded-full border-2 border-white/15 border-t-primary animate-spin" />
@@ -60,7 +60,7 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
               <div className="h-4 w-48 rounded-md bg-white/20 animate-pulse mt-1" />
             </div>
 
-            {/* Bottom YouTube-style Player Bar Skeleton */}
+            
             <div className="absolute bottom-0 inset-x-0 h-11 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-4 w-4 rounded bg-white/30 animate-pulse" />
@@ -77,9 +77,9 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
             </div>
           </div>
 
-          {/* Bottom Tabs & Details Container Skeleton */}
+          
           <div className="p-4 sm:p-8 space-y-6 max-w-5xl">
-            {/* Tab Navigation Header */}
+            
             <div className="flex items-center gap-6 border-b border-border pb-3">
               <div className="h-4 w-32 rounded-md bg-primary/40 animate-pulse" />
               <div className="h-4 w-28 rounded-md bg-surface-subtle animate-pulse" />
@@ -87,7 +87,7 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
               <div className="h-4 w-24 rounded-md bg-surface-subtle animate-pulse" />
             </div>
 
-            {/* Course Title & Metadata Badges Skeleton */}
+            
             <div className="space-y-3 pt-2">
               <div className="h-7 w-3/4 rounded-xl bg-surface-subtle animate-pulse" />
               <div className="space-y-1.5">
@@ -103,7 +103,7 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
               </div>
             </div>
 
-            {/* Course Learning Objectives Card Skeleton */}
+            
             <div className="rounded-2xl border border-border bg-surface p-6 space-y-4 shadow-xs">
               <div className="h-5 w-64 rounded-lg bg-surface-subtle animate-pulse" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
@@ -116,7 +116,7 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
               </div>
             </div>
 
-            {/* Instructor Details Card Skeleton */}
+            
             <div className="rounded-2xl border border-border bg-surface p-6 space-y-4 shadow-xs">
               <div className="h-5 w-48 rounded-lg bg-surface-subtle animate-pulse" />
               <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -131,9 +131,9 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
           </div>
         </div>
 
-        {/* Right Column: Course Curriculum Sidebar Skeleton */}
+        
         <div className="w-full lg:w-[380px] shrink-0 border-l border-border bg-surface flex flex-col max-h-[calc(100vh-3.5rem)] shadow-lg hidden lg:flex">
-          {/* Sidebar Tabs Header */}
+          
           <div className="flex items-center justify-between border-b border-border bg-surface-subtle/50 px-4 py-3 shrink-0">
             <div className="flex items-center gap-2">
               <div className="h-7 w-32 rounded-lg bg-surface shadow-xs border border-border/50 animate-pulse" />
@@ -145,16 +145,16 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
             <div className="h-3.5 w-20 rounded bg-surface-subtle animate-pulse" />
           </div>
 
-          {/* Chapter Accordion List Skeleton */}
+          
           <div className="flex-1 overflow-y-auto divide-y divide-border">
-            {/* Chapter 1 Expanded */}
+            
             <div className="p-4 space-y-3 bg-surface">
               <div className="flex items-center justify-between">
                 <div className="h-4 w-44 rounded-md bg-surface-subtle animate-pulse" />
                 <div className="h-3 w-16 rounded bg-surface-subtle/60 animate-pulse" />
               </div>
 
-              {/* Sub Lessons */}
+              
               <div className="space-y-2 pt-1">
                 {[1, 2, 3].map((lesIdx) => (
                   <div
@@ -173,7 +173,7 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
               </div>
             </div>
 
-            {/* Chapter 2 Collapsed */}
+            
             <div className="p-4 space-y-2 bg-surface">
               <div className="flex items-center justify-between">
                 <div className="h-4 w-48 rounded-md bg-surface-subtle animate-pulse" />
@@ -181,7 +181,7 @@ export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
               </div>
             </div>
 
-            {/* Chapter 3 Collapsed */}
+            
             <div className="p-4 space-y-2 bg-surface">
               <div className="flex items-center justify-between">
                 <div className="h-4 w-40 rounded-md bg-surface-subtle animate-pulse" />

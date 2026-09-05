@@ -148,7 +148,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
         </div>
 
         <CardContent className="p-5 sm:p-6 space-y-6">
-          {/* Main Score Overview */}
+          
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 space-y-1">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -200,7 +200,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
             </div>
           </div>
 
-          {/* Sub-scores grid */}
+          
           <div>
             <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3">
               Chi tiết điểm từng kỹ năng:
@@ -252,7 +252,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
             </div>
           </div>
 
-          {/* Placement Test CTA */}
+          
           <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-200/80 dark:border-indigo-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
               <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">

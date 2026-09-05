@@ -94,7 +94,7 @@ export function CourseNotesTab({
         </div>
       )}
 
-      {/* Add note bar */}
+      
       <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
         {isAdding && isEnrolled && isAuthenticated ? (
           <form onSubmit={handleAddNoteSubmit} className="space-y-3">
@@ -147,7 +147,7 @@ export function CourseNotesTab({
         )}
       </div>
 
-      {/* Notes list */}
+      
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs font-bold text-text-primary">
           <span>Danh sách ghi chú của bạn ({notes.length})</span>

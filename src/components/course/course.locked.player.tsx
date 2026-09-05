@@ -38,7 +38,7 @@ export function CourseLockedPlayer({
 
   return (
     <div className="relative w-full min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] bg-slate-950 flex items-center justify-center border-b border-border select-none py-12 sm:py-16 px-4 sm:px-6 overflow-hidden">
-      {/* Background blurred thumbnail */}
+      
       {course.thumbnail && (
         <div
           className="absolute inset-0 bg-cover bg-center scale-110 filter blur-2xl opacity-15 pointer-events-none"
@@ -46,10 +46,10 @@ export function CourseLockedPlayer({
         />
       )}
 
-      {/* Radial ambient lighting */}
+      
       <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-950/95 to-slate-950 pointer-events-none" />
 
-      {/* Center Lock Card */}
+      
       <div className="relative z-10 w-full max-w-xl mx-auto text-center flex flex-col items-center gap-3.5 sm:gap-4 animate-in fade-in zoom-in-95 duration-200">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[11px] sm:text-xs font-bold tracking-wide shadow-sm shadow-amber-500/10">
           <Lock size={13} className="text-amber-400" />
@@ -65,7 +65,7 @@ export function CourseLockedPlayer({
           </p>
         </div>
 
-        {/* Benefits bullets */}
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left bg-slate-900/70 border border-slate-800 rounded-xl p-3 sm:p-3.5 w-full max-w-md my-0.5 text-xs text-slate-200">
           <div className="flex items-center gap-2">
             <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
@@ -85,7 +85,7 @@ export function CourseLockedPlayer({
           </div>
         </div>
 
-        {/* Action buttons */}
+        
         <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 pt-1 w-full max-w-md">
           {!isAuthenticated ? (
             <button

@@ -1,3 +1,8 @@
+/**
+ * @file test.runner.types.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho test.runner.types.ts
+ */
+
 export interface CourseTestQuestion {
   id?: string
   question_text?: string

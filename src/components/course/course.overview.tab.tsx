@@ -29,7 +29,7 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* 1. Course Header Information */}
+      
       <div className="space-y-3">
         <h2 className="text-xl sm:text-2xl font-bold text-text-primary leading-snug">
           {course.title}
@@ -38,7 +38,7 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
           {course.description || 'Khóa học cung cấp kiến thức nền tảng và chuyên sâu giúp học viên tiến bộ nhanh chóng.'}
         </p>
 
-        {/* Metadata Badges (Rating, Enrolled Students, Total Duration) */}
+        
         <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-text-secondary pt-2">
           <div className="flex items-center gap-1.5 text-warning">
             <span className="font-extrabold text-sm">{ratingValue}</span>
@@ -69,7 +69,7 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
         </div>
       </div>
 
-      {/* 2. Learning Objectives Card */}
+      
       <div className="rounded-2xl border border-border bg-surface p-6 space-y-4 shadow-sm">
         <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
           <Award className="text-primary" size={18} />
@@ -85,7 +85,7 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
         </div>
       </div>
 
-      {/* 3. Instructor Card */}
+      
       {course.instructor && (
         <div className="rounded-2xl border border-border bg-surface p-6 space-y-4 shadow-sm">
           <h3 className="text-base font-bold text-text-primary">Giảng viên hướng dẫn</h3>

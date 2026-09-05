@@ -47,11 +47,9 @@ export function CourseResourcesTab({
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
-  // Consolidate resources from currentLesson, all chapters/lessons, and course-level
   const allResources = useMemo(() => {
     const list: EnrichedResource[] = []
 
-    // 1. Current lesson resources
     if (currentLesson) {
       if (Array.isArray(currentLesson.resources) && currentLesson.resources.length > 0) {
         currentLesson.resources.forEach((r, idx) => {
@@ -81,7 +79,6 @@ export function CourseResourcesTab({
         })
       }
 
-      // Default curated study aids for the active lesson if none or in addition
       list.push(
         {
           id: `les-pdf-${currentLesson.id}`,
@@ -106,7 +103,6 @@ export function CourseResourcesTab({
       )
     }
 
-    // 2. Course-wide comprehensive materials
     if (course) {
       list.push(
         {
@@ -138,7 +134,6 @@ export function CourseResourcesTab({
         }
       )
 
-      // Chapter-specific audio test resources if available
       course.chapters?.forEach((ch, chIdx) => {
         if (ch.test_audio_url || ch.challenge_audio_url || ch.audio_url) {
           list.push({
@@ -160,13 +155,12 @@ export function CourseResourcesTab({
 
   const filteredResources = useMemo(() => {
     return allResources.filter((r) => {
-      // 1. Filter by category/type
+
       if (filterType === 'current' && r.category !== 'lesson') return false
       if (filterType === 'pdf' && r.format !== 'pdf') return false
       if (filterType === 'audio' && r.format !== 'audio') return false
       if (filterType === 'slide' && r.format !== 'slide') return false
 
-      // 2. Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
         return (
@@ -196,7 +190,7 @@ export function CourseResourcesTab({
       if (resource.url && resource.url !== '#' && resource.url.startsWith('http')) {
         window.open(resource.url, '_blank')
       } else {
-        // Create virtual download file for demo materials
+
         const blob = new Blob(
           [
             `LingoSphere Course Resource: ${resource.title}\nCourse: ${course?.title}\nLesson: ${
@@ -264,7 +258,7 @@ export function CourseResourcesTab({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Header & Lock Alert for Guest/Trial */}
+      
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-text-primary flex items-center gap-2">
@@ -288,9 +282,9 @@ export function CourseResourcesTab({
         )}
       </div>
 
-      {/* Filter and Search Bar */}
+      
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface p-3.5 rounded-2xl border border-border">
-        {/* Filter Pills */}
+        
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
           {[
             { id: 'all', label: `Tất cả (${allResources.length})` },
@@ -314,7 +308,7 @@ export function CourseResourcesTab({
           ))}
         </div>
 
-        {/* Search Input */}
+        
         <div className="relative min-w-[200px] sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary" />
           <input
@@ -327,7 +321,7 @@ export function CourseResourcesTab({
         </div>
       </div>
 
-      {/* Resource Cards Grid */}
+      
       {filteredResources.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredResources.map((res) => {

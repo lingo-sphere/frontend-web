@@ -192,7 +192,7 @@ export function ToeicExamResult({
           </CardContent>
         </Card>
 
-        {/* 🌟 Khối Gợi Ý Lộ Trình & Khóa Học Thông Minh */}
+        
         <ToeicCourseRecommendations
           recommendedRoadmap={recommendedRoadmap}
           courses={recommendedCourses}

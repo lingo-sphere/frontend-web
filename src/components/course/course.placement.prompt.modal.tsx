@@ -61,7 +61,7 @@ export function CoursePlacementPromptModal({
         className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl w-full max-w-xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Decorative Header */}
+        
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
@@ -85,7 +85,7 @@ export function CoursePlacementPromptModal({
           </button>
         </div>
 
-        {/* Advisory Message */}
+        
         <div className="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 flex items-start gap-2.5">
           <ShieldAlert className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
           <p className="text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed">
@@ -93,9 +93,9 @@ export function CoursePlacementPromptModal({
           </p>
         </div>
 
-        {/* Recommendation Cards */}
+        
         <div className="space-y-3">
-          {/* Card 1: Khuyên làm test đầu vào hệ thống */}
+          
           <div className="rounded-2xl border border-indigo-200 dark:border-indigo-800/80 bg-gradient-to-br from-indigo-50/50 via-white to-violet-50/50 dark:from-slate-800/80 dark:via-slate-900 dark:to-indigo-950/40 p-4 space-y-3 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export function CoursePlacementPromptModal({
             </div>
           </div>
 
-          {/* Card 2: Cập nhật điểm đã có trong Profile */}
+          
           <div className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-slate-100/60 dark:hover:bg-slate-800/80 transition-all">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
@@ -176,7 +176,7 @@ export function CoursePlacementPromptModal({
           </div>
         </div>
 
-        {/* Footer actions */}
+        
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"

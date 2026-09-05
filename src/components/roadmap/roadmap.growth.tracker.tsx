@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file roadmap.growth.tracker.tsx
+ * @description Thành phần mã nguồn roadmap.growth.tracker.tsx
+ */
+
 import { Compass, TrendingUp, Target } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -18,9 +23,9 @@ interface RoadmapGrowthTrackerProps {
 export function RoadmapGrowthTracker({ progress, roadmapStats }: RoadmapGrowthTrackerProps) {
   return (
     <div className="space-y-4">
-      {/* 📈 Score Growth 3-column Cards */}
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Card 1: Điểm Xuất Phát */}
+        
         <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-1">
           <div className="text-xs font-bold text-text-tertiary flex items-center gap-1.5">
             <Compass className="w-3.5 h-3.5 text-indigo-500" />
@@ -32,7 +37,7 @@ export function RoadmapGrowthTracker({ progress, roadmapStats }: RoadmapGrowthTr
           <p className="text-[11px] text-text-secondary">Điểm khảo sát năng lực khi mới vào</p>
         </div>
 
-        {/* Card 2: Điểm Ước Tính Hiện Tại & Mức Tăng Trưởng */}
+        
         <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-surface to-surface border border-emerald-500/30 shadow-xs space-y-1">
           <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5" />
@@ -51,7 +56,7 @@ export function RoadmapGrowthTracker({ progress, roadmapStats }: RoadmapGrowthTr
           <p className="text-[11px] text-text-secondary">Ghi nhận liên tục qua các bài kiểm tra chặng</p>
         </div>
 
-        {/* Card 3: Mục Tiêu Cam Kết */}
+        
         <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-1">
           <div className="text-xs font-bold text-text-tertiary flex items-center gap-1.5">
             <Target className="w-3.5 h-3.5 text-teal-500" />
@@ -64,7 +69,7 @@ export function RoadmapGrowthTracker({ progress, roadmapStats }: RoadmapGrowthTr
         </div>
       </div>
 
-      {/* 📊 Visual Score Growth Chart (SVG Progression Curve) */}
+      
       <Card className="dashboard-card p-6 border-border bg-surface shadow-xs space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
           <div className="flex items-center gap-2">
@@ -87,7 +92,7 @@ export function RoadmapGrowthTracker({ progress, roadmapStats }: RoadmapGrowthTr
           )}
         </div>
 
-        {/* SVG Score Line Chart */}
+        
         <div className="relative pt-4 pb-2">
           <div className="h-44 w-full flex items-end justify-between px-4 sm:px-12 relative border-b border-dashed border-border/80 pb-6">
             {(progress.growth_chart_data || []).map((pt, idx, arr) => {
@@ -115,7 +120,7 @@ export function RoadmapGrowthTracker({ progress, roadmapStats }: RoadmapGrowthTr
               )
             })}
 
-            {/* Target Milestone Marker */}
+            
             <div className="flex flex-col items-center gap-2 z-10 opacity-70">
               <span className="text-xs font-black text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800">
                 {roadmapStats?.target}+đ

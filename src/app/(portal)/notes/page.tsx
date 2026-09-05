@@ -37,7 +37,7 @@ export default function NotesAppPage() {
         setNotes(JSON.parse(saved))
       }
     } catch {
-      // Ignore
+
     }
   }, [])
 
@@ -46,7 +46,7 @@ export default function NotesAppPage() {
     try {
       localStorage.setItem('lingosphere_user_notes', JSON.stringify(updated))
     } catch {
-      // Ignore
+
     }
   }
 

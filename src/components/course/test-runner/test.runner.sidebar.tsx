@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file test.runner.sidebar.tsx
+ * @description Thành phần mã nguồn test.runner.sidebar.tsx
+ */
+
 import { Send, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CourseTestQuestion, getCorrectOptionIndex } from './test.runner.types'
@@ -49,7 +54,7 @@ export function TestRunnerSidebar({
         </div>
       </div>
 
-      {/* Progress bar */}
+      
       <div className="w-full bg-border h-1.5">
         <div
           className="bg-primary h-1.5 transition-all duration-300"
@@ -57,7 +62,7 @@ export function TestRunnerSidebar({
         />
       </div>
 
-      {/* Grid of Question numbers */}
+      
       <div className="flex-1 overflow-y-auto p-4">
         <div className="grid grid-cols-5 gap-2">
           {questions.map((q, idx) => {
@@ -96,7 +101,7 @@ export function TestRunnerSidebar({
           })}
         </div>
 
-        {/* Legend */}
+        
         <div className="mt-5 pt-4 border-t border-border space-y-2 text-[11px] text-text-secondary">
           {!isSubmitted ? (
             <>
@@ -124,7 +129,7 @@ export function TestRunnerSidebar({
         </div>
       </div>
 
-      {/* Quick Action at bottom of palette */}
+      
       <div className="p-4 border-t border-border bg-surface-subtle/40">
         {!isSubmitted ? (
           <Button

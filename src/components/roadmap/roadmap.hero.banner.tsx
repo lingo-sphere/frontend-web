@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file roadmap.hero.banner.tsx
+ * @description Thành phần mã nguồn roadmap.hero.banner.tsx
+ */
+
 import { Compass, Sparkles, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 

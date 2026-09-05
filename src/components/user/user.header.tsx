@@ -173,7 +173,7 @@ export function UserStatsHeader({ user, onEditClick }: UserStatsHeaderProps) {
         </div>
         <p suppressHydrationWarning className="text-sm text-text-secondary mb-2">{user.email}</p>
         
-        {/* VIP Subscription Details Card */}
+        
         {isPremium && (
           <div className="mb-3 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent p-3 text-left">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">

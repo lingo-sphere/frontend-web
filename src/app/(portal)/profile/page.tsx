@@ -99,7 +99,7 @@ export default function ProfileAppPage() {
   })
 
   useEffect(() => {
-    // Client-side hydration sync
+
     let cachedStats: any = null
     let localScore: any = null
     try {

@@ -123,7 +123,7 @@ export default function ToeicExamAppPage() {
 
   const generateQuestionsForParts = useCallback((parts: number[]): ToeicQuestion[] => {
     if (!examData || !examData.parts) {
-      // Create fallback structure from exam
+
       const qs: ToeicQuestion[] = []
       let qIndex = 1
       parts.forEach((partNum) => {
@@ -264,7 +264,6 @@ export default function ToeicExamAppPage() {
       mode: state.timedMode ? 'timed' : 'practice',
     })
 
-    // Auto save placement score to profile if this is a diagnostic/placement test
     const isDiagnostic = Boolean(
       examData?.exam_type === 'DIAGNOSTIC_TEST' ||
       examId?.includes('placement') ||

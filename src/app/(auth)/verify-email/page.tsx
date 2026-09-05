@@ -48,7 +48,7 @@ function VerifyEmailContent() {
             channel.postMessage({ type: 'EMAIL_VERIFIED_SUCCESS', user: res.user })
             channel.close()
           } catch {
-            // BroadcastChannel fallback
+
           }
         }
         setState('SUCCESS')

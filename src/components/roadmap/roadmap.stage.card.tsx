@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file roadmap.stage.card.tsx
+ * @description Card thành phần hiển thị roadmap.stage.card.tsx
+ */
+
 import {
   CheckCircle2,
   TrendingUp,
@@ -47,7 +52,7 @@ export function RoadmapStageCard({
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-start gap-4">
-          {/* Step Circle Badge */}
+          
           <div
             className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm shadow-xs ${
               isCompleted
@@ -103,7 +108,7 @@ export function RoadmapStageCard({
           </div>
         </div>
 
-        {/* Stage Actions */}
+        
         <div className="flex items-center gap-2 sm:self-center">
           {isCompleted && (
             <Button

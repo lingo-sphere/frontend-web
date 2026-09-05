@@ -42,7 +42,7 @@ export const useEnrollmentStore = create<EnrollmentState>((set, get) => ({
 
   isEnrolled: (courseIdOrSlug: string) => {
     if (!courseIdOrSlug) return false
-    // VIP / Subscription users and Admin/Instructor get access to all courses
+
     try {
       const authUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('lingosphere_user') || '{}') : null
       if (authUser?.is_premium || authUser?.role === 'ADMIN' || authUser?.role === 'INSTRUCTOR') {

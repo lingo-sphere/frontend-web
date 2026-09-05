@@ -552,7 +552,6 @@ export function CourseScheduleModal({
           </div>
         </div>
 
-
         <label className="flex items-start gap-3 rounded-2xl border border-border bg-surface-hover/40 p-3.5 cursor-pointer hover:border-border-hover transition-colors">
           <input
             type="checkbox"

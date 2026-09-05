@@ -34,7 +34,7 @@ export function CourseGrowthChart({
   totalGrowthPercentage = 0,
   finalTestScore,
 }: CourseGrowthChartProps) {
-  // Sort or format growth chart points
+
   const points = useMemo(() => {
     if (!growthData || growthData.length === 0) {
       if (isBaselineEstablished && baselineScore > 0) {
@@ -67,7 +67,7 @@ export function CourseGrowthChart({
 
   return (
     <div className="p-6 rounded-3xl bg-surface border border-border shadow-xs space-y-6">
-      {/* Header Metrics */}
+      
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 border-b border-border/60">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-primary text-white shadow-md shadow-primary/20 shrink-0">
@@ -109,7 +109,7 @@ export function CourseGrowthChart({
         )}
       </div>
 
-      {/* Visual Chart - Interactive Timeline Bars */}
+      
       <div className="space-y-2">
         <div className="h-44 flex items-end justify-between gap-2.5 sm:gap-4 pt-6 px-2">
           {points.map((pt, idx) => {
@@ -119,12 +119,12 @@ export function CourseGrowthChart({
 
             return (
               <div key={idx} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                {/* Score badge tooltip on top of bar */}
+                
                 <span className="text-[11px] font-black text-text-primary px-2 py-0.5 rounded-lg bg-surface border border-border shadow-xs group-hover:scale-110 transition-transform">
                   {pt.score}
                 </span>
 
-                {/* Vertical Bar */}
+                
                 <div className="w-full max-w-[48px] bg-surface-subtle rounded-xl overflow-hidden p-1 flex items-end h-full">
                   <div
                     style={{ height: `${heightPercent}%` }}
@@ -138,7 +138,7 @@ export function CourseGrowthChart({
                   />
                 </div>
 
-                {/* Stage Label */}
+                
                 <span className="text-[11px] font-bold text-text-secondary text-center truncate max-w-[64px] sm:max-w-none">
                   {pt.stage}
                 </span>
@@ -148,7 +148,7 @@ export function CourseGrowthChart({
         </div>
       </div>
 
-      {/* Highlights & Stage Steps */}
+      
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
         <div className="p-3.5 rounded-2xl bg-surface-subtle/60 border border-border/70 flex items-center gap-3">
           <div className="p-2 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-300">

@@ -83,7 +83,7 @@ export const authService = {
     try {
       await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
     } catch {
-      // Ignore server error on logout
+
     } finally {
       if (typeof window !== 'undefined') {
         localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)

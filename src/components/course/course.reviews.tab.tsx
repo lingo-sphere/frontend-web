@@ -55,7 +55,7 @@ export function CourseReviewsTab({
 
   return (
     <div className="space-y-8 pt-2">
-      {/* Overview stats */}
+      
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center rounded-2xl border border-border bg-surface p-6">
         <div className="md:col-span-4 text-center md:border-r border-border md:pr-6 space-y-2">
           <div className="text-5xl font-black text-primary">{rating.toFixed(1)}</div>
@@ -112,7 +112,7 @@ export function CourseReviewsTab({
         </div>
       </div>
 
-      {/* Review form */}
+      
       {showReviewForm && onAddReview && (
         <form onSubmit={handleSubmit} className="rounded-2xl border border-primary/20 bg-primary-soft/10 p-5 space-y-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
@@ -181,7 +181,7 @@ export function CourseReviewsTab({
         </form>
       )}
 
-      {/* Review items */}
+      
       <div className="space-y-4">
         <h3 className="text-sm font-bold text-text-primary">
           Đánh giá từ học viên {reviewsList.length > 0 ? `(${reviewsList.length})` : ''}

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file player.controls.bar.tsx
+ * @description Thành phần mã nguồn player.controls.bar.tsx
+ */
+
 import { RefObject } from 'react'
 import {
   Play,
@@ -100,7 +105,7 @@ export function PlayerControlsBar({
         showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
-      {/* 1. YouTube Scrubber Progress Bar */}
+      
       <div
         ref={progressBarRef}
         onMouseDown={onTimelineMouseDown}
@@ -108,28 +113,28 @@ export function PlayerControlsBar({
         onMouseLeave={onTimelineMouseLeave}
         className="group/timeline relative w-full h-4 cursor-pointer flex items-center mb-1"
       >
-        {/* Scrubber Track */}
+        
         <div className="relative w-full h-[3px] group-hover/timeline:h-[5px] rounded-full bg-white/25 transition-all overflow-visible">
-          {/* Buffer Progress */}
+          
           <div
             className="absolute top-0 bottom-0 left-0 bg-white/40 rounded-full transition-all"
             style={{ width: `${bufferedPercent}%` }}
           />
 
-          {/* Played Progress (YouTube Red) */}
+          
           <div
             className="absolute top-0 bottom-0 left-0 bg-[#ff0000] rounded-full"
             style={{ width: `${playedPercent}%` }}
           />
 
-          {/* Red Thumb Scrubber Ball */}
+          
           <div
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-3.5 w-3.5 rounded-full bg-[#ff0000] shadow-md scale-0 group-hover/timeline:scale-100 transition-transform duration-100 pointer-events-none"
             style={{ left: `${playedPercent}%` }}
           />
         </div>
 
-        {/* Hover Tooltip Timestamp */}
+        
         {hoverTime !== null && (
           <div
             className="pointer-events-none absolute -top-8 -translate-x-1/2 rounded bg-[#0f0f0f]/90 text-white font-mono text-[11px] font-semibold px-1.5 py-0.5 shadow-xl border border-white/10"
@@ -140,9 +145,9 @@ export function PlayerControlsBar({
         )}
       </div>
 
-      {/* 2. YouTube Action Buttons Row */}
+      
       <div className="flex items-center justify-between gap-3 text-white">
-        {/* Left Controls: Prev, Play/Pause, Next, Volume, Time */}
+        
         <div className="flex items-center gap-1 sm:gap-2">
           {hasPrevLesson && (
             <button
@@ -176,7 +181,7 @@ export function PlayerControlsBar({
             </button>
           )}
 
-          {/* YouTube-style Expanding Volume Bar */}
+          
           <div className="group/vol flex items-center">
             <button
               onClick={onToggleMute}
@@ -205,7 +210,7 @@ export function PlayerControlsBar({
             </div>
           </div>
 
-          {/* Time Display */}
+          
           <div className="text-[12px] font-normal text-white/90 select-none ml-2 tracking-normal">
             <span>{formatTime(currentTime)}</span>
             <span className="text-white/50 mx-1">/</span>
@@ -213,9 +218,9 @@ export function PlayerControlsBar({
           </div>
         </div>
 
-        {/* Right Controls: Autoplay, Settings, PiP, Theater, Fullscreen */}
+        
         <div className="flex items-center gap-1 sm:gap-2">
-          {/* Autoplay Toggle Switch */}
+          
           <button
             onClick={onToggleAutoPlay}
             className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer text-xs"
@@ -237,7 +242,7 @@ export function PlayerControlsBar({
             </div>
           </button>
 
-          {/* Settings Menu */}
+          
           <PlayerSettingsMenu
             showSettingsMenu={showSettingsMenu}
             playbackSpeed={playbackSpeed}
@@ -249,7 +254,7 @@ export function PlayerControlsBar({
             onQualityChange={onQualityChange}
           />
 
-          {/* PiP Button */}
+          
           <button
             onClick={onTogglePip}
             className="p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
@@ -258,7 +263,7 @@ export function PlayerControlsBar({
             <PictureInPicture2 size={18} />
           </button>
 
-          {/* Theater Mode Toggle */}
+          
           <button
             onClick={onToggleTheater}
             className="p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
@@ -267,7 +272,7 @@ export function PlayerControlsBar({
             <Tv size={18} />
           </button>
 
-          {/* Fullscreen Toggle */}
+          
           <button
             onClick={onToggleFullscreen}
             className="p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"

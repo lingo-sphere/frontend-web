@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file test.runner.history.modal.tsx
+ * @description Modal dialog giao diện test.runner.history
+ */
+
 import { X, History, Crown, RotateCcw, CheckCircle2, FileQuestion, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TestAttemptItem } from './test.runner.types'

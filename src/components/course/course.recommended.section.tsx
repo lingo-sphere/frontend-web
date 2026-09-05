@@ -163,7 +163,7 @@ export function RecommendedCoursesSection({
               key={course.id || idx}
               className="group rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden relative"
             >
-              {/* Top Match Badge */}
+              
               <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
                   src={course.thumbnail}
@@ -179,7 +179,7 @@ export function RecommendedCoursesSection({
                 </div>
               </div>
 
-              {/* Card Body */}
+              
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">

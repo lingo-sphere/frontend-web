@@ -10,7 +10,6 @@ export const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
 let isInitialized = false
 
-// Danh sách các trang học tập quan trọng cần ghi hình Session Replay
 const IMPORTANT_LEARNING_PATHS = [
   '/exam',
   '/practice',
@@ -30,19 +29,15 @@ export function initPostHog(): void {
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
       person_profiles: 'identified_only',
-      capture_pageview: false, // Handled manually by Next.js router
+      capture_pageview: false,
       capture_pageleave: true,
       autocapture: true,
       session_recording: {
-        // 1. Bảo vệ mật khẩu học viên
+
         maskAllInputs: false,
         maskInputOptions: {
           password: true,
         },
-        // 2. Bỏ qua các phiên dưới 5 giây (học viên vừa mở lên rồi tắt ngay)
-        // @ts-expect-error PostHog session recording config option
-        minimum_duration_milliseconds: 5000,
-        // 3. Che các trường nhạy cảm có class mask-private
         maskTextSelector: '.mask-private',
       },
       loaded: () => {
@@ -91,14 +86,12 @@ export function trackPageView(url: string): void {
     $current_url: url,
   })
 
-  // Kiểm tra nếu là trang học tập quan trọng (TOEIC, Luyện Nghe, Từ vựng SRS, Khóa học)
   const isImportantPage = IMPORTANT_LEARNING_PATHS.some((path) => url.toLowerCase().includes(path))
   if (isImportantPage && typeof posthog.startSessionRecording === 'function') {
     posthog.startSessionRecording()
   }
 }
 
-// 🎯 Bắt lỗi & Kích hoạt ghi hình khi học viên gặp sự cố (Error-triggered Recording)
 export function trackError(errorName: string, errorDetail?: Record<string, unknown>): void {
   if (typeof window === 'undefined' || !posthog) return
   posthog.capture('$exception', {
@@ -107,13 +100,11 @@ export function trackError(errorName: string, errorDetail?: Record<string, unkno
     occurred_at: new Date().toISOString(),
   })
 
-  // Tự động kích hoạt ghi hình khi có lỗi phát sinh
   if (typeof posthog.startSessionRecording === 'function') {
     posthog.startSessionRecording()
   }
 }
 
-// 🎯 LingoSphere Domain Specific Tracking Helpers
 export const Analytics = {
   examSubmitted: (data: {
     examId: string

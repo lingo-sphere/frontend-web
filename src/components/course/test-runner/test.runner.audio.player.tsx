@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file test.runner.audio.player.tsx
+ * @description Thành phần mã nguồn test.runner.audio.player.tsx
+ */
+
 import { Volume2 } from 'lucide-react'
 
 interface TestRunnerAudioPlayerProps {

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file player.endscreen.tsx
+ * @description Thành phần mã nguồn player.endscreen.tsx
+ */
+
 import { Sparkles, ChevronRight, RotateCcw as ReplayIcon, X } from 'lucide-react'
 
 interface PlayerEndscreenProps {
@@ -75,7 +80,7 @@ export function PlayerEndscreen({
           </div>
         ) : hasNextLesson && autoPlayNext ? (
           <div className="space-y-4 pt-1 flex flex-col items-center">
-            {/* Circular Animated Countdown */}
+            
             <div className="relative w-16 h-16 flex items-center justify-center">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
                 <path

@@ -1,5 +1,10 @@
 'use client'
 
+/**
+ * @file test.runner.speaking.section.tsx
+ * @description Thành phần mã nguồn test.runner.speaking.section.tsx
+ */
+
 import { useState, useRef, useEffect } from 'react'
 import {
   Mic,

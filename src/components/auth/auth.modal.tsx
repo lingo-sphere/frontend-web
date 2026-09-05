@@ -112,7 +112,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
       }
       setResendCooldown(60)
     } catch {
-      // Handled by store
+
     }
   }
 
@@ -152,7 +152,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
         setMode('login')
       }
     } catch {
-      // Error handled by store
+
     }
   }
 
@@ -166,12 +166,12 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
       })
       onClose()
     } catch {
-      // Error handled by store
+
     }
   }
 
   const handleGoogleError = () => {
-    // Google login dialog dismissed
+
   }
 
   if (!isOpen) return null
