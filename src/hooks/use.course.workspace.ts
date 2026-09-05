@@ -371,6 +371,7 @@ export function useCourseWorkspace(courseId: string) {
     handleTestComplete,
     currentTestModalData,
   } = useCourseTests({
+    courseId,
     isEnrolled,
     progressDetail,
     setProgressDetail,

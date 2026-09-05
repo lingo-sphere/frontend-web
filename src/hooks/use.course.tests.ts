@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo, type Dispatch, type SetStateAction } from 'react'
+import { useNavigate } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
 import type { Course, Chapter } from '@/types/course'
 
@@ -14,6 +15,7 @@ interface ActiveTestModalState {
 }
 
 interface UseCourseTestsParams {
+  courseId?: string
   isEnrolled: boolean
   progressDetail: any
   setProgressDetail: Dispatch<SetStateAction<any>>
@@ -21,11 +23,13 @@ interface UseCourseTestsParams {
 }
 
 export function useCourseTests({
+  courseId,
   isEnrolled,
   progressDetail,
   setProgressDetail,
   setCourse,
 }: UseCourseTestsParams) {
+  const navigate = useNavigate()
   const [activeTestModal, setActiveTestModal] = useState<ActiveTestModalState>({
     isOpen: false,
     chapter: null,
@@ -43,6 +47,14 @@ export function useCourseTests({
       )
       return
     }
+
+    const targetCourseId = courseId || (chapter as any)?.courseId || (chapter as any)?.course_id
+    if (targetCourseId) {
+      const chapterParam = chapter?.id ? `&chapterId=${chapter.id}` : ''
+      navigate(`/course/${targetCourseId}/exam?type=${testType}${chapterParam}`)
+      return
+    }
+
     setActiveTestModal({
       isOpen: true,
       chapter,

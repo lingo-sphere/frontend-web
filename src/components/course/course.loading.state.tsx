@@ -8,7 +8,7 @@
 import { ArrowLeft, Play, Star, Sparkles, Share2, PanelRightClose } from 'lucide-react'
 
 interface CourseLoadingStateProps {
-  onBack: () => void
+  onBack?: () => void
 }
 
 export function CourseLoadingState({ onBack }: CourseLoadingStateProps) {
