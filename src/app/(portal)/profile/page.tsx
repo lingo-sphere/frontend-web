@@ -18,7 +18,7 @@ import { UserBadgesList } from '@/components/user/user.badges'
 import { UserActivityList } from '@/components/user/user.activities'
 import { EditProfileModal } from '@/components/user/user.edit.modal'
 import { UserScoreCard } from '@/components/user/user.score.card'
-import { RecommendedCoursesSection } from '@/components/course/RecommendedCoursesSection'
+import { RecommendedCoursesSection } from '@/components/course/course.recommended.section'
 
 function formatNumber(val?: number): string {
   if (val === undefined || val === null) return '0'

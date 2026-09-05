@@ -16,6 +16,7 @@ import type { CourseCardData, CourseTabType } from '@/types/course'
 import { CourseSearchBar } from '@/components/course/course.search.bar'
 import { CourseScheduleBanner, type UserScheduleData } from '@/components/course/course.schedule.banner'
 import { CourseScheduleModal } from '@/components/course/course.schedule.modal'
+import { CoursePlacementBanner } from '@/components/course/course.placement.banner'
 import { CourseCard } from '@/components/course/course.card'
 import { useWishlistStore } from '@/store/wishlist-store'
 import { useAuthStore } from '@/store/auth-store'
@@ -300,6 +301,11 @@ export default function CoursesCatalogPage() {
               </span>
             </div>
           </div>
+
+          {/* Placement Test Assessment Banner (Cách 3) */}
+          {activeTab === 'all' && (
+            <CoursePlacementBanner />
+          )}
 
           {activeTab === 'all' && showScheduleBanner && (
             <CourseScheduleBanner
