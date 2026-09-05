@@ -1,8 +1,8 @@
 'use client'
 
 /**
- * @file CourseTestRunnerModal.tsx
- * @description Modal thi và đánh giá 4 kỹ năng: Trắc nghiệm nghe hiểu có audio player, Luyện nói thu âm micro tích hợp Whisper STT và Viết luận có bộ đếm từ tự động.
+ * @file course.test.runner.modal.tsx
+ * @description Modal điều phối thi và đánh giá 4 kỹ năng (Trắc nghiệm, Luyện nói Whisper STT, Viết luận).
  */
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
@@ -32,16 +32,18 @@ import {
   WrongQuestionItem,
   AiExplanationsData,
   getCorrectOptionIndex,
-  TestRunnerAudioPlayer,
-  TestRunnerSpeakingSection,
-  TestRunnerWritingSection,
-  TestRunnerSidebar,
-  TestRunnerResultView,
-  TestRunnerQuestionItem,
-  TestRunnerHistoryModal,
+} from './test-runner/test.runner.types'
+import { TestRunnerAudioPlayer } from './test-runner/test.runner.audio.player'
+import { TestRunnerSpeakingSection } from './test-runner/test.runner.speaking.section'
+import { TestRunnerWritingSection } from './test-runner/test.runner.writing.section'
+import { TestRunnerSidebar } from './test-runner/test.runner.sidebar'
+import { TestRunnerResultView } from './test-runner/test.runner.result.view'
+import { TestRunnerQuestionItem } from './test-runner/test.runner.question.item'
+import { TestRunnerHistoryModal } from './test-runner/test.runner.history.modal'
+import {
   TestRunnerExitConfirmModal,
   TestRunnerSubmitConfirmModal,
-} from './test-runner'
+} from './test-runner/test.runner.confirm.modal'
 
 export type { CourseTestQuestion, TestAttemptItem }
 
@@ -445,7 +447,6 @@ export function CourseTestRunnerModal({
     [rawQuestions, selectedAnswers, passingScore, bestScore, testType, chapter, courseId, onComplete]
   )
 
-  // Ticking countdown timer
   useEffect(() => {
     if (!isOpen || isSubmitted || hasAutoSubmitted) return
 
@@ -462,7 +463,6 @@ export function CourseTestRunnerModal({
     return () => clearInterval(timer)
   }, [isOpen, isSubmitted, hasAutoSubmitted])
 
-  // Trigger auto submit on timeout
   useEffect(() => {
     if (timeLeft === 0 && !isSubmitted && !hasAutoSubmitted && isOpen && rawQuestions.length > 0) {
       setHasAutoSubmitted(true)
@@ -496,7 +496,6 @@ export function CourseTestRunnerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col h-screen w-screen bg-slate-50 dark:bg-slate-950 text-text-primary overflow-hidden antialiased animate-in fade-in duration-200">
-      {/* Top Header Bar */}
       <header className="h-16 px-4 sm:px-6 bg-surface/95 backdrop-blur-md border-b border-border flex items-center justify-between shrink-0 z-30 shadow-xs">
         <div className="flex items-center gap-3 min-w-0">
           <Button
@@ -535,7 +534,6 @@ export function CourseTestRunnerModal({
           </div>
         </div>
 
-        {/* Center: Live Countdown Timer */}
         <div className="flex items-center gap-2">
           {!isSubmitted ? (
             <div
@@ -568,7 +566,6 @@ export function CourseTestRunnerModal({
           )}
         </div>
 
-        {/* Right: Record, History, and Submit button */}
         <div className="flex items-center gap-2 shrink-0">
           <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-xs font-black shadow-2xs">
             <Crown size={14} className="text-amber-500 shrink-0" />
@@ -620,7 +617,6 @@ export function CourseTestRunnerModal({
         </div>
       </header>
 
-      {/* 4 Skills Navigation Bar */}
       {is4Skills && (
         <div className="flex items-center gap-2 px-6 py-2.5 border-b border-border/70 bg-surface-subtle/30 overflow-x-auto">
           <button
@@ -664,7 +660,6 @@ export function CourseTestRunnerModal({
         </div>
       )}
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
           {activeSection === 'QUIZ' && (
@@ -744,7 +739,6 @@ export function CourseTestRunnerModal({
           )}
         </div>
 
-        {/* Right Palette Sidebar */}
         {activeSection === 'QUIZ' && rawQuestions.length > 0 && (
           <TestRunnerSidebar
             questions={rawQuestions}
@@ -760,7 +754,6 @@ export function CourseTestRunnerModal({
         )}
       </div>
 
-      {/* Confirmation & History Modals */}
       <TestRunnerExitConfirmModal
         isOpen={showExitConfirm}
         onCancel={() => setShowExitConfirm(false)}

@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * @file LessonPlayer.tsx
+ * @file lesson.player.tsx
  * @description Trình phát video bài học phong cách YouTube cao cấp cho học viên LingoSphere
  */
 
@@ -22,10 +22,10 @@ import {
   detectNetworkQuality,
   isDirectVideoUrl,
   formatTime,
-  PlayerControlsBar,
-  PlayerEndscreen,
-  PlayerShortcutsModal,
-} from './player'
+} from './player/player.types'
+import { PlayerControlsBar } from './player/player.controls.bar'
+import { PlayerEndscreen } from './player/player.endscreen'
+import { PlayerShortcutsModal } from './player/player.shortcuts.modal'
 
 interface LessonPlayerProps {
   lesson: Lesson
@@ -64,7 +64,6 @@ export function LessonPlayer({
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const isDraggingTimelineRef = useRef<boolean>(false)
 
-  // Player States
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -81,22 +80,18 @@ export function LessonPlayer({
   const [isBuffering, setIsBuffering] = useState(false)
   const [autoPlayNext, setAutoPlayNext] = useState(true)
 
-  // Hover Scrubber Tooltip
   const [hoverTime, setHoverTime] = useState<number | null>(null)
   const [hoverPosition, setHoverPosition] = useState<number>(0)
 
-  // Menus & Modals
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [showShortcutsModal, setShowShortcutsModal] = useState(false)
 
-  // Center feedback indicator (YouTube play/pause/seek animation)
   const [actionFeedback, setActionFeedback] = useState<{
     type: 'forward' | 'rewind' | 'play' | 'pause' | 'speed' | 'volume'
     text?: string
   } | null>(null)
   const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // End Screen State
   const [showEndedScreen, setShowEndedScreen] = useState(false)
   const [countdownSeconds, setCountdownSeconds] = useState(5)
 
@@ -406,7 +401,6 @@ export function LessonPlayer({
     setHoverPosition(percent * 100)
   }, [])
 
-  // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -565,7 +559,6 @@ export function LessonPlayer({
           : 'aspect-video max-h-[calc(100vh-14rem)] min-h-[480px] sm:min-h-[540px] lg:min-h-[580px]'
       }`}
     >
-      {/* 🎬 1. Video Layer */}
       {isDirectVideo ? (
         <video
           ref={videoRef}
@@ -666,14 +659,12 @@ export function LessonPlayer({
         </div>
       )}
 
-      {/* 🌀 2. Buffering Spinner */}
       {isBuffering && isDirectVideo && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20">
           <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-white/20 border-t-[#ff0000]" />
         </div>
       )}
 
-      {/* ⚡ 3. YouTube Center Feedback */}
       {actionFeedback && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-30">
           <div className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-black/80 text-white backdrop-blur-md shadow-2xl animate-out fade-out zoom-out duration-500 font-semibold text-xs sm:text-sm border border-white/10">
@@ -686,7 +677,6 @@ export function LessonPlayer({
         </div>
       )}
 
-      {/* 4. End Screen Overlay */}
       <PlayerEndscreen
         showEndedScreen={showEndedScreen && isDirectVideo}
         isTrial={isTrial}
@@ -710,7 +700,6 @@ export function LessonPlayer({
         onDismissScreen={() => setShowEndedScreen(false)}
       />
 
-      {/* 🎛️ 5. Top Bar (Title + Quick Actions) */}
       <div
         className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 via-black/30 to-transparent transition-opacity duration-200 ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -743,7 +732,6 @@ export function LessonPlayer({
         </div>
       </div>
 
-      {/* 🎛️ 6. YouTube Bottom Controls Bar */}
       {isDirectVideo && (
         <PlayerControlsBar
           showControls={showControls}
@@ -784,7 +772,6 @@ export function LessonPlayer({
         />
       )}
 
-      {/* ⌨️ 7. Keyboard Shortcuts Modal */}
       <PlayerShortcutsModal
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}

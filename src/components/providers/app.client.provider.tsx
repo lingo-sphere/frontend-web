@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import '@/i18n'
+import '@/i18n/i18n.config'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/contexts/app.context'
 import { useAuthStore } from '@/store/auth-store'

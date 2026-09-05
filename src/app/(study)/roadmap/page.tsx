@@ -3,7 +3,6 @@
 /**
  * @file page.tsx
  * @description Trang Lộ Trình Học Tập Cá Nhân Hóa (Personalized Learning Roadmap Dashboard)
- * Trực quan hóa hành trình các chặng (Stages), theo dõi tiến độ và biểu đồ tăng trưởng điểm số (Growth Chart)
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
@@ -14,14 +13,12 @@ import { progressService } from '@/services/progress.service'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
 import type { UserRoadmapProgress, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
-import {
-  RoadmapHeroBanner,
-  RoadmapPublicCard,
-  RoadmapActiveHeader,
-  RoadmapGrowthTracker,
-  RoadmapStageCard,
-  RoadmapCheckpointModal,
-} from '@/components/roadmap'
+import { RoadmapHeroBanner } from '@/components/roadmap/roadmap.hero.banner'
+import { RoadmapPublicCard } from '@/components/roadmap/roadmap.public.card'
+import { RoadmapActiveHeader } from '@/components/roadmap/roadmap.active.header'
+import { RoadmapGrowthTracker } from '@/components/roadmap/roadmap.growth.tracker'
+import { RoadmapStageCard } from '@/components/roadmap/roadmap.stage.card'
+import { RoadmapCheckpointModal } from '@/components/roadmap/roadmap.checkpoint.modal'
 
 export default function RoadmapAppPage() {
   const { i18n } = useTranslation()
@@ -104,7 +101,6 @@ export default function RoadmapAppPage() {
     }
   }
 
-  // Calculate Overall Roadmap Stats
   const roadmapStats = useMemo(() => {
     if (!progress || !progress.roadmap) return null
 
@@ -145,7 +141,6 @@ export default function RoadmapAppPage() {
     )
   }
 
-  // 🌟 View 1: Chưa đăng ký lộ trình nào -> Gợi ý làm Test hoặc Chọn lộ trình
   if (!progress || !progress.roadmap) {
     return (
       <div className="min-h-screen bg-surface-secondary px-4 py-8">
@@ -155,7 +150,6 @@ export default function RoadmapAppPage() {
             onNavigatePlacement4Skills={() => navigate('/toeic/exam/placement_4skills')}
           />
 
-          {/* Available Public Roadmaps */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -183,17 +177,13 @@ export default function RoadmapAppPage() {
     )
   }
 
-  // 🌟 View 2: Đã kích hoạt Lộ Trình -> Dashboard Theo Dõi Tiến Độ & Biểu Đồ Tăng Trưởng
   return (
     <div className="min-h-screen bg-surface-secondary px-4 py-8">
       <div className="mx-auto max-w-5xl space-y-6">
-        {/* Active Roadmap Hero Header */}
         <RoadmapActiveHeader progress={progress} roadmapStats={roadmapStats} />
 
-        {/* 📈 Score Growth & Continuous Improvement Tracker */}
         <RoadmapGrowthTracker progress={progress} roadmapStats={roadmapStats} />
 
-        {/* 🗺️ Interactive Stage Stepper Flow */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -225,7 +215,6 @@ export default function RoadmapAppPage() {
         </div>
       </div>
 
-      {/* Checkpoint / Test-out Submission Modal */}
       <RoadmapCheckpointModal
         activeCheckpointStage={activeCheckpointStage}
         checkpointScoreInput={checkpointScoreInput}

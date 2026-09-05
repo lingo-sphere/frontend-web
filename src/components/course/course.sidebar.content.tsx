@@ -35,7 +35,7 @@ import { toast } from '@/store/toast-store'
 
 interface CourseSidebarContentProps {
   chapters: Chapter[]
-  currentLesson: Lesson
+  currentLesson: Lesson | null
   expandedChapters: string[]
   isEnrolled?: boolean
   lockedChapterIds?: Set<string>
@@ -230,7 +230,7 @@ export function CourseSidebarContent({
                 {/* 1. DANH SÁCH CÁC BÀI GIẢNG VIDEO TRONG CHƯƠNG */}
                 <div className="space-y-1">
                   {chapter.lessons.map((lesson) => {
-                    const isActive = currentLesson.id === lesson.id
+                    const isActive = currentLesson?.id === lesson.id
                     const isDone = lesson.status === 'completed'
                     const isResourceOpen = activeResourceDropdown === lesson.id
 

@@ -1,6 +1,6 @@
 /**
- * @file index.ts
- * @description Mã nguồn thành phần index.ts
+ * @file i18n.config.ts
+ * @description Cấu hình quốc tế hóa i18next (Tiếng Việt & Tiếng Anh) cho frontend-web
  */
 
 import i18n from 'i18next'
