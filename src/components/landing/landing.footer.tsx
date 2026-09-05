@@ -1,14 +1,9 @@
 /**
  * @file landing.footer.tsx
- * @description Thành phần Landing Footer phục vụ phía người học (Web Client)
+ * @description Component chân trang (Footer) của Landing Page
  */
 
 'use client'
-
-/**
- * @file landing.footer.tsx
- * @description Component chân trang (Footer) của Landing Page
- */
 
 import Link from "next/link"
 import { motion } from "motion/react"

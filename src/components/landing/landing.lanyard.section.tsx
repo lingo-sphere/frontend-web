@@ -1,14 +1,9 @@
 /**
  * @file landing.lanyard.section.tsx
- * @description Thành phần Landing Lanyard Section phục vụ phía người học (Web Client)
+ * @description Component hiển thị phần trải nghiệm thẻ học viên 3D (Lanyard) trên Landing Page
  */
 
 'use client'
-
-/**
- * @file landing.lanyard.section.tsx
- * @description Component hiển thị phần trải nghiệm thẻ học viên 3D (Lanyard) trên Landing Page
- */
 
 import { motion } from "motion/react"
 import { Lanyard } from "@/components/ui/lanyard"

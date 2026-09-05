@@ -1,14 +1,9 @@
 /**
  * @file app.client.provider.tsx
- * @description Thành phần App Client Provider phục vụ phía người học (Web Client)
+ * @description Component giao diện React AppClientProvider cho học viên
  */
 
 'use client'
-
-/**
- * @file AppClientProvider.tsx
- * @description Component giao diện React AppClientProvider cho học viên
- */
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'

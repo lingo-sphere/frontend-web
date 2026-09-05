@@ -1,14 +1,9 @@
 /**
  * @file player.settings.menu.tsx
- * @description Thành phần Player Settings Menu phục vụ phía người học (Web Client)
+ * @description Menu cài đặt trình phát video (tốc độ phát, chất lượng video và tự động chuyển bài)
  */
 
 'use client'
-
-/**
- * @file player.settings.menu.tsx
- * @description Thành phần mã nguồn player.settings.menu.tsx
- */
 
 import { useState } from 'react'
 import {

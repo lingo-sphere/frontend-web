@@ -1,14 +1,9 @@
 /**
  * @file course.sidebar.content.tsx
- * @description Thành phần Course Sidebar Content phục vụ phía người học (Web Client)
+ * @description Thanh danh sách các chương học, bài giảng và đề thi đánh giá trong giao diện học tập khóa học
  */
 
 'use client'
-
-/**
- * @file course.sidebar.content.tsx
- * @description Thanh danh sách các chương học, bài giảng và đề thi đánh giá trong giao diện học tập khóa học
- */
 
 import { useState } from 'react'
 import type { Chapter, Lesson } from '@/types/course'

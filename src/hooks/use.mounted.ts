@@ -1,14 +1,9 @@
 /**
  * @file use.mounted.ts
- * @description Thành phần Use Mounted phục vụ phía người học (Web Client)
+ * @description Custom React hook use-mounted hỗ trợ xử lý logic giao diện Web
  */
 
 'use client'
-
-/**
- * @file use-mounted.ts
- * @description Custom React hook use-mounted hỗ trợ xử lý logic giao diện Web
- */
 
 import { useState, useEffect } from 'react'
 

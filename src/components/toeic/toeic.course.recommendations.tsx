@@ -1,14 +1,9 @@
 /**
  * @file toeic.course.recommendations.tsx
- * @description Thành phần Toeic Course Recommendations phục vụ phía người học (Web Client)
+ * @description Giao diện đề xuất Lộ trình học tập cá nhân hóa và các khóa học lẻ cho học viên sau khi thi đánh giá
  */
 
 'use client'
-
-/**
- * @file ToeicCourseRecommendations.tsx
- * @description Giao diện đề xuất Lộ trình học tập cá nhân hóa và các khóa học lẻ cho học viên sau khi thi đánh giá
- */
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

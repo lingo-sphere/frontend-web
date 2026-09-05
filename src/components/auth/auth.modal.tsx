@@ -1,14 +1,9 @@
 /**
  * @file auth.modal.tsx
- * @description Thành phần Auth Modal phục vụ phía người học (Web Client)
+ * @description Modal đăng nhập, đăng ký, xác thực OTP và khôi phục mật khẩu người dùng
  */
 
 'use client'
-
-/**
- * @file auth.modal.tsx
- * @description Modal đăng nhập, đăng ký, xác thực OTP và khôi phục mật khẩu người dùng
- */
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'

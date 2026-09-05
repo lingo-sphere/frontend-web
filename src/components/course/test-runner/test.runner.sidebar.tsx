@@ -1,14 +1,9 @@
 /**
  * @file test.runner.sidebar.tsx
- * @description Thành phần Test Runner Sidebar phục vụ phía người học (Web Client)
+ * @description Thanh danh mục câu hỏi bài thi, trạng thái đã trả lời và nút nộp bài thi
  */
 
 'use client'
-
-/**
- * @file test.runner.sidebar.tsx
- * @description Thành phần mã nguồn test.runner.sidebar.tsx
- */
 
 import { Send, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'

@@ -1,14 +1,9 @@
 /**
  * @file course.placement.banner.tsx
- * @description Thành phần Course Placement Banner phục vụ phía người học (Web Client)
+ * @description Banner gợi ý học viên làm bài test đầu vào hệ thống tại trang danh sách khóa học
  */
 
 'use client'
-
-/**
- * @file CoursePlacementBanner.tsx
- * @description Banner gợi ý học viên làm bài test đầu vào hệ thống tại trang danh sách khóa học
- */
 
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from '@/lib/navigation'

@@ -1,14 +1,9 @@
 /**
  * @file header.cart.tsx
- * @description Thành phần Header Cart phục vụ phía người học (Web Client)
+ * @description Component giao diện React HeaderCartHover cho học viên
  */
 
 'use client'
-
-/**
- * @file HeaderCartHover.tsx
- * @description Component giao diện React HeaderCartHover cho học viên
- */
 
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'

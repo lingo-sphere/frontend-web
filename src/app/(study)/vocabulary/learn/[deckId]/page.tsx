@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/vocabulary/learn/[deckId]
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/vocabulary/learn/[deckId]
- */
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'

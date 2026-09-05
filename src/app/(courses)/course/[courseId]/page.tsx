@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang không gian học tập trực tuyến (Course Workspace) cho học viên LingoSphere
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang không gian học tập trực tuyến (Course Workspace) cho học viên LingoSphere
- */
 
 import { useMemo } from 'react'
 import { useParams, useNavigate } from '@/lib/navigation'

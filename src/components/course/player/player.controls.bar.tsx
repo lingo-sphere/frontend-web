@@ -1,14 +1,9 @@
 /**
  * @file player.controls.bar.tsx
- * @description Thành phần Player Controls Bar phục vụ phía người học (Web Client)
+ * @description Thanh điều khiển video bài học (play/pause, timeline, âm lượng, tốc độ phát và toàn màn hình)
  */
 
 'use client'
-
-/**
- * @file player.controls.bar.tsx
- * @description Thành phần mã nguồn player.controls.bar.tsx
- */
 
 import { RefObject } from 'react'
 import {

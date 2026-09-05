@@ -1,14 +1,9 @@
 /**
  * @file course.placement.prompt.modal.tsx
- * @description Thành phần Course Placement Prompt Modal phục vụ phía người học (Web Client)
+ * @description Modal tư vấn học viên làm bài test đầu vào (2 kỹ năng / 4 kỹ năng) hoặc cập nhật hồ sơ trước khi mua khóa học
  */
 
 'use client'
-
-/**
- * @file CoursePlacementPromptModal.tsx
- * @description Modal tư vấn học viên làm bài test đầu vào (2 kỹ năng / 4 kỹ năng) hoặc cập nhật hồ sơ trước khi mua khóa học
- */
 
 import React from 'react'
 import { useRouter } from 'next/navigation'

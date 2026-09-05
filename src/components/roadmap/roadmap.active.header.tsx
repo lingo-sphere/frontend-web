@@ -1,14 +1,9 @@
 /**
  * @file roadmap.active.header.tsx
- * @description Thành phần Roadmap Active Header phục vụ phía người học (Web Client)
+ * @description Header hiển thị lộ trình học đang hoạt động, cấp độ hiện tại và tiến độ hoàn thành
  */
 
 'use client'
-
-/**
- * @file roadmap.active.header.tsx
- * @description Thành phần mã nguồn roadmap.active.header.tsx
- */
 
 import type { UserRoadmapProgress } from '@/types/api.types'
 

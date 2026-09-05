@@ -1,14 +1,9 @@
 /**
  * @file player.shortcuts.modal.tsx
- * @description Thành phần Player Shortcuts Modal phục vụ phía người học (Web Client)
+ * @description Modal dialog giao diện player.shortcuts
  */
 
 'use client'
-
-/**
- * @file player.shortcuts.modal.tsx
- * @description Modal dialog giao diện player.shortcuts
- */
 
 import { Keyboard, X } from 'lucide-react'
 

@@ -1,14 +1,9 @@
 /**
  * @file course.rating.modal.tsx
- * @description Thành phần Course Rating Modal phục vụ phía người học (Web Client)
+ * @description Modal đánh giá khóa học từ 1 đến 5 sao cho học viên
  */
 
 'use client'
-
-/**
- * @file CourseRatingModal.tsx
- * @description Modal đánh giá khóa học từ 1 đến 5 sao cho học viên
- */
 
 import { useState } from 'react'
 import { Star, X, Sparkles } from 'lucide-react'

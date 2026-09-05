@@ -1,14 +1,9 @@
 /**
  * @file header.search.tsx
- * @description Thành phần Header Search phục vụ phía người học (Web Client)
+ * @description Component nút menu mobile và thanh tìm kiếm từ điển nhanh trên Header
  */
 
 'use client'
-
-/**
- * @file HeaderSearchDictionary.tsx
- * @description Component nút menu mobile và thanh tìm kiếm từ điển nhanh trên Header
- */
 
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon.map'

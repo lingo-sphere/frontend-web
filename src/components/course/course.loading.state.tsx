@@ -1,14 +1,9 @@
 /**
  * @file course.loading.state.tsx
- * @description Thành phần Course Loading State phục vụ phía người học (Web Client)
+ * @description Skeleton loading state chuẩn xác cho trang Workspace học tập & chi tiết khóa học
  */
 
 'use client'
-
-/**
- * @file CourseLoadingState.tsx
- * @description Skeleton loading state chuẩn xác cho trang Workspace học tập & chi tiết khóa học
- */
 
 import { ArrowLeft, Play, Star, Sparkles, Share2, PanelRightClose } from 'lucide-react'
 

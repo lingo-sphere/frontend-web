@@ -1,14 +1,9 @@
 /**
  * @file dictation.result.card.tsx
- * @description Thành phần Dictation Result Card phục vụ phía người học (Web Client)
+ * @description Component hiển thị kết quả kiểm tra, gợi ý và nút điều hướng tiếp tục bài dictation
  */
 
 'use client'
-
-/**
- * @file dictation.result.card.tsx
- * @description Component hiển thị kết quả kiểm tra, gợi ý và nút điều hướng tiếp tục bài dictation
- */
 
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon.map'

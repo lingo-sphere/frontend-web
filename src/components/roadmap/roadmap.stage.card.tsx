@@ -1,14 +1,9 @@
 /**
  * @file roadmap.stage.card.tsx
- * @description Thành phần Roadmap Stage Card phục vụ phía người học (Web Client)
+ * @description Card thành phần hiển thị roadmap.stage.card.tsx
  */
 
 'use client'
-
-/**
- * @file roadmap.stage.card.tsx
- * @description Card thành phần hiển thị roadmap.stage.card.tsx
- */
 
 import {
   CheckCircle2,

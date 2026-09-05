@@ -1,14 +1,9 @@
 /**
  * @file upgrade.plan.tsx
- * @description Thành phần Upgrade Plan phục vụ phía người học (Web Client)
+ * @description Màn hình bước 1 chọn gói thời hạn VIP, hiển thị hạn dùng hiện tại và xem trước cộng dồn
  */
 
 'use client'
-
-/**
- * @file UpgradeSelectPlanStep.tsx
- * @description Màn hình bước 1 chọn gói thời hạn VIP, hiển thị hạn dùng hiện tại và xem trước cộng dồn
- */
 
 import {
   AlertCircle,

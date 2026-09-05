@@ -1,14 +1,9 @@
 /**
  * @file landing.header.tsx
- * @description Thành phần Landing Header phục vụ phía người học (Web Client)
+ * @description Component thanh điều hướng chính của trang Landing Page
  */
 
 'use client'
-
-/**
- * @file landing.header.tsx
- * @description Component thanh điều hướng chính của trang Landing Page
- */
 
 import Link from "next/link"
 import { motion } from "motion/react"

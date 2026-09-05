@@ -1,14 +1,9 @@
 /**
  * @file toast.store.ts
- * @description Thành phần Toast Store phục vụ phía người học (Web Client)
+ * @description Store quản lý thông báo Toast cho frontend-web
  */
 
 'use client'
-
-/**
- * @file toast-store.ts
- * @description Store quản lý thông báo Toast cho frontend-web
- */
 
 import { useSyncExternalStore } from 'react'
 import { createStore } from 'zustand/vanilla'

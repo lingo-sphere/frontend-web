@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/ai-learning
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/ai-learning
- */
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'

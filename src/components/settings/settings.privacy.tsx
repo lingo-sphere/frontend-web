@@ -1,14 +1,9 @@
 /**
  * @file settings.privacy.tsx
- * @description Thành phần Settings Privacy phục vụ phía người học (Web Client)
+ * @description Component tab cài đặt quyền riêng tư, hiển thị hồ sơ trên bảng xếp hạng và kết nối xã hội
  */
 
 'use client'
-
-/**
- * @file SettingsPrivacyTab.tsx
- * @description Component tab cài đặt quyền riêng tư, hiển thị hồ sơ trên bảng xếp hạng và kết nối xã hội
- */
 
 import { Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'

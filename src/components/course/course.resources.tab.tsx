@@ -1,14 +1,9 @@
 /**
  * @file course.resources.tab.tsx
- * @description Thành phần Course Resources Tab phục vụ phía người học (Web Client)
+ * @description Component giao diện hiển thị danh sách tài liệu đính kèm (PDF, Slide, MP3, Cheatsheets) cho bài học và khóa học
  */
 
 'use client'
-
-/**
- * @file course.resources.tab.tsx
- * @description Component giao diện hiển thị danh sách tài liệu đính kèm (PDF, Slide, MP3, Cheatsheets) cho bài học và khóa học
- */
 
 import { useState, useMemo } from 'react'
 import { BookOpen, Lock, Search } from 'lucide-react'

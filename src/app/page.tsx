@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang chủ chính (Landing Page) của LingoSphere
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang chủ chính (Landing Page) của LingoSphere
- */
 
 import { useEffect, useRef, useState, useMemo } from "react"
 import { motion, AnimatePresence } from "motion/react"

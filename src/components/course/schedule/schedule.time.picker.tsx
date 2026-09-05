@@ -1,14 +1,9 @@
 /**
  * @file schedule.time.picker.tsx
- * @description Thành phần Schedule Time Picker phục vụ phía người học (Web Client)
+ * @description Component bộ chọn giờ tuỳ chỉnh cuộn mượt và danh sách khung giờ nhanh (presets)
  */
 
 'use client'
-
-/**
- * @file schedule.time.picker.tsx
- * @description Component bộ chọn giờ tuỳ chỉnh cuộn mượt và danh sách khung giờ nhanh (presets)
- */
 
 import { RefObject } from 'react'
 import { Clock, ChevronDown, RotateCcw } from 'lucide-react'

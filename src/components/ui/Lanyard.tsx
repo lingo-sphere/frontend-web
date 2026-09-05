@@ -1,14 +1,9 @@
 /**
  * @file lanyard.tsx
- * @description Thành phần Lanyard phục vụ phía người học (Web Client)
+ * @description Component giao diện React Lanyard cho học viên
  */
 
 'use client'
-
-/**
- * @file Lanyard.tsx
- * @description Component giao diện React Lanyard cho học viên
- */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'

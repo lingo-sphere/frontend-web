@@ -1,14 +1,9 @@
 /**
  * @file persistent.layout.tsx
- * @description Thành phần Persistent Layout phục vụ phía người học (Web Client)
+ * @description Layout tổng thể bọc sidebar, header và nội dung chính của ứng dụng
  */
 
 'use client'
-
-/**
- * @file PersistentLayout.tsx
- * @description Layout tổng thể bọc sidebar, header và nội dung chính của ứng dụng
- */
 
 import { Suspense, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'

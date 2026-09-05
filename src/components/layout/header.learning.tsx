@@ -1,14 +1,9 @@
 /**
  * @file header.learning.tsx
- * @description Thành phần Header Learning phục vụ phía người học (Web Client)
+ * @description Component giao diện React HeaderMyLearningHover cho học viên
  */
 
 'use client'
-
-/**
- * @file HeaderMyLearningHover.tsx
- * @description Component giao diện React HeaderMyLearningHover cho học viên
- */
 
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'

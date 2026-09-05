@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/leaderboard
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/leaderboard
- */
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'

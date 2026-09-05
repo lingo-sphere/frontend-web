@@ -1,14 +1,9 @@
 /**
  * @file avatar.tsx
- * @description Thành phần Avatar phục vụ phía người học (Web Client)
+ * @description Component giao diện React avatar cho học viên
  */
 
 'use client'
-
-/**
- * @file avatar.tsx
- * @description Component giao diện React avatar cho học viên
- */
 
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "radix-ui"

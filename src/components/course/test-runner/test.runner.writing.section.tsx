@@ -1,14 +1,9 @@
 /**
  * @file test.runner.writing.section.tsx
- * @description Thành phần Test Runner Writing Section phục vụ phía người học (Web Client)
+ * @description Phần thi kỹ năng Viết (Writing Section) hỗ trợ nộp bài luận và nhận đánh giá từ AI
  */
 
 'use client'
-
-/**
- * @file test.runner.writing.section.tsx
- * @description Thành phần mã nguồn test.runner.writing.section.tsx
- */
 
 import { useState, useRef } from 'react'
 import {

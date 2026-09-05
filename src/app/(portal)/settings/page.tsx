@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang cài đặt hệ thống chính điều phối các tab chức năng độc lập
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang cài đặt hệ thống chính điều phối các tab chức năng độc lập
- */
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'

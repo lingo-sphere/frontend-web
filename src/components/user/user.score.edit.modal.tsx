@@ -1,14 +1,9 @@
 /**
  * @file user.score.edit.modal.tsx
- * @description Thành phần User Score Edit Modal phục vụ phía người học (Web Client)
+ * @description Modal cho phép học viên tự điều chỉnh điểm trình độ kèm theo cảnh báo khuyến nghị của hệ thống
  */
 
 'use client'
-
-/**
- * @file user.score.edit.modal.tsx
- * @description Modal cho phép học viên tự điều chỉnh điểm trình độ kèm theo cảnh báo khuyến nghị của hệ thống
- */
 
 import React, { useState } from 'react'
 import {

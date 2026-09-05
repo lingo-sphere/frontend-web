@@ -1,14 +1,9 @@
 /**
  * @file schedule.days.selector.tsx
- * @description Thành phần Schedule Days Selector phục vụ phía người học (Web Client)
+ * @description Component chọn các ngày trong tuần để gửi thông báo nhắc học
  */
 
 'use client'
-
-/**
- * @file schedule.days.selector.tsx
- * @description Component chọn các ngày trong tuần để gửi thông báo nhắc học
- */
 
 import { DAYS_OF_WEEK } from './schedule.types'
 

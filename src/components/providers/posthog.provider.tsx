@@ -1,14 +1,9 @@
 /**
  * @file posthog.provider.tsx
- * @description Thành phần Posthog Provider phục vụ phía người học (Web Client)
+ * @description Component giao diện React PostHogProvider cho học viên
  */
 
 'use client'
-
-/**
- * @file PostHogProvider.tsx
- * @description Component giao diện React PostHogProvider cho học viên
- */
 
 import { useEffect, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'

@@ -1,14 +1,9 @@
 /**
  * @file course.sidebar.ai.chat.tsx
- * @description Thành phần Course Sidebar Ai Chat phục vụ phía người học (Web Client)
+ * @description Component giao diện React CourseSidebarAiChat cho học viên
  */
 
 'use client'
-
-/**
- * @file CourseSidebarAiChat.tsx
- * @description Component giao diện React CourseSidebarAiChat cho học viên
- */
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'

@@ -1,14 +1,9 @@
 /**
  * @file test.runner.confirm.modal.tsx
- * @description Thành phần Test Runner Confirm Modal phục vụ phía người học (Web Client)
+ * @description Modal dialog giao diện test.runner.confirm
  */
 
 'use client'
-
-/**
- * @file test.runner.confirm.modal.tsx
- * @description Modal dialog giao diện test.runner.confirm
- */
 
 import { AlertTriangle, Send, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'

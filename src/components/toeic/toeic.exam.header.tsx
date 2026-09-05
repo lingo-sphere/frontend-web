@@ -1,14 +1,9 @@
 /**
  * @file toeic.exam.header.tsx
- * @description Thành phần Toeic Exam Header phục vụ phía người học (Web Client)
+ * @description Header thanh điều hướng, đếm ngược thời gian và nộp bài thi TOEIC
  */
 
 'use client'
-
-/**
- * @file toeic.exam.header.tsx
- * @description Header thanh điều hướng, đếm ngược thời gian và nộp bài thi TOEIC
- */
 
 import { ArrowLeft, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'

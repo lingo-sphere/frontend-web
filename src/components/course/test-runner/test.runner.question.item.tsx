@@ -1,14 +1,9 @@
 /**
  * @file test.runner.question.item.tsx
- * @description Thành phần Test Runner Question Item phục vụ phía người học (Web Client)
+ * @description Thẻ hiển thị câu hỏi trắc nghiệm bài thi, các lựa chọn đáp án và trạng thái lựa chọn
  */
 
 'use client'
-
-/**
- * @file test.runner.question.item.tsx
- * @description Thành phần mã nguồn test.runner.question.item.tsx
- */
 
 import { AlertCircle, Bot, Target, XCircle, CheckCircle, Loader2 } from 'lucide-react'
 import {

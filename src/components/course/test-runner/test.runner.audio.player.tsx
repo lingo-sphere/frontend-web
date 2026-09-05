@@ -1,14 +1,9 @@
 /**
  * @file test.runner.audio.player.tsx
- * @description Thành phần Test Runner Audio Player phục vụ phía người học (Web Client)
+ * @description Trình phát âm thanh bài thi nghe với thanh tiến trình và điều chỉnh tốc độ
  */
 
 'use client'
-
-/**
- * @file test.runner.audio.player.tsx
- * @description Thành phần mã nguồn test.runner.audio.player.tsx
- */
 
 import { Volume2 } from 'lucide-react'
 

@@ -1,14 +1,9 @@
 /**
  * @file roadmap.checkpoint.modal.tsx
- * @description Thành phần Roadmap Checkpoint Modal phục vụ phía người học (Web Client)
+ * @description Modal dialog giao diện roadmap.checkpoint
  */
 
 'use client'
-
-/**
- * @file roadmap.checkpoint.modal.tsx
- * @description Modal dialog giao diện roadmap.checkpoint
- */
 
 import { FileCheck2, Sparkles, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'

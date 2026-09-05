@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang Lộ Trình Học Tập Cá Nhân Hóa (Personalized Learning Roadmap Dashboard)
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang Lộ Trình Học Tập Cá Nhân Hóa (Personalized Learning Roadmap Dashboard)
- */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

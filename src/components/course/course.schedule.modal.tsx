@@ -1,14 +1,9 @@
 /**
  * @file course.schedule.modal.tsx
- * @description Thành phần Course Schedule Modal phục vụ phía người học (Web Client)
+ * @description Modal cài đặt lịch nhắc nhở học tập hàng ngày tích hợp bộ chọn giờ custom đẹp mắt và đa ngôn ngữ
  */
 
 'use client'
-
-/**
- * @file course.schedule.modal.tsx
- * @description Modal cài đặt lịch nhắc nhở học tập hàng ngày tích hợp bộ chọn giờ custom đẹp mắt và đa ngôn ngữ
- */
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

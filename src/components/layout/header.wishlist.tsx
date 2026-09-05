@@ -1,14 +1,9 @@
 /**
  * @file header.wishlist.tsx
- * @description Thành phần Header Wishlist phục vụ phía người học (Web Client)
+ * @description Dropdown danh sách khóa học yêu thích trên Header với giao diện hiện đại, tinh tế
  */
 
 'use client'
-
-/**
- * @file HeaderWishlistHover.tsx
- * @description Dropdown danh sách khóa học yêu thích trên Header với giao diện hiện đại, tinh tế
- */
 
 import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart, Check, X, ArrowRight, ChevronRight } from 'lucide-react'

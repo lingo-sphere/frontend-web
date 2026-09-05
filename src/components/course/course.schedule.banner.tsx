@@ -1,14 +1,9 @@
 /**
  * @file course.schedule.banner.tsx
- * @description Thành phần Course Schedule Banner phục vụ phía người học (Web Client)
+ * @description Component giao diện React CourseScheduleBanner hiển thị trạng thái lịch học kèm định dạng đa ngôn ngữ
  */
 
 'use client'
-
-/**
- * @file CourseScheduleBanner.tsx
- * @description Component giao diện React CourseScheduleBanner hiển thị trạng thái lịch học kèm định dạng đa ngôn ngữ
- */
 
 import { useTranslation } from 'react-i18next'
 import { Clock, X, CalendarCheck2, Settings2, BellRing } from 'lucide-react'

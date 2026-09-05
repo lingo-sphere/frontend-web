@@ -1,14 +1,9 @@
 /**
  * @file settings.sidebar.tsx
- * @description Thành phần Settings Sidebar phục vụ phía người học (Web Client)
+ * @description Component thanh điều hướng các danh mục cài đặt bên trái trang Settings
  */
 
 'use client'
-
-/**
- * @file SettingsSidebar.tsx
- * @description Component thanh điều hướng các danh mục cài đặt bên trái trang Settings
- */
 
 import {
   ShieldCheck,

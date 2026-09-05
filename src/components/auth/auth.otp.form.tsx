@@ -1,14 +1,9 @@
 /**
  * @file auth.otp.form.tsx
- * @description Thành phần Auth Otp Form phục vụ phía người học (Web Client)
+ * @description Component nhập mã OTP 6 số để xác thực tài khoản Email
  */
 
 'use client'
-
-/**
- * @file auth.otp.form.tsx
- * @description Component nhập mã OTP 6 số để xác thực tài khoản Email
- */
 
 import React, { RefObject } from 'react'
 import { Icon } from '@/components/icons/icon.map'

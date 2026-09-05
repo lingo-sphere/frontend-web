@@ -1,15 +1,9 @@
 /**
  * @file course.growth.chart.tsx
- * @description Thành phần Course Growth Chart phục vụ phía người học (Web Client)
+ * @description Thành phần hiển thị biểu đồ và phân tích tăng trưởng năng lực học viên xuyên suốt khóa học (từ Baseline -> các Chương -> Final Test).
  */
 
 'use client'
-
-/**
- * @file CourseGrowthChart.tsx
- * @description Thành phần hiển thị biểu đồ và phân tích tăng trưởng năng lực học viên
- * xuyên suốt khóa học (từ Baseline -> các Chương -> Final Test).
- */
 
 import { useMemo } from 'react'
 import { TrendingUp, Award, Target, CheckCircle2, Sparkles, BarChart2 } from 'lucide-react'

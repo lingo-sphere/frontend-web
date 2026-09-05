@@ -1,14 +1,9 @@
 /**
  * @file course.recommended.section.tsx
- * @description Thành phần Course Recommended Section phục vụ phía người học (Web Client)
+ * @description Thành phần gợi ý khóa học thông minh dựa trên điểm số đánh giá đầu vào của học viên
  */
 
 'use client'
-
-/**
- * @file RecommendedCoursesSection.tsx
- * @description Thành phần gợi ý khóa học thông minh dựa trên điểm số đánh giá đầu vào của học viên
- */
 
 import React, { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'

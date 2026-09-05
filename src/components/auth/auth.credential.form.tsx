@@ -1,14 +1,9 @@
 /**
  * @file auth.credential.form.tsx
- * @description Thành phần Auth Credential Form phục vụ phía người học (Web Client)
+ * @description Component nhập thông tin đăng nhập và đăng ký tài khoản
  */
 
 'use client'
-
-/**
- * @file auth.credential.form.tsx
- * @description Component nhập thông tin đăng nhập và đăng ký tài khoản
- */
 
 import { Icon } from '@/components/icons/icon.map'
 import { Input } from '@/components/ui/input'

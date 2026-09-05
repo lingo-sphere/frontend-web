@@ -1,14 +1,9 @@
 /**
  * @file header.user.tsx
- * @description Thành phần Header User phục vụ phía người học (Web Client)
+ * @description Component hiển thị thông tin học viên, nút nâng cấp và đăng nhập/đăng xuất trên Header
  */
 
 'use client'
-
-/**
- * @file HeaderUserSection.tsx
- * @description Component hiển thị thông tin học viên, nút nâng cấp và đăng nhập/đăng xuất trên Header
- */
 
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'

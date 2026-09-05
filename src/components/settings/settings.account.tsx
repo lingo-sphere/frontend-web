@@ -1,14 +1,9 @@
 /**
  * @file settings.account.tsx
- * @description Thành phần Settings Account phục vụ phía người học (Web Client)
+ * @description Component tab cài đặt tài khoản cá nhân và đổi mật khẩu bảo mật
  */
 
 'use client'
-
-/**
- * @file SettingsAccountTab.tsx
- * @description Component tab cài đặt tài khoản cá nhân và đổi mật khẩu bảo mật
- */
 
 import { useState } from 'react'
 import {

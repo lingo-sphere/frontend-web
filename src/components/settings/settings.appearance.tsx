@@ -1,14 +1,9 @@
 /**
  * @file settings.appearance.tsx
- * @description Thành phần Settings Appearance phục vụ phía người học (Web Client)
+ * @description Component tab cài đặt giao diện hiển thị (Dark/Light/System) và ngôn ngữ ứng dụng
  */
 
 'use client'
-
-/**
- * @file SettingsAppearanceTab.tsx
- * @description Component tab cài đặt giao diện hiển thị (Dark/Light/System) và ngôn ngữ ứng dụng
- */
 
 import {
   Sun,

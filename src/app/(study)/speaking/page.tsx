@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/speaking
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/speaking
- */
 
 import { useState, useCallback, useEffect } from 'react'
 import { SpeakingHome } from '@/components/speaking/speaking.home'

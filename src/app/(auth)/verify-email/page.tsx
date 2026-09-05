@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (auth)/verify-email
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (auth)/verify-email
- */
 
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from '@/lib/navigation'

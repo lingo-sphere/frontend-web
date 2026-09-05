@@ -1,14 +1,9 @@
 /**
  * @file course.checkout.modal.tsx
- * @description Thành phần Course Checkout Modal phục vụ phía người học (Web Client)
+ * @description Modal thanh toán chuyển khoản ngân hàng qua VietQR kèm xác thực tự động cho Khóa học LingoSphere
  */
 
 'use client'
-
-/**
- * @file course.checkout.modal.tsx
- * @description Modal thanh toán chuyển khoản ngân hàng qua VietQR kèm xác thực tự động cho Khóa học LingoSphere
- */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

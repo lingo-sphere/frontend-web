@@ -1,14 +1,9 @@
 /**
  * @file dictionary.modal.tsx
- * @description Thành phần Dictionary Modal phục vụ phía người học (Web Client)
+ * @description Component giao diện React DictionaryModal cho học viên
  */
 
 'use client'
-
-/**
- * @file DictionaryModal.tsx
- * @description Component giao diện React DictionaryModal cho học viên
- */
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'

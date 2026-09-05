@@ -1,14 +1,9 @@
 /**
  * @file app.header.tsx
- * @description Thành phần App Header phục vụ phía người học (Web Client)
+ * @description Header tiện ích chính của hệ thống, quản lý tìm kiếm, giỏ hàng, thông báo và tài khoản
  */
 
 'use client'
-
-/**
- * @file UtilityHeader.tsx
- * @description Header tiện ích chính của hệ thống, quản lý tìm kiếm, giỏ hàng, thông báo và tài khoản
- */
 
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'

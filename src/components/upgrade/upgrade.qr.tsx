@@ -1,14 +1,9 @@
 /**
  * @file upgrade.qr.tsx
- * @description Thành phần Upgrade Qr phục vụ phía người học (Web Client)
+ * @description Màn hình bước 2 hiển thị mã QR VietQR, thông tin tài khoản ngân hàng và kiểm tra trạng thái
  */
 
 'use client'
-
-/**
- * @file UpgradePaymentQrStep.tsx
- * @description Màn hình bước 2 hiển thị mã QR VietQR, thông tin tài khoản ngân hàng và kiểm tra trạng thái
- */
 
 import {
   Clock,

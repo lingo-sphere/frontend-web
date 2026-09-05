@@ -1,14 +1,9 @@
 /**
  * @file landing.hero.tsx
- * @description Thành phần Landing Hero phục vụ phía người học (Web Client)
+ * @description Component Hero banner chính của Landing Page bao gồm nền video và CTA
  */
 
 'use client'
-
-/**
- * @file landing.hero.tsx
- * @description Component Hero banner chính của Landing Page bao gồm nền video và CTA
- */
 
 import React from "react"
 import Link from "next/link"

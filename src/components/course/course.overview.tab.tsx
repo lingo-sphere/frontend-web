@@ -1,14 +1,9 @@
 /**
  * @file course.overview.tab.tsx
- * @description Thành phần Course Overview Tab phục vụ phía người học (Web Client)
+ * @description Component giao diện React CourseOverviewTab hiển thị thông tin chi tiết khóa học và giảng viên
  */
 
 'use client'
-
-/**
- * @file CourseOverviewTab.tsx
- * @description Component giao diện React CourseOverviewTab hiển thị thông tin chi tiết khóa học và giảng viên
- */
 
 import { Award, Check, Clock, Star, Users, User } from 'lucide-react'
 import type { Course } from '@/types/course'

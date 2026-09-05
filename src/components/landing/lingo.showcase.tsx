@@ -1,14 +1,9 @@
 /**
  * @file lingo.showcase.tsx
- * @description Thành phần Lingo Showcase phục vụ phía người học (Web Client)
+ * @description Component giao diện React LingoShowcase cho học viên
  */
 
 'use client'
-
-/**
- * @file LingoShowcase.tsx
- * @description Component giao diện React LingoShowcase cho học viên
- */
 
 import { useRef, useEffect, useState } from "react"
 import Link from "next/link"

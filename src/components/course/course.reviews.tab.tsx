@@ -1,14 +1,9 @@
 /**
  * @file course.reviews.tab.tsx
- * @description Thành phần Course Reviews Tab phục vụ phía người học (Web Client)
+ * @description Component giao diện React CourseReviewsTab cho học viên kèm form đánh giá trực tiếp
  */
 
 'use client'
-
-/**
- * @file CourseReviewsTab.tsx
- * @description Component giao diện React CourseReviewsTab cho học viên kèm form đánh giá trực tiếp
- */
 
 import { useState } from 'react'
 import { Star, Send, MessageSquarePlus } from 'lucide-react'

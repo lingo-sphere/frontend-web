@@ -1,14 +1,9 @@
 /**
  * @file user.score.card.tsx
- * @description Thành phần User Score Card phục vụ phía người học (Web Client)
+ * @description Thẻ hiển thị điểm trình độ đánh giá đầu vào và mục tiêu TOEIC trong trang hồ sơ cá nhân
  */
 
 'use client'
-
-/**
- * @file user.score.card.tsx
- * @description Thẻ hiển thị điểm trình độ đánh giá đầu vào và mục tiêu TOEIC trong trang hồ sơ cá nhân
- */
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'

@@ -1,14 +1,9 @@
 /**
  * @file header.stats.tsx
- * @description Thành phần Header Stats phục vụ phía người học (Web Client)
+ * @description Component hiển thị huy hiệu Kim cương, Chuỗi ngày Streak và Nút nâng cấp VIP
  */
 
 'use client'
-
-/**
- * @file HeaderStatsBadges.tsx
- * @description Component hiển thị huy hiệu Kim cương, Chuỗi ngày Streak và Nút nâng cấp VIP
- */
 
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon.map'

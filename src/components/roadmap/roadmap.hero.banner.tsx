@@ -1,14 +1,9 @@
 /**
  * @file roadmap.hero.banner.tsx
- * @description Thành phần Roadmap Hero Banner phục vụ phía người học (Web Client)
+ * @description Banner giới thiệu lộ trình học tập được cá nhân hóa theo từng trình độ học viên
  */
 
 'use client'
-
-/**
- * @file roadmap.hero.banner.tsx
- * @description Thành phần mã nguồn roadmap.hero.banner.tsx
- */
 
 import { Compass, Sparkles, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'

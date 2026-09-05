@@ -1,14 +1,9 @@
 /**
  * @file course.notes.tab.tsx
- * @description Thành phần Course Notes Tab phục vụ phía người học (Web Client)
+ * @description Component giao diện Ghi chú bài học liên kết trực tiếp cơ sở dữ liệu
  */
 
 'use client'
-
-/**
- * @file CourseNotesTab.tsx
- * @description Component giao diện Ghi chú bài học liên kết trực tiếp cơ sở dữ liệu
- */
 
 import { useState, useEffect } from 'react'
 import { Plus, Play, Trash2, Clock, FileText, Sparkles } from 'lucide-react'

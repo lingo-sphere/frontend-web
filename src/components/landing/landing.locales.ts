@@ -1,14 +1,9 @@
 /**
  * @file landing.locales.ts
- * @description Thành phần Landing Locales phục vụ phía người học (Web Client)
+ * @description Component giao diện React landing-locales cho học viên
  */
 
 'use client'
-
-/**
- * @file landing-locales.ts
- * @description Component giao diện React landing-locales cho học viên
- */
 
 import { useState, useEffect, useCallback } from "react"
 

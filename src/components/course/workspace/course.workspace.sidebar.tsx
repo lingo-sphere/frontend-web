@@ -1,14 +1,9 @@
 /**
  * @file course.workspace.sidebar.tsx
- * @description Thành phần Course Workspace Sidebar phục vụ phía người học (Web Client)
+ * @description Thanh bên phải hiển thị danh sách các chương bài học và Trợ lý Gia sư AI.
  */
 
 'use client'
-
-/**
- * @file course.workspace.sidebar.tsx
- * @description Thanh bên phải hiển thị danh sách các chương bài học và Trợ lý Gia sư AI.
- */
 
 import { Sparkles, PanelRightClose, CheckCircle2 } from 'lucide-react'
 import { CourseSidebarContent } from '@/components/course/course.sidebar.content'

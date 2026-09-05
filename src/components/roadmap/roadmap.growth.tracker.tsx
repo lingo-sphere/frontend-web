@@ -1,14 +1,9 @@
 /**
  * @file roadmap.growth.tracker.tsx
- * @description Thành phần Roadmap Growth Tracker phục vụ phía người học (Web Client)
+ * @description Biểu đồ theo dõi sự phát triển kỹ năng và mục tiêu lộ trình của học viên
  */
 
 'use client'
-
-/**
- * @file roadmap.growth.tracker.tsx
- * @description Thành phần mã nguồn roadmap.growth.tracker.tsx
- */
 
 import { Compass, TrendingUp, Target } from 'lucide-react'
 import { Card } from '@/components/ui/card'

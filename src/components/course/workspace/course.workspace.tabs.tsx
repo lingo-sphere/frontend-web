@@ -1,14 +1,9 @@
 /**
  * @file course.workspace.tabs.tsx
- * @description Thành phần Course Workspace Tabs phục vụ phía người học (Web Client)
+ * @description Quản lý hiển thị các tab nội dung bài học: Tổng quan, Tiến độ, Tài liệu, Hỏi đáp, Ghi chú và Đánh giá.
  */
 
 'use client'
-
-/**
- * @file course.workspace.tabs.tsx
- * @description Quản lý hiển thị các tab nội dung bài học: Tổng quan, Tiến độ, Tài liệu, Hỏi đáp, Ghi chú và Đánh giá.
- */
 
 import { CourseOverviewTab } from '@/components/course/course.overview.tab'
 import { CourseGrowthChart } from '@/components/course/course.growth.chart'

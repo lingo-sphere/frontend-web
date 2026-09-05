@@ -1,14 +1,9 @@
 /**
  * @file landing.workbench.tsx
- * @description Thành phần Landing Workbench phục vụ phía người học (Web Client)
+ * @description Component hiển thị phương pháp học tập tương tác sâu của Landing Page
  */
 
 'use client'
-
-/**
- * @file landing.workbench.tsx
- * @description Component hiển thị phương pháp học tập tương tác sâu của Landing Page
- */
 
 import { useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"

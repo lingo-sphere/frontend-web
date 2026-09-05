@@ -1,14 +1,9 @@
 /**
  * @file navigation.ts
- * @description Thành phần Navigation phục vụ phía người học (Web Client)
+ * @description Mã nguồn thành phần navigation.ts
  */
 
 'use client'
-
-/**
- * @file navigation.ts
- * @description Mã nguồn thành phần navigation.ts
- */
 
 import { useCallback } from 'react'
 import {

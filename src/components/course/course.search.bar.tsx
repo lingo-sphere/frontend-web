@@ -1,14 +1,9 @@
 /**
  * @file course.search.bar.tsx
- * @description Thành phần Course Search Bar phục vụ phía người học (Web Client)
+ * @description Component giao diện React CourseSearchBar cho học viên
  */
 
 'use client'
-
-/**
- * @file CourseSearchBar.tsx
- * @description Component giao diện React CourseSearchBar cho học viên
- */
 
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'

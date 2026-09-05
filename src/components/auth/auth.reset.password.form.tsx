@@ -1,14 +1,9 @@
 /**
  * @file auth.reset.password.form.tsx
- * @description Thành phần Auth Reset Password Form phục vụ phía người học (Web Client)
+ * @description Component yêu cầu khôi phục và đặt lại mật khẩu mới
  */
 
 'use client'
-
-/**
- * @file auth.reset.password.form.tsx
- * @description Component yêu cầu khôi phục và đặt lại mật khẩu mới
- */
 
 import React, { RefObject } from 'react'
 import { Icon } from '@/components/icons/icon.map'

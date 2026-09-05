@@ -1,14 +1,9 @@
 /**
  * @file dictation.player.panel.tsx
- * @description Thành phần Dictation Player Panel phục vụ phía người học (Web Client)
+ * @description Component điều khiển phát audio/video và tiến trình các câu dictation
  */
 
 'use client'
-
-/**
- * @file dictation.player.panel.tsx
- * @description Component điều khiển phát audio/video và tiến trình các câu dictation
- */
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'

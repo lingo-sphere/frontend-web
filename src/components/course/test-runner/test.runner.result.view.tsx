@@ -1,14 +1,9 @@
 /**
  * @file test.runner.result.view.tsx
- * @description Thành phần Test Runner Result View phục vụ phía người học (Web Client)
+ * @description Giao diện hiển thị kết quả bài thi, điểm số đạt được, tỷ lệ chính xác và phân tích chi tiết
  */
 
 'use client'
-
-/**
- * @file test.runner.result.view.tsx
- * @description Thành phần mã nguồn test.runner.result.view.tsx
- */
 
 import {
   CheckCircle2,

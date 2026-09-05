@@ -1,14 +1,9 @@
 /**
  * @file player.endscreen.tsx
- * @description Thành phần Player Endscreen phục vụ phía người học (Web Client)
+ * @description Màn hình kết thúc bài học hỗ trợ học lại, chuyển bài tiếp theo và đánh dấu hoàn thành
  */
 
 'use client'
-
-/**
- * @file player.endscreen.tsx
- * @description Thành phần mã nguồn player.endscreen.tsx
- */
 
 import { Sparkles, ChevronRight, RotateCcw as ReplayIcon, X } from 'lucide-react'
 

@@ -1,14 +1,9 @@
 /**
  * @file settings.learning.tsx
- * @description Thành phần Settings Learning phục vụ phía người học (Web Client)
+ * @description Component tab cài đặt trải nghiệm học tập, phát âm, phiên âm IPA và mục tiêu ngày
  */
 
 'use client'
-
-/**
- * @file SettingsLearningTab.tsx
- * @description Component tab cài đặt trải nghiệm học tập, phát âm, phiên âm IPA và mục tiêu ngày
- */
 
 import {
   GraduationCap,

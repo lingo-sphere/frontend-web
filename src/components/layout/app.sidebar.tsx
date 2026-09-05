@@ -1,14 +1,9 @@
 /**
  * @file app.sidebar.tsx
- * @description Thành phần App Sidebar phục vụ phía người học (Web Client)
+ * @description Component giao diện React Sidebar cho học viên
  */
 
 'use client'
-
-/**
- * @file Sidebar.tsx
- * @description Component giao diện React Sidebar cho học viên
- */
 
 import { useTranslation } from 'react-i18next'
 import { PanelLeftClose, PanelLeft } from 'lucide-react'

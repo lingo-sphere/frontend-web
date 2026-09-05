@@ -1,14 +1,9 @@
 /**
  * @file header.user.hover.tsx
- * @description Thành phần Header User Hover phục vụ phía người học (Web Client)
+ * @description Component dropdown hover thông tin tài khoản người dùng phong cách Udemy
  */
 
 'use client'
-
-/**
- * @file HeaderUserHover.tsx
- * @description Component dropdown hover thông tin tài khoản người dùng phong cách Udemy
- */
 
 import { useTranslation } from 'react-i18next'
 import { ExternalLink, Globe } from 'lucide-react'

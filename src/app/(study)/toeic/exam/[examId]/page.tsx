@@ -1,14 +1,9 @@
 /**
  * @file page.tsx
- * @description Thành phần Page phục vụ phía người học (Web Client)
+ * @description Trang làm bài thi TOEIC trực tuyến (TOEIC Exam Workspace)
  */
 
 'use client'
-
-/**
- * @file page.tsx
- * @description Trang làm bài thi TOEIC trực tuyến (TOEIC Exam Workspace)
- */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'

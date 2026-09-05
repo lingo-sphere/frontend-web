@@ -1,14 +1,9 @@
 /**
  * @file sidebar.nav.tsx
- * @description Thành phần Sidebar Nav phục vụ phía người học (Web Client)
+ * @description Component giao diện React SidebarNav cho học viên
  */
 
 'use client'
-
-/**
- * @file SidebarNav.tsx
- * @description Component giao diện React SidebarNav cho học viên
- */
 
 import { useState } from 'react'
 import Link from 'next/link'

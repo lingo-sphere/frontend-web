@@ -1,14 +1,9 @@
 /**
  * @file course.card.tsx
- * @description Thành phần Course Card phục vụ phía người học (Web Client)
+ * @description Component giao diện React CourseCard cho học viên
  */
 
 'use client'
-
-/**
- * @file CourseCard.tsx
- * @description Component giao diện React CourseCard cho học viên
- */
 
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'

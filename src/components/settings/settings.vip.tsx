@@ -1,14 +1,9 @@
 /**
  * @file settings.vip.tsx
- * @description Thành phần Settings Vip phục vụ phía người học (Web Client)
+ * @description Component tab hiển thị thông tin gói thành viên VIP, đặc quyền và kích hoạt gia hạn
  */
 
 'use client'
-
-/**
- * @file SettingsVipTab.tsx
- * @description Component tab hiển thị thông tin gói thành viên VIP, đặc quyền và kích hoạt gia hạn
- */
 
 import { Crown, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'

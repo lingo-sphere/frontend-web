@@ -1,14 +1,9 @@
 /**
  * @file dictation.input.box.tsx
- * @description Thành phần Dictation Input Box phục vụ phía người học (Web Client)
+ * @description Component hiển thị câu văn và các ô điền từ (blanks) tương tác cho bài nghe chép chính tả
  */
 
 'use client'
-
-/**
- * @file dictation.input.box.tsx
- * @description Component hiển thị câu văn và các ô điền từ (blanks) tương tác cho bài nghe chép chính tả
- */
 
 import React from 'react'
 import type { TranscriptSegment, Blank } from '@/types/listening'

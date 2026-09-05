@@ -1,14 +1,9 @@
 /**
  * @file tabs.tsx
- * @description Thành phần Tabs phục vụ phía người học (Web Client)
+ * @description Component giao diện React tabs cho học viên
  */
 
 'use client'
-
-/**
- * @file tabs.tsx
- * @description Component giao diện React tabs cho học viên
- */
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"

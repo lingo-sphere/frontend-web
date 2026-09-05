@@ -1,14 +1,9 @@
 /**
  * @file roadmap.public.card.tsx
- * @description Thành phần Roadmap Public Card phục vụ phía người học (Web Client)
+ * @description Card thành phần hiển thị roadmap.public.card.tsx
  */
 
 'use client'
-
-/**
- * @file roadmap.public.card.tsx
- * @description Card thành phần hiển thị roadmap.public.card.tsx
- */
 
 import { Layers, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'

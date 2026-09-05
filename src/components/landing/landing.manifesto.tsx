@@ -1,14 +1,9 @@
 /**
  * @file landing.manifesto.tsx
- * @description Thành phần Landing Manifesto phục vụ phía người học (Web Client)
+ * @description Component hiển thị tuyên ngôn và các chỉ số thống kê (Stats) trên Landing Page
  */
 
 'use client'
-
-/**
- * @file landing.manifesto.tsx
- * @description Component hiển thị tuyên ngôn và các chỉ số thống kê (Stats) trên Landing Page
- */
 
 import { useEffect, useRef } from "react"
 import { motion, animate, useInView } from "motion/react"

@@ -1,14 +1,9 @@
 /**
  * @file course.qna.tab.tsx
- * @description Thành phần Course Qna Tab phục vụ phía người học (Web Client)
+ * @description Giao diện diễn đàn Hỏi & Đáp (Q&A) khóa học phong cách thảo luận hiện đại, hỗ trợ ẩn danh và mô hình phản hồi 2 cấp phẳng từ Giảng viên
  */
 
 'use client'
-
-/**
- * @file course.qna.tab.tsx
- * @description Giao diện diễn đàn Hỏi & Đáp (Q&A) khóa học phong cách thảo luận hiện đại, hỗ trợ ẩn danh và mô hình phản hồi 2 cấp phẳng từ Giảng viên
- */
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Lock, MessageSquare } from 'lucide-react'

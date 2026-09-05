@@ -1,14 +1,9 @@
 /**
  * @file course.locked.player.tsx
- * @description Thành phần Course Locked Player phục vụ phía người học (Web Client)
+ * @description Màn hình khóa bài giảng khi học viên chưa mua khóa học hoặc chưa nâng cấp gói Premium VIP
  */
 
 'use client'
-
-/**
- * @file CourseLockedPlayer.tsx
- * @description Màn hình khóa bài giảng khi học viên chưa mua khóa học hoặc chưa nâng cấp gói Premium VIP
- */
 
 import { Lock, ShoppingCart, Crown, ArrowRight, CheckCircle2, LogIn, Sparkles } from 'lucide-react'
 import type { Course, Lesson } from '@/types/course'

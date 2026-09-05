@@ -1,14 +1,9 @@
 /**
  * @file settings.notifications.tsx
- * @description Thành phần Settings Notifications phục vụ phía người học (Web Client)
+ * @description Component tab cài đặt thông báo, kênh nhận tin và chế độ giờ yên tĩnh
  */
 
 'use client'
-
-/**
- * @file SettingsNotificationsTab.tsx
- * @description Component tab cài đặt thông báo, kênh nhận tin và chế độ giờ yên tĩnh
- */
 
 import {
   Bell,

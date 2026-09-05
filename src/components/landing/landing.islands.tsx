@@ -1,14 +1,9 @@
 /**
  * @file landing.islands.tsx
- * @description Thành phần Landing Islands phục vụ phía người học (Web Client)
+ * @description Component hiển thị các trụ cột tính năng chính (Islands) trên Landing Page
  */
 
 'use client'
-
-/**
- * @file landing.islands.tsx
- * @description Component hiển thị các trụ cột tính năng chính (Islands) trên Landing Page
- */
 
 import { motion } from "motion/react"
 import { ElectricBorder } from "@/components/ui/electric.border"

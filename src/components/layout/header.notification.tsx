@@ -1,14 +1,9 @@
 /**
  * @file header.notification.tsx
- * @description Thành phần Header Notification phục vụ phía người học (Web Client)
+ * @description Component nút chuông và dropdown danh sách thông báo trên Header
  */
 
 'use client'
-
-/**
- * @file HeaderNotificationDropdown.tsx
- * @description Component nút chuông và dropdown danh sách thông báo trên Header
- */
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
