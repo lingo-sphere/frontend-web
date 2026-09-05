@@ -12,6 +12,8 @@ import {
   type RecommendedCourseItem,
 } from '@/components/toeic/toeic.course.recommendations'
 
+import type { LearningRoadmap } from '@/types/api.types'
+
 export interface ExamResultMetrics {
   correct: number
   total: number
@@ -29,6 +31,7 @@ export interface ExamResultMetrics {
 interface ToeicExamResultProps {
   results: ExamResultMetrics
   recommendedCourses: RecommendedCourseItem[]
+  recommendedRoadmap?: (LearningRoadmap & { stages?: any[] }) | null
   targetBand?: string
   levelLabel?: string
   isLoadingRecommendations?: boolean
@@ -39,6 +42,7 @@ interface ToeicExamResultProps {
 export function ToeicExamResult({
   results,
   recommendedCourses,
+  recommendedRoadmap,
   targetBand,
   levelLabel,
   isLoadingRecommendations = false,
@@ -188,12 +192,14 @@ export function ToeicExamResult({
           </CardContent>
         </Card>
 
-        {/* 🌟 Khối Gợi Ý Khóa Học Thông Minh */}
+        {/* 🌟 Khối Gợi Ý Lộ Trình & Khóa Học Thông Minh */}
         <ToeicCourseRecommendations
+          recommendedRoadmap={recommendedRoadmap}
           courses={recommendedCourses}
           targetBand={targetBand}
           levelLabel={levelLabel}
           isLoading={isLoadingRecommendations}
+          baselineScore={results.estimatedTotal}
         />
       </div>
     </div>

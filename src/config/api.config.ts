@@ -62,6 +62,15 @@ export const API_CONFIG = {
       LESSON_BY_ID: (lessonId: string) => `/courses/lessons/${lessonId}`,
       ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,
       MY_ENROLLED: '/courses/my/enrolled',
+      ROADMAPS: '/courses/roadmaps',
+      ROADMAP_RECOMMENDATION: '/courses/roadmaps/recommendation',
+      ROADMAP_BY_ID: (id: string) => `/courses/roadmaps/${id}`,
+    },
+
+    PROGRESS: {
+      ROADMAP_MY: '/progress/roadmaps/my',
+      ROADMAP_ENROLL: '/progress/roadmaps/enroll',
+      ROADMAP_CHECKPOINT: '/progress/roadmaps/checkpoint',
     },
 
     CART: {

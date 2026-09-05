@@ -80,6 +80,7 @@ export default function ToeicExamAppPage() {
   const [recommendedCourses, setRecommendedCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
   >([])
+  const [recommendedRoadmap, setRecommendedRoadmap] = useState<any | null>(null)
   const [targetBand, setTargetBand] = useState<string>('')
   const [levelLabel, setLevelLabel] = useState<string>('')
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false)
@@ -302,18 +303,38 @@ export default function ToeicExamAppPage() {
     if (res.listeningTotal > 0 && res.listeningCorrect / res.listeningTotal < 0.6) weakSkills.push('LISTENING')
     if (res.readingTotal > 0 && res.readingCorrect / res.readingTotal < 0.6) weakSkills.push('READING')
 
-    courseService
-      .getRecommendedCourses({
+    const skillsType = examData?.skills_enabled === 'ALL' || (examData as any)?.placement_type === '4SKILLS' ? '4SKILLS' : '2SKILLS'
+
+    Promise.allSettled([
+      courseService.getRecommendedCourses({
         total_score: res.estimatedTotal,
         listening_score: res.estimatedListening,
         reading_score: res.estimatedReading,
         weak_skills: weakSkills,
-      })
-      .then((data) => {
-        if (data?.recommendations && data.recommendations.length > 0) {
-          setRecommendedCourses(data.recommendations)
-          setTargetBand(data.target_band || '')
-          setLevelLabel(data.level_label || '')
+      }),
+      courseService.getRecommendedRoadmap({
+        total_score: res.estimatedTotal,
+        listening_score: res.estimatedListening,
+        reading_score: res.estimatedReading,
+        skills_type: skillsType,
+      }),
+    ])
+      .then(([coursesRes, roadmapRes]) => {
+        if (coursesRes.status === 'fulfilled' && coursesRes.value?.recommendations) {
+          setRecommendedCourses(coursesRes.value.recommendations)
+          setTargetBand(coursesRes.value.target_band || '')
+          setLevelLabel(coursesRes.value.level_label || '')
+        }
+
+        if (roadmapRes.status === 'fulfilled' && roadmapRes.value) {
+          setRecommendedRoadmap(roadmapRes.value.recommended_roadmap)
+          if (
+            (!recommendedCourses || recommendedCourses.length === 0) &&
+            roadmapRes.value.individual_courses &&
+            roadmapRes.value.individual_courses.length > 0
+          ) {
+            setRecommendedCourses(roadmapRes.value.individual_courses as any)
+          }
         }
       })
       .catch((err) => {
@@ -423,6 +444,7 @@ export default function ToeicExamAppPage() {
       <ToeicExamResult
         results={results}
         recommendedCourses={recommendedCourses}
+        recommendedRoadmap={recommendedRoadmap}
         targetBand={targetBand}
         levelLabel={levelLabel}
         isLoadingRecommendations={isLoadingRecommendations}
