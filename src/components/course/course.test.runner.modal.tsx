@@ -688,21 +688,37 @@ export function CourseTestRunnerModal({
     if (!recordedBlob) return
     setIsSubmittingSpeaking(true)
     try {
-      let uploadedAudioUrl = 'https://res.lingosphere.com/audio/sample_speaking.mp3'
+      let uploadedAudioUrl = ''
       const uploadFile = recordedBlob instanceof File
         ? recordedBlob
         : new File([recordedBlob], `speaking_${Date.now()}.webm`, {
             type: recordedBlob.type || 'audio/webm',
           })
       try {
-        const uploadRes = await api.upload<{ file_url: string }>('/media/upload', uploadFile, {
+        const uploadRes = await api.upload<{
+          file_url?: string
+          url?: string
+          public_url?: string
+          file_path?: string
+        }>('/media/upload', uploadFile, {
           folder: 'speaking-submissions',
         })
-        if (uploadRes?.file_url) {
-          uploadedAudioUrl = uploadRes.file_url
+        const realUrl = uploadRes?.url || uploadRes?.file_url || uploadRes?.public_url || uploadRes?.file_path
+        if (realUrl) {
+          uploadedAudioUrl = realUrl
         }
-      } catch {
-        // Fallback demo URL if offline
+      } catch (uploadErr) {
+        console.warn('Lỗi tải file lên Media Service, chuyển sang Base64 Audio URI:', uploadErr)
+      }
+
+      // Fallback sang Base64 Data URI để đảm bảo 100% không bao giờ mất file ghi âm của học viên
+      if (!uploadedAudioUrl) {
+        uploadedAudioUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve((reader.result as string) || '')
+          reader.onerror = () => resolve('')
+          reader.readAsDataURL(recordedBlob)
+        })
       }
 
       const res = await courseService.submitSpeakingSubmission(courseId, {
