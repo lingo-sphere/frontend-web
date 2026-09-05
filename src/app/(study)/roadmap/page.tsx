@@ -9,32 +9,19 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import {
-  Compass,
-  TrendingUp,
-  Award,
-  CheckCircle2,
-  Lock,
-  Play,
-  ArrowRight,
-  BookOpen,
-  Sparkles,
-  Layers,
-  ShieldCheck,
-  Zap,
-  Clock,
-  RotateCcw,
-  Target,
-  FileCheck2,
-  HelpCircle,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { RotateCcw, Layers } from 'lucide-react'
 import { progressService } from '@/services/progress.service'
 import { courseService } from '@/services/course.service'
 import { toast } from '@/store/toast-store'
 import type { UserRoadmapProgress, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
+import {
+  RoadmapHeroBanner,
+  RoadmapPublicCard,
+  RoadmapActiveHeader,
+  RoadmapGrowthTracker,
+  RoadmapStageCard,
+  RoadmapCheckpointModal,
+} from '@/components/roadmap'
 
 export default function RoadmapAppPage() {
   const { i18n } = useTranslation()
@@ -124,7 +111,9 @@ export default function RoadmapAppPage() {
     const stages = progress.roadmap.stages || []
     const totalStages = stages.length || 3
     const currentStageOrder = progress.current_stage_order || 1
-    const completedStages = (progress.stage_milestones || []).filter((m) => m.status === 'COMPLETED').length
+    const completedStages = (progress.stage_milestones || []).filter(
+      (m) => m.status === 'COMPLETED'
+    ).length
     const progressPercent = Math.min(100, Math.round((completedStages / totalStages) * 100))
 
     const baseline = progress.baseline_score || 0
@@ -161,39 +150,10 @@ export default function RoadmapAppPage() {
     return (
       <div className="min-h-screen bg-surface-secondary px-4 py-8">
         <div className="mx-auto max-w-5xl space-y-8">
-          {/* Hero Banner */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-900 p-8 sm:p-12 text-white shadow-2xl">
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />
-            <div className="relative z-10 max-w-2xl space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-bold text-indigo-200 border border-white/10">
-                <Compass className="w-3.5 h-3.5" />
-                <span>Hệ Thống Lộ Trình Học Tập Cá Nhân Hóa</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-                Xác Định Trình Độ & Chinh Phục Lộ Trình TOEIC Riêng Cho Bạn
-              </h1>
-              <p className="text-sm sm:text-base text-indigo-200/90 leading-relaxed">
-                Làm bài kiểm tra đánh giá năng lực rút gọn để hệ thống AI định vị chính xác điểm mạnh, điểm yếu và xây dựng lộ trình đo lường sự tăng trưởng qua từng chặng học.
-              </p>
-
-              <div className="pt-4 flex flex-wrap items-center gap-3">
-                <Button
-                  onClick={() => navigate('/toeic/exam/placement_2skills')}
-                  className="px-6 py-6 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-sm shadow-xl shadow-emerald-500/25 flex items-center gap-2 cursor-pointer transition-all hover:scale-105"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Test Đầu Vào 2 Kỹ Năng (LR)</span>
-                </Button>
-                <Button
-                  onClick={() => navigate('/toeic/exam/placement_4skills')}
-                  className="px-6 py-6 rounded-2xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white font-bold text-sm border border-white/20 flex items-center gap-2 cursor-pointer"
-                >
-                  <Target className="w-4 h-4" />
-                  <span>Test Toàn Diện 4 Kỹ Năng (LRSW)</span>
-                </Button>
-              </div>
-            </div>
-          </div>
+          <RoadmapHeroBanner
+            onNavigatePlacement2Skills={() => navigate('/toeic/exam/placement_2skills')}
+            onNavigatePlacement4Skills={() => navigate('/toeic/exam/placement_4skills')}
+          />
 
           {/* Available Public Roadmaps */}
           <div className="space-y-4">
@@ -210,62 +170,11 @@ export default function RoadmapAppPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {availableRoadmaps.map((rm) => (
-                <div
+                <RoadmapPublicCard
                   key={rm._id}
-                  className="group rounded-2xl border border-border bg-surface p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-indigo-400 hover:shadow-lg flex flex-col justify-between space-y-4"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                          rm.skills_focus === '4SKILLS'
-                            ? 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300'
-                            : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
-                        }`}
-                      >
-                        {rm.skills_focus === '4SKILLS' ? '4 Kỹ Năng' : '2 Kỹ Năng (LR)'}
-                      </span>
-                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">
-                        🎯 Mục tiêu {rm.target_score}+
-                      </span>
-                    </div>
-
-                    <h3 className="font-bold text-base text-text-primary group-hover:text-indigo-600 transition-colors">
-                      {rm.title}
-                    </h3>
-                    <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
-                      {rm.description || 'Lộ trình từng bước giúp bứt phá điểm số bền vững.'}
-                    </p>
-
-                    <div className="pt-2 flex items-center gap-2 text-xs text-text-tertiary">
-                      <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                      <span>{rm.stages?.length || 3} Chặng nối tiếp</span>
-                      <span>•</span>
-                      <span>Đầu vào: {rm.min_entry_score} - {rm.max_entry_score}</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-border flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                        {(rm.bundle_price || 1200000).toLocaleString('vi-VN')} đ
-                      </div>
-                      {rm.original_price && (
-                        <div className="text-[11px] text-text-tertiary line-through">
-                          {rm.original_price.toLocaleString('vi-VN')} đ
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => handleEnrollRoadmap(rm._id)}
-                      className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer"
-                    >
-                      <span>Bắt Đầu Ngay</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
+                  roadmap={rm}
+                  onEnroll={handleEnrollRoadmap}
+                />
               ))}
             </div>
           </div>
@@ -279,179 +188,10 @@ export default function RoadmapAppPage() {
     <div className="min-h-screen bg-surface-secondary px-4 py-8">
       <div className="mx-auto max-w-5xl space-y-6">
         {/* Active Roadmap Hero Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white shadow-xl border border-indigo-500/20">
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Đang Theo Học Lộ Trình</span>
-                </span>
-                <span className="text-xs text-indigo-300">
-                  {progress.roadmap.skills_focus === '4SKILLS' ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng (LR)'}
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                {progress.roadmap.title}
-              </h1>
-              <p className="text-xs sm:text-sm text-indigo-200/80 max-w-2xl">
-                {progress.roadmap.description || 'Chặng đường chinh phục mục tiêu được cá nhân hóa riêng cho bạn.'}
-              </p>
-            </div>
-
-            {/* Overall Progress Circle / Stats */}
-            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 shrink-0">
-              <div className="text-center">
-                <div className="text-2xl font-black text-emerald-400">
-                  {roadmapStats?.completedStages} / {roadmapStats?.totalStages}
-                </div>
-                <div className="text-[11px] text-indigo-200 font-semibold uppercase tracking-wider">
-                  Chặng Đã Xong
-                </div>
-              </div>
-              <div className="w-px h-10 bg-white/10" />
-              <div className="text-center">
-                <div className="text-2xl font-black text-teal-300">
-                  {roadmapStats?.progressPercent}%
-                </div>
-                <div className="text-[11px] text-indigo-200 font-semibold uppercase tracking-wider">
-                  Tiến Độ Tổng
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mt-6 pt-4 border-t border-indigo-500/20">
-            <div className="flex items-center justify-between text-xs text-indigo-200 mb-1.5 font-semibold">
-              <span>Tiến trình hoàn thành toàn lộ trình:</span>
-              <span>{roadmapStats?.progressPercent}%</span>
-            </div>
-            <div className="h-2.5 w-full bg-black/40 rounded-full overflow-hidden p-0.5">
-              <div
-                className="h-full bg-gradient-to-r from-teal-400 to-emerald-400 rounded-full transition-all duration-700"
-                style={{ width: `${roadmapStats?.progressPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
+        <RoadmapActiveHeader progress={progress} roadmapStats={roadmapStats} />
 
         {/* 📈 Score Growth & Continuous Improvement Tracker */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Card 1: Điểm Xuất Phát */}
-          <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-1">
-            <div className="text-xs font-bold text-text-tertiary flex items-center gap-1.5">
-              <Compass className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Vạch Xuất Phát (Placement Score)</span>
-            </div>
-            <div className="text-3xl font-black text-text-primary">
-              {roadmapStats?.baseline} <span className="text-xs font-normal text-text-tertiary">/ 990</span>
-            </div>
-            <p className="text-[11px] text-text-secondary">Điểm khảo sát năng lực khi mới vào</p>
-          </div>
-
-          {/* Card 2: Điểm Ước Tính Hiện Tại & Mức Tăng Trưởng */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-surface to-surface border border-emerald-500/30 shadow-xs space-y-1">
-            <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>Điểm Ước Tính Hiện Tại</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                {roadmapStats?.current}
-              </span>
-              {(roadmapStats?.growth || 0) > 0 && (
-                <span className="text-xs font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                  +{roadmapStats?.growth} điểm
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-text-secondary">Ghi nhận liên tục qua các bài kiểm tra chặng</p>
-          </div>
-
-          {/* Card 3: Mục Tiêu Cam Kết */}
-          <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs space-y-1">
-            <div className="text-xs font-bold text-text-tertiary flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5 text-teal-500" />
-              <span>Mục Tiêu Vạch Đích (Target Band)</span>
-            </div>
-            <div className="text-3xl font-black text-teal-600 dark:text-teal-400">
-              {roadmapStats?.target}+ <span className="text-xs font-normal text-text-tertiary">TOEIC</span>
-            </div>
-            <p className="text-[11px] text-text-secondary">Cam kết hoàn thành trọn bộ lộ trình</p>
-          </div>
-        </div>
-
-        {/* 📊 Visual Score Growth Chart (SVG Progression Curve) */}
-        <Card className="dashboard-card p-6 border-border bg-surface shadow-xs space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-text-primary">
-                  Biểu Đồ Tăng Trưởng Năng Lực (Score Growth Progression)
-                </h3>
-                <p className="text-xs text-text-secondary">
-                  Đo lường độ tiến bộ từ điểm xuất phát qua từng cột mốc chặng
-                </p>
-              </div>
-            </div>
-            {(roadmapStats?.growth || 0) > 0 && (
-              <Badge className="bg-emerald-600 text-white font-bold">
-                📈 Bứt Phá +{roadmapStats?.growth} Điểm
-              </Badge>
-            )}
-          </div>
-
-          {/* SVG Score Line Chart */}
-          <div className="relative pt-4 pb-2">
-            <div className="h-44 w-full flex items-end justify-between px-4 sm:px-12 relative border-b border-dashed border-border/80 pb-6">
-              {(progress.growth_chart_data || []).map((pt, idx, arr) => {
-                const heightPercent = Math.min(100, Math.max(20, Math.round((pt.score / 990) * 100)))
-                const isFirst = idx === 0
-                const isLast = idx === arr.length - 1
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-2 z-10">
-                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800">
-                      {pt.score}đ
-                    </span>
-                    <div
-                      className="w-4 sm:w-8 rounded-t-xl bg-gradient-to-t from-indigo-600 to-teal-400 shadow-md transition-all duration-700 hover:brightness-110"
-                      style={{ height: `${heightPercent * 1.1}px` }}
-                    />
-                    <div className="text-center">
-                      <span className="text-xs font-bold text-text-primary block whitespace-nowrap">
-                        {pt.milestone_name}
-                      </span>
-                      <span className="text-[10px] text-text-tertiary block">
-                        {isFirst ? 'Vạch xuất phát' : isLast ? 'Mốc hiện tại' : 'Đã đạt'}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-
-              {/* Target Milestone Marker */}
-              <div className="flex flex-col items-center gap-2 z-10 opacity-70">
-                <span className="text-xs font-black text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800">
-                  {roadmapStats?.target}+đ
-                </span>
-                <div
-                  className="w-4 sm:w-8 rounded-t-xl border-2 border-dashed border-teal-500 bg-teal-500/10"
-                  style={{ height: `${Math.min(100, Math.round(((roadmapStats?.target || 650) / 990) * 100)) * 1.1}px` }}
-                />
-                <div className="text-center">
-                  <span className="text-xs font-bold text-teal-600 dark:text-teal-400 block whitespace-nowrap">
-                    Vạch Đích
-                  </span>
-                  <span className="text-[10px] text-text-tertiary block">Mục tiêu cam kết</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Card>
+        <RoadmapGrowthTracker progress={progress} roadmapStats={roadmapStats} />
 
         {/* 🗺️ Interactive Stage Stepper Flow */}
         <div className="space-y-4">
@@ -468,228 +208,32 @@ export default function RoadmapAppPage() {
           </div>
 
           <div className="space-y-4">
-            {(roadmapStats?.stages || []).map((stage: LearningRoadmapStage, idx: number) => {
-              const stageOrder = stage.stage_order || idx + 1
-              const milestone = (progress.stage_milestones || []).find((m) => m.stage_order === stageOrder)
-              const status = milestone?.status || (stageOrder === 1 ? 'IN_PROGRESS' : 'LOCKED')
-
-              const isCompleted = status === 'COMPLETED'
-              const isInProgress = status === 'IN_PROGRESS'
-              const isLocked = status === 'LOCKED'
-
-              return (
-                <div
-                  key={idx}
-                  className={`rounded-2xl border p-5 transition-all relative overflow-hidden ${
-                    isCompleted
-                      ? 'border-emerald-200 bg-emerald-50/30 dark:border-emerald-900/50 dark:bg-emerald-950/20'
-                      : isInProgress
-                        ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-surface shadow-md'
-                        : 'border-border bg-surface-subtle opacity-70'
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      {/* Step Circle Badge */}
-                      <div
-                        className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm shadow-xs ${
-                          isCompleted
-                            ? 'bg-emerald-500 text-white'
-                            : isInProgress
-                              ? 'bg-indigo-600 text-white animate-pulse'
-                              : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                        }`}
-                      >
-                        {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : stageOrder}
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                            Chặng {stageOrder}
-                          </span>
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              isCompleted
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                : isInProgress
-                                  ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
-                                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                            }`}
-                          >
-                            {isCompleted ? 'Đã Hoàn Thành' : isInProgress ? 'Đang Học' : 'Chưa Mở Khóa'}
-                          </span>
-                          {stage.target_band && (
-                            <span className="text-[11px] font-bold text-teal-600 dark:text-teal-400">
-                              🎯 Mục tiêu: {stage.target_band}
-                            </span>
-                          )}
-                        </div>
-
-                        <h4 className="text-base font-bold text-text-primary">
-                          {stage.stage_title || `Chặng ${stageOrder}`}
-                        </h4>
-                        <p className="text-xs text-text-secondary max-w-xl leading-relaxed">
-                          {stage.stage_description || 'Hoàn thành các bài giảng cốt lõi và làm bài kiểm tra chặng.'}
-                        </p>
-
-                        {isCompleted && milestone?.score_growth !== undefined && (
-                          <div className="pt-1 text-xs font-bold text-emerald-600 flex items-center gap-1.5">
-                            <TrendingUp className="w-3.5 h-3.5" />
-                            <span>Điểm thi chặng đạt: {milestone.checkpoint_score}% (Tăng trưởng +{milestone.score_growth} điểm)</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Stage Actions */}
-                    <div className="flex items-center gap-2 sm:self-center">
-                      {isCompleted && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => stage.course_id && navigate(`/courses/${stage.course_id}`)}
-                          className="gap-1.5 text-xs font-semibold"
-                        >
-                          <BookOpen className="w-3.5 h-3.5" />
-                          <span>Xem Lại Khóa Học</span>
-                        </Button>
-                      )}
-
-                      {isInProgress && (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => stage.course_id && navigate(`/courses/${stage.course_id}`)}
-                            className="gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold cursor-pointer"
-                          >
-                            <Play className="w-3.5 h-3.5 fill-current" />
-                            <span>Vào Học Chặng Này</span>
-                          </Button>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setActiveCheckpointStage(stageOrder)
-                              setCheckpointScoreInput(80)
-                            }}
-                            className="gap-1.5 border-emerald-500 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-xs font-bold cursor-pointer"
-                          >
-                            <FileCheck2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Thi Checkpoint Chặng</span>
-                          </Button>
-                        </div>
-                      )}
-
-                      {isLocked && (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
-                          <div className="flex items-center gap-1.5 text-xs text-text-tertiary font-medium">
-                            <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                            <span>Điều kiện: Đạt bài test Chặng {stageOrder - 1}</span>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setActiveCheckpointStage(stageOrder - 1)
-                              setCheckpointScoreInput(80)
-                            }}
-                            className="gap-1.5 border-indigo-400/50 bg-indigo-50/60 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 dark:text-indigo-300 text-xs font-bold cursor-pointer transition-all shadow-xs"
-                          >
-                            <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                            <span>⚡ Thi Vượt Cấp Chặng {stageOrder - 1}</span>
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            {(roadmapStats?.stages || []).map((stage: LearningRoadmapStage, idx: number) => (
+              <RoadmapStageCard
+                key={idx}
+                stage={stage}
+                index={idx}
+                progress={progress}
+                onNavigateCourse={(courseId) => navigate(`/courses/${courseId}`)}
+                onOpenCheckpoint={(stageOrder) => {
+                  setActiveCheckpointStage(stageOrder)
+                  setCheckpointScoreInput(80)
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>
 
       {/* Checkpoint / Test-out Submission Modal */}
-      {activeCheckpointStage !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-3xl bg-surface border border-border p-6 sm:p-7 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-start justify-between gap-3 border-b border-border pb-3.5">
-              <div className="flex items-center gap-2.5 text-indigo-600 dark:text-indigo-400">
-                <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center">
-                  <FileCheck2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-base font-bold text-text-primary">
-                    Đánh Giá / Thi Vượt Cấp Chặng {activeCheckpointStage}
-                  </h4>
-                  <p className="text-xs text-text-tertiary">
-                    Xác nhận kết quả bài kiểm tra để mở khóa chặng tiếp theo
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveCheckpointStage(null)}
-                className="text-text-tertiary hover:text-text-primary p-1 rounded-lg cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                <span>Cơ Chế Thi Vượt Cấp Chuẩn Sư Phạm</span>
-              </div>
-              <p className="text-[11.5px] text-indigo-900/80 dark:text-indigo-200/80 leading-relaxed">
-                Nếu đạt từ <strong>70%</strong> trở lên, bạn được công nhận đã nắm vững kiến thức Chặng {activeCheckpointStage}. Hệ thống sẽ tự động mở khóa chặng tiếp theo và ghi nhận điểm tăng trưởng vào Biểu đồ hành trình!
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-text-primary">
-                Điểm bài kiểm tra (% đúng hoặc thang điểm 100):
-              </label>
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={checkpointScoreInput}
-                onChange={(e) => setCheckpointScoreInput(Math.min(100, Math.max(0, Number(e.target.value))))}
-                className="w-full px-3.5 py-2.5 bg-surface-subtle border border-border rounded-xl text-sm font-bold text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-              <div className="flex items-center justify-between text-[11px] text-text-tertiary pt-0.5">
-                <span>Ngưỡng tối thiểu: <strong>70%</strong></span>
-                <span className={checkpointScoreInput >= 70 ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}>
-                  {checkpointScoreInput >= 70 ? '✓ Đủ điều kiện vượt cấp' : '⚠ Chưa đủ điều kiện'}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-3 flex items-center justify-end gap-2 border-t border-border">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveCheckpointStage(null)}
-                className="text-xs font-semibold cursor-pointer"
-              >
-                Hủy bỏ
-              </Button>
-              <Button
-                size="sm"
-                disabled={isSubmittingCheckpoint}
-                onClick={handleRecordCheckpoint}
-                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer transition-all shadow-xs"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{isSubmittingCheckpoint ? 'Đang Ghi Nhận...' : 'Xác Nhận & Mở Khóa Chặng'}</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RoadmapCheckpointModal
+        activeCheckpointStage={activeCheckpointStage}
+        checkpointScoreInput={checkpointScoreInput}
+        isSubmittingCheckpoint={isSubmittingCheckpoint}
+        onScoreChange={setCheckpointScoreInput}
+        onClose={() => setActiveCheckpointStage(null)}
+        onSubmitCheckpoint={handleRecordCheckpoint}
+      />
     </div>
   )
 }

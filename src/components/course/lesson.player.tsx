@@ -10,28 +10,22 @@ import Hls from 'hls.js'
 import {
   Play,
   Pause,
-  Volume2,
-  VolumeX,
-  Volume1,
-  Maximize,
-  Minimize,
-  Tv,
-  PictureInPicture2,
-  Settings,
-  Check,
-  ChevronRight,
-  ChevronLeft,
-  SkipForward,
-  SkipBack,
-  RotateCcw as ReplayIcon,
   Sparkles,
   Keyboard,
-  X,
-  SlidersHorizontal,
   FastForward,
   Rewind,
 } from 'lucide-react'
 import type { Lesson } from '@/types/course'
+import {
+  PLAYBACK_SPEEDS,
+  QUALITIES,
+  detectNetworkQuality,
+  isDirectVideoUrl,
+  formatTime,
+  PlayerControlsBar,
+  PlayerEndscreen,
+  PlayerShortcutsModal,
+} from './player'
 
 interface LessonPlayerProps {
   lesson: Lesson
@@ -46,64 +40,6 @@ interface LessonPlayerProps {
   hasPrevLesson?: boolean
   onAddNoteAtTimestamp?: (seconds: number) => void
   onDurationChange?: (lessonId: string, durationSec: number) => void
-}
-
-const PLAYBACK_SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
-
-const QUALITIES = [
-  { id: 'auto', label: 'Tự động (Auto)', badge: 'Thích ứng' },
-  { id: '1080p', label: '1080p (Full HD)', badge: 'HD' },
-  { id: '720p', label: '720p (HD)', badge: 'HD' },
-  { id: '360p', label: '360p (Tiết kiệm)' },
-]
-
-function detectNetworkQuality(): '1080p' | '720p' | '360p' {
-  if (typeof window === 'undefined') return '1080p'
-  const nav = navigator as unknown as {
-    connection?: {
-      effectiveType?: 'slow-2g' | '2g' | '3g' | '4g'
-      downlink?: number
-      saveData?: boolean
-    }
-  }
-
-  const conn = nav.connection
-  if (!conn) return '1080p'
-  if (conn.saveData) return '360p'
-  if (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') return '360p'
-  if (conn.effectiveType === '3g') return conn.downlink && conn.downlink < 0.4 ? '360p' : '720p'
-  return '1080p'
-}
-
-function isDirectVideoUrl(url?: string): boolean {
-  if (!url || !url.trim()) return false
-  const clean = url.toLowerCase().trim()
-  if (
-    clean.endsWith('.jpg') ||
-    clean.endsWith('.jpeg') ||
-    clean.endsWith('.png') ||
-    clean.endsWith('.webp') ||
-    clean.endsWith('.svg') ||
-    clean.endsWith('.gif') ||
-    clean.includes('/course-thumbnails/')
-  ) {
-    return false
-  }
-  return true
-}
-
-function formatTime(seconds: number): string {
-  if (isNaN(seconds) || seconds < 0) return '0:00'
-  const totalSec = Math.floor(seconds)
-  const h = Math.floor(totalSec / 3600)
-  const m = Math.floor((totalSec % 3600) / 60)
-  const s = totalSec % 60
-  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
-
-  if (h > 0) {
-    return `${h}:${pad(m)}:${pad(s)}`
-  }
-  return `${m}:${pad(s)}`
 }
 
 export function LessonPlayer({
@@ -151,7 +87,6 @@ export function LessonPlayer({
 
   // Menus & Modals
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
-  const [settingsSubmenu, setSettingsSubmenu] = useState<'main' | 'quality' | 'speed'>('main')
   const [showShortcutsModal, setShowShortcutsModal] = useState(false)
 
   // Center feedback indicator (YouTube play/pause/seek animation)
@@ -283,7 +218,6 @@ export function LessonPlayer({
     []
   )
 
-  // 1. Play / Pause Toggle
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return
     if (videoRef.current.paused) {
@@ -298,7 +232,6 @@ export function LessonPlayer({
     }
   }, [triggerFeedback])
 
-  // 2. Seek Relative (+/- 5s)
   const seekRelative = useCallback(
     (seconds: number) => {
       if (!videoRef.current) return
@@ -316,7 +249,6 @@ export function LessonPlayer({
     [triggerFeedback]
   )
 
-  // 3. Volume & Mute control
   const handleVolumeChange = useCallback((newVolume: number) => {
     if (!videoRef.current) return
     const vol = Math.max(0, Math.min(1, newVolume))
@@ -346,7 +278,6 @@ export function LessonPlayer({
     }
   }, [isMuted, volume])
 
-  // 4. Playback Speed Change
   const handleSpeedChange = useCallback(
     (speed: number) => {
       if (!videoRef.current) return
@@ -358,7 +289,6 @@ export function LessonPlayer({
     [triggerFeedback]
   )
 
-  // 5. Resolution / Quality Change
   const handleQualityChange = useCallback(
     (qualityId: string) => {
       if (videoRef.current) {
@@ -366,7 +296,6 @@ export function LessonPlayer({
         wasPlayingBeforeSwitchRef.current = !videoRef.current.paused
       }
       setSelectedQuality(qualityId)
-      setSettingsSubmenu('main')
       setShowSettingsMenu(false)
       const qObj = QUALITIES.find((q) => q.id === qualityId)
       const label = qualityId === 'auto' ? `Tự động (${autoResolvedQuality})` : (qObj?.label || qualityId.toUpperCase())
@@ -390,7 +319,6 @@ export function LessonPlayer({
     [autoResolvedQuality, triggerFeedback]
   )
 
-  // 6. Fullscreen & Native Event Listeners
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return
     if (!document.fullscreenElement) {
@@ -404,21 +332,12 @@ export function LessonPlayer({
     const handleFullscreenChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement))
     }
-
     document.addEventListener('fullscreenchange', handleFullscreenChange)
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange)
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange)
-
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
     }
   }, [])
 
-  // 7. Picture-in-Picture Toggle
   const togglePip = useCallback(async () => {
     if (!videoRef.current) return
     try {
@@ -432,7 +351,6 @@ export function LessonPlayer({
     } catch {}
   }, [])
 
-  // 8. Auto-hide controls timer
   const handleUserActivity = useCallback(() => {
     setShowControls(true)
     if (hideControlsTimeoutRef.current) {
@@ -445,7 +363,6 @@ export function LessonPlayer({
     }
   }, [isPlaying, showSettingsMenu])
 
-  // 9. Interactive YouTube Scrubber (Click & Drag)
   const seekToPosition = useCallback((clientX: number) => {
     if (!progressBarRef.current || !videoRef.current) return
     const rect = progressBarRef.current.getBoundingClientRect()
@@ -489,7 +406,7 @@ export function LessonPlayer({
     setHoverPosition(percent * 100)
   }, [])
 
-  // 10. Keyboard Shortcuts
+  // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -500,7 +417,6 @@ export function LessonPlayer({
         return
       }
 
-      // Numeric keys 0-9: Jump to percentage of video duration (0% - 90%)
       if (/^[0-9]$/.test(e.key)) {
         if (!videoRef.current) return
         e.preventDefault()
@@ -630,14 +546,10 @@ export function LessonPlayer({
       videoRef.current.currentTime = 0
       const playPromise = videoRef.current.play()
       if (playPromise !== undefined) {
-        playPromise
-          .then(() => setIsPlaying(true))
-          .catch(() => setIsPlaying(false))
+        playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
       }
     }
   }, [lesson?.id, baseVideoSource])
-
-  const playedPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
     <div
@@ -761,7 +673,7 @@ export function LessonPlayer({
         </div>
       )}
 
-      {/* ⚡ 3. YouTube Center Ripple Feedback */}
+      {/* ⚡ 3. YouTube Center Feedback */}
       {actionFeedback && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-30">
           <div className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-black/80 text-white backdrop-blur-md shadow-2xl animate-out fade-out zoom-out duration-500 font-semibold text-xs sm:text-sm border border-white/10">
@@ -774,175 +686,29 @@ export function LessonPlayer({
         </div>
       )}
 
-      {showEndedScreen && isDirectVideo && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/85 p-6 text-center text-white backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="space-y-4 max-w-sm">
-            {isTrial ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
-                <Sparkles size={14} />
-                Kết thúc bài học thử
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/30">
-                <Sparkles size={14} />
-                Đã hoàn thành bài học!
-              </span>
-            )}
-            <h3 className="text-base font-bold text-white truncate">{lesson.title}</h3>
-
-            {isTrial ? (
-              <div className="space-y-3 pt-1">
-                <p className="text-xs text-zinc-300">
-                  Bạn vừa hoàn thành xem thử bài giảng. Hãy đăng ký khóa học để mở khóa toàn bộ bài học và bài thi nhé!
-                </p>
-                <div className="flex items-center justify-center gap-2.5">
-                  {onOpenCheckout && (
-                    <button
-                      type="button"
-                      onClick={() => onOpenCheckout()}
-                      className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition-colors cursor-pointer"
-                    >
-                      <span>Đăng ký khóa học</span>
-                      <ChevronRight size={15} />
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEndedScreen(false)
-                      if (videoRef.current) {
-                        videoRef.current.currentTime = 0
-                        videoRef.current.play()
-                      }
-                    }}
-                    className="flex items-center gap-1.5 rounded-lg bg-white/15 hover:bg-white/25 px-3.5 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
-                  >
-                    <ReplayIcon size={14} />
-                    <span>Xem lại</span>
-                  </button>
-                </div>
-              </div>
-            ) : hasNextLesson && autoPlayNext ? (
-              <div className="space-y-4 pt-1 flex flex-col items-center">
-                {/* Circular Animated Countdown */}
-                <div className="relative w-16 h-16 flex items-center justify-center">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                    <path
-                      className="text-white/20"
-                      strokeWidth="3"
-                      stroke="currentColor"
-                      fill="none"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                    <path
-                      className="text-[#ff0000] transition-all duration-1000 ease-linear"
-                      strokeDasharray={`${(countdownSeconds / 5) * 100}, 100`}
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                      stroke="currentColor"
-                      fill="none"
-                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                  </svg>
-                  <span className="absolute font-mono font-black text-white text-lg drop-shadow-md">
-                    {countdownSeconds}s
-                  </span>
-                </div>
-
-                <div className="space-y-1 text-center">
-                  <p className="text-xs font-semibold text-white/90">
-                    Tự động chuyển bài tiếp theo sau{' '}
-                    <span className="font-mono font-bold text-[#ff3333]">{countdownSeconds} giây</span>
-                  </p>
-                  <p className="text-[11px] text-zinc-400">
-                    Sẵn sàng tiếp thu kiến thức mới một cách liền mạch!
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
-                      setShowEndedScreen(false)
-                      onNextLesson?.()
-                    }}
-                    className="flex items-center gap-1.5 rounded-xl bg-[#ff0000] hover:bg-[#cc0000] px-4 py-2 text-xs font-extrabold text-white shadow-lg shadow-red-600/30 transition-all transform hover:scale-105 cursor-pointer"
-                  >
-                    <span>Chuyển bài ngay</span>
-                    <ChevronRight size={15} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
-                      setAutoPlayNext(false)
-                    }}
-                    className="flex items-center gap-1 rounded-xl bg-white/10 hover:bg-white/20 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer border border-white/10"
-                  >
-                    <X size={13} />
-                    <span>Dừng chuyển</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
-                      setShowEndedScreen(false)
-                      if (videoRef.current) {
-                        videoRef.current.currentTime = 0
-                        videoRef.current.play()
-                      }
-                    }}
-                    className="flex items-center gap-1.5 rounded-xl bg-white/15 hover:bg-white/25 px-3 py-2 text-xs font-semibold text-white transition-colors cursor-pointer"
-                  >
-                    <ReplayIcon size={13} />
-                    <span>Xem lại</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3 pt-2">
-                <p className="text-xs text-zinc-300">
-                  {hasNextLesson
-                    ? 'Bạn đã hoàn thành bài học này. Nhấn nút bên dưới để chuyển bài hoặc xem lại.'
-                    : '🎉 Chúc mừng bạn đã hoàn thành bài học cuối cùng trong danh sách!'}
-                </p>
-                <div className="flex items-center justify-center gap-2.5">
-                  {hasNextLesson && onNextLesson && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowEndedScreen(false)
-                        onNextLesson()
-                      }}
-                      className="flex items-center gap-1.5 rounded-xl bg-[#ff0000] hover:bg-[#cc0000] px-4 py-2 text-xs font-bold text-white shadow-lg transition-colors cursor-pointer"
-                    >
-                      <span>Bài tiếp theo</span>
-                      <ChevronRight size={15} />
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEndedScreen(false)
-                      if (videoRef.current) {
-                        videoRef.current.currentTime = 0
-                        videoRef.current.play()
-                      }
-                    }}
-                    className="flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 px-4 py-2 text-xs font-bold text-white shadow-lg transition-colors cursor-pointer"
-                  >
-                    <ReplayIcon size={14} />
-                    <span>Xem lại bài học</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* 4. End Screen Overlay */}
+      <PlayerEndscreen
+        showEndedScreen={showEndedScreen && isDirectVideo}
+        isTrial={isTrial}
+        lessonTitle={lesson?.title || ''}
+        hasNextLesson={hasNextLesson}
+        autoPlayNext={autoPlayNext}
+        countdownSeconds={countdownSeconds}
+        onOpenCheckout={onOpenCheckout}
+        onNextLesson={onNextLesson}
+        onReplay={() => {
+          setShowEndedScreen(false)
+          if (videoRef.current) {
+            videoRef.current.currentTime = 0
+            videoRef.current.play()
+          }
+        }}
+        onStopAutoPlay={() => {
+          if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current)
+          setAutoPlayNext(false)
+        }}
+        onDismissScreen={() => setShowEndedScreen(false)}
+      />
 
       {/* 🎛️ 5. Top Bar (Title + Quick Actions) */}
       <div
@@ -957,7 +723,6 @@ export function LessonPlayer({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Quick Note Button */}
           {onAddNoteAtTimestamp && isDirectVideo && (
             <button
               onClick={() => onAddNoteAtTimestamp(currentTime)}
@@ -968,7 +733,6 @@ export function LessonPlayer({
             </button>
           )}
 
-          {/* Keyboard Shortcuts Button */}
           <button
             onClick={() => setShowShortcutsModal(true)}
             className="p-1.5 rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
@@ -981,346 +745,50 @@ export function LessonPlayer({
 
       {/* 🎛️ 6. YouTube Bottom Controls Bar */}
       {isDirectVideo && (
-        <div
-          className={`absolute bottom-0 left-0 right-0 z-30 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-8 pb-2 px-3 sm:px-4 transition-opacity duration-200 ${
-            showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-        >
-          {/* 6.1 YouTube Scrubber Progress Bar */}
-          <div
-            ref={progressBarRef}
-            onMouseDown={handleTimelineMouseDown}
-            onMouseMove={handleTimelineMouseMove}
-            onMouseLeave={() => setHoverTime(null)}
-            className="group/timeline relative w-full h-4 cursor-pointer flex items-center mb-1"
-          >
-            {/* Scrubber Track */}
-            <div className="relative w-full h-[3px] group-hover/timeline:h-[5px] rounded-full bg-white/25 transition-all overflow-visible">
-              {/* Buffer Progress */}
-              <div
-                className="absolute top-0 bottom-0 left-0 bg-white/40 rounded-full transition-all"
-                style={{ width: `${bufferedPercent}%` }}
-              />
-
-              {/* Played Progress (YouTube Red) */}
-              <div
-                className="absolute top-0 bottom-0 left-0 bg-[#ff0000] rounded-full"
-                style={{ width: `${playedPercent}%` }}
-              />
-
-              {/* Red Thumb Scrubber Ball */}
-              <div
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-3.5 w-3.5 rounded-full bg-[#ff0000] shadow-md scale-0 group-hover/timeline:scale-100 transition-transform duration-100 pointer-events-none"
-                style={{ left: `${playedPercent}%` }}
-              />
-            </div>
-
-            {/* Hover Tooltip Timestamp */}
-            {hoverTime !== null && (
-              <div
-                className="pointer-events-none absolute -top-8 -translate-x-1/2 rounded bg-[#0f0f0f]/90 text-white font-mono text-[11px] font-semibold px-1.5 py-0.5 shadow-xl border border-white/10"
-                style={{ left: `${hoverPosition}%` }}
-              >
-                {formatTime(hoverTime)}
-              </div>
-            )}
-          </div>
-
-          {/* 6.2 YouTube Action Buttons Row */}
-          <div className="flex items-center justify-between gap-3 text-white">
-            {/* Left Controls: Prev, Play/Pause, Next, Volume, Time */}
-            <div className="flex items-center gap-1 sm:gap-2">
-              {/* Prev Lesson */}
-              {hasPrevLesson && (
-                <button
-                  onClick={onPrevLesson}
-                  className="p-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                  title="Bài học trước"
-                >
-                  <SkipBack size={18} />
-                </button>
-              )}
-
-              {/* Play / Pause Toggle */}
-              <button
-                onClick={togglePlay}
-                className="p-1.5 text-white hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                title={isPlaying ? 'Tạm dừng (k)' : 'Phát (k)'}
-              >
-                {isPlaying ? <Pause size={22} className="fill-white" /> : <Play size={22} className="fill-white ml-0.5" />}
-              </button>
-
-              {/* Next Lesson */}
-              {hasNextLesson && (
-                <button
-                  onClick={onNextLesson}
-                  className="p-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                  title="Bài học tiếp theo"
-                >
-                  <SkipForward size={18} />
-                </button>
-              )}
-
-              {/* YouTube-style Expanding Volume Bar */}
-              <div className="group/vol flex items-center">
-                <button
-                  onClick={toggleMute}
-                  className="p-1.5 text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                  title={isMuted ? 'Bật âm thanh (m)' : 'Tắt tiếng (m)'}
-                >
-                  {isMuted || volume === 0 ? (
-                    <VolumeX size={20} />
-                  ) : volume < 0.5 ? (
-                    <Volume1 size={20} />
-                  ) : (
-                    <Volume2 size={20} />
-                  )}
-                </button>
-
-                <div className="w-0 overflow-hidden group-hover/vol:w-16 transition-all duration-200 ease-out flex items-center ml-1">
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={isMuted ? 0 : volume}
-                    onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                    className="w-full h-1 bg-white/40 rounded-full appearance-none cursor-pointer accent-[#ff0000]"
-                  />
-                </div>
-              </div>
-
-              {/* Time Display */}
-              <div className="text-[12px] font-normal text-white/90 select-none ml-2 tracking-normal">
-                <span>{formatTime(currentTime)}</span>
-                <span className="text-white/50 mx-1">/</span>
-                <span>{formatTime(duration)}</span>
-              </div>
-            </div>
-
-            {/* Right Controls: Autoplay, Settings, PiP, Theater, Fullscreen */}
-            <div className="flex items-center gap-1 sm:gap-2">
-              {/* Autoplay Toggle Switch */}
-              <button
-                onClick={() => setAutoPlayNext(!autoPlayNext)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer text-xs"
-                title={`Tự động chuyển bài: ${autoPlayNext ? 'Đang bật' : 'Đang tắt'}`}
-              >
-                <span className="text-[11px] font-medium text-white/80 hidden md:inline">Tự động phát</span>
-                <div
-                  className={`w-7 h-3.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${
-                    autoPlayNext ? 'bg-[#ff0000]' : 'bg-white/30'
-                  }`}
-                >
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full bg-white transition-transform duration-200 ease-in-out ${
-                      autoPlayNext ? 'translate-x-3.5' : 'translate-x-0'
-                    }`}
-                  />
-                </div>
-              </button>
-
-              {/* Settings Gear & Popover */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setShowSettingsMenu(!showSettingsMenu)
-                    setSettingsSubmenu('main')
-                  }}
-                  className={`p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer relative ${
-                    showSettingsMenu ? 'rotate-45' : ''
-                  }`}
-                  title="Cài đặt (Tốc độ & Chất lượng)"
-                >
-                  <Settings size={18} />
-                  {(effectiveQualityKey === '1080p' || effectiveQualityKey === '720p') && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-[#ff0000] text-white text-[8px] font-black px-1 rounded-sm leading-tight tracking-tighter shadow-sm pointer-events-none">
-                      HD
-                    </span>
-                  )}
-                </button>
-
-                {showSettingsMenu && (
-                  <div className="absolute bottom-full right-0 mb-3 min-w-[270px] w-max max-w-xs rounded-2xl bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 text-white">
-                    {settingsSubmenu === 'main' && (
-                      <div className="space-y-1">
-                        <button
-                          onClick={() => setSettingsSubmenu('quality')}
-                          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium hover:bg-white/10 transition-colors cursor-pointer gap-4"
-                        >
-                          <span className="flex items-center gap-2.5 text-white/90 shrink-0 whitespace-nowrap">
-                            <SlidersHorizontal size={15} className="text-[#ff0000]" />
-                            <span className="font-semibold whitespace-nowrap">Chất lượng</span>
-                          </span>
-                          <span className="flex items-center gap-1 text-[11px] text-white/60 shrink-0 whitespace-nowrap">
-                            <span className="whitespace-nowrap">
-                              {selectedQuality === 'auto'
-                                ? `Tự động (${autoResolvedQuality})`
-                                : selectedQuality.toUpperCase()}
-                            </span>
-                            <ChevronRight size={13} />
-                          </span>
-                        </button>
-
-                        <button
-                          onClick={() => setSettingsSubmenu('speed')}
-                          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium hover:bg-white/10 transition-colors cursor-pointer gap-4"
-                        >
-                          <span className="flex items-center gap-2.5 text-white/90 shrink-0 whitespace-nowrap">
-                            <FastForward size={15} className="text-[#ff0000]" />
-                            <span className="font-semibold whitespace-nowrap">Tốc độ phát</span>
-                          </span>
-                          <span className="flex items-center gap-1 text-[11px] text-white/60 shrink-0 whitespace-nowrap">
-                            <span className="whitespace-nowrap">{playbackSpeed === 1.0 ? 'Chuẩn' : `${playbackSpeed}x`}</span>
-                            <ChevronRight size={13} />
-                          </span>
-                        </button>
-                      </div>
-                    )}
-
-                    {settingsSubmenu === 'quality' && (
-                      <div className="space-y-0.5">
-                        <button
-                          onClick={() => setSettingsSubmenu('main')}
-                          className="w-full flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white/70 hover:text-white border-b border-white/10 cursor-pointer mb-1 whitespace-nowrap"
-                        >
-                          <ChevronLeft size={14} />
-                          <span className="whitespace-nowrap">Chất lượng video</span>
-                        </button>
-                        {QUALITIES.map((q) => {
-                          const isSelected = selectedQuality === q.id
-                          return (
-                            <button
-                              key={q.id}
-                              onClick={() => handleQualityChange(q.id)}
-                              className={`w-full flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                                isSelected ? 'bg-white/15 text-white font-bold' : 'text-white/80 hover:bg-white/10'
-                              }`}
-                            >
-                              <span className="flex items-center gap-2 whitespace-nowrap">
-                                <span className="whitespace-nowrap">{q.id === 'auto' ? `Tự động (${autoResolvedQuality})` : q.label}</span>
-                                {q.badge && (
-                                  <span className="rounded bg-[#ff0000]/20 text-[#ff0000] px-1.5 py-0.5 text-[9px] font-bold whitespace-nowrap">
-                                    {q.badge}
-                                  </span>
-                                )}
-                              </span>
-                              {isSelected && <Check size={13} className="text-[#ff0000] ml-3 shrink-0" />}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
-
-                    {settingsSubmenu === 'speed' && (
-                      <div className="space-y-0.5">
-                        <button
-                          onClick={() => setSettingsSubmenu('main')}
-                          className="w-full flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white/70 hover:text-white border-b border-white/10 cursor-pointer mb-1 whitespace-nowrap"
-                        >
-                          <ChevronLeft size={14} />
-                          <span className="whitespace-nowrap">Tốc độ phát lại</span>
-                        </button>
-                        {PLAYBACK_SPEEDS.map((speed) => (
-                          <button
-                            key={speed}
-                            onClick={() => handleSpeedChange(speed)}
-                            className={`w-full flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap ${
-                              playbackSpeed === speed
-                                ? 'bg-white/15 text-white font-bold'
-                                : 'text-white/80 hover:bg-white/10'
-                            }`}
-                          >
-                            <span className="whitespace-nowrap">{speed === 1.0 ? '1.0x (Chuẩn)' : `${speed}x`}</span>
-                            {playbackSpeed === speed && <Check size={13} className="text-[#ff0000] ml-3 shrink-0" />}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* PiP Button */}
-              <button
-                onClick={togglePip}
-                className="p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                title="Hình trong hình (p)"
-              >
-                <PictureInPicture2 size={18} />
-              </button>
-
-              {/* Theater Mode Toggle */}
-              <button
-                onClick={() => setIsTheater(!isTheater)}
-                className="p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer hidden sm:block"
-                title="Chế độ rạp chiếu (t)"
-              >
-                <Tv size={18} />
-              </button>
-
-              {/* Fullscreen Toggle */}
-              <button
-                onClick={toggleFullscreen}
-                className="p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                title={isFullscreen ? 'Thoát toàn màn hình (f)' : 'Toàn màn hình (f)'}
-              >
-                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-              </button>
-            </div>
-          </div>
-        </div>
+        <PlayerControlsBar
+          showControls={showControls}
+          isPlaying={isPlaying}
+          currentTime={currentTime}
+          duration={duration}
+          bufferedPercent={bufferedPercent}
+          volume={volume}
+          isMuted={isMuted}
+          playbackSpeed={playbackSpeed}
+          selectedQuality={selectedQuality}
+          autoResolvedQuality={autoResolvedQuality}
+          effectiveQualityKey={effectiveQualityKey}
+          showSettingsMenu={showSettingsMenu}
+          isTheater={isTheater}
+          isFullscreen={isFullscreen}
+          autoPlayNext={autoPlayNext}
+          hasPrevLesson={hasPrevLesson}
+          hasNextLesson={hasNextLesson}
+          hoverTime={hoverTime}
+          hoverPosition={hoverPosition}
+          progressBarRef={progressBarRef}
+          onTimelineMouseDown={handleTimelineMouseDown}
+          onTimelineMouseMove={handleTimelineMouseMove}
+          onTimelineMouseLeave={() => setHoverTime(null)}
+          onTogglePlay={togglePlay}
+          onPrevLesson={onPrevLesson}
+          onNextLesson={onNextLesson}
+          onToggleMute={toggleMute}
+          onVolumeChange={handleVolumeChange}
+          onToggleAutoPlay={() => setAutoPlayNext(!autoPlayNext)}
+          onToggleSettingsMenu={() => setShowSettingsMenu(!showSettingsMenu)}
+          onSpeedChange={handleSpeedChange}
+          onQualityChange={handleQualityChange}
+          onTogglePip={togglePip}
+          onToggleTheater={() => setIsTheater((prev) => !prev)}
+          onToggleFullscreen={toggleFullscreen}
+        />
       )}
 
       {/* ⌨️ 7. Keyboard Shortcuts Modal */}
-      {showShortcutsModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
-          onClick={() => setShowShortcutsModal(false)}
-        >
-          <div
-            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#0f0f0f] border border-white/10 p-5 shadow-2xl text-white space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <Keyboard className="text-[#ff0000]" size={18} />
-                <span>Phím tắt điều khiển Video</span>
-              </h4>
-              <button
-                onClick={() => setShowShortcutsModal(false)}
-                className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {[
-                { key: 'Space / K', desc: 'Phát / Tạm dừng' },
-                { key: 'Mũi tên Trái / J', desc: 'Lùi 5 giây' },
-                { key: 'Mũi tên Phải / L', desc: 'Tiến 5 giây' },
-                { key: 'Mũi tên Lên / Xuống', desc: 'Tăng / Giảm âm lượng' },
-                { key: 'M', desc: 'Tắt / Bật tiếng' },
-                { key: 'F', desc: 'Toàn màn hình' },
-                { key: 'T', desc: 'Chế độ rạp chiếu' },
-                { key: 'P', desc: 'Hình trong hình (PiP)' },
-                { key: 'N', desc: 'Tạo ghi chú nhanh' },
-              ].map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5"
-                >
-                  <span className="text-zinc-300">{item.desc}</span>
-                  <span className="font-mono font-bold text-[#ff0000] bg-[#ff0000]/10 px-1.5 py-0.5 rounded text-[11px]">
-                    {item.key}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <PlayerShortcutsModal
+        isOpen={showShortcutsModal}
+        onClose={() => setShowShortcutsModal(false)}
+      />
     </div>
   )
 }
