@@ -7,6 +7,7 @@ import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import {
   UserRoadmapProgressSchema,
+  UserRoadmapProgressObjectSchema,
   type UserRoadmapProgress,
 } from '@/schemas/course.schema'
 
@@ -15,11 +16,12 @@ export type { UserRoadmapProgress }
 export const progressService = {
   async getMyRoadmapProgress(): Promise<UserRoadmapProgress | null> {
     try {
-      return await api.get<UserRoadmapProgress>(
+      const res = await api.get<UserRoadmapProgress | null | undefined>(
         API_CONFIG.ENDPOINTS.PROGRESS.ROADMAP_MY,
         undefined,
         UserRoadmapProgressSchema
       )
+      return res ?? null
     } catch {
       return null
     }
@@ -32,7 +34,7 @@ export const progressService = {
     return api.post<UserRoadmapProgress>(
       API_CONFIG.ENDPOINTS.PROGRESS.ROADMAP_ENROLL,
       data,
-      UserRoadmapProgressSchema
+      UserRoadmapProgressObjectSchema
     )
   },
 

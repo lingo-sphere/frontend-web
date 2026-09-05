@@ -196,8 +196,10 @@ export interface Course {
   approval_status?: string
   modules?: CourseModule[]
   chapters?: CourseModule[]
-  created_at?: string
-  updated_at?: string
+  curriculum?: CourseModule[]
+  course?: Course
+  created_at?: string | Date
+  updated_at?: string | Date
 }
 
 export interface CourseCurriculumResponse {
@@ -250,35 +252,42 @@ export interface StageMilestone {
   stage_order: number
   course_id: string
   course_title?: string
-  status: 'LOCKED' | 'IN_PROGRESS' | 'COMPLETED'
-  completed_at?: string
+  status: 'LOCKED' | 'IN_PROGRESS' | 'COMPLETED' | string
+  completed_at?: string | Date
   checkpoint_score?: number
   checkpoint_passed?: boolean
+  is_completed?: boolean
   score_growth?: number
+  pre_stage_score?: number
 }
 
 export interface GrowthChartPoint {
-  milestone_name: string
+  milestone_name?: string
+  label?: string
   score: number
   date?: string
   target?: number
+  is_target?: boolean
 }
 
 export interface UserRoadmapProgress {
   _id: string
+  id?: string
   user_id: string
   roadmap_id: string
+  roadmap_title?: string
   roadmap?: LearningRoadmap | null
-  enrolled_at: string
-  baseline_score: number
-  current_estimated_score: number
+  enrolled_at?: string | Date
+  last_activity_at?: string | Date
+  baseline_score?: number | Record<string, any>
+  current_estimated_score?: number | Record<string, any>
   current_stage_order: number
-  status: 'ACTIVE' | 'COMPLETED' | 'PAUSED'
-  completed_at?: string
+  status: 'ACTIVE' | 'COMPLETED' | 'PAUSED' | 'IN_PROGRESS' | string
+  completed_at?: string | Date
   stage_milestones: StageMilestone[]
   growth_chart_data: GrowthChartPoint[]
-  created_at?: string
-  updated_at?: string
+  created_at?: string | Date
+  updated_at?: string | Date
 }
 
 export interface LexicalItem {
@@ -391,9 +400,15 @@ export interface GamificationProfile {
 export interface LeaderboardEntry {
   rank: number
   user_id: string
-  user_name: string
+  full_name: string
+  user_name?: string
+  avatar_url?: string
   user_avatar?: string
   xp: number
+  level?: number
+  current_streak?: number
+  streak_days?: number
+  league?: string
   is_current_user?: boolean
 }
 

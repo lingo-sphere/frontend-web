@@ -43,15 +43,24 @@ export const GamificationProfileSchema = z.object({
 }).passthrough()
 
 export const LeaderboardEntrySchema = z.object({
-  rank: z.number(),
-  user_id: z.string(),
-  user_name: z.string(),
+  rank: z.number().default(0),
+  user_id: z.string().default(''),
+  full_name: z.string().default('Học viên'),
+  user_name: z.string().optional(),
+  avatar_url: z.string().optional(),
   user_avatar: z.string().optional(),
-  xp: z.number(),
+  xp: z.number().default(0),
+  level: z.number().optional(),
+  current_streak: z.number().optional(),
+  streak_days: z.number().optional(),
+  league: z.string().optional(),
   is_current_user: z.boolean().optional(),
 }).passthrough()
 
-export const LeaderboardListSchema = z.array(LeaderboardEntrySchema)
+export const LeaderboardListSchema = z.union([
+  z.array(LeaderboardEntrySchema),
+  z.object({ items: z.array(LeaderboardEntrySchema) }).transform((val) => val.items),
+]).default([])
 
 export const UserProfileResponseSchema = z.object({
   profile: UserSchema,

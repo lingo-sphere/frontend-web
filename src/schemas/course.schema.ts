@@ -31,7 +31,7 @@ export const CourseModuleSchema = z.object({
 
 export const ChapterSchema = CourseModuleSchema
 
-export const CourseSchema = z.object({
+export const CourseBaseSchema = z.object({
   _id: z.string().default(''),
   id: z.string().optional(),
   title: z.string(),
@@ -59,9 +59,31 @@ export const CourseSchema = z.object({
   is_published: z.boolean().default(true),
   modules: z.array(CourseModuleSchema).optional(),
   chapters: z.array(CourseModuleSchema).optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
+  curriculum: z.array(CourseModuleSchema).optional(),
+  created_at: z.union([z.string(), z.date()]).optional(),
+  updated_at: z.union([z.string(), z.date()]).optional(),
 }).passthrough()
+
+export const CourseDetailResponseSchema = z.object({
+  course: CourseBaseSchema,
+  curriculum: z.array(CourseModuleSchema).optional(),
+  modules: z.array(CourseModuleSchema).optional(),
+  total_modules: z.number().optional(),
+  total_lessons: z.number().optional(),
+}).passthrough().transform((val) => ({
+  ...val.course,
+  course: val.course,
+  curriculum: val.curriculum || val.course.modules || [],
+  modules: val.curriculum || val.course.modules || [],
+  chapters: val.curriculum || val.course.modules || [],
+  total_modules: val.total_modules ?? val.course.total_modules ?? (val.curriculum || []).length,
+  total_lessons: val.total_lessons ?? val.course.total_lessons,
+}))
+
+export const CourseSchema = z.union([
+  CourseDetailResponseSchema,
+  CourseBaseSchema,
+])
 
 export const PaginationMetaSchema = z.object({
   current: z.number().default(1),
@@ -113,36 +135,45 @@ export const StageMilestoneSchema = z.object({
   stage_order: z.number(),
   course_id: z.string(),
   course_title: z.string().optional(),
-  status: z.enum(['LOCKED', 'IN_PROGRESS', 'COMPLETED']).default('LOCKED'),
-  completed_at: z.string().optional(),
+  status: z.union([z.enum(['LOCKED', 'IN_PROGRESS', 'COMPLETED']), z.string()]).default('LOCKED'),
+  completed_at: z.union([z.string(), z.date()]).optional(),
   checkpoint_score: z.number().optional(),
   checkpoint_passed: z.boolean().optional(),
+  is_completed: z.boolean().optional(),
   score_growth: z.number().optional(),
+  pre_stage_score: z.number().optional(),
 }).passthrough()
 
 export const GrowthChartPointSchema = z.object({
-  milestone_name: z.string(),
-  score: z.number(),
+  label: z.string().optional(),
+  milestone_name: z.string().optional(),
+  score: z.number().default(0),
   date: z.string().optional(),
   target: z.number().optional(),
+  is_target: z.boolean().optional(),
 }).passthrough()
 
-export const UserRoadmapProgressSchema = z.object({
-  _id: z.string(),
-  user_id: z.string(),
-  roadmap_id: z.string(),
+export const UserRoadmapProgressObjectSchema = z.object({
+  _id: z.string().default(''),
+  id: z.string().optional(),
+  user_id: z.string().default(''),
+  roadmap_id: z.string().default(''),
+  roadmap_title: z.string().optional(),
   roadmap: LearningRoadmapSchema.nullable().optional(),
-  enrolled_at: z.string(),
-  baseline_score: z.number().default(0),
-  current_estimated_score: z.number().default(0),
+  enrolled_at: z.union([z.string(), z.date()]).optional(),
+  last_activity_at: z.union([z.string(), z.date()]).optional(),
+  baseline_score: z.union([z.number(), z.record(z.string(), z.unknown())]).optional().default(0),
+  current_estimated_score: z.union([z.number(), z.record(z.string(), z.unknown())]).optional().default(0),
   current_stage_order: z.number().default(1),
-  status: z.enum(['ACTIVE', 'COMPLETED', 'PAUSED']).default('ACTIVE'),
-  completed_at: z.string().optional(),
+  status: z.string().default('IN_PROGRESS'),
+  completed_at: z.union([z.string(), z.date()]).optional(),
   stage_milestones: z.array(StageMilestoneSchema).default([]),
   growth_chart_data: z.array(GrowthChartPointSchema).default([]),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
+  created_at: z.union([z.string(), z.date()]).optional(),
+  updated_at: z.union([z.string(), z.date()]).optional(),
 }).passthrough()
+
+export const UserRoadmapProgressSchema = UserRoadmapProgressObjectSchema.nullable().optional()
 
 export type Lesson = z.infer<typeof LessonSchema>
 export type CourseModule = z.infer<typeof CourseModuleSchema>
@@ -152,4 +183,4 @@ export type LearningRoadmapStage = z.infer<typeof LearningRoadmapStageSchema>
 export type LearningRoadmap = z.infer<typeof LearningRoadmapSchema>
 export type StageMilestone = z.infer<typeof StageMilestoneSchema>
 export type GrowthChartPoint = z.infer<typeof GrowthChartPointSchema>
-export type UserRoadmapProgress = z.infer<typeof UserRoadmapProgressSchema>
+export type UserRoadmapProgress = z.infer<typeof UserRoadmapProgressObjectSchema>

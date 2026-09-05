@@ -180,7 +180,7 @@ function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): 
     const errorDetails = parsed.error.issues
       .map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`)
       .join('; ')
-    console.error(`[ZodValidationError] Endpoint ${endpoint}:`, parsed.error.format())
+    console.error(`[ZodValidationError] Endpoint ${endpoint}: ${errorDetails}`, parsed.error.issues)
     throw new Error(`Dữ liệu từ máy chủ không đúng định dạng (${endpoint}): ${errorDetails}`)
   }
   return parsed.data

@@ -51,7 +51,7 @@ export default function LeaderboardAppPage() {
             rank: idx + 1,
             name: entry.full_name || `Học viên #${idx + 1}`,
             avatarColor: avatarColors[idx % avatarColors.length],
-            streakDays: entry.streak_days || 1,
+            streakDays: entry.current_streak ?? entry.streak_days ?? 1,
             totalMinutes: entry.total_minutes || 60 + idx * 10,
             questionsAnswered: entry.questions_answered || 20 + idx * 5,
             wordsLearned: entry.words_learned || 15 + idx * 3,

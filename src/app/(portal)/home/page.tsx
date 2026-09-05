@@ -63,7 +63,7 @@ export default function HomeAppPage() {
             const mappedEntries = lbData.map((u: any, idx: number) => ({
               rank: idx + 1,
               name: u.full_name || `Học viên #${idx + 1}`,
-              streakDays: u.streak_days || 1,
+              streakDays: u.current_streak ?? u.streak_days ?? 1,
             }))
             setLeaderboard({
               week: mappedEntries,

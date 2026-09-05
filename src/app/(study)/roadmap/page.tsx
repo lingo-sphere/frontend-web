@@ -112,8 +112,22 @@ export default function RoadmapAppPage() {
     ).length
     const progressPercent = Math.min(100, Math.round((completedStages / totalStages) * 100))
 
-    const baseline = progress.baseline_score || 0
-    const current = progress.current_estimated_score || baseline
+    const baseline =
+      typeof progress.baseline_score === 'number'
+        ? progress.baseline_score
+        : typeof progress.baseline_score === 'object' && progress.baseline_score !== null
+          ? ((progress.baseline_score as Record<string, any>).total ??
+              (progress.baseline_score as Record<string, any>).overall ??
+              0)
+          : 0
+    const current =
+      typeof progress.current_estimated_score === 'number'
+        ? progress.current_estimated_score
+        : typeof progress.current_estimated_score === 'object' && progress.current_estimated_score !== null
+          ? ((progress.current_estimated_score as Record<string, any>).total ??
+              (progress.current_estimated_score as Record<string, any>).overall ??
+              baseline)
+          : baseline
     const growth = current - baseline
     const target = progress.roadmap.target_score || 650
 
