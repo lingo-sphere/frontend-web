@@ -55,7 +55,7 @@ export function useCourseQnA({
       const newQnA: QnAItem = {
         id: String(res?._id || `qna-${Date.now()}`),
         lessonTitle: currentLesson.title,
-        userId: user.id || user.user_id,
+        userId: user.user_id,
         isAnonymous: Boolean(isAnonymous),
         author: authorName,
         authorAvatar: authorAvatar || undefined,

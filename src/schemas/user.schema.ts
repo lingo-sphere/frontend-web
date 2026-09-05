@@ -1,7 +1,4 @@
-/**
- * @file user.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ user và auth
- */
+// Handles user-related validation schemas.
 
 import { z } from 'zod'
 
@@ -9,11 +6,11 @@ export const UserRoleSchema = z.enum(['ADMIN', 'INSTRUCTOR', 'STUDENT', 'USER'])
 export const AccountStatusSchema = z.enum(['ACTIVE', 'INACTIVE', 'BLOCKED', 'PENDING'])
 
 export const UserSchema = z.object({
+  user_id: z.string(),
   _id: z.string().optional(),
-  id: z.string().default(''),
-  user_id: z.string().optional(),
+  id: z.string().optional(),
   email: z.string(),
-  full_name: z.string(),
+  full_name: z.string().default(''),
   phone_number: z.string().optional(),
   avatar_url: z.string().optional(),
   date_of_birth: z.string().optional(),

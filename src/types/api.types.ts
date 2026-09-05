@@ -1,7 +1,4 @@
-/**
- * @file api.types.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
- */
+// Handles TypeScript definitions for frontend-web application.
 
 export interface ApiResponse<T = unknown> {
   statusCode: number
@@ -11,13 +8,25 @@ export interface ApiResponse<T = unknown> {
   timestamp?: string
 }
 
+export interface PaginationMeta {
+  current: number
+  pageSize: number
+  pages: number
+  total: number
+}
+
+export interface PaginatedResult<T> {
+  meta: PaginationMeta
+  result: T[]
+}
+
 export type UserRole = 'ADMIN' | 'INSTRUCTOR' | 'STUDENT' | 'USER'
 export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'PENDING'
 
 export interface User {
+  user_id: string
   _id?: string
-  id: string
-  user_id?: string
+  id?: string
   email: string
   full_name: string
   phone_number?: string
@@ -30,6 +39,12 @@ export interface User {
   bio?: string
   level?: string
   target_score?: number
+  target_toeic_score?: number
+  current_estimated_score?: number
+  placement_test_score?: number
+  placement_listening_score?: number
+  placement_reading_score?: number
+  placement_tested_at?: string
   xp?: number
   streak_count?: number
   is_premium?: boolean
@@ -114,10 +129,14 @@ export interface SocialLoginPayload {
 }
 
 export interface Lesson {
-  id: string
-  _id?: string
+  _id: string
+  id?: string
+  module_id?: string
+  course_id?: string
   title: string
   description?: string
+  lesson_type?: string
+  content_html?: string
   video_url?: string
   duration_seconds: number
   order_index: number
@@ -125,18 +144,33 @@ export interface Lesson {
   lesson_notes?: string
 }
 
-export interface Chapter {
-  id: string
-  _id?: string
+export interface CourseModule {
+  _id: string
+  id?: string
+  course_id?: string
   title: string
   description?: string
   order_index: number
-  lessons: Lesson[]
+  is_free_preview?: boolean
+  challenge_test_exam_id?: string
+  challenge_passing_score?: number
+  challenge_duration_minutes?: number
+  challenge_questions?: Array<Record<string, unknown>>
+  post_mini_test_exam_id?: string
+  post_mini_passing_score?: number
+  post_mini_duration_minutes?: number
+  post_mini_questions?: Array<Record<string, unknown>>
+  test_audio_url?: string
+  challenge_audio_url?: string
+  audio_url?: string
+  lessons?: Lesson[]
 }
 
+export type Chapter = CourseModule
+
 export interface Course {
-  id: string
-  _id?: string
+  _id: string
+  id?: string
   title: string
   slug: string
   description: string
@@ -145,18 +179,33 @@ export interface Course {
   skills?: string[]
   price: number
   discount_price?: number
-  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | string
   category: string
   instructor_id?: string
   instructor_name?: string
+  author_id?: string
+  author_name?: string
+  author_avatar?: string
+  total_modules?: number
   total_lessons: number
-  total_duration_minutes: number
-  rating_avg: number
-  rating_count: number
+  total_duration_minutes?: number
+  rating?: number
+  rating_avg?: number
+  rating_count?: number
+  students_count?: number
   is_published: boolean
-  chapters?: Chapter[]
+  approval_status?: string
+  modules?: CourseModule[]
+  chapters?: CourseModule[]
   created_at?: string
   updated_at?: string
+}
+
+export interface CourseCurriculumResponse {
+  course: Course
+  total_modules: number
+  total_lessons: number
+  curriculum: CourseModule[]
 }
 
 export interface CourseEnrollment {

@@ -1,7 +1,4 @@
-/**
- * @file course.workspace.adapter.ts
- * @description Data transform adapter mapping raw backend course response to workspace Chapter, Lesson, QnA, Review, and Course models
- */
+// Handles course workspace data transformation.
 
 import type { Course, Chapter, Lesson, NoteItem, QnAItem, CourseReviewItem } from '@/types/course'
 
@@ -22,21 +19,22 @@ export function mapCourseDataToWorkspace(
   notesRes: any,
   qnaRes: any
 ): Course {
-  const rawChapters = courseObj.chapters || courseObj.modules || []
-  const chaptersArr = Array.isArray(rawChapters) ? rawChapters : []
+  const rawModules = courseObj.modules || courseObj.curriculum || courseObj.chapters || []
+  const modulesArr = Array.isArray(rawModules) ? rawModules : []
 
   const completedLessonIdSet = new Set<string>()
-  const compLessonIds = progressDetail?.completed_lesson_ids || (progressDetail as any)?.completed_lessons
+  const compLessonIds = progressDetail?.completed_lesson_ids || progressDetail?.completed_lessons
   if (userIsEnrolled && Array.isArray(compLessonIds)) {
     compLessonIds.forEach((id: string) => completedLessonIdSet.add(id))
   }
 
-  const mappedChapters: Chapter[] = chaptersArr.map((ch: any, cIdx: number) => {
-    const rawLessons = ch.lessons || ch.items || []
+  const mappedChapters: Chapter[] = modulesArr.map((mod: any, cIdx: number) => {
+    const rawLessons = mod.lessons || []
     const lessonsArr = Array.isArray(rawLessons) ? rawLessons : []
+    const modId = String(mod._id || mod.id)
 
     const modProgress = progressDetail?.modules_progress?.find(
-      (m: any) => m.module_id === ch.id || m.module_id === ch._id || m.order_index === (ch.order || cIdx + 1)
+      (m: any) => m.module_id === modId
     )
 
     let chapterStatus: Chapter['status'] = 'in-progress'
@@ -48,41 +46,41 @@ export function mapCourseDataToWorkspace(
       }
     }
 
-    const chId = String(ch.id || ch._id || `ch-${cIdx + 1}`)
     const mappedLessons: Lesson[] = lessonsArr.map((l: any, lIdx: number) => {
-      const isCompleted = l.status === 'completed' || completedLessonIdSet.has(l.id || l._id)
+      const lesId = String(l._id || l.id)
+      const isCompleted = l.status === 'completed' || completedLessonIdSet.has(lesId)
       return {
-        id: String(l.id || l._id || `les-${cIdx + 1}-${lIdx + 1}`),
-        chapterId: chId,
-        order: l.order || lIdx + 1,
+        id: lesId,
+        chapterId: modId,
+        order: l.order_index ?? (lIdx + 1),
         title: String(l.title || `Bài ${lIdx + 1}`),
-        duration: typeof l.duration === 'number' ? l.duration : 600,
-        type: l.type || 'video',
+        duration: typeof l.duration_seconds === 'number' ? l.duration_seconds : 600,
+        type: l.lesson_type || l.type || 'video',
         status: isCompleted ? 'completed' : l.status || 'available',
         progress: isCompleted ? 100 : l.progress || 0,
-        videoUrl: l.videoUrl || l.video_url || l.content?.videoUrl,
-        is_free_preview: Boolean(l.is_free_preview || l.is_preview || (cIdx === 0 && lIdx === 0)),
-        is_preview: Boolean(l.is_free_preview || l.is_preview || (cIdx === 0 && lIdx === 0)),
+        videoUrl: l.video_url || l.videoUrl || l.content?.videoUrl,
+        is_free_preview: Boolean(l.is_free_preview),
+        is_preview: Boolean(l.is_free_preview),
         resources: Array.isArray(l.resources) ? l.resources : [],
         content: typeof l.content === 'object' && l.content !== null ? l.content : { sections: [] },
       }
     })
 
     return {
-      id: chId,
+      id: modId,
       courseId: String(courseId),
-      title: String(ch.title || `Chương ${cIdx + 1}`),
-      order: ch.order || cIdx + 1,
-      description: ch.description || '',
+      title: String(mod.title || `Chương ${cIdx + 1}`),
+      order: mod.order_index ?? (cIdx + 1),
+      description: mod.description || '',
       status: chapterStatus,
       lessons: mappedLessons,
-      challenge_questions: ch.challenge_questions || ch.test_questions || [],
-      challenge_duration_minutes: ch.challenge_duration_minutes || 15,
-      challenge_passing_score: ch.challenge_passing_score || 80,
-      speaking_prompt: ch.speaking_prompt,
-      speaking_file_url: ch.speaking_file_url,
-      writing_prompt: ch.writing_prompt,
-      writing_file_url: ch.writing_file_url,
+      challenge_questions: mod.challenge_questions || [],
+      challenge_duration_minutes: mod.challenge_duration_minutes || 15,
+      challenge_passing_score: mod.challenge_passing_score || 80,
+      speaking_prompt: mod.speaking_prompt,
+      speaking_file_url: mod.speaking_file_url,
+      writing_prompt: mod.writing_prompt,
+      writing_file_url: mod.writing_file_url,
     }
   })
 

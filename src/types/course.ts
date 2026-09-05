@@ -207,10 +207,12 @@ export interface CourseAnnouncement {
 
 export interface Course {
   id: string
+  _id?: string
   title: string
   level: string
   description: string
   duration: string
+  duration_minutes?: number
   totalChapters: number
   totalLessons: number
   totalHours?: number

@@ -1,33 +1,38 @@
-/**
- * @file course.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ course
- */
+// Handles course-related API requests for frontend-web.
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { Course, Chapter, Lesson, CourseEnrollment, LearningRoadmap } from '@/types/api.types'
-import { CourseSchema, LessonSchema } from '@/schemas/course.schema'
+import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, LearningRoadmap, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
+import { CourseSchema, LessonSchema, PaginatedCoursesSchema } from '@/schemas/course.schema'
 
 export const courseService = {
 
   async getAllCourses(params?: { category?: string; level?: string; search?: string; limit?: number; is_published?: boolean }): Promise<Course[]> {
-    const res = await api.get<{ result?: Course[]; data?: Course[]; meta?: unknown } | Course[]>(API_CONFIG.ENDPOINTS.COURSES.LIST, {
+    const res = await api.get<PaginatedResult<Course>>(API_CONFIG.ENDPOINTS.COURSES.LIST, {
       is_published: true,
       ...params,
-    })
-    let items: Course[] = []
-    if (Array.isArray(res)) items = res
-    else if (res && Array.isArray((res as { result?: Course[] }).result)) items = (res as { result: Course[] }).result
-    else if (res && Array.isArray((res as { data?: Course[] }).data)) items = (res as { data: Course[] }).data
-    return items.filter((c) => c && (c as unknown as { is_published?: boolean }).is_published !== false)
+    }, PaginatedCoursesSchema)
+    return res.result
   },
 
   async getCourseById(id: string): Promise<Course> {
     return api.get<Course>(API_CONFIG.ENDPOINTS.COURSES.BY_ID(id), undefined, CourseSchema)
   },
 
+  async getCourseCurriculum(courseId: string): Promise<CourseCurriculumResponse> {
+    return api.get<CourseCurriculumResponse>(API_CONFIG.ENDPOINTS.COURSES.CURRICULUM(courseId))
+  },
+
+  async getCourseModules(courseId: string): Promise<CourseModule[]> {
+    return api.get<CourseModule[]>(API_CONFIG.ENDPOINTS.COURSES.MODULES(courseId))
+  },
+
   async getCourseChapters(courseId: string): Promise<Chapter[]> {
-    return api.get<Chapter[]>(API_CONFIG.ENDPOINTS.COURSES.CHAPTERS(courseId))
+    return api.get<Chapter[]>(API_CONFIG.ENDPOINTS.COURSES.MODULES(courseId))
+  },
+
+  async getModuleLessons(moduleId: string): Promise<Lesson[]> {
+    return api.get<Lesson[]>(API_CONFIG.ENDPOINTS.COURSES.LESSONS(moduleId))
   },
 
   async getChapterLessons(chapterId: string): Promise<Lesson[]> {

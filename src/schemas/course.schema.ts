@@ -1,15 +1,16 @@
-/**
- * @file course.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ course và roadmap
- */
+// Handles course and roadmap validation schemas.
 
 import { z } from 'zod'
 
 export const LessonSchema = z.object({
-  id: z.string().default(''),
-  _id: z.string().optional(),
+  _id: z.string().default(''),
+  id: z.string().optional(),
+  module_id: z.string().optional(),
+  course_id: z.string().optional(),
   title: z.string(),
   description: z.string().optional(),
+  lesson_type: z.string().optional(),
+  content_html: z.string().optional(),
   video_url: z.string().optional(),
   duration_seconds: z.number().default(0),
   order_index: z.number().default(1),
@@ -17,18 +18,22 @@ export const LessonSchema = z.object({
   lesson_notes: z.string().optional(),
 }).passthrough()
 
-export const ChapterSchema = z.object({
-  id: z.string().default(''),
-  _id: z.string().optional(),
+export const CourseModuleSchema = z.object({
+  _id: z.string().default(''),
+  id: z.string().optional(),
+  course_id: z.string().optional(),
   title: z.string(),
   description: z.string().optional(),
   order_index: z.number().default(1),
+  is_free_preview: z.boolean().optional(),
   lessons: z.array(LessonSchema).default([]),
 }).passthrough()
 
+export const ChapterSchema = CourseModuleSchema
+
 export const CourseSchema = z.object({
-  id: z.string().default(''),
-  _id: z.string().optional(),
+  _id: z.string().default(''),
+  id: z.string().optional(),
   title: z.string(),
   slug: z.string().default(''),
   description: z.string().default(''),
@@ -41,14 +46,33 @@ export const CourseSchema = z.object({
   category: z.string().default('TOEIC'),
   instructor_id: z.string().optional(),
   instructor_name: z.string().optional(),
+  author_id: z.string().optional(),
+  author_name: z.string().optional(),
+  author_avatar: z.string().optional(),
+  total_modules: z.number().default(0),
   total_lessons: z.number().default(0),
   total_duration_minutes: z.number().default(0),
+  rating: z.number().optional(),
   rating_avg: z.number().default(5),
   rating_count: z.number().default(0),
+  students_count: z.number().default(0),
   is_published: z.boolean().default(true),
-  chapters: z.array(ChapterSchema).optional(),
+  modules: z.array(CourseModuleSchema).optional(),
+  chapters: z.array(CourseModuleSchema).optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
+}).passthrough()
+
+export const PaginationMetaSchema = z.object({
+  current: z.number().default(1),
+  pageSize: z.number().default(10),
+  pages: z.number().default(1),
+  total: z.number().default(0),
+}).passthrough()
+
+export const PaginatedCoursesSchema = z.object({
+  meta: PaginationMetaSchema,
+  result: z.array(CourseSchema),
 }).passthrough()
 
 export const CourseListSchema = z.array(CourseSchema)
@@ -121,6 +145,7 @@ export const UserRoadmapProgressSchema = z.object({
 }).passthrough()
 
 export type Lesson = z.infer<typeof LessonSchema>
+export type CourseModule = z.infer<typeof CourseModuleSchema>
 export type Chapter = z.infer<typeof ChapterSchema>
 export type Course = z.infer<typeof CourseSchema>
 export type LearningRoadmapStage = z.infer<typeof LearningRoadmapStageSchema>

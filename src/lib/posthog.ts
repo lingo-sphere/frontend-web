@@ -51,20 +51,20 @@ export function initPostHog(): void {
 }
 
 export function identifyUser(user: {
+  user_id?: string
   id?: string
   _id?: string
   email?: string
   full_name?: string
-  name?: string
   role?: string
 }): void {
   if (typeof window === 'undefined' || !posthog) return
-  const userId = user.id || user._id
+  const userId = user.user_id
   if (!userId) return
 
   posthog.identify(userId, {
     email: user.email,
-    name: user.full_name || user.name,
+    name: user.full_name || '',
     role: user.role || 'STUDENT',
     app_platform: 'web',
   })

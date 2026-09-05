@@ -96,10 +96,10 @@ export default function CourseDetailPage() {
       return
     }
 
-    let hasPlacementScore = Boolean(
-      (user as any)?.placement_test_score ||
-      (user as any)?.current_estimated_score ||
-      (user as any)?.placement_tested_at
+    const hasPlacementScore = Boolean(
+      user?.placement_test_score ||
+      user?.current_estimated_score ||
+      user?.placement_tested_at
     )
 
     if (!hasPlacementScore) {
@@ -107,12 +107,12 @@ export default function CourseDetailPage() {
         const stored = localStorage.getItem('lingo_user_placement_score')
         if (stored) {
           const parsed = JSON.parse(stored)
-          if (parsed?.placement_test_score > 0) hasPlacementScore = true
+          if (parsed?.placement_test_score > 0) {
+            setShowCourseCheckoutModal(true)
+            return
+          }
         }
       } catch {}
-    }
-
-    if (!hasPlacementScore) {
       setShowPlacementPromptModal(true)
     } else {
       setShowCourseCheckoutModal(true)
@@ -126,12 +126,11 @@ export default function CourseDetailPage() {
   if (activeTestModal.isOpen) {
     const durationMins =
       activeTestModal.testType === 'final-test'
-        ? Number((course as any).final_test_duration_minutes || (course as any).duration_minutes || 60)
+        ? Number(course.final_test_duration_minutes || course.duration_minutes || 60)
         : Number(
             activeTestModal.chapter?.challenge_duration_minutes ||
-              (activeTestModal.chapter as any)?.challengeTest?.durationMinutes ||
-              (activeTestModal.chapter as any)?.duration_minutes ||
-              15
+            activeTestModal.chapter?.duration_minutes ||
+            15
           )
 
     return (
@@ -146,22 +145,22 @@ export default function CourseDetailPage() {
         finalTestAudioUrl={course.final_test_audio_url}
         speakingPrompt={
           activeTestModal.testType === 'final-test'
-            ? ((course as any).final_test_speaking_prompt || activeTestModal.chapter?.speaking_prompt)
+            ? (course.final_test_speaking_prompt || activeTestModal.chapter?.speaking_prompt)
             : activeTestModal.chapter?.speaking_prompt
         }
         speakingFileUrl={
           activeTestModal.testType === 'final-test'
-            ? ((course as any).final_test_speaking_file_url || activeTestModal.chapter?.speaking_file_url)
+            ? (course.final_test_speaking_file_url || activeTestModal.chapter?.speaking_file_url)
             : activeTestModal.chapter?.speaking_file_url
         }
         writingPrompt={
           activeTestModal.testType === 'final-test'
-            ? ((course as any).final_test_writing_prompt || activeTestModal.chapter?.writing_prompt)
+            ? (course.final_test_writing_prompt || activeTestModal.chapter?.writing_prompt)
             : activeTestModal.chapter?.writing_prompt
         }
         writingFileUrl={
           activeTestModal.testType === 'final-test'
-            ? ((course as any).final_test_writing_file_url || activeTestModal.chapter?.writing_file_url)
+            ? (course.final_test_writing_file_url || activeTestModal.chapter?.writing_file_url)
             : activeTestModal.chapter?.writing_file_url
         }
         category={course.category}
@@ -238,7 +237,7 @@ export default function CourseDetailPage() {
             activeTab={activeBottomTab}
             isEnrolled={isEnrolled}
             isAuthenticated={isAuthenticated}
-            currentUserId={user?.id || user?.user_id}
+            currentUserId={user?.user_id}
             currentUserRole={user?.role}
             playerCurrentTime={playerCurrentTime}
             progressDetail={progressDetail}

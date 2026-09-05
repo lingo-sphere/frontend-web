@@ -1,7 +1,4 @@
-/**
- * @file api.config.ts
- * @description Mã nguồn thành phần api.config.ts
- */
+// Handles API endpoints configuration for frontend-web.
 
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -57,8 +54,10 @@ export const API_CONFIG = {
       LIST: '/courses',
       RECOMMENDATIONS: '/courses/recommendations',
       BY_ID: (id: string) => `/courses/${id}`,
-      CHAPTERS: (courseId: string) => `/courses/${courseId}/chapters`,
-      LESSONS: (chapterId: string) => `/courses/chapters/${chapterId}/lessons`,
+      CURRICULUM: (id: string) => `/courses/${id}/curriculum`,
+      MODULES: (courseId: string) => `/courses/${courseId}/modules`,
+      CHAPTERS: (courseId: string) => `/courses/${courseId}/modules`,
+      LESSONS: (moduleId: string) => `/courses/modules/${moduleId}/lessons`,
       LESSON_BY_ID: (lessonId: string) => `/courses/lessons/${lessonId}`,
       ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,
       MY_ENROLLED: '/courses/my/enrolled',
@@ -134,11 +133,11 @@ export const API_CONFIG = {
       SPEAKING: '/practice/speaking/exercises',
       SPEAKING_BY_ID: (id: string) => `/practice/speaking/exercises/${id}`,
       SPEAKING_SUBMIT: '/practice/speaking/attempts/submit',
-      SPEAKING_EVALUATE: '/practice/speaking/evaluate',
+      SPEAKING_EVALUATE: '/ai/evaluations/evaluate',
       WRITING: '/practice/writing/exercises',
       WRITING_BY_ID: (id: string) => `/practice/writing/exercises/${id}`,
       WRITING_SUBMIT: '/practice/writing/submissions/submit',
-      WRITING_EVALUATE: '/practice/writing/evaluate',
+      WRITING_EVALUATE: '/ai/evaluations/evaluate',
       DAILY_PROMPT: '/practice/writing/journal/daily-prompt',
       DAILY_JOURNAL_SUBMIT: '/practice/writing/journal/submit',
       DAILY_JOURNAL_HISTORY: '/practice/writing/journal/history',
@@ -147,26 +146,19 @@ export const API_CONFIG = {
 
     AI: {
       CHAT: '/ai/chat',
-      TUTOR_CHAT: '/ai/tutor/chat',
       TRANSLATE: '/ai/translations/translate',
-      EXPLAIN_QUESTION: '/ai/explain-question',
+      EXPLAIN_ERRORS: '/ai/evaluations/explain-test-errors',
+      EXPLAIN_QUESTION: '/ai/evaluations/explain-test-errors',
       GENERATE: '/ai/generate',
-      IMPROVE_WRITING: '/ai/improve-writing',
+      EVALUATE: '/ai/evaluations/evaluate',
+      IMPROVE_WRITING: '/ai/evaluations/evaluate',
     },
 
     NOTIFICATIONS: {
-      LIST: '/notifications',
-      UNREAD_COUNT: '/notifications/unread-count',
-      MARK_READ: '/notifications/mark-read',
-      MARK_ALL_READ: '/notifications/mark-all-read',
+      MY: '/notifications/my',
+      MARK_READ: (id: string) => `/notifications/${id}/read`,
+      MARK_ALL_READ: '/notifications/my/read-all',
       PREFERENCES: '/notifications/preferences/my',
-    },
-
-    COMMUNITY: {
-      POSTS: '/community/posts',
-      POST_BY_ID: (id: string) => `/community/posts/${id}`,
-      COMMENTS: (postId: string) => `/community/posts/${postId}/comments`,
-      LIKE: (postId: string) => `/community/posts/${postId}/like`,
     },
   },
 }
