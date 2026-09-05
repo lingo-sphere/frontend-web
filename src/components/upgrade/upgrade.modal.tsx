@@ -9,7 +9,7 @@ import { X, ArrowLeft, Crown } from 'lucide-react'
 import { UpgradeSelectPlanStep } from '@/components/upgrade/upgrade.plan'
 import { UpgradePaymentQrStep } from '@/components/upgrade/upgrade.qr'
 import { UpgradeSuccessView } from './upgrade.success.view'
-import { useUpgradePayment } from './use.upgrade.payment'
+import { useUpgradePayment } from '@/hooks/use.upgrade.payment'
 
 interface UpgradeModalProps {
   open: boolean

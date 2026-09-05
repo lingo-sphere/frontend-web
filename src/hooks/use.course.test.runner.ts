@@ -13,7 +13,7 @@ import {
   WrongQuestionItem,
   AiExplanationsData,
   getCorrectOptionIndex,
-} from './test.runner.types'
+} from '@/components/course/test-runner/test.runner.types'
 
 interface UseCourseTestRunnerOptions {
   isOpen: boolean

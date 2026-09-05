@@ -15,7 +15,7 @@ import { DictationWorkspaceHeader } from './dictation.workspace.header'
 import {
   useDictationWorkspace,
   formatDuration,
-} from './use.dictation.workspace'
+} from '@/hooks/use.dictation.workspace'
 
 interface VideoDictationViewProps {
   exercise: ListeningExercise

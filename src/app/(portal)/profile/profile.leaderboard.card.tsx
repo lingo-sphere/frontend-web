@@ -7,7 +7,7 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Icon } from '@/components/icons/icon.map'
-import { formatNumber } from './use.profile.data'
+import { formatNumber } from '@/hooks/use.profile.data'
 
 interface ProfileLeaderboardCardProps {
   leaderboard: any[]

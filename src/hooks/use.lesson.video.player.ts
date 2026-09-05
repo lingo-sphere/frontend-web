@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Hls from 'hls.js'
 import type { Lesson } from '@/types/course'
-import { isDirectVideoUrl } from './player.types'
+import { isDirectVideoUrl } from '@/components/course/player/player.types'
 
 interface UseLessonVideoPlayerProps {
   lesson: Lesson

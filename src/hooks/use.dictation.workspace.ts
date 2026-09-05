@@ -16,7 +16,7 @@ import type {
   CheckedBlankResult,
   UserAnswers,
   HintRevealedCount,
-} from './dictation.input.box'
+} from '@/components/listening/dictation.input.box'
 
 export function formatDuration(seconds?: number): string {
   if (!seconds) return '0:00'

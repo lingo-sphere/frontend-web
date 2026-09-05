@@ -13,7 +13,7 @@ import {
 import { API_CONFIG } from '@/config/api.config'
 import { toast } from '@/store/toast.store'
 import { getRemainingSubscriptionText } from '@/components/layout/header.utils'
-import { getPlans, type Plan } from './upgrade.data'
+import { getPlans, type Plan } from '@/components/upgrade/upgrade.data'
 
 interface UseUpgradePaymentOptions {
   open: boolean

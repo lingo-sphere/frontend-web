@@ -30,7 +30,7 @@ import {
   TestRunnerExitConfirmModal,
   TestRunnerSubmitConfirmModal,
 } from './test-runner/test.runner.confirm.modal'
-import { useCourseTestRunner } from './test-runner/use.course.test.runner'
+import { useCourseTestRunner } from '@/hooks/use.course.test.runner'
 
 export type { CourseTestQuestion, TestAttemptItem }
 

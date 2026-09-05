@@ -12,7 +12,7 @@ import { CourseScheduleModal } from '@/components/course/course.schedule.modal'
 import { CoursePlacementBanner } from '@/components/course/course.placement.banner'
 import { CourseCard } from '@/components/course/course.card'
 import { buildCourseUrl } from '@/lib/course.url'
-import { useCoursesCatalog } from './use.courses.catalog'
+import { useCoursesCatalog } from '@/hooks/use.courses.catalog'
 import { CoursesCatalogTabsHeader } from './courses.catalog.tabs.header'
 import { CoursesEmptyState } from './courses.empty.state'
 

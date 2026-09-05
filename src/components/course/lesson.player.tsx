@@ -10,7 +10,7 @@ import type { Lesson } from '@/types/course'
 import { PlayerControlsBar } from './player/player.controls.bar'
 import { PlayerEndscreen } from './player/player.endscreen'
 import { PlayerShortcutsModal } from './player/player.shortcuts.modal'
-import { useLessonVideoPlayer } from './player/use.lesson.video.player'
+import { useLessonVideoPlayer } from '@/hooks/use.lesson.video.player'
 
 interface LessonPlayerProps {
   lesson: Lesson

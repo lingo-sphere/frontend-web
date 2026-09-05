@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { courseService } from '@/services/course.service'
 import { api } from '@/services/api.client'
 import { toast } from '@/store/toast.store'
-import { useSpeakingRecorder } from './use.speaking.recorder'
+import { useSpeakingRecorder } from '@/hooks/use.speaking.recorder'
 import { TestRunnerSpeakingResult } from './test.runner.speaking.result'
 
 interface TestRunnerSpeakingSectionProps {

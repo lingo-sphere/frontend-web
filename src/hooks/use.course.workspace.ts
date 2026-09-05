@@ -10,16 +10,16 @@ import { useEnrollmentStore } from '@/store/enrollment.store'
 import { useCartStore } from '@/store/cart.store'
 import { toast } from '@/store/toast.store'
 import type { Course, Chapter, Lesson } from '@/types/course'
-import { useCourseNotes } from './use.course.notes'
-import { useCourseQnA } from './use.course.qna'
-import { useCourseReviews } from './use.course.reviews'
-import { useCourseTests } from './use.course.tests'
-import type { BottomTab } from './course.workspace.tabs'
-import type { SidebarTab } from './course.workspace.sidebar'
+import { useCourseNotes } from '@/hooks/use.course.notes'
+import { useCourseQnA } from '@/hooks/use.course.qna'
+import { useCourseReviews } from '@/hooks/use.course.reviews'
+import { useCourseTests } from '@/hooks/use.course.tests'
+import type { BottomTab } from '@/components/course/workspace/course.workspace.tabs'
+import type { SidebarTab } from '@/components/course/workspace/course.workspace.sidebar'
 import {
   mapCourseDataToWorkspace,
   formatExactDuration,
-} from './course.workspace.adapter'
+} from '@/components/course/workspace/course.workspace.adapter'
 
 export function useCourseWorkspace(courseId: string) {
   const user = useAuthStore((s) => s.user)

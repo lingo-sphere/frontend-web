@@ -26,7 +26,7 @@ import { toast } from '@/store/toast.store'
 import { extractCourseId, buildCourseUrl } from '@/lib/course.url'
 import { CourseWorkspaceTabs } from '@/components/course/workspace/course.workspace.tabs'
 import { CourseWorkspaceSidebar } from '@/components/course/workspace/course.workspace.sidebar'
-import { useCourseWorkspace } from '@/components/course/workspace/use.course.workspace'
+import { useCourseWorkspace } from '@/hooks/use.course.workspace'
 
 export default function CourseDetailPage() {
   const params = useParams<{ courseId: string }>()

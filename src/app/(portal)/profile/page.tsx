@@ -13,7 +13,7 @@ import { StatCard } from '@/components/user/user.stats'
 import { UserBadgesList } from '@/components/user/user.badges'
 import { UserActivityList } from '@/components/user/user.activities'
 import { EditProfileModal } from '@/components/user/user.edit.modal'
-import { useProfileData, formatNumber } from './use.profile.data'
+import { useProfileData, formatNumber } from '@/hooks/use.profile.data'
 import { ProfileOverviewTab } from './profile.overview.tab'
 
 export default function ProfileAppPage() {
