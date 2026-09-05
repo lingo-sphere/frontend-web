@@ -9,7 +9,6 @@ import { useMemo } from 'react'
 import { useParams, useNavigate } from '@/lib/navigation'
 import { CourseWorkspaceHeader } from '@/components/course/course.workspace.header'
 import { CourseRatingModal } from '@/components/course/course.rating.modal'
-import { CourseTestRunnerModal } from '@/components/course/course.test.runner.modal'
 import { CourseLoadingState } from '@/components/course/course.loading.state'
 import { LessonPlayer } from '@/components/course/lesson.player'
 import { CourseLockedPlayer } from '@/components/course/course.locked.player'
@@ -121,55 +120,6 @@ export default function CourseDetailPage() {
 
   if (isLoading || !course || !currentLesson) {
     return <CourseLoadingState onBack={handleBack} />
-  }
-
-  if (activeTestModal.isOpen) {
-    const durationMins =
-      activeTestModal.testType === 'final-test'
-        ? Number(course.final_test_duration_minutes || 60)
-        : Number(
-            activeTestModal.chapter?.challenge_duration_minutes ||
-            15
-          )
-
-    return (
-      <CourseTestRunnerModal
-        isOpen={activeTestModal.isOpen}
-        courseId={String(course.id)}
-        courseTitle={course.title}
-        chapter={activeTestModal.chapter}
-        testType={activeTestModal.testType}
-        durationMinutes={durationMins}
-        finalTestQuestions={course.final_test_questions as any}
-        finalTestAudioUrl={course.final_test_audio_url}
-        speakingPrompt={
-          activeTestModal.testType === 'final-test'
-            ? (course.final_test_speaking_prompt || activeTestModal.chapter?.speaking_prompt)
-            : activeTestModal.chapter?.speaking_prompt
-        }
-        speakingFileUrl={
-          activeTestModal.testType === 'final-test'
-            ? (course.final_test_speaking_file_url || activeTestModal.chapter?.speaking_file_url)
-            : activeTestModal.chapter?.speaking_file_url
-        }
-        writingPrompt={
-          activeTestModal.testType === 'final-test'
-            ? (course.final_test_writing_prompt || activeTestModal.chapter?.writing_prompt)
-            : activeTestModal.chapter?.writing_prompt
-        }
-        writingFileUrl={
-          activeTestModal.testType === 'final-test'
-            ? (course.final_test_writing_file_url || activeTestModal.chapter?.writing_file_url)
-            : activeTestModal.chapter?.writing_file_url
-        }
-        category={course.category}
-        skills={course.skills}
-        highestScore={currentTestModalData.highestScore}
-        previousAttempts={currentTestModalData.attempts}
-        onClose={() => setActiveTestModal({ isOpen: false, chapter: null, testType: 'post-mini' })}
-        onComplete={handleTestComplete}
-      />
-    )
   }
 
   return (
