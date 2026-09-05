@@ -1,3 +1,8 @@
+/**
+ * @file specular.button.tsx
+ * @description Thành phần Specular Button phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

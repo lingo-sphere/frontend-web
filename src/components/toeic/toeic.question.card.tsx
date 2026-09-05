@@ -1,5 +1,5 @@
 /**
- * @file ToeicQuestionCard.tsx
+ * @file toeic.question.card.tsx
  * @description Component giao diện React ToeicQuestionCard cho học viên
  */
 

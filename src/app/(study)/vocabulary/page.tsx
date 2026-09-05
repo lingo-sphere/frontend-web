@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -13,8 +18,8 @@ import { BookOpen, Layers3, Star, Globe, Info, Plus, Users, GraduationCap, Bookm
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon-map'
-import { useDashboardStore } from '@/store/dashboard-store'
+import { Icon } from '@/components/icons/icon.map'
+import { useDashboardStore } from '@/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
 import { vocabularyService } from '@/services/vocabulary.service'
 import type { Deck } from '@/types/api.types'

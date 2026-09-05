@@ -1,5 +1,5 @@
 /**
- * @file TodaysLearningCard.tsx
+ * @file todays.learning.card.tsx
  * @description Component giao diện React TodaysLearningCard cho học viên
  */
 
@@ -8,7 +8,7 @@ import { ArrowRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { SectionHeading } from '@/components/dashboard/section.heading'
 import type { LearningTask } from '@/types/dashboard'
 

@@ -1,3 +1,8 @@
+/**
+ * @file course.resources.tab.tsx
+ * @description Thành phần Course Resources Tab phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,7 +13,7 @@
 import { useState, useMemo } from 'react'
 import { BookOpen, Lock, Search } from 'lucide-react'
 import type { Course, Lesson } from '@/types/course'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import {
   CourseResourceItemCard,
   type EnrichedResource,

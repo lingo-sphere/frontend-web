@@ -1,5 +1,5 @@
 /**
- * @file upgrade-data.ts
+ * @file upgrade.data.ts
  * @description Định nghĩa dữ liệu các gói thành viên VIP và danh sách quyền lợi
  */
 

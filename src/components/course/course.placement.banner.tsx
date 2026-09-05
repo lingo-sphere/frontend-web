@@ -1,3 +1,8 @@
+/**
+ * @file course.placement.banner.tsx
+ * @description Thành phần Course Placement Banner phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -17,7 +22,7 @@ import {
   Compass,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { UserScoreEditModal } from '@/components/user/user.score.edit.modal'
 
 export function CoursePlacementBanner() {

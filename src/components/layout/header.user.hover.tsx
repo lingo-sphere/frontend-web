@@ -1,3 +1,8 @@
+/**
+ * @file header.user.hover.tsx
+ * @description Thành phần Header User Hover phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,10 +13,10 @@
 import { useTranslation } from 'react-i18next'
 import { ExternalLink, Globe } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
-import { useAuthStore } from '@/store/auth-store'
-import { useCartStore } from '@/store/cart-store'
-import { useWishlistStore } from '@/store/wishlist-store'
-import { Icon } from '@/components/icons/icon-map'
+import { useAuthStore } from '@/store/auth.store'
+import { useCartStore } from '@/store/cart.store'
+import { useWishlistStore } from '@/store/wishlist.store'
+import { Icon } from '@/components/icons/icon.map'
 import { getRemainingSubscriptionText } from '@/components/layout/app.header'
 
 interface HeaderUserHoverProps {

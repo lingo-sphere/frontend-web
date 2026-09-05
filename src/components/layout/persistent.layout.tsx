@@ -1,3 +1,8 @@
+/**
+ * @file persistent.layout.tsx
+ * @description Thành phần Persistent Layout phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -10,7 +15,7 @@ import { usePathname } from 'next/navigation'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Sidebar } from '@/components/layout/app.sidebar'
 import { UtilityHeader } from '@/components/layout/app.header'
-import { useDashboardStore } from '@/store/dashboard-store'
+import { useDashboardStore } from '@/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {

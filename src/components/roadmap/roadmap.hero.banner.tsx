@@ -1,3 +1,8 @@
+/**
+ * @file roadmap.hero.banner.tsx
+ * @description Thành phần Roadmap Hero Banner phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

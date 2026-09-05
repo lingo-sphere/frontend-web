@@ -1,3 +1,8 @@
+/**
+ * @file course.card.tsx
+ * @description Thành phần Course Card phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -18,10 +23,10 @@ import {
   Crown,
 } from 'lucide-react'
 import type { CourseCardData } from '@/types/course'
-import { useAuthStore } from '@/store/auth-store'
-import { useCartStore } from '@/store/cart-store'
-import { useEnrollmentStore } from '@/store/enrollment-store'
-import { toast } from '@/store/toast-store'
+import { useAuthStore } from '@/store/auth.store'
+import { useCartStore } from '@/store/cart.store'
+import { useEnrollmentStore } from '@/store/enrollment.store'
+import { toast } from '@/store/toast.store'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/lib/course.url'
 

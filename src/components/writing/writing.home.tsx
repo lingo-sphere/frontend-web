@@ -1,5 +1,5 @@
 /**
- * @file WritingHome.tsx
+ * @file writing.home.tsx
  * @description Component giao diện React WritingHome cho học viên
  */
 

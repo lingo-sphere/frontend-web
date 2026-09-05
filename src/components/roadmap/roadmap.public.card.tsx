@@ -1,3 +1,8 @@
+/**
+ * @file roadmap.public.card.tsx
+ * @description Thành phần Roadmap Public Card phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

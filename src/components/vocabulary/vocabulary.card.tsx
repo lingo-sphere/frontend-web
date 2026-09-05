@@ -1,5 +1,5 @@
 /**
- * @file VocabularyCard.tsx
+ * @file vocabulary.card.tsx
  * @description Component giao diện React VocabularyCard cho học viên
  */
 

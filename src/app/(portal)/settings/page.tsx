@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -10,10 +15,10 @@ import { useTranslation } from 'react-i18next'
 import { User, Layers, ExternalLink, RotateCcw, Save, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { useAuthStore } from '@/store/auth-store'
-import { dashboardStore } from '@/store/dashboard-store'
+import { useAuthStore } from '@/store/auth.store'
+import { dashboardStore } from '@/store/dashboard.store'
 import { userService } from '@/services/user.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { UpgradeModal } from '@/components/upgrade/upgrade.modal'
 import { useNavigate } from '@/lib/navigation'
 import { getRemainingSubscriptionText } from '@/components/layout/header.utils'

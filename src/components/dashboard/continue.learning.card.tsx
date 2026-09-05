@@ -1,5 +1,5 @@
 /**
- * @file ContinueLearningCard.tsx
+ * @file continue.learning.card.tsx
  * @description Component giao diện React ContinueLearningCard cho học viên
  */
 

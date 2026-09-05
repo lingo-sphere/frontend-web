@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,8 +12,8 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
-import { api } from '@/services/api-client'
+import { Icon } from '@/components/icons/icon.map'
+import { api } from '@/services/api.client'
 
 interface JournalEvaluation {
   overall_score: number

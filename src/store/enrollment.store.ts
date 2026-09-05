@@ -1,5 +1,5 @@
 /**
- * @file enrollment-store.ts
+ * @file enrollment.store.ts
  * @description Store Zustand quản lý danh sách các khóa học học viên đã mua / ghi danh
  */
 

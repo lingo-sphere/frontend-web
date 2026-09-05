@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -11,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { Pagination } from '@/components/common/pagination'
 import { vocabularyService, type BackendGrammarPoint } from '@/services/vocabulary.service'
 

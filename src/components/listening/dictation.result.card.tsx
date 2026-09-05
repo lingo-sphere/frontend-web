@@ -1,3 +1,8 @@
+/**
+ * @file dictation.result.card.tsx
+ * @description Thành phần Dictation Result Card phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -6,7 +11,7 @@
  */
 
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { TranscriptSegment } from '@/types/listening'
 import type { CheckedResults } from './dictation.input.box'
 

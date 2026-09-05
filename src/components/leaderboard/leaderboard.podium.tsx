@@ -1,5 +1,5 @@
 /**
- * @file LeaderboardPodium.tsx
+ * @file leaderboard.podium.tsx
  * @description Component giao diện React LeaderboardPodium cho học viên
  */
 

@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,7 +14,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
 import { vocabularyService } from '@/services/vocabulary.service'
-import type { VocabularyDeck, LearningResult, VocabularyItem } from '@/types/vocabulary-learn'
+import type { VocabularyDeck, LearningResult, VocabularyItem } from '@/types/vocabulary.learn'
 import { VocabularyLearningSession } from '@/components/vocabulary-learning/vocabulary.learning.session'
 import { LearningResultView } from '@/components/vocabulary-learning/learning.result.view'
 

@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -18,10 +23,10 @@ import { CourseScheduleBanner, type UserScheduleData } from '@/components/course
 import { CourseScheduleModal } from '@/components/course/course.schedule.modal'
 import { CoursePlacementBanner } from '@/components/course/course.placement.banner'
 import { CourseCard } from '@/components/course/course.card'
-import { useWishlistStore } from '@/store/wishlist-store'
-import { useAuthStore } from '@/store/auth-store'
-import { useEnrollmentStore } from '@/store/enrollment-store'
-import { toast } from '@/store/toast-store'
+import { useWishlistStore } from '@/store/wishlist.store'
+import { useAuthStore } from '@/store/auth.store'
+import { useEnrollmentStore } from '@/store/enrollment.store'
+import { toast } from '@/store/toast.store'
 import { buildCourseUrl } from '@/lib/course.url'
 
 export default function CoursesCatalogPage() {

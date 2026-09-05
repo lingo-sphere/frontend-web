@@ -1,3 +1,8 @@
+/**
+ * @file error.tsx
+ * @description Thành phần Error phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,7 +13,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 
 export default function GlobalError({
   error,

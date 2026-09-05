@@ -1,3 +1,8 @@
+/**
+ * @file welcome.banner.tsx
+ * @description Thành phần Welcome Banner phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,7 +13,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 
 export function WelcomeBanner() {
   const { t, i18n } = useTranslation()

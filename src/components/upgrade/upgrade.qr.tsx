@@ -1,3 +1,8 @@
+/**
+ * @file upgrade.qr.tsx
+ * @description Thành phần Upgrade Qr phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

@@ -1,3 +1,8 @@
+/**
+ * @file course.workspace.header.tsx
+ * @description Thành phần Course Workspace Header phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

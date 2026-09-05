@@ -1,3 +1,8 @@
+/**
+ * @file roadmap.growth.tracker.tsx
+ * @description Thành phần Roadmap Growth Tracker phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

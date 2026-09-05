@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -11,7 +16,7 @@ import { useNavigate, useParams } from '@/lib/navigation'
 import { courseService } from '@/services/course.service'
 import { examService, type BackendToeicExam } from '@/services/exam.service'
 import { userService } from '@/services/user.service'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import type { Course } from '@/types/api.types'
 import type { ToeicQuestion } from '@/types/toeic'
 import { ToeicModeSelector, type PracticeMode } from '@/components/toeic/toeic.mode.selector'
@@ -21,7 +26,7 @@ import { ToeicQuestionNav } from '@/components/toeic/toeic.question.nav'
 import { ToeicExamHeader } from '@/components/toeic/toeic.exam.header'
 import { PART_TIMINGS, PART_TIPS } from '@/components/toeic/toeic.constants'
 import { Analytics } from '@/lib/posthog'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 
 interface ExamState {
   mode: PracticeMode

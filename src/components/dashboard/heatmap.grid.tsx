@@ -1,10 +1,10 @@
 /**
- * @file HeatmapGrid.tsx
+ * @file heatmap.grid.tsx
  * @description Component giao diện React HeatmapGrid cho học viên
  */
 
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { HeatmapDay } from '@/types/dashboard'
 
 interface HeatmapGridProps {

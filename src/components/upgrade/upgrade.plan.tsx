@@ -1,3 +1,8 @@
+/**
+ * @file upgrade.plan.tsx
+ * @description Thành phần Upgrade Plan phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

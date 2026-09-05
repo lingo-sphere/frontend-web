@@ -1,3 +1,8 @@
+/**
+ * @file player.endscreen.tsx
+ * @description Thành phần Player Endscreen phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

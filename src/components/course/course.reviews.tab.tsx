@@ -1,3 +1,8 @@
+/**
+ * @file course.reviews.tab.tsx
+ * @description Thành phần Course Reviews Tab phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

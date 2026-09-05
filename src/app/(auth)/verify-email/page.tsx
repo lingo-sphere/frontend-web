@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,10 +13,10 @@
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from '@/lib/navigation'
 import { motion } from 'motion/react'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { Button } from '@/components/ui/button'
 import { authService } from '@/services/auth.service'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 
 type VerifyState = 'VERIFYING' | 'SUCCESS' | 'ERROR'
 

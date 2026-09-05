@@ -1,3 +1,8 @@
+/**
+ * @file app.client.provider.tsx
+ * @description Thành phần App Client Provider phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -10,7 +15,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import '@/i18n/i18n.config'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/contexts/app.context'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { API_CONFIG } from '@/config/api.config'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'

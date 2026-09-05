@@ -1,5 +1,5 @@
 /**
- * @file SpeakingHistory.tsx
+ * @file speaking.history.tsx
  * @description Component giao diện React SpeakingHistory cho học viên
  */
 

@@ -1,3 +1,8 @@
+/**
+ * @file lingo.performance.tsx
+ * @description Thành phần Lingo Performance phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -19,7 +24,7 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react"
-import { landingLocales, type LandingLang } from "@/components/landing/landing-locales"
+import { landingLocales, type LandingLang } from "@/components/landing/landing.locales"
 
 interface LingoPerformanceProps {
   lang?: LandingLang

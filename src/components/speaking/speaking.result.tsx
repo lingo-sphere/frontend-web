@@ -1,5 +1,5 @@
 /**
- * @file SpeakingResult.tsx
+ * @file speaking.result.tsx
  * @description Component giao diện React SpeakingResult cho học viên
  */
 

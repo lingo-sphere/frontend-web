@@ -1,3 +1,8 @@
+/**
+ * @file course.checkout.modal.tsx
+ * @description Thành phần Course Checkout Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,12 +14,12 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, CheckCircle2, AlertCircle, RefreshCw, GraduationCap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAuthStore } from '@/store/auth-store'
-import { useCartStore } from '@/store/cart-store'
-import { useEnrollmentStore } from '@/store/enrollment-store'
+import { useAuthStore } from '@/store/auth.store'
+import { useCartStore } from '@/store/cart.store'
+import { useEnrollmentStore } from '@/store/enrollment.store'
 import { courseService } from '@/services/course.service'
 import { subscriptionService, type PaymentOrderResponse } from '@/services/subscription.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { CheckoutOrderSummary } from './checkout/checkout.order.summary'
 import { CheckoutQrCard } from './checkout/checkout.qr.card'
 import { CheckoutSuccessView } from './checkout/checkout.success.view'

@@ -1,3 +1,8 @@
+/**
+ * @file header.user.tsx
+ * @description Thành phần Header User phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,7 +12,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { useNavigate } from '@/lib/navigation'
 import { HeaderUserHover } from '@/components/layout/header.user.hover'
 import { getRemainingSubscriptionText } from '@/components/layout/header.utils'

@@ -1,3 +1,8 @@
+/**
+ * @file toast.store.ts
+ * @description Thành phần Toast Store phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

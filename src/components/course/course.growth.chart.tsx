@@ -1,3 +1,8 @@
+/**
+ * @file course.growth.chart.tsx
+ * @description Thành phần Course Growth Chart phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

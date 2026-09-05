@@ -1,3 +1,8 @@
+/**
+ * @file tabs.tsx
+ * @description Thành phần Tabs phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

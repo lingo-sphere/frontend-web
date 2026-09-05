@@ -1,5 +1,5 @@
 /**
- * @file ToeicQuestionNav.tsx
+ * @file toeic.question.nav.tsx
  * @description Component giao diện React ToeicQuestionNav cho học viên
  */
 

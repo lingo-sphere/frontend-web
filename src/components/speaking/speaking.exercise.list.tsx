@@ -1,5 +1,5 @@
 /**
- * @file SpeakingExerciseList.tsx
+ * @file speaking.exercise.list.tsx
  * @description Component giao diện React SpeakingExerciseList cho học viên
  */
 

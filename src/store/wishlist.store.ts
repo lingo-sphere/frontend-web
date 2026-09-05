@@ -1,5 +1,5 @@
 /**
- * @file wishlist-store.ts
+ * @file wishlist.store.ts
  * @description Zustand store quản lý trạng thái cho wishlist
  */
 
@@ -116,4 +116,3 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
 
   clearWishlist: () => set({ items: [] }),
 }))
-

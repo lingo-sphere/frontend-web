@@ -1,3 +1,8 @@
+/**
+ * @file course.locked.player.tsx
+ * @description Thành phần Course Locked Player phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,7 +13,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { Input } from '@/components/ui/input'
 import { practiceService, type BackendListeningExercise } from '@/services/practice.service'
 import type { ListeningExercise, ListeningAttempt } from '@/types/listening'

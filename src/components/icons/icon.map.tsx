@@ -1,5 +1,5 @@
 /**
- * @file icon-map.tsx
+ * @file icon.map.tsx
  * @description Component giao diện React icon-map cho học viên
  */
 

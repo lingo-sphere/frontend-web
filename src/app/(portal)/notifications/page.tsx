@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,8 +14,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
-import { api } from '@/services/api-client'
+import { Icon } from '@/components/icons/icon.map'
+import { api } from '@/services/api.client'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification, NotificationCategory } from '@/types/notification'
 

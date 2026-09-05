@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -10,7 +15,7 @@ import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { Layers3, Bookmark } from 'lucide-react'
 import { SectionHeading } from '@/components/dashboard/section.heading'
-import { useDashboardStore } from '@/store/dashboard-store'
+import { useDashboardStore } from '@/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
 import { SelectDeckModal } from '@/components/vocabulary/select.deck.modal'
 import { ConfirmDeleteModal } from '@/components/vocabulary/confirm.delete.modal'

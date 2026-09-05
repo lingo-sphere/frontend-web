@@ -1,3 +1,8 @@
+/**
+ * @file dictation.player.panel.tsx
+ * @description Thành phần Dictation Player Panel phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,7 +12,7 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { ListeningExercise } from '@/types/listening'
 
 function formatDuration(seconds?: number): string {

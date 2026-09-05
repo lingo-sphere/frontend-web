@@ -1,3 +1,8 @@
+/**
+ * @file course.workspace.tabs.tsx
+ * @description Thành phần Course Workspace Tabs phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

@@ -1,5 +1,5 @@
 /**
- * @file ConfirmDeleteModal.tsx
+ * @file confirm.delete.modal.tsx
  * @description Component giao diện React ConfirmDeleteModal cho học viên
  */
 

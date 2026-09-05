@@ -1,3 +1,8 @@
+/**
+ * @file posthog.provider.tsx
+ * @description Thành phần Posthog Provider phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,7 +12,7 @@
 
 import { useEffect, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { initPostHog, identifyUser, resetUser, trackPageView } from '@/lib/posthog'
 
 function PostHogPageViewTracker() {

@@ -1,3 +1,8 @@
+/**
+ * @file course.placement.prompt.modal.tsx
+ * @description Thành phần Course Placement Prompt Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

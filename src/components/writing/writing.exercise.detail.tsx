@@ -1,5 +1,5 @@
 /**
- * @file WritingExerciseDetail.tsx
+ * @file writing.exercise.detail.tsx
  * @description Component giao diện React WritingExerciseDetail cho học viên
  */
 

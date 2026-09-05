@@ -1,3 +1,8 @@
+/**
+ * @file toeic.course.recommendations.tsx
+ * @description Thành phần Toeic Course Recommendations phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

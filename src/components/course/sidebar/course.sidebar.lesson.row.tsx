@@ -5,7 +5,7 @@
 
 import { Check, Download, FolderDown, Lock, PlayCircle } from 'lucide-react'
 import type { Lesson } from '@/types/course'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 
 interface CourseSidebarLessonRowProps {
   lesson: Lesson

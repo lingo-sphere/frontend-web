@@ -1,3 +1,8 @@
+/**
+ * @file auth.otp.form.tsx
+ * @description Thành phần Auth Otp Form phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -6,7 +11,7 @@
  */
 
 import React, { RefObject } from 'react'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 
 interface AuthOtpFormProps {
   email: string

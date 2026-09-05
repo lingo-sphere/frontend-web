@@ -1,3 +1,8 @@
+/**
+ * @file sidebar.nav.tsx
+ * @description Thành phần Sidebar Nav phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,9 +14,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useLocation } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
-import { useMounted } from '@/hooks/use-mounted'
+import { useMounted } from '@/hooks/use.mounted'
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { NavGroup, NavItem } from '@/config/navigation.config'
 
 interface SidebarNavProps {

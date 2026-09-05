@@ -1,3 +1,8 @@
+/**
+ * @file settings.notifications.tsx
+ * @description Thành phần Settings Notifications phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

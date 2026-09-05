@@ -1,12 +1,12 @@
 /**
- * @file ListeningCards.tsx
+ * @file listening.cards.tsx
  * @description Component giao diện React ListeningCards cho học viên
  */
 
 import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { ListeningExercise, ListeningAttempt } from '@/types/listening'
 
 function formatDuration(seconds?: number): string {

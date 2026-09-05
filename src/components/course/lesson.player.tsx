@@ -1,3 +1,8 @@
+/**
+ * @file lesson.player.tsx
+ * @description Thành phần Lesson Player phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

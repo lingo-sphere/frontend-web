@@ -1,5 +1,5 @@
 /**
- * @file LearningRoadmap.tsx
+ * @file learning.roadmap.tsx
  * @description Component giao diện React LearningRoadmap cho học viên
  */
 

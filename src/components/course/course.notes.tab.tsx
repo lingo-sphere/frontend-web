@@ -1,3 +1,8 @@
+/**
+ * @file course.notes.tab.tsx
+ * @description Thành phần Course Notes Tab phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

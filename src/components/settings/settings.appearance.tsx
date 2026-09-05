@@ -1,3 +1,8 @@
+/**
+ * @file settings.appearance.tsx
+ * @description Thành phần Settings Appearance phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

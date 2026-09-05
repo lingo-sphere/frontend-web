@@ -1,5 +1,5 @@
 /**
- * @file Pagination.tsx
+ * @file pagination.tsx
  * @description Component giao diện React Pagination cho học viên
  */
 

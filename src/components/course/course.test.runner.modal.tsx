@@ -1,3 +1,8 @@
+/**
+ * @file course.test.runner.modal.tsx
+ * @description Thành phần Course Test Runner Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -19,7 +24,7 @@ import {
 import { Button } from '@/components/ui/button'
 import type { Chapter } from '@/types/course'
 import { courseService } from '@/services/course.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import {
   CourseTestQuestion,
   TestAttemptItem,

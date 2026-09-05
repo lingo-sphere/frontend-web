@@ -5,7 +5,7 @@
 
 import { CheckCircle2, ChevronDown, ChevronUp, Lock, RotateCcw } from 'lucide-react'
 import type { Chapter, Lesson } from '@/types/course'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { CourseSidebarLessonRow } from './course.sidebar.lesson.row'
 import { CourseSidebarChallengeTestCard } from './course.sidebar.challenge.test.card'
 

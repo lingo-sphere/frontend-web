@@ -5,7 +5,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 
 export default function NotFound() {
   return (

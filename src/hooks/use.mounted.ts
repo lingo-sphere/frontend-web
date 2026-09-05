@@ -1,3 +1,8 @@
+/**
+ * @file use.mounted.ts
+ * @description Thành phần Use Mounted phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

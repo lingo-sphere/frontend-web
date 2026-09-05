@@ -1,3 +1,8 @@
+/**
+ * @file course.sidebar.ai.chat.tsx
+ * @description Thành phần Course Sidebar Ai Chat phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,7 +14,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Bot, Send, Sparkles, AlertCircle } from 'lucide-react'
 import { aiService, type AiChatMessage, type UserAiQuotaSummary } from '@/services/ai.service'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 
 interface CourseSidebarAiChatProps {
   currentLessonTitle: string

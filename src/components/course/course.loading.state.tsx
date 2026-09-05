@@ -1,3 +1,8 @@
+/**
+ * @file course.loading.state.tsx
+ * @description Thành phần Course Loading State phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

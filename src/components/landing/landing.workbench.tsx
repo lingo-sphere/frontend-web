@@ -1,3 +1,8 @@
+/**
+ * @file landing.workbench.tsx
+ * @description Thành phần Landing Workbench phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,7 +12,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
-import type { LandingLocale } from "@/components/landing/landing-locales"
+import type { LandingLocale } from "@/components/landing/landing.locales"
 
 function SeamlessCircleVideo() {
   const v1Ref = useRef<HTMLVideoElement | null>(null)

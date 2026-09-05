@@ -1,3 +1,8 @@
+/**
+ * @file landing.hero.tsx
+ * @description Thành phần Landing Hero phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,7 +14,7 @@ import React from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { SpecularButton } from "@/components/ui/specular.button"
-import type { LandingLocale } from "@/components/landing/landing-locales"
+import type { LandingLocale } from "@/components/landing/landing.locales"
 
 interface LandingHeroProps {
   t: LandingLocale

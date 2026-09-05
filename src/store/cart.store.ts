@@ -1,5 +1,5 @@
 /**
- * @file cart-store.ts
+ * @file cart.store.ts
  * @description Mã nguồn thành phần cart-store.ts
  */
 

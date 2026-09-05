@@ -1,3 +1,8 @@
+/**
+ * @file dictation.input.box.tsx
+ * @description Thành phần Dictation Input Box phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

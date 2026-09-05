@@ -1,5 +1,5 @@
 /**
- * @file ExploreTopics.tsx
+ * @file explore.topics.tsx
  * @description Component giao diện React ExploreTopics cho học viên
  */
 

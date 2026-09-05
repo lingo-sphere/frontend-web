@@ -1,3 +1,8 @@
+/**
+ * @file settings.vip.tsx
+ * @description Thành phần Settings Vip phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

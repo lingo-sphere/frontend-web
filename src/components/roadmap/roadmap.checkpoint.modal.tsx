@@ -1,3 +1,8 @@
+/**
+ * @file roadmap.checkpoint.modal.tsx
+ * @description Thành phần Roadmap Checkpoint Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

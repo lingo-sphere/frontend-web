@@ -1,3 +1,8 @@
+/**
+ * @file course.schedule.banner.tsx
+ * @description Thành phần Course Schedule Banner phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

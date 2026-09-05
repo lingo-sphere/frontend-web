@@ -1,3 +1,8 @@
+/**
+ * @file settings.learning.tsx
+ * @description Thành phần Settings Learning phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

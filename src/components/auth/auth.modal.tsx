@@ -1,3 +1,8 @@
+/**
+ * @file auth.modal.tsx
+ * @description Thành phần Auth Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,9 +13,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { Button } from '@/components/ui/button'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { AuthCredentialForm } from './auth.credential.form'
 import { AuthOtpForm } from './auth.otp.form'
 import { AuthResetPasswordForm } from './auth.reset.password.form'

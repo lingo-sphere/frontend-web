@@ -1,3 +1,8 @@
+/**
+ * @file settings.account.tsx
+ * @description Thành phần Settings Account phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -17,7 +22,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { authService } from '@/services/auth.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { User } from '@/types/api.types'
 
 interface SettingsAccountTabProps {

@@ -1,9 +1,9 @@
 /**
- * @file UserActivityList.tsx
+ * @file user.activities.tsx
  * @description Component giao diện React UserActivityList cho học viên
  */
 
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { Activity } from '@/types/user'
 
 const typeIcons: Record<string, string> = {

@@ -1,3 +1,8 @@
+/**
+ * @file landing.lanyard.section.tsx
+ * @description Thành phần Landing Lanyard Section phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,7 +12,7 @@
 
 import { motion } from "motion/react"
 import { Lanyard } from "@/components/ui/lanyard"
-import type { LandingLocale } from "@/components/landing/landing-locales"
+import type { LandingLocale } from "@/components/landing/landing.locales"
 
 interface LandingLanyardSectionProps {
   t: LandingLocale

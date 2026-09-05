@@ -1,3 +1,8 @@
+/**
+ * @file schedule.days.selector.tsx
+ * @description Thành phần Schedule Days Selector phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

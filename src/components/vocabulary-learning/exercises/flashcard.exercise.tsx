@@ -1,5 +1,5 @@
 /**
- * @file FlashcardExercise.tsx
+ * @file flashcard.exercise.tsx
  * @description Component giao diện React FlashcardExercise cho học viên
  */
 
@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Volume2, Bookmark, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { VocabularyItem } from '@/types/vocabulary-learn'
+import type { VocabularyItem } from '@/types/vocabulary.learn'
 
 interface FlashcardExerciseProps {
   word: VocabularyItem

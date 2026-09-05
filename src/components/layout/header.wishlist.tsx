@@ -1,3 +1,8 @@
+/**
+ * @file header.wishlist.tsx
+ * @description Thành phần Header Wishlist phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,11 +13,11 @@
 import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart, Check, X, ArrowRight, ChevronRight } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
-import { useWishlistStore } from '@/store/wishlist-store'
-import { useCartStore } from '@/store/cart-store'
-import { useAuthStore } from '@/store/auth-store'
-import { useEnrollmentStore } from '@/store/enrollment-store'
-import { toast } from '@/store/toast-store'
+import { useWishlistStore } from '@/store/wishlist.store'
+import { useCartStore } from '@/store/cart.store'
+import { useAuthStore } from '@/store/auth.store'
+import { useEnrollmentStore } from '@/store/enrollment.store'
+import { toast } from '@/store/toast.store'
 import { buildCourseUrl } from '@/lib/course.url'
 
 export function HeaderWishlistHover() {

@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -16,8 +21,8 @@ import { CourseLockedPlayer } from '@/components/course/course.locked.player'
 import { CourseCheckoutModal } from '@/components/course/course.checkout.modal'
 import { CoursePlacementPromptModal } from '@/components/course/course.placement.prompt.modal'
 import { UpgradeModal } from '@/components/upgrade/upgrade.modal'
-import { useEnrollmentStore } from '@/store/enrollment-store'
-import { toast } from '@/store/toast-store'
+import { useEnrollmentStore } from '@/store/enrollment.store'
+import { toast } from '@/store/toast.store'
 import { extractCourseId, buildCourseUrl } from '@/lib/course.url'
 import { CourseWorkspaceTabs } from '@/components/course/workspace/course.workspace.tabs'
 import { CourseWorkspaceSidebar } from '@/components/course/workspace/course.workspace.sidebar'

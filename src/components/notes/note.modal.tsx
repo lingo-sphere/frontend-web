@@ -1,5 +1,5 @@
 /**
- * @file NoteModal.tsx
+ * @file note.modal.tsx
  * @description Component giao diện React NoteModal cho học viên
  */
 
@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { UserNote, NoteTargetType, CreateNoteForm } from '@/types/notes'
 import { NOTE_TARGET_LABELS, NOTE_TARGET_ICONS } from '@/types/notes'
 

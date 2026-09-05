@@ -1,3 +1,8 @@
+/**
+ * @file user.score.edit.modal.tsx
+ * @description Thành phần User Score Edit Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -18,9 +23,9 @@ import {
   Sparkles,
   Info,
 } from 'lucide-react'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { userService } from '@/services/user.service'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 
 interface UserScoreEditModalProps {
   open: boolean

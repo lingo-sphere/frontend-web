@@ -1,3 +1,8 @@
+/**
+ * @file course.overview.tab.tsx
+ * @description Thành phần Course Overview Tab phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

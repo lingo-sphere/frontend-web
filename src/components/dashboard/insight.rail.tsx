@@ -1,5 +1,5 @@
 /**
- * @file InsightRail.tsx
+ * @file insight.rail.tsx
  * @description Component giao diện React InsightRail cho học viên
  */
 
@@ -8,7 +8,7 @@ import { ArrowRight, Brain, Flame } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 
 interface InsightRailProps {
   onAction: (message: string) => void

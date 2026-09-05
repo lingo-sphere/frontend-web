@@ -3,7 +3,7 @@
  * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ subscription
  */
 
-import { api } from '@/services/api-client'
+import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 
 export interface SubscribePayload {
@@ -77,7 +77,6 @@ export const subscriptionService = {
   async simulatePayment(orderCode: string): Promise<{ success: boolean; message: string; order_code: string }> {
     return api.post<{ success: boolean; message: string; order_code: string }>(
       API_CONFIG.ENDPOINTS.SUBSCRIPTION.SIMULATE_ORDER(orderCode),
-      {}
     )
   },
 

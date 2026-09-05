@@ -1,3 +1,8 @@
+/**
+ * @file lingo.showcase.tsx
+ * @description Thành phần Lingo Showcase phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,7 +14,7 @@ import { useRef, useEffect, useState } from "react"
 import Link from "next/link"
 import { motion, useScroll, useTransform } from "motion/react"
 import { Zap, Sparkles, Brain, ArrowRight, CheckCircle2, Cpu } from "lucide-react"
-import { landingLocales, type LandingLang } from "@/components/landing/landing-locales"
+import { landingLocales, type LandingLang } from "@/components/landing/landing.locales"
 
 interface LingoShowcaseProps {
   lang?: LandingLang

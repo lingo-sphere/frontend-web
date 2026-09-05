@@ -1,3 +1,8 @@
+/**
+ * @file dictionary.modal.tsx
+ * @description Thành phần Dictionary Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

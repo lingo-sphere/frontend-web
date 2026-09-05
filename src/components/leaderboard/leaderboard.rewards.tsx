@@ -1,5 +1,5 @@
 /**
- * @file LeaderboardRewards.tsx
+ * @file leaderboard.rewards.tsx
  * @description Component giao diện React LeaderboardRewards cho học viên
  */
 

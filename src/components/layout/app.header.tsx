@@ -1,3 +1,8 @@
+/**
+ * @file app.header.tsx
+ * @description Thành phần App Header phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,11 +13,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart } from 'lucide-react'
-import { useMounted } from '@/hooks/use-mounted'
+import { useMounted } from '@/hooks/use.mounted'
 
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { DictionaryModal } from '@/components/dictionary/dictionary.modal'
 import { UpgradeModal } from '@/components/upgrade/upgrade.modal'
 import { AuthModal } from '@/components/auth/auth.modal'
@@ -23,11 +28,11 @@ import { HeaderSearchDictionary } from '@/components/layout/header.search'
 import { HeaderStatsBadges } from '@/components/layout/header.stats'
 import { HeaderNotificationDropdown } from '@/components/layout/header.notification'
 import { HeaderUserSection } from '@/components/layout/header.user'
-import { useDashboardStore } from '@/store/dashboard-store'
-import { useAuthStore } from '@/store/auth-store'
-import { useCartStore } from '@/store/cart-store'
-import { useWishlistStore } from '@/store/wishlist-store'
-import { useEnrollmentStore } from '@/store/enrollment-store'
+import { useDashboardStore } from '@/store/dashboard.store'
+import { useAuthStore } from '@/store/auth.store'
+import { useCartStore } from '@/store/cart.store'
+import { useWishlistStore } from '@/store/wishlist.store'
+import { useEnrollmentStore } from '@/store/enrollment.store'
 import { useNavigate } from '@/lib/navigation'
 import type { Notification } from '@/types/notification'
 

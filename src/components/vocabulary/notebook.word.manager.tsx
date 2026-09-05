@@ -1,5 +1,5 @@
 /**
- * @file NotebookWordManager.tsx
+ * @file notebook.word.manager.tsx
  * @description Component giao diện React NotebookWordManager cho học viên
  */
 

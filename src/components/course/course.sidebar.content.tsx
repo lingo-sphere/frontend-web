@@ -1,3 +1,8 @@
+/**
+ * @file course.sidebar.content.tsx
+ * @description Thành phần Course Sidebar Content phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

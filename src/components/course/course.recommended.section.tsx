@@ -1,3 +1,8 @@
+/**
+ * @file course.recommended.section.tsx
+ * @description Thành phần Course Recommended Section phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

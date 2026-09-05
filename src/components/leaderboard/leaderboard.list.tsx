@@ -1,5 +1,5 @@
 /**
- * @file LeaderboardList.tsx
+ * @file leaderboard.list.tsx
  * @description Component giao diện React LeaderboardList cho học viên
  */
 

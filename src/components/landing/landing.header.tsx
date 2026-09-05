@@ -1,3 +1,8 @@
+/**
+ * @file landing.header.tsx
+ * @description Thành phần Landing Header phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,7 +13,7 @@
 import Link from "next/link"
 import { motion } from "motion/react"
 import { LanguageSkewSwitch } from "@/components/ui/language.skew.switch"
-import type { LandingLocale } from "@/components/landing/landing-locales"
+import type { LandingLocale } from "@/components/landing/landing.locales"
 
 interface LandingHeaderProps {
   isHeaderHidden: boolean

@@ -1,3 +1,8 @@
+/**
+ * @file landing.manifesto.tsx
+ * @description Thành phần Landing Manifesto phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,7 +12,7 @@
 
 import { useEffect, useRef } from "react"
 import { motion, animate, useInView } from "motion/react"
-import type { LandingLocale } from "@/components/landing/landing-locales"
+import type { LandingLocale } from "@/components/landing/landing.locales"
 
 function StatCounter({ target, suffix = "", decimals = 0 }: { target: number; suffix?: string; decimals?: number }) {
   const nodeRef = useRef<HTMLSpanElement | null>(null)

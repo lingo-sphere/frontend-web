@@ -1,3 +1,8 @@
+/**
+ * @file landing.islands.tsx
+ * @description Thành phần Landing Islands phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,7 +13,7 @@
 import { motion } from "motion/react"
 import { ElectricBorder } from "@/components/ui/electric.border"
 import { CurvedLoop } from "@/components/ui/curved.loop"
-import type { LandingLocale } from "@/components/landing/landing-locales"
+import type { LandingLocale } from "@/components/landing/landing.locales"
 
 interface IslandItem {
   node: string

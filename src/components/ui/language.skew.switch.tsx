@@ -1,3 +1,8 @@
+/**
+ * @file language.skew.switch.tsx
+ * @description Thành phần Language Skew Switch phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -6,7 +11,7 @@
  */
 
 import React from "react"
-import type { LandingLang } from "@/components/landing/landing-locales"
+import type { LandingLang } from "@/components/landing/landing.locales"
 
 interface LanguageSkewSwitchProps {
   lang: LandingLang

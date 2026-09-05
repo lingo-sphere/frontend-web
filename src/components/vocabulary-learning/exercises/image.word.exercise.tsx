@@ -1,5 +1,5 @@
 /**
- * @file ImageWordExercise.tsx
+ * @file image.word.exercise.tsx
  * @description Component giao diện React ImageWordExercise cho học viên
  */
 
@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, X, ChevronRight, Volume2, Eye, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { VocabularyItem } from '@/types/vocabulary-learn'
+import type { VocabularyItem } from '@/types/vocabulary.learn'
 
 interface ImageWordExerciseProps {
   word: VocabularyItem

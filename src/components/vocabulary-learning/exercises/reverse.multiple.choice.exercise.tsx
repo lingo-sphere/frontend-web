@@ -1,5 +1,5 @@
 /**
- * @file ReverseMultipleChoiceExercise.tsx
+ * @file reverse.multiple.choice.exercise.tsx
  * @description Component giao diện React ReverseMultipleChoiceExercise cho học viên
  */
 
@@ -7,8 +7,8 @@ import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, X, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { VocabularyItem } from '@/types/vocabulary-learn'
-import { getRandomDistractors } from '@/lib/audio-utils'
+import type { VocabularyItem } from '@/types/vocabulary.learn'
+import { getRandomDistractors } from '@/lib/audio.utils'
 
 interface ReverseMultipleChoiceExerciseProps {
   word: VocabularyItem

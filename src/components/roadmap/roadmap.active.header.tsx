@@ -1,3 +1,8 @@
+/**
+ * @file roadmap.active.header.tsx
+ * @description Thành phần Roadmap Active Header phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

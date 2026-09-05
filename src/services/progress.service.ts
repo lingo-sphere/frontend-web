@@ -3,7 +3,7 @@
  * @description Service xử lý tiến độ học tập và lộ trình người dùng (User Roadmap Progress)
  */
 
-import { api } from '@/services/api-client'
+import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { UserRoadmapProgress } from '@/types/api.types'
 

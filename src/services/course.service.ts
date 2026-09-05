@@ -3,7 +3,7 @@
  * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ course
  */
 
-import { api } from '@/services/api-client'
+import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { Course, Chapter, Lesson, CourseEnrollment, LearningRoadmap } from '@/types/api.types'
 

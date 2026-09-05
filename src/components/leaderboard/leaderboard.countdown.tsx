@@ -1,5 +1,5 @@
 /**
- * @file LeaderboardCountdown.tsx
+ * @file leaderboard.countdown.tsx
  * @description Component giao diện React LeaderboardCountdown cho học viên
  */
 

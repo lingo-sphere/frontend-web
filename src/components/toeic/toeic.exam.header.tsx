@@ -1,3 +1,8 @@
+/**
+ * @file toeic.exam.header.tsx
+ * @description Thành phần Toeic Exam Header phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

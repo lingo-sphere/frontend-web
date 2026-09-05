@@ -1,3 +1,8 @@
+/**
+ * @file roadmap.stage.card.tsx
+ * @description Thành phần Roadmap Stage Card phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

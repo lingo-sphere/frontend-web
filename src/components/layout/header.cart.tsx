@@ -1,3 +1,8 @@
+/**
+ * @file header.cart.tsx
+ * @description Thành phần Header Cart phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,7 +12,7 @@
 
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import { useCartStore } from '@/store/cart-store'
+import { useCartStore } from '@/store/cart.store'
 
 export function HeaderCartHover() {
   const { i18n } = useTranslation()

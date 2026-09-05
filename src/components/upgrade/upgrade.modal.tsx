@@ -1,3 +1,8 @@
+/**
+ * @file upgrade.modal.tsx
+ * @description Thành phần Upgrade Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,10 +14,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, ArrowLeft, Crown, CheckCircle2, Sparkles } from 'lucide-react'
 
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { subscriptionService, type PaymentOrderResponse } from '@/services/subscription.service'
 import { API_CONFIG } from '@/config/api.config'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { getRemainingSubscriptionText } from '@/components/layout/header.utils'
 import { getPlans, type Plan } from '@/components/upgrade/upgrade.data'
 import { UpgradeSelectPlanStep } from '@/components/upgrade/upgrade.plan'

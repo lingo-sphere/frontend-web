@@ -1,3 +1,8 @@
+/**
+ * @file course.qna.tab.tsx
+ * @description Thành phần Course Qna Tab phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

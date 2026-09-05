@@ -1,3 +1,8 @@
+/**
+ * @file course.rating.modal.tsx
+ * @description Thành phần Course Rating Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

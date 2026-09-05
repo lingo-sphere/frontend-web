@@ -1,5 +1,5 @@
 /**
- * @file ToeicFilterBar.tsx
+ * @file toeic.filter.bar.tsx
  * @description Component giao diện React ToeicFilterBar cho học viên
  */
 

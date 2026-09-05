@@ -1,5 +1,5 @@
 /**
- * @file ComingSoon.tsx
+ * @file coming.soon.tsx
  * @description Component giao diện React ComingSoon cho học viên
  */
 

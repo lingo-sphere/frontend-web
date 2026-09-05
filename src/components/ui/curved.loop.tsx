@@ -1,5 +1,5 @@
 /**
- * @file CurvedLoop.tsx
+ * @file curved.loop.tsx
  * @description Component giao diện React CurvedLoop cho học viên
  */
 

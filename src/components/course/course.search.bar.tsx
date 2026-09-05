@@ -1,3 +1,8 @@
+/**
+ * @file course.search.bar.tsx
+ * @description Thành phần Course Search Bar phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

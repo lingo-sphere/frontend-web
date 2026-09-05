@@ -1,3 +1,8 @@
+/**
+ * @file schedule.time.picker.tsx
+ * @description Thành phần Schedule Time Picker phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

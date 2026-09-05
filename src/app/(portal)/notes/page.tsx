@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -10,7 +15,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { Pagination } from '@/components/common/pagination'
 import type { UserNote, NoteTargetType, CreateNoteForm } from '@/types/notes'
 import { NOTE_TARGET_LABELS, NOTE_TARGET_ICONS } from '@/types/notes'

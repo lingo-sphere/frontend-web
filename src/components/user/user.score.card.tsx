@@ -1,3 +1,8 @@
+/**
+ * @file user.score.card.tsx
+ * @description Thành phần User Score Card phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

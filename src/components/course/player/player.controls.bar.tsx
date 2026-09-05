@@ -1,3 +1,8 @@
+/**
+ * @file player.controls.bar.tsx
+ * @description Thành phần Player Controls Bar phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

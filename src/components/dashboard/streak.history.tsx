@@ -1,5 +1,5 @@
 /**
- * @file StreakHistory.tsx
+ * @file streak.history.tsx
  * @description Component giao diện React StreakHistory cho học viên
  */
 
@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { HeatmapDetailCard } from '@/components/dashboard/heatmap.detail.card'
 import { HeatmapGrid } from '@/components/dashboard/heatmap.grid'
 import { HeatmapSummaryCard } from '@/components/dashboard/heatmap.summary.card'
-import { useDashboardStore } from '@/store/dashboard-store'
+import { useDashboardStore } from '@/store/dashboard.store'
 import type { HeatmapDay, HeatmapSummary } from '@/types/dashboard'
 
 interface StreakHistoryProps {

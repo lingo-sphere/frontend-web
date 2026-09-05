@@ -1,11 +1,11 @@
 /**
- * @file ListeningResultModal.tsx
+ * @file listening.result.modal.tsx
  * @description Component giao diện React ListeningResultModal cho học viên
  */
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { ListeningExercise, ListeningAttempt } from '@/types/listening'
 
 interface ResultViewProps {

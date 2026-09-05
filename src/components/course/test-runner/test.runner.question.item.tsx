@@ -1,3 +1,8 @@
+/**
+ * @file test.runner.question.item.tsx
+ * @description Thành phần Test Runner Question Item phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

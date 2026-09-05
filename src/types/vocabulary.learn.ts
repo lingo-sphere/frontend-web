@@ -1,5 +1,5 @@
 /**
- * @file vocabulary-learn.ts
+ * @file vocabulary.learn.ts
  * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
  */
 

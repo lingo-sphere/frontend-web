@@ -1,3 +1,8 @@
+/**
+ * @file toast.container.tsx
+ * @description Thành phần Toast Container phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -5,7 +10,7 @@
  * @description Component hiển thị thông báo Toast với animation mượt mà cho học viên
  */
 
-import { useToastStore, type ToastType } from '@/store/toast-store'
+import { useToastStore, type ToastType } from '@/store/toast.store'
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 

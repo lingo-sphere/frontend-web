@@ -1,5 +1,5 @@
 /**
- * @file WritingWorkspace.tsx
+ * @file writing.workspace.tsx
  * @description Component giao diện React WritingWorkspace cho học viên
  */
 
@@ -9,7 +9,7 @@ import { ArrowLeft, Clock, Save, Send, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import type { WritingExercise, WritingDraft } from '@/types/writing'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 
 interface WritingWorkspaceProps {
   exercise: WritingExercise

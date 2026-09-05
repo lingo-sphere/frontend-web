@@ -1,5 +1,5 @@
 /**
- * @file NotebookDeckList.tsx
+ * @file notebook.deck.list.tsx
  * @description Component giao diện React NotebookDeckList cho học viên
  */
 

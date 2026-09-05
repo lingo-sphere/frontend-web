@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -11,7 +16,7 @@ import { ChevronUp } from "lucide-react"
 import { LingoShowcase } from "@/components/landing/lingo.showcase"
 import { LingoPerformance } from "@/components/landing/lingo.performance"
 import { ClickSpark } from "@/components/ui/click.spark"
-import { useLandingLocale } from "@/components/landing/landing-locales"
+import { useLandingLocale } from "@/components/landing/landing.locales"
 import { LandingHeader } from "@/components/landing/landing.header"
 import { LandingHero } from "@/components/landing/landing.hero"
 import { LandingWorkbench } from "@/components/landing/landing.workbench"

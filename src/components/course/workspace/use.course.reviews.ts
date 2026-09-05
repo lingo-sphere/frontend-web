@@ -5,7 +5,7 @@
 
 import { type Dispatch, type SetStateAction } from 'react'
 import { courseService } from '@/services/course.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { Course, CourseReviewItem } from '@/types/course'
 
 interface UseCourseReviewsParams {

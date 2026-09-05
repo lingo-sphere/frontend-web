@@ -1,5 +1,5 @@
 /**
- * @file SectionHeading.tsx
+ * @file section.heading.tsx
  * @description Component giao diện React SectionHeading cho học viên
  */
 

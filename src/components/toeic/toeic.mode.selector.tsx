@@ -1,5 +1,5 @@
 /**
- * @file ToeicModeSelector.tsx
+ * @file toeic.mode.selector.tsx
  * @description Component giao diện React ToeicModeSelector cho học viên
  */
 

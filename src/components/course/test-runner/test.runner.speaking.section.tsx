@@ -1,3 +1,8 @@
+/**
+ * @file test.runner.speaking.section.tsx
+ * @description Thành phần Test Runner Speaking Section phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -21,8 +26,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { courseService } from '@/services/course.service'
-import { api } from '@/services/api-client'
-import { toast } from '@/store/toast-store'
+import { api } from '@/services/api.client'
+import { toast } from '@/store/toast.store'
 
 interface TestRunnerSpeakingSectionProps {
   courseId: string

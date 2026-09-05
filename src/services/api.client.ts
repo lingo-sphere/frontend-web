@@ -1,5 +1,5 @@
 /**
- * @file api-client.ts
+ * @file api.client.ts
  * @description Service API client kết nối backend cho api-client
  */
 

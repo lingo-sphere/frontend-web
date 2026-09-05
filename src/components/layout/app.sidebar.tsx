@@ -1,3 +1,8 @@
+/**
+ * @file app.sidebar.tsx
+ * @description Thành phần App Sidebar phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,11 +13,11 @@
 import { useTranslation } from 'react-i18next'
 import { PanelLeftClose, PanelLeft } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
-import { useMounted } from '@/hooks/use-mounted'
+import { useMounted } from '@/hooks/use.mounted'
 import { Button } from '@/components/ui/button'
 import { SidebarNav } from '@/components/layout/sidebar.nav'
 import { NAV_GROUPS } from '@/config/navigation.config'
-import { useDashboardStore } from '@/store/dashboard-store'
+import { useDashboardStore } from '@/store/dashboard.store'
 
 interface SidebarProps {
   mobile?: boolean

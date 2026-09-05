@@ -1,5 +1,5 @@
 /**
- * @file ToeicExamResult.tsx
+ * @file toeic.exam.result.tsx
  * @description Component giao diện React ToeicExamResult cho học viên
  */
 

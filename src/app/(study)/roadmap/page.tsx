@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -11,7 +16,7 @@ import { useNavigate } from '@/lib/navigation'
 import { RotateCcw, Layers } from 'lucide-react'
 import { progressService } from '@/services/progress.service'
 import { courseService } from '@/services/course.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { UserRoadmapProgress, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
 import { RoadmapHeroBanner } from '@/components/roadmap/roadmap.hero.banner'
 import { RoadmapPublicCard } from '@/components/roadmap/roadmap.public.card'

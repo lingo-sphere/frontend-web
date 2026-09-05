@@ -1,5 +1,5 @@
 /**
- * @file TypeWordExercise.tsx
+ * @file type.word.exercise.tsx
  * @description Component giao diện React TypeWordExercise cho học viên
  */
 
@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, X, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { VocabularyItem } from '@/types/vocabulary-learn'
+import type { VocabularyItem } from '@/types/vocabulary.learn'
 
 interface TypeWordExerciseProps {
   word: VocabularyItem

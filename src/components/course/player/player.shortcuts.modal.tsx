@@ -1,3 +1,8 @@
+/**
+ * @file player.shortcuts.modal.tsx
+ * @description Thành phần Player Shortcuts Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

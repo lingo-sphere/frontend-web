@@ -1,5 +1,5 @@
 /**
- * @file useLanguage.ts
+ * @file use.language.ts
  * @description Custom React hook useLanguage hỗ trợ xử lý logic giao diện Web
  */
 

@@ -1,3 +1,8 @@
+/**
+ * @file settings.sidebar.tsx
+ * @description Thành phần Settings Sidebar phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

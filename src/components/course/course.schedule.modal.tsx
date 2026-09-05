@@ -1,3 +1,8 @@
+/**
+ * @file course.schedule.modal.tsx
+ * @description Thành phần Course Schedule Modal phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -17,9 +22,9 @@ import {
   Sparkles,
   BellRing,
 } from 'lucide-react'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { userService } from '@/services/user.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { UserScheduleData } from '@/components/course/course.schedule.banner'
 import {
   DAYS_OF_WEEK,

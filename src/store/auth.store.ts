@@ -1,5 +1,5 @@
 /**
- * @file auth-store.ts
+ * @file auth.store.ts
  * @description Mã nguồn thành phần auth-store.ts
  */
 

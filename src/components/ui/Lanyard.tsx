@@ -1,3 +1,8 @@
+/**
+ * @file lanyard.tsx
+ * @description Thành phần Lanyard phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -9,7 +14,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import * as THREE from 'three'
 import { ArrowDown, CheckCircle2 } from 'lucide-react'
-import { landingLocales, type LandingLang } from '@/components/landing/landing-locales'
+import { landingLocales, type LandingLang } from '@/components/landing/landing.locales'
 
 export interface LanyardProps {
   destinationUrl?: string

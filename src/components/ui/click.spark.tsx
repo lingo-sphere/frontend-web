@@ -1,5 +1,5 @@
 /**
- * @file ClickSpark.tsx
+ * @file click.spark.tsx
  * @description Component giao diện React ClickSpark cho học viên
  */
 

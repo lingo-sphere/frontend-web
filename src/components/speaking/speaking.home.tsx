@@ -1,5 +1,5 @@
 /**
- * @file SpeakingHome.tsx
+ * @file speaking.home.tsx
  * @description Component giao diện React SpeakingHome cho học viên
  */
 

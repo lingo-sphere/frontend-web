@@ -1,5 +1,5 @@
 /**
- * @file dashboard-store.ts
+ * @file dashboard.store.ts
  * @description Mã nguồn thành phần dashboard-store.ts
  */
 

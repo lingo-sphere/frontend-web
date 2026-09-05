@@ -1,3 +1,8 @@
+/**
+ * @file header.notification.tsx
+ * @description Thành phần Header Notification phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,7 +13,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { useNavigate } from '@/lib/navigation'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification } from '@/types/notification'

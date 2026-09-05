@@ -1,5 +1,5 @@
 /**
- * @file LeaderboardTabs.tsx
+ * @file leaderboard.tabs.tsx
  * @description Component giao diện React LeaderboardTabs cho học viên
  */
 

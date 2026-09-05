@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -10,9 +15,9 @@ import Link from 'next/link'
 import { motion } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { aiService, type AiChatMessage, type UserAiQuotaSummary } from '@/services/ai.service'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 
 const SUGGESTED_PROMPTS = [
   { icon: 'bookOpen', label: 'Giải thích ngữ pháp', text: 'Hãy giải thích cho tôi cấu trúc câu điều kiện loại 3 kèm 3 ví dụ dễ hiểu.' },

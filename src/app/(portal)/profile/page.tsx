@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,10 +13,10 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { userService } from '@/services/user.service'
 import type { User, EditProfileForm } from '@/types/user'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/store/auth.store'
 import { UserStatsHeader } from '@/components/user/user.header'
 import { StatCard, XPProgress } from '@/components/user/user.stats'
 import { UserBadgesList } from '@/components/user/user.badges'

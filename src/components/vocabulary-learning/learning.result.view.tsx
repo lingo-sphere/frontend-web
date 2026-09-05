@@ -1,5 +1,5 @@
 /**
- * @file LearningResultView.tsx
+ * @file learning.result.view.tsx
  * @description Component giao diện React LearningResultView cho học viên
  */
 
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronRight, RotateCcw, Home } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import type { LearningResult, VocabularyItem } from '@/types/vocabulary-learn'
+import type { LearningResult, VocabularyItem } from '@/types/vocabulary.learn'
 
 interface LearningResultViewProps {
   result: LearningResult

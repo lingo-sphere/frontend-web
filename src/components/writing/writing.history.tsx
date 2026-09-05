@@ -1,5 +1,5 @@
 /**
- * @file WritingHistory.tsx
+ * @file writing.history.tsx
  * @description Component giao diện React WritingHistory cho học viên
  */
 

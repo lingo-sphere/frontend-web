@@ -1,3 +1,8 @@
+/**
+ * @file landing.footer.tsx
+ * @description Thành phần Landing Footer phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -7,7 +12,7 @@
 
 import Link from "next/link"
 import { motion } from "motion/react"
-import type { LandingLocale } from "@/components/landing/landing-locales"
+import type { LandingLocale } from "@/components/landing/landing.locales"
 
 interface LandingFooterProps {
   t: LandingLocale

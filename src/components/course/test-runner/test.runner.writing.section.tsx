@@ -1,3 +1,8 @@
+/**
+ * @file test.runner.writing.section.tsx
+ * @description Thành phần Test Runner Writing Section phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -19,7 +24,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { courseService } from '@/services/course.service'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 
 interface TestRunnerWritingSectionProps {
   courseId: string

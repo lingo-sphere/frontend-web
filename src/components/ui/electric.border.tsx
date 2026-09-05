@@ -1,5 +1,5 @@
 /**
- * @file ElectricBorder.tsx
+ * @file electric.border.tsx
  * @description Component giao diện React ElectricBorder cho học viên
  */
 

@@ -1,9 +1,9 @@
 /**
- * @file UserBadgesList.tsx
+ * @file user.badges.tsx
  * @description Component giao diện React UserBadgesList cho học viên
  */
 
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { Achievement } from '@/types/user'
 
 export function AchievementCard({ achievement }: { achievement: Achievement }) {

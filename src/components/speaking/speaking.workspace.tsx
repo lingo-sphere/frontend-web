@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft } from 'lucide-react'
 import type { SpeakingExercise, RecordingState, SpeakingExerciseType } from '@/types/speaking'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { SpeakingPromptCard } from './speaking.prompt.card'
 import { SpeakingRecorderPanel } from './speaking.recorder.panel'
 

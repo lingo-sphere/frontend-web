@@ -1,9 +1,9 @@
 /**
- * @file UserStatsHeader.tsx
+ * @file user.header.tsx
  * @description Component giao diện React UserStatsHeader cho học viên
  */
 
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import { Button } from '@/components/ui/button'
 import type { User } from '@/types/user'
 

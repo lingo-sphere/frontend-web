@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo, type Dispatch, type SetStateAction } from 'react'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import type { Course, Chapter } from '@/types/course'
 
 interface ActiveTestModalState {

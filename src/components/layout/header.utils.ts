@@ -1,5 +1,5 @@
 /**
- * @file header-utils.ts
+ * @file header.utils.ts
  * @description Các hàm tiện ích hỗ trợ tính toán gói VIP và biểu tượng thông báo cho Header
  */
 

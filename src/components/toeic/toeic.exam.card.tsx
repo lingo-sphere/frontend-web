@@ -1,5 +1,5 @@
 /**
- * @file ToeicExamCard.tsx
+ * @file toeic.exam.card.tsx
  * @description Component giao diện React ToeicExamCard cho học viên
  */
 

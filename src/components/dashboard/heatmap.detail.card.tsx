@@ -1,5 +1,5 @@
 /**
- * @file HeatmapDetailCard.tsx
+ * @file heatmap.detail.card.tsx
  * @description Component giao diện React HeatmapDetailCard cho học viên
  */
 
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { Flame } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { HeatmapDay } from '@/types/dashboard'
 
 interface HeatmapDetailCardProps {

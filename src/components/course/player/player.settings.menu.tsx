@@ -1,3 +1,8 @@
+/**
+ * @file player.settings.menu.tsx
+ * @description Thành phần Player Settings Menu phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

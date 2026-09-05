@@ -280,4 +280,3 @@ export interface CourseCardData {
   hasCertificate?: boolean
   isArchived?: boolean
 }
-

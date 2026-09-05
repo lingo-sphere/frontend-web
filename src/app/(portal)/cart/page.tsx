@@ -1,3 +1,8 @@
+/**
+ * @file page.tsx
+ * @description Thành phần Page phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,12 +13,12 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ShoppingCart, Trash2, ArrowLeft, ShieldCheck, Award, Zap, CheckCircle2, Loader2 } from 'lucide-react'
-import { useCartStore } from '@/store/cart-store'
-import { useAuthStore } from '@/store/auth-store'
-import { useEnrollmentStore } from '@/store/enrollment-store'
+import { useCartStore } from '@/store/cart.store'
+import { useAuthStore } from '@/store/auth.store'
+import { useEnrollmentStore } from '@/store/enrollment.store'
 import { courseService } from '@/services/course.service'
 import { CourseCheckoutModal, type CheckoutCourseItem } from '@/components/course/course.checkout.modal'
-import { toast } from '@/store/toast-store'
+import { toast } from '@/store/toast.store'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/lib/course.url'
 

@@ -1,3 +1,8 @@
+/**
+ * @file test.runner.result.view.tsx
+ * @description Thành phần Test Runner Result View phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

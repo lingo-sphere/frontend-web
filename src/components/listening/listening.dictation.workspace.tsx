@@ -1,3 +1,8 @@
+/**
+ * @file listening.dictation.workspace.tsx
+ * @description Thành phần Listening Dictation Workspace phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
@@ -8,7 +13,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import {
   calculateAttemptScore,
   type ListeningExercise,

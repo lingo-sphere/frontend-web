@@ -1,3 +1,8 @@
+/**
+ * @file settings.privacy.tsx
+ * @description Thành phần Settings Privacy phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

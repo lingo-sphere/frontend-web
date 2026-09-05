@@ -1,12 +1,12 @@
 /**
- * @file AppContext.tsx
+ * @file app.context.tsx
  * @description Mã nguồn thành phần AppContext.tsx
  */
 
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { useDashboardStore } from '@/store/dashboard-store'
+import { useDashboardStore } from '@/store/dashboard.store'
 
 interface AppContextType {
   actionMessage: string

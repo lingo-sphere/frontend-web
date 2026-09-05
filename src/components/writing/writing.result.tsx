@@ -1,5 +1,5 @@
 /**
- * @file WritingResult.tsx
+ * @file writing.result.tsx
  * @description Component giao diện React WritingResult cho học viên
  */
 

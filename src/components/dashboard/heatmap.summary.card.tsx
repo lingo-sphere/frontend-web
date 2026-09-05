@@ -1,12 +1,12 @@
 /**
- * @file HeatmapSummaryCard.tsx
+ * @file heatmap.summary.card.tsx
  * @description Component giao diện React HeatmapSummaryCard cho học viên
  */
 
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { Icon } from '@/components/icons/icon-map'
+import { Icon } from '@/components/icons/icon.map'
 import type { HeatmapSummary } from '@/types/dashboard'
 
 interface HeatmapSummaryCardProps {

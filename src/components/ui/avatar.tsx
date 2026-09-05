@@ -1,3 +1,8 @@
+/**
+ * @file avatar.tsx
+ * @description Thành phần Avatar phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**

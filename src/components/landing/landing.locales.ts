@@ -1,3 +1,8 @@
+/**
+ * @file landing.locales.ts
+ * @description Thành phần Landing Locales phục vụ phía người học (Web Client)
+ */
+
 'use client'
 
 /**
