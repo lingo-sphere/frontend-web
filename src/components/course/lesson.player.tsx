@@ -182,7 +182,7 @@ export function LessonPlayer({
   const effectiveVideoUrl = useMemo(() => {
     if (!baseVideoSource) return ''
     let source = baseVideoSource
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
+    const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/+$/, '')
     if (source.includes('pub-') || source.includes('r2.cloudflarestorage.com') || source.includes('.r2.dev')) {
       try {
         const parsed = new URL(source)
