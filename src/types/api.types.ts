@@ -25,8 +25,6 @@ export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'PENDING'
 
 export interface User {
   user_id: string
-  _id?: string
-  id?: string
   email: string
   full_name: string
   phone_number?: string
@@ -300,18 +298,14 @@ export interface LexicalItem {
 
 export interface Deck {
   _id: string
-  id?: string
   name: string
   name_vi?: string
-  title?: string
   description?: string
   description_vi?: string
   thumbnail_url?: string
   cefr_level?: string
   card_count: number
-  total_cards?: number
   visibility?: 'PUBLIC' | 'PRIVATE' | string
-  is_public?: boolean
   creator_id?: string
   cards?: LexicalItem[]
   tags?: string[]

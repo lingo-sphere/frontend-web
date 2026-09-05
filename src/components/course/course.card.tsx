@@ -239,7 +239,7 @@ export function CourseCard({
             {course.title}
           </h3>
           <p className="text-xs text-text-secondary line-clamp-1 leading-relaxed">
-            {course.description || course.title}
+            {course.description || ''}
           </p>
           <div className="text-[11px] text-text-tertiary line-clamp-1">
             {course.instructor}

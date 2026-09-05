@@ -62,8 +62,8 @@ export default function HomeAppPage() {
           if (Array.isArray(lbData) && lbData.length > 0) {
             const mappedEntries = lbData.map((u: any, idx: number) => ({
               rank: idx + 1,
-              name: u.full_name || u.username || u.user_name || `Học viên #${idx + 1}`,
-              streakDays: u.streak_days || u.streakDays || 1,
+              name: u.full_name || `Học viên #${idx + 1}`,
+              streakDays: u.streak_days || 1,
             }))
             setLeaderboard({
               week: mappedEntries,
@@ -74,10 +74,10 @@ export default function HomeAppPage() {
 
           if (Array.isArray(topData) && topData.length > 0) {
             const mappedTopics: Topic[] = topData.map((t: any) => ({
-              id: t._id || t.id,
-              label: t.name_vi || t.name_en || t.name || 'Chủ đề',
+              id: t._id || `topic-${t.code || ''}`,
+              label: t.name_vi || t.name_en || 'Chủ đề',
               emoji: '📚',
-              words: t.lexical_count || t.total_words || 20,
+              words: t.lexical_count || 0,
             }))
             setTopics(mappedTopics)
           }

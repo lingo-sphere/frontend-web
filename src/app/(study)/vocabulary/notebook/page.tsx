@@ -15,6 +15,7 @@ import { useApp } from '@/contexts/app.context'
 import { SelectDeckModal } from '@/components/vocabulary/select.deck.modal'
 import { ConfirmDeleteModal } from '@/components/vocabulary/confirm.delete.modal'
 import type { SavedVocabulary, UserDeck } from '@/types/vocabulary'
+import type { Deck } from '@/types/api.types'
 import { vocabularyService } from '@/services/vocabulary.service'
 import { VocabularyTab } from '@/components/vocabulary/notebook.word.manager'
 import { DecksTab, CreateDeckModal } from '@/components/vocabulary/notebook.deck.list'
@@ -36,10 +37,11 @@ export default function NotebookAppPage() {
       try {
         const enrollments = await vocabularyService.getMyEnrollments().catch(() => [])
         if (isMounted && Array.isArray(enrollments)) {
-          const mappedDecks: UserDeck[] = enrollments.map((d: any, idx) => ({
-            id: d.id || d._id || `deck-${idx}`,
-            title: d.title || d.name || 'Personal Deck',
-            cardCount: d.total_cards || d.card_count || 0,
+          const mappedDecks: UserDeck[] = enrollments.map((d: Deck, idx: number) => ({
+            id: d._id || `deck-${idx}`,
+            name: d.name || 'Personal Deck',
+            title: d.name || 'Personal Deck',
+            cardCount: d.card_count || 0,
             createdAt: d.created_at || new Date().toISOString(),
           }))
           setUserDecks(mappedDecks)
@@ -196,8 +198,8 @@ export default function NotebookAppPage() {
     setUserDecks((prev) => prev.filter((d) => d.id !== deck.id))
     showAction(
       isVietnamese
-        ? `Đã xóa deck "${deck.title}". Các từ đã được chuyển về Danh sách từ vựng.`
-        : `Deleted deck "${deck.title}". Words moved back to General Vocabulary.`
+        ? `Đã xóa deck "${deck.name || deck.title}". Các từ đã được chuyển về Danh sách từ vựng.`
+        : `Deleted deck "${deck.name || deck.title}". Words moved back to General Vocabulary.`
     )
   }
 

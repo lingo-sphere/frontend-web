@@ -64,7 +64,7 @@ export function DecksTab({
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="text-[15px] font-semibold text-text-primary">
-                            {deck.title}
+                            {deck.name || 'Bộ thẻ'}
                           </h4>
                           {deck.cefrLevel && (
                             <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[10px] font-medium text-text-secondary">

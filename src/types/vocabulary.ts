@@ -20,7 +20,8 @@ export interface VocabularyStatus {
 
 export interface UserDeck {
   id: string
-  title: string
+  name: string
+  title?: string
   cardCount: number
   createdAt: string
   description?: string

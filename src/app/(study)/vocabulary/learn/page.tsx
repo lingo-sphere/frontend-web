@@ -37,12 +37,12 @@ export default function VocabularyLearnAppPage() {
         setIsLoading(true)
         const liveDecks: Deck[] = await vocabularyService.getPublicDecks()
         if (isMounted && Array.isArray(liveDecks)) {
-          const mapped: VocabularyDeck[] = liveDecks.map((d: any, index: number) => ({
-            id: d.id || d._id || `deck-${index}`,
-            title: d.title || d.name || 'Flashcard Deck',
-            description: d.description || d.description_vi || '',
+          const mapped: VocabularyDeck[] = liveDecks.map((d: Deck, index: number) => ({
+            id: d._id || `deck-${index}`,
+            title: d.name || 'Flashcard Deck',
+            description: d.description || '',
             coverColor: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e', '#e17055'][index % 5],
-            cardCount: d.total_cards || d.card_count || d.cards?.length || 0,
+            cardCount: d.card_count || 0,
             creatorType: 'SYSTEM',
             visibility: 'PUBLIC',
             vocabularyItems: [],

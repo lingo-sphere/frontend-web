@@ -126,10 +126,9 @@ export default function CourseDetailPage() {
   if (activeTestModal.isOpen) {
     const durationMins =
       activeTestModal.testType === 'final-test'
-        ? Number(course.final_test_duration_minutes || course.duration_minutes || 60)
+        ? Number(course.final_test_duration_minutes || 60)
         : Number(
             activeTestModal.chapter?.challenge_duration_minutes ||
-            activeTestModal.chapter?.duration_minutes ||
             15
           )
 

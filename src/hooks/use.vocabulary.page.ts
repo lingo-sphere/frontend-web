@@ -65,8 +65,8 @@ export function useVocabularyPage() {
 
   const handleDeckClick = (deck: Deck) => {
     setActiveNavItem('vocabulary')
-    navigate(`/vocabulary/learn/${deck._id || deck.id}`)
-    showAction(`Bắt đầu học bộ thẻ "${deck.name || deck.title}"`)
+    navigate(`/vocabulary/learn/${deck._id}`)
+    showAction(`Bắt đầu học bộ thẻ "${deck.name}"`)
   }
 
   return {

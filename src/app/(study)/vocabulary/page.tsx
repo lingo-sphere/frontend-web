@@ -192,7 +192,7 @@ export default function VocabularyAppPage() {
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {publicDecks.map((deck: any, idx) => (
                 <Card
-                  key={deck.id || deck._id || idx}
+                  key={deck._id || idx}
                   className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   onClick={() => handleDeckClick(deck)}
                 >
@@ -203,10 +203,10 @@ export default function VocabularyAppPage() {
                     <Layers3 className="text-white/60" size={36} />
                   </div>
                   <CardContent className="p-4">
-                    <h4 className="text-[15px] font-semibold text-text-primary">{deck.title || deck.name}</h4>
+                    <h4 className="text-[15px] font-semibold text-text-primary">{deck.name || deck.title}</h4>
                     <p className="mt-1 text-[12px] text-text-secondary line-clamp-2">{deck.description || deck.description_vi}</p>
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-[12px] text-text-tertiary">{deck.card_count || deck.total_cards || 0} {isVietnamese ? 'từ' : 'words'}</span>
+                      <span className="text-[12px] text-text-tertiary">{deck.card_count ?? 0} {isVietnamese ? 'từ' : 'words'}</span>
                       <Button
                         size="sm"
                         className="bg-primary hover:bg-primary-hover"
@@ -287,7 +287,7 @@ export default function VocabularyAppPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredPacks.map((pack: any, idx) => (
                 <Card
-                  key={pack.id || pack._id || idx}
+                  key={pack._id || idx}
                   className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   onClick={() => handleDeckClick(pack)}
                 >
@@ -298,10 +298,10 @@ export default function VocabularyAppPage() {
                     <Layers3 className="text-white/60" size={36} />
                   </div>
                   <CardContent className="p-3">
-                    <h4 className="text-[14px] font-semibold text-text-primary line-clamp-1">{pack.title || pack.name}</h4>
+                    <h4 className="text-[14px] font-semibold text-text-primary line-clamp-1">{pack.name || pack.title}</h4>
                     <p className="mt-1 text-[12px] text-text-secondary line-clamp-2">{pack.description || pack.description_vi}</p>
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="text-[12px] text-text-secondary">{pack.card_count || pack.total_cards || 0} {isVietnamese ? 'từ' : 'words'}</span>
+                      <span className="text-[12px] text-text-secondary">{pack.card_count ?? 0} {isVietnamese ? 'từ' : 'words'}</span>
                       <span className="flex items-center gap-1 text-[12px] text-text-secondary">
                         <Users size={12} />
                         {(pack.total_users || 0).toLocaleString()}

@@ -102,7 +102,7 @@ export function useProfileData() {
     if (auth) {
       setUser((prev) => ({
         ...prev,
-        id: auth.id || auth.user_id || prev.id,
+        id: auth.user_id || auth.id || prev.id,
         user_id: auth.user_id || prev.user_id,
         email: auth.email || prev.email,
         full_name: auth.full_name || prev.full_name,

@@ -96,7 +96,7 @@ export function SelectDeckModal({
               >
                 <div className="flex items-center gap-2">
                   <Layers3 size={16} className="text-text-tertiary" />
-                  <span className="text-[14px] text-text-primary">{deck.title}</span>
+                  <span className="text-[14px] text-text-primary">{deck.name}</span>
                 </div>
                 {selectedDeckId === deck.id && !isCreatingNew && (
                   <Check size={16} className="text-primary" />

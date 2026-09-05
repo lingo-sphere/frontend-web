@@ -47,15 +47,15 @@ export default function PublicDecksAppPage() {
         setIsLoading(true)
         const liveDecks: Deck[] = await vocabularyService.getPublicDecks()
         if (isMounted && Array.isArray(liveDecks)) {
-          const mapped: FormattedDeck[] = liveDecks.map((d: any, i) => ({
-            id: d.id || d._id || `deck-${i}`,
-            title: d.title || d.name || 'Community Deck',
-            author: d.creator_type === 'SYSTEM' ? 'LingoSphere Official' : 'Community Member',
+          const mapped: FormattedDeck[] = liveDecks.map((d: Deck, i: number) => ({
+            id: d._id || `deck-${i}`,
+            title: d.name || 'Community Deck',
+            author: 'LingoSphere Official',
             authorAvatar: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e', '#e17055'][i % 5],
-            wordCount: d.total_cards || d.card_count || 0,
-            views: d.total_users || 120 + i * 25,
-            saves: d.save_count || 30 + i * 5,
-            topic: d.cefr_level || d.category || 'General',
+            wordCount: d.card_count || 0,
+            views: 120 + i * 25,
+            saves: 30 + i * 5,
+            topic: 'General',
           }))
           setDecks(mapped)
         }

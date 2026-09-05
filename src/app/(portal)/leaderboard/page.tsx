@@ -49,10 +49,10 @@ export default function LeaderboardAppPage() {
         if (isMounted && Array.isArray(data)) {
           const mapped: MonthlyLeaderboardUser[] = data.map((entry: any, idx: number) => ({
             rank: idx + 1,
-            name: entry.full_name || entry.username || entry.user_name || `Học viên #${idx + 1}`,
+            name: entry.full_name || `Học viên #${idx + 1}`,
             avatarColor: avatarColors[idx % avatarColors.length],
-            streakDays: entry.streak_days || entry.streakDays || 1,
-            totalMinutes: entry.total_minutes || entry.totalMinutes || 60 + idx * 10,
+            streakDays: entry.streak_days || 1,
+            totalMinutes: entry.total_minutes || 60 + idx * 10,
             questionsAnswered: entry.questions_answered || 20 + idx * 5,
             wordsLearned: entry.words_learned || 15 + idx * 3,
             diamonds: entry.diamonds || 50,

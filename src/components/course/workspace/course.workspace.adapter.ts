@@ -55,10 +55,10 @@ export function mapCourseDataToWorkspace(
         order: l.order_index ?? (lIdx + 1),
         title: String(l.title || `Bài ${lIdx + 1}`),
         duration: typeof l.duration_seconds === 'number' ? l.duration_seconds : 600,
-        type: l.lesson_type || l.type || 'video',
+        type: l.lesson_type || 'video',
         status: isCompleted ? 'completed' : l.status || 'available',
         progress: isCompleted ? 100 : l.progress || 0,
-        videoUrl: l.video_url || l.videoUrl || l.content?.videoUrl,
+        videoUrl: l.video_url || '',
         is_free_preview: Boolean(l.is_free_preview),
         is_preview: Boolean(l.is_free_preview),
         resources: Array.isArray(l.resources) ? l.resources : [],
@@ -143,7 +143,7 @@ export function mapCourseDataToWorkspace(
     totalLessons: totalLes,
     rating: typeof reviewsRes?.rating === 'number' ? reviewsRes.rating : 5.0,
     ratingCount: typeof reviewsRes?.rating_count === 'number' ? reviewsRes.rating_count : 0,
-    studentsCount: Number(courseObj.students_count || courseObj.studentsCount || 0),
+    studentsCount: Number(courseObj.students_count || 0),
     whatYouWillLearn: Array.isArray(courseObj.what_you_will_learn)
       ? (courseObj.what_you_will_learn as string[])
       : [],

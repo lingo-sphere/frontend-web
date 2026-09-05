@@ -148,7 +148,7 @@ export function VocabularyTab({
           </option>
           {userDecks.map((deck) => (
             <option key={deck.id} value={deck.id}>
-              📁 {deck.title}
+              📁 {deck.name || 'Bộ thẻ'}
             </option>
           ))}
         </select>

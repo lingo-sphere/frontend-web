@@ -55,11 +55,11 @@ export default function VocabularyDeckLearnAppPage() {
           })
 
           setSelectedDeck({
-            id: deck.id || deck._id || deckId,
-            title: deck.title || (deck as any).name || 'Vocabulary Deck',
-            description: deck.description || (deck as any).description_vi || '',
+            id: deck._id || deckId,
+            title: deck.name || 'Vocabulary Deck',
+            description: deck.description || '',
             coverColor: '#6b5ce7',
-            cardCount: mappedItems.length || deck.total_cards || (deck as any).card_count || 10,
+            cardCount: mappedItems.length || deck.card_count || 10,
             creatorType: 'SYSTEM',
             visibility: 'PUBLIC',
             vocabularyItems: mappedItems,
