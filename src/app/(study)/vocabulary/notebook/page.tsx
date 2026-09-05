@@ -104,6 +104,7 @@ export default function NotebookAppPage() {
     if (createNew && newDeckTitle) {
       const newDeck: UserDeck = {
         id: `deck-${Date.now()}`,
+        name: newDeckTitle,
         title: newDeckTitle,
         cardCount: 1,
         createdAt: new Date().toISOString(),
@@ -174,6 +175,7 @@ export default function NotebookAppPage() {
 
     const newDeck: UserDeck = {
       id: `deck-${Date.now()}`,
+      name: newDeckTitle.trim(),
       title: newDeckTitle.trim(),
       cardCount: 0,
       createdAt: new Date().toISOString(),

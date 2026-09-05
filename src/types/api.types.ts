@@ -25,6 +25,7 @@ export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'PENDING'
 
 export interface User {
   user_id: string
+  id?: string
   email: string
   full_name: string
   phone_number?: string
@@ -310,6 +311,8 @@ export interface Deck {
   cards?: LexicalItem[]
   tags?: string[]
   category?: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface SpacedRepetitionReviewPayload {
