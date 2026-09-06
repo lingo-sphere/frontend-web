@@ -31,10 +31,102 @@ export interface ExamState {
   timedMode: boolean
 }
 
+function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[]): ToeicQuestion[] {
+  if (examData.questions && Array.isArray(examData.questions) && examData.questions.length > 0) {
+    const questions: ToeicQuestion[] = []
+    let qIndex = 1
+
+    examData.questions.forEach((rawQ, idx) => {
+      const q = rawQ as Record<string, unknown>
+      const partNum = Number(q.part_number) || 1
+
+      if (parts.includes(partNum) || parts.length === 0) {
+        const rawOptions = Array.isArray(q.options) ? q.options : []
+        const optionKeys = ['A', 'B', 'C', 'D']
+        const mappedOptions = rawOptions.map((opt: unknown, optIdx: number) => {
+          if (typeof opt === 'string') {
+            return { key: optionKeys[optIdx] || String.fromCharCode(65 + optIdx), textEn: opt }
+          }
+          if (typeof opt === 'object' && opt !== null) {
+            const o = opt as Record<string, unknown>
+            return {
+              key: String(o.key || optionKeys[optIdx] || 'A'),
+              textEn: String(o.text || o.textEn || ''),
+            }
+          }
+          return { key: optionKeys[optIdx] || 'A', textEn: String(opt) }
+        })
+
+        const audioUrl = (q.media_url || q.audio_url || examData.audio_full_url || examData.audio_url) as string | undefined
+        const imageUrl = (q.image_url || '') as string
+
+        questions.push({
+          id: String(q.id || `q-${idx + 1}`),
+          examId: examData._id,
+          partId: `part-${partNum}`,
+          partNumber: partNum,
+          questionNumber: Number(q.question_number) || qIndex,
+          questionType: 'MULTIPLE_CHOICE',
+          questionTextEn: String(q.question_text || `Question ${qIndex}`),
+          options: mappedOptions,
+          correctOption: String(q.correct_answer || 'A').trim().toUpperCase(),
+          explanationEn: typeof q.explanation === 'string' ? q.explanation : undefined,
+          imageMediaId: imageUrl || undefined,
+          audioMediaId: audioUrl || undefined,
+          hasImage: Boolean(imageUrl),
+          hasAudio: Boolean(audioUrl),
+          difficultyLevel: (q.difficulty_level as 'EASY' | 'MEDIUM' | 'HARD') || 'MEDIUM',
+          skillType: (q.skill_type as 'LISTENING' | 'READING') || (partNum <= 4 ? 'LISTENING' : 'READING'),
+          hasPassage: partNum >= 6,
+          status: 'PUBLISHED',
+        })
+        qIndex++
+      }
+    })
+
+    if (questions.length > 0) {
+      return questions
+    }
+  }
+
+  if (examData.parts && Array.isArray(examData.parts)) {
+    const questions: ToeicQuestion[] = []
+    examData.parts.forEach((p) => {
+      if (parts.includes(p.part_number) || parts.length === 0) {
+        p.questions.forEach((q) => {
+          questions.push({
+            id: `p${p.part_number}-q${q.question_number}`,
+            examId: examData._id,
+            partId: `part-${p.part_number}`,
+            partNumber: p.part_number,
+            questionNumber: q.question_number,
+            questionType: 'MULTIPLE_CHOICE',
+            questionTextEn: q.question_text || `Question ${q.question_number}`,
+            options: q.options.map((opt) => ({ key: opt.key, textEn: opt.text })),
+            correctOption: q.correct_answer || 'A',
+            explanationEn: q.explanation,
+            imageMediaId: q.image_url,
+            audioMediaId: q.audio_url,
+            hasImage: Boolean(q.image_url),
+            hasAudio: Boolean(q.audio_url),
+            difficultyLevel: 'MEDIUM',
+            skillType: p.part_number <= 4 ? 'LISTENING' : 'READING',
+            hasPassage: p.part_number >= 6,
+            status: 'PUBLISHED',
+          })
+        })
+      }
+    })
+    return questions
+  }
+
+  return []
+}
+
 export function useToeicExam(examId?: string) {
   const [examData, setExamData] = useState<BackendToeicExam | null>(null)
   const [isLoadingExam, setIsLoadingExam] = useState<boolean>(true)
-  const [showModeSelector, setShowModeSelector] = useState<boolean>(true)
+  const [showModeSelector, setShowModeSelector] = useState<boolean>(false)
   const [allQuestions, setAllQuestions] = useState<ToeicQuestion[]>([])
   const [state, setState] = useState<ExamState>({
     mode: 'FULL',
@@ -71,6 +163,28 @@ export function useToeicExam(examId?: string) {
       .then((data) => {
         if (data) {
           setExamData(data)
+          const allParts = [1, 2, 3, 4, 5, 6, 7]
+          const questions = parseQuestionsFromExamData(data, allParts)
+          setAllQuestions(questions)
+          const time =
+            typeof data.duration_minutes === 'number' && data.duration_minutes > 0
+              ? data.duration_minutes * 60
+              : 120 * 60
+
+          setState((prev) => ({
+            ...prev,
+            mode: 'FULL',
+            selectedParts: allParts,
+            currentQuestionIndex: 0,
+            answers: {},
+            flagged: [],
+            timeRemaining: time,
+            started: true,
+            submitted: false,
+            showAnswer: false,
+            timedMode: true,
+          }))
+          setShowModeSelector(false)
         }
       })
       .catch((err) => {
@@ -83,96 +197,7 @@ export function useToeicExam(examId?: string) {
 
   const generateQuestionsForParts = useCallback((parts: number[]): ToeicQuestion[] => {
     if (!examData) return []
-
-    if (examData.questions && Array.isArray(examData.questions) && examData.questions.length > 0) {
-      const questions: ToeicQuestion[] = []
-      let qIndex = 1
-
-      examData.questions.forEach((rawQ, idx) => {
-        const q = rawQ as Record<string, unknown>
-        const partNum = Number(q.part_number) || 1
-
-        if (parts.includes(partNum) || parts.length === 0) {
-          const rawOptions = Array.isArray(q.options) ? q.options : []
-          const optionKeys = ['A', 'B', 'C', 'D']
-          const mappedOptions = rawOptions.map((opt: unknown, optIdx: number) => {
-            if (typeof opt === 'string') {
-              return { key: optionKeys[optIdx] || String.fromCharCode(65 + optIdx), textEn: opt }
-            }
-            if (typeof opt === 'object' && opt !== null) {
-              const o = opt as Record<string, unknown>
-              return {
-                key: String(o.key || optionKeys[optIdx] || 'A'),
-                textEn: String(o.text || o.textEn || ''),
-              }
-            }
-            return { key: optionKeys[optIdx] || 'A', textEn: String(opt) }
-          })
-
-          const audioUrl = (q.media_url || q.audio_url || examData.audio_full_url || examData.audio_url) as string | undefined
-          const imageUrl = (q.image_url || '') as string
-
-          questions.push({
-            id: String(q.id || `q-${idx + 1}`),
-            examId: examData._id,
-            partId: `part-${partNum}`,
-            partNumber: partNum,
-            questionNumber: Number(q.question_number) || qIndex,
-            questionType: 'MULTIPLE_CHOICE',
-            questionTextEn: String(q.question_text || `Question ${qIndex}`),
-            options: mappedOptions,
-            correctOption: String(q.correct_answer || 'A').trim().toUpperCase(),
-            explanationEn: typeof q.explanation === 'string' ? q.explanation : undefined,
-            imageMediaId: imageUrl || undefined,
-            audioMediaId: audioUrl || undefined,
-            hasImage: Boolean(imageUrl),
-            hasAudio: Boolean(audioUrl),
-            difficultyLevel: (q.difficulty_level as 'EASY' | 'MEDIUM' | 'HARD') || 'MEDIUM',
-            skillType: (q.skill_type as 'LISTENING' | 'READING') || (partNum <= 4 ? 'LISTENING' : 'READING'),
-            hasPassage: partNum >= 6,
-            status: 'PUBLISHED',
-          })
-          qIndex++
-        }
-      })
-
-      if (questions.length > 0) {
-        return questions
-      }
-    }
-
-    if (examData.parts && Array.isArray(examData.parts)) {
-      const questions: ToeicQuestion[] = []
-      examData.parts.forEach((p) => {
-        if (parts.includes(p.part_number) || parts.length === 0) {
-          p.questions.forEach((q) => {
-            questions.push({
-              id: `p${p.part_number}-q${q.question_number}`,
-              examId: examData._id,
-              partId: `part-${p.part_number}`,
-              partNumber: p.part_number,
-              questionNumber: q.question_number,
-              questionType: 'MULTIPLE_CHOICE',
-              questionTextEn: q.question_text || `Question ${q.question_number}`,
-              options: q.options.map((opt) => ({ key: opt.key, textEn: opt.text })),
-              correctOption: q.correct_answer || 'A',
-              explanationEn: q.explanation,
-              imageMediaId: q.image_url,
-              audioMediaId: q.audio_url,
-              hasImage: Boolean(q.image_url),
-              hasAudio: Boolean(q.audio_url),
-              difficultyLevel: 'MEDIUM',
-              skillType: p.part_number <= 4 ? 'LISTENING' : 'READING',
-              hasPassage: p.part_number >= 6,
-              status: 'PUBLISHED',
-            })
-          })
-        }
-      })
-      return questions
-    }
-
-    return []
+    return parseQuestionsFromExamData(examData, parts)
   }, [examData])
 
   const calculateResults = useCallback((): ExamResultMetrics => {

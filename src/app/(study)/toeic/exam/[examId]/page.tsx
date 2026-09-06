@@ -84,7 +84,7 @@ export default function ToeicExamAppPage() {
               ? 'Bài thi này hiện chưa được cập nhật nội dung câu hỏi trên hệ thống. Vui lòng quay lại sau hoặc liên hệ ban quản trị.'
               : 'This exam currently has no questions. Please check back later.'}
           </p>
-          <Button onClick={() => setShowModeSelector(true)} variant="outline" className="mt-2">
+          <Button onClick={() => navigate(-1)} variant="outline" className="mt-2">
             {isVietnamese ? 'Quay lại' : 'Go back'}
           </Button>
         </div>
@@ -120,7 +120,7 @@ export default function ToeicExamAppPage() {
         timedMode={state.timedMode}
         timeRemaining={state.timeRemaining}
         isVietnamese={isVietnamese}
-        onBackToModeSelect={() => setShowModeSelector(true)}
+        onBackToModeSelect={() => navigate(-1)}
         onSubmit={handleSubmit}
       />
 
