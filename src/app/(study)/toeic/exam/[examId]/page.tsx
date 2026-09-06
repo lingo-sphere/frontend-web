@@ -111,6 +111,40 @@ export default function ToeicExamAppPage() {
   const currentQuestion = allQuestions[state.currentQuestionIndex]
   const currentPart = currentQuestion?.partNumber || 1
 
+  const isWriting =
+    currentQuestion?.questionType === 'WRITING' ||
+    currentQuestion?.skillType === 'WRITING' ||
+    String(currentPart).toLowerCase().includes('writ')
+
+  const isSpeaking =
+    !isWriting &&
+    (currentQuestion?.questionType === 'SPEAKING' ||
+      currentQuestion?.skillType === 'SPEAKING' ||
+      String(currentPart).toLowerCase().includes('speak'))
+
+  const partName = isWriting
+    ? isVietnamese
+      ? 'Kỹ năng Viết (Writing)'
+      : 'Writing Task'
+    : isSpeaking
+      ? isVietnamese
+        ? 'Kỹ năng Nói (Speaking)'
+        : 'Speaking Task'
+      : typeof currentPart === 'number'
+        ? `Part ${currentPart}`
+        : String(currentPart)
+
+  const numericPart = typeof currentPart === 'number' ? currentPart : 5
+  const partTip = isWriting
+    ? isVietnamese
+      ? 'Đảm bảo cấu trúc bài viết rõ ràng, đủ luận điểm và đạt tối thiểu số từ yêu cầu.'
+      : 'Ensure clear structure, coherence, and meet the minimum word count.'
+    : isSpeaking
+      ? isVietnamese
+        ? 'Nói to rõ ràng, tự nhiên, bám sát các ý trọng tâm trong đề bài.'
+        : 'Speak clearly, naturally, and cover all required prompt points.'
+      : PART_TIPS[numericPart]
+
   return (
     <div className="min-h-screen bg-surface-secondary">
       <ToeicExamHeader
@@ -129,8 +163,8 @@ export default function ToeicExamAppPage() {
           <ToeicQuestionCard
             question={currentQuestion}
             currentPart={currentPart}
-            partName={`Part ${currentPart}`}
-            partTip={PART_TIPS[currentPart]}
+            partName={partName}
+            partTip={partTip}
             selectedOption={state.answers[currentQuestion.questionNumber]}
             isFlagged={state.flagged.includes(currentQuestion.questionNumber)}
             showAnswer={state.showAnswer}
@@ -150,7 +184,7 @@ export default function ToeicExamAppPage() {
           flagged={state.flagged}
           currentIndex={state.currentQuestionIndex}
           currentPart={currentPart}
-          partTiming={PART_TIMINGS[currentPart]}
+          partTiming={typeof currentPart === 'number' ? PART_TIMINGS[currentPart] : undefined}
           onGoToQuestion={goToQuestion}
         />
       </div>

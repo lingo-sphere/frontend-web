@@ -38,47 +38,105 @@ function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[])
 
     examData.questions.forEach((rawQ, idx) => {
       const q = rawQ as Record<string, unknown>
-      const partNum = Number(q.part_number) || 1
+      const rawPart = q.part_number
+      const isPartNumeric = typeof rawPart === 'number' || (typeof rawPart === 'string' && /^\d+$/.test(rawPart))
+      const numericPart = isPartNumeric ? Number(rawPart) : 5
 
-      if (parts.includes(partNum) || parts.length === 0) {
-        const rawOptions = Array.isArray(q.options) ? q.options : []
-        const optionKeys = ['A', 'B', 'C', 'D']
-        const mappedOptions = rawOptions.map((opt: unknown, optIdx: number) => {
-          if (typeof opt === 'string') {
-            return { key: optionKeys[optIdx] || String.fromCharCode(65 + optIdx), textEn: opt }
-          }
+      const rawOptions = Array.isArray(q.options) ? q.options : []
+      const areAllOptionsEmpty =
+        rawOptions.length === 0 ||
+        rawOptions.every((opt: unknown) => {
+          if (typeof opt === 'string') return !opt.trim()
           if (typeof opt === 'object' && opt !== null) {
             const o = opt as Record<string, unknown>
-            return {
-              key: String(o.key || optionKeys[optIdx] || 'A'),
-              textEn: String(o.text || o.textEn || ''),
-            }
+            return !String(o.text || o.textEn || '').trim()
           }
-          return { key: optionKeys[optIdx] || 'A', textEn: String(opt) }
+          return true
         })
+
+      const qText = String(q.question_text || '')
+      const isWritingPrompt = /write\s+an?\s+(email|essay|letter|paragraph)|at\s+least\s+\d+\s+words/i.test(qText)
+      const isSpeakingPrompt = /describe\s+a\s+time|speak\s+about|pronounce|recording/i.test(qText)
+
+      const isWriting =
+        q.question_type === 'WRITING' ||
+        q.skill_type === 'WRITING' ||
+        String(rawPart).toLowerCase().includes('writ') ||
+        (areAllOptionsEmpty && isWritingPrompt)
+
+      const isSpeaking =
+        !isWriting &&
+        (q.question_type === 'SPEAKING' ||
+          q.skill_type === 'SPEAKING' ||
+          String(rawPart).toLowerCase().includes('speak') ||
+          (areAllOptionsEmpty && isSpeakingPrompt))
+
+      const shouldInclude =
+        parts.length === 0 ||
+        parts.length >= 7 ||
+        (isWriting && parts.includes(8)) ||
+        (isSpeaking && parts.includes(7)) ||
+        (!isWriting && !isSpeaking && parts.includes(numericPart))
+
+      if (shouldInclude) {
+        const optionKeys = ['A', 'B', 'C', 'D']
+        const mappedOptions = isWriting || isSpeaking
+          ? []
+          : rawOptions
+              .map((opt: unknown, optIdx: number) => {
+                if (typeof opt === 'string') {
+                  return { key: optionKeys[optIdx] || String.fromCharCode(65 + optIdx), textEn: opt }
+                }
+                if (typeof opt === 'object' && opt !== null) {
+                  const o = opt as Record<string, unknown>
+                  return {
+                    key: String(o.key || optionKeys[optIdx] || 'A'),
+                    textEn: String(o.text || o.textEn || ''),
+                  }
+                }
+                return { key: optionKeys[optIdx] || 'A', textEn: String(opt) }
+              })
+              .filter((opt) => Boolean(opt.textEn.trim()))
 
         const audioUrl = (q.media_url || q.audio_url || examData.audio_full_url || examData.audio_url) as string | undefined
         const imageUrl = (q.image_url || '') as string
 
+        const finalSkillType: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = isWriting
+          ? 'WRITING'
+          : isSpeaking
+            ? 'SPEAKING'
+            : q.skill_type === 'LISTENING' || (numericPart <= 4 && isPartNumeric)
+              ? 'LISTENING'
+              : 'READING'
+
+        const finalQuestionType = isWriting
+          ? 'WRITING'
+          : isSpeaking
+            ? 'SPEAKING'
+            : 'MULTIPLE_CHOICE'
+
         questions.push({
           id: String(q.id || `q-${idx + 1}`),
           examId: examData._id,
-          partId: `part-${partNum}`,
-          partNumber: partNum,
+          partId: `part-${rawPart || numericPart}`,
+          partNumber: isWriting ? 'writing' : isSpeaking ? 'speaking' : numericPart,
           questionNumber: Number(q.question_number) || qIndex,
-          questionType: 'MULTIPLE_CHOICE',
-          questionTextEn: String(q.question_text || `Question ${qIndex}`),
+          questionType: finalQuestionType,
+          questionTextEn: qText || `Question ${qIndex}`,
           options: mappedOptions,
-          correctOption: String(q.correct_answer || 'A').trim().toUpperCase(),
+          correctOption: String(q.correct_answer || (mappedOptions[0]?.key || 'A')).trim().toUpperCase(),
           explanationEn: typeof q.explanation === 'string' ? q.explanation : undefined,
           imageMediaId: imageUrl || undefined,
           audioMediaId: audioUrl || undefined,
           hasImage: Boolean(imageUrl),
           hasAudio: Boolean(audioUrl),
           difficultyLevel: (q.difficulty_level as 'EASY' | 'MEDIUM' | 'HARD') || 'MEDIUM',
-          skillType: (q.skill_type as 'LISTENING' | 'READING') || (partNum <= 4 ? 'LISTENING' : 'READING'),
-          hasPassage: partNum >= 6,
+          skillType: finalSkillType,
+          hasPassage: !isWriting && !isSpeaking && numericPart >= 6,
           status: 'PUBLISHED',
+          minWords: isWriting ? (Number(q.min_words) || 100) : undefined,
+          prepTimeSeconds: isSpeaking ? (Number(q.prep_time_seconds) || 45) : undefined,
+          responseTimeSeconds: isSpeaking ? (Number(q.response_time_seconds) || 60) : undefined,
         })
         qIndex++
       }
@@ -210,26 +268,36 @@ export function useToeicExam(examId?: string) {
     const partStats: Record<number, { correct: number; total: number }> = {}
 
     allQuestions.forEach((q) => {
-      const part = q.partNumber || 1
-      if (!partStats[part]) {
-        partStats[part] = { correct: 0, total: 0 }
+      const partKey = typeof q.partNumber === 'number' ? q.partNumber : q.skillType === 'SPEAKING' ? 7 : 8
+      if (!partStats[partKey]) {
+        partStats[partKey] = { correct: 0, total: 0 }
       }
-      partStats[part].total++
+      partStats[partKey].total++
 
-      const isCorrect = state.answers[q.questionNumber] === q.correctOption
+      const isWriting = q.questionType === 'WRITING' || q.skillType === 'WRITING'
+      const isSpeaking = q.questionType === 'SPEAKING' || q.skillType === 'SPEAKING'
+
+      let isCorrect = false
+      if (isWriting || isSpeaking) {
+        const studentText = (state.answers[q.questionNumber] || '').trim()
+        isCorrect = studentText.length > 0
+      } else {
+        isCorrect = state.answers[q.questionNumber] === q.correctOption
+      }
+
       if (isCorrect) {
         correct++
-        partStats[part].correct++
-        if (part <= 4) {
+        partStats[partKey].correct++
+        if (q.skillType === 'LISTENING') {
           listeningCorrect++
-        } else {
+        } else if (q.skillType === 'READING') {
           readingCorrect++
         }
       }
 
-      if (part <= 4) {
+      if (q.skillType === 'LISTENING') {
         listeningTotal++
-      } else {
+      } else if (q.skillType === 'READING') {
         readingTotal++
       }
     })

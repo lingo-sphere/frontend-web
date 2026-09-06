@@ -1,10 +1,7 @@
-/**
- * @file toeic.question.card.tsx
- * @description Component giao diện React ToeicQuestionCard cho học viên
- */
+// Component giao diện React ToeicQuestionCard hiển thị câu hỏi trắc nghiệm, bài viết và phần nói cho học viên.
 
 import { useTranslation } from 'react-i18next'
-import { Flag, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Flag, CheckCircle2, XCircle, ChevronLeft, ChevronRight, PenTool, Mic } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,7 +9,7 @@ import type { ToeicQuestion } from '@/types/toeic'
 
 interface ToeicQuestionCardProps {
   question: ToeicQuestion
-  currentPart: number
+  currentPart: number | string
   partName?: string
   partTip?: string
   selectedOption?: string
@@ -46,18 +43,59 @@ export function ToeicQuestionCard({
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
+  const isWriting =
+    question.questionType === 'WRITING' ||
+    question.questionType === 'ESSAY' ||
+    question.skillType === 'WRITING' ||
+    String(question.partNumber).toLowerCase().includes('writ')
+
+  const isSpeaking =
+    !isWriting &&
+    (question.questionType === 'SPEAKING' ||
+      question.skillType === 'SPEAKING' ||
+      String(question.partNumber).toLowerCase().includes('speak'))
+
+  const wordCount = (selectedOption || '').trim().split(/\s+/).filter(Boolean).length
+  const minWords = question.minWords || 100
+
+  let badgeLabel = `Part ${currentPart}`
+  let badgeClass = 'bg-primary'
+  if (isWriting) {
+    badgeLabel = isVietnamese ? 'Kỹ năng Viết (Writing)' : 'Writing Task'
+    badgeClass = 'bg-purple-600 text-white'
+  } else if (isSpeaking) {
+    badgeLabel = isVietnamese ? 'Kỹ năng Nói (Speaking)' : 'Speaking Task'
+    badgeClass = 'bg-amber-600 text-white'
+  } else if (question.skillType === 'LISTENING') {
+    badgeLabel = isVietnamese ? `Part ${currentPart} (Nghe)` : `Part ${currentPart} (Listening)`
+  } else if (question.skillType === 'READING') {
+    badgeLabel = isVietnamese ? `Part ${currentPart} (Đọc)` : `Part ${currentPart} (Reading)`
+  }
+
+  const effectivePartTip =
+    partTip ||
+    (isWriting
+      ? isVietnamese
+        ? 'Đảm bảo cấu trúc rõ ràng, đủ luận điểm và đạt tối thiểu số từ yêu cầu.'
+        : 'Ensure clear structure, coherence, and meet the minimum word count.'
+      : isSpeaking
+        ? isVietnamese
+          ? 'Nói to rõ ràng, tự nhiên, bám sát các ý trọng tâm trong đề bài.'
+          : 'Speak clearly, naturally, and cover all required prompt points.'
+        : undefined)
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Badge variant="default" className="bg-primary">
-            Part {currentPart}
+          <Badge variant="default" className={badgeClass}>
+            {badgeLabel}
           </Badge>
           {partName && <span className="text-[12px] text-text-secondary">{partName}</span>}
         </div>
-        {partTip && (
-          <div className="max-w-md rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800">
-            💡 {partTip}
+        {effectivePartTip && (
+          <div className="max-w-md rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+            💡 {effectivePartTip}
           </div>
         )}
       </div>
@@ -68,7 +106,7 @@ export function ToeicQuestionCard({
           size="icon"
           onClick={onToggleFlag}
           className={`absolute right-3 top-3 ${
-            isFlagged ? 'bg-amber-100 text-amber-600' : 'text-text-tertiary'
+            isFlagged ? 'bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400' : 'text-text-tertiary'
           }`}
           title={isVietnamese ? 'Đánh dấu câu hỏi' : 'Flag question'}
         >
@@ -95,61 +133,135 @@ export function ToeicQuestionCard({
             </div>
           )}
 
-          <div className="mt-4 space-y-2">
-            {question.options?.map((option) => {
-              const isSelected = selectedOption === option.key
-              const isCorrect = showAnswer && option.key === question.correctOption
-              const isWrong = showAnswer && isSelected && option.key !== question.correctOption
-
-              return (
-                <button
-                  key={option.key}
-                  onClick={() => onSelectAnswer(option.key)}
-                  disabled={isSubmitted}
-                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
-                    isCorrect
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : isWrong
-                        ? 'border-red-500 bg-red-50'
-                        : isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
+          {isWriting ? (
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-between text-xs text-text-secondary border-b border-border pb-2">
+                <span className="font-semibold text-text-primary flex items-center gap-1.5">
+                  <PenTool size={14} className="text-purple-600" />
+                  {isVietnamese ? 'Bài làm của bạn:' : 'Your Written Response:'}
+                </span>
+                <span
+                  className={`font-bold px-2.5 py-0.5 rounded-full text-xs transition-colors ${
+                    wordCount >= minWords
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                      : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
                   }`}
                 >
-                  <span
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[14px] font-medium ${
+                  {isVietnamese ? 'Số từ: ' : 'Words: '}
+                  {wordCount} / {minWords} {isVietnamese ? 'từ' : 'words'}
+                </span>
+              </div>
+
+              <textarea
+                value={selectedOption || ''}
+                onChange={(e) => onSelectAnswer(e.target.value)}
+                disabled={isSubmitted}
+                rows={9}
+                placeholder={
+                  isVietnamese
+                    ? 'Nhập bài viết của bạn tại đây (đáp ứng đúng yêu cầu của đề bài)...'
+                    : 'Type your response here (satisfying prompt instructions)...'
+                }
+                className="w-full rounded-xl border border-border bg-surface p-3.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors resize-y leading-relaxed disabled:opacity-80 disabled:bg-surface-subtle"
+              />
+
+              {wordCount > 0 && wordCount < minWords && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                  {isVietnamese
+                    ? `⚠️ Bài viết hiện có ${wordCount} từ, bạn cần viết thêm ít nhất ${minWords - wordCount} từ nữa để đạt yêu cầu.`
+                    : `⚠️ Current length is ${wordCount} words, add at least ${minWords - wordCount} more words to reach target.`}
+                </p>
+              )}
+            </div>
+          ) : isSpeaking ? (
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300">
+                <Mic size={16} className="shrink-0 text-amber-600" />
+                <span className="font-medium">
+                  {isVietnamese
+                    ? `Thời gian chuẩn bị: ${question.prepTimeSeconds || 45}s • Thời gian nói: ${question.responseTimeSeconds || 60}s`
+                    : `Prep Time: ${question.prepTimeSeconds || 45}s • Speaking Time: ${question.responseTimeSeconds || 60}s`}
+                </span>
+              </div>
+
+              <textarea
+                value={selectedOption || ''}
+                onChange={(e) => onSelectAnswer(e.target.value)}
+                disabled={isSubmitted}
+                rows={6}
+                placeholder={
+                  isVietnamese
+                    ? 'Ghi chú dàn ý hoặc câu trả lời nói của bạn tại đây...'
+                    : 'Enter your speaking outline or response notes here...'
+                }
+                className="w-full rounded-xl border border-border bg-surface p-3 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors resize-y leading-relaxed disabled:opacity-80 disabled:bg-surface-subtle"
+              />
+            </div>
+          ) : (
+            <div className="mt-4 space-y-2">
+              {question.options?.map((option) => {
+                const isSelected = selectedOption === option.key
+                const isCorrect = showAnswer && option.key === question.correctOption
+                const isWrong = showAnswer && isSelected && option.key !== question.correctOption
+
+                return (
+                  <button
+                    key={option.key}
+                    onClick={() => onSelectAnswer(option.key)}
+                    disabled={isSubmitted}
+                    className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
                       isCorrect
-                        ? 'bg-emerald-500 text-white'
+                        ? 'border-emerald-500 bg-emerald-50'
                         : isWrong
-                          ? 'bg-red-500 text-white'
+                          ? 'border-red-500 bg-red-50'
                           : isSelected
-                            ? 'bg-primary text-white'
-                            : 'bg-surface-subtle'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    {option.key}
-                  </span>
-                  <span
-                    className={`flex-1 text-[14px] ${
-                      isCorrect
-                        ? 'font-medium text-emerald-700'
-                        : isWrong
-                          ? 'text-red-700'
-                          : 'text-text-primary'
-                    }`}
-                  >
-                    {option.textEn}
-                    {isCorrect && <CheckCircle2 size={14} className="ml-2 inline text-emerald-600" />}
-                    {isWrong && <XCircle size={14} className="ml-2 inline text-red-600" />}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[14px] font-medium ${
+                        isCorrect
+                          ? 'bg-emerald-500 text-white'
+                          : isWrong
+                            ? 'bg-red-500 text-white'
+                            : isSelected
+                              ? 'bg-primary text-white'
+                              : 'bg-surface-subtle'
+                      }`}
+                    >
+                      {option.key}
+                    </span>
+                    <span
+                      className={`flex-1 text-[14px] ${
+                        isCorrect
+                          ? 'font-medium text-emerald-700'
+                          : isWrong
+                            ? 'text-red-700'
+                            : 'text-text-primary'
+                      }`}
+                    >
+                      {option.textEn}
+                      {isCorrect && <CheckCircle2 size={14} className="ml-2 inline text-emerald-600" />}
+                      {isWrong && <XCircle size={14} className="ml-2 inline text-red-600" />}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {(showAnswer || isSubmitted) && question.explanationEn && (
             <div className="mt-4 rounded-xl bg-blue-500/10 border border-blue-500/20 p-3.5 text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-              <span className="font-bold">{isVietnamese ? 'Giải thích đáp án: ' : 'Explanation: '}</span>
+              <span className="font-bold">
+                {isWriting || isSpeaking
+                  ? isVietnamese
+                    ? 'Tiêu chí đánh giá & Bài mẫu: '
+                    : 'Evaluation Criteria & Model Answer: '
+                  : isVietnamese
+                    ? 'Giải thích đáp án: '
+                    : 'Explanation: '}
+              </span>
               <span>{question.explanationEn}</span>
             </div>
           )}

@@ -79,9 +79,9 @@ export interface ToeicQuestion {
   id: string
   examId?: string
   partId?: string
-  partNumber: number
+  partNumber: number | string
   questionNumber: number
-  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'FILL_BLANK'
+  questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'FILL_BLANK' | 'WRITING' | 'SPEAKING' | 'ESSAY'
   questionTextEn?: string
   questionTextVi?: string
   instructionEn?: string
@@ -107,6 +107,9 @@ export interface ToeicQuestion {
   hasImage?: boolean
   hasPassage?: boolean
   createdAt?: string
+  minWords?: number
+  prepTimeSeconds?: number
+  responseTimeSeconds?: number
 }
 
 export interface ToeicPassage {

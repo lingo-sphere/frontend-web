@@ -1,7 +1,4 @@
-/**
- * @file toeic.question.nav.tsx
- * @description Component giao diện React ToeicQuestionNav cho học viên
- */
+// Component giao diện React ToeicQuestionNav hiển thị danh sách điều hướng câu hỏi cho học viên.
 
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,7 +10,7 @@ interface ToeicQuestionNavProps {
   answers: Record<number, string>
   flagged: number[]
   currentIndex: number
-  currentPart?: number
+  currentPart?: number | string
   partTiming?: { questions: number; description: string }
   onGoToQuestion: (index: number) => void
 }
@@ -99,7 +96,7 @@ export function ToeicQuestionNav({
         </CardContent>
       </Card>
 
-      {currentPart && partTiming && (
+      {typeof currentPart === 'number' && partTiming && (
         <Card className="dashboard-card">
           <CardContent className="p-4">
             <h3 className="mb-3 text-[13px] font-semibold text-text-primary">Part {currentPart} Info</h3>
