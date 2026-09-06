@@ -40,6 +40,15 @@ export default function RoadmapAppPage() {
         courseService.getAllRoadmaps({ is_published: true }),
       ])
 
+      if (myProgress && !myProgress.roadmap && myProgress.roadmap_id) {
+        try {
+          const rm = await courseService.getRoadmapById(myProgress.roadmap_id)
+          if (rm) {
+            myProgress.roadmap = rm
+          }
+        } catch {}
+      }
+
       setProgress(myProgress)
       setAvailableRoadmaps(Array.isArray(roadmapsList) ? roadmapsList : [])
     } catch (err) {

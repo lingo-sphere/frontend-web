@@ -175,7 +175,10 @@ apiClient.interceptors.response.use(
 
 function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): T {
   if (!schema) return data as T
-  const parsed = schema.safeParse(data)
+  let parsed = schema.safeParse(data)
+  if (!parsed.success && data === '') {
+    parsed = schema.safeParse(null)
+  }
   if (!parsed.success) {
     const errorDetails = parsed.error.issues
       .map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`)

@@ -218,77 +218,13 @@ export interface CourseEnrollment {
   last_accessed_at: string
 }
 
-export interface LearningRoadmapStage {
-  stage_order: number
-  stage_title: string
-  stage_description?: string
-  course_id: string
-  target_band?: string
-  checkpoint_exam_id?: string
-  passing_score?: number
-  is_optional?: boolean
-  course?: Course | null
-}
-
-export interface LearningRoadmap {
-  _id: string
-  title: string
-  slug: string
-  description?: string
-  skills_focus: '2SKILLS' | '4SKILLS'
-  target_score: number
-  min_entry_score: number
-  max_entry_score: number
-  stages: LearningRoadmapStage[]
-  bundle_price?: number
-  original_price?: number
-  version?: number
-  is_published: boolean
-  created_at?: string
-  updated_at?: string
-}
-
-export interface StageMilestone {
-  stage_order: number
-  course_id: string
-  course_title?: string
-  status: 'LOCKED' | 'IN_PROGRESS' | 'COMPLETED' | string
-  completed_at?: string | Date
-  checkpoint_score?: number
-  checkpoint_passed?: boolean
-  is_completed?: boolean
-  score_growth?: number
-  pre_stage_score?: number
-}
-
-export interface GrowthChartPoint {
-  milestone_name?: string
-  label?: string
-  score: number
-  date?: string
-  target?: number
-  is_target?: boolean
-}
-
-export interface UserRoadmapProgress {
-  _id: string
-  id?: string
-  user_id: string
-  roadmap_id: string
-  roadmap_title?: string
-  roadmap?: LearningRoadmap | null
-  enrolled_at?: string | Date
-  last_activity_at?: string | Date
-  baseline_score?: number | Record<string, any>
-  current_estimated_score?: number | Record<string, any>
-  current_stage_order: number
-  status: 'ACTIVE' | 'COMPLETED' | 'PAUSED' | 'IN_PROGRESS' | string
-  completed_at?: string | Date
-  stage_milestones: StageMilestone[]
-  growth_chart_data: GrowthChartPoint[]
-  created_at?: string | Date
-  updated_at?: string | Date
-}
+export type {
+  LearningRoadmapStage,
+  LearningRoadmap,
+  StageMilestone,
+  GrowthChartPoint,
+  UserRoadmapProgress,
+} from '@/schemas/course.schema'
 
 export interface LexicalItem {
   id: string

@@ -42,21 +42,22 @@ export const CourseBaseSchema = z.object({
   skills: z.array(z.string()).optional(),
   price: z.number().default(0),
   discount_price: z.number().optional(),
-  level: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']).default('BEGINNER'),
+  level: z.string().default('BEGINNER'),
   category: z.string().default('TOEIC'),
   instructor_id: z.string().optional(),
   instructor_name: z.string().optional(),
   author_id: z.string().optional(),
   author_name: z.string().optional(),
   author_avatar: z.string().optional(),
-  total_modules: z.number().default(0),
+  total_modules: z.number().optional(),
   total_lessons: z.number().default(0),
-  total_duration_minutes: z.number().default(0),
+  total_duration_minutes: z.number().optional(),
   rating: z.number().optional(),
   rating_avg: z.number().default(5),
   rating_count: z.number().default(0),
   students_count: z.number().default(0),
   is_published: z.boolean().default(true),
+  approval_status: z.string().optional(),
   modules: z.array(CourseModuleSchema).optional(),
   chapters: z.array(CourseModuleSchema).optional(),
   curriculum: z.array(CourseModuleSchema).optional(),
@@ -108,7 +109,7 @@ export const LearningRoadmapStageSchema = z.object({
   checkpoint_exam_id: z.string().optional(),
   passing_score: z.number().optional(),
   is_optional: z.boolean().optional(),
-  course: CourseSchema.nullable().optional(),
+  course: CourseBaseSchema.nullable().optional(),
 }).passthrough()
 
 export const LearningRoadmapSchema = z.object({
@@ -173,7 +174,9 @@ export const UserRoadmapProgressObjectSchema = z.object({
   updated_at: z.union([z.string(), z.date()]).optional(),
 }).passthrough()
 
-export const UserRoadmapProgressSchema = UserRoadmapProgressObjectSchema.nullable().optional()
+export const UserRoadmapProgressSchema = z
+  .union([UserRoadmapProgressObjectSchema, z.literal(''), z.null(), z.undefined()])
+  .transform((val) => (val === '' ? null : (val ?? null)))
 
 export type Lesson = z.infer<typeof LessonSchema>
 export type CourseModule = z.infer<typeof CourseModuleSchema>
