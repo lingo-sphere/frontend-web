@@ -36,12 +36,14 @@ export const BackendToeicExamSchema = z.object({
   duration_minutes: z.number().default(120),
   total_questions: z.number().default(200),
   audio_full_url: z.string().optional(),
+  audio_url: z.string().optional(),
   is_published: z.boolean().default(true),
   is_system_placement: z.boolean().optional(),
   skills_enabled: z.string().optional(),
   placement_type: z.string().optional(),
   attempts_count: z.number().optional(),
   parts: z.array(ExamPartSchema).optional(),
+  questions: z.array(z.record(z.string(), z.unknown())).optional(),
 }).passthrough()
 
 export const BackendToeicExamListSchema = z.array(BackendToeicExamSchema)

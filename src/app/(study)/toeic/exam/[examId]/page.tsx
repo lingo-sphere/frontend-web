@@ -7,6 +7,8 @@
 
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from '@/lib/navigation'
+import { RotateCcw, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useToeicExam } from '@/hooks/use.toeic.exam'
 import { ToeicModeSelector } from '@/components/toeic/toeic.mode.selector'
 import { ToeicExamResult } from '@/components/toeic/toeic.exam.result'
@@ -23,6 +25,7 @@ export default function ToeicExamAppPage() {
 
   const {
     examData,
+    isLoadingExam,
     showModeSelector,
     setShowModeSelector,
     allQuestions,
@@ -42,6 +45,19 @@ export default function ToeicExamAppPage() {
     calculateResults,
   } = useToeicExam(examId)
 
+  if (isLoadingExam) {
+    return (
+      <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3 text-text-secondary">
+          <RotateCcw className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-sm font-semibold">
+            {isVietnamese ? 'Đang tải thông tin đề thi...' : 'Loading exam data...'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (showModeSelector) {
     return (
       <ToeicModeSelector
@@ -50,6 +66,29 @@ export default function ToeicExamAppPage() {
         onSelectMode={handleSelectMode}
         onBack={() => navigate('/toeic')}
       />
+    )
+  }
+
+  if (!showModeSelector && allQuestions.length === 0) {
+    return (
+      <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
+        <div className="max-w-md rounded-2xl bg-surface p-6 text-center border border-border shadow-sm space-y-4">
+          <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 mx-auto flex items-center justify-center">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <h2 className="text-lg font-bold text-text-primary">
+            {isVietnamese ? 'Đề thi chưa có câu hỏi' : 'No questions in this exam'}
+          </h2>
+          <p className="text-xs text-text-secondary">
+            {isVietnamese
+              ? 'Bài thi này hiện chưa được cập nhật nội dung câu hỏi trên hệ thống. Vui lòng quay lại sau hoặc liên hệ ban quản trị.'
+              : 'This exam currently has no questions. Please check back later.'}
+          </p>
+          <Button onClick={() => setShowModeSelector(true)} variant="outline" className="mt-2">
+            {isVietnamese ? 'Quay lại' : 'Go back'}
+          </Button>
+        </div>
+      </div>
     )
   }
 

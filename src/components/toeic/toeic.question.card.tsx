@@ -79,6 +79,22 @@ export function ToeicQuestionCard({
             {isVietnamese ? 'Câu' : 'Q'} {question.questionNumber}: {question.questionTextEn}
           </p>
 
+          {question.imageMediaId && (
+            <div className="my-3 max-w-md overflow-hidden rounded-xl border border-border">
+              <img
+                src={question.imageMediaId}
+                alt={`Question ${question.questionNumber}`}
+                className="w-full object-contain max-h-72"
+              />
+            </div>
+          )}
+
+          {question.audioMediaId && (
+            <div className="my-3 max-w-md overflow-hidden rounded-xl border border-border bg-surface-subtle p-2">
+              <audio controls src={question.audioMediaId} className="w-full h-10" />
+            </div>
+          )}
+
           <div className="mt-4 space-y-2">
             {question.options?.map((option) => {
               const isSelected = selectedOption === option.key
@@ -130,6 +146,13 @@ export function ToeicQuestionCard({
               )
             })}
           </div>
+
+          {(showAnswer || isSubmitted) && question.explanationEn && (
+            <div className="mt-4 rounded-xl bg-blue-500/10 border border-blue-500/20 p-3.5 text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+              <span className="font-bold">{isVietnamese ? 'Giải thích đáp án: ' : 'Explanation: '}</span>
+              <span>{question.explanationEn}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 

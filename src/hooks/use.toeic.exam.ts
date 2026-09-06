@@ -33,6 +33,7 @@ export interface ExamState {
 
 export function useToeicExam(examId?: string) {
   const [examData, setExamData] = useState<BackendToeicExam | null>(null)
+  const [isLoadingExam, setIsLoadingExam] = useState<boolean>(true)
   const [showModeSelector, setShowModeSelector] = useState<boolean>(true)
   const [allQuestions, setAllQuestions] = useState<ToeicQuestion[]>([])
   const [state, setState] = useState<ExamState>({
@@ -59,101 +60,120 @@ export function useToeicExam(examId?: string) {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    if (!examId) return
-    const isPlacement2Skills = examId.includes('placement_2skills')
-    const isPlacement4Skills = examId.includes('placement_4skills')
-    if (isPlacement2Skills || isPlacement4Skills) {
-      setExamData({
-        _id: examId,
-        title: isPlacement4Skills
-          ? 'Bài Test Năng Lực Đầu Vào Toàn Hệ Thống (TOEIC 4 Kỹ Năng)'
-          : 'Bài Test Năng Lực Đầu Vào Toàn Hệ Thống (TOEIC 2 Kỹ Năng LR)',
-        slug: examId,
-        description: isPlacement4Skills
-          ? 'Đánh giá toàn diện 4 kỹ năng Listening, Reading, Speaking & Writing chuẩn quốc tế'
-          : 'Đánh giá năng lực trình độ Listening & Reading từ 10 - 990 điểm chuẩn cấu trúc ETS mới nhất',
-        exam_type: 'DIAGNOSTIC_TEST',
-        duration_minutes: isPlacement4Skills ? 90 : 60,
-        total_questions: isPlacement4Skills ? 120 : 100,
-        is_published: true,
-        is_system_placement: true,
-        skills_enabled: isPlacement4Skills ? 'ALL' : 'LR',
-      })
+    if (!examId) {
+      setIsLoadingExam(false)
+      return
     }
 
+    setIsLoadingExam(true)
     examService
       .getExamById(examId)
       .then((data) => {
-        if (data) setExamData(data)
+        if (data) {
+          setExamData(data)
+        }
       })
       .catch((err) => {
-        console.warn('Exam not yet in backend DB, using dynamic test generator:', err?.message || err)
+        console.warn('Lỗi khi tải dữ liệu đề thi:', err?.message || err)
+      })
+      .finally(() => {
+        setIsLoadingExam(false)
       })
   }, [examId])
 
   const generateQuestionsForParts = useCallback((parts: number[]): ToeicQuestion[] => {
-    if (!examData || !examData.parts) {
-      const qs: ToeicQuestion[] = []
+    if (!examData) return []
+
+    if (examData.questions && Array.isArray(examData.questions) && examData.questions.length > 0) {
+      const questions: ToeicQuestion[] = []
       let qIndex = 1
-      parts.forEach((partNum) => {
-        const count = PART_TIMINGS[partNum]?.questions || 10
-        for (let i = 0; i < count; i++) {
-          qs.push({
-            id: `p${partNum}-q${qIndex}`,
-            examId: examId || 'toeic-test',
-            partId: `p${partNum}`,
+
+      examData.questions.forEach((rawQ, idx) => {
+        const q = rawQ as Record<string, unknown>
+        const partNum = Number(q.part_number) || 1
+
+        if (parts.includes(partNum) || parts.length === 0) {
+          const rawOptions = Array.isArray(q.options) ? q.options : []
+          const optionKeys = ['A', 'B', 'C', 'D']
+          const mappedOptions = rawOptions.map((opt: unknown, optIdx: number) => {
+            if (typeof opt === 'string') {
+              return { key: optionKeys[optIdx] || String.fromCharCode(65 + optIdx), textEn: opt }
+            }
+            if (typeof opt === 'object' && opt !== null) {
+              const o = opt as Record<string, unknown>
+              return {
+                key: String(o.key || optionKeys[optIdx] || 'A'),
+                textEn: String(o.text || o.textEn || ''),
+              }
+            }
+            return { key: optionKeys[optIdx] || 'A', textEn: String(opt) }
+          })
+
+          const audioUrl = (q.media_url || q.audio_url || examData.audio_full_url || examData.audio_url) as string | undefined
+          const imageUrl = (q.image_url || '') as string
+
+          questions.push({
+            id: String(q.id || `q-${idx + 1}`),
+            examId: examData._id,
+            partId: `part-${partNum}`,
             partNumber: partNum,
-            questionNumber: qIndex,
+            questionNumber: Number(q.question_number) || qIndex,
             questionType: 'MULTIPLE_CHOICE',
-            questionTextEn: `Question ${qIndex}: Select the best answer.`,
-            options: [
-              { key: 'A', textEn: 'Option A' },
-              { key: 'B', textEn: 'Option B' },
-              { key: 'C', textEn: 'Option C' },
-              { key: 'D', textEn: 'Option D' },
-            ],
-            correctOption: 'A',
-            difficultyLevel: 'MEDIUM',
-            skillType: partNum <= 4 ? 'LISTENING' : 'READING',
+            questionTextEn: String(q.question_text || `Question ${qIndex}`),
+            options: mappedOptions,
+            correctOption: String(q.correct_answer || 'A').trim().toUpperCase(),
+            explanationEn: typeof q.explanation === 'string' ? q.explanation : undefined,
+            imageMediaId: imageUrl || undefined,
+            audioMediaId: audioUrl || undefined,
+            hasImage: Boolean(imageUrl),
+            hasAudio: Boolean(audioUrl),
+            difficultyLevel: (q.difficulty_level as 'EASY' | 'MEDIUM' | 'HARD') || 'MEDIUM',
+            skillType: (q.skill_type as 'LISTENING' | 'READING') || (partNum <= 4 ? 'LISTENING' : 'READING'),
             hasPassage: partNum >= 6,
             status: 'PUBLISHED',
           })
           qIndex++
         }
       })
-      return qs
+
+      if (questions.length > 0) {
+        return questions
+      }
     }
 
-    const questions: ToeicQuestion[] = []
-    examData.parts.forEach((p) => {
-      if (parts.includes(p.part_number)) {
-        p.questions.forEach((q) => {
-          questions.push({
-            id: `p${p.part_number}-q${q.question_number}`,
-            examId: examData._id,
-            partId: `part-${p.part_number}`,
-            partNumber: p.part_number,
-            questionNumber: q.question_number,
-            questionType: 'MULTIPLE_CHOICE',
-            questionTextEn: q.question_text || `Question ${q.question_number}`,
-            options: q.options.map((opt) => ({ key: opt.key, textEn: opt.text })),
-            correctOption: q.correct_answer || 'A',
-            explanationEn: q.explanation,
-            imageMediaId: q.image_url,
-            audioMediaId: q.audio_url,
-            hasImage: Boolean(q.image_url),
-            hasAudio: Boolean(q.audio_url),
-            difficultyLevel: 'MEDIUM',
-            skillType: p.part_number <= 4 ? 'LISTENING' : 'READING',
-            hasPassage: p.part_number >= 6,
-            status: 'PUBLISHED',
+    if (examData.parts && Array.isArray(examData.parts)) {
+      const questions: ToeicQuestion[] = []
+      examData.parts.forEach((p) => {
+        if (parts.includes(p.part_number) || parts.length === 0) {
+          p.questions.forEach((q) => {
+            questions.push({
+              id: `p${p.part_number}-q${q.question_number}`,
+              examId: examData._id,
+              partId: `part-${p.part_number}`,
+              partNumber: p.part_number,
+              questionNumber: q.question_number,
+              questionType: 'MULTIPLE_CHOICE',
+              questionTextEn: q.question_text || `Question ${q.question_number}`,
+              options: q.options.map((opt) => ({ key: opt.key, textEn: opt.text })),
+              correctOption: q.correct_answer || 'A',
+              explanationEn: q.explanation,
+              imageMediaId: q.image_url,
+              audioMediaId: q.audio_url,
+              hasImage: Boolean(q.image_url),
+              hasAudio: Boolean(q.audio_url),
+              difficultyLevel: 'MEDIUM',
+              skillType: p.part_number <= 4 ? 'LISTENING' : 'READING',
+              hasPassage: p.part_number >= 6,
+              status: 'PUBLISHED',
+            })
           })
-        })
-      }
-    })
+        }
+      })
+      return questions
+    }
 
-    return questions
-  }, [examData, examId])
+    return []
+  }, [examData])
 
   const calculateResults = useCallback((): ExamResultMetrics => {
     let correct = 0
@@ -403,6 +423,7 @@ export function useToeicExam(examId?: string) {
 
   return {
     examData,
+    isLoadingExam,
     showModeSelector,
     setShowModeSelector,
     allQuestions,
