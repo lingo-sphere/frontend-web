@@ -1,7 +1,4 @@
-/**
- * @file toeic.course.recommendations.tsx
- * @description Giao diện đề xuất Lộ trình học tập cá nhân hóa và các khóa học lẻ cho học viên sau khi thi đánh giá
- */
+// Giao diện đề xuất các khóa học phù hợp cho học viên sau khi thi đánh giá.
 
 'use client'
 
@@ -249,7 +246,7 @@ export function ToeicCourseRecommendations({
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {courses.map((course) => {
               const courseId = (course as { _id?: string })._id || course.id || ''
               return (
