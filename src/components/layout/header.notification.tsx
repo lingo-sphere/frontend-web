@@ -1,7 +1,4 @@
-/**
- * @file header.notification.tsx
- * @description Component nút chuông và dropdown danh sách thông báo trên Header
- */
+// Component nút chuông và dropdown danh sách thông báo trên Header.
 
 'use client'
 
@@ -82,41 +79,46 @@ export function HeaderNotificationDropdown({
                   </p>
                 </div>
               ) : (
-                notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`flex cursor-pointer items-start gap-3 border-b border-border p-3 last:border-0 hover:bg-surface-subtle ${
-                      !notif.isRead ? 'bg-primary/5' : ''
-                    }`}
-                    onClick={() => {
-                      onMarkAsRead(notif.id)
-                      if (onAction) onAction(`Viewed: ${notif.title}`)
-                    }}
-                  >
-                    <div className={`mt-0.5 shrink-0 rounded-lg p-1.5 ${getCategoryColor(notif.notificationCategory)}/10`}>
-                      <Icon
-                        name={getNotifIcon(notif.notificationType)}
-                        size={14}
-                        className={getCategoryColor(notif.notificationCategory).replace('bg-', 'text-')}
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className={`truncate text-sm ${notif.isRead ? 'text-text-secondary' : 'font-medium text-text-primary'}`}>
-                          {notif.title}
-                        </span>
-                        {!notif.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                notifications.map((notif) => {
+                  const notifId = notif._id || notif.id || ''
+                  return (
+                    <div
+                      key={notifId}
+                      className={`flex cursor-pointer items-start gap-3 border-b border-border p-3 last:border-0 hover:bg-surface-subtle ${
+                        !notif.is_read ? 'bg-primary/5' : ''
+                      }`}
+                      onClick={() => {
+                        onMarkAsRead(notifId)
+                        if (onAction) onAction(`Viewed: ${notif.title}`)
+                      }}
+                    >
+                      <div className={`mt-0.5 shrink-0 rounded-lg p-1.5 ${getCategoryColor(notif.notification_category)}/10`}>
+                        <Icon
+                          name={getNotifIcon(notif.notification_type)}
+                          size={14}
+                          className={getCategoryColor(notif.notification_category).replace('bg-', 'text-')}
+                        />
                       </div>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-text-tertiary">{notif.content}</p>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-[10px] text-text-tertiary">{formatNotifTime(notif.createdAt)}</span>
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${getCategoryColor(notif.notificationCategory)} text-white`}>
-                          {getCategoryLabel(notif.notificationCategory)}
-                        </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className={`truncate text-sm ${notif.is_read ? 'text-text-secondary' : 'font-medium text-text-primary'}`}>
+                            {isVi && notif.title_vi ? notif.title_vi : notif.title}
+                          </span>
+                          {!notif.is_read && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
+                        </div>
+                        <p className="mt-0.5 line-clamp-1 text-xs text-text-tertiary">
+                          {isVi && notif.content_vi ? notif.content_vi : notif.content}
+                        </p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-[10px] text-text-tertiary">{formatNotifTime(notif.created_at)}</span>
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${getCategoryColor(notif.notification_category)} text-white`}>
+                            {getCategoryLabel(notif.notification_category)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </CardContent>
             <div className="border-t border-border p-2">

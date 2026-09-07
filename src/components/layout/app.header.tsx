@@ -1,7 +1,4 @@
-/**
- * @file app.header.tsx
- * @description Header tiện ích chính của hệ thống, quản lý tìm kiếm, giỏ hàng, thông báo và tài khoản
- */
+// Header tiện ích chính của hệ thống, quản lý tìm kiếm, giỏ hàng, thông báo và tài khoản.
 
 'use client'
 
@@ -29,6 +26,7 @@ import { useCartStore } from '@/store/cart.store'
 import { useWishlistStore } from '@/store/wishlist.store'
 import { useEnrollmentStore } from '@/store/enrollment.store'
 import { useNavigate } from '@/lib/navigation'
+import { notificationService } from '@/services/notification.service'
 import type { Notification } from '@/types/notification'
 
 export { getRemainingSubscriptionText } from '@/components/layout/header.utils'
@@ -87,13 +85,17 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
       fetchCart()
       fetchWishlist()
       useEnrollmentStore.getState().fetchMyEnrollments()
+      notificationService.getMyNotifications().then((res) => {
+        if (Array.isArray(res)) setNotifications(res)
+      }).catch(() => {})
     }
   }, [isAuthenticated])
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length
+  const unreadCount = notifications.filter((n) => !n.is_read).length
 
   const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
+    setNotifications((prev) => prev.map((n) => ((n._id === id || n.id === id) ? { ...n, is_read: true } : n)))
+    notificationService.markAsRead(id).catch(() => {})
   }
 
   const handleLanguageToggle = () => {

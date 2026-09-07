@@ -1,7 +1,4 @@
-/**
- * @file notification.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
- */
+// Định nghĩa kiểu dữ liệu TypeScript cho thực thể thông báo và danh mục.
 
 export type NotificationCategory =
   | 'AUTH'
@@ -17,7 +14,6 @@ export type NotificationCategory =
   | 'SYSTEM'
 
 export type NotificationType =
-
   | 'LOGIN_SUCCESS'
   | 'LOGIN_FAILED'
   | 'PASSWORD_CHANGED'
@@ -26,7 +22,6 @@ export type NotificationType =
   | 'TWO_FACTOR_ENABLED'
   | 'ACCOUNT_BLOCKED'
   | 'NEW_LOGIN_LOCATION'
-
   | 'SUBSCRIPTION_CREATED'
   | 'SUBSCRIPTION_RENEWED'
   | 'SUBSCRIPTION_EXPIRING'
@@ -34,7 +29,6 @@ export type NotificationType =
   | 'SUBSCRIPTION_CANCELLED'
   | 'PAYMENT_SUCCESS'
   | 'PAYMENT_FAILED'
-
   | 'STREAK_REMINDER'
   | 'STREAK_BROKEN'
   | 'STREAK_MILESTONE'
@@ -46,64 +40,60 @@ export type NotificationType =
   | 'XP_MILESTONE'
   | 'ACHIEVEMENT_UNLOCKED'
   | 'GEM_EARNED'
-
   | 'SRS_DUE'
   | 'SRS_DUE_COUNT'
   | 'NEW_CARDS_AVAILABLE'
   | 'DECK_COMPLETED'
   | 'VOCABULARY_MASTERED'
   | 'REVIEW_COMPLETED'
-
   | 'PRACTICE_SESSION_REMINDER'
   | 'PRACTICE_STREAK'
   | 'SPEAKING_EVALUATION_READY'
   | 'WRITING_EVALUATION_READY'
-
   | 'TOEIC_TEST_REMINDER'
   | 'TOEIC_RESULT_READY'
   | 'TOEIC_SCORE_IMPROVED'
   | 'TOEIC_PART_WEAK'
   | 'TEST_ASSIGNED'
-
   | 'COURSE_ENROLLED'
   | 'LESSON_AVAILABLE'
   | 'LESSON_COMPLETED'
   | 'COURSE_COMPLETED'
   | 'COURSE_CERTIFICATE_READY'
-
   | 'AI_QUOTA_WARNING'
   | 'AI_RECOMMENDATION_AVAILABLE'
-
   | 'SYSTEM_MAINTENANCE'
 
 export type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT' | 'CRITICAL'
 
 export interface Notification {
-  id: string
-  recipientId: string
-  recipientType: 'USER' | 'ADMIN'
-  notificationType: NotificationType
-  notificationCategory: NotificationCategory
-  channels: ('PUSH' | 'EMAIL' | 'SMS' | 'IN_APP')[]
+  _id: string
+  id?: string
+  recipient_id: string
+  recipient_type?: string
+  notification_type: NotificationType
+  notification_category: NotificationCategory
+  channels?: ('PUSH' | 'EMAIL' | 'SMS' | 'IN_APP')[]
   title: string
-  titleVi?: string
+  title_vi?: string
   content: string
-  contentVi?: string
+  content_vi?: string
   data?: Record<string, unknown>
-  actionType?: 'NAVIGATE' | 'REDIRECT' | 'BUTTON' | 'DISMISS'
-  actionUrl?: string
-  actionParams?: Record<string, unknown>
-  actionLabel?: string
-  sourceService?: 'AUTH' | 'USER' | 'VOCABULARY' | 'PRACTICE' | 'EXAM' | 'COURSE' | 'AI' | 'SYSTEM'
-  sourceType?: string
-  sourceId?: string
+  action_type?: string
+  action_url?: string
+  action_params?: Record<string, unknown>
+  action_label?: string
+  action_label_vi?: string
+  source_service?: string
+  source_type?: string
+  source_id?: string
   priority: NotificationPriority
-  isPinned: boolean
-  isRead: boolean
-  readAt?: string
-  expiresAt?: string
-  createdAt: string
-  updatedAt?: string
+  is_pinned: boolean
+  is_read: boolean
+  read_at?: string
+  expires_at?: string
+  created_at: string
+  updated_at?: string
 }
 
 export function getCategoryColor(category: NotificationCategory): string {

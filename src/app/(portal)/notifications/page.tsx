@@ -1,7 +1,4 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/notifications
- */
+// Trang giao diện hiển thị danh sách thông báo và tương tác của người dùng.
 
 'use client'
 
@@ -10,7 +7,8 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/icons/icon.map'
-import { api } from '@/services/api.client'
+import { useNavigate } from '@/lib/navigation'
+import { notificationService } from '@/services/notification.service'
 import { getCategoryColor, getCategoryLabel } from '@/types/notification'
 import type { Notification, NotificationCategory } from '@/types/notification'
 
@@ -26,21 +24,21 @@ const categoryTabs: { key: 'ALL' | NotificationCategory; label: { vi: string; en
   { key: 'AI', label: { vi: 'AI', en: 'AI' } },
 ]
 
-const priorityColors = {
-  LOW: 'bg-gray-100 text-gray-600',
-  NORMAL: 'bg-blue-100 text-blue-600',
-  HIGH: 'bg-orange-100 text-orange-600',
-  URGENT: 'bg-red-100 text-red-600',
+const priorityColors: Record<string, string> = {
+  LOW: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
+  NORMAL: 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400',
+  HIGH: 'bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400',
+  URGENT: 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400',
   CRITICAL: 'bg-red-600 text-white',
 }
 
 export default function NotificationsAppPage() {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
   const isVietnamese = i18n.language === 'vi'
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'ALL' | NotificationCategory>('ALL')
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [showRead, setShowRead] = useState(true)
 
   useEffect(() => {
@@ -48,8 +46,8 @@ export default function NotificationsAppPage() {
     const fetchNotifications = async () => {
       try {
         setIsLoading(true)
-        const res = await api.get<Notification[]>('/notifications/my').catch(() => [])
-        if (isMounted && Array.isArray(res)) {
+        const res = await notificationService.getMyNotifications()
+        if (isMounted) {
           setNotifications(res)
         }
       } catch (err) {
@@ -68,38 +66,41 @@ export default function NotificationsAppPage() {
     let filtered = notifications
 
     if (activeTab !== 'ALL') {
-      filtered = filtered.filter((n) => n.notificationCategory === activeTab)
+      filtered = filtered.filter((n) => n.notification_category === activeTab)
     }
 
     if (!showRead) {
-      filtered = filtered.filter((n) => !n.isRead)
+      filtered = filtered.filter((n) => !n.is_read)
     }
 
     filtered = [...filtered].sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1
-      if (!a.isPinned && b.isPinned) return 1
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      if (a.is_pinned && !b.is_pinned) return -1
+      if (!a.is_pinned && b.is_pinned) return 1
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     })
 
     return filtered
   }, [notifications, activeTab, showRead])
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length
+  const unreadCount = notifications.filter((n) => !n.is_read).length
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
-    api.post(`/notifications/${id}/read`).catch(() => {})
+  const handleMarkAsRead = async (id: string) => {
+    setNotifications((prev) => prev.map((n) => ((n._id === id || n.id === id) ? { ...n, is_read: true } : n)))
+    await notificationService.markAsRead(id)
   }
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
-    api.post('/notifications/my/read-all').catch(() => {})
+  const handleMarkAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
+    await notificationService.markAllAsRead()
   }
 
-  const handleNotificationClick = (notification: Notification) => {
-    setSelectedNotification(notification)
-    if (!notification.isRead) {
-      handleMarkAsRead(notification.id)
+  const handleNotificationClick = async (notification: Notification) => {
+    const notifId = notification._id || notification.id || ''
+    if (!notification.is_read && notifId) {
+      await handleMarkAsRead(notifId)
+    }
+    if (notification.action_url) {
+      navigate(notification.action_url)
     }
   }
 
@@ -178,58 +179,61 @@ export default function NotificationsAppPage() {
           </div>
         ) : filteredNotifications.length > 0 ? (
           <div className="space-y-3">
-            {filteredNotifications.map((notification) => (
-              <Card
-                key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  !notification.isRead ? 'border-primary/50 bg-primary/5' : ''
-                }`}
-              >
-                <CardContent className="flex items-start gap-4 p-4">
-                  <div
-                    className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${getCategoryColor(
-                      notification.notificationCategory,
-                    )}`}
-                  >
-                    <Icon name="bell" size={20} className="text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold uppercase text-primary">
-                          {getCategoryLabel(notification.notificationCategory)}
-                        </span>
-                        {notification.isPinned && (
-                          <span className="rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-bold text-warning">
-                            PINNED
+            {filteredNotifications.map((notification) => {
+              const notifId = notification._id || notification.id || ''
+              return (
+                <Card
+                  key={notifId}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    !notification.is_read ? 'border-primary/50 bg-primary/5' : ''
+                  }`}
+                >
+                  <CardContent className="flex items-start gap-4 p-4">
+                    <div
+                      className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${getCategoryColor(
+                        notification.notification_category,
+                      )}`}
+                    >
+                      <Icon name="bell" size={20} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold uppercase text-primary">
+                            {getCategoryLabel(notification.notification_category)}
                           </span>
-                        )}
-                        <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                            priorityColors[notification.priority]
-                          }`}
-                        >
-                          {notification.priority}
+                          {notification.is_pinned && (
+                            <span className="rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-bold text-warning">
+                              PINNED
+                            </span>
+                          )}
+                          <span
+                            className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                              priorityColors[notification.priority] || priorityColors.NORMAL
+                            }`}
+                          >
+                            {notification.priority}
+                          </span>
+                        </div>
+                        <span className="text-xs text-text-tertiary">
+                          {formatTime(notification.created_at)}
                         </span>
                       </div>
-                      <span className="text-xs text-text-tertiary">
-                        {formatTime(notification.createdAt)}
-                      </span>
+                      <h3 className="mt-1 font-semibold text-text-primary">
+                        {isVietnamese && notification.title_vi ? notification.title_vi : notification.title}
+                      </h3>
+                      <p className="mt-0.5 text-sm text-text-secondary line-clamp-2">
+                        {isVietnamese && notification.content_vi ? notification.content_vi : notification.content}
+                      </p>
                     </div>
-                    <h3 className="mt-1 font-semibold text-text-primary">
-                      {isVietnamese && notification.titleVi ? notification.titleVi : notification.title}
-                    </h3>
-                    <p className="mt-0.5 text-sm text-text-secondary line-clamp-2">
-                      {isVietnamese && notification.contentVi ? notification.contentVi : notification.content}
-                    </p>
-                  </div>
-                  {!notification.isRead && (
-                    <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                    {!notification.is_read && (
+                      <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
+                    )}
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-border py-16 text-center">
