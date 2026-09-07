@@ -21,6 +21,16 @@ export const UserSchema = z.object({
   bio: z.string().optional(),
   level: z.string().optional(),
   target_score: z.number().optional(),
+  target_toeic_score: z.number().optional(),
+  current_estimated_score: z.number().optional(),
+  placement_test_score: z.number().optional(),
+  placement_listening_score: z.number().optional(),
+  placement_reading_score: z.number().optional(),
+  placement_speaking_score: z.number().optional(),
+  placement_writing_score: z.number().optional(),
+  placement_skills_type: z.string().optional(),
+  placement_tested_at: z.string().optional(),
+  is_score_manually_edited: z.boolean().optional(),
   xp: z.number().optional(),
   streak_count: z.number().optional(),
   is_premium: z.boolean().optional(),
@@ -28,7 +38,7 @@ export const UserSchema = z.object({
   subscription_plan: z.string().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
-})
+}).passthrough()
 
 export const GamificationProfileSchema = z.object({
   total_xp: z.number().default(0),

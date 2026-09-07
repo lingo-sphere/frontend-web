@@ -56,16 +56,24 @@ export const ExamResultPartBreakdownItemSchema = z.object({
 }).passthrough()
 
 export const ExamResultSchema = z.object({
-  submission_id: z.string(),
-  exam_id: z.string(),
-  total_score: z.number(),
+  attempt_id: z.string().optional(),
+  submission_id: z.string().optional(),
+  exam_id: z.string().optional(),
+  total_score: z.number().optional(),
+  total_scaled_score: z.number().optional(),
   listening_score: z.number().default(0),
+  listening_scaled_score: z.number().optional(),
   reading_score: z.number().default(0),
+  reading_scaled_score: z.number().optional(),
   total_correct: z.number().default(0),
+  correct_questions: z.number().optional(),
   total_incorrect: z.number().default(0),
+  incorrect_questions: z.number().optional(),
   total_skipped: z.number().default(0),
+  skipped_questions: z.number().optional(),
   accuracy_percent: z.number().default(0),
   part_breakdown: z.record(z.string(), ExamResultPartBreakdownItemSchema).default({}),
+  part_analysis: z.array(z.record(z.string(), z.unknown())).optional(),
   completed_at: z.string().default(() => new Date().toISOString()),
 }).passthrough()
 

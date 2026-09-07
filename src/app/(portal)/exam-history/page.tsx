@@ -16,11 +16,9 @@ import {
   CheckCircle,
   HelpCircle,
   FileQuestion,
-  ExternalLink,
   Sparkles,
   Loader2,
   AlertCircle,
-  X,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -85,46 +83,6 @@ interface UnifiedTestAttempt {
   durationSeconds?: number
 }
 
-interface CourseQuestionDetail {
-  question_number: number
-  question_text: string
-  options: string[]
-  correct_answer: string
-  explanation?: string
-  media_url?: string
-  image_url?: string
-}
-
-interface AttemptResultDetail {
-  attempt: {
-    _id: string
-    exam_title?: string
-    total_scaled_score: number
-    listening_scaled_score: number
-    reading_scaled_score: number
-    correct_questions: number
-    total_questions: number
-    submitted_at: string
-  }
-  answers?: Array<{
-    question_number: number
-    selected_option?: string
-    correct_option: string
-    is_correct: boolean
-    is_skipped: boolean
-    question_id?: {
-      question_text_en?: string
-      question_text_vi?: string
-      options?: Array<{ key: string; text_en: string; text_vi?: string }>
-      explanation_en?: string
-      explanation_vi?: string
-      correct_option: string
-      image_url?: string
-      audio_url?: string
-    }
-  }>
-}
-
 export default function ExamHistoryPage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
@@ -135,12 +93,6 @@ export default function ExamHistoryPage() {
   const [courseAttempts, setCourseAttempts] = useState<CourseTestAttemptItem[]>([])
   const [activeTab, setActiveTab] = useState<'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHALLENGE' | 'POST_MINI' | 'FINAL_TEST'>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
-
-  const [selectedAttempt, setSelectedAttempt] = useState<UnifiedTestAttempt | null>(null)
-  const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null)
-  const [isLoadingDetail, setIsLoadingDetail] = useState<boolean>(false)
-  const [detailData, setDetailData] = useState<AttemptResultDetail | null>(null)
-  const [courseQuestions, setCourseQuestions] = useState<CourseQuestionDetail[]>([])
   const [courseTitleMap, setCourseTitleMap] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -221,10 +173,25 @@ export default function ExamHistoryPage() {
 
     const hasRecordedPlacementAttempt = list.some((i) => i.testType === 'PLACEMENT')
     const activeUser = mounted ? user : null
-    const userPlacementScore = Number(activeUser?.placement_test_score ?? 0)
-    const userPlacementTestedAt = activeUser?.placement_tested_at
+    let userPlacementScore = Number(activeUser?.placement_test_score ?? 0)
+    let userPlacementTestedAt = activeUser?.placement_tested_at
+    let skillsType = activeUser?.placement_skills_type || '2SKILLS'
+
+    if (!userPlacementScore && typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('lingo_user_placement_score')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (parsed.placement_test_score) {
+            userPlacementScore = Number(parsed.placement_test_score)
+            userPlacementTestedAt = parsed.placement_tested_at || userPlacementTestedAt
+            skillsType = parsed.placement_skills_type || skillsType
+          }
+        }
+      } catch {}
+    }
+
     if (!hasRecordedPlacementAttempt && (userPlacementScore > 0 || userPlacementTestedAt)) {
-      const skillsType = activeUser?.placement_skills_type || '2SKILLS'
       const totalQ = skillsType === '4SKILLS' ? 8 : 4
       const estCorrect = Math.max(1, Math.round((userPlacementScore / 990) * totalQ))
       list.push({
@@ -313,232 +280,86 @@ export default function ExamHistoryPage() {
     return { total, passed, passRate, avgScore, totalCorrect }
   }, [unifiedList])
 
-  const handleOpenDetail = async (item: UnifiedTestAttempt) => {
-    setSelectedAttempt(item)
-    setSelectedAttemptId(item.id)
-    setIsLoadingDetail(true)
-    setDetailData(null)
-    setCourseQuestions([])
+  const handleNavigateDetail = (item: UnifiedTestAttempt) => {
+    const query = new URLSearchParams()
+    if (item.sourceType) query.set('sourceType', item.sourceType)
+    if (item.testType) query.set('testType', item.testType)
+    if (item.courseId) query.set('courseId', item.courseId)
+    if (item.moduleId) query.set('moduleId', item.moduleId)
+    if (item.examId) query.set('examId', item.examId)
+    if (item.title) query.set('title', item.title)
+    if (item.scoreDisplay) query.set('score', item.scoreDisplay)
+    if (item.scoreValue !== undefined) query.set('scoreVal', String(item.scoreValue))
+    if (item.correctCount !== undefined) query.set('correct', String(item.correctCount))
+    if (item.totalQuestions !== undefined) query.set('total', String(item.totalQuestions))
+    if (item.isPassed !== undefined) query.set('isPassed', String(item.isPassed))
+    if (item.submittedAt) query.set('submittedAt', item.submittedAt)
+    if (item.durationSeconds !== undefined) query.set('duration', String(item.durationSeconds))
 
-    try {
-      if (item.sourceType === 'TOEIC' && item.id !== 'profile-placement-baseline') {
-        const res = await examService.getExamAttemptResult(item.id)
-        if (res) {
-          setDetailData(res as unknown as AttemptResultDetail)
-        }
-      } else if (item.sourceType === 'COURSE' && item.courseId) {
-        const course = await courseService.getCourseById(item.courseId).catch(() => null)
-        if (course) {
-          const courseData = course as unknown as {
-            final_test_questions?: unknown[]
-            modules?: Array<{
-              _id?: string
-              id?: string
-              order_index?: number
-              challenge_questions?: Array<{
-                question_text?: string
-                question?: string
-                options?: string[] | Array<{ text?: string; key?: string }>
-                correct_answer?: string
-                correct_option?: string
-                explanation?: string
-                explanation_vi?: string
-                explanation_en?: string
-                media_url?: string
-                audio_url?: string
-                image_url?: string
-              }>
-              post_mini_questions?: Array<{
-                question_text?: string
-                question?: string
-                options?: string[] | Array<{ text?: string; key?: string }>
-                correct_answer?: string
-                correct_option?: string
-                explanation?: string
-                explanation_vi?: string
-                explanation_en?: string
-                media_url?: string
-                audio_url?: string
-                image_url?: string
-              }>
-              test_questions?: Array<{
-                question_text?: string
-                question?: string
-                options?: string[] | Array<{ text?: string; key?: string }>
-                correct_answer?: string
-                correct_option?: string
-                explanation?: string
-                explanation_vi?: string
-                explanation_en?: string
-                media_url?: string
-                audio_url?: string
-                image_url?: string
-              }>
-            }>
-            chapters?: Array<{
-              _id?: string
-              id?: string
-              order_index?: number
-              challenge_questions?: Array<{
-                question_text?: string
-                question?: string
-                options?: string[] | Array<{ text?: string; key?: string }>
-                correct_answer?: string
-                correct_option?: string
-                explanation?: string
-                explanation_vi?: string
-                explanation_en?: string
-                media_url?: string
-                audio_url?: string
-                image_url?: string
-              }>
-              post_mini_questions?: Array<{
-                question_text?: string
-                question?: string
-                options?: string[] | Array<{ text?: string; key?: string }>
-                correct_answer?: string
-                correct_option?: string
-                explanation?: string
-                explanation_vi?: string
-                explanation_en?: string
-                media_url?: string
-                audio_url?: string
-                image_url?: string
-              }>
-              test_questions?: Array<{
-                question_text?: string
-                question?: string
-                options?: string[] | Array<{ text?: string; key?: string }>
-                correct_answer?: string
-                correct_option?: string
-                explanation?: string
-                explanation_vi?: string
-                explanation_en?: string
-                media_url?: string
-                audio_url?: string
-                image_url?: string
-              }>
-            }>
-          }
-
-          if (item.testType === 'final-test' && Array.isArray(courseData.final_test_questions)) {
-            setCourseQuestions(
-              courseData.final_test_questions.map((rawQ: unknown, idx: number) => {
-                const q = rawQ as {
-                  question_text?: string
-                  question?: string
-                  options?: string[] | Array<{ text?: string; key?: string }>
-                  correct_answer?: string
-                  correct_option?: string
-                  explanation?: string
-                  explanation_vi?: string
-                  explanation_en?: string
-                  media_url?: string
-                  audio_url?: string
-                  image_url?: string
-                }
-                const opts = Array.isArray(q.options)
-                  ? q.options.map((opt) => (typeof opt === 'string' ? opt : opt.text || opt.key || ''))
-                  : []
-                return {
-                  question_number: idx + 1,
-                  question_text: q.question_text || q.question || '',
-                  options: opts,
-                  correct_answer: q.correct_answer || q.correct_option || '',
-                  explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
-                  media_url: q.media_url || q.audio_url,
-                  image_url: q.image_url,
-                }
-              })
-            )
-          } else {
-            const rawModules = courseData.modules || courseData.chapters || []
-            const matchedMod = rawModules.find(
-              (m) =>
-                String(m._id || m.id) === item.moduleId ||
-                (typeof item.orderIndex === 'number' && m.order_index === item.orderIndex)
-            )
-            if (matchedMod) {
-              const qList =
-                item.testType === 'challenge'
-                  ? matchedMod.challenge_questions
-                  : matchedMod.post_mini_questions || matchedMod.test_questions
-              if (Array.isArray(qList) && qList.length > 0) {
-                setCourseQuestions(
-                  qList.map((q, idx) => {
-                    const opts = Array.isArray(q.options)
-                      ? q.options.map((opt) => (typeof opt === 'string' ? opt : opt.text || opt.key || ''))
-                      : []
-                    return {
-                      question_number: idx + 1,
-                      question_text: q.question_text || q.question || '',
-                      options: opts,
-                      correct_answer: q.correct_answer || q.correct_option || '',
-                      explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
-                      media_url: q.media_url || q.audio_url,
-                      image_url: q.image_url,
-                    }
-                  })
-                )
-              }
-            }
-          }
-        }
-      }
-    } catch {
-    } finally {
-      setIsLoadingDetail(false)
-    }
-  }
-
-  const handleCloseDetail = () => {
-    setSelectedAttempt(null)
-    setSelectedAttemptId(null)
-    setDetailData(null)
-    setCourseQuestions([])
-  }
-
-  const formatDate = (isoString: string) => {
-    try {
-      const date = new Date(isoString)
-      return new Intl.DateTimeFormat('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      }).format(date)
-    } catch {
-      return isoString
-    }
+    navigate(`/exam-history/${item.id}?${query.toString()}`)
   }
 
   const formatDuration = (seconds?: number) => {
-    if (!seconds || seconds <= 0) return null
+    if (!seconds) return '30 phút'
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
-    return `${mins}m ${secs}s`
+    return `${mins}p ${secs > 0 ? `${secs}s` : ''}`
+  }
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'Vừa xong'
+    try {
+      const d = new Date(dateStr)
+      return d.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+    } catch {
+      return dateStr
+    }
   }
 
   return (
-    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
-      <SectionHeading
-        eyebrow="Khảo thí & Đánh giá năng lực"
-        title="Lịch sử làm bài kiểm tra"
-        description="Xem lại toàn bộ bài thi đã làm, kiểm tra số câu đúng sai và theo dõi sự tiến bộ của bạn."
-      />
+    <main className="w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
+          <SectionHeading
+            eyebrow="Đánh Giá Năng Lực"
+            title="Lịch Sử Bài Kiểm Tra & Thi Thử"
+            description="Tổng hợp toàn diện kết quả các bài test đầu vào, bài thi thử TOEIC và bài kiểm tra tiến độ trong khóa học."
+          />
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            onClick={() => navigate('/toeic')}
+            className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5 shadow-xs cursor-pointer"
+          >
+            <BookOpen size={14} />
+            <span>Luyện đề TOEIC mới</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => loadAllHistory()}
+            className="text-xs font-semibold rounded-xl cursor-pointer"
+            title="Tải lại dữ liệu"
+          >
+            Làm mới
+          </Button>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div className="p-4 rounded-2xl border border-border bg-surface shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-bold text-text-secondary">Tổng số bài làm</span>
+            <span className="text-xs font-bold text-text-secondary">Tổng số lượt làm bài</span>
             <div className="p-1.5 rounded-xl bg-primary/10 text-primary">
-              <BookOpen size={16} />
+              <Trophy size={16} />
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-black text-text-primary">{stats.total}</div>
-            <p className="text-[11px] font-semibold text-text-tertiary mt-0.5">lần làm bài thi</p>
+            <div className="text-2xl font-black text-text-primary">
+              {stats.total}
+            </div>
+            <p className="text-[11px] font-semibold text-text-tertiary mt-0.5">lần hoàn thành bài test</p>
           </div>
         </div>
 
@@ -747,106 +568,122 @@ export default function ExamHistoryPage() {
             return (
               <Card
                 key={item.id}
-                onClick={() => handleOpenDetail(item)}
-                className="dashboard-card hover:border-primary/50 hover:shadow-md transition-all overflow-hidden cursor-pointer group"
+                onClick={() => handleNavigateDetail(item)}
+                className="dashboard-card group p-5 border-border hover:border-primary/40 hover:shadow-md transition-all cursor-pointer"
               >
-                <CardContent className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="space-y-1.5 min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge className={`${badgeClass} text-[10.5px] font-bold px-2 py-0.5 rounded-lg`}>
-                        {badgeText}
-                      </Badge>
-                      <span className="text-[11px] text-text-tertiary flex items-center gap-1">
-                        <Calendar size={12} />
-                        <span>{formatDate(item.submittedAt)}</span>
-                      </span>
-                      {item.durationSeconds && (
-                        <span className="text-[11px] text-text-tertiary flex items-center gap-1">
-                          <Clock size={12} />
-                          <span>{formatDuration(item.durationSeconds)}</span>
-                        </span>
+                <CardContent className="p-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                    <div className="w-11 h-11 rounded-2xl bg-surface-subtle border border-border/80 flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary/30 transition-colors">
+                      {isToeic ? (
+                        <Trophy size={20} className={isPlacement ? 'text-sky-600' : 'text-primary'} />
+                      ) : (
+                        <BookOpen size={20} className="text-emerald-600" />
                       )}
                     </div>
 
-                    <h3 className="text-sm sm:text-base font-bold text-text-primary truncate group-hover:text-primary transition-colors">
-                      {item.title}
-                    </h3>
+                    <div className="space-y-1.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge className={`${badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-md`}>
+                          {badgeText}
+                        </Badge>
+                        <h3 className="text-sm sm:text-base font-bold text-text-primary group-hover:text-primary transition-colors truncate">
+                          {item.title}
+                        </h3>
+                      </div>
 
-                    {item.subtitle && (
-                      <p className="text-xs text-text-secondary truncate">{item.subtitle}</p>
-                    )}
+                      {item.subtitle && (
+                        <p className="text-xs text-text-secondary font-medium truncate">
+                          {item.subtitle}
+                        </p>
+                      )}
 
-                    <div className="flex items-center gap-2 pt-1 flex-wrap">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                        <CheckCircle2 size={12} /> {item.correctCount} đúng
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
-                        <XCircle size={12} /> {item.incorrectCount} sai
-                      </span>
-                      <span className="text-[11px] text-text-tertiary">
-                        Tổng {item.totalQuestions} câu hỏi
-                      </span>
+                      <div className="flex items-center gap-3 text-[11px] text-text-tertiary flex-wrap pt-0.5">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={13} />
+                          <span>{formatDate(item.submittedAt)}</span>
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={13} />
+                          <span>{formatDuration(item.durationSeconds)}</span>
+                        </span>
+                        <span>•</span>
+                        <span>
+                          Tổng số câu: <strong>{item.totalQuestions}</strong>
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between md:justify-end gap-4 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-border">
-                    <div className="text-left md:text-right">
-                      <div className="text-lg sm:text-xl font-black text-text-primary">
-                        {item.scoreDisplay}
+                  <div className="flex items-center justify-between lg:justify-end gap-5 shrink-0 border-t lg:border-t-0 pt-3 lg:pt-0 border-border/60">
+                    <div className="flex items-center gap-4 text-left">
+                      <div>
+                        <span className="text-[11px] font-semibold text-text-tertiary block">
+                          Điểm số
+                        </span>
+                        <div className="text-base sm:text-lg font-black text-primary">
+                          {item.scoreDisplay}
+                        </div>
                       </div>
-                      <div className="mt-0.5">
-                        {item.isPassed ? (
-                          <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">
-                            <CheckCircle size={12} /> Đạt chuẩn
+
+                      <div className="h-8 w-px bg-border/80" />
+
+                      <div>
+                        <span className="text-[11px] font-semibold text-text-tertiary block">
+                          Kết quả
+                        </span>
+                        <div className="flex items-center gap-1 text-xs font-bold">
+                          <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                            <CheckCircle2 size={13} />
+                            {item.correctCount}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-amber-600 dark:text-amber-400">
-                            <AlertCircle size={12} /> Chưa đạt
+                          <span className="text-text-tertiary">/</span>
+                          <span className="text-rose-500 flex items-center gap-0.5">
+                            <XCircle size={13} />
+                            {item.incorrectCount}
                           </span>
-                        )}
+                        </div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <Button
+                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleOpenDetail(item)
+                          handleNavigateDetail(item)
                         }}
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl gap-1.5 text-xs font-semibold cursor-pointer hover:border-primary/50"
+                        className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5 shadow-xs cursor-pointer"
                       >
                         <Eye size={14} />
-                        <span>Chi tiết bài thi</span>
+                        <span>Xem chi tiết</span>
                       </Button>
 
                       {isToeic ? (
                         <Button
+                          size="sm"
+                          variant="outline"
                           onClick={(e) => {
                             e.stopPropagation()
                             navigate(item.examId ? `/toeic/exam/${item.examId}` : '/toeic/exam/placement_2skills')
                           }}
-                          size="sm"
-                          className="rounded-xl bg-primary text-white hover:bg-primary-hover gap-1.5 text-xs font-semibold cursor-pointer"
+                          className="rounded-xl gap-1.5 text-xs font-semibold cursor-pointer hover:border-primary/40"
                         >
                           <RotateCcw size={14} />
-                          <span>Làm lại bài</span>
+                          <span>Làm lại</span>
                         </Button>
                       ) : (
                         <Button
+                          size="sm"
+                          variant="outline"
                           onClick={(e) => {
                             e.stopPropagation()
-                            if (item.courseId) {
-                              navigate(
-                                `/course/${item.courseId}/exam?type=${item.testType}${
-                                  item.moduleId ? `&chapterId=${item.moduleId}` : ''
-                                }`
-                              )
-                            }
+                            navigate(
+                              `/course/${item.courseId}/exam?type=${item.testType}${
+                                item.moduleId ? `&chapterId=${item.moduleId}` : ''
+                              }`
+                            )
                           }}
-                          variant="outline"
-                          size="sm"
                           className="rounded-xl gap-1.5 text-xs font-semibold cursor-pointer hover:border-primary/40"
                         >
                           <RotateCcw size={14} />
@@ -859,348 +696,6 @@ export default function ExamHistoryPage() {
               </Card>
             )
           })}
-        </div>
-      )}
-
-      {selectedAttempt && (
-        <div
-          onClick={handleCloseDetail}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-4xl max-h-[88vh] flex flex-col rounded-3xl border border-border bg-surface shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
-          >
-            <div className="p-5 border-b border-border flex items-center justify-between shrink-0 bg-surface-subtle/50">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-bold text-text-primary">
-                    {detailData?.attempt?.exam_title ?? selectedAttempt.title}
-                  </h3>
-                  {selectedAttempt.isPassed ? (
-                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                      <CheckCircle size={11} className="mr-1" /> Đạt chuẩn
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                      <AlertCircle size={11} className="mr-1" /> Chưa đạt
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 text-xs text-text-secondary flex-wrap">
-                  <span>
-                    Điểm số:{' '}
-                    <strong className="text-primary font-black">
-                      {detailData?.attempt ? `${detailData.attempt.total_scaled_score} / 990 điểm` : selectedAttempt.scoreDisplay}
-                    </strong>
-                  </span>
-                  <span>•</span>
-                  <span>
-                    Đúng: {detailData?.attempt ? detailData.attempt.correct_questions : selectedAttempt.correctCount}/{detailData?.attempt ? detailData.attempt.total_questions : selectedAttempt.totalQuestions} câu
-                  </span>
-                  {selectedAttempt.subtitle && (
-                    <>
-                      <span>•</span>
-                      <span>{selectedAttempt.subtitle}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCloseDetail}
-                className="rounded-xl cursor-pointer"
-              >
-                <X size={18} />
-              </Button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {isLoadingDetail ? (
-                <div className="py-16 flex flex-col items-center justify-center gap-2.5 text-text-secondary">
-                  <Loader2 size={28} className="animate-spin text-primary" />
-                  <p className="text-xs font-semibold">Đang tải chi tiết bài làm...</p>
-                </div>
-              ) : selectedAttempt.sourceType === 'COURSE' ? (
-                courseQuestions.length > 0 ? (
-                  courseQuestions.map((q) => {
-                    return (
-                      <div
-                        key={q.question_number}
-                        className="p-4 rounded-2xl border border-border bg-surface text-xs space-y-3"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-bold text-text-primary text-sm">
-                            Câu {q.question_number}:
-                          </span>
-                        </div>
-
-                        {q.question_text && (
-                          <p className="text-text-primary text-sm leading-relaxed">{q.question_text}</p>
-                        )}
-
-                        {q.image_url && (
-                          <div className="max-w-md rounded-xl overflow-hidden border border-border">
-                            <img src={q.image_url} alt={`Câu ${q.question_number}`} className="w-full h-auto object-cover" />
-                          </div>
-                        )}
-
-                        {q.media_url && (
-                          <div className="pt-1">
-                            <audio controls className="w-full h-8" src={q.media_url} />
-                          </div>
-                        )}
-
-                        {q.options && q.options.length > 0 && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
-                            {q.options.map((opt, oIdx) => {
-                              const optKey = ['A', 'B', 'C', 'D'][oIdx] || String(oIdx + 1)
-                              const isCorrect =
-                                q.correct_answer === optKey ||
-                                q.correct_answer.toLowerCase() === opt.toLowerCase() ||
-                                q.correct_answer.startsWith(optKey)
-
-                              return (
-                                <div
-                                  key={oIdx}
-                                  className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${
-                                    isCorrect
-                                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-semibold'
-                                      : 'border-border bg-surface-subtle/50 text-text-secondary'
-                                  }`}
-                                >
-                                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                    isCorrect
-                                      ? 'bg-emerald-600 text-white'
-                                      : 'bg-border text-text-tertiary'
-                                  }`}>
-                                    {optKey}
-                                  </span>
-                                  <span className="flex-1">{opt}</span>
-                                  {isCorrect && <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />}
-                                </div>
-                              )
-                            })}
-                          </div>
-                        )}
-
-                        {q.explanation && (
-                          <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-900 dark:text-blue-200 text-xs">
-                            <span className="font-bold text-blue-700 dark:text-blue-300 block mb-0.5">
-                              💡 Giải thích chi tiết:
-                            </span>
-                            <p className="leading-relaxed">{q.explanation}</p>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })
-                ) : (
-                  <div className="py-8 text-center text-xs text-text-secondary space-y-4">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
-                      <Trophy size={24} />
-                    </div>
-                    <div className="max-w-md mx-auto space-y-1">
-                      <p className="font-bold text-text-primary text-sm">
-                        Kết quả bài kiểm tra khóa học
-                      </p>
-                      <p className="text-text-secondary leading-relaxed">
-                        Bạn đã hoàn thành bài kiểm tra với điểm số{' '}
-                        <strong className="text-primary font-bold">{selectedAttempt.scoreDisplay}</strong> (Đúng{' '}
-                        {selectedAttempt.correctCount}/{selectedAttempt.totalQuestions} câu hỏi).
-                      </p>
-                    </div>
-                    {selectedAttempt.courseId && (
-                      <div className="pt-2 flex items-center justify-center gap-2.5">
-                        <Button
-                          onClick={() =>
-                            navigate(
-                              `/course/${selectedAttempt.courseId}/exam?type=${selectedAttempt.testType}${
-                                selectedAttempt.moduleId ? `&chapterId=${selectedAttempt.moduleId}` : ''
-                              }`
-                            )
-                          }
-                          className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
-                        >
-                          <RotateCcw size={14} className="mr-1.5" />
-                          Làm lại bài kiểm tra
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )
-              ) : selectedAttempt.id === 'profile-placement-baseline' ? (
-                <div className="py-8 text-center text-xs text-text-secondary space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-600 mx-auto flex items-center justify-center">
-                    <Sparkles size={24} />
-                  </div>
-                  <div className="max-w-md mx-auto space-y-1.5">
-                    <h4 className="font-bold text-text-primary text-base">
-                      Đánh Giá Năng Lực Đầu Vào (Placement Test)
-                    </h4>
-                    <p className="text-text-secondary leading-relaxed">
-                      Điểm xuất phát của bạn là <strong className="text-primary">{selectedAttempt.scoreDisplay}</strong>. Hệ thống đã đồng bộ lộ trình học cá nhân hóa tương ứng với mức điểm này.
-                    </p>
-                  </div>
-                  <div className="pt-2 flex items-center justify-center gap-2.5">
-                    <Button
-                      onClick={() => navigate('/roadmap')}
-                      className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
-                    >
-                      Xem lộ trình học tập
-                    </Button>
-                    <Button
-                      onClick={() => navigate('/toeic/exam/placement_2skills')}
-                      variant="outline"
-                      className="text-xs font-semibold rounded-xl"
-                    >
-                      <RotateCcw size={14} className="mr-1.5" />
-                      Làm lại Test đầu vào
-                    </Button>
-                  </div>
-                </div>
-              ) : !detailData || !detailData.answers || detailData.answers.length === 0 ? (
-                <div className="py-12 text-center text-xs text-text-secondary space-y-2">
-                  <AlertCircle size={24} className="mx-auto text-amber-500" />
-                  <p>Lần thi này chưa được lưu lại danh sách câu hỏi chi tiết.</p>
-                </div>
-              ) : (
-                detailData.answers.map((ans, idx) => {
-                  const q = ans.question_id
-                  const isCorrect = ans.is_correct
-                  const isSkipped = ans.is_skipped || !ans.selected_option
-                  const correctKey = ans.correct_option
-
-                  return (
-                    <div
-                      key={idx}
-                      className={`p-4 rounded-2xl border text-xs space-y-2.5 transition-all ${
-                        isCorrect
-                          ? 'border-emerald-500/30 bg-emerald-500/5'
-                          : isSkipped
-                          ? 'border-amber-500/30 bg-amber-500/5'
-                          : 'border-rose-500/30 bg-rose-500/5'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-text-primary text-sm">
-                          Câu {ans.question_number}:
-                        </span>
-                        {isCorrect ? (
-                          <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full">
-                            <CheckCircle size={12} /> Làm đúng
-                          </span>
-                        ) : isSkipped ? (
-                          <span className="inline-flex items-center gap-1 font-bold text-amber-700 dark:text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded-full">
-                            <AlertCircle size={12} /> Chưa làm
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 font-bold text-rose-700 dark:text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full">
-                            <XCircle size={12} /> Chưa chính xác
-                          </span>
-                        )}
-                      </div>
-
-                      {q?.question_text_en && (
-                        <p className="text-text-primary leading-relaxed">{q.question_text_en}</p>
-                      )}
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                        <div className="p-2.5 rounded-xl bg-surface border border-border">
-                          <span className="font-semibold text-text-secondary block">
-                            Lựa chọn của bạn:
-                          </span>
-                          <span
-                            className={`font-bold ${
-                              isCorrect
-                                ? 'text-emerald-600 dark:text-emerald-400'
-                                : 'text-rose-600 dark:text-rose-400'
-                            }`}
-                          >
-                            {ans.selected_option ?? 'Chưa chọn'}
-                          </span>
-                        </div>
-                        <div className="p-2.5 rounded-xl bg-surface border border-border">
-                          <span className="font-semibold text-text-secondary block">
-                            Đáp án chuẩn xác:
-                          </span>
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                            {correctKey}
-                          </span>
-                        </div>
-                      </div>
-
-                      {q?.explanation_en && (
-                        <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-900 dark:text-blue-200">
-                          <span className="font-bold text-blue-700 dark:text-blue-300 block mb-0.5">
-                            💡 Giải thích chi tiết:
-                          </span>
-                          <p className="leading-relaxed">{q.explanation_en}</p>
-                        </div>
-                      )}
-                      {q?.explanation_vi && (
-                        <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 text-blue-900 dark:text-blue-200">
-                          <span className="font-bold text-blue-700 dark:text-blue-300 block mb-0.5">
-                            💡 Giải thích (Tiếng Việt):
-                          </span>
-                          <p className="leading-relaxed italic">{q.explanation_vi}</p>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })
-              )}
-            </div>
-
-            <div className="p-4 border-t border-border bg-surface-subtle/50 flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2">
-                {selectedAttempt.sourceType === 'COURSE' && selectedAttempt.courseId && (
-                  <>
-                    <Button
-                      onClick={() =>
-                        navigate(
-                          `/course/${selectedAttempt.courseId}/exam?type=${selectedAttempt.testType}${
-                            selectedAttempt.moduleId ? `&chapterId=${selectedAttempt.moduleId}` : ''
-                          }`
-                        )
-                      }
-                      className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5"
-                    >
-                      <RotateCcw size={14} />
-                      <span>Làm lại bài</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate(`/course/${selectedAttempt.courseId}`)}
-                      className="text-xs font-semibold rounded-xl"
-                    >
-                      Vào khóa học
-                    </Button>
-                  </>
-                )}
-                {selectedAttempt.sourceType === 'TOEIC' && (
-                  <Button
-                    onClick={() =>
-                      navigate(selectedAttempt.examId ? `/toeic/exam/${selectedAttempt.examId}` : '/toeic/exam/placement_2skills')
-                    }
-                    className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5"
-                  >
-                    <RotateCcw size={14} />
-                    <span>Làm lại đề thi</span>
-                  </Button>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCloseDetail}
-                className="rounded-xl text-xs font-semibold cursor-pointer ml-auto"
-              >
-                Đóng
-              </Button>
-            </div>
-          </div>
         </div>
       )}
     </main>

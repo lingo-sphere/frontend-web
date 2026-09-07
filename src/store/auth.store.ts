@@ -47,13 +47,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res = await authService.login(payload)
       let isPremium = Boolean(res.user?.is_premium)
+      let profileUser: Partial<User> = {}
       try {
         const profileRes = await userService.getProfile()
-        if (profileRes.is_premium) {
-          isPremium = true
+        if (profileRes) {
+          if (profileRes.is_premium) isPremium = true
+          if (profileRes.profile) profileUser = profileRes.profile
         }
       } catch {}
-      const finalUser = { ...res.user, is_premium: isPremium }
+      const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
+      if (!finalUser.placement_test_score && typeof window !== 'undefined') {
+        try {
+          const cachedPlacement = localStorage.getItem('lingo_user_placement_score')
+          if (cachedPlacement) {
+            const parsed = JSON.parse(cachedPlacement)
+            if (parsed.placement_test_score) {
+              Object.assign(finalUser, parsed)
+            }
+          }
+        } catch {}
+      }
       if (typeof window !== 'undefined') {
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
       }
@@ -74,13 +87,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const res = await authService.socialLogin(payload)
       let isPremium = Boolean(res.user?.is_premium)
+      let profileUser: Partial<User> = {}
       try {
         const profileRes = await userService.getProfile()
-        if (profileRes.is_premium) {
-          isPremium = true
+        if (profileRes) {
+          if (profileRes.is_premium) isPremium = true
+          if (profileRes.profile) profileUser = profileRes.profile
         }
       } catch {}
-      const finalUser = { ...res.user, is_premium: isPremium }
+      const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
+      if (!finalUser.placement_test_score && typeof window !== 'undefined') {
+        try {
+          const cachedPlacement = localStorage.getItem('lingo_user_placement_score')
+          if (cachedPlacement) {
+            const parsed = JSON.parse(cachedPlacement)
+            if (parsed.placement_test_score) {
+              Object.assign(finalUser, parsed)
+            }
+          }
+        } catch {}
+      }
       if (typeof window !== 'undefined') {
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
       }
@@ -178,13 +204,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const user = await authService.getCurrentUser()
       let isPremium = Boolean(user?.is_premium)
+      let profileUser: Partial<User> = {}
       try {
         const profileRes = await userService.getProfile()
-        if (profileRes.is_premium) {
-          isPremium = true
+        if (profileRes) {
+          if (profileRes.is_premium) isPremium = true
+          if (profileRes.profile) profileUser = profileRes.profile
         }
       } catch {}
-      const finalUser = { ...user, is_premium: isPremium }
+      const finalUser = { ...user, ...profileUser, is_premium: isPremium }
+      if (!finalUser.placement_test_score && typeof window !== 'undefined') {
+        try {
+          const cachedPlacement = localStorage.getItem('lingo_user_placement_score')
+          if (cachedPlacement) {
+            const parsed = JSON.parse(cachedPlacement)
+            if (parsed.placement_test_score) {
+              Object.assign(finalUser, parsed)
+            }
+          }
+        } catch {}
+      }
       if (typeof window !== 'undefined') {
         localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
       }
