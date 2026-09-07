@@ -7,6 +7,8 @@
 
 import { useMemo } from 'react'
 import { useParams, useNavigate } from '@/lib/navigation'
+import { AlertCircle, ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { CourseWorkspaceHeader } from '@/components/course/course.workspace.header'
 import { CourseRatingModal } from '@/components/course/course.rating.modal'
 import { CourseLoadingState } from '@/components/course/course.loading.state'
@@ -24,7 +26,7 @@ import { useCourseWorkspace } from '@/hooks/use.course.workspace'
 
 export default function CourseDetailPage() {
   const params = useParams<{ courseId: string }>()
-  const rawParam = params?.courseId || 'toeic-foundation'
+  const rawParam = params?.courseId || ''
   const courseId = useMemo(() => extractCourseId(rawParam), [rawParam])
   const navigate = useNavigate()
 
@@ -118,7 +120,36 @@ export default function CourseDetailPage() {
     }
   }
 
-  if (isLoading || !course || !currentLesson) {
+  if (isLoading) {
+    return <CourseLoadingState onBack={handleBack} />
+  }
+
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-6 antialiased">
+        <div className="w-full max-w-md p-8 bg-surface rounded-3xl border border-border shadow-xl text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center">
+            <AlertCircle size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-text-primary">Không tìm thấy khóa học</h2>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Khóa học bạn yêu cầu không tồn tại hoặc đã ngừng xuất bản trên hệ thống.
+          </p>
+          <div className="pt-2">
+            <Button
+              onClick={handleBack}
+              className="w-full bg-primary text-white font-bold rounded-xl gap-2 cursor-pointer shadow-md"
+            >
+              <ArrowLeft size={16} />
+              <span>Quay lại danh sách khóa học</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!currentLesson) {
     return <CourseLoadingState onBack={handleBack} />
   }
 

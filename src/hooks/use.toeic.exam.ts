@@ -482,13 +482,6 @@ export function useToeicExam(examId?: string) {
 
         if (roadmapRes.status === 'fulfilled' && roadmapRes.value) {
           setRecommendedRoadmap(roadmapRes.value.recommended_roadmap)
-          if (
-            (!recommendedCourses || recommendedCourses.length === 0) &&
-            roadmapRes.value.individual_courses &&
-            roadmapRes.value.individual_courses.length > 0
-          ) {
-            setRecommendedCourses(roadmapRes.value.individual_courses as any)
-          }
         }
       })
       .catch((err) => {
