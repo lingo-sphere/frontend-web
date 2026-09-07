@@ -70,6 +70,7 @@ export const API_CONFIG = {
       ROADMAP_MY: '/progress/roadmaps/my',
       ROADMAP_ENROLL: '/progress/roadmaps/enroll',
       ROADMAP_CHECKPOINT: '/progress/roadmaps/checkpoint',
+      TEST_ATTEMPTS: '/progress/test-attempts',
     },
 
     CART: {
@@ -117,6 +118,7 @@ export const API_CONFIG = {
       SUBMIT: (attemptId: string) => `/exams/attempts/${attemptId}/submit`,
       RESULT: (attemptId: string) => `/exams/attempts/${attemptId}/result`,
       MY_PROFILE: '/exams/profile/my',
+      HISTORY: '/exams/attempts/history',
     },
 
     PRACTICE: {

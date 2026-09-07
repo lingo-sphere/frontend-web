@@ -1,7 +1,4 @@
-/**
- * @file header.user.hover.tsx
- * @description Component dropdown hover thông tin tài khoản người dùng phong cách Udemy
- */
+// Component dropdown hover thông tin tài khoản người dùng và điều hướng các trang cá nhân.
 
 'use client'
 
@@ -167,6 +164,12 @@ export function HeaderUserHover({
             className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-subtle hover:text-text-primary transition-colors cursor-pointer"
           >
             <span>{isVi ? 'Tiến độ học tập' : 'Learning progress'}</span>
+          </button>
+          <button
+            onClick={() => handleItemClick('/exam-history')}
+            className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-subtle hover:text-text-primary transition-colors cursor-pointer"
+          >
+            <span>{isVi ? 'Lịch sử làm bài' : 'Exam history'}</span>
           </button>
           <button
             onClick={() => handleItemClick('/notifications')}

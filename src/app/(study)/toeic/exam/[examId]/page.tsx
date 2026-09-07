@@ -1,7 +1,4 @@
-/**
- * @file page.tsx
- * @description Trang làm bài thi TOEIC trực tuyến (TOEIC Exam Workspace)
- */
+// Trang làm bài thi TOEIC trực tuyến.
 
 'use client'
 
@@ -92,6 +89,8 @@ export default function ToeicExamAppPage() {
     return (
       <ToeicExamResult
         results={results}
+        questions={allQuestions}
+        userAnswers={state.answers}
         recommendedCourses={recommendedCourses}
         recommendedRoadmap={recommendedRoadmap}
         targetBand={targetBand}

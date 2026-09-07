@@ -468,4 +468,20 @@ export const courseService = {
   }> {
     return api.post(`/progress/courses/${courseId}/writing`, data)
   },
+
+  async getMyCourseTestAttempts(): Promise<Array<{
+    attempt_id: string
+    test_type: string
+    course_id: string
+    course_title?: string
+    module_id?: string
+    order_index?: number
+    score: number
+    correct_count: number
+    total_questions: number
+    is_passed: boolean
+    submitted_at: string
+  }>> {
+    return api.get('/progress/test-attempts')
+  },
 }

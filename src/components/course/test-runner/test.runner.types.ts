@@ -1,19 +1,16 @@
-/**
- * @file test.runner.types.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho test.runner.types.ts
- */
+// Định nghĩa kiểu dữ liệu TypeScript cho bài thi và câu hỏi khóa học.
 
 export interface CourseTestQuestion {
   id?: string
-  question_text?: string
-  question?: string
-  options?: string[]
-  answers?: string[]
-  choices?: string[]
-  correct_answer?: number | string
+  question_text: string
+  options: string[]
+  correct_answer: string | number
   correct_index?: number
   explanation?: string
   media_url?: string
+  image_url?: string
+  skill_type?: string
+  part_number?: number
 }
 
 export interface TestAttemptItem {

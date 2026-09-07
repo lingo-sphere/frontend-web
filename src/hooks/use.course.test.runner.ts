@@ -1,7 +1,4 @@
-/**
- * @file use.course.test.runner.ts
- * @description Custom hook quản lý trạng thái thi, đếm ngược thời gian, lưu đáp án, chấm điểm và AI giải thích lỗi sai
- */
+// Quản lý trạng thái bài kiểm tra khóa học, đếm ngược thời gian, chấm điểm và AI giải thích.
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import type { Chapter } from '@/types/course'
@@ -151,23 +148,16 @@ export function useCourseTestRunner({
       Array.isArray(finalTestQuestions) &&
       finalTestQuestions.length > 0
     ) {
-      return finalTestQuestions as CourseTestQuestion[]
+      return finalTestQuestions
     }
-    if (testType === 'challenge' || testType === 'post-mini' || testType === 'exercise') {
-      const qList =
-        (Array.isArray(chapter?.challenge_questions) &&
-        chapter.challenge_questions.length > 0
-          ? chapter.challenge_questions
-          : null) ||
-        (Array.isArray(chapter?.test_questions) && chapter.test_questions.length > 0
-          ? chapter.test_questions
-          : null) ||
-        (Array.isArray(chapter?.post_mini_questions) &&
-        chapter.post_mini_questions.length > 0
-          ? chapter.post_mini_questions
-          : null) ||
-        []
-      return qList as CourseTestQuestion[]
+    if (testType === 'challenge') {
+      return (chapter?.challenge_questions ?? []) as unknown as CourseTestQuestion[]
+    }
+    if (testType === 'post-mini') {
+      return (chapter?.post_mini_questions ?? []) as unknown as CourseTestQuestion[]
+    }
+    if (testType === 'exercise') {
+      return (chapter?.test_questions ?? []) as unknown as CourseTestQuestion[]
     }
     return []
   }, [chapter, testType, finalTestQuestions])
@@ -250,7 +240,7 @@ export function useCourseTestRunner({
 
       rawQuestions.forEach((q, idx) => {
         const chosen = selectedAnswers[idx]
-        const options = q.options || q.answers || ['A', 'B', 'C', 'D']
+        const options = q.options ?? []
         const correctIdx = getCorrectOptionIndex(q, options)
 
         if (chosen !== undefined && chosen === correctIdx) {
@@ -258,13 +248,13 @@ export function useCourseTestRunner({
         } else {
           wrongs.push({
             question_number: idx + 1,
-            question_text: q.question_text || q.question || `Câu hỏi số ${idx + 1}`,
+            question_text: q.question_text,
             user_selected_answer:
               chosen !== undefined
-                ? options[chosen] || String.fromCharCode(65 + chosen)
+                ? options[chosen] ?? String.fromCharCode(65 + chosen)
                 : 'Chưa làm',
-            correct_answer: options[correctIdx] || String.fromCharCode(65 + correctIdx),
-            category: chapter?.title || 'Kiến thức chung',
+            correct_answer: options[correctIdx] ?? String.fromCharCode(65 + correctIdx),
+            category: chapter?.title ?? 'Kiến thức chung',
           })
         }
       })

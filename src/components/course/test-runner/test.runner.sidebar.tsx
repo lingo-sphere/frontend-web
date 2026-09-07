@@ -1,7 +1,4 @@
-/**
- * @file test.runner.sidebar.tsx
- * @description Thanh danh mục câu hỏi bài thi, trạng thái đã trả lời và nút nộp bài thi
- */
+// Thanh danh mục câu hỏi bài thi, trạng thái đã trả lời và điều hướng câu hỏi.
 
 'use client'
 
@@ -67,7 +64,7 @@ export function TestRunnerSidebar({
         <div className="grid grid-cols-5 gap-2">
           {questions.map((q, idx) => {
             const isAnswered = selectedAnswers[idx] !== undefined
-            const options = q.options || q.answers || ['A', 'B', 'C', 'D']
+            const options = q.options ?? []
             const correctIdx = getCorrectOptionIndex(q, options)
             const chosenIdx = selectedAnswers[idx]
             const isCorrect = isSubmitted && chosenIdx === correctIdx

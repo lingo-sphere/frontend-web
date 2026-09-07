@@ -1,7 +1,4 @@
-/**
- * @file test.runner.result.view.tsx
- * @description Giao diện hiển thị kết quả bài thi, điểm số đạt được, tỷ lệ chính xác và phân tích chi tiết
- */
+// Giao diện hiển thị kết quả kiểm tra khóa học, thống kê đúng sai và phân tích chi tiết.
 
 'use client'
 
@@ -141,6 +138,82 @@ export function TestRunnerResultView({
             <RotateCcw size={14} />
             <span>{scoreResult.isPassed ? 'Luyện tập lại' : 'Làm lại thử thách ngay'}</span>
           </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="p-3.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/20 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">Câu đúng</span>
+            <div className="p-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 size={16} />
+            </div>
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-black text-emerald-700 dark:text-emerald-300">
+              {scoreResult.correctCount}
+              <span className="text-xs font-semibold text-emerald-600/80 dark:text-emerald-400/80 ml-1">
+                / {scoreResult.totalQuestions} câu
+              </span>
+            </div>
+            <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
+              {scoreResult.totalQuestions > 0 ? Math.round((scoreResult.correctCount / scoreResult.totalQuestions) * 100) : 0}% chính xác
+            </p>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 dark:bg-rose-950/20 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-rose-800 dark:text-rose-300">Câu sai</span>
+            <div className="p-1 rounded-lg bg-rose-500/20 text-rose-600 dark:text-rose-400">
+              <XCircle size={16} />
+            </div>
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-black text-rose-700 dark:text-rose-300">
+              {Math.max(0, scoreResult.totalQuestions - scoreResult.correctCount)}
+              <span className="text-xs font-semibold text-rose-600/80 dark:text-rose-400/80 ml-1">
+                / {scoreResult.totalQuestions} câu
+              </span>
+            </div>
+            <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 mt-0.5">
+              {scoreResult.totalQuestions > 0 ? Math.round((Math.max(0, scoreResult.totalQuestions - scoreResult.correctCount) / scoreResult.totalQuestions) * 100) : 0}% cần cải thiện
+            </p>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl border border-border bg-surface shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-text-secondary">Điểm số</span>
+            <div className="p-1 rounded-lg bg-primary/10 text-primary">
+              <Target size={16} />
+            </div>
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-black text-primary">
+              {scoreResult.score}%
+            </div>
+            <p className="text-[11px] font-semibold text-text-tertiary mt-0.5">
+              {scoreResult.isPassed ? 'Đạt chuẩn yêu cầu' : `Cần tối thiểu ${passingScore}%`}
+            </p>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-950/20 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-amber-800 dark:text-amber-300">Kỷ lục điểm</span>
+            <div className="p-1 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <Crown size={16} />
+            </div>
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-black text-amber-700 dark:text-amber-300">
+              {bestScore}%
+            </div>
+            <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mt-0.5">
+              {isNewHighScore ? 'Kỷ lục mới vừa lập!' : 'Cột mốc cao nhất'}
+            </p>
+          </div>
         </div>
       </div>
 

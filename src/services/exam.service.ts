@@ -1,7 +1,4 @@
-/**
- * @file exam.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ exam
- */
+// Xử lý API liên quan đến đề thi và bài làm TOEIC.
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
@@ -58,5 +55,26 @@ export const examService = {
 
   async getMyExamProfile(): Promise<Record<string, unknown>> {
     return api.get<Record<string, unknown>>(API_CONFIG.ENDPOINTS.EXAMS.MY_PROFILE)
+  },
+
+  async getMyExamHistory(): Promise<Array<{
+    _id: string
+    exam_id: { _id: string; title: string; code?: string; exam_type?: string }
+    exam_title?: string
+    exam_code?: string
+    exam_type?: string
+    total_questions: number
+    answered_questions?: number
+    correct_questions?: number
+    incorrect_questions?: number
+    total_scaled_score?: number
+    listening_scaled_score?: number
+    reading_scaled_score?: number
+    total_time_seconds?: number
+    status: string
+    submitted_at: string
+    created_at: string
+  }>> {
+    return api.get(API_CONFIG.ENDPOINTS.EXAMS.HISTORY)
   },
 }
