@@ -10,13 +10,15 @@ import { courseService } from '@/services/course.service'
 import { examService, type BackendToeicExam } from '@/services/exam.service'
 import { userService } from '@/services/user.service'
 import { useAuthStore } from '@/store/auth.store'
+import { useNavigate } from '@/lib/navigation'
 import type { Course } from '@/types/api.types'
 import type { ToeicQuestion } from '@/types/toeic'
-import type { PracticeMode } from '@/components/toeic/toeic.mode.selector'
 import type { ExamResultMetrics } from '@/components/toeic/toeic.exam.result'
 import { PART_TIMINGS } from '@/components/toeic/toeic.constants'
 import { Analytics } from '@/lib/posthog'
 import { toast } from '@/store/toast.store'
+
+export type PracticeMode = 'FULL' | 'LISTENING' | 'READING' | 'PART'
 
 export interface ExamState {
   mode: PracticeMode
@@ -182,9 +184,9 @@ function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[])
 }
 
 export function useToeicExam(examId?: string) {
+  const navigate = useNavigate()
   const [examData, setExamData] = useState<BackendToeicExam | null>(null)
   const [isLoadingExam, setIsLoadingExam] = useState<boolean>(true)
-  const [showModeSelector, setShowModeSelector] = useState<boolean>(false)
   const [allQuestions, setAllQuestions] = useState<ToeicQuestion[]>([])
   const [state, setState] = useState<ExamState>({
     mode: 'FULL',
@@ -242,7 +244,6 @@ export function useToeicExam(examId?: string) {
             showAnswer: false,
             timedMode: true,
           }))
-          setShowModeSelector(false)
         }
       })
       .catch((err) => {
@@ -491,37 +492,6 @@ export function useToeicExam(examId?: string) {
     }
   }, [state.started, state.submitted, state.timedMode])
 
-  const handleSelectMode = (mode: PracticeMode, parts: number[], timed: boolean) => {
-    const questions = generateQuestionsForParts(parts)
-    setAllQuestions(questions)
-
-    let time = 0
-    if (timed) {
-      if (typeof examData?.duration_minutes === 'number' && examData.duration_minutes > 0) {
-        time = examData.duration_minutes * 60
-      } else if (mode === 'FULL') time = 120 * 60
-      else if (mode === 'LISTENING') time = 45 * 60
-      else if (mode === 'READING') time = 75 * 60
-      else {
-        time = parts.reduce((acc, p) => acc + (PART_TIMINGS[p]?.timeMinutes || 10) * 60, 0)
-      }
-    }
-
-    setState({
-      mode,
-      selectedParts: parts,
-      currentQuestionIndex: 0,
-      answers: {},
-      flagged: [],
-      timeRemaining: time,
-      started: true,
-      submitted: false,
-      showAnswer: false,
-      timedMode: timed,
-    })
-    setShowModeSelector(false)
-  }
-
   const handleSelectAnswer = (optionKey: string) => {
     const currentQ = allQuestions[state.currentQuestionIndex]
     if (!currentQ || state.submitted) return
@@ -563,15 +533,12 @@ export function useToeicExam(examId?: string) {
   }
 
   const handleChooseAnother = () => {
-    setShowModeSelector(true)
-    setAllQuestions([])
+    navigate('/roadmap')
   }
 
   return {
     examData,
     isLoadingExam,
-    showModeSelector,
-    setShowModeSelector,
     allQuestions,
     state,
     recommendedCourses,
@@ -579,7 +546,6 @@ export function useToeicExam(examId?: string) {
     targetBand,
     levelLabel,
     isLoadingRecommendations,
-    handleSelectMode,
     handleSelectAnswer,
     goToQuestion,
     toggleFlag,

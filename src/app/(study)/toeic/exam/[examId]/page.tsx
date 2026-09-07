@@ -10,7 +10,6 @@ import { useNavigate, useParams } from '@/lib/navigation'
 import { RotateCcw, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToeicExam } from '@/hooks/use.toeic.exam'
-import { ToeicModeSelector } from '@/components/toeic/toeic.mode.selector'
 import { ToeicExamResult } from '@/components/toeic/toeic.exam.result'
 import { ToeicQuestionCard } from '@/components/toeic/toeic.question.card'
 import { ToeicQuestionNav } from '@/components/toeic/toeic.question.nav'
@@ -26,8 +25,6 @@ export default function ToeicExamAppPage() {
   const {
     examData,
     isLoadingExam,
-    showModeSelector,
-    setShowModeSelector,
     allQuestions,
     state,
     recommendedCourses,
@@ -35,7 +32,6 @@ export default function ToeicExamAppPage() {
     targetBand,
     levelLabel,
     isLoadingRecommendations,
-    handleSelectMode,
     handleSelectAnswer,
     goToQuestion,
     toggleFlag,
@@ -58,18 +54,7 @@ export default function ToeicExamAppPage() {
     )
   }
 
-  if (showModeSelector) {
-    return (
-      <ToeicModeSelector
-        title={examData?.title || 'ETS TOEIC Practice Test'}
-        description={examData?.description || 'Official ETS format with 7 Parts'}
-        onSelectMode={handleSelectMode}
-        onBack={() => navigate('/toeic')}
-      />
-    )
-  }
-
-  if (!showModeSelector && allQuestions.length === 0) {
+  if (allQuestions.length === 0) {
     return (
       <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
         <div className="max-w-md rounded-2xl bg-surface p-6 text-center border border-border shadow-sm space-y-4">
