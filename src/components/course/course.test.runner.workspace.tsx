@@ -2,8 +2,12 @@
 
 'use client'
 
+import { useState, useEffect } from 'react'
 import { ArrowLeft, Clock, Send, BookOpen, Mic, PenTool } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useNavigate } from '@/lib/navigation'
+import { courseService } from '@/services/course.service'
+import type { Course } from '@/types/api.types'
 import type { Chapter } from '@/types/course'
 import { TestRunnerAudioPlayer } from './test-runner/test.runner.audio.player'
 import { TestRunnerQuestionItem } from './test-runner/test.runner.question.item'
@@ -115,6 +119,31 @@ export function CourseTestRunnerWorkspace({
     previousAttempts,
     onComplete,
   })
+
+  const navigate = useNavigate()
+  const [nextCourses, setNextCourses] = useState<
+    (Course & { recommendation_reason?: string; match_score?: number })[]
+  >([])
+
+  useEffect(() => {
+    if (isSubmitted && scoreResult?.isPassed) {
+      let isMounted = true
+      courseService
+        .getRecommendedCourses({
+          current_course_id: courseId,
+          category,
+        })
+        .then((res) => {
+          if (isMounted && res?.recommendations) {
+            setNextCourses(res.recommendations)
+          }
+        })
+        .catch(() => {})
+      return () => {
+        isMounted = false
+      }
+    }
+  }, [isSubmitted, scoreResult?.isPassed, courseId, category])
 
   return (
     <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col antialiased">
@@ -238,10 +267,13 @@ export function CourseTestRunnerWorkspace({
                   showAiDetails={showAiDetails}
                   aiExplanations={aiExplanations}
                   attemptsCount={attemptsList.length}
+                  recommendedNextCourses={nextCourses}
                   onShowHistory={() => setShowHistoryModal(true)}
                   onRetry={handleRetry}
                   onExplainMistakes={() => {}}
                   onToggleAiDetails={() => setShowAiDetails(!showAiDetails)}
+                  onBackToLessons={onClose}
+                  onNavigateCourse={(slugOrId) => navigate(`/course/${slugOrId}`)}
                 />
               )}
               {rawQuestions.map((q, idx) => (

@@ -65,6 +65,8 @@ export const courseService = {
     reading_score?: number
     speaking_score?: number
     weak_skills?: string[]
+    category?: string
+    current_course_id?: string
   }): Promise<{
     learner_score?: {
       total: number
@@ -82,6 +84,8 @@ export const courseService = {
     if (params?.reading_score !== undefined) queryParams.reading_score = params.reading_score
     if (params?.speaking_score !== undefined) queryParams.speaking_score = params.speaking_score
     if (params?.weak_skills && params.weak_skills.length > 0) queryParams.weak_skills = params.weak_skills.join(',')
+    if (params?.category) queryParams.category = params.category
+    if (params?.current_course_id) queryParams.current_course_id = params.current_course_id
 
     return api.get(API_CONFIG.ENDPOINTS.COURSES.RECOMMENDATIONS, queryParams)
   },

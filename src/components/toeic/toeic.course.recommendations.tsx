@@ -53,6 +53,7 @@ export function ToeicCourseRecommendations({
   const navigate = useNavigate()
   const isVietnamese = i18n.language === 'vi'
 
+  const SHOW_ROADMAP_RECOMMENDATION = false
   const [isEnrollingRoadmap, setIsEnrollingRoadmap] = useState(false)
 
   const handleEnrollRoadmap = async () => {
@@ -79,7 +80,7 @@ export function ToeicCourseRecommendations({
   return (
     <div className="space-y-6">
       
-      {recommendedRoadmap && (
+      {SHOW_ROADMAP_RECOMMENDATION && recommendedRoadmap && (
         <div className="relative overflow-hidden rounded-3xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
           <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
           <div className="absolute bottom-0 left-0 -ml-16 -mb-16 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl" />
@@ -205,10 +206,22 @@ export function ToeicCourseRecommendations({
             </div>
             <div>
               <h4 className="text-base font-bold text-text-primary">
-                {isVietnamese ? 'Hoặc Tự Chọn Học Từng Khóa Học Riêng Lẻ' : 'Or Choose Individual Courses'}
+                {isVietnamese
+                  ? SHOW_ROADMAP_RECOMMENDATION
+                    ? 'Hoặc Tự Chọn Học Từng Khóa Học Riêng Lẻ'
+                    : 'Khóa Học Đề Xuất Phù Hợp Cho Bạn'
+                  : SHOW_ROADMAP_RECOMMENDATION
+                  ? 'Or Choose Individual Courses'
+                  : 'Recommended Courses For You'}
               </h4>
               <p className="text-xs text-text-secondary">
-                Nếu bạn muốn tự do học từng kỹ năng hoặc từng phần cụ thể theo nhu cầu
+                {isVietnamese
+                  ? SHOW_ROADMAP_RECOMMENDATION
+                    ? 'Nếu bạn muốn tự do học từng kỹ năng hoặc từng phần cụ thể theo nhu cầu'
+                    : 'Dựa trên kết quả bài thi đánh giá năng lực của bạn'
+                  : SHOW_ROADMAP_RECOMMENDATION
+                  ? 'If you want to focus on specific skills'
+                  : 'Based on your placement assessment result'}
               </p>
             </div>
           </div>
