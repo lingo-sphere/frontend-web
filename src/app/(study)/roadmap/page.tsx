@@ -191,8 +191,8 @@ export default function RoadmapAppPage() {
 
   if (!progress || !progress.roadmap) {
     return (
-      <div className="min-h-screen bg-surface-secondary px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mx-auto max-w-7xl space-y-12">
+      <div className="min-h-screen bg-surface-secondary text-text-primary">
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-10">
           <RoadmapHeroBanner
             onNavigatePlacement2Skills={() => navigate('/toeic/exam/placement_2skills')}
             onNavigatePlacement4Skills={() => navigate('/toeic/exam/placement_4skills')}
@@ -211,7 +211,7 @@ export default function RoadmapAppPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                 {availableRoadmaps.map((rm) => (
                   <RoadmapPublicCard
                     key={rm._id}
@@ -249,7 +249,7 @@ export default function RoadmapAppPage() {
             </div>
 
             {sortedCourses.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
                 {sortedCourses.map((c) => {
                   const courseId = c._id || c.id || c.slug
                   const isFree = !c.price || c.price === 0
@@ -444,14 +444,14 @@ export default function RoadmapAppPage() {
               </p>
             </div>
           </section>
-        </div>
+        </main>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-surface-secondary px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <div className="min-h-screen bg-surface-secondary text-text-primary">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
         <RoadmapActiveHeader progress={progress} roadmapStats={roadmapStats} />
 
         <RoadmapGrowthTracker progress={progress} roadmapStats={roadmapStats} />
@@ -485,7 +485,7 @@ export default function RoadmapAppPage() {
             ))}
           </div>
         </div>
-      </div>
+      </main>
 
       <RoadmapCheckpointModal
         activeCheckpointStage={activeCheckpointStage}
