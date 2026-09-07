@@ -4,7 +4,7 @@
 
 import { RotateCcw, Compass } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { ExamResultMetrics } from '../toeic.exam.result'
+import type { ExamResultMetrics } from '@/components/toeic/toeic.exam.result'
 
 interface ToeicPartBreakdownProps {
   results: ExamResultMetrics

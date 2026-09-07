@@ -11,7 +11,7 @@ import {
   Mic,
   PenTool,
 } from 'lucide-react'
-import type { ExamResultMetrics } from '../toeic.exam.result'
+import type { ExamResultMetrics } from '@/components/toeic/toeic.exam.result'
 
 interface ToeicScoreOverviewProps {
   results: ExamResultMetrics

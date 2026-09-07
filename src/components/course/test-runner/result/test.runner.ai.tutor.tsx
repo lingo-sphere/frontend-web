@@ -13,7 +13,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { WrongQuestionItem, AiExplanationsData } from '../test.runner.types'
+import type { WrongQuestionItem, AiExplanationsData } from '@/components/course/test-runner/test.runner.types'
 
 interface TestRunnerAiTutorProps {
   wrongQuestionsList: WrongQuestionItem[]

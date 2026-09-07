@@ -1,10 +1,7 @@
-/**
- * @file checkout.order.summary.tsx
- * @description Thành phần tóm tắt danh sách khóa học và tổng số tiền thanh toán trong modal checkout
- */
+// Thành phần tóm tắt danh sách khóa học và tổng số tiền thanh toán trong modal checkout.
 
 import { BookOpen } from 'lucide-react'
-import type { CheckoutCourseItem } from '../course.checkout.modal'
+import type { CheckoutCourseItem } from '@/components/course/course.checkout.modal'
 
 interface CheckoutOrderSummaryProps {
   courses: CheckoutCourseItem[]
