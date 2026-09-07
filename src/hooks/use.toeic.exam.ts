@@ -413,8 +413,8 @@ export function useToeicExam(examId?: string) {
 
     const res = calculateResults()
     Analytics.examSubmitted({
-      examId: (examId as string) || 'toeic-full-test',
-      examTitle: examData?.title || 'TOEIC Practice Test',
+      examId: examId || '',
+      examTitle: examData?.title || '',
       totalScore: res.estimatedTotal,
       listeningScore: res.estimatedListening,
       readingScore: res.estimatedReading,
