@@ -79,3 +79,22 @@ export const ExamResultSchema = z.object({
 
 export type BackendToeicExam = z.infer<typeof BackendToeicExamSchema>
 export type ExamResult = z.infer<typeof ExamResultSchema>
+
+export const ToeicLearningProfileSchema = z.object({
+  profile: z.object({
+    user_id: z.string().optional(),
+    total_tests_taken: z.number().default(0),
+    best_score: z.number().default(0),
+    best_listening_score: z.number().default(0),
+    best_reading_score: z.number().default(0),
+    latest_score: z.number().default(0),
+    latest_listening_score: z.number().optional(),
+    latest_reading_score: z.number().optional(),
+    avg_score: z.number().optional(),
+    target_score: z.number().default(750),
+  }).passthrough().optional().nullable(),
+  part_statistics: z.array(z.record(z.string(), z.unknown())).optional(),
+  recent_attempts: z.array(z.record(z.string(), z.unknown())).optional(),
+}).passthrough()
+
+export type ToeicLearningProfile = z.infer<typeof ToeicLearningProfileSchema>

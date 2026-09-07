@@ -211,12 +211,16 @@ export interface CourseCurriculumResponse {
 }
 
 export interface CourseEnrollment {
-  id: string
+  _id?: string
+  id?: string
   course_id: string
   user_id: string
-  progress_percent: number
-  completed_lessons: string[]
-  last_accessed_at: string
+  status?: string
+  enrolled_at?: string
+  progress_percent?: number
+  completed_lessons?: string[]
+  last_accessed_at?: string
+  course?: Course | null
 }
 
 export interface UserCourseProgressItem {

@@ -9,8 +9,6 @@ import {
   Flame,
   BookOpen,
   CheckCircle2,
-  TrendingUp,
-  Sparkles,
   ArrowRight,
   GraduationCap,
   Award,
@@ -27,11 +25,13 @@ import { Progress } from '@/components/ui/progress'
 import { SectionHeading } from '@/components/dashboard/section.heading'
 import { useNavigate } from '@/lib/navigation'
 import { useAuthStore } from '@/store/auth.store'
+import { authService } from '@/services/auth.service'
+import { userService, type GamificationProfile } from '@/services/user.service'
 import { progressService, type UserCourseProgressItem, type UserRoadmapProgress } from '@/services/progress.service'
 import { courseService } from '@/services/course.service'
-import { examService } from '@/services/exam.service'
+import { examService, type ToeicLearningProfile } from '@/services/exam.service'
 import { vocabularyService } from '@/services/vocabulary.service'
-import type { Course } from '@/types/api.types'
+import type { Course, CourseEnrollment } from '@/types/api.types'
 
 interface VocabStatsSummary {
   learned_words: number
@@ -48,9 +48,11 @@ export default function ProgressAppPage() {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ROADMAP' | 'SKILLS' | 'RECENT_TESTS'>('OVERVIEW')
 
   const [courseProgresses, setCourseProgresses] = useState<UserCourseProgressItem[]>([])
+  const [myEnrolledCourses, setMyEnrolledCourses] = useState<CourseEnrollment[]>([])
   const [allCourses, setAllCourses] = useState<Course[]>([])
   const [roadmapProgress, setRoadmapProgress] = useState<UserRoadmapProgress | null>(null)
-  const [examProfile, setExamProfile] = useState<Record<string, unknown> | null>(null)
+  const [examProfile, setExamProfile] = useState<ToeicLearningProfile | null>(null)
+  const [gamification, setGamification] = useState<GamificationProfile | null>(null)
   const [testAttempts, setTestAttempts] = useState<Array<{
     attempt_id: string
     test_type: string
@@ -81,31 +83,44 @@ export default function ProgressAppPage() {
     setMounted(true)
   }, [])
 
+  useEffect(() => {
+    if (mounted && !authService.isAuthenticated()) {
+      navigate('/login')
+    }
+  }, [mounted, navigate])
+
   const loadAllProgressData = useCallback(async () => {
     setIsLoading(true)
     try {
       const [
         coursesProgressRes,
+        enrolledCoursesRes,
         allCoursesRes,
         roadmapRes,
         examProfileRes,
+        gamificationRes,
         testAttemptsRes,
         examHistoryRes,
         vocabProgressRes,
       ] = await Promise.allSettled([
         progressService.getMyCoursesProgress(),
+        courseService.getMyEnrolledCourses(),
         courseService.getAllCourses(),
         progressService.getMyRoadmapProgress(),
         examService.getMyExamProfile(),
+        userService.getGamificationProfile(),
         progressService.getMyTestAttempts(),
         examService.getMyExamHistory(),
         vocabularyService.getMyVocabProgress(),
       ])
 
-      if (coursesProgressRes.status === 'fulfilled') {
+      if (coursesProgressRes.status === 'fulfilled' && Array.isArray(coursesProgressRes.value)) {
         setCourseProgresses(coursesProgressRes.value)
       }
-      if (allCoursesRes.status === 'fulfilled') {
+      if (enrolledCoursesRes.status === 'fulfilled' && Array.isArray(enrolledCoursesRes.value)) {
+        setMyEnrolledCourses(enrolledCoursesRes.value)
+      }
+      if (allCoursesRes.status === 'fulfilled' && Array.isArray(allCoursesRes.value)) {
         setAllCourses(allCoursesRes.value)
       }
       if (roadmapRes.status === 'fulfilled') {
@@ -114,7 +129,10 @@ export default function ProgressAppPage() {
       if (examProfileRes.status === 'fulfilled' && examProfileRes.value) {
         setExamProfile(examProfileRes.value)
       }
-      if (testAttemptsRes.status === 'fulfilled') {
+      if (gamificationRes.status === 'fulfilled' && gamificationRes.value) {
+        setGamification(gamificationRes.value)
+      }
+      if (testAttemptsRes.status === 'fulfilled' && Array.isArray(testAttemptsRes.value)) {
         setTestAttempts(testAttemptsRes.value)
       }
       if (examHistoryRes.status === 'fulfilled' && Array.isArray(examHistoryRes.value)) {
@@ -144,37 +162,79 @@ export default function ProgressAppPage() {
     const map = new Map<string, Course>()
     allCourses.forEach((c) => {
       if (c.id) map.set(c.id, c)
+      if (c._id) map.set(c._id, c)
     })
     return map
   }, [allCourses])
 
   const enrolledCourseCards = useMemo(() => {
-    return courseProgresses.map((cp) => {
-      const meta = coursesMap.get(cp.course_id)
-      return {
-        ...cp,
-        title: meta?.title || `Khóa học: ${cp.course_id}`,
-        thumbnail_url: meta?.thumbnail_url,
-        level: meta?.level || 'Mọi cấp độ',
-        category: meta?.category || 'TOEIC',
+    const courseProgressMap = new Map<string, UserCourseProgressItem>()
+    courseProgresses.forEach((cp) => {
+      if (cp.course_id) {
+        courseProgressMap.set(cp.course_id, cp)
       }
     })
-  }, [courseProgresses, coursesMap])
+
+    const enrolledMap = new Map<string, CourseEnrollment>()
+    myEnrolledCourses.forEach((e) => {
+      if (e.course_id) {
+        enrolledMap.set(e.course_id, e)
+      }
+    })
+
+    const allCourseIds = Array.from(
+      new Set([...Array.from(enrolledMap.keys()), ...Array.from(courseProgressMap.keys())])
+    )
+
+    return allCourseIds.map((courseId) => {
+      const enrollment = enrolledMap.get(courseId)
+      const progress = courseProgressMap.get(courseId)
+      const catalogCourse = coursesMap.get(courseId) || enrollment?.course
+
+      const title = catalogCourse?.title || `Khóa học: ${courseId}`
+      const thumbnail_url = catalogCourse?.thumbnail_url
+      const level = catalogCourse?.level || 'Mọi cấp độ'
+      const category = catalogCourse?.category || 'TOEIC'
+
+      const completedLessons = progress?.completed_lessons_count ?? 0
+      const totalLessons = progress?.total_lessons_count || catalogCourse?.total_lessons || 1
+      const completedModules = progress?.completed_modules_count ?? 0
+      const totalModules = progress?.total_modules_count || 1
+      const progressPercent = progress?.progress_percentage ?? (enrollment?.progress_percent ?? 0)
+      const status = progress?.status || (progressPercent >= 100 ? 'COMPLETED' : 'ACTIVE')
+      const enrolledAt = progress?.enrolled_at || enrollment?.enrolled_at || ''
+
+      return {
+        course_id: courseId,
+        title,
+        thumbnail_url,
+        level,
+        category,
+        progress_percentage: progressPercent,
+        completed_lessons_count: completedLessons,
+        total_lessons_count: totalLessons,
+        completed_modules_count: completedModules,
+        total_modules_count: totalModules,
+        status,
+        enrolled_at: enrolledAt,
+      }
+    })
+  }, [courseProgresses, myEnrolledCourses, coursesMap])
 
   const metrics = useMemo(() => {
-    const totalCourses = courseProgresses.length
-    const completedCourses = courseProgresses.filter(
+    const totalCourses = enrolledCourseCards.length
+    const completedCourses = enrolledCourseCards.filter(
       (cp) => cp.status === 'COMPLETED' || cp.progress_percentage >= 100
     ).length
     const avgProgress =
       totalCourses > 0
         ? Math.round(
-            courseProgresses.reduce((acc, curr) => acc + (curr.progress_percentage || 0), 0) /
+            enrolledCourseCards.reduce((acc, curr) => acc + (curr.progress_percentage || 0), 0) /
               totalCourses
           )
         : 0
 
-    const totalLessons = courseProgresses.reduce(
+    const totalLessons = enrolledCourseCards.reduce(
       (acc, curr) => acc + (curr.completed_lessons_count || 0),
       0
     )
@@ -187,22 +247,26 @@ export default function ProgressAppPage() {
       totalAttemptsCount > 0 ? Math.round((passedAttemptsCount / totalAttemptsCount) * 100) : 0
 
     const currentScore = Number(
-      activeUser?.current_estimated_score ||
-        (examProfile as any)?.estimated_score ||
-        activeUser?.placement_test_score ||
+      activeUser?.placement_test_score ??
+        examProfile?.profile?.best_score ??
+        activeUser?.current_estimated_score ??
         0
     )
     const targetScore = Number(
-      activeUser?.target_score ||
-        activeUser?.target_toeic_score ||
-        (examProfile as any)?.target_score ||
-        roadmapProgress?.target_score ||
+      activeUser?.target_toeic_score ??
+        activeUser?.target_score ??
+        examProfile?.profile?.target_score ??
+        roadmapProgress?.target_score ??
         800
     )
     const scoreProgressPercent = Math.min(
       100,
       Math.max(0, Math.round((currentScore / (targetScore || 990)) * 100))
     )
+
+    const streak = gamification?.current_streak ?? Number(activeUser?.streak_count || 0)
+    const xp = gamification?.total_xp ?? Number(activeUser?.xp || 0)
+    const level = gamification?.level ? String(gamification.level) : (activeUser?.level || '1')
 
     return {
       totalCourses,
@@ -214,15 +278,16 @@ export default function ProgressAppPage() {
       currentScore,
       targetScore,
       scoreProgressPercent,
-      streak: Number(activeUser?.streak_count || 0),
-      xp: Number(activeUser?.xp || 0),
-      level: activeUser?.level || 'Học viên',
+      streak,
+      xp,
+      level,
     }
-  }, [courseProgresses, testAttempts, toeicAttempts, activeUser, examProfile, roadmapProgress])
+  }, [enrolledCourseCards, testAttempts, toeicAttempts, activeUser, examProfile, roadmapProgress, gamification])
 
   const recentActivities = useMemo(() => {
     const list: Array<{
       id: string
+      courseId?: string
       type: 'TOEIC' | 'COURSE'
       title: string
       subtitle: string
@@ -254,6 +319,7 @@ export default function ProgressAppPage() {
 
       list.push({
         id: c.attempt_id,
+        courseId: c.course_id,
         type: 'COURSE',
         title: testName,
         subtitle: courseMeta?.title || `Khóa học ID: ${c.course_id}`,
@@ -280,6 +346,17 @@ export default function ProgressAppPage() {
       return isoString
     }
   }
+
+  const listeningScore = Number(
+    activeUser?.placement_listening_score ??
+      examProfile?.profile?.best_listening_score ??
+      0
+  )
+  const readingScore = Number(
+    activeUser?.placement_reading_score ??
+      examProfile?.profile?.best_reading_score ??
+      0
+  )
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
@@ -718,24 +795,31 @@ export default function ProgressAppPage() {
               <Compass size={28} />
             </div>
             <div className="max-w-md mx-auto space-y-1">
-              <h3 className="text-base font-bold text-text-primary">Chưa kích hoạt lộ trình cá nhân</h3>
+              <h3 className="text-base font-bold text-text-primary">
+                {metrics.currentScore > 0
+                  ? `Đã ghi nhận điểm đầu vào TOEIC: ${metrics.currentScore} điểm`
+                  : 'Chưa kích hoạt lộ trình cá nhân'}
+              </h3>
               <p className="text-xs text-text-secondary leading-relaxed">
-                Hãy làm bài test đánh giá năng lực đầu vào hoặc thiết lập mục tiêu điểm số để hệ thống tạo lộ trình học chuẩn xác nhất cho bạn!
+                {metrics.currentScore > 0
+                  ? `Bạn đã hoàn thành bài thi test đầu vào và đạt ${metrics.currentScore} điểm (Mục tiêu: ${metrics.targetScore} điểm). Hãy vào giao diện Lộ Trình để bắt đầu các chặng học tối ưu riêng cho bạn!`
+                  : 'Hãy làm bài test đánh giá năng lực đầu vào hoặc thiết lập mục tiêu điểm số để hệ thống tạo lộ trình học chuẩn xác nhất cho bạn!'}
               </p>
             </div>
             <div className="pt-2 flex items-center justify-center gap-3">
               <Button
-                onClick={() => navigate('/toeic/exam/placement_2skills')}
-                className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
+                onClick={() => navigate('/roadmap')}
+                className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5 cursor-pointer"
               >
-                Làm Test đầu vào ngay
+                <Compass size={14} />
+                <span>Xem lộ trình học tập</span>
               </Button>
               <Button
-                onClick={() => navigate('/roadmap')}
+                onClick={() => navigate('/toeic/exam/placement_2skills')}
                 variant="outline"
-                className="text-xs font-semibold rounded-xl"
+                className="text-xs font-semibold rounded-xl cursor-pointer"
               >
-                Khám phá lộ trình
+                {metrics.currentScore > 0 ? 'Làm lại test đầu vào' : 'Làm Test đầu vào ngay'}
               </Button>
             </div>
           </Card>
@@ -760,9 +844,7 @@ export default function ProgressAppPage() {
                   <span className="text-[11px] text-text-tertiary">Part 1, 2, 3, 4</span>
                 </div>
                 <span className="text-base font-black text-indigo-600">
-                  {Number(activeUser?.placement_listening_score || (examProfile as any)?.listening_score || 0) > 0
-                    ? `${activeUser?.placement_listening_score || (examProfile as any)?.listening_score} / 495`
-                    : '-- / 495'}
+                  {listeningScore > 0 ? `${listeningScore} / 495` : '-- / 495'}
                 </span>
               </div>
 
@@ -772,9 +854,7 @@ export default function ProgressAppPage() {
                   <span className="text-[11px] text-text-tertiary">Part 5, 6, 7</span>
                 </div>
                 <span className="text-base font-black text-emerald-600">
-                  {Number(activeUser?.placement_reading_score || (examProfile as any)?.reading_score || 0) > 0
-                    ? `${activeUser?.placement_reading_score || (examProfile as any)?.reading_score} / 495`
-                    : '-- / 495'}
+                  {readingScore > 0 ? `${readingScore} / 495` : '-- / 495'}
                 </span>
               </div>
             </div>
@@ -864,7 +944,15 @@ export default function ProgressAppPage() {
               {recentActivities.map((item) => (
                 <Card
                   key={item.id}
-                  onClick={() => navigate('/exam-history')}
+                  onClick={() => {
+                    if (item.type === 'TOEIC') {
+                      navigate(`/exam-history/${item.id}`)
+                    } else if (item.courseId) {
+                      navigate(`/course/${item.courseId}`)
+                    } else {
+                      navigate('/exam-history')
+                    }
+                  }}
                   className="dashboard-card hover:border-primary/50 transition-all p-4 flex items-center justify-between gap-4 cursor-pointer"
                 >
                   <div className="space-y-1 min-w-0">

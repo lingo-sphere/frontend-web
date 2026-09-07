@@ -6,11 +6,13 @@ import {
   BackendToeicExamSchema,
   BackendToeicExamListSchema,
   ExamResultSchema,
+  ToeicLearningProfileSchema,
   type BackendToeicExam,
   type ExamResult,
+  type ToeicLearningProfile,
 } from '@/schemas/exam.schema'
 
-export type { BackendToeicExam, ExamResult }
+export type { BackendToeicExam, ExamResult, ToeicLearningProfile }
 
 export const examService = {
   async getExams(params?: { type?: string; year?: number; search?: string }): Promise<BackendToeicExam[]> {
@@ -57,8 +59,8 @@ export const examService = {
     )
   },
 
-  async getMyExamProfile(): Promise<Record<string, unknown>> {
-    return api.get<Record<string, unknown>>(API_CONFIG.ENDPOINTS.EXAMS.MY_PROFILE)
+  async getMyExamProfile(): Promise<ToeicLearningProfile> {
+    return api.get<ToeicLearningProfile>(API_CONFIG.ENDPOINTS.EXAMS.MY_PROFILE, undefined, ToeicLearningProfileSchema)
   },
 
   async getMyExamHistory(): Promise<Array<{
