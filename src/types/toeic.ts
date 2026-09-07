@@ -79,7 +79,7 @@ export interface ToeicQuestion {
   id: string
   examId?: string
   partId?: string
-  partNumber: number | string
+  partNumber?: number | string
   questionNumber: number
   questionType: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'FILL_BLANK' | 'WRITING' | 'SPEAKING' | 'ESSAY'
   questionTextEn?: string

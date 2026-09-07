@@ -25,7 +25,7 @@ export interface ExamResultMetrics {
   estimatedListening: number
   estimatedReading: number
   estimatedTotal: number
-  partStats: Record<number, { correct: number; total: number }>
+  partStats: Record<string | number, { correct: number; total: number }>
   speakingTotal?: number
   speakingCompleted?: number
   estimatedSpeaking?: number
@@ -57,34 +57,34 @@ export function ToeicExamResult({
 }: ToeicExamResultProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const passed = results.percentage >= 60
+
+  const statEntries = Object.entries(results.partStats)
+  const hasExplicitParts = statEntries.some(([key]) => {
+    const n = Number(key)
+    return !isNaN(n) && n >= 1 && n <= 7
+  })
 
   return (
-    <div className="min-h-screen bg-surface-secondary px-4 py-8">
-      <div className="mx-auto max-w-4xl space-y-6">
-        <Card className="dashboard-card overflow-hidden border-border bg-surface shadow-sm">
+    <div className="min-h-screen bg-surface-secondary py-8">
+      <div className="mx-auto max-w-4xl px-4">
+        <Card className="dashboard-card overflow-hidden">
           <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 text-center sm:p-8">
-            <div
-              className={`mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl shadow-sm ${
-                passed ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
-              }`}
-            >
-              {passed ? <CheckCircle2 className="h-10 w-10" /> : <Trophy className="h-10 w-10" />}
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Trophy size={32} />
             </div>
-
-            <h1 className="text-2xl font-bold text-text-primary sm:text-3xl">
-              {passed
+            <h1 className="text-2xl font-bold text-text-primary">
+              {levelLabel
                 ? isVietnamese
-                  ? 'Kết Quả Bài Thi Xuất Sắc!'
-                  : 'Great Exam Performance!'
+                  ? `Đánh Giá Năng Lực: ${levelLabel}`
+                  : `Proficiency Level: ${levelLabel}`
                 : isVietnamese
                   ? 'Hoàn Thành Bài Thi!'
                   : 'Exam Completed!'}
             </h1>
             <p className="mx-auto mt-2 max-w-md text-sm text-text-secondary">
               {isVietnamese
-                ? 'Hệ thống đã phân tích độ chính xác từng Part và ước lượng điểm TOEIC chuẩn ETS.'
-                : 'System evaluated part-by-part accuracy and estimated ETS scaled TOEIC score.'}
+                ? 'Hệ thống đã phân tích độ chính xác từng phần và ước lượng điểm TOEIC chuẩn.'
+                : 'System evaluated sectional accuracy and estimated scaled TOEIC score.'}
             </p>
 
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -151,18 +151,37 @@ export function ToeicExamResult({
 
           <CardContent className="p-6">
             <h3 className="mb-3 text-sm font-bold text-text-primary">
-              {isVietnamese ? 'Phân Tích Chi Tiết Từng Part' : 'Part-by-Part Performance'}
+              {hasExplicitParts
+                ? isVietnamese
+                  ? 'Phân Tích Chi Tiết Từng Part'
+                  : 'Part-by-Part Performance'
+                : isVietnamese
+                  ? 'Phân Tích Chi Tiết Từng Kỹ Năng'
+                  : 'Skill-by-Skill Performance'}
             </h3>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-              {Object.entries(results.partStats).map(([partStr, stat]) => {
-                const partNum = Number(partStr)
+              {statEntries.map(([partStr, stat]) => {
+                let label = partStr
+                const num = Number(partStr)
+                if (!isNaN(num) && num >= 1 && num <= 7) {
+                  label = `Part ${num}`
+                } else if (partStr.toLowerCase() === 'listening') {
+                  label = isVietnamese ? 'Kỹ năng Nghe' : 'Listening'
+                } else if (partStr.toLowerCase() === 'reading') {
+                  label = isVietnamese ? 'Kỹ năng Đọc' : 'Reading'
+                } else if (partStr.toLowerCase() === 'speaking') {
+                  label = isVietnamese ? 'Kỹ năng Nói' : 'Speaking'
+                } else if (partStr.toLowerCase() === 'writing') {
+                  label = isVietnamese ? 'Kỹ năng Viết' : 'Writing'
+                }
+
                 const acc = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0
                 const isGood = acc >= 70
                 const isWeak = acc < 50
 
                 return (
                   <div
-                    key={partNum}
+                    key={partStr}
                     className={`flex flex-col items-center rounded-xl border p-2.5 text-center transition-all ${
                       isWeak
                         ? 'border-red-200 bg-red-50/50'
@@ -171,7 +190,7 @@ export function ToeicExamResult({
                           : 'border-border bg-surface-subtle'
                     }`}
                   >
-                    <span className="text-xs font-bold text-text-primary">Part {partNum}</span>
+                    <span className="text-xs font-bold text-text-primary">{label}</span>
                     <span
                       className={`my-1 text-base font-extrabold ${
                         isWeak ? 'text-red-600' : isGood ? 'text-emerald-600' : 'text-amber-600'

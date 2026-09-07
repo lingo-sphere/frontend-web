@@ -11,7 +11,7 @@ import type { ToeicQuestion } from '@/types/toeic'
 
 interface ToeicQuestionCardProps {
   question: ToeicQuestion
-  currentPart: number | string
+  currentPart?: number | string
   partName?: string
   partTip?: string
   selectedOption?: string
@@ -83,7 +83,12 @@ export function ToeicQuestionCard({
   const wordCount = (selectedOption || '').trim().split(/\s+/).filter(Boolean).length
   const minWords = question.minWords || 100
 
-  let badgeLabel = `Part ${currentPart}`
+  const hasExplicitPart =
+    typeof currentPart === 'number' &&
+    currentPart >= 1 &&
+    currentPart <= 7
+
+  let badgeLabel = ''
   let badgeClass = 'bg-primary'
   if (isWriting) {
     badgeLabel = isVietnamese ? 'Kỹ năng Viết (Writing)' : 'Writing Task'
@@ -91,10 +96,20 @@ export function ToeicQuestionCard({
   } else if (isSpeaking) {
     badgeLabel = isVietnamese ? 'Kỹ năng Nói (Speaking)' : 'Speaking Task'
     badgeClass = 'bg-amber-600 text-white'
-  } else if (question.skillType === 'LISTENING') {
-    badgeLabel = isVietnamese ? `Part ${currentPart} (Nghe)` : `Part ${currentPart} (Listening)`
-  } else if (question.skillType === 'READING') {
-    badgeLabel = isVietnamese ? `Part ${currentPart} (Đọc)` : `Part ${currentPart} (Reading)`
+  } else if (hasExplicitPart) {
+    if (question.skillType === 'LISTENING') {
+      badgeLabel = isVietnamese ? `Part ${currentPart} (Nghe)` : `Part ${currentPart} (Listening)`
+    } else {
+      badgeLabel = isVietnamese ? `Part ${currentPart} (Đọc)` : `Part ${currentPart} (Reading)`
+    }
+  } else {
+    if (question.skillType === 'LISTENING') {
+      badgeLabel = isVietnamese ? 'Kỹ năng Nghe (Listening)' : 'Listening Section'
+      badgeClass = 'bg-indigo-600 text-white'
+    } else {
+      badgeLabel = isVietnamese ? 'Kỹ năng Đọc (Reading)' : 'Reading Section'
+      badgeClass = 'bg-emerald-600 text-white'
+    }
   }
 
   const effectivePartTip =
@@ -116,7 +131,9 @@ export function ToeicQuestionCard({
           <Badge variant="default" className={badgeClass}>
             {badgeLabel}
           </Badge>
-          {partName && <span className="text-[12px] text-text-secondary">{partName}</span>}
+          {hasExplicitPart && partName && partName !== badgeLabel && (
+            <span className="text-[12px] text-text-secondary">{partName}</span>
+          )}
         </div>
         {effectivePartTip && (
           <div className="max-w-md rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">

@@ -30,6 +30,7 @@ export const ExamPartSchema = z.object({
 export const BackendToeicExamSchema = z.object({
   _id: z.string(),
   title: z.string(),
+  code: z.string().optional(),
   slug: z.string().default(''),
   description: z.string().default(''),
   exam_type: z.string().default('FULL_TEST'),

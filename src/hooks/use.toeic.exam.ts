@@ -14,7 +14,6 @@ import { useNavigate } from '@/lib/navigation'
 import type { Course } from '@/types/api.types'
 import type { ToeicQuestion } from '@/types/toeic'
 import type { ExamResultMetrics } from '@/components/toeic/toeic.exam.result'
-import { PART_TIMINGS } from '@/components/toeic/toeic.constants'
 import { Analytics } from '@/lib/posthog'
 import { toast } from '@/store/toast.store'
 
@@ -38,11 +37,24 @@ function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[])
     const questions: ToeicQuestion[] = []
     let qIndex = 1
 
+    const isSystemPlacement = Boolean(
+      examData.is_system_placement ||
+      examData.placement_type ||
+      Boolean(examData.code && examData.code.includes('placement')) ||
+      examData.title?.toLowerCase().includes('đầu vào') ||
+      examData.title?.toLowerCase().includes('placement')
+    )
+
     examData.questions.forEach((rawQ, idx) => {
       const q = rawQ as Record<string, unknown>
       const rawPart = q.part_number
       const isPartNumeric = typeof rawPart === 'number' || (typeof rawPart === 'string' && /^\d+$/.test(rawPart))
-      const numericPart = isPartNumeric ? Number(rawPart) : 5
+      const numericPartVal = isPartNumeric ? Number(rawPart) : undefined
+      const hasGenuinePart =
+        !isSystemPlacement &&
+        numericPartVal !== undefined &&
+        numericPartVal >= 1 &&
+        numericPartVal <= 7
 
       const rawOptions = Array.isArray(q.options) ? q.options : []
       const areAllOptionsEmpty =
@@ -78,7 +90,7 @@ function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[])
         parts.length >= 7 ||
         (isWriting && parts.includes(8)) ||
         (isSpeaking && parts.includes(7)) ||
-        (!isWriting && !isSpeaking && parts.includes(numericPart))
+        (!isWriting && !isSpeaking && (!hasGenuinePart || (numericPartVal !== undefined && parts.includes(numericPartVal))))
 
       if (shouldInclude) {
         const optionKeys = ['A', 'B', 'C', 'D']
@@ -107,7 +119,7 @@ function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[])
           ? 'WRITING'
           : isSpeaking
             ? 'SPEAKING'
-            : q.skill_type === 'LISTENING' || (numericPart <= 4 && isPartNumeric)
+            : q.skill_type === 'LISTENING' || (!isWriting && !isSpeaking && Boolean(audioUrl)) || (hasGenuinePart && numericPartVal !== undefined && numericPartVal <= 4)
               ? 'LISTENING'
               : 'READING'
 
@@ -120,8 +132,8 @@ function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[])
         questions.push({
           id: String(q.id || `q-${idx + 1}`),
           examId: examData._id,
-          partId: `part-${rawPart || numericPart}`,
-          partNumber: isWriting ? 'writing' : isSpeaking ? 'speaking' : numericPart,
+          partId: hasGenuinePart && numericPartVal ? `part-${numericPartVal}` : `skill-${finalSkillType.toLowerCase()}`,
+          partNumber: isWriting ? 'writing' : isSpeaking ? 'speaking' : hasGenuinePart && numericPartVal ? numericPartVal : undefined,
           questionNumber: Number(q.question_number) || qIndex,
           questionType: finalQuestionType,
           questionTextEn: qText || `Question ${qIndex}`,
@@ -134,7 +146,7 @@ function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[])
           hasAudio: Boolean(audioUrl),
           difficultyLevel: (q.difficulty_level as 'EASY' | 'MEDIUM' | 'HARD') || 'MEDIUM',
           skillType: finalSkillType,
-          hasPassage: !isWriting && !isSpeaking && numericPart >= 6,
+          hasPassage: !isWriting && !isSpeaking && hasGenuinePart && numericPartVal !== undefined && numericPartVal >= 6,
           status: 'PUBLISHED',
           minWords: isWriting ? (Number(q.min_words) || 100) : undefined,
           prepTimeSeconds: isSpeaking ? (Number(q.prep_time_seconds) || 45) : undefined,
@@ -272,7 +284,7 @@ export function useToeicExam(examId?: string) {
     let writingCompleted = 0
     let writingScoreSum = 0
 
-    const partStats: Record<number, { correct: number; total: number }> = {}
+    const partStats: Record<string, { correct: number; total: number }> = {}
 
     allQuestions.forEach((q) => {
       const isWriting =
@@ -285,7 +297,21 @@ export function useToeicExam(examId?: string) {
           q.skillType === 'SPEAKING' ||
           String(q.partNumber).toLowerCase().includes('speak'))
 
-      const partKey = typeof q.partNumber === 'number' ? q.partNumber : isSpeaking ? 7 : isWriting ? 8 : 5
+      const hasGenuinePart =
+        typeof q.partNumber === 'number' &&
+        q.partNumber >= 1 &&
+        q.partNumber <= 7
+
+      const partKey: string = isWriting
+        ? 'writing'
+        : isSpeaking
+          ? 'speaking'
+          : hasGenuinePart
+            ? String(q.partNumber)
+            : q.skillType === 'LISTENING'
+              ? 'listening'
+              : 'reading'
+
       if (!partStats[partKey]) {
         partStats[partKey] = { correct: 0, total: 0 }
       }

@@ -94,32 +94,37 @@ export default function ToeicExamAppPage() {
   }
 
   const currentQuestion = allQuestions[state.currentQuestionIndex]
-  const currentPart = currentQuestion?.partNumber || 1
 
   const isWriting =
     currentQuestion?.questionType === 'WRITING' ||
     currentQuestion?.skillType === 'WRITING' ||
-    String(currentPart).toLowerCase().includes('writ')
+    String(currentQuestion?.partNumber).toLowerCase().includes('writ')
 
   const isSpeaking =
     !isWriting &&
     (currentQuestion?.questionType === 'SPEAKING' ||
       currentQuestion?.skillType === 'SPEAKING' ||
-      String(currentPart).toLowerCase().includes('speak'))
+      String(currentQuestion?.partNumber).toLowerCase().includes('speak'))
 
-  const partName = isWriting
-    ? isVietnamese
-      ? 'Kỹ năng Viết (Writing)'
-      : 'Writing Task'
-    : isSpeaking
-      ? isVietnamese
-        ? 'Kỹ năng Nói (Speaking)'
-        : 'Speaking Task'
-      : typeof currentPart === 'number'
-        ? `Part ${currentPart}`
-        : String(currentPart)
+  const isSystemPlacement = Boolean(
+    examData?.is_system_placement ||
+    examData?.placement_type ||
+    Boolean(examData?.code && examData.code.includes('placement')) ||
+    examData?.title?.toLowerCase().includes('đầu vào') ||
+    examData?.title?.toLowerCase().includes('placement')
+  )
 
-  const numericPart = typeof currentPart === 'number' ? currentPart : 5
+  const hasExplicitPart =
+    !isSystemPlacement &&
+    !isWriting &&
+    !isSpeaking &&
+    typeof currentQuestion?.partNumber === 'number' &&
+    currentQuestion.partNumber >= 1 &&
+    currentQuestion.partNumber <= 7
+
+  const currentPart = hasExplicitPart ? (currentQuestion.partNumber as number) : undefined
+  const partName = hasExplicitPart && currentPart ? `Part ${currentPart}` : undefined
+
   const partTip = isWriting
     ? isVietnamese
       ? 'Đảm bảo cấu trúc bài viết rõ ràng, đủ luận điểm và đạt tối thiểu số từ yêu cầu.'
@@ -128,7 +133,11 @@ export default function ToeicExamAppPage() {
       ? isVietnamese
         ? 'Nói to rõ ràng, tự nhiên, bám sát các ý trọng tâm trong đề bài.'
         : 'Speak clearly, naturally, and cover all required prompt points.'
-      : PART_TIPS[numericPart]
+      : hasExplicitPart && currentPart
+        ? PART_TIPS[currentPart]
+        : undefined
+
+  const partTiming = hasExplicitPart && currentPart ? PART_TIMINGS[currentPart] : undefined
 
   return (
     <div className="min-h-screen bg-surface-secondary">
@@ -169,7 +178,7 @@ export default function ToeicExamAppPage() {
           flagged={state.flagged}
           currentIndex={state.currentQuestionIndex}
           currentPart={currentPart}
-          partTiming={typeof currentPart === 'number' ? PART_TIMINGS[currentPart] : undefined}
+          partTiming={partTiming}
           onGoToQuestion={goToQuestion}
         />
       </div>
