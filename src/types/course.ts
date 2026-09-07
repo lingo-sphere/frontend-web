@@ -129,12 +129,15 @@ export interface Chapter {
   audio_url?: string
   speaking_prompt?: string
   speaking_file_url?: string
+  speaking_prompt_file_url?: string
   writing_prompt?: string
   writing_file_url?: string
+  writing_prompt_file_url?: string
   test_speaking_prompt?: string
   test_speaking_file_url?: string
   test_writing_prompt?: string
   test_writing_file_url?: string
+  challenge_passing_score?: number
   status: ChapterStatus
 }
 

@@ -1,7 +1,4 @@
-/**
- * @file use.course.workspace.ts
- * @description Custom hook coordinating the course workspace state, lesson navigation, and progress tracking
- */
+// Hook điều phối trạng thái không gian học tập, điều hướng bài giảng và theo dõi tiến độ khóa học.
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { courseService } from '@/services/course.service'
@@ -20,6 +17,21 @@ import {
   mapCourseDataToWorkspace,
   formatExactDuration,
 } from '@/components/course/workspace/course.workspace.adapter'
+
+interface ModuleProgressInfo {
+  module_id?: string
+  order_index?: number
+  status?: string
+  challenge_score?: number
+  challenge_taken?: boolean
+  is_passed_by_challenge?: boolean
+  post_mini_score?: number
+}
+
+interface CourseProgressDetailInfo {
+  modules_progress?: ModuleProgressInfo[]
+  completed_lesson_ids?: string[]
+}
 
 export function useCourseWorkspace(courseId: string) {
   const user = useAuthStore((s) => s.user)
@@ -43,7 +55,7 @@ export function useCourseWorkspace(courseId: string) {
   const [showCourseCheckoutModal, setShowCourseCheckoutModal] = useState(false)
   const [showPlacementPromptModal, setShowPlacementPromptModal] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
-  const [progressDetail, setProgressDetail] = useState<any>(null)
+  const [progressDetail, setProgressDetail] = useState<CourseProgressDetailInfo | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -57,7 +69,7 @@ export function useCourseWorkspace(courseId: string) {
           return
         }
 
-        const courseObj = (fetchedCourse || {}) as any
+        const courseObj = fetchedCourse
 
         const [enrollmentRes, progressRes] = await Promise.all([
           courseService
@@ -130,10 +142,10 @@ export function useCourseWorkspace(courseId: string) {
     for (let i = 1; i < course.chapters.length; i++) {
       const prevCh = course.chapters[i - 1]
       const prevMod = progressDetail?.modules_progress?.find(
-        (m: any) => m.module_id === prevCh.id || m.order_index === (prevCh.order || i)
+        (m: ModuleProgressInfo) => m.module_id === prevCh.id || m.order_index === (prevCh.order || i)
       )
       const prevPassingScore =
-        prevCh.challengeTest?.passingScore || (prevCh as any)?.challenge_passing_score || 80
+        prevCh.challengeTest?.passingScore || prevCh.challenge_passing_score || 80
       const prevScore = Number(prevMod?.challenge_score ?? prevMod?.post_mini_score ?? 0)
       const passedChallenge = Boolean(
         prevMod?.is_passed_by_challenge ||

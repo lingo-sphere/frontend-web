@@ -109,10 +109,7 @@ export function CourseSidebarChallengeTestCard({
               </span>
             )}
             {Boolean(
-              chapter.test_speaking_prompt || (chapter as any).test_speaking_file_url
-            )}
-            {Boolean(
-              chapter.test_speaking_prompt || (chapter as any).test_speaking_file_url
+              chapter.test_speaking_prompt || chapter.test_speaking_file_url
             ) && (
               <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-pink-50 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border border-pink-200/60 shrink-0">
                 <Mic size={9} className="text-pink-500" />
@@ -120,7 +117,7 @@ export function CourseSidebarChallengeTestCard({
               </span>
             )}
             {Boolean(
-              chapter.test_writing_prompt || (chapter as any).test_writing_file_url
+              chapter.test_writing_prompt || chapter.test_writing_file_url
             ) && (
               <span className="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 shrink-0">
                 <FileText size={9} className="text-purple-500" />

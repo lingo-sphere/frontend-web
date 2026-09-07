@@ -1,13 +1,10 @@
-/**
- * @file page.tsx
- * @description Trang cài đặt hệ thống chính điều phối các tab chức năng độc lập
- */
+// Trang cài đặt tài khoản và tùy biến hệ thống của học viên.
 
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { User, Layers, ExternalLink, RotateCcw, Save, Loader2 } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/auth.store'
@@ -61,8 +58,8 @@ const defaultPreferences: UserPreferences = {
 }
 
 export default function SettingsAppPage() {
-  const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
+  const { currentLanguage, changeLanguage, isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const navigate = useNavigate()
   const { user: authUser, setUser: setAuthUser } = useAuthStore()
 
@@ -81,12 +78,12 @@ export default function SettingsAppPage() {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
 
   const [fullName, setFullName] = useState(authUser?.full_name || '')
-  const [phoneNumber, setPhoneNumber] = useState((authUser as any)?.phone_number || '')
+  const [phoneNumber, setPhoneNumber] = useState(authUser?.phone_number || '')
 
   useEffect(() => {
     if (authUser) {
       setFullName(authUser.full_name || '')
-      setPhoneNumber((authUser as any)?.phone_number || '')
+      setPhoneNumber(authUser?.phone_number || '')
     }
   }, [authUser])
 
@@ -94,23 +91,23 @@ export default function SettingsAppPage() {
     let isMounted = true
     const loadSettingsFromBackend = async () => {
       try {
-        const res: any = await userService.getMySettings()
-        const backendSettings = res?.data || res
+        const res = await userService.getMySettings()
+        const backendSettings = (res && typeof res === 'object' && 'data' in res ? (res as Record<string, unknown>).data : res) as Record<string, unknown> | undefined
         if (isMounted && backendSettings) {
           setPreferences((prev) => ({
             ...prev,
-            theme: backendSettings.dark_mode_enabled ? 'dark' : prev.theme,
+            theme: backendSettings.dark_mode_enabled === true ? 'dark' : prev.theme,
             learning: {
               ...prev.learning,
-              dailyGoal: backendSettings.study_duration_minutes || prev.learning.dailyGoal,
+              dailyGoal: typeof backendSettings.study_duration_minutes === 'number' ? backendSettings.study_duration_minutes : prev.learning.dailyGoal,
             },
             notifications: {
               ...prev.notifications,
-              allEnabled: backendSettings.is_reminder_enabled !== undefined ? backendSettings.is_reminder_enabled : prev.notifications.allEnabled,
-              email: backendSettings.is_email_notification_enabled !== undefined ? backendSettings.is_email_notification_enabled : prev.notifications.email,
-              push: backendSettings.is_push_notification_enabled !== undefined ? backendSettings.is_push_notification_enabled : prev.notifications.push,
-              sound: backendSettings.sound_effects_enabled !== undefined ? backendSettings.sound_effects_enabled : prev.notifications.sound,
-              quietHoursStart: backendSettings.reminder_time || prev.notifications.quietHoursStart,
+              allEnabled: typeof backendSettings.is_reminder_enabled === 'boolean' ? backendSettings.is_reminder_enabled : prev.notifications.allEnabled,
+              email: typeof backendSettings.is_email_notification_enabled === 'boolean' ? backendSettings.is_email_notification_enabled : prev.notifications.email,
+              push: typeof backendSettings.is_push_notification_enabled === 'boolean' ? backendSettings.is_push_notification_enabled : prev.notifications.push,
+              sound: typeof backendSettings.sound_effects_enabled === 'boolean' ? backendSettings.sound_effects_enabled : prev.notifications.sound,
+              quietHoursStart: typeof backendSettings.reminder_time === 'string' ? backendSettings.reminder_time : prev.notifications.quietHoursStart,
             },
           }))
         }
@@ -191,10 +188,7 @@ export default function SettingsAppPage() {
 
   const handleSelectLanguage = (lang: 'vi' | 'en') => {
     setPreferences((prev) => ({ ...prev, language: lang }))
-    i18n.changeLanguage(lang)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('i18nextLng', lang)
-    }
+    changeLanguage(lang)
   }
 
   const isPremium = Boolean(authUser?.is_premium || authUser?.subscription_expires_at)
@@ -283,7 +277,7 @@ export default function SettingsAppPage() {
                 preferences={preferences}
                 onSelectTheme={handleSelectTheme}
                 onSelectLanguage={handleSelectLanguage}
-                currentLanguage={i18n.language}
+                currentLanguage={currentLanguage}
                 isVi={isVi}
               />
             )}

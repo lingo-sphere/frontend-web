@@ -1,7 +1,4 @@
-/**
- * @file user.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ user
- */
+// Service xử lý các logic nghiệp vụ cho người dùng (user).
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'

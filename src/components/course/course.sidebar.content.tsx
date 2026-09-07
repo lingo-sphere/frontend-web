@@ -86,7 +86,7 @@ export function CourseSidebarContent({
           Number(m.order_index) === idx + 1
       )
       const passScore =
-        ch.challengeTest?.passingScore || (ch as any).challenge_passing_score || 80
+        ch.challengeTest?.passingScore || ch.challenge_passing_score || 80
       const chScore = Number(modProg?.challenge_score ?? modProg?.post_mini_score ?? 0)
       return Boolean(
         modProg?.is_passed_by_challenge ||
@@ -125,7 +125,7 @@ export function CourseSidebarContent({
         const questionsCount = chapterQuestions.length
         const passingScore =
           chapter.challengeTest?.passingScore ||
-          (chapter as any).challenge_passing_score ||
+          chapter.challenge_passing_score ||
           80
 
         const challengeScore = Number(
@@ -163,7 +163,7 @@ export function CourseSidebarContent({
             (Boolean(prevModProgress?.challenge_taken) &&
               (prevModProgress?.challenge_score || 0) >=
                 (prevChapter?.challengeTest?.passingScore ||
-                  (prevChapter as any)?.challenge_passing_score ||
+                  prevChapter?.challenge_passing_score ||
                   80))
         )
         const isChapterLocked = lockedChapterIds

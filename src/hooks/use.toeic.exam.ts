@@ -467,10 +467,10 @@ export function useToeicExam(examId?: string) {
 
     try {
       localStorage.setItem('lingo_user_placement_score', JSON.stringify(placementData))
-      userService.updateProfile(placementData as any).catch(() => null)
+      userService.updateProfile(placementData).catch(() => null)
       const { user, setUser } = useAuthStore.getState()
       if (user) {
-        setUser({ ...user, ...placementData } as any)
+        setUser({ ...user, ...placementData })
       }
     } catch {}
 
@@ -521,7 +521,7 @@ export function useToeicExam(examId?: string) {
     if (res.readingTotal > 0 && res.readingCorrect / res.readingTotal < 0.6) weakSkills.push('READING')
 
     const skillsType =
-      examData?.skills_enabled === 'ALL' || (examData as any)?.placement_type === '4SKILLS' ? '4SKILLS' : '2SKILLS'
+      examData?.skills_enabled === 'ALL' || examData?.placement_type === '4SKILLS' ? '4SKILLS' : '2SKILLS'
 
     Promise.allSettled([
       courseService.getRecommendedCourses({

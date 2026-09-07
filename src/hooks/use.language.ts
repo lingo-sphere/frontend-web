@@ -1,7 +1,4 @@
-/**
- * @file use.language.ts
- * @description Custom React hook useLanguage hỗ trợ xử lý logic giao diện Web
- */
+// Hook quản lý trạng thái và chức năng chuyển đổi ngôn ngữ ứng dụng.
 
 import { useTranslation } from 'react-i18next'
 import { useCallback } from 'react'
@@ -10,12 +7,14 @@ export type Language = 'vi' | 'en'
 
 export function useLanguage() {
   const { i18n, t } = useTranslation()
-  const currentLanguage = (i18n.language || 'vi') as Language
+  const currentLanguage = ((i18n.language || 'vi').toLowerCase().startsWith('en') ? 'en' : 'vi') as Language
 
   const changeLanguage = useCallback(
     (lang: Language) => {
       i18n.changeLanguage(lang)
-      localStorage.setItem('i18nextLng', lang)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('i18nextLng', lang)
+      }
     },
     [i18n]
   )

@@ -49,8 +49,8 @@ export function useCourseTestRunner({
   previousAttempts = [],
   onComplete,
 }: UseCourseTestRunnerOptions) {
-  const hasSpeaking = Boolean(speakingPrompt || (chapter as any)?.speaking_prompt)
-  const hasWriting = Boolean(writingPrompt || (chapter as any)?.writing_prompt)
+  const hasSpeaking = Boolean(speakingPrompt || chapter?.speaking_prompt)
+  const hasWriting = Boolean(writingPrompt || chapter?.writing_prompt)
 
   const is4Skills = useMemo(() => {
     if (
@@ -71,7 +71,7 @@ export function useCourseTestRunner({
   const effectiveSpeakingPrompt = useMemo(() => {
     return (
       speakingPrompt ||
-      (chapter as any)?.speaking_prompt ||
+      chapter?.speaking_prompt ||
       ''
     )
   }, [speakingPrompt, chapter])
@@ -79,8 +79,8 @@ export function useCourseTestRunner({
   const effectiveSpeakingFileUrl = useMemo(() => {
     return (
       speakingFileUrl ||
-      (chapter as any)?.speaking_file_url ||
-      (chapter as any)?.speaking_prompt_file_url ||
+      chapter?.speaking_file_url ||
+      chapter?.speaking_prompt_file_url ||
       ''
     )
   }, [speakingFileUrl, chapter])
@@ -88,7 +88,7 @@ export function useCourseTestRunner({
   const effectiveWritingPrompt = useMemo(() => {
     return (
       writingPrompt ||
-      (chapter as any)?.writing_prompt ||
+      chapter?.writing_prompt ||
       ''
     )
   }, [writingPrompt, chapter])
@@ -96,8 +96,8 @@ export function useCourseTestRunner({
   const effectiveWritingFileUrl = useMemo(() => {
     return (
       writingFileUrl ||
-      (chapter as any)?.writing_file_url ||
-      (chapter as any)?.writing_prompt_file_url ||
+      chapter?.writing_file_url ||
+      chapter?.writing_prompt_file_url ||
       ''
     )
   }, [writingFileUrl, chapter])
@@ -177,7 +177,7 @@ export function useCourseTestRunner({
   const passingScore =
     testType === 'challenge'
       ? chapter?.challengeTest?.passingScore ||
-        (chapter as any)?.challenge_passing_score ||
+        chapter?.challenge_passing_score ||
         80
       : 80
 
@@ -193,7 +193,7 @@ export function useCourseTestRunner({
   const effectiveDurationMinutes = useMemo(() => {
     if (typeof durationMinutes === 'number' && durationMinutes > 0) return durationMinutes
     const chDur =
-      (chapter as any)?.challenge_duration_minutes || (chapter as any)?.duration_minutes
+      chapter?.challenge_duration_minutes
     if (typeof chDur === 'number' && chDur > 0) return chDur
     return testType === 'final-test' ? 60 : 15
   }, [durationMinutes, chapter, testType])

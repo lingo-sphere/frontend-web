@@ -179,8 +179,8 @@ export default function NotificationsAppPage() {
           </div>
         ) : filteredNotifications.length > 0 ? (
           <div className="space-y-3">
-            {filteredNotifications.map((notification) => {
-              const notifId = notification._id || notification.id || ''
+            {filteredNotifications.map((notification, idx) => {
+              const notifId = notification._id || notification.id || `notif-${idx}`
               return (
                 <Card
                   key={notifId}

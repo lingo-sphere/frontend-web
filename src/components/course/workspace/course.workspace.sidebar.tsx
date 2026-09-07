@@ -117,12 +117,12 @@ export function CourseWorkspaceSidebar({
           modulesProgress={progressDetail?.modules_progress}
           finalTestQuestionsCount={course.final_test_questions?.length || 0}
           finalTestScore={progressDetail?.course_progress?.final_test_score}
-          finalTestAttempts={(progressDetail?.course_progress as any)?.final_test_attempts}
+          finalTestAttempts={progressDetail?.course_progress?.final_test_attempts}
           finalTestAudioUrl={course.final_test_audio_url}
-          finalTestSpeakingPrompt={(course as any).final_test_speaking_prompt}
-          finalTestSpeakingFileUrl={(course as any).final_test_speaking_file_url}
-          finalTestWritingPrompt={(course as any).final_test_writing_prompt}
-          finalTestWritingFileUrl={(course as any).final_test_writing_file_url}
+          finalTestSpeakingPrompt={course.final_test_speaking_prompt}
+          finalTestSpeakingFileUrl={course.final_test_speaking_file_url}
+          finalTestWritingPrompt={course.final_test_writing_prompt}
+          finalTestWritingFileUrl={course.final_test_writing_file_url}
           onToggleChapter={onToggleChapter}
           onSelectLesson={onSelectLesson}
           onToggleLessonComplete={onToggleLessonComplete}

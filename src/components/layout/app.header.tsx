@@ -27,6 +27,7 @@ import { useWishlistStore } from '@/store/wishlist.store'
 import { useEnrollmentStore } from '@/store/enrollment.store'
 import { useNavigate } from '@/lib/navigation'
 import { notificationService } from '@/services/notification.service'
+import { useLanguage } from '@/hooks/use.language'
 import type { Notification } from '@/types/notification'
 
 export { getRemainingSubscriptionText } from '@/components/layout/header.utils'
@@ -36,9 +37,8 @@ interface UtilityHeaderProps {
 }
 
 export function UtilityHeader({ onAction }: UtilityHeaderProps) {
-  const { i18n } = useTranslation()
   const mounted = useMounted()
-  const [language, setLanguage] = useState<'VI' | 'EN'>('VI')
+  const { currentLanguage, toggleLanguage, isVietnamese } = useLanguage()
   const [dictionaryOpen, setDictionaryOpen] = useState(false)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -77,10 +77,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   }
 
   useEffect(() => {
-    setLanguage(i18n.language === 'en' ? 'EN' : 'VI')
-  }, [i18n.language])
-
-  useEffect(() => {
     if (isAuthenticated) {
       fetchCart()
       fetchWishlist()
@@ -98,14 +94,8 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
     notificationService.markAsRead(id).catch(() => {})
   }
 
-  const handleLanguageToggle = () => {
-    const newLang = language === 'VI' ? 'en' : 'vi'
-    setLanguage(newLang === 'en' ? 'EN' : 'VI')
-    i18n.changeLanguage(newLang)
-    localStorage.setItem('i18nextLng', newLang)
-  }
-
-  const isVi = mounted ? language === 'VI' : true
+  const isVi = mounted ? isVietnamese : true
+  const languageLabel = (currentLanguage || 'vi').toUpperCase()
 
   return (
     <>
@@ -130,10 +120,10 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
               <Button
                 aria-label={isVi ? 'Switch to English' : 'Chuyển sang Tiếng Việt'}
                 className="h-9 rounded-xl border-border px-3 text-[12px] font-bold text-text-secondary cursor-pointer"
-                onClick={handleLanguageToggle}
+                onClick={toggleLanguage}
                 variant="outline"
               >
-                <span suppressHydrationWarning>{language}</span>
+                <span suppressHydrationWarning>{languageLabel}</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>{isVi ? 'Chuyển sang English' : 'Switch to Tiếng Việt'}</TooltipContent>
@@ -238,8 +228,8 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             onMouseEnter={() => handleMouseEnter('user')}
             onMouseLeave={handleMouseLeave}
             onCloseHover={() => setHoveredHeaderMenu(null)}
-            onLanguageToggle={handleLanguageToggle}
-            currentLanguage={language}
+            onLanguageToggle={toggleLanguage}
+            currentLanguage={languageLabel as 'VI' | 'EN'}
             onOpenAuth={() => setAuthModalOpen(true)}
             onOpenUpgrade={() => setUpgradeOpen(true)}
             onLogout={() => logout()}

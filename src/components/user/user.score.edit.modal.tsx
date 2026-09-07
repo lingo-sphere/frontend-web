@@ -93,14 +93,14 @@ export function UserScoreEditModal({
         placement_tested_at: new Date().toISOString(),
       }
 
-      await userService.updateProfile(payload as any).catch(() => null)
+      await userService.updateProfile(payload).catch(() => null)
 
       const { user, setUser } = useAuthStore.getState()
       if (user) {
         setUser({
           ...user,
           ...payload,
-        } as any)
+        })
       }
 
       try {

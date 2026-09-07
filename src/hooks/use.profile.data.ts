@@ -178,14 +178,14 @@ export function useProfileData() {
               }
             })
 
-            const pEstimate = (profileData as unknown as { current_estimated_score?: number })?.current_estimated_score
-            const pPlacement = (profileData as unknown as { placement_test_score?: number })?.placement_test_score
+            const pEstimate = profileData?.current_estimated_score
+            const pPlacement = profileData?.placement_test_score
             if (pPlacement !== undefined || pEstimate !== undefined) {
               const sTotal = pPlacement ?? pEstimate ?? 0
-              const sList = (profileData as unknown as { placement_listening_score?: number })?.placement_listening_score ?? 0
-              const sRead = (profileData as unknown as { placement_reading_score?: number })?.placement_reading_score ?? 0
-              const sSpk = (profileData as unknown as { placement_speaking_score?: number })?.placement_speaking_score ?? 0
-              const sWrt = (profileData as unknown as { placement_writing_score?: number })?.placement_writing_score ?? 0
+              const sList = profileData?.placement_listening_score ?? 0
+              const sRead = profileData?.placement_reading_score ?? 0
+              const sSpk = profileData?.placement_speaking_score ?? 0
+              const sWrt = profileData?.placement_writing_score ?? 0
               const sHas = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
 
               setUserScores((prev) => ({

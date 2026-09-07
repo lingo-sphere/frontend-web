@@ -43,8 +43,11 @@ export interface User {
   placement_test_score?: number
   placement_listening_score?: number
   placement_reading_score?: number
+  placement_speaking_score?: number
+  placement_writing_score?: number
   placement_skills_type?: '2SKILLS' | '4SKILLS' | string
   placement_tested_at?: string
+  is_score_manually_edited?: boolean
   xp?: number
   streak_count?: number
   is_premium?: boolean
@@ -68,9 +71,18 @@ export interface UpdateUserProfilePayload {
   full_name?: string
   avatar_url?: string
   phone_number?: string
-  gender?: 'MALE' | 'FEMALE' | 'OTHER'
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string
   date_of_birth?: string
   target_toeic_score?: number
+  current_estimated_score?: number
+  placement_test_score?: number
+  placement_listening_score?: number
+  placement_reading_score?: number
+  placement_speaking_score?: number
+  placement_writing_score?: number
+  placement_skills_type?: '2SKILLS' | '4SKILLS' | string
+  placement_tested_at?: string
+  is_score_manually_edited?: boolean
   learning_goal_minutes_per_day?: number
   bio?: string
 }
@@ -163,6 +175,17 @@ export interface CourseModule {
   test_audio_url?: string
   challenge_audio_url?: string
   audio_url?: string
+  speaking_prompt?: string
+  speaking_file_url?: string
+  speaking_prompt_file_url?: string
+  writing_prompt?: string
+  writing_file_url?: string
+  writing_prompt_file_url?: string
+  test_speaking_prompt?: string
+  test_speaking_file_url?: string
+  test_writing_prompt?: string
+  test_writing_file_url?: string
+  challengeTest?: { passingScore?: number }
   lessons?: Lesson[]
 }
 
@@ -195,6 +218,14 @@ export interface Course {
   students_count?: number
   is_published: boolean
   approval_status?: string
+  final_test_exam_id?: string
+  final_test_passing_score?: number
+  final_test_duration_minutes?: number
+  final_test_questions?: Array<Record<string, unknown>>
+  final_test_speaking_prompt?: string
+  final_test_speaking_file_url?: string
+  final_test_writing_prompt?: string
+  final_test_writing_file_url?: string
   modules?: CourseModule[]
   chapters?: CourseModule[]
   curriculum?: CourseModule[]
@@ -238,6 +269,14 @@ export interface UserCourseProgressItem {
   progress_percentage: number
   status: string
   final_test_score?: number
+  final_test_attempts?: Array<{
+    attempt_id: string
+    score: number
+    correct_count: number
+    total_questions: number
+    is_passed: boolean
+    submitted_at: string
+  }>
   total_score_growth?: number
   total_growth_percentage?: number
   growth_chart_data?: Array<{
