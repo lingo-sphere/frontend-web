@@ -37,8 +37,9 @@ interface ToeicHistoryItem {
   exam_id: string
   exam_title: string
   exam_code: string
-  exam_type: 'FULL_TEST' | 'PART_PRACTICE' | 'PLACEMENT'
+  exam_type: 'FULL_TEST' | 'PART_PRACTICE' | 'PLACEMENT' | 'DIAGNOSTIC_TEST'
   attempt_type: string
+  is_system_placement?: boolean
   total_questions: number
   correct_questions: number
   incorrect_questions: number
@@ -67,7 +68,7 @@ interface CourseTestAttemptItem {
 interface UnifiedTestAttempt {
   id: string
   sourceType: 'TOEIC' | 'COURSE'
-  testType: 'FULL_TEST' | 'PART_PRACTICE' | 'PLACEMENT' | 'challenge' | 'post-mini' | 'final-test'
+  testType: 'FULL_TEST' | 'PART_PRACTICE' | 'PLACEMENT' | 'DIAGNOSTIC_TEST' | 'challenge' | 'post-mini' | 'final-test'
   title: string
   subtitle?: string
   examId?: string
@@ -120,7 +121,7 @@ export default function ExamHistoryPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [toeicAttempts, setToeicAttempts] = useState<ToeicHistoryItem[]>([])
   const [courseAttempts, setCourseAttempts] = useState<CourseTestAttemptItem[]>([])
-  const [activeTab, setActiveTab] = useState<'ALL' | 'TOEIC' | 'CHALLENGE' | 'POST_MINI' | 'FINAL_TEST'>('ALL')
+  const [activeTab, setActiveTab] = useState<'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHALLENGE' | 'POST_MINI' | 'FINAL_TEST'>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
 
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null)
@@ -156,12 +157,26 @@ export default function ExamHistoryPage() {
     const list: UnifiedTestAttempt[] = []
 
     toeicAttempts.forEach((t) => {
+      const isPlacement = Boolean(
+        t.is_system_placement ||
+        t.attempt_type === 'PLACEMENT' ||
+        t.exam_type === 'PLACEMENT' ||
+        t.exam_type === 'DIAGNOSTIC_TEST' ||
+        (t.exam_code && t.exam_code.includes('placement')) ||
+        (t.exam_title && t.exam_title.toLowerCase().includes('đầu vào')) ||
+        (t.exam_title && t.exam_title.toLowerCase().includes('placement'))
+      )
+
       list.push({
         id: t._id,
         sourceType: 'TOEIC',
-        testType: t.exam_type,
-        title: t.exam_title,
-        subtitle: t.exam_code ? `Mã đề: ${t.exam_code}` : undefined,
+        testType: isPlacement ? 'PLACEMENT' : t.exam_type,
+        title: isPlacement
+          ? (t.exam_title || 'Bài thi đánh giá năng lực đầu vào (Placement Test)')
+          : t.exam_title,
+        subtitle: isPlacement
+          ? (t.exam_code ? `Mã bài test: ${t.exam_code}` : 'Đánh giá năng lực TOEIC')
+          : (t.exam_code ? `Mã đề: ${t.exam_code}` : undefined),
         examId: t.exam_id,
         totalQuestions: t.total_questions,
         correctCount: t.correct_questions,
@@ -173,6 +188,30 @@ export default function ExamHistoryPage() {
         durationSeconds: t.total_time_seconds,
       })
     })
+
+    const hasRecordedPlacementAttempt = list.some((i) => i.testType === 'PLACEMENT')
+    const userPlacementScore = Number((user as any)?.placement_test_score ?? 0)
+    const userPlacementTestedAt = (user as any)?.placement_tested_at
+    if (!hasRecordedPlacementAttempt && (userPlacementScore > 0 || userPlacementTestedAt)) {
+      const skillsType = (user as any)?.placement_skills_type || '2SKILLS'
+      const totalQ = skillsType === '4SKILLS' ? 8 : 4
+      const estCorrect = Math.max(1, Math.round((userPlacementScore / 990) * totalQ))
+      list.push({
+        id: 'profile-placement-baseline',
+        sourceType: 'TOEIC',
+        testType: 'PLACEMENT',
+        title: `Bài thi đánh giá năng lực đầu vào (TOEIC ${skillsType === '4SKILLS' ? '4 Kỹ Năng' : '2 Kỹ Năng LR'})`,
+        subtitle: 'Kết quả đánh giá năng lực hệ thống đã ghi nhận',
+        examId: skillsType === '4SKILLS' ? 'placement_4skills' : 'placement_2skills',
+        totalQuestions: totalQ,
+        correctCount: estCorrect,
+        incorrectCount: Math.max(0, totalQ - estCorrect),
+        scoreDisplay: `${userPlacementScore} / 990 điểm`,
+        scoreValue: userPlacementScore,
+        isPassed: userPlacementScore >= 450,
+        submittedAt: userPlacementTestedAt || new Date().toISOString(),
+      })
+    }
 
     courseAttempts.forEach((c) => {
       const isFinal = c.test_type === 'final-test'
@@ -203,11 +242,12 @@ export default function ExamHistoryPage() {
 
     list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
     return list
-  }, [toeicAttempts, courseAttempts])
+  }, [toeicAttempts, courseAttempts, user])
 
   const filteredList = useMemo(() => {
     return unifiedList.filter((item) => {
-      if (activeTab === 'TOEIC' && item.sourceType !== 'TOEIC') return false
+      if (activeTab === 'PLACEMENT' && item.testType !== 'PLACEMENT') return false
+      if (activeTab === 'TOEIC' && (item.sourceType !== 'TOEIC' || item.testType === 'PLACEMENT')) return false
       if (activeTab === 'CHALLENGE' && item.testType !== 'challenge') return false
       if (activeTab === 'POST_MINI' && item.testType !== 'post-mini') return false
       if (activeTab === 'FINAL_TEST' && item.testType !== 'final-test') return false
@@ -361,6 +401,17 @@ export default function ExamHistoryPage() {
           </button>
           <button
             type="button"
+            onClick={() => setActiveTab('PLACEMENT')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'PLACEMENT'
+                ? 'bg-sky-600 text-white shadow-xs'
+                : 'bg-sky-500/10 text-sky-700 dark:text-sky-300 hover:bg-sky-500/20'
+            }`}
+          >
+            Test đầu vào ({unifiedList.filter((i) => i.testType === 'PLACEMENT').length})
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveTab('TOEIC')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'TOEIC'
@@ -368,7 +419,7 @@ export default function ExamHistoryPage() {
                 : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
             }`}
           >
-            Đề thi TOEIC ({toeicAttempts.length})
+            Đề thi TOEIC ({unifiedList.filter((i) => i.sourceType === 'TOEIC' && i.testType !== 'PLACEMENT').length})
           </button>
           <button
             type="button"
@@ -427,37 +478,56 @@ export default function ExamHistoryPage() {
           <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
             <FileQuestion size={24} />
           </div>
-          <h3 className="text-base font-bold text-text-primary">Chưa có bài kiểm tra nào</h3>
+          <h3 className="text-base font-bold text-text-primary">
+            {activeTab === 'PLACEMENT' ? 'Chưa có bài test đầu vào nào' : 'Chưa có bài kiểm tra nào'}
+          </h3>
           <p className="text-xs text-text-secondary max-w-sm mx-auto">
-            Bạn chưa hoàn thành bài thi nào trong mục này. Hãy thử sức với các đề thi TOEIC hoặc bài tập khóa học để ghi nhận kết quả nhé!
+            {activeTab === 'PLACEMENT'
+              ? 'Bạn chưa hoàn thành bài test đánh giá năng lực đầu vào. Hãy làm bài test nhanh để hệ thống gợi ý lộ trình phù hợp nhất nhé!'
+              : 'Bạn chưa hoàn thành bài thi nào trong mục này. Hãy thử sức với các đề thi TOEIC hoặc bài tập khóa học để ghi nhận kết quả nhé!'}
           </p>
           <div className="pt-2 flex items-center justify-center gap-3">
-            <Button
-              onClick={() => navigate('/toeic')}
-              className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
-            >
-              Làm đề thi TOEIC
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/courses?tab=my-courses')}
-              className="text-xs font-semibold rounded-xl"
-            >
-              Vào khóa học của tôi
-            </Button>
+            {activeTab === 'PLACEMENT' ? (
+              <Button
+                onClick={() => navigate('/toeic/exam/placement_2skills')}
+                className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
+              >
+                Làm bài Test đầu vào ngay
+              </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={() => navigate('/toeic')}
+                  className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
+                >
+                  Làm đề thi TOEIC
+                </Button>
+                <Button
+                  onClick={() => navigate('/toeic/exam/placement_2skills')}
+                  variant="outline"
+                  className="text-xs font-semibold rounded-xl"
+                >
+                  Test đầu vào
+                </Button>
+              </>
+            )}
           </div>
         </div>
       ) : (
         <div className="space-y-3">
           {filteredList.map((item) => {
             const isToeic = item.sourceType === 'TOEIC'
+            const isPlacement = item.testType === 'PLACEMENT'
             const isChallenge = item.testType === 'challenge'
             const isFinal = item.testType === 'final-test'
 
             let badgeClass = 'bg-indigo-600 text-white'
             let badgeText = 'Đề thi TOEIC'
 
-            if (!isToeic) {
+            if (isPlacement) {
+              badgeClass = 'bg-sky-600 text-white'
+              badgeText = 'Test đầu vào'
+            } else if (!isToeic) {
               if (isChallenge) {
                 badgeClass = 'bg-amber-600 text-white'
                 badgeText = 'Thử thách chương'
@@ -533,7 +603,7 @@ export default function ExamHistoryPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {isToeic ? (
+                      {isToeic && item.id !== 'profile-placement-baseline' && (
                         <Button
                           onClick={() => handleOpenDetail(item.id)}
                           variant="outline"
@@ -542,6 +612,17 @@ export default function ExamHistoryPage() {
                         >
                           <Eye size={14} />
                           <span>Chi tiết đáp án</span>
+                        </Button>
+                      )}
+
+                      {isToeic ? (
+                        <Button
+                          onClick={() => navigate(item.examId ? `/toeic/exam/${item.examId}` : '/toeic/exam/placement_2skills')}
+                          size="sm"
+                          className="rounded-xl bg-primary text-white hover:bg-primary-hover gap-1.5 text-xs font-semibold cursor-pointer"
+                        >
+                          <RotateCcw size={14} />
+                          <span>Làm lại bài</span>
                         </Button>
                       ) : (
                         <Button
@@ -560,17 +641,6 @@ export default function ExamHistoryPage() {
                         >
                           <RotateCcw size={14} />
                           <span>Làm lại bài</span>
-                        </Button>
-                      )}
-
-                      {isToeic && item.examId && (
-                        <Button
-                          onClick={() => navigate(`/toeic/exam/${item.examId}`)}
-                          size="sm"
-                          className="rounded-xl bg-primary text-white hover:bg-primary-hover gap-1.5 text-xs font-semibold cursor-pointer"
-                        >
-                          <RotateCcw size={14} />
-                          <span className="hidden sm:inline">Làm lại</span>
                         </Button>
                       )}
                     </div>

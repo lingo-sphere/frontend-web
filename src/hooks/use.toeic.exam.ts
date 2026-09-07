@@ -222,6 +222,7 @@ export function useToeicExam(examId?: string) {
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false)
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const attemptIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!examId) {
@@ -256,6 +257,29 @@ export function useToeicExam(examId?: string) {
             showAnswer: false,
             timedMode: true,
           }))
+
+          const isSystemPlacement = Boolean(
+            data.is_system_placement ||
+            data.placement_type ||
+            Boolean(data.code && data.code.includes('placement')) ||
+            data.title?.toLowerCase().includes('đầu vào') ||
+            data.title?.toLowerCase().includes('placement') ||
+            examId?.includes('placement')
+          )
+
+          const authUser = useAuthStore.getState().user
+          if (authUser) {
+            examService
+              .startExamAttempt(examId, {
+                attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
+              })
+              .then((attemptRes) => {
+                if (attemptRes && attemptRes.attempt_id) {
+                  attemptIdRef.current = attemptRes.attempt_id
+                }
+              })
+              .catch(() => {})
+          }
         }
       })
       .catch((err) => {
@@ -449,6 +473,46 @@ export function useToeicExam(examId?: string) {
         setUser({ ...user, ...placementData } as any)
       }
     } catch {}
+
+    const isSystemPlacement = Boolean(
+      examData?.is_system_placement ||
+      examData?.placement_type ||
+      Boolean(examData?.code && examData.code.includes('placement')) ||
+      examData?.title?.toLowerCase().includes('đầu vào') ||
+      examData?.title?.toLowerCase().includes('placement') ||
+      examId?.includes('placement')
+    )
+
+    const formattedAnswers = allQuestions
+      .filter((q) => state.answers[q.questionNumber])
+      .map((q) => ({
+        question_id: q.id,
+        selected_option: state.answers[q.questionNumber],
+      }))
+
+    const totalSeconds = examData?.duration_minutes ? examData.duration_minutes * 60 : 7200
+    const timeSpent = Math.max(1, totalSeconds - state.timeRemaining)
+
+    const submitAttemptToBackend = async () => {
+      try {
+        let currentAttemptId = attemptIdRef.current
+        if (!currentAttemptId && examId) {
+          const newAttempt = await examService.startExamAttempt(examId, {
+            attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
+          })
+          if (newAttempt && newAttempt.attempt_id) {
+            currentAttemptId = newAttempt.attempt_id
+            attemptIdRef.current = currentAttemptId
+          }
+        }
+        if (currentAttemptId) {
+          await examService.submitExamAttempt(currentAttemptId, formattedAnswers, timeSpent)
+        }
+      } catch (err) {
+        console.warn('Lỗi khi nộp bài lên hệ thống:', err)
+      }
+    }
+    submitAttemptToBackend()
 
     setIsLoadingRecommendations(true)
 

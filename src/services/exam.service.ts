@@ -33,14 +33,18 @@ export const examService = {
     return api.get<Array<Record<string, unknown>>>(API_CONFIG.ENDPOINTS.EXAMS.PARTS)
   },
 
-  async startExamAttempt(examId: string, options?: Record<string, unknown>): Promise<{ attemptId: string }> {
-    return api.post<{ attemptId: string }>(API_CONFIG.ENDPOINTS.EXAMS.START(examId), options)
+  async startExamAttempt(examId: string, options?: Record<string, unknown>): Promise<{ attempt_id: string }> {
+    return api.post<{ attempt_id: string }>(API_CONFIG.ENDPOINTS.EXAMS.START(examId), options)
   },
 
-  async submitExamAttempt(attemptId: string, answers: Record<string, string>, durationSeconds?: number): Promise<ExamResult> {
+  async submitExamAttempt(
+    attemptId: string,
+    answers: Array<{ question_id: string; selected_option?: string }>,
+    timeSpentSeconds?: number
+  ): Promise<ExamResult> {
     return api.post<ExamResult>(
       API_CONFIG.ENDPOINTS.EXAMS.SUBMIT(attemptId),
-      { answers, duration_seconds: durationSeconds },
+      { answers, time_spent_seconds: timeSpentSeconds },
       ExamResultSchema
     )
   },
@@ -59,18 +63,21 @@ export const examService = {
 
   async getMyExamHistory(): Promise<Array<{
     _id: string
-    exam_id: { _id: string; title: string; code?: string; exam_type?: string }
-    exam_title?: string
-    exam_code?: string
-    exam_type?: string
+    user_id: string
+    exam_id: string
+    exam_title: string
+    exam_code: string
+    exam_type: 'FULL_TEST' | 'PART_PRACTICE' | 'PLACEMENT' | 'DIAGNOSTIC_TEST'
+    attempt_type: string
+    is_system_placement?: boolean
     total_questions: number
-    answered_questions?: number
-    correct_questions?: number
-    incorrect_questions?: number
-    total_scaled_score?: number
-    listening_scaled_score?: number
-    reading_scaled_score?: number
-    total_time_seconds?: number
+    correct_questions: number
+    incorrect_questions: number
+    total_scaled_score: number
+    listening_scaled_score: number
+    reading_scaled_score: number
+    total_time_seconds: number
+    is_best_attempt: boolean
     status: string
     submitted_at: string
     created_at: string
