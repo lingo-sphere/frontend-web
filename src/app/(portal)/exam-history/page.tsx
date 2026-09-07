@@ -117,6 +117,7 @@ interface AttemptResultDetail {
 export default function ExamHistoryPage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
+  const [mounted, setMounted] = useState<boolean>(false)
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [toeicAttempts, setToeicAttempts] = useState<ToeicHistoryItem[]>([])
@@ -127,6 +128,10 @@ export default function ExamHistoryPage() {
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState<boolean>(false)
   const [detailData, setDetailData] = useState<AttemptResultDetail | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const loadAllHistory = useCallback(async () => {
     setIsLoading(true)
@@ -190,10 +195,11 @@ export default function ExamHistoryPage() {
     })
 
     const hasRecordedPlacementAttempt = list.some((i) => i.testType === 'PLACEMENT')
-    const userPlacementScore = Number((user as any)?.placement_test_score ?? 0)
-    const userPlacementTestedAt = (user as any)?.placement_tested_at
+    const activeUser = mounted ? user : null
+    const userPlacementScore = Number(activeUser?.placement_test_score ?? 0)
+    const userPlacementTestedAt = activeUser?.placement_tested_at
     if (!hasRecordedPlacementAttempt && (userPlacementScore > 0 || userPlacementTestedAt)) {
-      const skillsType = (user as any)?.placement_skills_type || '2SKILLS'
+      const skillsType = activeUser?.placement_skills_type || '2SKILLS'
       const totalQ = skillsType === '4SKILLS' ? 8 : 4
       const estCorrect = Math.max(1, Math.round((userPlacementScore / 990) * totalQ))
       list.push({
@@ -209,7 +215,7 @@ export default function ExamHistoryPage() {
         scoreDisplay: `${userPlacementScore} / 990 điểm`,
         scoreValue: userPlacementScore,
         isPassed: userPlacementScore >= 450,
-        submittedAt: userPlacementTestedAt || new Date().toISOString(),
+        submittedAt: userPlacementTestedAt || new Date(0).toISOString(),
       })
     }
 
@@ -242,7 +248,7 @@ export default function ExamHistoryPage() {
 
     list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
     return list
-  }, [toeicAttempts, courseAttempts, user])
+  }, [toeicAttempts, courseAttempts, user, mounted])
 
   const filteredList = useMemo(() => {
     return unifiedList.filter((item) => {
@@ -284,9 +290,9 @@ export default function ExamHistoryPage() {
     setDetailData(null)
 
     try {
-      const res: any = await examService.getExamAttemptResult(attemptId)
+      const res = await examService.getExamAttemptResult(attemptId)
       if (res) {
-        setDetailData(res)
+        setDetailData(res as unknown as AttemptResultDetail)
       }
     } catch {
     } finally {

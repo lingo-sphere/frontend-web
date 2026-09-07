@@ -43,6 +43,7 @@ export interface User {
   placement_test_score?: number
   placement_listening_score?: number
   placement_reading_score?: number
+  placement_skills_type?: '2SKILLS' | '4SKILLS' | string
   placement_tested_at?: string
   xp?: number
   streak_count?: number
