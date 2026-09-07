@@ -133,8 +133,13 @@ export function TestRunnerSpeakingSection({
         onScoreUpdated?.(res.ai_score)
       }
       toast.success('Đã nộp bài nói thành công! Whisper & AI đã hoàn tất chấm sơ bộ.')
-    } catch {
-      toast.error('Lỗi khi nộp bài nói. Vui lòng thử lại.')
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { message?: string } }; message?: string }
+      const errorMsg =
+        apiError?.response?.data?.message ||
+        apiError?.message ||
+        'Dịch vụ nhận diện giọng nói AI hiện chưa sẵn sàng. Vui lòng kiểm tra lại mic hoặc thử lại sau ít phút.'
+      toast.error(errorMsg)
     } finally {
       setIsSubmittingSpeaking(false)
     }
