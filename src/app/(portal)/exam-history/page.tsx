@@ -74,6 +74,7 @@ interface UnifiedTestAttempt {
   examId?: string
   courseId?: string
   moduleId?: string
+  orderIndex?: number
   totalQuestions: number
   correctCount: number
   incorrectCount: number
@@ -82,6 +83,16 @@ interface UnifiedTestAttempt {
   isPassed: boolean
   submittedAt: string
   durationSeconds?: number
+}
+
+interface CourseQuestionDetail {
+  question_number: number
+  question_text: string
+  options: string[]
+  correct_answer: string
+  explanation?: string
+  media_url?: string
+  image_url?: string
 }
 
 interface AttemptResultDetail {
@@ -125,9 +136,12 @@ export default function ExamHistoryPage() {
   const [activeTab, setActiveTab] = useState<'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHALLENGE' | 'POST_MINI' | 'FINAL_TEST'>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
 
+  const [selectedAttempt, setSelectedAttempt] = useState<UnifiedTestAttempt | null>(null)
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState<boolean>(false)
   const [detailData, setDetailData] = useState<AttemptResultDetail | null>(null)
+  const [courseQuestions, setCourseQuestions] = useState<CourseQuestionDetail[]>([])
+  const [courseTitleMap, setCourseTitleMap] = useState<Record<string, string>>({})
 
   useEffect(() => {
     setMounted(true)
@@ -136,9 +150,10 @@ export default function ExamHistoryPage() {
   const loadAllHistory = useCallback(async () => {
     setIsLoading(true)
     try {
-      const [toeicRes, courseRes] = await Promise.allSettled([
+      const [toeicRes, courseRes, allCoursesRes] = await Promise.allSettled([
         examService.getMyExamHistory(),
         courseService.getMyCourseTestAttempts(),
+        courseService.getAllCourses(),
       ])
 
       if (toeicRes.status === 'fulfilled' && Array.isArray(toeicRes.value)) {
@@ -147,6 +162,16 @@ export default function ExamHistoryPage() {
 
       if (courseRes.status === 'fulfilled' && Array.isArray(courseRes.value)) {
         setCourseAttempts(courseRes.value as unknown as CourseTestAttemptItem[])
+      }
+
+      if (allCoursesRes.status === 'fulfilled' && Array.isArray(allCoursesRes.value)) {
+        const titleMap: Record<string, string> = {}
+        allCoursesRes.value.forEach((c) => {
+          if (c.id && c.title) {
+            titleMap[c.id] = c.title
+          }
+        })
+        setCourseTitleMap(titleMap)
       }
     } catch {
     } finally {
@@ -228,14 +253,18 @@ export default function ExamHistoryPage() {
         ? `Thử thách chương ${c.order_index ?? ''}`
         : `Kiểm tra cuối chương ${c.order_index ?? ''}`
 
+      const courseTitle = courseTitleMap[c.course_id]
+      const subtitle = courseTitle ? `Khóa học: ${courseTitle}` : `Khóa học ID: ${c.course_id}`
+
       list.push({
         id: c.attempt_id,
         sourceType: 'COURSE',
         testType: c.test_type,
         title,
-        subtitle: `Khóa học ID: ${c.course_id}`,
+        subtitle,
         courseId: c.course_id,
         moduleId: c.module_id,
+        orderIndex: c.order_index,
         totalQuestions: c.total_questions,
         correctCount: c.correct_count,
         incorrectCount: Math.max(0, c.total_questions - c.correct_count),
@@ -248,7 +277,7 @@ export default function ExamHistoryPage() {
 
     list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
     return list
-  }, [toeicAttempts, courseAttempts, user, mounted])
+  }, [toeicAttempts, courseAttempts, user, mounted, courseTitleMap])
 
   const filteredList = useMemo(() => {
     return unifiedList.filter((item) => {
@@ -284,20 +313,189 @@ export default function ExamHistoryPage() {
     return { total, passed, passRate, avgScore, totalCorrect }
   }, [unifiedList])
 
-  const handleOpenDetail = async (attemptId: string) => {
-    setSelectedAttemptId(attemptId)
+  const handleOpenDetail = async (item: UnifiedTestAttempt) => {
+    setSelectedAttempt(item)
+    setSelectedAttemptId(item.id)
     setIsLoadingDetail(true)
     setDetailData(null)
+    setCourseQuestions([])
 
     try {
-      const res = await examService.getExamAttemptResult(attemptId)
-      if (res) {
-        setDetailData(res as unknown as AttemptResultDetail)
+      if (item.sourceType === 'TOEIC' && item.id !== 'profile-placement-baseline') {
+        const res = await examService.getExamAttemptResult(item.id)
+        if (res) {
+          setDetailData(res as unknown as AttemptResultDetail)
+        }
+      } else if (item.sourceType === 'COURSE' && item.courseId) {
+        const course = await courseService.getCourseById(item.courseId).catch(() => null)
+        if (course) {
+          const courseData = course as unknown as {
+            final_test_questions?: unknown[]
+            modules?: Array<{
+              _id?: string
+              id?: string
+              order_index?: number
+              challenge_questions?: Array<{
+                question_text?: string
+                question?: string
+                options?: string[] | Array<{ text?: string; key?: string }>
+                correct_answer?: string
+                correct_option?: string
+                explanation?: string
+                explanation_vi?: string
+                explanation_en?: string
+                media_url?: string
+                audio_url?: string
+                image_url?: string
+              }>
+              post_mini_questions?: Array<{
+                question_text?: string
+                question?: string
+                options?: string[] | Array<{ text?: string; key?: string }>
+                correct_answer?: string
+                correct_option?: string
+                explanation?: string
+                explanation_vi?: string
+                explanation_en?: string
+                media_url?: string
+                audio_url?: string
+                image_url?: string
+              }>
+              test_questions?: Array<{
+                question_text?: string
+                question?: string
+                options?: string[] | Array<{ text?: string; key?: string }>
+                correct_answer?: string
+                correct_option?: string
+                explanation?: string
+                explanation_vi?: string
+                explanation_en?: string
+                media_url?: string
+                audio_url?: string
+                image_url?: string
+              }>
+            }>
+            chapters?: Array<{
+              _id?: string
+              id?: string
+              order_index?: number
+              challenge_questions?: Array<{
+                question_text?: string
+                question?: string
+                options?: string[] | Array<{ text?: string; key?: string }>
+                correct_answer?: string
+                correct_option?: string
+                explanation?: string
+                explanation_vi?: string
+                explanation_en?: string
+                media_url?: string
+                audio_url?: string
+                image_url?: string
+              }>
+              post_mini_questions?: Array<{
+                question_text?: string
+                question?: string
+                options?: string[] | Array<{ text?: string; key?: string }>
+                correct_answer?: string
+                correct_option?: string
+                explanation?: string
+                explanation_vi?: string
+                explanation_en?: string
+                media_url?: string
+                audio_url?: string
+                image_url?: string
+              }>
+              test_questions?: Array<{
+                question_text?: string
+                question?: string
+                options?: string[] | Array<{ text?: string; key?: string }>
+                correct_answer?: string
+                correct_option?: string
+                explanation?: string
+                explanation_vi?: string
+                explanation_en?: string
+                media_url?: string
+                audio_url?: string
+                image_url?: string
+              }>
+            }>
+          }
+
+          if (item.testType === 'final-test' && Array.isArray(courseData.final_test_questions)) {
+            setCourseQuestions(
+              courseData.final_test_questions.map((rawQ: unknown, idx: number) => {
+                const q = rawQ as {
+                  question_text?: string
+                  question?: string
+                  options?: string[] | Array<{ text?: string; key?: string }>
+                  correct_answer?: string
+                  correct_option?: string
+                  explanation?: string
+                  explanation_vi?: string
+                  explanation_en?: string
+                  media_url?: string
+                  audio_url?: string
+                  image_url?: string
+                }
+                const opts = Array.isArray(q.options)
+                  ? q.options.map((opt) => (typeof opt === 'string' ? opt : opt.text || opt.key || ''))
+                  : []
+                return {
+                  question_number: idx + 1,
+                  question_text: q.question_text || q.question || '',
+                  options: opts,
+                  correct_answer: q.correct_answer || q.correct_option || '',
+                  explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
+                  media_url: q.media_url || q.audio_url,
+                  image_url: q.image_url,
+                }
+              })
+            )
+          } else {
+            const rawModules = courseData.modules || courseData.chapters || []
+            const matchedMod = rawModules.find(
+              (m) =>
+                String(m._id || m.id) === item.moduleId ||
+                (typeof item.orderIndex === 'number' && m.order_index === item.orderIndex)
+            )
+            if (matchedMod) {
+              const qList =
+                item.testType === 'challenge'
+                  ? matchedMod.challenge_questions
+                  : matchedMod.post_mini_questions || matchedMod.test_questions
+              if (Array.isArray(qList) && qList.length > 0) {
+                setCourseQuestions(
+                  qList.map((q, idx) => {
+                    const opts = Array.isArray(q.options)
+                      ? q.options.map((opt) => (typeof opt === 'string' ? opt : opt.text || opt.key || ''))
+                      : []
+                    return {
+                      question_number: idx + 1,
+                      question_text: q.question_text || q.question || '',
+                      options: opts,
+                      correct_answer: q.correct_answer || q.correct_option || '',
+                      explanation: q.explanation || q.explanation_vi || q.explanation_en || '',
+                      media_url: q.media_url || q.audio_url,
+                      image_url: q.image_url,
+                    }
+                  })
+                )
+              }
+            }
+          }
+        }
       }
     } catch {
     } finally {
       setIsLoadingDetail(false)
     }
+  }
+
+  const handleCloseDetail = () => {
+    setSelectedAttempt(null)
+    setSelectedAttemptId(null)
+    setDetailData(null)
+    setCourseQuestions([])
   }
 
   const formatDate = (isoString: string) => {
@@ -323,7 +521,7 @@ export default function ExamHistoryPage() {
   }
 
   return (
-    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 max-w-7xl mx-auto space-y-6">
+    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
       <SectionHeading
         eyebrow="Khảo thí & Đánh giá năng lực"
         title="Lịch sử làm bài kiểm tra"
@@ -549,7 +747,8 @@ export default function ExamHistoryPage() {
             return (
               <Card
                 key={item.id}
-                className="dashboard-card hover:border-primary/40 transition-all overflow-hidden"
+                onClick={() => handleOpenDetail(item)}
+                className="dashboard-card hover:border-primary/50 hover:shadow-md transition-all overflow-hidden cursor-pointer group"
               >
                 <CardContent className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1.5 min-w-0 flex-1">
@@ -569,7 +768,7 @@ export default function ExamHistoryPage() {
                       )}
                     </div>
 
-                    <h3 className="text-sm sm:text-base font-bold text-text-primary truncate">
+                    <h3 className="text-sm sm:text-base font-bold text-text-primary truncate group-hover:text-primary transition-colors">
                       {item.title}
                     </h3>
 
@@ -609,21 +808,25 @@ export default function ExamHistoryPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {isToeic && item.id !== 'profile-placement-baseline' && (
-                        <Button
-                          onClick={() => handleOpenDetail(item.id)}
-                          variant="outline"
-                          size="sm"
-                          className="rounded-xl gap-1.5 text-xs font-semibold cursor-pointer"
-                        >
-                          <Eye size={14} />
-                          <span>Chi tiết đáp án</span>
-                        </Button>
-                      )}
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenDetail(item)
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl gap-1.5 text-xs font-semibold cursor-pointer hover:border-primary/50"
+                      >
+                        <Eye size={14} />
+                        <span>Chi tiết bài thi</span>
+                      </Button>
 
                       {isToeic ? (
                         <Button
-                          onClick={() => navigate(item.examId ? `/toeic/exam/${item.examId}` : '/toeic/exam/placement_2skills')}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(item.examId ? `/toeic/exam/${item.examId}` : '/toeic/exam/placement_2skills')
+                          }}
                           size="sm"
                           className="rounded-xl bg-primary text-white hover:bg-primary-hover gap-1.5 text-xs font-semibold cursor-pointer"
                         >
@@ -632,7 +835,8 @@ export default function ExamHistoryPage() {
                         </Button>
                       ) : (
                         <Button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation()
                             if (item.courseId) {
                               navigate(
                                 `/course/${item.courseId}/exam?type=${item.testType}${
@@ -643,7 +847,7 @@ export default function ExamHistoryPage() {
                           }}
                           variant="outline"
                           size="sm"
-                          className="rounded-xl gap-1.5 text-xs font-semibold cursor-pointer"
+                          className="rounded-xl gap-1.5 text-xs font-semibold cursor-pointer hover:border-primary/40"
                         >
                           <RotateCcw size={14} />
                           <span>Làm lại bài</span>
@@ -658,27 +862,54 @@ export default function ExamHistoryPage() {
         </div>
       )}
 
-      {selectedAttemptId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-3xl max-h-[85vh] flex flex-col rounded-3xl border border-border bg-surface shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      {selectedAttempt && (
+        <div
+          onClick={handleCloseDetail}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-4xl max-h-[88vh] flex flex-col rounded-3xl border border-border bg-surface shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+          >
             <div className="p-5 border-b border-border flex items-center justify-between shrink-0 bg-surface-subtle/50">
-              <div>
-                <h3 className="text-base font-bold text-text-primary">
-                  {detailData?.attempt?.exam_title ?? 'Chi Tiết Kết Quả Bài Thi'}
-                </h3>
-                {detailData?.attempt && (
-                  <p className="text-xs text-text-secondary mt-0.5">
-                    Điểm số: <strong className="text-primary">{detailData.attempt.total_scaled_score} điểm</strong> • Đúng {detailData.attempt.correct_questions}/{detailData.attempt.total_questions} câu
-                  </p>
-                )}
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base font-bold text-text-primary">
+                    {detailData?.attempt?.exam_title ?? selectedAttempt.title}
+                  </h3>
+                  {selectedAttempt.isPassed ? (
+                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                      <CheckCircle size={11} className="mr-1" /> Đạt chuẩn
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                      <AlertCircle size={11} className="mr-1" /> Chưa đạt
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-xs text-text-secondary flex-wrap">
+                  <span>
+                    Điểm số:{' '}
+                    <strong className="text-primary font-black">
+                      {detailData?.attempt ? `${detailData.attempt.total_scaled_score} / 990 điểm` : selectedAttempt.scoreDisplay}
+                    </strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    Đúng: {detailData?.attempt ? detailData.attempt.correct_questions : selectedAttempt.correctCount}/{detailData?.attempt ? detailData.attempt.total_questions : selectedAttempt.totalQuestions} câu
+                  </span>
+                  {selectedAttempt.subtitle && (
+                    <>
+                      <span>•</span>
+                      <span>{selectedAttempt.subtitle}</span>
+                    </>
+                  )}
+                </div>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  setSelectedAttemptId(null)
-                  setDetailData(null)
-                }}
+                onClick={handleCloseDetail}
                 className="rounded-xl cursor-pointer"
               >
                 <X size={18} />
@@ -689,7 +920,145 @@ export default function ExamHistoryPage() {
               {isLoadingDetail ? (
                 <div className="py-16 flex flex-col items-center justify-center gap-2.5 text-text-secondary">
                   <Loader2 size={28} className="animate-spin text-primary" />
-                  <p className="text-xs font-semibold">Đang tải đáp án chi tiết...</p>
+                  <p className="text-xs font-semibold">Đang tải chi tiết bài làm...</p>
+                </div>
+              ) : selectedAttempt.sourceType === 'COURSE' ? (
+                courseQuestions.length > 0 ? (
+                  courseQuestions.map((q) => {
+                    return (
+                      <div
+                        key={q.question_number}
+                        className="p-4 rounded-2xl border border-border bg-surface text-xs space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-text-primary text-sm">
+                            Câu {q.question_number}:
+                          </span>
+                        </div>
+
+                        {q.question_text && (
+                          <p className="text-text-primary text-sm leading-relaxed">{q.question_text}</p>
+                        )}
+
+                        {q.image_url && (
+                          <div className="max-w-md rounded-xl overflow-hidden border border-border">
+                            <img src={q.image_url} alt={`Câu ${q.question_number}`} className="w-full h-auto object-cover" />
+                          </div>
+                        )}
+
+                        {q.media_url && (
+                          <div className="pt-1">
+                            <audio controls className="w-full h-8" src={q.media_url} />
+                          </div>
+                        )}
+
+                        {q.options && q.options.length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                            {q.options.map((opt, oIdx) => {
+                              const optKey = ['A', 'B', 'C', 'D'][oIdx] || String(oIdx + 1)
+                              const isCorrect =
+                                q.correct_answer === optKey ||
+                                q.correct_answer.toLowerCase() === opt.toLowerCase() ||
+                                q.correct_answer.startsWith(optKey)
+
+                              return (
+                                <div
+                                  key={oIdx}
+                                  className={`p-2.5 rounded-xl border flex items-center gap-2 transition-all ${
+                                    isCorrect
+                                      ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-semibold'
+                                      : 'border-border bg-surface-subtle/50 text-text-secondary'
+                                  }`}
+                                >
+                                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                    isCorrect
+                                      ? 'bg-emerald-600 text-white'
+                                      : 'bg-border text-text-tertiary'
+                                  }`}>
+                                    {optKey}
+                                  </span>
+                                  <span className="flex-1">{opt}</span>
+                                  {isCorrect && <CheckCircle size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {q.explanation && (
+                          <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-900 dark:text-blue-200 text-xs">
+                            <span className="font-bold text-blue-700 dark:text-blue-300 block mb-0.5">
+                              💡 Giải thích chi tiết:
+                            </span>
+                            <p className="leading-relaxed">{q.explanation}</p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className="py-8 text-center text-xs text-text-secondary space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary mx-auto flex items-center justify-center">
+                      <Trophy size={24} />
+                    </div>
+                    <div className="max-w-md mx-auto space-y-1">
+                      <p className="font-bold text-text-primary text-sm">
+                        Kết quả bài kiểm tra khóa học
+                      </p>
+                      <p className="text-text-secondary leading-relaxed">
+                        Bạn đã hoàn thành bài kiểm tra với điểm số{' '}
+                        <strong className="text-primary font-bold">{selectedAttempt.scoreDisplay}</strong> (Đúng{' '}
+                        {selectedAttempt.correctCount}/{selectedAttempt.totalQuestions} câu hỏi).
+                      </p>
+                    </div>
+                    {selectedAttempt.courseId && (
+                      <div className="pt-2 flex items-center justify-center gap-2.5">
+                        <Button
+                          onClick={() =>
+                            navigate(
+                              `/course/${selectedAttempt.courseId}/exam?type=${selectedAttempt.testType}${
+                                selectedAttempt.moduleId ? `&chapterId=${selectedAttempt.moduleId}` : ''
+                              }`
+                            )
+                          }
+                          className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
+                        >
+                          <RotateCcw size={14} className="mr-1.5" />
+                          Làm lại bài kiểm tra
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )
+              ) : selectedAttempt.id === 'profile-placement-baseline' ? (
+                <div className="py-8 text-center text-xs text-text-secondary space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-600 mx-auto flex items-center justify-center">
+                    <Sparkles size={24} />
+                  </div>
+                  <div className="max-w-md mx-auto space-y-1.5">
+                    <h4 className="font-bold text-text-primary text-base">
+                      Đánh Giá Năng Lực Đầu Vào (Placement Test)
+                    </h4>
+                    <p className="text-text-secondary leading-relaxed">
+                      Điểm xuất phát của bạn là <strong className="text-primary">{selectedAttempt.scoreDisplay}</strong>. Hệ thống đã đồng bộ lộ trình học cá nhân hóa tương ứng với mức điểm này.
+                    </p>
+                  </div>
+                  <div className="pt-2 flex items-center justify-center gap-2.5">
+                    <Button
+                      onClick={() => navigate('/roadmap')}
+                      className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
+                    >
+                      Xem lộ trình học tập
+                    </Button>
+                    <Button
+                      onClick={() => navigate('/toeic/exam/placement_2skills')}
+                      variant="outline"
+                      className="text-xs font-semibold rounded-xl"
+                    >
+                      <RotateCcw size={14} className="mr-1.5" />
+                      Làm lại Test đầu vào
+                    </Button>
+                  </div>
                 </div>
               ) : !detailData || !detailData.answers || detailData.answers.length === 0 ? (
                 <div className="py-12 text-center text-xs text-text-secondary space-y-2">
@@ -784,15 +1153,49 @@ export default function ExamHistoryPage() {
               )}
             </div>
 
-            <div className="p-4 border-t border-border bg-surface-subtle/50 flex justify-end">
+            <div className="p-4 border-t border-border bg-surface-subtle/50 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                {selectedAttempt.sourceType === 'COURSE' && selectedAttempt.courseId && (
+                  <>
+                    <Button
+                      onClick={() =>
+                        navigate(
+                          `/course/${selectedAttempt.courseId}/exam?type=${selectedAttempt.testType}${
+                            selectedAttempt.moduleId ? `&chapterId=${selectedAttempt.moduleId}` : ''
+                          }`
+                        )
+                      }
+                      className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5"
+                    >
+                      <RotateCcw size={14} />
+                      <span>Làm lại bài</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/course/${selectedAttempt.courseId}`)}
+                      className="text-xs font-semibold rounded-xl"
+                    >
+                      Vào khóa học
+                    </Button>
+                  </>
+                )}
+                {selectedAttempt.sourceType === 'TOEIC' && (
+                  <Button
+                    onClick={() =>
+                      navigate(selectedAttempt.examId ? `/toeic/exam/${selectedAttempt.examId}` : '/toeic/exam/placement_2skills')
+                    }
+                    className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5"
+                  >
+                    <RotateCcw size={14} />
+                    <span>Làm lại đề thi</span>
+                  </Button>
+                )}
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  setSelectedAttemptId(null)
-                  setDetailData(null)
-                }}
-                className="rounded-xl text-xs font-semibold cursor-pointer"
+                onClick={handleCloseDetail}
+                className="rounded-xl text-xs font-semibold cursor-pointer ml-auto"
               >
                 Đóng
               </Button>
