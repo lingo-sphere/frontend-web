@@ -26,6 +26,12 @@ export interface ExamResultMetrics {
   estimatedReading: number
   estimatedTotal: number
   partStats: Record<number, { correct: number; total: number }>
+  speakingTotal?: number
+  speakingCompleted?: number
+  estimatedSpeaking?: number
+  writingTotal?: number
+  writingCompleted?: number
+  estimatedWriting?: number
 }
 
 interface ToeicExamResultProps {
@@ -116,6 +122,30 @@ export function ToeicExamResult({
                   {results.correct}/{results.total} câu đúng
                 </p>
               </div>
+
+              {results.estimatedSpeaking !== undefined && (
+                <div className="rounded-xl border border-border bg-surface p-3 text-center shadow-xs">
+                  <p className="text-xs font-medium text-text-tertiary">
+                    {isVietnamese ? 'Điểm Speaking' : 'Speaking Score'}
+                  </p>
+                  <p className="mt-1 text-2xl font-black text-amber-600">{results.estimatedSpeaking}</p>
+                  <p className="text-[11px] text-text-tertiary">
+                    / 200 điểm ({results.speakingCompleted || 0}/{results.speakingTotal || 0} bài)
+                  </p>
+                </div>
+              )}
+
+              {results.estimatedWriting !== undefined && (
+                <div className="rounded-xl border border-border bg-surface p-3 text-center shadow-xs">
+                  <p className="text-xs font-medium text-text-tertiary">
+                    {isVietnamese ? 'Điểm Writing' : 'Writing Score'}
+                  </p>
+                  <p className="mt-1 text-2xl font-black text-purple-600">{results.estimatedWriting}</p>
+                  <p className="text-[11px] text-text-tertiary">
+                    / 200 điểm ({results.writingCompleted || 0}/{results.writingTotal || 0} bài)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

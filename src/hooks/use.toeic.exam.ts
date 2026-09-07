@@ -264,41 +264,77 @@ export function useToeicExam(examId?: string) {
     let listeningTotal = 0
     let readingCorrect = 0
     let readingTotal = 0
+    let speakingTotal = 0
+    let speakingCompleted = 0
+    let speakingScoreSum = 0
+    let writingTotal = 0
+    let writingCompleted = 0
+    let writingScoreSum = 0
 
     const partStats: Record<number, { correct: number; total: number }> = {}
 
     allQuestions.forEach((q) => {
-      const partKey = typeof q.partNumber === 'number' ? q.partNumber : q.skillType === 'SPEAKING' ? 7 : 8
+      const isWriting =
+        q.questionType === 'WRITING' ||
+        q.skillType === 'WRITING' ||
+        String(q.partNumber).toLowerCase().includes('writ')
+      const isSpeaking =
+        !isWriting &&
+        (q.questionType === 'SPEAKING' ||
+          q.skillType === 'SPEAKING' ||
+          String(q.partNumber).toLowerCase().includes('speak'))
+
+      const partKey = typeof q.partNumber === 'number' ? q.partNumber : isSpeaking ? 7 : isWriting ? 8 : 5
       if (!partStats[partKey]) {
         partStats[partKey] = { correct: 0, total: 0 }
       }
       partStats[partKey].total++
 
-      const isWriting = q.questionType === 'WRITING' || q.skillType === 'WRITING'
-      const isSpeaking = q.questionType === 'SPEAKING' || q.skillType === 'SPEAKING'
-
-      let isCorrect = false
-      if (isWriting || isSpeaking) {
+      if (isWriting) {
+        writingTotal++
         const studentText = (state.answers[q.questionNumber] || '').trim()
-        isCorrect = studentText.length > 0
-      } else {
-        isCorrect = state.answers[q.questionNumber] === q.correctOption
-      }
-
-      if (isCorrect) {
-        correct++
-        partStats[partKey].correct++
-        if (q.skillType === 'LISTENING') {
-          listeningCorrect++
-        } else if (q.skillType === 'READING') {
-          readingCorrect++
+        const wordCount = studentText.split(/\s+/).filter(Boolean).length
+        const minWords = q.minWords || 60
+        if (wordCount > 0) {
+          writingCompleted++
+          correct++
+          partStats[partKey].correct++
+          const completionRatio = Math.min(1, wordCount / minWords)
+          const qScore = Math.round(completionRatio * 200)
+          writingScoreSum += qScore
         }
-      }
+      } else if (isSpeaking) {
+        speakingTotal++
+        const studentResponse = (state.answers[q.questionNumber] || '').trim()
+        if (studentResponse.length > 0) {
+          speakingCompleted++
+          correct++
+          partStats[partKey].correct++
+          const wordCount = studentResponse.split(/\s+/).filter(Boolean).length
+          const completionRatio =
+            studentResponse.startsWith('data:audio') || studentResponse.startsWith('http')
+              ? 0.85
+              : Math.min(1, Math.max(0.3, wordCount / 30))
+          const qScore = Math.round(completionRatio * 200)
+          speakingScoreSum += qScore
+        }
+      } else {
+        if (q.skillType === 'LISTENING') {
+          listeningTotal++
+        } else if (q.skillType === 'READING') {
+          readingTotal++
+        }
 
-      if (q.skillType === 'LISTENING') {
-        listeningTotal++
-      } else if (q.skillType === 'READING') {
-        readingTotal++
+        const isCorrect = state.answers[q.questionNumber] === q.correctOption
+        if (isCorrect) {
+          correct++
+          partStats[partKey].correct++
+          if (q.skillType === 'LISTENING') {
+            listeningCorrect++
+          } else if (q.skillType === 'READING') {
+            readingCorrect++
+          }
+        }
       }
     })
 
@@ -318,6 +354,12 @@ export function useToeicExam(examId?: string) {
         ? estimatedListening + estimatedReading
         : Math.min(990, Math.max(10, Math.round(((percentage / 100) * 990) / 5) * 5))
 
+    const estimatedSpeaking =
+      speakingTotal > 0 ? Math.min(200, Math.round(speakingScoreSum / speakingTotal)) : undefined
+
+    const estimatedWriting =
+      writingTotal > 0 ? Math.min(200, Math.round(writingScoreSum / writingTotal)) : undefined
+
     return {
       correct,
       total,
@@ -330,6 +372,12 @@ export function useToeicExam(examId?: string) {
       estimatedReading,
       estimatedTotal,
       partStats,
+      speakingTotal,
+      speakingCompleted,
+      estimatedSpeaking,
+      writingTotal,
+      writingCompleted,
+      estimatedWriting,
     }
   }, [allQuestions, state.answers])
 
@@ -346,14 +394,19 @@ export function useToeicExam(examId?: string) {
       mode: state.timedMode ? 'timed' : 'practice',
     })
 
-    const is4Skills = Boolean(examId?.includes('4skills') || examData?.skills_enabled === 'ALL')
+    const is4Skills = Boolean(
+      examId?.includes('4skills') ||
+        examData?.skills_enabled === 'ALL' ||
+        (res.speakingTotal && res.speakingTotal > 0) ||
+        (res.writingTotal && res.writingTotal > 0)
+    )
 
     const placementData = {
       placement_test_score: res.estimatedTotal,
       placement_listening_score: res.estimatedListening,
       placement_reading_score: res.estimatedReading,
-      placement_speaking_score: is4Skills ? 140 : undefined,
-      placement_writing_score: is4Skills ? 150 : undefined,
+      placement_speaking_score: is4Skills ? (res.estimatedSpeaking ?? 0) : undefined,
+      placement_writing_score: is4Skills ? (res.estimatedWriting ?? 0) : undefined,
       placement_skills_type: is4Skills ? '4SKILLS' : '2SKILLS',
       target_toeic_score: Math.min(990, res.estimatedTotal + 150),
       current_estimated_score: res.estimatedTotal,

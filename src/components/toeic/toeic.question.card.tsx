@@ -1,10 +1,12 @@
 // Component giao diện React ToeicQuestionCard hiển thị câu hỏi trắc nghiệm, bài viết và phần nói cho học viên.
 
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Flag, CheckCircle2, XCircle, ChevronLeft, ChevronRight, PenTool, Mic } from 'lucide-react'
+import { Flag, CheckCircle2, XCircle, ChevronLeft, ChevronRight, PenTool, Mic, Square, RotateCcw } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useSpeakingRecorder } from '@/hooks/use.speaking.recorder'
 import type { ToeicQuestion } from '@/types/toeic'
 
 interface ToeicQuestionCardProps {
@@ -42,6 +44,29 @@ export function ToeicQuestionCard({
 }: ToeicQuestionCardProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+
+  const {
+    isRecording,
+    recordingSeconds,
+    recordedBlob,
+    recordedUrl,
+    micVolume,
+    startRecording,
+    stopRecording,
+    resetRecording,
+  } = useSpeakingRecorder()
+
+  useEffect(() => {
+    if (recordedBlob && !selectedOption?.startsWith('data:audio')) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          onSelectAnswer(reader.result)
+        }
+      }
+      reader.readAsDataURL(recordedBlob)
+    }
+  }, [recordedBlob, selectedOption, onSelectAnswer])
 
   const isWriting =
     question.questionType === 'WRITING' ||
@@ -184,15 +209,97 @@ export function ToeicQuestionCard({
                 </span>
               </div>
 
+              <div className="p-4 rounded-2xl border border-border bg-surface-subtle space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+                    <Mic size={14} className="text-amber-600" />
+                    {isVietnamese ? 'Thu âm giọng nói của bạn:' : 'Voice Recording:'}
+                  </span>
+                  {isRecording && (
+                    <div className="flex items-center gap-2 text-xs font-bold text-red-600 animate-pulse">
+                      <span className="h-2.5 w-2.5 rounded-full bg-red-600 inline-block" />
+                      <span>{Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, '0')}s</span>
+                    </div>
+                  )}
+                </div>
+
+                {isRecording && (
+                  <div className="space-y-1">
+                    <div className="w-full bg-surface-hover h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-amber-500 h-full transition-all duration-75"
+                        style={{ width: `${Math.min(100, Math.max(5, micVolume * 100))}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-text-tertiary text-right">
+                      {isVietnamese ? 'Đang nhận tín hiệu micro...' : 'Detecting microphone audio...'}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  {!isRecording && !recordedUrl && !selectedOption?.startsWith('data:audio') && (
+                    <Button
+                      type="button"
+                      disabled={isSubmitted}
+                      onClick={startRecording}
+                      className="bg-amber-600 hover:bg-amber-700 text-white font-bold gap-2 text-xs cursor-pointer"
+                    >
+                      <Mic size={14} />
+                      {isVietnamese ? 'Bắt đầu thu âm bài nói' : 'Start Voice Recording'}
+                    </Button>
+                  )}
+
+                  {isRecording && (
+                    <Button
+                      type="button"
+                      onClick={stopRecording}
+                      variant="destructive"
+                      className="font-bold gap-2 text-xs animate-pulse cursor-pointer"
+                    >
+                      <Square size={14} />
+                      {isVietnamese ? 'Dừng & Lưu bản thu âm' : 'Stop & Save Recording'}
+                    </Button>
+                  )}
+
+                  {(recordedUrl || selectedOption?.startsWith('data:audio')) && !isRecording && (
+                    <div className="flex flex-wrap items-center gap-3 w-full">
+                      <audio
+                        controls
+                        src={recordedUrl || selectedOption}
+                        className="h-9 max-w-xs flex-1"
+                      />
+                      {!isSubmitted && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            resetRecording()
+                            onSelectAnswer('')
+                          }}
+                          className="gap-1.5 text-xs text-text-secondary cursor-pointer"
+                        >
+                          <RotateCcw size={13} />
+                          {isVietnamese ? 'Thu âm lại' : 'Re-record'}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <textarea
-                value={selectedOption || ''}
+                value={selectedOption?.startsWith('data:audio') ? '' : selectedOption || ''}
                 onChange={(e) => onSelectAnswer(e.target.value)}
-                disabled={isSubmitted}
-                rows={6}
+                disabled={isSubmitted || Boolean(recordedUrl || selectedOption?.startsWith('data:audio'))}
+                rows={4}
                 placeholder={
-                  isVietnamese
-                    ? 'Ghi chú dàn ý hoặc câu trả lời nói của bạn tại đây...'
-                    : 'Enter your speaking outline or response notes here...'
+                  selectedOption?.startsWith('data:audio')
+                    ? (isVietnamese ? 'Đã lưu tệp ghi âm giọng nói thành công.' : 'Voice recording saved.')
+                    : (isVietnamese
+                        ? 'Ghi chú dàn ý hoặc câu trả lời nói của bạn tại đây...'
+                        : 'Enter your speaking outline or response notes here...')
                 }
                 className="w-full rounded-xl border border-border bg-surface p-3 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors resize-y leading-relaxed disabled:opacity-80 disabled:bg-surface-subtle"
               />
