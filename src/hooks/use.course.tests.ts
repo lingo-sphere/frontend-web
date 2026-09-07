@@ -1,12 +1,46 @@
-/**
- * @file use.course.tests.ts
- * @description Custom hook quản lý trạng thái mở modal kiểm tra (Challenge, Post-Mini, Final Test) và cập nhật tiến độ điểm thi
- */
+// Hook quản lý trạng thái mở modal kiểm tra và cập nhật tiến độ điểm số bài thi trong khóa học.
 
 import { useState, useMemo, type Dispatch, type SetStateAction } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
 import type { Course, Chapter } from '@/types/course'
+
+interface FinalTestAttemptItem {
+  attempt_id: string
+  score: number
+  is_passed: boolean
+  submitted_at: Date | string
+}
+
+interface ModuleAttemptItem {
+  attempt_id: string
+  test_type: string
+  score: number
+  is_passed: boolean
+  submitted_at: Date | string
+}
+
+interface ModuleProgressStateItem {
+  module_id?: string
+  order_index?: number
+  status?: string
+  challenge_score?: number
+  challenge_taken?: boolean
+  is_passed_by_challenge?: boolean
+  post_mini_score?: number
+  attempts?: ModuleAttemptItem[]
+}
+
+interface CourseProgressState {
+  final_test_score?: number
+  final_test_attempts?: FinalTestAttemptItem[]
+}
+
+export interface CourseProgressDetailData {
+  course_progress?: CourseProgressState
+  modules_progress?: ModuleProgressStateItem[]
+  completed_lesson_ids?: string[]
+}
 
 interface ActiveTestModalState {
   isOpen: boolean
@@ -17,8 +51,8 @@ interface ActiveTestModalState {
 interface UseCourseTestsParams {
   courseId?: string
   isEnrolled: boolean
-  progressDetail: any
-  setProgressDetail: Dispatch<SetStateAction<any>>
+  progressDetail: CourseProgressDetailData | null
+  setProgressDetail: Dispatch<SetStateAction<CourseProgressDetailData | null>>
   setCourse: Dispatch<SetStateAction<Course | null>>
 }
 
@@ -48,7 +82,7 @@ export function useCourseTests({
       return
     }
 
-    const targetCourseId = courseId || (chapter as any)?.courseId || (chapter as any)?.course_id
+    const targetCourseId = courseId || chapter?.courseId || chapter?.course_id
     if (targetCourseId) {
       const chapterParam = chapter?.id ? `&chapterId=${chapter.id}` : ''
       navigate(`/course/${targetCourseId}/exam?type=${testType}${chapterParam}`)
@@ -64,11 +98,11 @@ export function useCourseTests({
 
   const handleTestComplete = async (score: number, isPassed: boolean) => {
     if (activeTestModal.testType === 'final-test') {
-      setProgressDetail((prev: any) => {
+      setProgressDetail((prev) => {
         const currentFinalAttempts = Array.isArray(prev?.course_progress?.final_test_attempts)
           ? [...prev.course_progress.final_test_attempts]
           : []
-        const newAttempt = {
+        const newAttempt: FinalTestAttemptItem = {
           attempt_id: `att_${Date.now()}`,
           score,
           is_passed: isPassed,
@@ -88,24 +122,24 @@ export function useCourseTests({
     if (activeTestModal.chapter) {
       const finishedChId = activeTestModal.chapter.id
       const finishedChOrder = Number(activeTestModal.chapter.order || 1)
-      setProgressDetail((prev: any) => {
+      setProgressDetail((prev) => {
         const existingMods = Array.isArray(prev?.modules_progress) ? [...prev.modules_progress] : []
         const modIdx = existingMods.findIndex(
-          (m: any) =>
+          (m) =>
             m.module_id === finishedChId ||
             String(m.module_id) === String(finishedChId) ||
             Number(m.order_index) === finishedChOrder
         )
         const prevMod = modIdx >= 0 ? existingMods[modIdx] : null
         const currentAttempts = Array.isArray(prevMod?.attempts) ? [...prevMod.attempts] : []
-        const newAttempt = {
+        const newAttempt: ModuleAttemptItem = {
           attempt_id: `att_${Date.now()}`,
           test_type: activeTestModal.testType,
           score,
           is_passed: isPassed,
           submitted_at: new Date(),
         }
-        const updatedMod = {
+        const updatedMod: ModuleProgressStateItem = {
           module_id: finishedChId,
           order_index: finishedChOrder,
           status: isPassed ? 'COMPLETED' : prevMod?.status || 'IN_PROGRESS',
@@ -122,7 +156,7 @@ export function useCourseTests({
 
         if (isPassed) {
           const nextOrder = finishedChOrder + 1
-          const nextModIdx = existingMods.findIndex((m: any) => Number(m.order_index) === nextOrder)
+          const nextModIdx = existingMods.findIndex((m) => Number(m.order_index) === nextOrder)
           if (nextModIdx >= 0) {
             existingMods[nextModIdx] = {
               ...existingMods[nextModIdx],
@@ -159,7 +193,7 @@ export function useCourseTests({
     }
     if (activeTestModal.chapter) {
       const mod = progressDetail?.modules_progress?.find(
-        (m: any) =>
+        (m) =>
           m.module_id === activeTestModal.chapter?.id ||
           String(m.module_id) === String(activeTestModal.chapter?.id) ||
           Number(m.order_index) === Number(activeTestModal.chapter?.order)

@@ -112,6 +112,7 @@ export interface ChallengeTest {
 export interface Chapter {
   id: string
   courseId: string
+  course_id?: string
   order: number
   title: string
   description: string
