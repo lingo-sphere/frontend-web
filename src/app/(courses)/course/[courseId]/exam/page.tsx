@@ -115,7 +115,32 @@ function CourseExamContent() {
       ? null
       : course.chapters.find(
           (c) => String(c.id) === String(chapterId) || String(c.order) === String(chapterId)
-        ) || course.chapters[0] || null
+        ) || null
+
+  if (testType !== 'final-test' && !selectedChapter) {
+    return (
+      <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-6 antialiased">
+        <div className="w-full max-w-md p-8 bg-surface rounded-3xl border border-border shadow-xl text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center">
+            <AlertCircle size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-text-primary">Không tìm thấy chương học</h2>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Chương học hoặc bài kiểm tra yêu cầu không tồn tại trong khóa học này.
+          </p>
+          <div className="pt-2">
+            <Button
+              onClick={handleBackToCourse}
+              className="w-full bg-primary text-white font-bold rounded-xl gap-2 cursor-pointer shadow-md"
+            >
+              <ArrowLeft size={16} />
+              <span>Quay lại khóa học</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const durationMins =
     testType === 'final-test'

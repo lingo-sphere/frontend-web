@@ -52,6 +52,9 @@ export function useCourseTestRunner({
   previousAttempts = [],
   onComplete,
 }: UseCourseTestRunnerOptions) {
+  const hasSpeaking = Boolean(speakingPrompt || (chapter as any)?.speaking_prompt)
+  const hasWriting = Boolean(writingPrompt || (chapter as any)?.writing_prompt)
+
   const is4Skills = useMemo(() => {
     if (
       category === 'TOEIC_4_SKILLS' ||
@@ -64,21 +67,15 @@ export function useCourseTestRunner({
       (skills.includes('SPEAKING') || skills.includes('WRITING') || skills.length >= 4)
     )
       return true
-    if (
-      category === 'TOEIC_2_SKILLS' &&
-      Array.isArray(skills) &&
-      !skills.includes('SPEAKING') &&
-      !skills.includes('WRITING')
-    )
-      return false
-    return true
-  }, [category, skills])
+    if (hasSpeaking || hasWriting) return true
+    return false
+  }, [category, skills, hasSpeaking, hasWriting])
 
   const effectiveSpeakingPrompt = useMemo(() => {
     return (
       speakingPrompt ||
       (chapter as any)?.speaking_prompt ||
-      'Please introduce yourself and discuss your daily English study plan.'
+      ''
     )
   }, [speakingPrompt, chapter])
 
@@ -86,7 +83,8 @@ export function useCourseTestRunner({
     return (
       speakingFileUrl ||
       (chapter as any)?.speaking_file_url ||
-      (chapter as any)?.speaking_prompt_file_url
+      (chapter as any)?.speaking_prompt_file_url ||
+      ''
     )
   }, [speakingFileUrl, chapter])
 
@@ -94,7 +92,7 @@ export function useCourseTestRunner({
     return (
       writingPrompt ||
       (chapter as any)?.writing_prompt ||
-      'Write a short response answering the essay prompt.'
+      ''
     )
   }, [writingPrompt, chapter])
 
@@ -102,7 +100,8 @@ export function useCourseTestRunner({
     return (
       writingFileUrl ||
       (chapter as any)?.writing_file_url ||
-      (chapter as any)?.writing_prompt_file_url
+      (chapter as any)?.writing_prompt_file_url ||
+      ''
     )
   }, [writingFileUrl, chapter])
 

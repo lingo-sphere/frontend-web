@@ -19,10 +19,12 @@ import { RoadmapActiveHeader } from '@/components/roadmap/roadmap.active.header'
 import { RoadmapGrowthTracker } from '@/components/roadmap/roadmap.growth.tracker'
 import { RoadmapStageCard } from '@/components/roadmap/roadmap.stage.card'
 import { RoadmapCheckpointModal } from '@/components/roadmap/roadmap.checkpoint.modal'
+import { useAuthStore } from '@/store/auth.store'
 
 export default function RoadmapAppPage() {
   const { i18n } = useTranslation()
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const isVi = i18n.language === 'vi'
 
   const [progress, setProgress] = useState<UserRoadmapProgress | null>(null)
@@ -64,9 +66,13 @@ export default function RoadmapAppPage() {
 
   const handleEnrollRoadmap = async (roadmapId: string) => {
     try {
+      const userBaseline =
+        (user as any)?.placement_test_score ||
+        (user as any)?.current_estimated_score ||
+        0
       const result = await progressService.enrollRoadmap({
         roadmap_id: roadmapId,
-        baseline_score: 350,
+        baseline_score: userBaseline,
       })
       setProgress(result)
       toast.success('Đã kích hoạt Lộ trình học tập thành công!')
