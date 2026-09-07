@@ -219,6 +219,31 @@ export interface CourseEnrollment {
   last_accessed_at: string
 }
 
+export interface UserCourseProgressItem {
+  _id?: string
+  user_id: string
+  course_id: string
+  enrolled_at?: string
+  baseline_source?: string
+  baseline_score?: number
+  is_baseline_established?: boolean
+  completed_lessons_count: number
+  total_lessons_count: number
+  completed_modules_count: number
+  total_modules_count: number
+  progress_percentage: number
+  status: string
+  final_test_score?: number
+  total_score_growth?: number
+  total_growth_percentage?: number
+  growth_chart_data?: Array<{
+    stage: string
+    score: number
+    timestamp?: string
+  }>
+  updated_at?: string
+}
+
 export type {
   LearningRoadmapStage,
   LearningRoadmap,

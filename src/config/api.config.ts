@@ -67,6 +67,9 @@ export const API_CONFIG = {
     },
 
     PROGRESS: {
+      COURSES: '/progress/courses',
+      COURSE_DETAIL: (courseId: string) => `/progress/courses/${courseId}/detail`,
+      GROWTH_CHART: (courseId: string) => `/progress/courses/${courseId}/growth-chart`,
       ROADMAP_MY: '/progress/roadmaps/my',
       ROADMAP_ENROLL: '/progress/roadmaps/enroll',
       ROADMAP_CHECKPOINT: '/progress/roadmaps/checkpoint',
