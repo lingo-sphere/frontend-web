@@ -54,7 +54,7 @@ export default function ToeicExamAppPage() {
     )
   }
 
-  if (allQuestions.length === 0) {
+  if (!examData || allQuestions.length === 0) {
     return (
       <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
         <div className="max-w-md rounded-2xl bg-surface p-6 text-center border border-border shadow-sm space-y-4">
@@ -62,12 +62,22 @@ export default function ToeicExamAppPage() {
             <AlertCircle className="w-6 h-6" />
           </div>
           <h2 className="text-lg font-bold text-text-primary">
-            {isVietnamese ? 'Đề thi chưa có câu hỏi' : 'No questions in this exam'}
+            {!examData
+              ? isVietnamese
+                ? 'Không tìm thấy đề thi'
+                : 'Exam Not Found'
+              : isVietnamese
+                ? 'Đề thi chưa có câu hỏi'
+                : 'No questions in this exam'}
           </h2>
           <p className="text-xs text-text-secondary">
-            {isVietnamese
-              ? 'Bài thi này hiện chưa được cập nhật nội dung câu hỏi trên hệ thống. Vui lòng quay lại sau hoặc liên hệ ban quản trị.'
-              : 'This exam currently has no questions. Please check back later.'}
+            {!examData
+              ? isVietnamese
+                ? 'Bài thi này hiện chưa được khởi tạo hoặc chưa được xuất bản trên hệ thống. Vui lòng quay lại sau.'
+                : 'This exam does not exist or has not been published yet.'
+              : isVietnamese
+                ? 'Bài thi này hiện chưa được cập nhật nội dung câu hỏi trên hệ thống. Vui lòng quay lại sau hoặc liên hệ ban quản trị.'
+                : 'This exam currently has no questions. Please check back later.'}
           </p>
           <Button onClick={() => navigate(-1)} variant="outline" className="mt-2">
             {isVietnamese ? 'Quay lại' : 'Go back'}
