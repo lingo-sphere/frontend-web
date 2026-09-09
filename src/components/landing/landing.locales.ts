@@ -1,11 +1,8 @@
-/**
- * @file landing.locales.ts
- * @description Component giao diện React landing-locales cho học viên
- */
-
+// Bản dịch đa ngôn ngữ và hook điều khiển ngôn ngữ trang landing
 'use client'
 
 import { useState, useEffect, useCallback } from "react"
+import { storage, STORAGE_KEYS } from "@/lib/storage"
 
 export type LandingLang = "vi" | "en"
 export type LandingLocale = typeof landingLocales.vi
@@ -355,38 +352,30 @@ export const landingLocales = {
   },
 }
 
-const STORAGE_KEY = "lingo_landing_lang"
-
 export function useLandingLocale() {
   const [lang, setLangState] = useState<LandingLang>("vi")
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(STORAGE_KEY) as LandingLang | null
-      if (saved === "vi" || saved === "en") {
-        setLangState(saved)
-      } else {
-        const i18nSaved = localStorage.getItem("i18nextLng")
-        if (i18nSaved && (i18nSaved.startsWith("en") || i18nSaved.startsWith("vi"))) {
-          setLangState(i18nSaved.startsWith("en") ? "en" : "vi")
-        }
+    const saved = storage.get<LandingLang>(STORAGE_KEYS.LANDING_LANG)
+    if (saved === "vi" || saved === "en") {
+      setLangState(saved)
+    } else {
+      const i18nSaved = storage.get<string>(STORAGE_KEYS.I18N_LNG)
+      if (i18nSaved && (i18nSaved.startsWith("en") || i18nSaved.startsWith("vi"))) {
+        setLangState(i18nSaved.startsWith("en") ? "en" : "vi")
       }
     }
   }, [])
 
   const setLang = useCallback((newLang: LandingLang) => {
     setLangState(newLang)
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, newLang)
-    }
+    storage.set(STORAGE_KEYS.LANDING_LANG, newLang)
   }, [])
 
   const toggleLang = useCallback(() => {
     setLangState((prev) => {
       const next = prev === "vi" ? "en" : "vi"
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, next)
-      }
+      storage.set(STORAGE_KEYS.LANDING_LANG, next)
       return next
     })
   }, [])

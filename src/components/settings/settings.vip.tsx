@@ -1,11 +1,7 @@
-/**
- * @file settings.vip.tsx
- * @description Component tab hiển thị thông tin gói thành viên VIP, đặc quyền và kích hoạt gia hạn
- */
-
+// Component tab hiển thị thông tin gói thành viên VIP, đặc quyền và kích hoạt gia hạn
 'use client'
 
-import { Crown, Zap } from 'lucide-react'
+import { Crown, BookOpen, Mic, Award } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface SettingsVipTabProps {
@@ -74,19 +70,22 @@ export function SettingsVipTab({
           {
             title: isVi ? 'Không giới hạn bài học' : 'Unlimited Lessons',
             desc: isVi ? 'Truy cập trọn đời mọi bài giảng video & bài tập' : 'Access all video lectures',
+            icon: BookOpen,
           },
           {
             title: isVi ? 'AI Whisper chấm nói & viết' : 'Whisper AI Speech Scoring',
             desc: isVi ? 'Đánh giá phát âm chuẩn xác từng âm vị IPA' : 'Phonetic accuracy grading',
+            icon: Mic,
           },
           {
             title: isVi ? 'Chứng chỉ hoàn thành' : 'Certified Diplomas',
             desc: isVi ? 'Cấp chứng chỉ tốt nghiệp sau mỗi khóa học' : 'Accredited certificate issuance',
+            icon: Award,
           },
         ].map((feat, idx) => (
           <div key={idx} className="p-4 rounded-2xl border border-border bg-surface shadow-xs">
             <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center mb-3">
-              <Zap size={16} />
+              <feat.icon size={16} />
             </div>
             <h4 className="text-sm font-bold text-text-primary mb-1">{feat.title}</h4>
             <p className="text-xs text-text-tertiary">{feat.desc}</p>

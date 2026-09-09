@@ -13,6 +13,10 @@ import {
   Target,
   FileText,
   MessageSquare,
+  SpellCheck,
+  MapPin,
+  ClipboardList,
+  HelpCircle,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -72,13 +76,13 @@ export function WritingResult({
 
   const getErrorIcon = (type: string) => {
     switch (type) {
-      case 'GRAMMAR': return '📝'
-      case 'SPELLING': return '🔤'
-      case 'PUNCTUATION': return '📍'
-      case 'VOCABULARY': return '📚'
-      case 'STYLE': return '✨'
-      case 'FORMAT': return '📋'
-      default: return '❓'
+      case 'GRAMMAR': return FileText
+      case 'SPELLING': return SpellCheck
+      case 'PUNCTUATION': return MapPin
+      case 'VOCABULARY': return BookOpen
+      case 'STYLE': return Sparkles
+      case 'FORMAT': return ClipboardList
+      default: return HelpCircle
     }
   }
 
@@ -104,7 +108,7 @@ export function WritingResult({
           <span className="text-[14px] text-text-tertiary">/10</span>
         </div>
         <h1 className="mt-4 text-[24px] font-bold text-text-primary">
-          {scores.overall >= 8 ? '🎉 ' + (isVietnamese ? 'Tuyệt vời!' : 'Excellent!') : scores.overall >= 6 ? '👍 ' + (isVietnamese ? 'Tốt lắm!' : 'Good job!') : '💪 ' + (isVietnamese ? 'Cố gắng hơn!' : 'Keep trying!')}
+          {scores.overall >= 8 ? (isVietnamese ? 'Tuyệt vời!' : 'Excellent!') : scores.overall >= 6 ? (isVietnamese ? 'Tốt lắm!' : 'Good job!') : (isVietnamese ? 'Cố gắng hơn!' : 'Keep trying!')}
         </h1>
         <div className="mt-2 flex items-center justify-center gap-2 text-[14px] text-text-secondary">
           {aiEval?.estimated_cefr && (
@@ -262,7 +266,10 @@ export function WritingResult({
                       <CardContent className="p-4">
                         <div className="mb-3 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">{getErrorIcon(error.type)}</span>
+                            {(() => {
+                              const ErrorIcon = getErrorIcon(error.type)
+                              return <ErrorIcon className="w-4 h-4 text-text-secondary" />
+                            })()}
                             <span className="text-[13px] font-medium text-text-primary">{error.type}</span>
                           </div>
                           <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${getSeverityColor(error.severity)}`}>{error.severity}</span>

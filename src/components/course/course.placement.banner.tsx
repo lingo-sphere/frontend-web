@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/auth.store'
 import { UserScoreEditModal } from '@/components/user/user.score.edit.modal'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function CoursePlacementBanner() {
   const navigate = useNavigate()
@@ -47,24 +48,25 @@ export function CoursePlacementBanner() {
       return
     }
 
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('lingo_user_placement_score')
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored)
-          if (parsed?.placement_test_score) {
-            setPlacementData({
-              score: parsed.placement_test_score,
-              listening: parsed.placement_listening_score,
-              reading: parsed.placement_reading_score,
-              speaking: parsed.placement_speaking_score,
-              writing: parsed.placement_writing_score,
-              skillsType: parsed.placement_skills_type || '2SKILLS',
-              testedAt: parsed.placement_tested_at,
-            })
-          }
-        } catch {}
-      }
+    const stored = storage.get<{
+      placement_test_score?: number
+      placement_listening_score?: number
+      placement_reading_score?: number
+      placement_speaking_score?: number
+      placement_writing_score?: number
+      placement_skills_type?: string
+      placement_tested_at?: string
+    }>(STORAGE_KEYS.PLACEMENT_SCORE)
+    if (stored?.placement_test_score) {
+      setPlacementData({
+        score: stored.placement_test_score,
+        listening: stored.placement_listening_score,
+        reading: stored.placement_reading_score,
+        speaking: stored.placement_speaking_score,
+        writing: stored.placement_writing_score,
+        skillsType: stored.placement_skills_type || '2SKILLS',
+        testedAt: stored.placement_tested_at,
+      })
     }
   }, [user])
 

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth.store'
 import { useEnrollmentStore } from '@/store/enrollment.store'
 import { useCartStore } from '@/store/cart.store'
 import { toast } from '@/store/toast.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { Course, Chapter, Lesson } from '@/types/course'
 import { useCourseNotes } from '@/hooks/use.course.notes'
 import { useCourseQnA } from '@/hooks/use.course.qna'
@@ -170,9 +171,7 @@ export function useCourseWorkspace(courseId: string) {
     }
     setCurrentChapter(chapter)
     setCurrentLesson(lesson)
-    try {
-      localStorage.setItem(`course_last_watched_${courseId}`, lesson.id)
-    } catch {}
+    storage.set(STORAGE_KEYS.COURSE_LAST_WATCHED(courseId), lesson.id)
   }
 
   const handleToggleLessonComplete = (lessonId: string, e: React.MouseEvent) => {

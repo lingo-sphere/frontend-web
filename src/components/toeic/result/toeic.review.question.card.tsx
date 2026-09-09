@@ -2,7 +2,7 @@
 
 'use client'
 
-import { CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, XCircle, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react'
 import type { ToeicQuestion } from '@/types/toeic'
 
 interface ToeicReviewQuestionCardProps {
@@ -156,7 +156,8 @@ export function ToeicReviewQuestionCard({
       {(question.explanationEn || question.explanationVi) && (
         <div className="ml-9 mt-3.5 p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-900 dark:text-blue-200 space-y-1">
           <span className="font-bold flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
-            💡 Giải thích đáp án chi tiết:
+            <Lightbulb className="w-3.5 h-3.5" />
+            <span>Giải thích đáp án chi tiết:</span>
           </span>
           {question.explanationEn && (
             <p className="text-[11.5px] leading-relaxed pl-4 font-medium">

@@ -1,11 +1,7 @@
-/**
- * @file dashboard.store.ts
- * @description Mã nguồn thành phần dashboard-store.ts
- */
-
+// Store quản lý trạng thái giao diện và theme của dashboard học viên
 import { useSyncExternalStore } from 'react'
 import { createStore } from 'zustand/vanilla'
-
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { LeaderboardPeriod, ThemeMode } from '@/types/dashboard'
 
 interface DashboardStore {
@@ -25,8 +21,7 @@ interface DashboardStore {
 }
 
 const getInitialTheme = (): ThemeMode => {
-  if (typeof window === 'undefined') return 'light'
-  const savedTheme = window.localStorage.getItem('lingosphere-theme')
+  const savedTheme = storage.get<ThemeMode>(STORAGE_KEYS.THEME)
   return savedTheme === 'dark' ? 'dark' : 'light'
 }
 
@@ -38,12 +33,12 @@ export const dashboardStore = createStore<DashboardStore>()((set, get) => ({
   mobileSidebarOpen: false,
   sidebarCollapsed: false,
   setTheme: (theme) => {
-    if (typeof window !== 'undefined') window.localStorage.setItem('lingosphere-theme', theme)
+    storage.set(STORAGE_KEYS.THEME, theme)
     set({ theme })
   },
   toggleTheme: () => {
     const nextTheme: ThemeMode = get().theme === 'light' ? 'dark' : 'light'
-    if (typeof window !== 'undefined') window.localStorage.setItem('lingosphere-theme', nextTheme)
+    storage.set(STORAGE_KEYS.THEME, nextTheme)
     set({ theme: nextTheme })
   },
   setActiveNavItem: (activeNavItem) => set({ activeNavItem }),

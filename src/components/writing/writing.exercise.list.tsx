@@ -1,11 +1,18 @@
-/**
- * @file writing.exercise.list.tsx
- * @description Component giao diện React WritingExerciseList cho học viên
- */
-
+// Component danh sách bài tập Writing phân theo cấp độ và dạng bài
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Search, Clock, ChevronRight } from 'lucide-react'
+import {
+  ArrowLeft,
+  Search,
+  Clock,
+  ChevronRight,
+  FileText,
+  SpellCheck,
+  PenTool,
+  Key,
+  File,
+  BookOpen,
+} from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { WritingExercise, WritingLevel, ExerciseType } from '@/types/writing'
@@ -193,13 +200,13 @@ function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese, levelLabels
 
   const getExerciseIcon = (type: ExerciseType) => {
     switch (type) {
-      case 'SENTENCE_COMPLETION': return '📝'
-      case 'SENTENCE_ARRANGEMENT': return '🔤'
-      case 'PARAPHRASING': return '✍️'
-      case 'KEYWORD_WRITING': return '🔑'
-      case 'TOPIC_WRITING': return '📄'
-      case 'DIARY': return '📓'
-      default: return '📝'
+      case 'SENTENCE_COMPLETION': return FileText
+      case 'SENTENCE_ARRANGEMENT': return SpellCheck
+      case 'PARAPHRASING': return PenTool
+      case 'KEYWORD_WRITING': return Key
+      case 'TOPIC_WRITING': return File
+      case 'DIARY': return BookOpen
+      default: return FileText
     }
   }
 
@@ -208,7 +215,10 @@ function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese, levelLabels
       <CardContent className="p-4">
         <div className="mb-3 flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-[20px]">{getExerciseIcon(exercise.exercise_type)}</span>
+            {(() => {
+              const ExerciseIcon = getExerciseIcon(exercise.exercise_type)
+              return <ExerciseIcon className="w-5 h-5 text-primary shrink-0" />
+            })()}
             <div>
               <h3 className="text-[15px] font-semibold text-text-primary">{exercise.title}</h3>
               {exercise.title_vi && <p className="text-[12px] text-text-secondary">{exercise.title_vi}</p>}

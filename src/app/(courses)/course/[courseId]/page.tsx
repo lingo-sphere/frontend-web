@@ -1,8 +1,4 @@
-/**
- * @file page.tsx
- * @description Trang không gian học tập trực tuyến (Course Workspace) cho học viên LingoSphere
- */
-
+// Trang không gian học tập trực tuyến (Course Workspace) cho học viên LingoSphere
 'use client'
 
 import { useMemo } from 'react'
@@ -23,6 +19,7 @@ import { extractCourseId, buildCourseUrl } from '@/lib/course.url'
 import { CourseWorkspaceTabs } from '@/components/course/workspace/course.workspace.tabs'
 import { CourseWorkspaceSidebar } from '@/components/course/workspace/course.workspace.sidebar'
 import { useCourseWorkspace } from '@/hooks/use.course.workspace'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export default function CourseDetailPage() {
   const params = useParams<{ courseId: string }>()
@@ -99,16 +96,11 @@ export default function CourseDetailPage() {
     )
 
     if (!hasPlacementScore) {
-      try {
-        const stored = localStorage.getItem('lingo_user_placement_score')
-        if (stored) {
-          const parsed = JSON.parse(stored)
-          if (parsed?.placement_test_score > 0) {
-            setShowCourseCheckoutModal(true)
-            return
-          }
-        }
-      } catch {}
+      const stored = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
+      if (stored && Number(stored.placement_test_score) > 0) {
+        setShowCourseCheckoutModal(true)
+        return
+      }
       setShowPlacementPromptModal(true)
     } else {
       setShowCourseCheckoutModal(true)

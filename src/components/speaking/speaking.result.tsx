@@ -2,7 +2,23 @@
 
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Play, Pause, RotateCcw, ChevronRight, CheckCircle2, XCircle, Volume2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  Play,
+  Pause,
+  RotateCcw,
+  ChevronRight,
+  CheckCircle2,
+  XCircle,
+  Volume2,
+  Sparkles,
+  Bot,
+  Target,
+  Activity,
+  FileText,
+  BookOpen,
+  Lightbulb,
+} from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { SpeakingAttempt, SpeakingExercise } from '@/types/speaking'
@@ -88,7 +104,8 @@ export function SpeakingResult({
             <div className="flex items-center gap-2">
               {submission.is_best_attempt && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-[12px] font-medium text-amber-700">
-                  ✨ {isVietnamese ? 'Điểm cao nhất' : 'Best Score'}
+                  <Sparkles size={13} className="text-amber-600" />
+                  {isVietnamese ? 'Điểm cao nhất' : 'Best Score'}
                 </span>
               )}
               <span className="rounded-full bg-surface-subtle px-3 py-1 text-[12px] text-text-secondary">
@@ -159,7 +176,7 @@ export function SpeakingResult({
         <Card className="mb-6 dashboard-card">
           <CardContent className="p-4">
             <div className="mb-4 flex items-center gap-2">
-              <span className="text-xl">🤖</span>
+              <Bot size={20} className="text-primary" />
               <h2 className="text-[16px] font-semibold text-text-primary">
                 {isVietnamese ? 'Phản hồi từ AI' : 'AI Feedback'}
               </h2>
@@ -174,7 +191,7 @@ export function SpeakingResult({
             <div className="space-y-3">
               {evaluation.pronunciation_analysis && (
                 <AnalysisItem
-                  icon="🎯"
+                  icon={Target}
                   title={isVietnamese ? 'Phân tích phát âm' : 'Pronunciation Analysis'}
                   score={evaluation.pronunciation_analysis.score}
                   issues={evaluation.pronunciation_analysis.issues}
@@ -186,7 +203,7 @@ export function SpeakingResult({
               )}
               {evaluation.fluency_analysis && (
                 <AnalysisItem
-                  icon="⚡"
+                  icon={Activity}
                   title="Fluency Analysis"
                   score={evaluation.fluency_analysis.score}
                   issues={evaluation.fluency_analysis.issues}
@@ -198,7 +215,7 @@ export function SpeakingResult({
               )}
               {evaluation.grammar_analysis && (
                 <AnalysisItem
-                  icon="📝"
+                  icon={FileText}
                   title={isVietnamese ? 'Phân tích ngữ pháp' : 'Grammar Analysis'}
                   score={evaluation.grammar_analysis.score}
                   issues={evaluation.grammar_analysis.issues}
@@ -210,7 +227,7 @@ export function SpeakingResult({
               )}
               {evaluation.vocabulary_analysis && (
                 <AnalysisItem
-                  icon="📚"
+                  icon={BookOpen}
                   title={isVietnamese ? 'Phân tích từ vựng' : 'Vocabulary Analysis'}
                   score={evaluation.vocabulary_analysis.score}
                   issues={evaluation.vocabulary_analysis.issues}
@@ -225,7 +242,8 @@ export function SpeakingResult({
             {evaluation.improvement_tips && evaluation.improvement_tips.length > 0 && (
               <div className="mt-4 rounded-xl bg-amber-50 p-4">
                 <h3 className="mb-2 flex items-center gap-2 text-[13px] font-semibold text-amber-700">
-                  💡 {isVietnamese ? 'Lời khuyên cải thiện' : 'Improvement Tips'}
+                  <Lightbulb size={16} className="text-amber-600" />
+                  {isVietnamese ? 'Lời khuyên cải thiện' : 'Improvement Tips'}
                 </h3>
                 <ul className="space-y-1">
                   {evaluation.improvement_tips.map((tip, i) => (
@@ -263,7 +281,7 @@ export function SpeakingResult({
 }
 
 function AnalysisItem({
-  icon,
+  icon: IconComponent,
   title,
   score,
   issues,
@@ -272,7 +290,7 @@ function AnalysisItem({
   scoreBg,
   isVietnamese,
 }: {
-  icon: string
+  icon: React.ComponentType<{ size?: number; className?: string }>
   title: string
   score: number
   issues: string[]
@@ -290,7 +308,7 @@ function AnalysisItem({
         className="flex w-full items-center justify-between p-3 text-left"
       >
         <div className="flex items-center gap-2">
-          <span className="text-lg">{icon}</span>
+          <IconComponent size={18} className="text-primary" />
           <span className="text-[14px] font-medium text-text-primary">{title}</span>
         </div>
         <div className="flex items-center gap-2">

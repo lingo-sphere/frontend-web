@@ -1,6 +1,6 @@
 // Component giao diện React WritingExerciseDetail cho học viên
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Clock, BookOpen } from 'lucide-react'
+import { ArrowLeft, Clock, BookOpen, Lightbulb } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { WritingExercise } from '@/types/writing'
@@ -135,8 +135,9 @@ export function WritingExerciseDetail({
 
           {exercise.writing_level !== 'BASIC' && exercise.ai_hints && exercise.ai_hints.length > 0 && (
             <div className="mb-6 rounded-lg bg-purple-50 p-4">
-              <p className="mb-2 text-[13px] font-medium text-purple-700">
-                💡 {isVietnamese ? 'Gợi ý từ AI' : 'AI Hints'}
+              <p className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-purple-700">
+                <Lightbulb className="w-4 h-4 text-purple-600" />
+                <span>{isVietnamese ? 'Gợi ý từ AI' : 'AI Hints'}</span>
               </p>
               <ul className="space-y-1">
                 {exercise.ai_hints.map((hint, index) => (

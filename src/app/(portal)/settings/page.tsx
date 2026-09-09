@@ -15,6 +15,7 @@ import { UpgradeModal } from '@/components/upgrade/upgrade.modal'
 import { useNavigate } from '@/lib/navigation'
 import { getRemainingSubscriptionText } from '@/components/layout/header.utils'
 import type { UserPreferences } from '@/types/user'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 import { SettingsSidebar, type SettingsTab } from '@/components/settings/settings.sidebar'
 import { SettingsAccountTab } from '@/components/settings/settings.account'
@@ -65,13 +66,7 @@ export default function SettingsAppPage() {
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('account')
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('lingosphere_user_preferences')
-        if (saved) return JSON.parse(saved)
-      } catch {}
-    }
-    return defaultPreferences
+    return storage.get<UserPreferences>(STORAGE_KEYS.USER_PREFERENCES) || defaultPreferences
   })
 
   const [isSaving, setIsSaving] = useState(false)
@@ -123,9 +118,7 @@ export default function SettingsAppPage() {
   const handleSavePreferences = async () => {
     setIsSaving(true)
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('lingosphere_user_preferences', JSON.stringify(preferences))
-      }
+      storage.set(STORAGE_KEYS.USER_PREFERENCES, preferences)
 
       await userService.updateMySettings({
         is_reminder_enabled: preferences.notifications.allEnabled,
@@ -142,7 +135,7 @@ export default function SettingsAppPage() {
           full_name: fullName,
           phone_number: phoneNumber,
           learning_goal_minutes_per_day: preferences.learning.dailyGoal,
-        } as any)
+        })
         if (authUser) {
           setAuthUser({
             ...authUser,
@@ -167,9 +160,7 @@ export default function SettingsAppPage() {
 
   const handleResetDefaults = () => {
     setPreferences(defaultPreferences)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lingosphere_user_preferences', JSON.stringify(defaultPreferences))
-    }
+    storage.set(STORAGE_KEYS.USER_PREFERENCES, defaultPreferences)
     toast.info(
       isVi ? 'Đã khôi phục cài đặt về mặc định của hệ thống.' : 'Restored system default settings.',
       isVi ? 'Khôi phục' : 'Reset'

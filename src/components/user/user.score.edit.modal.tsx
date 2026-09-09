@@ -9,11 +9,13 @@ import {
   BookOpen,
   Mic,
   FileEdit,
+  Layers,
   X,
 } from 'lucide-react'
 import { toast } from '@/store/toast.store'
 import { userService } from '@/services/user.service'
 import { useAuthStore } from '@/store/auth.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 interface UserScoreEditModalProps {
   open: boolean
@@ -95,9 +97,7 @@ export function UserScoreEditModal({
         })
       }
 
-      try {
-        localStorage.setItem('lingo_user_placement_score', JSON.stringify(payload))
-      } catch {}
+      storage.set(STORAGE_KEYS.PLACEMENT_SCORE, payload)
 
       toast.success('Cập nhật điểm trình độ thành công!')
       onSuccess(payload)
@@ -164,24 +164,26 @@ export function UserScoreEditModal({
               <button
                 type="button"
                 onClick={() => setSkillsType('2SKILLS')}
-                className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   skillsType === '2SKILLS'
                     ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500/20'
                     : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                 }`}
               >
-                🎧 📖 2 Kỹ Năng (LR)
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>2 Kỹ Năng (LR)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSkillsType('4SKILLS')}
-                className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   skillsType === '4SKILLS'
                     ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 text-teal-700 dark:text-teal-300 ring-1 ring-teal-500/20'
                     : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                 }`}
               >
-                🎧 📖 🗣️ ✍️ 4 Kỹ Năng
+                <Layers className="w-3.5 h-3.5" />
+                <span>4 Kỹ Năng (Toàn diện)</span>
               </button>
             </div>
           </div>

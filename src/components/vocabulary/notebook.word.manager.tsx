@@ -1,7 +1,4 @@
-/**
- * @file notebook.word.manager.tsx
- * @description Component giao diện React NotebookWordManager cho học viên
- */
+// Quản lý danh sách từ vựng trong sổ từ.
 
 import { useState, useEffect } from 'react'
 import { Bookmark, Search } from 'lucide-react'
@@ -143,12 +140,12 @@ export function VocabularyTab({
         >
           <option value="all">{isVietnamese ? 'Tất cả' : 'All'}</option>
           <option value="inbox">
-            📁 {isVietnamese ? 'Danh sách từ vựng' : 'Vocabulary list'} (
+            {isVietnamese ? 'Danh sách từ vựng' : 'Vocabulary list'} (
             {savedVocabulary.filter((w) => !w.deck_id).length})
           </option>
           {userDecks.map((deck) => (
             <option key={deck.id} value={deck.id}>
-              📁 {deck.name || 'Bộ thẻ'}
+              {deck.name || 'Bộ thẻ'}
             </option>
           ))}
         </select>

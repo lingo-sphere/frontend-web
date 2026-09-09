@@ -1,9 +1,5 @@
-/**
- * @file course.sidebar.challenge.test.card.tsx
- * @description Thành phần hiển thị card bài thi thử thách mở khóa chương học trong thanh bên
- */
-
-import { CheckCircle2, Crown, FileText, Lock, Mic, RotateCcw, Trophy, Volume2, Zap } from 'lucide-react'
+// Thành phần hiển thị card bài thi thử thách mở khóa chương học trong thanh bên
+import { CheckCircle2, Crown, FileText, Lock, Mic, RotateCcw, Trophy, Volume2, Target } from 'lucide-react'
 import type { Chapter } from '@/types/course'
 
 interface CourseSidebarChallengeTestCardProps {
@@ -129,7 +125,7 @@ export function CourseSidebarChallengeTestCard({
             {isChapterLocked
               ? `Cần vượt qua bài test của Chương ${prevChapterOrder} để mở khóa`
               : isPassedChallenge
-                ? `👑 Kỷ lục: ${challengeScore}% • Đã hoàn thành thử thách & mở khóa chương tiếp theo`
+                ? `Kỷ lục: ${challengeScore}% • Đã hoàn thành thử thách & mở khóa chương tiếp theo`
                 : hasTakenChallenge
                   ? `Cần tối thiểu ${passingScore}% để mở khóa chương tiếp theo • Bấm để làm lại`
                   : `${questionsCount} câu hỏi • Vượt qua ${passingScore}% để mở khóa chương tiếp theo`}
@@ -154,7 +150,7 @@ export function CourseSidebarChallengeTestCard({
           </span>
         ) : (
           <span className="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-[11px] shadow-xs transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
-            <Zap size={11} />
+            <Target size={11} />
             <span>Làm thử thách</span>
           </span>
         )

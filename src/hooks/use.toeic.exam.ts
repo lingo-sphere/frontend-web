@@ -12,6 +12,7 @@ import type { ToeicQuestion } from '@/types/toeic'
 import type { ExamResultMetrics } from '@/components/toeic/toeic.exam.result'
 import { Analytics } from '@/lib/posthog'
 import { toast } from '@/store/toast.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export type PracticeMode = 'FULL' | 'LISTENING' | 'READING' | 'PART'
 
@@ -457,7 +458,7 @@ export function useToeicExam(examId?: string) {
     }
 
     try {
-      localStorage.setItem('lingo_user_placement_score', JSON.stringify(placementData))
+      storage.set(STORAGE_KEYS.PLACEMENT_SCORE, placementData)
       userService.updateProfile(placementData).catch(() => null)
       const { user, setUser } = useAuthStore.getState()
       if (user) {

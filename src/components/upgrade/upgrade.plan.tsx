@@ -1,8 +1,4 @@
-/**
- * @file upgrade.plan.tsx
- * @description Màn hình bước 1 chọn gói thời hạn VIP, hiển thị hạn dùng hiện tại và xem trước cộng dồn
- */
-
+// Giao diện chọn gói thời hạn nâng cấp tài khoản VIP.
 'use client'
 
 import {
@@ -13,7 +9,7 @@ import {
   Loader2,
   QrCode,
   Shield,
-  Zap,
+  Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getBenefits, type Plan } from '@/components/upgrade/upgrade.data'
@@ -222,7 +218,7 @@ export function UpgradeSelectPlanStep({
             {isVi ? 'Tự động 100%' : '100% Automated'}
           </span>
           <span className="flex items-center gap-1.5 font-medium text-amber-600 dark:text-amber-400">
-            <Zap className="h-3.5 w-3.5" />
+            <Clock className="h-3.5 w-3.5" />
             {isVi ? 'Nhận VIP tức thì sau 2 giây' : 'Instant activation'}
           </span>
         </div>

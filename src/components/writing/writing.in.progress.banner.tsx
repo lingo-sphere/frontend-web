@@ -1,11 +1,7 @@
-/**
- * @file writing.in.progress.banner.tsx
- * @description Thành phần hiển thị banner bài viết đang làm dở (Draft in progress) cho học viên tiếp tục làm bài
- */
-
+// Banner hiển thị bài viết đang làm dở cho học viên.
 'use client'
 
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, PenLine } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { ContinueWriting } from '@/types/writing'
@@ -43,8 +39,9 @@ export function WritingInProgressBanner({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1">
               <div className="mb-2 flex items-center gap-2">
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                  📝 {isVietnamese ? 'Đang làm dở' : 'In Progress'}
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                  <PenLine className="w-3 h-3" />
+                  <span>{isVietnamese ? 'Đang làm dở' : 'In Progress'}</span>
                 </span>
                 <span className="text-[12px] text-text-tertiary">
                   {continueWriting.exercise_type.replace('_', ' ')} • {continueWriting.writing_level}

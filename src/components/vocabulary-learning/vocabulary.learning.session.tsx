@@ -1,7 +1,20 @@
 // Component giao diện React VocabularyLearningSession cho học viên
 import { useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X, ChevronDown, Brain, Check } from 'lucide-react'
+import {
+  X,
+  ChevronDown,
+  Brain,
+  Check,
+  Layers,
+  CheckSquare,
+  RotateCcw,
+  Keyboard,
+  Image as ImageIcon,
+  Headphones,
+  Mic,
+  FileText,
+} from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import type { VocabularyDeck, ExerciseMode, ExerciseAnswer, LearningResult } from '@/types/vocabulary.learn'
 import { shuffleArray, speakWord, speakSentence } from '@/lib/audio.utils'
@@ -22,14 +35,14 @@ interface VocabularyLearningSessionProps {
 }
 
 const getExerciseModes = (isVietnamese: boolean) => [
-  { mode: 'flashcard' as ExerciseMode, label: isVietnamese ? 'Flashcard' : 'Flashcard', icon: '📇' },
-  { mode: 'multiple-choice' as ExerciseMode, label: isVietnamese ? 'Chọn đáp án' : 'Multiple Choice', icon: '🔤' },
-  { mode: 'reverse-multiple-choice' as ExerciseMode, label: isVietnamese ? 'Đảo ngược' : 'Reverse MC', icon: '🔄' },
-  { mode: 'type-word' as ExerciseMode, label: isVietnamese ? 'Đánh từ' : 'Type Word', icon: '⌨️' },
-  { mode: 'image-word' as ExerciseMode, label: isVietnamese ? 'Hình → Từ' : 'Image → Word', icon: '🖼️' },
-  { mode: 'listen-type' as ExerciseMode, label: isVietnamese ? 'Nghe & Đánh' : 'Listen & Type', icon: '🎧' },
-  { mode: 'pronunciation' as ExerciseMode, label: isVietnamese ? 'Phát âm' : 'Pronunciation', icon: '🎤' },
-  { mode: 'context' as ExerciseMode, label: isVietnamese ? 'Ngữ cảnh' : 'Context', icon: '📝' },
+  { mode: 'flashcard' as ExerciseMode, label: isVietnamese ? 'Flashcard' : 'Flashcard', icon: Layers },
+  { mode: 'multiple-choice' as ExerciseMode, label: isVietnamese ? 'Chọn đáp án' : 'Multiple Choice', icon: CheckSquare },
+  { mode: 'reverse-multiple-choice' as ExerciseMode, label: isVietnamese ? 'Đảo ngược' : 'Reverse MC', icon: RotateCcw },
+  { mode: 'type-word' as ExerciseMode, label: isVietnamese ? 'Đánh từ' : 'Type Word', icon: Keyboard },
+  { mode: 'image-word' as ExerciseMode, label: isVietnamese ? 'Hình → Từ' : 'Image → Word', icon: ImageIcon },
+  { mode: 'listen-type' as ExerciseMode, label: isVietnamese ? 'Nghe & Đánh' : 'Listen & Type', icon: Headphones },
+  { mode: 'pronunciation' as ExerciseMode, label: isVietnamese ? 'Phát âm' : 'Pronunciation', icon: Mic },
+  { mode: 'context' as ExerciseMode, label: isVietnamese ? 'Ngữ cảnh' : 'Context', icon: FileText },
 ]
 
 const practiceModes: ExerciseMode[] = [
@@ -215,8 +228,13 @@ export function VocabularyLearningSession({ deck, onComplete, onExit, onAction }
               {isSmartMode ? (
                 <><Brain size={16} className="text-primary" />{isVietnamese ? 'Thông minh' : 'Smart'}</>
               ) : (
-                <><span>{exerciseModes.find(m => m.mode === currentMode)?.icon}</span>
-                  {exerciseModes.find(m => m.mode === currentMode)?.label}</>
+                <>
+                  {(() => {
+                    const CurrentIcon = exerciseModes.find(m => m.mode === currentMode)?.icon || Layers
+                    return <CurrentIcon size={16} className="text-text-secondary" />
+                  })()}
+                  {exerciseModes.find(m => m.mode === currentMode)?.label}
+                </>
               )}
               <ChevronDown size={16} />
             </button>
@@ -238,12 +256,12 @@ export function VocabularyLearningSession({ deck, onComplete, onExit, onAction }
 
                 <div className="my-2 border-t border-border" />
 
-                {exerciseModes.map(({ mode, label, icon }) => (
+                {exerciseModes.map(({ mode, label, icon: ModeIcon }) => (
                   <button key={mode} onClick={() => handleModeChange(mode)}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] ${
                       !isSmartMode && currentMode === mode ? 'bg-primary/10 text-primary' : 'text-text-primary hover:bg-surface-hover'
                     }`}>
-                    <span>{icon}</span>
+                    <ModeIcon size={16} className={!isSmartMode && currentMode === mode ? 'text-primary' : 'text-text-secondary'} />
                     {label}
                     {!isSmartMode && currentMode === mode && <Check size={14} className="ml-auto" />}
                   </button>

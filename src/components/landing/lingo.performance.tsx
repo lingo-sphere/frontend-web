@@ -8,7 +8,7 @@ import {
   Brain,
   Mic,
   Award,
-  Zap,
+  Cpu,
   Layers,
   Flame,
   CheckCircle2,
@@ -234,7 +234,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
           >
             <div className="flex items-center justify-between text-xs text-white/70 mb-3">
               <span className="flex items-center gap-2 font-bold text-[#48c9b0]">
-                <Zap className="h-4 w-4" /> {t.card4Title}
+                <Cpu className="h-4 w-4" /> {t.card4Title}
               </span>
               <span className="text-[10px] font-mono text-amber-300 bg-amber-500/25 px-2.5 py-1 rounded-full font-semibold">
                 {t.card4Badge}

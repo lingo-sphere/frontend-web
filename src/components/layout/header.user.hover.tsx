@@ -3,7 +3,7 @@
 'use client'
 
 import { useTranslation } from 'react-i18next'
-import { Globe } from 'lucide-react'
+import { Globe, Crown } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { useAuthStore } from '@/store/auth.store'
 import { useCartStore } from '@/store/cart.store'
@@ -92,8 +92,9 @@ export function HeaderUserHover({
             </div>
             <p className="text-xs text-text-tertiary truncate">{user.email}</p>
             {isPremium ? (
-              <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 truncate mt-0.5">
-                👑 {remainingSubText}
+              <p className="flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 truncate mt-0.5">
+                <Crown className="w-3 h-3 text-amber-500 shrink-0" />
+                <span>{remainingSubText}</span>
               </p>
             ) : (
               <p className="text-[11px] text-text-tertiary truncate mt-0.5">

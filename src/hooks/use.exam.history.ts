@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { examService } from '@/services/exam.service'
 import { courseService } from '@/services/course.service'
 import { useAuthStore } from '@/store/auth.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export interface ToeicHistoryItem {
   _id: string
@@ -153,18 +154,13 @@ export function useExamHistory() {
     let userPlacementTestedAt = activeUser?.placement_tested_at
     let skillsType = activeUser?.placement_skills_type || '2SKILLS'
 
-    if (!userPlacementScore && typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('lingo_user_placement_score')
-        if (cached) {
-          const parsed = JSON.parse(cached)
-          if (parsed.placement_test_score) {
-            userPlacementScore = Number(parsed.placement_test_score)
-            userPlacementTestedAt = parsed.placement_tested_at || userPlacementTestedAt
-            skillsType = parsed.placement_skills_type || skillsType
-          }
-        }
-      } catch {}
+    if (!userPlacementScore) {
+      const cached = storage.get<{ placement_test_score?: number; placement_tested_at?: string; placement_skills_type?: string }>(STORAGE_KEYS.PLACEMENT_SCORE)
+      if (cached?.placement_test_score) {
+        userPlacementScore = Number(cached.placement_test_score)
+        userPlacementTestedAt = cached.placement_tested_at || userPlacementTestedAt
+        skillsType = cached.placement_skills_type || skillsType
+      }
     }
 
     if (!hasRecordedPlacementAttempt && (userPlacementScore > 0 || userPlacementTestedAt)) {

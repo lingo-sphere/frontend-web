@@ -1,10 +1,6 @@
-/**
- * @file learning.result.view.tsx
- * @description Component giao diện React LearningResultView cho học viên
- */
-
+// Component hiển thị kết quả học từ vựng và thống kê tỷ lệ chính xác
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, RotateCcw, Home } from 'lucide-react'
+import { ChevronRight, RotateCcw, Home, Award, TrendingUp, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { LearningResult, VocabularyItem } from '@/types/vocabulary.learn'
@@ -48,7 +44,17 @@ export function LearningResultView({ result, onRetry, onBackToHome, onAction }: 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8">
       <div className="mb-8 text-center">
-        <div className="mb-4 text-6xl">{accuracy >= 80 ? '🎉' : accuracy >= 50 ? '💪' : '📚'}</div>
+        <div className="mb-4 flex justify-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            {accuracy >= 80 ? (
+              <Award size={36} className="text-primary" />
+            ) : accuracy >= 50 ? (
+              <TrendingUp size={36} className="text-primary" />
+            ) : (
+              <BookOpen size={36} className="text-primary" />
+            )}
+          </div>
+        </div>
         <h1 className="text-[28px] font-bold text-text-primary">{getAccuracyMessage(accuracy)}</h1>
         <p className="mt-2 text-[14px] text-text-secondary">
           {isVietnamese ? 'Bạn đã hoàn thành phiên học từ vựng.' : 'You completed your vocabulary session.'}

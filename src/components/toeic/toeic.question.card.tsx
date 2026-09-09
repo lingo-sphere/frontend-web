@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Flag, CheckCircle2, XCircle, ChevronLeft, ChevronRight, PenTool, Mic, Square, RotateCcw } from 'lucide-react'
+import { Flag, CheckCircle2, XCircle, ChevronLeft, ChevronRight, PenTool, Mic, Square, RotateCcw, Lightbulb } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -136,8 +136,9 @@ export function ToeicQuestionCard({
           )}
         </div>
         {effectivePartTip && (
-          <div className="max-w-md rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-            💡 {effectivePartTip}
+          <div className="flex items-center gap-1.5 max-w-md rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+            <Lightbulb className="w-3.5 h-3.5 shrink-0" />
+            <span>{effectivePartTip}</span>
           </div>
         )}
       </div>

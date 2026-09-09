@@ -11,7 +11,8 @@ import {
   ArrowRight,
   Layers,
   TrendingUp,
-  Zap,
+  Target,
+  Lightbulb,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -154,7 +155,7 @@ export function ToeicCourseRecommendations({
                 <div className="flex items-center justify-center sm:justify-start gap-2">
                   <span className="text-xs text-indigo-300">Đăng ký trọn gói Lộ Trình:</span>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold border border-emerald-500/30">
-                    <Zap className="w-3 h-3 text-emerald-400" />
+                    <Sparkles className="w-3 h-3 text-emerald-400" />
                     <span>Tiết Kiệm 25% Combo</span>
                   </span>
                 </div>
@@ -262,8 +263,15 @@ export function ToeicCourseRecommendations({
                           <GraduationCap className="h-10 w-10" />
                         </div>
                       )}
-                      <span className="absolute top-2 right-2 rounded-lg bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs">
-                        {course.target_score ? `🎯 ${course.target_score}+` : 'TOEIC'}
+                      <span className="absolute top-2 right-2 flex items-center gap-1 rounded-lg bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs">
+                        {course.target_score ? (
+                          <>
+                            <Target className="w-3 h-3 text-teal-400" />
+                            <span>{course.target_score}+</span>
+                          </>
+                        ) : (
+                          'TOEIC'
+                        )}
                       </span>
                     </div>
 
@@ -271,8 +279,9 @@ export function ToeicCourseRecommendations({
                       {course.title}
                     </h5>
 
-                    <div className="mt-2 rounded-lg bg-indigo-50/60 p-2 text-[11px] leading-relaxed text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
-                      💡 {course.recommendation_reason || 'Khóa học được tối ưu cho khung điểm của bạn'}
+                    <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-indigo-50/60 p-2 text-[11px] leading-relaxed text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
+                      <Lightbulb className="w-3.5 h-3.5 shrink-0 text-indigo-500 mt-0.5" />
+                      <span>{course.recommendation_reason || 'Khóa học được tối ưu cho khung điểm của bạn'}</span>
                     </div>
                   </div>
 

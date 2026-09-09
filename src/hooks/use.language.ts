@@ -2,6 +2,7 @@
 
 import { useTranslation } from 'react-i18next'
 import { useCallback } from 'react'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export type Language = 'vi' | 'en'
 
@@ -12,9 +13,7 @@ export function useLanguage() {
   const changeLanguage = useCallback(
     (lang: Language) => {
       i18n.changeLanguage(lang)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('i18nextLng', lang)
-      }
+      storage.set(STORAGE_KEYS.I18N_LNG, lang)
     },
     [i18n]
   )

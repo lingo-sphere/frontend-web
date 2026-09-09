@@ -8,7 +8,6 @@ import {
   Target,
   CheckCircle2,
   TrendingUp,
-  Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -130,7 +129,7 @@ export function RoadmapHeroBanner({
             </div>
 
             <div className="p-3 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-start gap-2.5">
-              <Zap className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+              <Sparkles className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-[11px] text-indigo-100 leading-relaxed">
                 Sau khi thi đánh giá, hệ thống sẽ tự động xếp bạn vào đúng chặng và gợi ý khóa học phù hợp nhất!
               </p>

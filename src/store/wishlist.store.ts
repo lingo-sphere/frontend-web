@@ -1,20 +1,11 @@
-/**
- * @file wishlist.store.ts
- * @description Zustand store quản lý trạng thái cho wishlist
- */
-
+// Store Zustand quản lý trạng thái danh sách khóa học yêu thích
 import { create } from 'zustand'
 import { wishlistService } from '@/services/wishlist.service'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { CourseCardData } from '@/types/course'
 import type { WishlistItem } from '@/types/wishlist'
 
-if (typeof window !== 'undefined') {
-  try {
-    localStorage.removeItem('lingosphere-user-wishlist')
-  } catch {
-
-  }
-}
+storage.remove(STORAGE_KEYS.WISHLIST)
 
 const mapWishlistItemToCourseCard = (item: WishlistItem): CourseCardData => ({
   id: item.course_id,

@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   AlertCircle,
   TrendingUp,
+  Layers,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { UserScoreEditModal } from '@/components/user/user.score.edit.modal'
@@ -186,11 +187,12 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Hình thức đánh giá:
               </span>
-              <div className="text-sm font-bold text-teal-800 dark:text-teal-300 pt-1">
-                {is4Skills ? '🎧 📖 🗣️ ✍️ TOEIC 4 Kỹ Năng' : '🎧 📖 TOEIC 2 Kỹ Năng'}
+              <div className="flex items-center gap-1.5 text-sm font-bold text-teal-800 dark:text-teal-300 pt-1">
+                <Layers className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                <span>{is4Skills ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng'}</span>
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                {is4Skills ? 'LR + Speaking & Writing' : 'Listening & Reading'}
+                {is4Skills ? 'Listening, Reading + Speaking & Writing' : 'Listening & Reading'}
               </div>
             </div>
           </div>

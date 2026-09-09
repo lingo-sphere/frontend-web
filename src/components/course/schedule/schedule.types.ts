@@ -1,7 +1,4 @@
-/**
- * @file schedule.types.ts
- * @description Hằng số và hàm tiện ích cho bộ cài đặt lịch học tập hàng ngày
- */
+// Hằng số và hàm tiện ích cho bộ cài đặt lịch học tập hàng ngày
 
 export const DAYS_OF_WEEK = [
   { id: 'T2', shortVi: 'T2', shortEn: 'Mon', labelVi: 'Thứ 2', labelEn: 'Monday' },
@@ -34,32 +31,34 @@ export function formatTimeDisplay(timeStr: string, isVi: boolean) {
   const period12 = isVi ? (isPM ? 'CH' : 'SA') : (isPM ? 'PM' : 'AM')
 
   let periodDesc = ''
-  let periodEmoji = '🌅'
+  let periodIcon: 'moon' | 'sunrise' | 'sun' | 'sunset' = 'sunrise'
   if (h >= 0 && h < 5) {
     periodDesc = isVi ? 'Đêm muộn' : 'Late night'
-    periodEmoji = '🌙'
+    periodIcon = 'moon'
   } else if (h >= 5 && h < 11) {
     periodDesc = isVi ? 'Buổi sáng' : 'Morning'
-    periodEmoji = '🌅'
+    periodIcon = 'sunrise'
   } else if (h >= 11 && h < 14) {
     periodDesc = isVi ? 'Buổi trưa' : 'Noon'
-    periodEmoji = '☀️'
+    periodIcon = 'sun'
   } else if (h >= 14 && h < 18) {
     periodDesc = isVi ? 'Buổi chiều' : 'Afternoon'
-    periodEmoji = '🌤️'
+    periodIcon = 'sun'
   } else if (h >= 18 && h < 22) {
     periodDesc = isVi ? 'Buổi tối' : 'Evening'
-    periodEmoji = '🌆'
+    periodIcon = 'sunset'
   } else {
     periodDesc = isVi ? 'Ban đêm' : 'Night'
-    periodEmoji = '🌃'
+    periodIcon = 'moon'
   }
 
   return {
     time24,
     time12: `${pad(h12)}:${pad(m)} ${period12}`,
     periodDesc,
-    periodEmoji,
+    periodIcon,
+    h,
+    m,
     label: isVi
       ? `${time24} • ${pad(h12)}:${pad(m)} ${period12} (${periodDesc})`
       : `${pad(h12)}:${pad(m)} ${period12} • ${time24} (${periodDesc})`,

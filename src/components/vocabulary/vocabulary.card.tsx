@@ -1,10 +1,6 @@
-/**
- * @file vocabulary.card.tsx
- * @description Component giao diện React VocabularyCard cho học viên
- */
-
+// Thẻ hiển thị từ vựng đã lưu trong sổ từ.
 import { useTranslation } from 'react-i18next'
-import { Volume2, Plus, Trash2 } from 'lucide-react'
+import { Volume2, Plus, Trash2, Folder } from 'lucide-react'
 import type { SavedVocabulary, UserDeck, Meaning } from '@/types/vocabulary'
 
 interface VocabularyCardProps {
@@ -119,8 +115,8 @@ export function VocabularyCard({
       </div>
 
       {deckName && (
-        <div className="mt-3 flex items-center gap-1 text-[11px] text-text-tertiary">
-          <span>📁</span>
+        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-text-tertiary">
+          <Folder className="w-3.5 h-3.5" />
           <span>{deckName}</span>
         </div>
       )}

@@ -1,14 +1,10 @@
-/**
- * @file lingo.showcase.tsx
- * @description Component giao diện React LingoShowcase cho học viên
- */
-
+// Component giao diện showcase tính năng và hiệu năng LingoSphere.
 'use client'
 
 import { useRef, useEffect, useState } from "react"
 import Link from "next/link"
 import { motion, useScroll, useTransform } from "motion/react"
-import { Zap, Sparkles, Brain, ArrowRight, CheckCircle2, Cpu } from "lucide-react"
+import { Sparkles, Brain, ArrowRight, CheckCircle2, Cpu } from "lucide-react"
 import { landingLocales, type LandingLang } from "@/components/landing/landing.locales"
 
 interface LingoShowcaseProps {
@@ -211,7 +207,7 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
 
             <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-left shadow-lg hover:border-[#48c9b0]/40 transition-colors">
               <div className="flex items-center gap-2 text-[#48c9b0] mb-3 font-mono text-xs font-bold">
-                <Zap className="h-4 w-4" /> GROQ LPU
+                <Cpu className="h-4 w-4" /> GROQ LPU
               </div>
               <div className="text-3xl sm:text-4xl font-black text-white">0.3s</div>
               <div className="text-xs text-white/60 mt-1.5">{lang === "vi" ? "Tốc độ phản hồi Gia sư AI" : "AI Tutor response latency"}</div>

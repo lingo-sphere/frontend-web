@@ -1,11 +1,7 @@
-/**
- * @file auth.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ auth
- */
-
-import { api } from '@/services/api.client'
-import { apiClient } from '@/services/api.client'
+// Service xử lý các logic nghiệp vụ xác thực và lưu trữ phiên đăng nhập học viên
+import { api, apiClient } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { LoginPayload, RegisterPayload, SocialLoginPayload } from '@/types/api.types'
 import {
   AuthResponseSchema,
@@ -19,10 +15,10 @@ export type { AuthResponse, User }
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, payload, AuthResponseSchema)
-    if (typeof window !== 'undefined' && res.access_token) {
-      localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+    if (res.access_token) {
+      storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
+        storage.set(STORAGE_KEYS.USER, res.user)
       }
     }
     return res
@@ -30,10 +26,10 @@ export const authService = {
 
   async socialLogin(payload: SocialLoginPayload): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.SOCIAL_LOGIN, payload, AuthResponseSchema)
-    if (typeof window !== 'undefined' && res.access_token) {
-      localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+    if (res.access_token) {
+      storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
+        storage.set(STORAGE_KEYS.USER, res.user)
       }
     }
     return res
@@ -45,10 +41,10 @@ export const authService = {
 
   async verifyEmailOtp(payload: { email: string; otp: string }): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_OTP, payload, AuthResponseSchema)
-    if (typeof window !== 'undefined' && res.access_token) {
-      localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+    if (res.access_token) {
+      storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
+        storage.set(STORAGE_KEYS.USER, res.user)
       }
     }
     return res
@@ -56,10 +52,10 @@ export const authService = {
 
   async verifyEmailToken(payload: { email: string; token: string }): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_TOKEN, payload, AuthResponseSchema)
-    if (typeof window !== 'undefined' && res.access_token) {
-      localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+    if (res.access_token) {
+      storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (res.user) {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user))
+        storage.set(STORAGE_KEYS.USER, res.user)
       }
     }
     return res
@@ -91,28 +87,17 @@ export const authService = {
     try {
       await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
     } catch {
-
     } finally {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-        localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
-      }
+      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.USER)
     }
   },
 
   isAuthenticated(): boolean {
-    if (typeof window === 'undefined') return false
-    return !!localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
+    return !!storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
   },
 
   getStoredUser(): User | null {
-    if (typeof window === 'undefined') return null
-    const userStr = localStorage.getItem(API_CONFIG.STORAGE_KEYS.USER)
-    if (!userStr) return null
-    try {
-      return JSON.parse(userStr) as User
-    } catch {
-      return null
-    }
+    return storage.get<User>(STORAGE_KEYS.USER)
   },
 }

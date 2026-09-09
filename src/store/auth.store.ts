@@ -1,12 +1,8 @@
-/**
- * @file auth.store.ts
- * @description Mã nguồn thành phần auth-store.ts
- */
-
+// Store quản lý trạng thái xác thực và thông tin phiên học viên
 import { create } from 'zustand'
 import { authService } from '@/services/auth.service'
 import { userService } from '@/services/user.service'
-import { API_CONFIG } from '@/config/api.config'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { User, LoginPayload, RegisterPayload, SocialLoginPayload } from '@/types/api.types'
 
 interface AuthState {
@@ -34,8 +30,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
 
   setUser: (user) => {
-    if (typeof window !== 'undefined' && user) {
-      localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(user))
+    if (user) {
+      storage.set(STORAGE_KEYS.USER, user)
     }
     set({ user, isAuthenticated: !!user })
   },
@@ -56,20 +52,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score && typeof window !== 'undefined') {
-        try {
-          const cachedPlacement = localStorage.getItem('lingo_user_placement_score')
-          if (cachedPlacement) {
-            const parsed = JSON.parse(cachedPlacement)
-            if (parsed.placement_test_score) {
-              Object.assign(finalUser, parsed)
-            }
-          }
-        } catch {}
+      if (!finalUser.placement_test_score) {
+        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
+        if (cachedPlacement?.placement_test_score) {
+          Object.assign(finalUser, cachedPlacement)
+        }
       }
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
-      }
+      storage.set(STORAGE_KEYS.USER, finalUser)
       set({
         user: finalUser,
         isAuthenticated: true,
@@ -96,20 +85,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score && typeof window !== 'undefined') {
-        try {
-          const cachedPlacement = localStorage.getItem('lingo_user_placement_score')
-          if (cachedPlacement) {
-            const parsed = JSON.parse(cachedPlacement)
-            if (parsed.placement_test_score) {
-              Object.assign(finalUser, parsed)
-            }
-          }
-        } catch {}
+      if (!finalUser.placement_test_score) {
+        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
+        if (cachedPlacement?.placement_test_score) {
+          Object.assign(finalUser, cachedPlacement)
+        }
       }
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
-      }
+      storage.set(STORAGE_KEYS.USER, finalUser)
       set({
         user: finalUser,
         isAuthenticated: true,
@@ -213,25 +195,18 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score && typeof window !== 'undefined') {
-        try {
-          const cachedPlacement = localStorage.getItem('lingo_user_placement_score')
-          if (cachedPlacement) {
-            const parsed = JSON.parse(cachedPlacement)
-            if (parsed.placement_test_score) {
-              Object.assign(finalUser, parsed)
-            }
-          }
-        } catch {}
+      if (!finalUser.placement_test_score) {
+        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
+        if (cachedPlacement?.placement_test_score) {
+          Object.assign(finalUser, cachedPlacement)
+        }
       }
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(API_CONFIG.STORAGE_KEYS.USER, JSON.stringify(finalUser))
-      }
+      storage.set(STORAGE_KEYS.USER, finalUser)
       set({ user: finalUser, isAuthenticated: true })
     } catch {
+      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.USER)
       if (typeof window !== 'undefined') {
-        localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-        localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
         window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
       }
       set({ user: null, isAuthenticated: false })

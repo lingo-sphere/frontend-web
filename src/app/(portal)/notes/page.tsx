@@ -1,8 +1,4 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/notes
- */
-
+// Trang quản lý ghi chú học tập cá nhân của học viên
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
@@ -16,6 +12,7 @@ import type { UserNote, NoteTargetType, CreateNoteForm } from '@/types/notes'
 import { NOTE_TARGET_LABELS, NOTE_TARGET_ICONS } from '@/types/notes'
 import { NoteCard } from '@/components/notes/note.card'
 import { NoteModal } from '@/components/notes/note.modal'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 const ITEMS_PER_PAGE = 9
 
@@ -31,23 +28,15 @@ export default function NotesAppPage() {
   const [editingNote, setEditingNote] = useState<UserNote | undefined>()
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('lingosphere_user_notes')
-      if (saved) {
-        setNotes(JSON.parse(saved))
-      }
-    } catch {
-
+    const saved = storage.get<UserNote[]>(STORAGE_KEYS.USER_NOTES)
+    if (saved && Array.isArray(saved)) {
+      setNotes(saved)
     }
   }, [])
 
   const saveNotes = (updated: UserNote[]) => {
     setNotes(updated)
-    try {
-      localStorage.setItem('lingosphere_user_notes', JSON.stringify(updated))
-    } catch {
-
-    }
+    storage.set(STORAGE_KEYS.USER_NOTES, updated)
   }
 
   const targetTypes: (NoteTargetType | 'ALL')[] = [

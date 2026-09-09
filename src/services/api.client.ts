@@ -1,10 +1,7 @@
-/**
- * @file api.client.ts
- * @description Service API client kết nối backend cho api-client
- */
-
+// Service API client kết nối backend cho api-client
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { API_CONFIG } from '@/config/api.config'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { ApiResponse } from '@/types/api.types'
 import type { ZodType } from 'zod'
 
@@ -19,14 +16,12 @@ export const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-      if (config.headers && !config.headers['x-correlation-id']) {
-        config.headers['x-correlation-id'] = `trace_web_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
-      }
+    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    if (config.headers && !config.headers['x-correlation-id']) {
+      config.headers['x-correlation-id'] = `trace_web_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
     }
     return config
   },
@@ -72,9 +67,9 @@ apiClient.interceptors.response.use(
         originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN)
 
       if (isKickout) {
+        storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.remove(STORAGE_KEYS.USER)
         if (typeof window !== 'undefined') {
-          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
           window.dispatchEvent(new CustomEvent('lingosphere:session_terminated', { detail: { message: errorMsg } }))
         }
         return Promise.reject(new Error(errorMsg || 'Phiên đăng nhập đã bị đăng xuất từ thiết bị khác'))
@@ -114,7 +109,7 @@ apiClient.interceptors.response.use(
         const newAccessToken = responseData?.data?.access_token ? responseData.data.access_token : responseData?.access_token
 
         if (newAccessToken) {
-          localStorage.setItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+          storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
 
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
@@ -130,9 +125,9 @@ apiClient.interceptors.response.use(
         processQueue(refreshErr, null)
         console.warn('Phiên đăng nhập học viên đã hết hạn. Đang đăng xuất...', refreshErr)
 
+        storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.remove(STORAGE_KEYS.USER)
         if (typeof window !== 'undefined') {
-          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-          localStorage.removeItem(API_CONFIG.STORAGE_KEYS.USER)
           window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
         }
         return Promise.reject(refreshErr)

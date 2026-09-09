@@ -1,8 +1,4 @@
-/**
- * @file use.courses.catalog.ts
- * @description Custom hook quản lý danh sách khóa học, tìm kiếm, lọc theo tab/danh mục, lịch học và wishlist
- */
-
+// Custom hook quản lý danh sách khóa học, lọc theo danh mục, lịch học và wishlist
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from '@/lib/navigation'
@@ -15,6 +11,7 @@ import { useWishlistStore } from '@/store/wishlist.store'
 import { useAuthStore } from '@/store/auth.store'
 import { useEnrollmentStore } from '@/store/enrollment.store'
 import { toast } from '@/store/toast.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function useCoursesCatalog() {
   const { i18n } = useTranslation()
@@ -40,13 +37,11 @@ export function useCoursesCatalog() {
   const [userSchedule, setUserSchedule] = useState<UserScheduleData | null>(null)
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const dismissedUntil = localStorage.getItem('course_schedule_banner_dismissed_until')
-      if (dismissedUntil) {
-        const untilTime = parseInt(dismissedUntil, 10)
-        if (Date.now() < untilTime) {
-          setShowScheduleBanner(false)
-        }
+    const dismissedUntil = storage.get<string>(STORAGE_KEYS.BANNER_DISMISSED)
+    if (dismissedUntil) {
+      const untilTime = parseInt(dismissedUntil, 10)
+      if (Date.now() < untilTime) {
+        setShowScheduleBanner(false)
       }
     }
   }, [])
@@ -84,10 +79,8 @@ export function useCoursesCatalog() {
 
   const handleDismissScheduleBanner = () => {
     setShowScheduleBanner(false)
-    if (typeof window !== 'undefined') {
-      const twoHoursLater = Date.now() + 2 * 60 * 60 * 1000
-      localStorage.setItem('course_schedule_banner_dismissed_until', twoHoursLater.toString())
-    }
+    const twoHoursLater = Date.now() + 2 * 60 * 60 * 1000
+    storage.set(STORAGE_KEYS.BANNER_DISMISSED, twoHoursLater.toString())
   }
 
   const handleOpenScheduleModal = () => {

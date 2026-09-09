@@ -1,11 +1,7 @@
-/**
- * @file roadmap.public.card.tsx
- * @description Card thành phần hiển thị roadmap.public.card.tsx
- */
-
+// Thẻ hiển thị thông tin lộ trình học tập công khai.
 'use client'
 
-import { Layers, ArrowRight } from 'lucide-react'
+import { Layers, ArrowRight, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { LearningRoadmap } from '@/types/api.types'
 
@@ -28,8 +24,9 @@ export function RoadmapPublicCard({ roadmap, onEnroll }: RoadmapPublicCardProps)
           >
             {roadmap.skills_focus === '4SKILLS' ? '4 Kỹ Năng' : '2 Kỹ Năng (LR)'}
           </span>
-          <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">
-            🎯 Mục tiêu {roadmap.target_score}+
+          <span className="flex items-center gap-1 text-xs font-black text-indigo-600 dark:text-indigo-400">
+            <Target className="w-3.5 h-3.5" />
+            <span>Mục tiêu {roadmap.target_score}+</span>
           </span>
         </div>
 

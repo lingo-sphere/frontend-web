@@ -1,12 +1,9 @@
-/**
- * @file use.profile.data.ts
- * @description Custom hook tải và đồng bộ dữ liệu hồ sơ cá nhân, điểm đánh giá TOEIC, điểm XP và bảng xếp hạng tuần
- */
-
+// Custom hook tải và đồng bộ dữ liệu hồ sơ cá nhân, điểm đánh giá TOEIC và điểm XP
 import { useState, useEffect } from 'react'
 import { userService } from '@/services/user.service'
 import type { User, EditProfileForm } from '@/types/user'
 import { useAuthStore } from '@/store/auth.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export function formatNumber(val?: number): string {
   if (val === undefined || val === null) return '0'
@@ -87,16 +84,19 @@ export function useProfileData() {
   })
 
   useEffect(() => {
-    let cachedStats: any = null
-    let localScore: any = null
-    try {
-      if (typeof window !== 'undefined') {
-        const storedStats = localStorage.getItem('lingo_cached_profile_stats')
-        if (storedStats) cachedStats = JSON.parse(storedStats)
-        const storedScore = localStorage.getItem('lingo_user_placement_score')
-        if (storedScore) localScore = JSON.parse(storedScore)
-      }
-    } catch {}
+    const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
+    const localScore = storage.get<{
+      placement_test_score?: number
+      placement_listening_score?: number
+      placement_reading_score?: number
+      placement_speaking_score?: number
+      placement_writing_score?: number
+      placement_skills_type?: string
+      target_toeic_score?: number
+      current_estimated_score?: number
+      is_score_manually_edited?: boolean
+      placement_tested_at?: string
+    }>(STORAGE_KEYS.PLACEMENT_SCORE)
 
     const auth = authUser || useAuthStore.getState().user
     if (auth) {
@@ -155,11 +155,7 @@ export function useProfileData() {
                 currentStreak: gamify?.current_streak ?? prev.stats?.currentStreak ?? 0,
                 longestStreak: gamify?.longest_streak ?? prev.stats?.longestStreak ?? 0,
               }
-              try {
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('lingo_cached_profile_stats', JSON.stringify(updatedStats))
-                }
-              } catch {}
+              storage.set(STORAGE_KEYS.PROFILE_STATS, updatedStats)
 
               return {
                 ...prev,

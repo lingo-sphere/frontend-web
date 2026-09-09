@@ -1,8 +1,4 @@
-/**
- * @file roadmap.growth.tracker.tsx
- * @description Biểu đồ theo dõi sự phát triển kỹ năng và mục tiêu lộ trình của học viên
- */
-
+// Biểu đồ theo dõi sự phát triển kỹ năng và mục tiêu lộ trình của học viên.
 'use client'
 
 import { Compass, TrendingUp, Target } from 'lucide-react'
@@ -86,8 +82,9 @@ export function RoadmapGrowthTracker({ progress, roadmapStats }: RoadmapGrowthTr
             </div>
           </div>
           {(roadmapStats?.growth || 0) > 0 && (
-            <Badge className="bg-emerald-600 text-white font-bold">
-              📈 Bứt Phá +{roadmapStats?.growth} Điểm
+            <Badge className="flex items-center gap-1 bg-emerald-600 text-white font-bold">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Bứt Phá +{roadmapStats?.growth} Điểm</span>
             </Badge>
           )}
         </div>

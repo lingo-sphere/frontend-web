@@ -1,7 +1,7 @@
 // Component giao diện React WritingHistory cho học viên
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Calendar, Trophy, Clock, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Calendar, Trophy, Clock, ChevronRight, Layers } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { WritingSubmission, WritingLevel, WritingExercise } from '@/types/writing'
@@ -172,7 +172,8 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
                         )}
                         {submission.drafts && submission.drafts.length > 0 && (
                           <span className="flex items-center gap-1 text-primary">
-                            📝 {submission.drafts.length + 1} {isVietnamese ? 'phiên bản' : 'versions'}
+                            <Layers size={14} />
+                            <span>{submission.drafts.length + 1} {isVietnamese ? 'phiên bản' : 'versions'}</span>
                           </span>
                         )}
                       </div>

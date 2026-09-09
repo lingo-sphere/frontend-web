@@ -1,6 +1,6 @@
 // Component hiển thị phân tích kỹ năng TOEIC và tiến độ từ vựng ngắt quãng SRS
 
-import { GraduationCap, Zap } from 'lucide-react'
+import { GraduationCap, Brain } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { VocabStatsSummary } from '@/hooks/use.progress.data'
@@ -70,7 +70,7 @@ export function ProgressSkillsTab({
             <h4 className="text-sm font-bold text-text-primary">Spaced Repetition (SRS)</h4>
           </div>
           <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
-            <Zap size={18} />
+            <Brain size={18} />
           </div>
         </div>
 

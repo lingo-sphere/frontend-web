@@ -1,8 +1,4 @@
-/**
- * @file app.client.provider.tsx
- * @description Component giao diện React AppClientProvider cho học viên
- */
-
+// Component cung cấp context tổng thể, xác thực và cấu hình giao diện cho toàn bộ web app
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -12,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppProvider } from '@/contexts/app.context'
 import { useAuthStore } from '@/store/auth.store'
 import { API_CONFIG } from '@/config/api.config'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 
@@ -116,10 +113,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const token =
-      typeof window !== 'undefined'
-        ? localStorage.getItem(API_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-        : null
+    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
     if (!token) return
 
     let eventSource: EventSource | null = null

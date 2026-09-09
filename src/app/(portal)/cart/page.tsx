@@ -1,13 +1,9 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/cart
- */
-
+// Trang giỏ hàng và thanh toán khóa học của học viên
 'use client'
 
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ShoppingCart, ArrowLeft, ShieldCheck, Award, Zap } from 'lucide-react'
+import { ShoppingCart, ArrowLeft, ShieldCheck, Award, QrCode } from 'lucide-react'
 import { useCartStore } from '@/store/cart.store'
 import { useAuthStore } from '@/store/auth.store'
 import { CourseCheckoutModal, type CheckoutCourseItem } from '@/components/course/course.checkout.modal'
@@ -252,7 +248,7 @@ export default function CartPage() {
                   disabled={items.length === 0}
                   className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm py-3.5 transition-all shadow-md shadow-purple-600/20 hover:shadow-purple-600/40 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <Zap size={16} />
+                  <QrCode size={16} />
                   <span>{isVi ? 'Thanh toán chuyển khoản VietQR' : 'Proceed to VietQR Checkout'}</span>
                 </button>
               </div>

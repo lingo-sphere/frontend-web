@@ -1,7 +1,7 @@
 // Component giao diện React WritingWorkspace cho học viên
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Clock, Save, Send, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Clock, Save, Send, AlertCircle, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { WritingExercise } from '@/types/writing'
 import { toast } from '@/store/toast.store'
@@ -173,8 +173,9 @@ export function WritingWorkspace({
 
             {exercise.ai_hints && exercise.ai_hints.length > 0 && (
               <section className="rounded-lg bg-purple-50 p-4">
-                <h2 className="mb-2 text-[13px] font-semibold text-purple-700">
-                  💡 {isVietnamese ? 'Gợi ý từ AI' : 'AI Hints'}
+                <h2 className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-purple-700">
+                  <Lightbulb className="w-4 h-4 text-purple-600" />
+                  <span>{isVietnamese ? 'Gợi ý từ AI' : 'AI Hints'}</span>
                 </h2>
                 <ul className="space-y-1">
                   {exercise.ai_hints.map((hint, index) => (

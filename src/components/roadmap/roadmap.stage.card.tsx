@@ -1,8 +1,4 @@
-/**
- * @file roadmap.stage.card.tsx
- * @description Card thành phần hiển thị roadmap.stage.card.tsx
- */
-
+// Card thành phần hiển thị chặng học trong lộ trình học tập
 'use client'
 
 import {
@@ -12,7 +8,7 @@ import {
   Play,
   FileCheck2,
   Lock,
-  Zap,
+  Target,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { LearningRoadmapStage, UserRoadmapProgress } from '@/types/api.types'
@@ -82,8 +78,9 @@ export function RoadmapStageCard({
                 {isCompleted ? 'Đã Hoàn Thành' : isInProgress ? 'Đang Học' : 'Chưa Mở Khóa'}
               </span>
               {stage.target_band && (
-                <span className="text-[11px] font-bold text-teal-600 dark:text-teal-400">
-                  🎯 Mục tiêu: {stage.target_band}
+                <span className="flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400">
+                  <Target className="w-3 h-3" />
+                  <span>Mục tiêu: {stage.target_band}</span>
                 </span>
               )}
             </div>
@@ -157,8 +154,8 @@ export function RoadmapStageCard({
                 onClick={() => onOpenCheckpoint(stageOrder - 1)}
                 className="gap-1.5 border-indigo-400/50 bg-indigo-50/60 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 dark:text-indigo-300 text-xs font-bold cursor-pointer transition-all shadow-xs"
               >
-                <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                <span>⚡ Thi Vượt Cấp Chặng {stageOrder - 1}</span>
+                <Target className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <span>Thi Vượt Cấp Chặng {stageOrder - 1}</span>
               </Button>
             </div>
           )}

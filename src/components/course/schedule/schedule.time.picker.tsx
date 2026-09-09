@@ -1,12 +1,8 @@
-/**
- * @file schedule.time.picker.tsx
- * @description Component bộ chọn giờ tuỳ chỉnh cuộn mượt và danh sách khung giờ nhanh (presets)
- */
-
+// Component bộ chọn giờ tuỳ chỉnh cuộn mượt và danh sách khung giờ nhanh (presets)
 'use client'
 
 import { RefObject } from 'react'
-import { Clock, ChevronDown, RotateCcw } from 'lucide-react'
+import { Clock, ChevronDown, RotateCcw, Sun, Moon, Sunrise, Sunset } from 'lucide-react'
 import {
   HOURS_LIST,
   MINUTES_LIST,
@@ -28,6 +24,19 @@ interface ScheduleTimePickerProps {
   onSelectMinute: (minute: string) => void
   onSetCurrentTime: () => void
   onSelectPreset: (time: string) => void
+}
+
+function PeriodIconBadge({ icon, size = 13 }: { icon: string; size?: number }) {
+  switch (icon) {
+    case 'moon':
+      return <Moon size={size} className="text-indigo-400 shrink-0" />
+    case 'sunrise':
+      return <Sunrise size={size} className="text-amber-500 shrink-0" />
+    case 'sunset':
+      return <Sunset size={size} className="text-rose-500 shrink-0" />
+    default:
+      return <Sun size={size} className="text-amber-500 shrink-0" />
+  }
 }
 
 export function ScheduleTimePicker({
@@ -54,8 +63,9 @@ export function ScheduleTimePicker({
         <label className="text-xs font-bold text-text-primary uppercase tracking-wider">
           {isVi ? '2. Chọn khung giờ nhắc nhở' : '2. Select Reminder Time'}
         </label>
-        <span className="text-xs font-medium text-text-tertiary">
-          {timeDisplayInfo.periodEmoji} {timeDisplayInfo.periodDesc}
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-tertiary">
+          <PeriodIconBadge icon={timeDisplayInfo.periodIcon} />
+          <span>{timeDisplayInfo.periodDesc}</span>
         </span>
       </div>
 
@@ -123,7 +133,7 @@ export function ScheduleTimePicker({
                   <span>{isVi ? 'Bộ chọn giờ nhắc học' : 'Time Selector'}</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                  <span>{timeDisplayInfo.periodEmoji}</span>
+                  <PeriodIconBadge icon={timeDisplayInfo.periodIcon} />
                   <span>{timeDisplayInfo.periodDesc}</span>
                 </div>
               </div>

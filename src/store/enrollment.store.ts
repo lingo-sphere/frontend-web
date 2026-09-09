@@ -1,10 +1,8 @@
-/**
- * @file enrollment.store.ts
- * @description Store Zustand quản lý danh sách các khóa học học viên đã mua / ghi danh
- */
-
+// Store Zustand quản lý danh sách các khóa học học viên đã mua hoặc ghi danh
 import { create } from 'zustand'
 import { courseService } from '@/services/course.service'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
+import type { User } from '@/schemas/user.schema'
 
 interface EnrollmentState {
   enrolledCourseIds: string[]
@@ -12,6 +10,15 @@ interface EnrollmentState {
   fetchMyEnrollments: () => Promise<void>
   isEnrolled: (courseIdOrSlug: string) => boolean
   addEnrolledCourse: (courseId: string) => void
+}
+
+interface EnrollmentItem {
+  course_id?: string
+  course?: {
+    _id?: string
+    id?: string
+    slug?: string
+  }
 }
 
 export const useEnrollmentStore = create<EnrollmentState>((set, get) => ({
@@ -25,7 +32,7 @@ export const useEnrollmentStore = create<EnrollmentState>((set, get) => ({
       const enrollments = await courseService.getMyEnrolledCourses()
       if (Array.isArray(enrollments)) {
         const ids: string[] = []
-        enrollments.forEach((e: any) => {
+        ;(enrollments as EnrollmentItem[]).forEach((e) => {
           if (e.course_id) ids.push(String(e.course_id))
           if (e.course?._id) ids.push(String(e.course._id))
           if (e.course?.id) ids.push(String(e.course.id))
@@ -43,12 +50,10 @@ export const useEnrollmentStore = create<EnrollmentState>((set, get) => ({
   isEnrolled: (courseIdOrSlug: string) => {
     if (!courseIdOrSlug) return false
 
-    try {
-      const authUser = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('lingosphere_user') || '{}') : null
-      if (authUser?.is_premium || authUser?.role === 'ADMIN' || authUser?.role === 'INSTRUCTOR') {
-        return true
-      }
-    } catch {}
+    const authUser = storage.get<User>(STORAGE_KEYS.USER)
+    if (authUser?.is_premium || authUser?.role === 'ADMIN' || authUser?.role === 'INSTRUCTOR') {
+      return true
+    }
     return get().enrolledCourseIds.includes(String(courseIdOrSlug))
   },
 

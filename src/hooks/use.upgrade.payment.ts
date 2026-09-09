@@ -1,8 +1,4 @@
-/**
- * @file use.upgrade.payment.ts
- * @description Custom hook quản lý luồng chọn gói đăng ký, tạo đơn thanh toán VietQR, đếm ngược thời gian và tự động kiểm tra trạng thái thanh toán
- */
-
+// Custom hook quản lý luồng chọn gói đăng ký, tạo đơn thanh toán VietQR và kiểm tra thanh toán
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/auth.store'
@@ -10,7 +6,7 @@ import {
   subscriptionService,
   type PaymentOrderResponse,
 } from '@/services/subscription.service'
-import { API_CONFIG } from '@/config/api.config'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
 import { getRemainingSubscriptionText } from '@/components/layout/header.utils'
 import { getPlans, type Plan } from '@/components/upgrade/upgrade.data'
@@ -214,12 +210,7 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
         subscription_plan: orderRef.current?.billing_cycle || 'YEARLY',
       }
       setUser(updatedUser)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(
-          API_CONFIG.STORAGE_KEYS.USER,
-          JSON.stringify(updatedUser)
-        )
-      }
+      storage.set(STORAGE_KEYS.USER, updatedUser)
     }
 
     setTimeout(() => {
