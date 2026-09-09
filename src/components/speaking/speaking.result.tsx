@@ -1,9 +1,6 @@
-/**
- * @file speaking.result.tsx
- * @description Component giao diện React SpeakingResult cho học viên
- */
+// Component giao diện React SpeakingResult cho học viên.
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Play, Pause, RotateCcw, ChevronRight, CheckCircle2, XCircle, Volume2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -29,8 +26,7 @@ export function SpeakingResult({
   const isVietnamese = i18n.language === 'vi'
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [playbackPosition, setPlaybackPosition] = useState(0)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [playbackPosition] = useState(0)
   const evaluation = submission.ai_evaluation
 
   const scores = [

@@ -1,11 +1,7 @@
-/**
- * @file writing.history.tsx
- * @description Component giao diện React WritingHistory cho học viên
- */
-
+// Component giao diện React WritingHistory cho học viên
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Calendar, Trophy, Clock, Filter, ChevronRight, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Calendar, Trophy, Clock, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { WritingSubmission, WritingLevel, WritingExercise } from '@/types/writing'

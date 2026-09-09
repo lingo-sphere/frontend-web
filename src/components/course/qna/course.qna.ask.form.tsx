@@ -1,10 +1,7 @@
-/**
- * @file course.qna.ask.form.tsx
- * @description Form soạn thảo câu hỏi thảo luận mới trong tab Q&A của bài học
- */
+// Form soạn thảo câu hỏi thảo luận mới trong tab Q&A của bài học.
 
 import { forwardRef } from 'react'
-import { BookOpen, EyeOff, MessageSquare, ShieldCheck, User, X } from 'lucide-react'
+import { BookOpen, EyeOff, MessageSquare, User, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface CourseQnAAskFormProps {

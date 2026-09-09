@@ -1,11 +1,8 @@
-/**
- * @file specular.button.tsx
- * @description Component giao diện React SpecularButton cho học viên
- */
+// Component giao diện React SpecularButton cho học viên.
 
 'use client'
 
-import React, { useRef, useEffect, type CSSProperties, type ReactNode, type MouseEventHandler } from 'react'
+import { useRef, useEffect, type CSSProperties, type ReactNode, type MouseEventHandler } from 'react'
 import { Renderer, Program, Mesh, Triangle, Color } from 'ogl'
 
 export type ButtonSize = 'sm' | 'md' | 'lg'

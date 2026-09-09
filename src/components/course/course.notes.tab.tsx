@@ -1,12 +1,9 @@
-/**
- * @file course.notes.tab.tsx
- * @description Component giao diện Ghi chú bài học liên kết trực tiếp cơ sở dữ liệu
- */
+// Component giao diện Ghi chú bài học liên kết trực tiếp cơ sở dữ liệu.
 
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Play, Trash2, Clock, FileText, Sparkles } from 'lucide-react'
+import { Plus, Play, Trash2, Clock, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { NoteItem } from '@/types/course'
 

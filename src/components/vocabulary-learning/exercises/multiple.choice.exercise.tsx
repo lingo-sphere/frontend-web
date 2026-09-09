@@ -1,11 +1,7 @@
-/**
- * @file multiple.choice.exercise.tsx
- * @description Component giao diện React MultipleChoiceExercise cho học viên
- */
-
+// Component giao diện React MultipleChoiceExercise cho học viên
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, X, ChevronRight, Volume2 } from 'lucide-react'
+import { Check, X, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { VocabularyItem } from '@/types/vocabulary.learn'
 import { getRandomDistractors } from '@/lib/audio.utils'

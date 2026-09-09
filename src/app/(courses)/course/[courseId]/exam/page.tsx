@@ -29,7 +29,6 @@ function CourseExamContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [course, setCourse] = useState<Course | null>(null)
   const [progressDetail, setProgressDetail] = useState<any>(null)
-  const [isEnrolled, setIsEnrolled] = useState<boolean>(true)
 
   const loadExamData = useCallback(async () => {
     if (!courseId) return
@@ -52,7 +51,6 @@ function CourseExamContent() {
         return
       }
 
-      setIsEnrolled(enrollmentRes.enrolled)
       setProgressDetail(progressRes)
 
       const mapped = mapCourseDataToWorkspace(

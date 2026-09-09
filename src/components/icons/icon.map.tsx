@@ -85,7 +85,6 @@ import {
   TrendingUp,
   Trophy,
   Type,
-  User,
   UserCheck,
   UserCircle2,
   Users,

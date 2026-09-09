@@ -1,11 +1,8 @@
-/**
- * @file course.placement.banner.tsx
- * @description Banner gợi ý học viên làm bài test đầu vào hệ thống tại trang danh sách khóa học
- */
+// Banner gợi ý học viên làm bài test đầu vào hệ thống tại trang danh sách khóa học.
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import {
   Sparkles,

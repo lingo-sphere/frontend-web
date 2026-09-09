@@ -1,15 +1,9 @@
-/**
- * @file writing.result.tsx
- * @description Component giao diện React WritingResult cho học viên
- */
-
+// Component giao diện React WritingResult cho học viên
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
-  Trophy,
   CheckCircle,
-  XCircle,
   AlertTriangle,
   Lightbulb,
   RotateCcw,
@@ -22,7 +16,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import type { WritingSubmission, WritingExercise, GrammarError } from '@/types/writing'
+import type { WritingSubmission, WritingExercise } from '@/types/writing'
 
 interface WritingResultProps {
   submission: WritingSubmission

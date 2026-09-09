@@ -1,6 +1,6 @@
 // Component hiển thị thông tin lộ trình học tập cá nhân hóa và các mốc chặng
 
-import { Compass, Layers, Badge as BadgeIcon } from 'lucide-react'
+import { Compass, Layers } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

@@ -1,11 +1,8 @@
-/**
- * @file user.score.card.tsx
- * @description Thẻ hiển thị điểm trình độ đánh giá đầu vào và mục tiêu TOEIC trong trang hồ sơ cá nhân
- */
+// Thẻ hiển thị điểm trình độ đánh giá đầu vào và mục tiêu TOEIC trong trang hồ sơ cá nhân.
 
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Award,
@@ -17,8 +14,6 @@ import {
   ShieldCheck,
   AlertCircle,
   TrendingUp,
-  ArrowRight,
-  RotateCcw,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { UserScoreEditModal } from '@/components/user/user.score.edit.modal'

@@ -3,7 +3,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart } from 'lucide-react'
 import { useMounted } from '@/hooks/use.mounted'
 

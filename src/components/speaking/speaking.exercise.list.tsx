@@ -1,7 +1,4 @@
-/**
- * @file speaking.exercise.list.tsx
- * @description Component giao diện React SpeakingExerciseList cho học viên
- */
+// Component giao diện React SpeakingExerciseList cho học viên.
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -74,11 +71,6 @@ export function SpeakingExerciseList({
     return groups
   }, [filteredExercises])
 
-  const levelColors: Record<string, string> = {
-    EASY: 'bg-emerald-100 text-emerald-700',
-    MEDIUM: 'bg-amber-100 text-amber-700',
-    HARD: 'bg-red-100 text-red-700',
-  }
 
   const levelLabels: Record<string, string> = {
     EASY: isVietnamese ? 'Dễ' : 'Easy',

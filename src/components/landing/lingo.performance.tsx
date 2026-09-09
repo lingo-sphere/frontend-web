@@ -1,7 +1,4 @@
-/**
- * @file lingo.performance.tsx
- * @description Component giao diện React LingoPerformance cho học viên
- */
+// Component giao diện React LingoPerformance cho học viên.
 
 'use client'
 
@@ -17,7 +14,6 @@ import {
   CheckCircle2,
   Volume2,
   Sparkles,
-  TrendingUp,
 } from "lucide-react"
 import { landingLocales, type LandingLang } from "@/components/landing/landing.locales"
 

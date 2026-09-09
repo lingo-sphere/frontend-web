@@ -1,11 +1,7 @@
-/**
- * @file course.sidebar.lesson.row.tsx
- * @description Thành phần hiển thị một bài học trong thanh danh sách bài giảng bên cạnh
- */
+// Thành phần hiển thị một bài học trong thanh danh sách bài giảng bên cạnh.
 
 import { Check, Download, FolderDown, Lock, PlayCircle } from 'lucide-react'
 import type { Lesson } from '@/types/course'
-import { toast } from '@/store/toast.store'
 
 interface CourseSidebarLessonRowProps {
   lesson: Lesson

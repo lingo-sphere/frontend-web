@@ -1,9 +1,6 @@
-/**
- * @file curved.loop.tsx
- * @description Component giao diện React CurvedLoop cho học viên
- */
+// Component giao diện React CurvedLoop cho học viên.
 
-import React, { useRef, useEffect, useState, useMemo, useId, type FC, type PointerEvent } from 'react'
+import { useRef, useEffect, useState, useMemo, useId, type FC, type PointerEvent } from 'react'
 
 export interface CurvedLoopProps {
   marqueeText?: string

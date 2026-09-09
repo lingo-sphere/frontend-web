@@ -1,14 +1,9 @@
-/**
- * @file writing.workspace.tsx
- * @description Component giao diện React WritingWorkspace cho học viên
- */
-
+// Component giao diện React WritingWorkspace cho học viên
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Clock, Save, Send, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import type { WritingExercise, WritingDraft } from '@/types/writing'
+import type { WritingExercise } from '@/types/writing'
 import { toast } from '@/store/toast.store'
 
 interface WritingWorkspaceProps {

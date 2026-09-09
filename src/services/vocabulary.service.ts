@@ -1,8 +1,4 @@
-/**
- * @file vocabulary.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ vocabulary
- */
-
+// Service xử lý các logic nghiệp vụ chính cho dịch vụ vocabulary
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import {
@@ -10,11 +6,9 @@ import {
   DeckListSchema,
   BackendTopicSchema,
   BackendTopicListSchema,
-  BackendIpaSymbolSchema,
   BackendIpaSymbolListSchema,
   BackendGrammarPointSchema,
   BackendGrammarPointListSchema,
-  LexicalItemSchema,
   LexicalItemListSchema,
   type Deck,
   type BackendTopic,

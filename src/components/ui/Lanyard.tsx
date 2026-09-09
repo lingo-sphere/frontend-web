@@ -1,11 +1,8 @@
-/**
- * @file lanyard.tsx
- * @description Component giao diện React Lanyard cho học viên
- */
+// Component giao diện React Lanyard cho học viên.
 
 'use client'
 
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import * as THREE from 'three'
 import { ArrowDown, CheckCircle2 } from 'lucide-react'

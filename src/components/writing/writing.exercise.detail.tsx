@@ -1,10 +1,6 @@
-/**
- * @file writing.exercise.detail.tsx
- * @description Component giao diện React WritingExerciseDetail cho học viên
- */
-
+// Component giao diện React WritingExerciseDetail cho học viên
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Clock, Target, BookOpen } from 'lucide-react'
+import { ArrowLeft, Clock, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { WritingExercise } from '@/types/writing'

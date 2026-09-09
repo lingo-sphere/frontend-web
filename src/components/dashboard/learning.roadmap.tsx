@@ -1,7 +1,4 @@
-/**
- * @file learning.roadmap.tsx
- * @description Component giao diện React LearningRoadmap cho học viên
- */
+// Component giao diện React LearningRoadmap cho học viên.
 
 import { useTranslation } from 'react-i18next'
 import { Check, Lock } from 'lucide-react'
@@ -17,7 +14,7 @@ interface LearningRoadmapProps {
 }
 
 export function LearningRoadmap({ units, onAction }: LearningRoadmapProps) {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
   const getStatusLabel = (status: string) => {

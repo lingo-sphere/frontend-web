@@ -1,7 +1,4 @@
-/**
- * @file todays.learning.card.tsx
- * @description Component giao diện React TodaysLearningCard cho học viên
- */
+// Component giao diện React TodaysLearningCard cho học viên.
 
 import { useTranslation } from 'react-i18next'
 import { ArrowRight } from 'lucide-react'
@@ -18,7 +15,7 @@ interface TodaysLearningCardProps {
 }
 
 export function TodaysLearningCard({ tasks, onAction }: TodaysLearningCardProps) {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
   const getTaskLabel = (task: LearningTask) => {

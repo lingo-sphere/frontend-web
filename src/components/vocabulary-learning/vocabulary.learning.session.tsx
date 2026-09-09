@@ -1,14 +1,9 @@
-/**
- * @file vocabulary.learning.session.tsx
- * @description Component giao diện React VocabularyLearningSession cho học viên
- */
-
+// Component giao diện React VocabularyLearningSession cho học viên
 import { useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, ChevronDown, Brain, Check } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import type { VocabularyDeck, ExerciseMode, VocabularyItem, ExerciseAnswer, LearningResult } from '@/types/vocabulary.learn'
+import type { VocabularyDeck, ExerciseMode, ExerciseAnswer, LearningResult } from '@/types/vocabulary.learn'
 import { shuffleArray, speakWord, speakSentence } from '@/lib/audio.utils'
 import { FlashcardExercise } from '@/components/vocabulary-learning/exercises/flashcard.exercise'
 import { MultipleChoiceExercise } from '@/components/vocabulary-learning/exercises/multiple.choice.exercise'

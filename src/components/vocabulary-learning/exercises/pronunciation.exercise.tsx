@@ -1,13 +1,8 @@
-/**
- * @file pronunciation.exercise.tsx
- * @description Component giao diện React PronunciationExercise cho học viên
- */
-
+// Component giao diện React PronunciationExercise cho học viên
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Volume2, Mic, Square, Check, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { speakWord } from '@/lib/audio.utils'
 import type { VocabularyItem } from '@/types/vocabulary.learn'
 
 interface PronunciationExerciseProps {

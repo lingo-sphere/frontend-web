@@ -1,7 +1,4 @@
-/**
- * @file leaderboard.podium.tsx
- * @description Component giao diện React LeaderboardPodium cho học viên
- */
+// Component giao diện React LeaderboardPodium cho học viên.
 
 import { useTranslation } from 'react-i18next'
 import { Crown } from "lucide-react";
@@ -49,12 +46,6 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
   const sortedUsers = podiumConfig.map(
     (p) => users.find((u) => u.rank === p.rank)!
   );
-
-  const getStatLabel = () => {
-    if (type === "streak") return isVietnamese ? 'Ngày' : 'days'
-    if (type === "learning") return isVietnamese ? 'Phút' : 'min'
-    return ''
-  }
 
   const getTypeLabel = () => {
     if (type === "streak") return isVietnamese ? 'Chuỗi' : 'Streak'

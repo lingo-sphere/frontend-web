@@ -1,16 +1,10 @@
-/**
- * @file course.placement.prompt.modal.tsx
- * @description Modal tư vấn học viên làm bài test đầu vào (2 kỹ năng / 4 kỹ năng) hoặc cập nhật hồ sơ trước khi mua khóa học
- */
+// Modal tư vấn học viên làm bài test đầu vào hoặc cập nhật hồ sơ trước khi mua khóa học.
 
 'use client'
 
-import React from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Sparkles,
-  BookOpen,
-  CheckCircle2,
   ArrowRight,
   Headphones,
   Mic,

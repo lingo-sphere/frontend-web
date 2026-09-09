@@ -55,7 +55,6 @@ export default function ExamAttemptDetailPage() {
   const moduleId = searchParams.get('moduleId') || ''
   const initialTitle = searchParams.get('title') || 'Chi tiết bài làm'
   const initialScore = searchParams.get('score') || ''
-  const initialScoreVal = searchParams.get('scoreVal') ? Number(searchParams.get('scoreVal')) : undefined
   const initialCorrect = searchParams.get('correct') ? Number(searchParams.get('correct')) : undefined
   const initialTotal = searchParams.get('total') ? Number(searchParams.get('total')) : undefined
   const initialIsPassed = searchParams.get('isPassed') === 'true'

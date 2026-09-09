@@ -1,9 +1,5 @@
-/**
- * @file section.heading.tsx
- * @description Component giao diện React SectionHeading cho học viên
- */
+// Component giao diện React SectionHeading cho học viên.
 
-import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 
 interface SectionHeadingProps {
@@ -15,8 +11,6 @@ interface SectionHeadingProps {
 }
 
 export function SectionHeading({ eyebrow, title, description, actionLabel, onAction }: SectionHeadingProps) {
-  const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
 
   return (
     <div className="flex items-end justify-between gap-4">

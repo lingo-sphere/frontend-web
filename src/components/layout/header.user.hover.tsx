@@ -3,7 +3,7 @@
 'use client'
 
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, Globe } from 'lucide-react'
+import { Globe } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { useAuthStore } from '@/store/auth.store'
 import { useCartStore } from '@/store/cart.store'

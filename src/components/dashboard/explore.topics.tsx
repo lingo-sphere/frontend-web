@@ -1,7 +1,4 @@
-/**
- * @file explore.topics.tsx
- * @description Component giao diện React ExploreTopics cho học viên
- */
+// Component giao diện React ExploreTopics cho học viên.
 
 import { useTranslation } from 'react-i18next'
 import { ArrowUpRight } from 'lucide-react'
@@ -17,7 +14,7 @@ interface ExploreTopicsProps {
 }
 
 export function ExploreTopics({ topics, onAction }: ExploreTopicsProps) {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
   return (

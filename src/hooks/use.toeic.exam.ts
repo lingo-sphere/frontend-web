@@ -1,8 +1,4 @@
-/**
- * @file use.toeic.exam.ts
- * @description Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và điều phối gợi ý lộ trình
- */
-
+// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và điều phối gợi ý lộ trình
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -289,11 +285,6 @@ export function useToeicExam(examId?: string) {
         setIsLoadingExam(false)
       })
   }, [examId])
-
-  const generateQuestionsForParts = useCallback((parts: number[]): ToeicQuestion[] => {
-    if (!examData) return []
-    return parseQuestionsFromExamData(examData, parts)
-  }, [examData])
 
   const calculateResults = useCallback((): ExamResultMetrics => {
     let correct = 0

@@ -9,13 +9,8 @@ import {
   Sparkles,
   GraduationCap,
   ArrowRight,
-  Compass,
-  CheckCircle2,
-  Lock,
   Layers,
   TrendingUp,
-  Tag,
-  ShieldCheck,
   Zap,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'

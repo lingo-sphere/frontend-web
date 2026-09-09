@@ -1,22 +1,15 @@
-/**
- * @file course.recommended.section.tsx
- * @description Thành phần gợi ý khóa học thông minh dựa trên điểm số đánh giá đầu vào của học viên
- */
+// Thành phần gợi ý khóa học thông minh dựa trên điểm số đánh giá đầu vào.
 
 'use client'
 
-import React, { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Sparkles,
   BookOpen,
-  Award,
   Users,
-  Clock,
   Star,
   ArrowRight,
-  TrendingUp,
-  ShieldCheck,
 } from 'lucide-react'
 import { courseService } from '@/services/course.service'
 

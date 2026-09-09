@@ -1,11 +1,7 @@
-/**
- * @file user.score.edit.modal.tsx
- * @description Modal cho phép học viên tự điều chỉnh điểm trình độ kèm theo cảnh báo khuyến nghị của hệ thống
- */
-
+// Modal cho phép học viên tự điều chỉnh điểm trình độ kèm theo cảnh báo khuyến nghị của hệ thống
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   AlertTriangle,
   Award,
@@ -14,9 +10,6 @@ import {
   Mic,
   FileEdit,
   X,
-  Check,
-  Sparkles,
-  Info,
 } from 'lucide-react'
 import { toast } from '@/store/toast.store'
 import { userService } from '@/services/user.service'
@@ -51,7 +44,6 @@ export function UserScoreEditModal({
   const [speakingScore, setSpeakingScore] = useState<number>(currentScores.speakingScore || 110)
   const [writingScore, setWritingScore] = useState<number>(currentScores.writingScore || 110)
   const [targetScore, setTargetScore] = useState<number>(currentScores.targetScore || 650)
-  const [isConfirmed, setIsConfirmed] = useState<boolean>(false)
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
   if (!open) return null
