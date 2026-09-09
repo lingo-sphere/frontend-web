@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Hls from 'hls.js'
 import type { Lesson } from '@/types/course'
 import { isDirectVideoUrl } from '@/components/course/player/player.types'
+import { API_CONFIG } from '@/config/api.config'
 
 interface UseLessonVideoPlayerProps {
   lesson: Lesson
@@ -84,7 +85,7 @@ export function useLessonVideoPlayer({
   const effectiveVideoUrl = useMemo(() => {
     if (!baseVideoSource) return ''
     let source = baseVideoSource
-    const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(
+    const apiBase = (API_CONFIG.BASE_URL ?? '').replace(
       /\/+$/,
       ''
     )

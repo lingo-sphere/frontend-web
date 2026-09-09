@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { PersistentLayout } from '@/components/layout/persistent.layout'
 import { ToastContainer } from '@/components/common/toast.container'
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
+const GOOGLE_CLIENT_ID = API_CONFIG.GOOGLE_CLIENT_ID ?? ''
 
 interface AppClientProviderProps {
   children: ReactNode

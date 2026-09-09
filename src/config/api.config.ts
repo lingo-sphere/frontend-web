@@ -2,6 +2,9 @@
 
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+  SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
   TIMEOUT: 120000,
   STORAGE_KEYS: {
     ACCESS_TOKEN: 'lingosphere_user_access_token',

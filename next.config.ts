@@ -10,8 +10,9 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/+$/, '')
-    if (!apiBaseUrl) return []
+    const rawApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+    if (!rawApiBaseUrl) return []
+    const apiBaseUrl = rawApiBaseUrl.replace(/\/+$/, '')
     return [
       {
         source: '/api/:path*',
