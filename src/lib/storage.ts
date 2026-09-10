@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   BANNER_DISMISSED: 'course_schedule_banner_dismissed_until',
   PENDING_ORDER: 'lingo_payment_pending_order',
   COURSE_LAST_WATCHED: (courseId: string) => `course_last_watched_${courseId}`,
+  COMMUNITY_CHAT_OPEN: 'lingosphere_community_chat_open',
 } as const
 
 interface CookieOptions {

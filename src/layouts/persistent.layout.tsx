@@ -12,6 +12,7 @@ import { Sidebar } from '@/layouts/app.sidebar'
 import { UtilityHeader } from '@/layouts/app.header'
 import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
+import { CommunityChatFloatingButton } from '@/features/community/components/community.chat.floating.button'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
@@ -44,6 +45,7 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
         <UtilityHeader onAction={showAction} />
         {children}
       </div>
+      <CommunityChatFloatingButton />
     </div>
   )
 }

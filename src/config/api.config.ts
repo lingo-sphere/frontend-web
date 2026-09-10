@@ -168,5 +168,12 @@ export const API_CONFIG = {
       MARK_ALL_READ: '/notifications/my/read-all',
       PREFERENCES: '/notifications/preferences/my',
     },
+
+    COMMUNITY: {
+      ELIGIBILITY: '/community/eligibility',
+      ROOM: '/community/room',
+      MESSAGES: '/community/messages',
+      PINNED_MESSAGES: '/community/messages/pinned',
+    },
   },
 }
