@@ -1,13 +1,15 @@
 // Trang giao diện hiển thị danh sách thông báo và tương tác của người dùng.
-
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Bell } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
+import { EmptyState } from '@/components/empty.state'
 import { useNavigate } from '@/lib/navigation'
+import { formatRelativeTime } from '@/lib/format'
 import {
   useMyNotifications,
   useMarkNotificationAsReadMutation,
@@ -85,21 +87,6 @@ export default function NotificationsAppPage() {
     if (notification.action_url) {
       navigate(notification.action_url)
     }
-  }
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    if (diffMins < 1) return isVietnamese ? 'Vừa xong' : 'Just now'
-    if (diffMins < 60) return `${diffMins}m ${isVietnamese ? 'trước' : 'ago'}`
-    if (diffHours < 24) return `${diffHours}h ${isVietnamese ? 'trước' : 'ago'}`
-    if (diffDays < 7) return `${diffDays}d ${isVietnamese ? 'trước' : 'ago'}`
-    return date.toLocaleDateString()
   }
 
   return (
@@ -200,7 +187,7 @@ export default function NotificationsAppPage() {
                           </span>
                         </div>
                         <span className="text-xs text-text-tertiary">
-                          {formatTime(notification.created_at)}
+                          {formatRelativeTime(notification.created_at)}
                         </span>
                       </div>
                       <h3 className="mt-1 font-semibold text-text-primary">
@@ -219,15 +206,12 @@ export default function NotificationsAppPage() {
             })}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-border py-16 text-center">
-            <Icon name="bell" size={48} className="mx-auto mb-3 text-text-tertiary" />
-            <h3 className="text-lg font-semibold text-text-primary">
-              {isVietnamese ? 'Không có thông báo nào' : 'No notifications'}
-            </h3>
-            <p className="mt-1 text-sm text-text-secondary">
-              {isVietnamese ? 'Bạn đã xem hết tất cả thông báo mới' : "You're all caught up!"}
-            </p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title={isVietnamese ? 'Không có thông báo nào' : 'No notifications'}
+            description={isVietnamese ? 'Bạn đã xem hết tất cả thông báo mới' : "You're all caught up!"}
+            className="py-16"
+          />
         )}
       </main>
     </>

@@ -1,9 +1,9 @@
 // Màn hình khóa bài giảng khi học viên chưa mua khóa học.
-
 'use client'
 
 import { Lock, ShoppingCart, Crown, ArrowRight, CheckCircle2, LogIn } from 'lucide-react'
 import type { Course, Lesson } from '@/features/courses/types/course'
+import { formatCurrency } from '@/lib/format'
 
 interface CourseLockedPlayerProps {
   course: Course
@@ -31,7 +31,7 @@ export function CourseLockedPlayer({
   onOpenAuth,
 }: CourseLockedPlayerProps) {
   const price = course.price || 0
-  const formattedPrice = price > 0 ? `₫${price.toLocaleString('vi-VN')}` : 'Miễn phí'
+  const formattedPrice = formatCurrency(price, 'Miễn phí')
 
   return (
     <div className="relative w-full min-h-[580px] sm:min-h-[640px] lg:min-h-[700px] bg-slate-950 flex items-center justify-center border-b border-border select-none py-12 sm:py-16 px-4 sm:px-6 overflow-hidden">

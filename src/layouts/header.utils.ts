@@ -1,7 +1,5 @@
-/**
- * @file header.utils.ts
- * @description Các hàm tiện ích hỗ trợ tính toán gói VIP và biểu tượng thông báo cho Header
- */
+// Tiện ích hỗ trợ tính toán gói VIP và định dạng thông báo Header
+import { formatRelativeTime } from '@/lib/format'
 
 export function getRemainingSubscriptionText(expiresAt?: string | null, plan?: string | null, isVi: boolean = true): string {
   if (plan === 'LIFETIME') {
@@ -25,45 +23,13 @@ export function getRemainingSubscriptionText(expiresAt?: string | null, plan?: s
     return isVi ? `Còn ${months} tháng ${remDays > 0 ? `${remDays} ngày` : ''}` : `${months}mo ${remDays}d left`
   }
   if (days > 0) {
-    return isVi ? `Còn ${days} ngày ${hours > 0 ? `${hours}h` : ''}` : `${days}d ${hours}h left`
+    return isVi ? `Còn ${days} ngày ${hours > 0 ? `${hours} giờ` : ''}` : `${days}d ${hours}h left`
   }
-  const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-  return isVi ? `Còn ${hours}h ${mins}m` : `${hours}h ${mins}m left`
+  return isVi ? `Còn ${Math.max(1, hours)} giờ` : `${Math.max(1, hours)}h left`
 }
 
-export function getNotifIcon(type: string): string {
+export function getNotificationIcon(type: string): string {
   const iconMap: Record<string, string> = {
-    LOGIN_SUCCESS: 'logIn',
-    LOGIN_FAILED: 'alertTriangle',
-    PASSWORD_CHANGED: 'lock',
-    EMAIL_VERIFIED: 'checkCircle',
-    TWO_FACTOR_ENABLED: 'shield',
-    ACCOUNT_BLOCKED: 'xCircle',
-    NEW_LOGIN_LOCATION: 'mapPin',
-    SUBSCRIPTION_CREATED: 'creditCard',
-    SUBSCRIPTION_RENEWED: 'refresh',
-    SUBSCRIPTION_EXPIRING: 'clock',
-    SUBSCRIPTION_EXPIRED: 'alertCircle',
-    PAYMENT_SUCCESS: 'checkCircle',
-    PAYMENT_FAILED: 'xCircle',
-    STREAK_REMINDER: 'flame',
-    STREAK_BROKEN: 'zapOff',
-    STREAK_MILESTONE: 'award',
-    LEVEL_UP: 'trendingUp',
-    XP_MILESTONE: 'star',
-    ACHIEVEMENT_UNLOCKED: 'trophy',
-    GEM_EARNED: 'gem',
-    SRS_DUE: 'clock',
-    NEW_CARDS_AVAILABLE: 'plusCircle',
-    DECK_COMPLETED: 'checkCircle',
-    VOCABULARY_MASTERED: 'checkSquare',
-    PRACTICE_SESSION_REMINDER: 'activity',
-    PRACTICE_STREAK: 'flame',
-    SPEAKING_EVALUATION_READY: 'mic',
-    WRITING_EVALUATION_READY: 'pencil',
-    LISTENING_EVALUATION_READY: 'headphones',
-    TOEIC_TEST_REMINDER: 'fileText',
-    TOEIC_RESULT_READY: 'barChart',
     TOEIC_SCORE_IMPROVED: 'trendingUp',
     TOEIC_PART_WEAK: 'alertTriangle',
     COURSE_ENROLLED: 'book',
@@ -80,17 +46,8 @@ export function getNotifIcon(type: string): string {
   return iconMap[type] || 'bell'
 }
 
-export function formatNotifTime(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
+export const getNotifIcon = getNotificationIcon
 
-  if (diffMins < 1) return 'Now'
-  if (diffMins < 60) return `${diffMins}m`
-  if (diffHours < 24) return `${diffHours}h`
-  if (diffDays < 7) return `${diffDays}d`
-  return date.toLocaleDateString()
+export function formatNotifTime(dateString: string): string {
+  return formatRelativeTime(dateString, false)
 }

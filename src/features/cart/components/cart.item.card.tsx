@@ -1,13 +1,10 @@
-/**
- * @file cart.item.card.tsx
- * @description Component hiển thị từng khóa học trong giỏ hàng kèm giá ưu đãi và nút xóa
- */
-
+// Component hiển thị từng khóa học trong giỏ hàng kèm giá ưu đãi và nút xóa
 'use client'
 
 import { Trash2, CheckCircle2 } from 'lucide-react'
 import type { CartItem } from '@/features/cart/types/cart'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { formatCurrency } from '@/lib/format'
 
 interface CartItemCardProps {
   item: CartItem
@@ -56,15 +53,11 @@ export function CartItemCard({ item, isVi, onRemove, onNavigate }: CartItemCardP
       <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 shrink-0 border-t sm:border-t-0 border-border/40 pt-2 sm:pt-0">
         <div className="flex sm:flex-col items-baseline sm:items-end gap-1.5">
           <span className="text-base font-extrabold text-text-primary">
-            {itemSalePrice > 0
-              ? `₫${itemSalePrice.toLocaleString('vi-VN')}`
-              : isVi
-              ? 'Miễn phí'
-              : 'Free'}
+            {formatCurrency(itemSalePrice, isVi ? 'Miễn phí' : 'Free')}
           </span>
           {itemOriginalPrice && (
             <span className="text-xs text-text-tertiary line-through">
-              ₫{itemOriginalPrice.toLocaleString('vi-VN')}
+              {formatCurrency(itemOriginalPrice)}
             </span>
           )}
         </div>

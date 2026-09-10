@@ -10,6 +10,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { toast } from '@/store/toast.store'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { formatCurrency } from '@/lib/format'
 
 export function HeaderWishlistHover() {
   const { i18n } = useTranslation()
@@ -21,11 +22,6 @@ export function HeaderWishlistHover() {
   const isEnrolled = useEnrollmentStore((state) => state.isEnrolled)
   const isPremiumUser = Boolean(user?.is_premium)
   const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
-
-  const formatPrice = (price?: number) => {
-    if (!price || price === 0) return isVi ? 'Miễn phí' : 'Free'
-    return `₫${price.toLocaleString('vi-VN')}`
-  }
 
   const handleAddToCart = async (e: React.MouseEvent, courseId: string) => {
     e.stopPropagation()
@@ -124,11 +120,11 @@ export function HeaderWishlistHover() {
                     <div className="flex items-center justify-between gap-2 pt-0.5">
                       <div className="flex items-baseline gap-1.5 min-w-0">
                         <span className="text-xs font-black text-text-primary truncate">
-                          {formatPrice(course.price)}
+                          {formatCurrency(course.price, isVi ? 'Miễn phí' : 'Free')}
                         </span>
-                        {course.discountPrice && course.discountPrice > 0 && (
+                        {course.discountPrice && (
                           <span className="text-[10px] text-text-tertiary line-through truncate">
-                            {formatPrice(course.discountPrice)}
+                            {formatCurrency(course.discountPrice)}
                           </span>
                         )}
                       </div>

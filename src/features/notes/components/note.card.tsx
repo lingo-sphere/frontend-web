@@ -1,11 +1,8 @@
-/**
- * @file note.card.tsx
- * @description Component giao diện React NoteCard cho học viên
- */
-
+// Component giao diện NoteCard cho học viên
 import { Icon } from '@/components/icon.map'
 import type { UserNote } from '@/features/notes/types/notes'
 import { NOTE_TARGET_LABELS } from '@/features/notes/types/notes'
+import { formatDate, truncateText } from '@/lib/format'
 
 interface NoteCardProps {
   note: UserNote
@@ -22,18 +19,6 @@ export function NoteCard({
   onTogglePin,
   isVietnamese,
 }: NoteCardProps) {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString(isVietnamese ? 'vi-VN' : 'en-US', {
-      day: '2-digit',
-      month: 'short',
-    })
-  }
-
-  const truncateContent = (content: string, maxLength: number = 120) => {
-    if (content.length <= maxLength) return content
-    return content.slice(0, maxLength) + '...'
-  }
 
   return (
     <div
@@ -85,10 +70,10 @@ export function NoteCard({
         </h4>
       )}
       <p className="text-sm text-text-secondary line-clamp-3 whitespace-pre-wrap">
-        {truncateContent(note.content)}
+        {truncateText(note.content, 120)}
       </p>
       <div className="flex items-center justify-between mt-3 text-xs text-text-tertiary">
-        <span>{formatDate(note.updatedAt)}</span>
+        <span>{formatDate(note.updatedAt, isVietnamese, { day: '2-digit', month: 'short' })}</span>
       </div>
     </div>
   )

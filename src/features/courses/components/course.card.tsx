@@ -1,8 +1,4 @@
-/**
- * @file course.card.tsx
- * @description Component giao diện React CourseCard cho học viên
- */
-
+// Component giao diện CourseCard cho học viên
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -27,6 +23,7 @@ import { courseKeys } from '@/features/courses/keys/course.keys'
 import { courseService } from '@/features/courses/services/course.service'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { formatCurrency, formatNumber } from '@/lib/format'
 
 interface CourseCardProps {
   course: CourseCardData
@@ -275,7 +272,7 @@ export function CourseCard({
 
           <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">
             {course.ratingCount > 0
-              ? `${course.ratingCount.toLocaleString('en-US')} ${isVi ? 'đánh giá' : 'ratings'}`
+              ? `${formatNumber(course.ratingCount)} ${isVi ? 'đánh giá' : 'ratings'}`
               : isVi ? 'Mới' : 'New'}
           </span>
 
@@ -303,15 +300,11 @@ export function CourseCard({
           ) : (
             <>
               <span className="text-[15px] font-extrabold text-text-primary">
-                {course.price > 0
-                  ? `₫${course.price.toLocaleString('vi-VN')}`
-                  : isVi
-                  ? 'Miễn phí'
-                  : 'Free'}
+                {formatCurrency(course.price, isVi ? 'Miễn phí' : 'Free')}
               </span>
               {course.discountPrice && course.discountPrice > course.price ? (
                 <span className="text-xs text-text-tertiary line-through font-normal">
-                  ₫${course.discountPrice.toLocaleString('vi-VN')}
+                  {formatCurrency(course.discountPrice)}
                 </span>
               ) : null}
             </>

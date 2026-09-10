@@ -15,14 +15,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCommunityChat } from '@/features/community/hooks/use.community.chat'
 import { CommunityChatHeader } from '@/features/community/components/community.chat.header'
 import { CommunityChatInputBar } from '@/features/community/components/community.chat.input.bar'
-
-function formatRelativeTime(dateStr: string): string {
-  const diff = Math.max(0, Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000))
-  if (diff < 60) return 'vừa xong'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`
-  return `${Math.floor(diff / 86400)}d`
-}
+import { formatRelativeTime } from '@/lib/format'
 
 interface CommunityChatWidgetProps {
   chatState: ReturnType<typeof useCommunityChat>

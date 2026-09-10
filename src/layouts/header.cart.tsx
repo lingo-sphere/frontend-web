@@ -4,6 +4,7 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
+import { formatCurrency } from '@/lib/format'
 
 export function HeaderCartHover() {
   const { i18n } = useTranslation()
@@ -59,7 +60,7 @@ export function HeaderCartHover() {
                       {item.title}
                     </h4>
                     <span className="text-xs font-extrabold text-text-primary block">
-                      ₫{itemPrice.toLocaleString('vi-VN')}
+                      {formatCurrency(itemPrice)}
                     </span>
                   </div>
                 </div>
@@ -73,7 +74,7 @@ export function HeaderCartHover() {
                 {isVi ? 'Tổng thanh toán:' : 'Total:'}
               </span>
               <span className="text-sm font-extrabold text-primary">
-                ₫{totalAmount.toLocaleString('vi-VN')}
+                {formatCurrency(totalAmount)}
               </span>
             </div>
 
