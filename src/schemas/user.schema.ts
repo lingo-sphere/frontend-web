@@ -11,33 +11,33 @@ export const UserSchema = z.object({
   id: z.string().optional(),
   email: z.string(),
   full_name: z.string().default(''),
-  phone_number: z.string().optional(),
-  avatar_url: z.string().optional(),
-  date_of_birth: z.string().optional(),
-  gender: z.string().optional(),
+  phone_number: z.string().nullable().optional(),
+  avatar_url: z.string().nullable().optional(),
+  date_of_birth: z.string().nullable().optional(),
+  gender: z.string().nullable().optional(),
   role: UserRoleSchema.default('STUDENT'),
   status: AccountStatusSchema.default('ACTIVE'),
   is_email_verified: z.boolean().optional(),
-  bio: z.string().optional(),
-  level: z.string().optional(),
-  target_score: z.number().optional(),
-  target_toeic_score: z.number().optional(),
-  current_estimated_score: z.number().optional(),
-  placement_test_score: z.number().optional(),
-  placement_listening_score: z.number().optional(),
-  placement_reading_score: z.number().optional(),
-  placement_speaking_score: z.number().optional(),
-  placement_writing_score: z.number().optional(),
-  placement_skills_type: z.string().optional(),
-  placement_tested_at: z.string().optional(),
+  bio: z.string().nullable().optional(),
+  level: z.string().nullable().optional(),
+  target_score: z.number().nullable().optional(),
+  target_toeic_score: z.number().nullable().optional(),
+  current_estimated_score: z.number().nullable().optional(),
+  placement_test_score: z.number().nullable().optional(),
+  placement_listening_score: z.number().nullable().optional(),
+  placement_reading_score: z.number().nullable().optional(),
+  placement_speaking_score: z.number().nullable().optional(),
+  placement_writing_score: z.number().nullable().optional(),
+  placement_skills_type: z.string().nullable().optional(),
+  placement_tested_at: z.string().nullable().optional(),
   is_score_manually_edited: z.boolean().optional(),
   xp: z.number().optional(),
   streak_count: z.number().optional(),
   is_premium: z.boolean().optional(),
-  subscription_expires_at: z.string().optional(),
-  subscription_plan: z.string().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
+  subscription_expires_at: z.string().nullable().optional(),
+  subscription_plan: z.string().nullable().optional(),
+  created_at: z.string().nullable().optional(),
+  updated_at: z.string().nullable().optional(),
 }).passthrough()
 
 export const GamificationProfileSchema = z.object({
@@ -72,14 +72,28 @@ export const LeaderboardListSchema = z.union([
   z.object({ items: z.array(LeaderboardEntrySchema) }).transform((val) => val.items),
 ]).default([])
 
+export const UserSubscriptionSchema = z.object({
+  _id: z.string().optional(),
+  id: z.string().optional(),
+  user_id: z.string().optional(),
+  plan_id: z.string().optional(),
+  billing_cycle: z.string().optional(),
+  price_paid: z.number().optional(),
+  status: z.string().optional(),
+  started_at: z.string().optional(),
+  expires_at: z.string().nullable().optional(),
+  cancelled_at: z.string().nullable().optional(),
+  auto_renew: z.boolean().optional(),
+}).passthrough()
+
 export const UserProfileResponseSchema = z.object({
   profile: UserSchema,
   is_premium: z.boolean().default(false),
-  subscription_expires_at: z.string().optional(),
-  subscription_plan: z.string().optional(),
-  gamification: GamificationProfileSchema.optional(),
-  settings: z.record(z.string(), z.unknown()).optional(),
-  subscription: z.record(z.string(), z.unknown()).optional(),
+  subscription_expires_at: z.string().nullable().optional(),
+  subscription_plan: z.string().nullable().optional(),
+  gamification: GamificationProfileSchema.nullable().optional(),
+  settings: z.record(z.string(), z.unknown()).nullable().optional(),
+  subscription: UserSubscriptionSchema.nullable().optional(),
 }).passthrough()
 
 export const AuthResponseSchema = z.object({
@@ -91,5 +105,6 @@ export const AuthResponseSchema = z.object({
 export type User = z.infer<typeof UserSchema>
 export type GamificationProfile = z.infer<typeof GamificationProfileSchema>
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>
+export type UserSubscription = z.infer<typeof UserSubscriptionSchema>
 export type UserProfileResponse = z.infer<typeof UserProfileResponseSchema>
 export type AuthResponse = z.infer<typeof AuthResponseSchema>

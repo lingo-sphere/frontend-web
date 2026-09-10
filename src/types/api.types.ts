@@ -28,43 +28,43 @@ export interface User {
   id?: string
   email: string
   full_name: string
-  phone_number?: string
-  avatar_url?: string
-  date_of_birth?: string
-  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string
+  phone_number?: string | null
+  avatar_url?: string | null
+  date_of_birth?: string | null
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string | null
   role: UserRole
   status: AccountStatus
   is_email_verified?: boolean
-  bio?: string
-  level?: string
-  target_score?: number
-  target_toeic_score?: number
-  current_estimated_score?: number
-  placement_test_score?: number
-  placement_listening_score?: number
-  placement_reading_score?: number
-  placement_speaking_score?: number
-  placement_writing_score?: number
-  placement_skills_type?: '2SKILLS' | '4SKILLS' | string
-  placement_tested_at?: string
+  bio?: string | null
+  level?: string | null
+  target_score?: number | null
+  target_toeic_score?: number | null
+  current_estimated_score?: number | null
+  placement_test_score?: number | null
+  placement_listening_score?: number | null
+  placement_reading_score?: number | null
+  placement_speaking_score?: number | null
+  placement_writing_score?: number | null
+  placement_skills_type?: '2SKILLS' | '4SKILLS' | string | null
+  placement_tested_at?: string | null
   is_score_manually_edited?: boolean
   xp?: number
   streak_count?: number
   is_premium?: boolean
-  subscription_expires_at?: string
-  subscription_plan?: string
-  created_at?: string
-  updated_at?: string
+  subscription_expires_at?: string | null
+  subscription_plan?: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 export interface UserProfileResponse {
   profile: User
   is_premium: boolean
-  subscription_expires_at?: string
-  subscription_plan?: string
-  gamification?: GamificationProfile
-  settings?: Record<string, unknown>
-  subscription?: Record<string, unknown>
+  subscription_expires_at?: string | null
+  subscription_plan?: string | null
+  gamification?: GamificationProfile | null
+  settings?: Record<string, unknown> | null
+  subscription?: Record<string, unknown> | null
 }
 
 export interface UpdateUserProfilePayload {

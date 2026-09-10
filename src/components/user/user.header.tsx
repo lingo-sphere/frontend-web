@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import type { User } from '@/types/user'
 
 interface UserAvatarProps {
-  src?: string
+  src?: string | null
   name?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
   editable?: boolean

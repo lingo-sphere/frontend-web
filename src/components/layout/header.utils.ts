@@ -3,7 +3,7 @@
  * @description Các hàm tiện ích hỗ trợ tính toán gói VIP và biểu tượng thông báo cho Header
  */
 
-export function getRemainingSubscriptionText(expiresAt?: string, plan?: string, isVi: boolean = true): string {
+export function getRemainingSubscriptionText(expiresAt?: string | null, plan?: string | null, isVi: boolean = true): string {
   if (plan === 'LIFETIME') {
     return isVi ? 'Gói Vĩnh Viễn' : 'Lifetime Access'
   }

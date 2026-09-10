@@ -19,7 +19,7 @@ interface UpgradeSelectPlanStepProps {
   selectedPlan: string
   onSelectPlan: (id: string) => void
   isPremium: boolean
-  userPlan?: string
+  userPlan?: string | null
   remainingTimeText: string
   formattedCurrentExp: string | null
   calculatedNewExpiry: string
