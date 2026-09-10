@@ -25,7 +25,10 @@ import { useCartStore } from '@/features/cart/store/cart.store'
 import { useWishlistStore } from '@/features/cart/store/wishlist.store'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { useNavigate } from '@/lib/navigation'
-import { notificationService } from '@/features/notifications/services/notification.service'
+import {
+  useMyNotifications,
+  useMarkNotificationAsReadMutation,
+} from '@/features/notifications/hooks/use.notifications.query'
 import { useLanguage } from '@/hooks/use.language'
 import type { Notification } from '@/features/notifications/types/notification'
 
@@ -42,20 +45,22 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
   const theme = useDashboardStore((state) => state.theme)
   const toggleTheme = useDashboardStore((state) => state.toggleTheme)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
   const { user, isAuthenticated, logout } = useAuthStore()
   const fetchCart = useCartStore((state) => state.fetchCart)
+  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
   const cart = useCartStore((state) => state.cart)
   const cartItemCount = cart?.total_items || 0
-  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
   const wishlistItems = useWishlistStore((state) => state.items)
   const wishlistCount = wishlistItems?.length || 0
   const navigate = useNavigate()
-  const [hoveredHeaderMenu, setHoveredHeaderMenu] = useState<'learning' | 'wishlist' | 'cart' | 'user' | null>(null)
+  const [hoveredHeaderMenu, setHoveredHeaderMenu] = useState<string | null>(null)
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const { data: notifications = [] } = useMyNotifications(undefined, isAuthenticated)
+  const { mutate: markNotificationAsRead } = useMarkNotificationAsReadMutation()
 
   const handleMouseEnter = (menu: 'learning' | 'wishlist' | 'cart' | 'user') => {
     if (hoverTimerRef.current) {
@@ -80,17 +85,13 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
       fetchCart()
       fetchWishlist()
       useEnrollmentStore.getState().fetchMyEnrollments()
-      notificationService.getMyNotifications().then((res) => {
-        if (Array.isArray(res)) setNotifications(res)
-      }).catch(() => {})
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, fetchCart, fetchWishlist])
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
   const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => ((n._id === id || n.id === id) ? { ...n, is_read: true } : n)))
-    notificationService.markAsRead(id).catch(() => {})
+    markNotificationAsRead(id)
   }
 
   const isVi = mounted ? isVietnamese : true

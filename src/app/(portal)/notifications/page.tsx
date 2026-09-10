@@ -8,7 +8,11 @@ import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
 import { useNavigate } from '@/lib/navigation'
-import { notificationService } from '@/features/notifications/services/notification.service'
+import {
+  useMyNotifications,
+  useMarkNotificationAsReadMutation,
+  useMarkAllNotificationsAsReadMutation,
+} from '@/features/notifications/hooks/use.notifications.query'
 import { getCategoryColor, getCategoryLabel } from '@/features/notifications/types/notification'
 import type { Notification, NotificationCategory } from '@/features/notifications/types/notification'
 
@@ -36,31 +40,12 @@ export default function NotificationsAppPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const isVietnamese = i18n.language === 'vi'
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'ALL' | NotificationCategory>('ALL')
   const [showRead, setShowRead] = useState(true)
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchNotifications = async () => {
-      try {
-        setIsLoading(true)
-        const res = await notificationService.getMyNotifications()
-        if (isMounted) {
-          setNotifications(res)
-        }
-      } catch (err) {
-        console.error('Failed to load notifications:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchNotifications()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: notifications = [], isLoading } = useMyNotifications()
+  const { mutate: markAsReadMutate } = useMarkNotificationAsReadMutation()
+  const { mutate: markAllAsReadMutate } = useMarkAllNotificationsAsReadMutation()
 
   const filteredNotifications = useMemo(() => {
     let filtered = notifications
@@ -84,14 +69,12 @@ export default function NotificationsAppPage() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
-  const handleMarkAsRead = async (id: string) => {
-    setNotifications((prev) => prev.map((n) => ((n._id === id || n.id === id) ? { ...n, is_read: true } : n)))
-    await notificationService.markAsRead(id)
+  const handleMarkAsRead = (id: string) => {
+    markAsReadMutate(id)
   }
 
-  const handleMarkAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-    await notificationService.markAllAsRead()
+  const handleMarkAllAsRead = () => {
+    markAllAsReadMutate()
   }
 
   const handleNotificationClick = async (notification: Notification) => {

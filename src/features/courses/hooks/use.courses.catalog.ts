@@ -12,6 +12,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { useAllCoursesQuery } from '@/features/courses/hooks/use.courses.query'
 
 export function useCoursesCatalog() {
   const { i18n } = useTranslation()
@@ -26,8 +27,7 @@ export function useCoursesCatalog() {
   const activeTab: CourseTabType =
     tabParam === 'my-courses' ? 'my-courses' : tabParam === 'wishlist' ? 'wishlist' : 'all'
 
-  const [courses, setCourses] = useState<CourseCardData[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: liveCourses = [], isLoading: loading } = useAllCoursesQuery()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
@@ -119,88 +119,70 @@ export function useCoursesCatalog() {
     }
   }, [isAuthenticated, fetchWishlist])
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchCourses = async () => {
-      setLoading(true)
-      try {
-        const liveCourses: Course[] = await courseService.getAllCourses()
-        if (isMounted && Array.isArray(liveCourses)) {
-          const mapped: CourseCardData[] = liveCourses.map((c) => {
-            const raw = c as unknown as Record<string, unknown>
-            const is4Skills = c.category === 'TOEIC_4_SKILLS'
-            const durationHrs = Math.max(
-              1,
-              Math.round(
-                (Number(raw.total_duration_minutes) ||
-                  (Number(raw.total_lessons) || 0) * 15 ||
-                  60) / 60
-              )
-            )
-            const rawLevel = String(c.level || '')
-            let levelDisplay = 'TOEIC'
-            if (rawLevel === 'BEGINNER') levelDisplay = 'Sơ cấp (Beginner)'
-            else if (rawLevel === 'INTERMEDIATE') levelDisplay = 'Trung cấp (Intermediate)'
-            else if (rawLevel === 'ADVANCED') levelDisplay = 'Nâng cao (Advanced)'
-            else if (rawLevel) levelDisplay = rawLevel
+  const courses = useMemo<CourseCardData[]>(() => {
+    if (!Array.isArray(liveCourses)) return []
+    return liveCourses.map((c) => {
+      const raw = c as unknown as Record<string, unknown>
+      const is4Skills = c.category === 'TOEIC_4_SKILLS'
+      const durationHrs = Math.max(
+        1,
+        Math.round(
+          (Number(raw.total_duration_minutes) ||
+            (Number(raw.total_lessons) || 0) * 15 ||
+            60) / 60
+        )
+      )
+      const rawLevel = String(c.level || '')
+      let levelDisplay = 'TOEIC'
+      if (rawLevel === 'BEGINNER') levelDisplay = 'Sơ cấp (Beginner)'
+      else if (rawLevel === 'INTERMEDIATE') levelDisplay = 'Trung cấp (Intermediate)'
+      else if (rawLevel === 'ADVANCED') levelDisplay = 'Nâng cao (Advanced)'
+      else if (rawLevel) levelDisplay = rawLevel
 
-            const rawPrice = Number(raw.price ?? 0)
-            const rawDiscount = Number(raw.discount_price ?? 0)
-            let finalPrice = rawPrice
-            let originalPrice = Number(raw.original_price ?? 0)
+      const rawPrice = Number(raw.price ?? 0)
+      const rawDiscount = Number(raw.discount_price ?? 0)
+      let finalPrice = rawPrice
+      let originalPrice = Number(raw.original_price ?? 0)
 
-            if (rawDiscount > 0 && rawPrice > 0 && rawPrice > rawDiscount) {
-              finalPrice = rawDiscount
-              originalPrice = rawPrice
-            } else if (rawDiscount > 0 && rawPrice === 0) {
-              finalPrice = rawDiscount
-            } else if (rawPrice > 0 && originalPrice === 0 && rawDiscount > rawPrice) {
-              originalPrice = rawDiscount
-            }
-
-            return {
-              id: String(c.id || raw._id || c.slug || ''),
-              slug: c.slug,
-              title: c.title,
-              instructor: String(
-                raw.author_name || raw.instructor_name || 'Đội ngũ Giảng viên LingoSphere'
-              ),
-              thumbnail:
-                c.thumbnail_url ||
-                'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop',
-              category: c.category || 'TOEIC_2_SKILLS',
-              level: levelDisplay,
-              description: c.description || '',
-              duration: `${durationHrs} giờ`,
-              totalLessons: Number(c.total_lessons) || 0,
-              chapters:
-                Number(raw.total_modules) ||
-                (Array.isArray(c.chapters) ? c.chapters.length : 0),
-              students: Number(raw.students_count || raw.enrollments || 0),
-              rating: Number(raw.rating || raw.rating_avg || 5.0),
-              ratingCount: Number(raw.rating_count || raw.reviews_count || 0),
-              price: finalPrice,
-              discountPrice: originalPrice > finalPrice ? originalPrice : undefined,
-              targetScore: Number(raw.target_score) || 0,
-              badge: is4Skills ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng',
-              progress: 0,
-              hasCertificate: true,
-            }
-          })
-          setCourses(mapped)
-        }
-      } catch (err) {
-        console.error('Lỗi khi tải danh sách khóa học:', err)
-        if (isMounted) setCourses([])
-      } finally {
-        if (isMounted) setLoading(false)
+      if (rawDiscount > 0 && rawPrice > 0 && rawPrice > rawDiscount) {
+        finalPrice = rawDiscount
+        originalPrice = rawPrice
+      } else if (rawDiscount > 0 && rawPrice === 0) {
+        finalPrice = rawDiscount
+      } else if (rawPrice > 0 && originalPrice === 0 && rawDiscount > rawPrice) {
+        originalPrice = rawDiscount
       }
-    }
-    fetchCourses()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+
+      return {
+        id: String(c.id || raw._id || c.slug || ''),
+        slug: c.slug,
+        title: c.title,
+        instructor: String(
+          raw.author_name || raw.instructor_name || 'Đội ngũ Giảng viên LingoSphere'
+        ),
+        thumbnail:
+          c.thumbnail_url ||
+          'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop',
+        category: c.category || 'TOEIC_2_SKILLS',
+        level: levelDisplay,
+        description: c.description || '',
+        duration: `${durationHrs} giờ`,
+        totalLessons: Number(c.total_lessons) || 0,
+        chapters:
+          Number(raw.total_modules) ||
+          (Array.isArray(c.chapters) ? c.chapters.length : 0),
+        students: Number(raw.students_count || raw.enrollments || 0),
+        rating: Number(raw.rating || raw.rating_avg || 5.0),
+        ratingCount: Number(raw.rating_count || raw.reviews_count || 0),
+        price: finalPrice,
+        discountPrice: originalPrice > finalPrice ? originalPrice : undefined,
+        targetScore: Number(raw.target_score) || 0,
+        badge: is4Skills ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng',
+        progress: 0,
+        hasCertificate: true,
+      }
+    })
+  }, [liveCourses])
 
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {

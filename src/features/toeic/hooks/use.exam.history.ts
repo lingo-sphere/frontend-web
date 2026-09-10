@@ -1,41 +1,44 @@
-// Hook quản lý dữ liệu lịch sử thi và bài kiểm tra của học viên.
+// Hook quản lý dữ liệu lịch sử thi và bài kiểm tra của học viên bằng TanStack Query.
+'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { examService } from '@/features/toeic/services/exam.service'
-import { courseService } from '@/features/courses/services/course.service'
-import { useAuthStore } from '@/features/auth/store/auth.store'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { useQueryClient } from '@tanstack/react-query'
+import { useToeicHistoryQuery, useCourseTestAttemptsQuery } from '@/features/toeic/hooks/use.toeic.query'
+import { useAllCoursesQuery } from '@/features/courses/hooks/use.courses.query'
+import { toeicKeys } from '@/features/toeic/keys/toeic.keys'
+import { authService } from '@/features/auth/services/auth.service'
 
 export interface ToeicHistoryItem {
   _id: string
-  user_id: string
+  user_id?: string
   exam_id: string
   exam_title: string
-  exam_code: string
-  exam_type: 'FULL_TEST' | 'PART_PRACTICE' | 'PLACEMENT' | 'DIAGNOSTIC_TEST'
-  attempt_type: string
+  exam_code?: string
+  exam_type: string
+  attempt_type?: string
   is_system_placement?: boolean
   total_questions: number
   correct_questions: number
-  incorrect_questions: number
+  incorrect_questions?: number
   total_scaled_score: number
-  listening_scaled_score: number
-  reading_scaled_score: number
-  total_time_seconds: number
-  is_best_attempt: boolean
-  status: string
+  listening_score?: number
+  reading_score?: number
+  time_spent_seconds?: number
+  total_time_seconds?: number
+  is_best_attempt?: boolean
+  status?: string
   submitted_at: string
 }
 
 export interface CourseTestAttemptItem {
   attempt_id: string
-  test_type: 'challenge' | 'post-mini' | 'final-test'
+  test_type: string
   course_id: string
   module_id?: string
   order_index?: number
   score: number
-  correct_count: number
-  total_questions: number
+  correct_count?: number
+  total_questions?: number
   is_passed: boolean
   submitted_at: string
 }
@@ -43,7 +46,7 @@ export interface CourseTestAttemptItem {
 export interface UnifiedTestAttempt {
   id: string
   sourceType: 'TOEIC' | 'COURSE'
-  testType: 'FULL_TEST' | 'PART_PRACTICE' | 'PLACEMENT' | 'DIAGNOSTIC_TEST' | 'challenge' | 'post-mini' | 'final-test'
+  testType: string
   title: string
   subtitle?: string
   examId?: string
@@ -63,54 +66,35 @@ export interface UnifiedTestAttempt {
 export type ExamHistoryTab = 'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHALLENGE' | 'POST_MINI' | 'FINAL_TEST'
 
 export function useExamHistory() {
-  const { user } = useAuthStore()
+  const queryClient = useQueryClient()
   const [mounted, setMounted] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [toeicAttempts, setToeicAttempts] = useState<ToeicHistoryItem[]>([])
-  const [courseAttempts, setCourseAttempts] = useState<CourseTestAttemptItem[]>([])
   const [activeTab, setActiveTab] = useState<ExamHistoryTab>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [courseTitleMap, setCourseTitleMap] = useState<Record<string, string>>({})
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  const loadAllHistory = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const [toeicRes, courseRes, allCoursesRes] = await Promise.allSettled([
-        examService.getMyExamHistory(),
-        courseService.getMyCourseTestAttempts(),
-        courseService.getAllCourses(),
-      ])
+  const isEnabled = mounted && authService.isAuthenticated()
 
-      if (toeicRes.status === 'fulfilled' && Array.isArray(toeicRes.value)) {
-        setToeicAttempts(toeicRes.value as unknown as ToeicHistoryItem[])
+  const toeicHistoryQuery = useToeicHistoryQuery(isEnabled)
+  const courseAttemptsQuery = useCourseTestAttemptsQuery(isEnabled)
+  const allCoursesQuery = useAllCoursesQuery(undefined, isEnabled)
+
+  const toeicAttempts = toeicHistoryQuery.data || []
+  const courseAttempts = courseAttemptsQuery.data || []
+  const allCourses = allCoursesQuery.data || []
+
+  const courseTitleMap = useMemo(() => {
+    const titleMap: Record<string, string> = {}
+    allCourses.forEach((c) => {
+      const cid = c.id || c._id
+      if (cid && c.title) {
+        titleMap[cid] = c.title
       }
-
-      if (courseRes.status === 'fulfilled' && Array.isArray(courseRes.value)) {
-        setCourseAttempts(courseRes.value as unknown as CourseTestAttemptItem[])
-      }
-
-      if (allCoursesRes.status === 'fulfilled' && Array.isArray(allCoursesRes.value)) {
-        const titleMap: Record<string, string> = {}
-        allCoursesRes.value.forEach((c) => {
-          if (c.id && c.title) {
-            titleMap[c.id] = c.title
-          }
-        })
-        setCourseTitleMap(titleMap)
-      }
-    } catch {
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadAllHistory()
-  }, [loadAllHistory])
+    })
+    return titleMap
+  }, [allCourses])
 
   const unifiedList: UnifiedTestAttempt[] = useMemo(() => {
     const list: UnifiedTestAttempt[] = []
@@ -137,104 +121,79 @@ export function useExamHistory() {
           ? (t.exam_code ? `Mã bài test: ${t.exam_code}` : 'Đánh giá năng lực TOEIC')
           : (t.exam_code ? `Mã đề: ${t.exam_code}` : undefined),
         examId: t.exam_id,
-        totalQuestions: t.total_questions,
-        correctCount: t.correct_questions,
-        incorrectCount: t.incorrect_questions,
-        scoreDisplay: `${t.total_scaled_score} / 990 điểm`,
-        scoreValue: t.total_scaled_score,
-        isPassed: t.total_scaled_score >= 450,
-        submittedAt: t.submitted_at,
-        durationSeconds: t.total_time_seconds,
+        totalQuestions: t.total_questions || 200,
+        correctCount: t.correct_questions || 0,
+        incorrectCount: (t.total_questions || 200) - (t.correct_questions || 0),
+        scoreDisplay: `${t.total_scaled_score || 0}/990`,
+        scoreValue: t.total_scaled_score || 0,
+        isPassed: (t.total_scaled_score || 0) >= 450,
+        submittedAt: t.submitted_at || new Date().toISOString(),
+        durationSeconds: t.time_spent_seconds || 0,
       })
     })
 
-    const hasRecordedPlacementAttempt = list.some((i) => i.testType === 'PLACEMENT')
-    const activeUser = mounted ? user : null
-    let userPlacementScore = Number(activeUser?.placement_test_score ?? 0)
-    let userPlacementTestedAt = activeUser?.placement_tested_at
-    let skillsType = activeUser?.placement_skills_type || '2SKILLS'
-
-    if (!userPlacementScore) {
-      const cached = storage.get<{ placement_test_score?: number; placement_tested_at?: string; placement_skills_type?: string }>(STORAGE_KEYS.PLACEMENT_SCORE)
-      if (cached?.placement_test_score) {
-        userPlacementScore = Number(cached.placement_test_score)
-        userPlacementTestedAt = cached.placement_tested_at || userPlacementTestedAt
-        skillsType = cached.placement_skills_type || skillsType
-      }
-    }
-
-    if (!hasRecordedPlacementAttempt && (userPlacementScore > 0 || userPlacementTestedAt)) {
-      const totalQ = skillsType === '4SKILLS' ? 8 : 4
-      const estCorrect = Math.max(1, Math.round((userPlacementScore / 990) * totalQ))
-      list.push({
-        id: 'profile-placement-baseline',
-        sourceType: 'TOEIC',
-        testType: 'PLACEMENT',
-        title: `Bài thi đánh giá năng lực đầu vào (TOEIC ${skillsType === '4SKILLS' ? '4 Kỹ Năng' : '2 Kỹ Năng LR'})`,
-        subtitle: 'Kết quả đánh giá năng lực hệ thống đã ghi nhận',
-        examId: skillsType === '4SKILLS' ? 'placement_4skills' : 'placement_2skills',
-        totalQuestions: totalQ,
-        correctCount: estCorrect,
-        incorrectCount: Math.max(0, totalQ - estCorrect),
-        scoreDisplay: `${userPlacementScore} / 990 điểm`,
-        scoreValue: userPlacementScore,
-        isPassed: userPlacementScore >= 450,
-        submittedAt: userPlacementTestedAt || new Date(0).toISOString(),
-      })
-    }
-
     courseAttempts.forEach((c) => {
-      const isFinal = c.test_type === 'final-test'
-      const isChallenge = c.test_type === 'challenge'
-      const title = isFinal
-        ? 'Bài thi tốt nghiệp (Exit Test)'
-        : isChallenge
-        ? `Thử thách chương ${c.order_index ?? ''}`
-        : `Kiểm tra cuối chương ${c.order_index ?? ''}`
+      let testType = c.test_type
+      let testName = 'Kiểm tra'
 
-      const courseTitle = courseTitleMap[c.course_id]
-      const subtitle = courseTitle ? `Khóa học: ${courseTitle}` : `Khóa học ID: ${c.course_id}`
+      if (c.test_type === 'final-test') {
+        testName = 'Bài thi tốt nghiệp Exit Test'
+      } else if (c.test_type === 'challenge') {
+        testName = `Thử thách chương ${c.order_index ?? ''}`
+      } else if (c.test_type === 'post-mini') {
+        testName = `Kiểm tra cuối chương ${c.order_index ?? ''}`
+      }
+
+      const courseTitle = courseTitleMap[c.course_id] || `Khóa học ID: ${c.course_id}`
 
       list.push({
         id: c.attempt_id,
         sourceType: 'COURSE',
-        testType: c.test_type,
-        title,
-        subtitle,
+        testType,
+        title: testName,
+        subtitle: courseTitle,
         courseId: c.course_id,
-        moduleId: c.module_id,
         orderIndex: c.order_index,
-        totalQuestions: c.total_questions,
-        correctCount: c.correct_count,
-        incorrectCount: Math.max(0, c.total_questions - c.correct_count),
+        totalQuestions: c.total_questions || 10,
+        correctCount: c.correct_count ?? Math.round(((c.score || 0) / 100) * (c.total_questions || 10)),
+        incorrectCount: (c.total_questions || 10) - (c.correct_count ?? Math.round(((c.score || 0) / 100) * (c.total_questions || 10))),
         scoreDisplay: `${c.score}%`,
         scoreValue: c.score,
         isPassed: c.is_passed,
         submittedAt: c.submitted_at,
+        durationSeconds: 0,
       })
     })
 
     list.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
     return list
-  }, [toeicAttempts, courseAttempts, user, mounted, courseTitleMap])
+  }, [toeicAttempts, courseAttempts, courseTitleMap])
 
   const filteredList = useMemo(() => {
-    return unifiedList.filter((item) => {
-      if (activeTab === 'PLACEMENT' && item.testType !== 'PLACEMENT') return false
-      if (activeTab === 'TOEIC' && (item.sourceType !== 'TOEIC' || item.testType === 'PLACEMENT')) return false
-      if (activeTab === 'CHALLENGE' && item.testType !== 'challenge') return false
-      if (activeTab === 'POST_MINI' && item.testType !== 'post-mini') return false
-      if (activeTab === 'FINAL_TEST' && item.testType !== 'final-test') return false
+    let result = [...unifiedList]
 
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase()
-        const titleMatch = item.title.toLowerCase().includes(query)
-        const subMatch = item.subtitle?.toLowerCase().includes(query)
-        if (!titleMatch && !subMatch) return false
-      }
+    if (activeTab === 'PLACEMENT') {
+      result = result.filter((i) => i.testType === 'PLACEMENT')
+    } else if (activeTab === 'TOEIC') {
+      result = result.filter((i) => i.sourceType === 'TOEIC' && i.testType !== 'PLACEMENT')
+    } else if (activeTab === 'CHALLENGE') {
+      result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'challenge')
+    } else if (activeTab === 'POST_MINI') {
+      result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'post-mini')
+    } else if (activeTab === 'FINAL_TEST') {
+      result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'final-test')
+    }
 
-      return true
-    })
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      result = result.filter(
+        (i) =>
+          i.title.toLowerCase().includes(q) ||
+          (i.subtitle && i.subtitle.toLowerCase().includes(q))
+      )
+    }
+
+    return result
   }, [unifiedList, activeTab, searchQuery])
 
   const stats = useMemo(() => {
@@ -272,6 +231,14 @@ export function useExamHistory() {
       return dateStr
     }
   }
+
+  const loadAllHistory = useCallback(async () => {
+    queryClient.invalidateQueries({ queryKey: toeicKeys.all })
+  }, [queryClient])
+
+  const isLoading =
+    (toeicHistoryQuery.isLoading && toeicAttempts.length === 0) ||
+    (courseAttemptsQuery.isLoading && courseAttempts.length === 0)
 
   return {
     isLoading,

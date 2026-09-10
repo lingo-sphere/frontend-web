@@ -1,16 +1,24 @@
-// Custom React hook quản lý trạng thái tải dữ liệu và tính toán chỉ số học tập trang Tiến độ
-
+// Custom React hook quản lý trạng thái tải dữ liệu và tính toán chỉ số học tập trang Tiến độ bằng TanStack Query.
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { authService } from '@/features/auth/services/auth.service'
-import { userService, type GamificationProfile } from '@/features/user/services/user.service'
-import { progressService, type UserCourseProgressItem, type UserRoadmapProgress } from '@/features/progress/services/progress.service'
-import { courseService } from '@/features/courses/services/course.service'
-import { examService, type ToeicLearningProfile } from '@/features/toeic/services/exam.service'
-import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import { progressKeys } from '@/features/progress/keys/progress.keys'
+import { courseKeys } from '@/features/courses/keys/course.keys'
+import {
+  useCoursesProgressQuery,
+  useRoadmapProgressQuery,
+  useExamProfileQuery,
+  useGamificationProfileQuery,
+  useTestAttemptsQuery,
+  useExamHistoryQuery,
+  useVocabProgressQuery,
+} from '@/features/progress/hooks/use.progress.query'
+import { useAllCoursesQuery, useMyEnrollmentsQuery } from '@/features/courses/hooks/use.courses.query'
 import type { Course, CourseEnrollment } from '@/types/api.types'
+import type { UserCourseProgressItem } from '@/features/progress/services/progress.service'
 
 export interface VocabStatsSummary {
   learned_words: number
@@ -61,40 +69,8 @@ export interface ProgressRecentActivity {
 
 export function useProgressData(navigate: (path: string) => void) {
   const { user } = useAuthStore()
+  const queryClient = useQueryClient()
   const [mounted, setMounted] = useState<boolean>(false)
-
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [courseProgresses, setCourseProgresses] = useState<UserCourseProgressItem[]>([])
-  const [myEnrolledCourses, setMyEnrolledCourses] = useState<CourseEnrollment[]>([])
-  const [allCourses, setAllCourses] = useState<Course[]>([])
-  const [roadmapProgress, setRoadmapProgress] = useState<UserRoadmapProgress | null>(null)
-  const [examProfile, setExamProfile] = useState<ToeicLearningProfile | null>(null)
-  const [gamification, setGamification] = useState<GamificationProfile | null>(null)
-  const [testAttempts, setTestAttempts] = useState<Array<{
-    attempt_id: string
-    test_type: string
-    course_id: string
-    module_id?: string
-    order_index?: number
-    score: number
-    correct_count: number
-    total_questions: number
-    is_passed: boolean
-    submitted_at: string
-  }>>([])
-  const [toeicAttempts, setToeicAttempts] = useState<Array<{
-    _id: string
-    exam_title: string
-    total_scaled_score: number
-    correct_questions: number
-    total_questions: number
-    submitted_at: string
-  }>>([])
-  const [vocabStats, setVocabStats] = useState<VocabStatsSummary>({
-    learned_words: 0,
-    review_due: 0,
-    total_cards: 0,
-  })
 
   useEffect(() => {
     setMounted(true)
@@ -106,74 +82,41 @@ export function useProgressData(navigate: (path: string) => void) {
     }
   }, [mounted, navigate])
 
-  const loadAllProgressData = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const [
-        coursesProgressRes,
-        enrolledCoursesRes,
-        allCoursesRes,
-        roadmapRes,
-        examProfileRes,
-        gamificationRes,
-        testAttemptsRes,
-        examHistoryRes,
-        vocabProgressRes,
-      ] = await Promise.allSettled([
-        progressService.getMyCoursesProgress(),
-        courseService.getMyEnrolledCourses(),
-        courseService.getAllCourses(),
-        progressService.getMyRoadmapProgress(),
-        examService.getMyExamProfile(),
-        userService.getGamificationProfile(),
-        progressService.getMyTestAttempts(),
-        examService.getMyExamHistory(),
-        vocabularyService.getMyVocabProgress(),
-      ])
+  const isEnabled = mounted && authService.isAuthenticated()
 
-      if (coursesProgressRes.status === 'fulfilled' && Array.isArray(coursesProgressRes.value)) {
-        setCourseProgresses(coursesProgressRes.value)
-      }
-      if (enrolledCoursesRes.status === 'fulfilled' && Array.isArray(enrolledCoursesRes.value)) {
-        setMyEnrolledCourses(enrolledCoursesRes.value)
-      }
-      if (allCoursesRes.status === 'fulfilled' && Array.isArray(allCoursesRes.value)) {
-        setAllCourses(allCoursesRes.value)
-      }
-      if (roadmapRes.status === 'fulfilled') {
-        setRoadmapProgress(roadmapRes.value)
-      }
-      if (examProfileRes.status === 'fulfilled' && examProfileRes.value) {
-        setExamProfile(examProfileRes.value)
-      }
-      if (gamificationRes.status === 'fulfilled' && gamificationRes.value) {
-        setGamification(gamificationRes.value)
-      }
-      if (testAttemptsRes.status === 'fulfilled' && Array.isArray(testAttemptsRes.value)) {
-        setTestAttempts(testAttemptsRes.value)
-      }
-      if (examHistoryRes.status === 'fulfilled' && Array.isArray(examHistoryRes.value)) {
-        setToeicAttempts(examHistoryRes.value as unknown as typeof toeicAttempts)
-      }
-      if (vocabProgressRes.status === 'fulfilled' && vocabProgressRes.value) {
-        const raw = vocabProgressRes.value as Record<string, unknown>
-        setVocabStats({
-          learned_words: Number(raw.learned_words || raw.total_learned || 0),
-          review_due: Number(raw.review_due || raw.due_cards || 0),
-          total_cards: Number(raw.total_cards || 0),
-        })
-      }
-    } catch {
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadAllProgressData()
-  }, [loadAllProgressData])
+  const coursesProgressQuery = useCoursesProgressQuery(isEnabled)
+  const myEnrollmentsQuery = useMyEnrollmentsQuery(isEnabled)
+  const allCoursesQuery = useAllCoursesQuery(undefined, isEnabled)
+  const roadmapProgressQuery = useRoadmapProgressQuery(isEnabled)
+  const examProfileQuery = useExamProfileQuery(isEnabled)
+  const gamificationQuery = useGamificationProfileQuery(isEnabled)
+  const testAttemptsQuery = useTestAttemptsQuery(isEnabled)
+  const examHistoryQuery = useExamHistoryQuery(isEnabled)
+  const vocabProgressQuery = useVocabProgressQuery(isEnabled)
 
   const activeUser = mounted ? user : null
+
+  const courseProgresses = coursesProgressQuery.data || []
+  const myEnrolledCourses = myEnrollmentsQuery.data || []
+  const allCourses = allCoursesQuery.data || []
+  const roadmapProgress = roadmapProgressQuery.data || null
+  const examProfile = examProfileQuery.data || null
+  const gamification = gamificationQuery.data || null
+  const testAttempts = testAttemptsQuery.data || []
+  const toeicAttempts = examHistoryQuery.data || []
+  const rawVocab = vocabProgressQuery.data
+
+  const vocabStats: VocabStatsSummary = useMemo(() => {
+    if (!rawVocab) {
+      return { learned_words: 0, review_due: 0, total_cards: 0 }
+    }
+    const raw = rawVocab as unknown as Record<string, unknown>
+    return {
+      learned_words: Number(raw.learned_words || raw.total_learned || 0),
+      review_due: Number(raw.review_due || raw.due_cards || 0),
+      total_cards: Number(raw.total_cards || 0),
+    }
+  }, [rawVocab])
 
   const coursesMap = useMemo(() => {
     const map = new Map<string, Course>()
@@ -218,8 +161,6 @@ export function useProgressData(navigate: (path: string) => void) {
       const completedModules = progress?.completed_modules_count ?? 0
       const totalModules = progress?.total_modules_count || 1
       const progressPercent = progress?.progress_percentage ?? (enrollment?.progress_percent ?? 0)
-      const status = progress?.status || (progressPercent >= 100 ? 'COMPLETED' : 'ACTIVE')
-      const enrolledAt = progress?.enrolled_at || enrollment?.enrolled_at || ''
 
       return {
         course_id: courseId,
@@ -227,63 +168,59 @@ export function useProgressData(navigate: (path: string) => void) {
         thumbnail_url,
         level,
         category,
-        progress_percentage: progressPercent,
+        progress_percentage: Math.min(100, Math.max(0, Math.round(progressPercent))),
         completed_lessons_count: completedLessons,
         total_lessons_count: totalLessons,
         completed_modules_count: completedModules,
         total_modules_count: totalModules,
-        status,
-        enrolled_at: enrolledAt,
+        status: enrollment?.status || (progressPercent >= 100 ? 'COMPLETED' : 'STUDYING'),
+        enrolled_at: enrollment?.enrolled_at || new Date().toISOString(),
       }
     })
   }, [courseProgresses, myEnrolledCourses, coursesMap])
 
-  const metrics = useMemo<ProgressMetrics>(() => {
+  const metrics: ProgressMetrics = useMemo(() => {
     const totalCourses = enrolledCourseCards.length
     const completedCourses = enrolledCourseCards.filter(
-      (cp) => cp.status === 'COMPLETED' || cp.progress_percentage >= 100
+      (c) => c.status === 'COMPLETED' || c.progress_percentage >= 100
     ).length
-    const avgProgress =
-      totalCourses > 0
-        ? Math.round(
-            enrolledCourseCards.reduce((acc, curr) => acc + (curr.progress_percentage || 0), 0) /
-              totalCourses
-          )
-        : 0
-
+    const avgProgress = totalCourses
+      ? Math.round(
+          enrolledCourseCards.reduce((acc, curr) => acc + (curr.progress_percentage || 0), 0) /
+            totalCourses
+        )
+      : 0
     const totalLessons = enrolledCourseCards.reduce(
       (acc, curr) => acc + (curr.completed_lessons_count || 0),
       0
     )
 
     const totalAttemptsCount = testAttempts.length + toeicAttempts.length
-    const passedAttemptsCount =
+    const passedAttempts =
       testAttempts.filter((t) => t.is_passed).length +
-      toeicAttempts.filter((t) => t.total_scaled_score >= 450).length
-    const passRate =
-      totalAttemptsCount > 0 ? Math.round((passedAttemptsCount / totalAttemptsCount) * 100) : 0
+      toeicAttempts.filter((t) => (t.total_scaled_score || 0) >= 450).length
+    const passRate = totalAttemptsCount ? Math.round((passedAttempts / totalAttemptsCount) * 100) : 0
 
     const currentScore = Number(
-      activeUser?.placement_test_score ??
-        examProfile?.profile?.best_score ??
-        activeUser?.current_estimated_score ??
-        0
+      activeUser?.current_estimated_score ||
+        examProfile?.profile?.estimated_score ||
+        examProfile?.profile?.target_score ||
+        450
     )
     const targetScore = Number(
-      activeUser?.target_toeic_score ??
-        activeUser?.target_score ??
-        examProfile?.profile?.target_score ??
-        roadmapProgress?.target_score ??
-        800
+      activeUser?.target_toeic_score ||
+        roadmapProgress?.target_score ||
+        examProfile?.profile?.target_score ||
+        750
     )
     const scoreProgressPercent = Math.min(
       100,
       Math.max(0, Math.round((currentScore / (targetScore || 990)) * 100))
     )
 
-    const streak = gamification?.current_streak ?? Number(activeUser?.streak_count || 0)
-    const xp = gamification?.total_xp ?? Number(activeUser?.xp || 0)
-    const level = gamification?.level ? String(gamification.level) : (activeUser?.level || '1')
+    const streak = Number(gamification?.streak ?? activeUser?.streak_count ?? 0)
+    const xp = Number(gamification?.total_xp ?? activeUser?.xp ?? 0)
+    const level = String(gamification?.level ?? activeUser?.level ?? 1)
 
     return {
       totalCourses,
@@ -301,22 +238,22 @@ export function useProgressData(navigate: (path: string) => void) {
     }
   }, [enrolledCourseCards, testAttempts, toeicAttempts, activeUser, examProfile, roadmapProgress, gamification])
 
-  const recentActivities = useMemo<ProgressRecentActivity[]>(() => {
+  const recentActivities: ProgressRecentActivity[] = useMemo(() => {
     const list: ProgressRecentActivity[] = []
 
-    toeicAttempts.slice(0, 5).forEach((t) => {
+    toeicAttempts.forEach((t) => {
       list.push({
         id: t._id,
         type: 'TOEIC',
-        title: t.exam_title || 'Đề thi TOEIC',
-        subtitle: `Đúng ${t.correct_questions}/${t.total_questions} câu`,
-        scoreText: `${t.total_scaled_score} / 990 điểm`,
-        isPassed: t.total_scaled_score >= 450,
-        submittedAt: t.submitted_at,
+        title: t.exam_title || 'Bài thi TOEIC Full Test',
+        subtitle: `Điểm đạt: ${t.total_scaled_score || 0}/990 (${t.correct_questions || 0}/${t.total_questions || 200} câu đúng)`,
+        scoreText: `${t.total_scaled_score || 0} điểm`,
+        isPassed: (t.total_scaled_score || 0) >= 450,
+        submittedAt: t.submitted_at || new Date().toISOString(),
       })
     })
 
-    testAttempts.slice(0, 5).forEach((c) => {
+    testAttempts.forEach((c) => {
       const courseMeta = coursesMap.get(c.course_id)
       const testName =
         c.test_type === 'final-test'
@@ -352,6 +289,15 @@ export function useProgressData(navigate: (path: string) => void) {
       0
   )
 
+  const reload = () => {
+    queryClient.invalidateQueries({ queryKey: progressKeys.all })
+    queryClient.invalidateQueries({ queryKey: courseKeys.all })
+  }
+
+  const isLoading =
+    (coursesProgressQuery.isLoading && courseProgresses.length === 0) ||
+    (allCoursesQuery.isLoading && allCourses.length === 0)
+
   return {
     isLoading,
     activeUser,
@@ -362,6 +308,6 @@ export function useProgressData(navigate: (path: string) => void) {
     vocabStats,
     listeningScore,
     readingScore,
-    reload: loadAllProgressData,
+    reload,
   }
 }

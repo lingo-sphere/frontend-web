@@ -1,13 +1,10 @@
-/**
- * @file layout.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến layout.tsx
- */
-
+// Bố cục gốc ứng dụng Web cung cấp Font, PostHog, QueryProvider và AppClientProvider.
 import type { Metadata, Viewport } from 'next'
 import { Inter, Newsreader } from 'next/font/google'
 import '@/app/globals.css'
 import { AppClientProvider } from '@/providers/app.client.provider'
 import { PostHogProvider } from '@/providers/posthog.provider'
+import { QueryProvider } from '@/providers/query.provider'
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -84,7 +81,9 @@ export default function RootLayout({
     <html lang="vi" className={`${inter.variable} ${newsreader.variable} h-full antialiased`} data-theme="light" suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <PostHogProvider>
-          <AppClientProvider>{children}</AppClientProvider>
+          <QueryProvider>
+            <AppClientProvider>{children}</AppClientProvider>
+          </QueryProvider>
         </PostHogProvider>
       </body>
     </html>

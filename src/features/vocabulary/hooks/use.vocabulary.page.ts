@@ -1,16 +1,15 @@
-/**
- * @file use.vocabulary.page.ts
- * @description Hook tải dữ liệu bộ thẻ từ vựng công khai và cá nhân, lọc theo danh mục
- */
-
+// Hook quản lý dữ liệu thẻ từ vựng công khai và cá nhân bằng TanStack Query.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
-import type { Deck } from '@/types/api.types'
+import {
+  usePublicDecksQuery,
+  useMyVocabularyEnrollmentsQuery,
+} from '@/features/vocabulary/hooks/use.vocabulary.query'
+import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
 
 const VOCABULARY_TAGS = ['all', 'TOEIC', 'General', 'Business', 'Communication', 'Basic']
 
@@ -20,34 +19,10 @@ export function useVocabularyPage() {
   const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
 
   const [activeTag, setActiveTag] = useState('all')
-  const [publicDecks, setPublicDecks] = useState<Deck[]>([])
-  const [myDecks, setMyDecks] = useState<Deck[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchVocabularyData = async () => {
-      try {
-        setIsLoading(true)
-        const [pubDecks, myEnrollments] = await Promise.all([
-          vocabularyService.getPublicDecks(),
-          vocabularyService.getMyEnrollments().catch(() => []),
-        ])
-        if (isMounted) {
-          if (Array.isArray(pubDecks)) setPublicDecks(pubDecks)
-          if (Array.isArray(myEnrollments)) setMyDecks(myEnrollments)
-        }
-      } catch (err) {
-        console.error('Error loading vocabulary data:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchVocabularyData()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: publicDecks = [], isLoading: isPublicLoading } = usePublicDecksQuery()
+  const { data: myDecks = [], isLoading: isMyLoading } = useMyVocabularyEnrollmentsQuery()
+  const isLoading = isPublicLoading || isMyLoading
 
   const filteredPacks = publicDecks.filter((d: Deck) => {
     if (activeTag === 'all') return true

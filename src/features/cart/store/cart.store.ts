@@ -1,10 +1,8 @@
-/**
- * @file cart.store.ts
- * @description Mã nguồn thành phần cart-store.ts
- */
-
+// Store Zustand quản lý trạng thái giỏ hàng đồng bộ với TanStack Query.
 import { create } from 'zustand'
 import { cartService } from '@/features/cart/services/cart.service'
+import { getQueryClient } from '@/config/query.config'
+import { cartKeys } from '@/features/cart/keys/cart.keys'
 import type { Cart, CartItem } from '@/features/cart/types/cart'
 
 interface CartState {
@@ -30,6 +28,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       const res = await cartService.getCart()
       set({ cart: res, isLoading: false })
+      getQueryClient().setQueryData(cartKeys.mine(), res)
     } catch {
       set({ cart: null, isLoading: false })
     }
@@ -40,6 +39,8 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       const res = await cartService.addToCart(courseId)
       set({ cart: res })
+      getQueryClient().setQueryData(cartKeys.mine(), res)
+      getQueryClient().invalidateQueries({ queryKey: cartKeys.all })
       return { success: true }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Không thể thêm vào giỏ hàng'
@@ -54,21 +55,23 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       const res = await cartService.removeFromCart(courseId)
       set({ cart: res })
+      getQueryClient().setQueryData(cartKeys.mine(), res)
+      getQueryClient().invalidateQueries({ queryKey: cartKeys.all })
     } catch {
       const current = get().cart
       if (current) {
         const filtered = current.items.filter((i) => i.course_id !== courseId)
-        set({
-          cart: {
-            ...current,
-            items: filtered,
-            total_items: filtered.length,
-            total_amount: filtered.reduce(
-              (acc, it) => acc + (it.discount_price && it.discount_price > 0 ? it.discount_price : it.price),
-              0
-            ),
-          },
-        })
+        const updated = {
+          ...current,
+          items: filtered,
+          total_items: filtered.length,
+          total_amount: filtered.reduce(
+            (acc, it) => acc + (it.discount_price && it.discount_price > 0 ? it.discount_price : it.price),
+            0
+          ),
+        }
+        set({ cart: updated })
+        getQueryClient().setQueryData(cartKeys.mine(), updated)
       }
     } finally {
       set({ isLoading: false })
@@ -80,8 +83,11 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       const res = await cartService.clearCart()
       set({ cart: res })
+      getQueryClient().setQueryData(cartKeys.mine(), res)
+      getQueryClient().invalidateQueries({ queryKey: cartKeys.all })
     } catch {
       set({ cart: null })
+      getQueryClient().invalidateQueries({ queryKey: cartKeys.all })
     } finally {
       set({ isLoading: false })
     }

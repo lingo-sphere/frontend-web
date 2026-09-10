@@ -1,11 +1,10 @@
-// Store Zustand quản lý trạng thái danh sách khóa học yêu thích
+// Store Zustand quản lý trạng thái yêu thích đồng bộ với TanStack Query.
 import { create } from 'zustand'
 import { wishlistService } from '@/features/cart/services/wishlist.service'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { getQueryClient } from '@/config/query.config'
+import { wishlistKeys } from '@/features/cart/keys/wishlist.keys'
 import type { CourseCardData } from '@/features/courses/types/course'
 import type { WishlistItem } from '@/features/cart/types/wishlist'
-
-storage.remove(STORAGE_KEYS.WISHLIST)
 
 const mapWishlistItemToCourseCard = (item: WishlistItem): CourseCardData => ({
   id: item.course_id,
@@ -51,6 +50,7 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       } else {
         set({ items: [], isLoading: false })
       }
+      getQueryClient().setQueryData(wishlistKeys.mine(), res)
     } catch {
       set({ items: [], isLoading: false })
     }
@@ -64,8 +64,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       } else {
         await get().fetchWishlist()
       }
+      getQueryClient().invalidateQueries({ queryKey: wishlistKeys.all })
     } catch (err) {
-      console.error('Lỗi khi thêm vào danh sách yêu thích:', err)
       throw err
     }
   },
@@ -78,8 +78,8 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       } else {
         await get().fetchWishlist()
       }
+      getQueryClient().invalidateQueries({ queryKey: wishlistKeys.all })
     } catch (err) {
-      console.error('Lỗi khi xóa khỏi danh sách yêu thích:', err)
       throw err
     }
   },
@@ -90,12 +90,13 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
       if (res?.wishlist && Array.isArray(res.wishlist.items)) {
         const mapped = res.wishlist.items.map(mapWishlistItemToCourseCard)
         set({ items: mapped })
+        getQueryClient().invalidateQueries({ queryKey: wishlistKeys.all })
         return { success: true, isWishlisted: res.is_wishlisted }
       }
       await get().fetchWishlist()
+      getQueryClient().invalidateQueries({ queryKey: wishlistKeys.all })
       return { success: true, isWishlisted: get().isInWishlist(course.id) }
     } catch (err: unknown) {
-      console.error('Lỗi khi chuyển đổi yêu thích:', err)
       const msg = err instanceof Error ? err.message : 'Không thể cập nhật danh sách yêu thích'
       return { success: false, message: msg }
     }

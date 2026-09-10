@@ -1,7 +1,9 @@
-// Store Zustand quản lý danh sách các khóa học học viên đã mua hoặc ghi danh
+// Store Zustand quản lý danh sách các khóa học học viên đã mua đồng bộ với TanStack Query.
 import { create } from 'zustand'
 import { courseService } from '@/features/courses/services/course.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { getQueryClient } from '@/config/query.config'
+import { courseKeys } from '@/features/courses/keys/course.keys'
 import type { User } from '@/features/user/schemas/user.schema'
 
 interface EnrollmentState {
@@ -30,6 +32,7 @@ export const useEnrollmentStore = create<EnrollmentState>((set, get) => ({
     set({ isLoading: true })
     try {
       const enrollments = await courseService.getMyEnrolledCourses()
+      getQueryClient().setQueryData(courseKeys.enrollments(), enrollments)
       if (Array.isArray(enrollments)) {
         const ids: string[] = []
         ;(enrollments as EnrollmentItem[]).forEach((e) => {
@@ -61,5 +64,6 @@ export const useEnrollmentStore = create<EnrollmentState>((set, get) => ({
     set((state) => ({
       enrolledCourseIds: Array.from(new Set([...state.enrolledCourseIds, String(courseId)])),
     }))
+    getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
   },
 }))

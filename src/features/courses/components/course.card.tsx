@@ -22,6 +22,9 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCartStore } from '@/features/cart/store/cart.store'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { toast } from '@/store/toast.store'
+import { useQueryClient } from '@tanstack/react-query'
+import { courseKeys } from '@/features/courses/keys/course.keys'
+import { courseService } from '@/features/courses/services/course.service'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 
@@ -57,7 +60,18 @@ export function CourseCard({
   const isAlreadyEnrolled = isEnrolled || isPremiumUser || isPrivilegedUser
   const [isAdding, setIsAdding] = useState(false)
   const isAlreadyInCart = isInCart(course.id)
+  const queryClient = useQueryClient()
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const handlePrefetch = () => {
+    if (course.id) {
+      queryClient.prefetchQuery({
+        queryKey: courseKeys.detail(course.id),
+        queryFn: () => courseService.getCourseById(course.id),
+        staleTime: 5 * 60 * 1000,
+      })
+    }
+  }
 
   useEffect(() => {
     if (!isMenuOpen) return
@@ -145,6 +159,7 @@ export function CourseCard({
   return (
     <div
       onClick={() => onClick(course.id)}
+      onMouseEnter={handlePrefetch}
       className="group relative flex flex-col justify-between rounded-2xl border border-border/80 bg-surface p-3.5 shadow-sm transition-all duration-300 hover:shadow-md hover:bg-surface-hover cursor-pointer"
     >
       <div>
