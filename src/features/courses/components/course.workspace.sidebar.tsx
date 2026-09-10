@@ -114,6 +114,7 @@ export function CourseWorkspaceSidebar({
           expandedChapters={expandedChapters}
           isEnrolled={isEnrolled}
           lockedChapterIds={lockedChapterIds}
+          lockState={progressDetail?.course_progress?.lock_state}
           modulesProgress={progressDetail?.modules_progress}
           finalTestQuestionsCount={course.final_test_questions?.length || 0}
           finalTestScore={progressDetail?.course_progress?.final_test_score}

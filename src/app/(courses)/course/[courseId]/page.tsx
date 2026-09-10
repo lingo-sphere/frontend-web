@@ -1,7 +1,7 @@
 // Trang không gian học tập trực tuyến (Course Workspace) cho học viên LingoSphere
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from '@/lib/navigation'
 import { AlertCircle, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/button'
@@ -18,6 +18,9 @@ import { toast } from '@/store/toast.store'
 import { extractCourseId, buildCourseUrl } from '@/features/courses/lib/course.url'
 import { CourseWorkspaceTabs } from '@/features/courses/components/course.workspace.tabs'
 import { CourseWorkspaceSidebar } from '@/features/courses/components/course.workspace.sidebar'
+import { CourseScheduleBanner } from '@/features/courses/components/course.schedule.banner'
+import { CourseScheduleModal } from '@/features/courses/components/course.schedule.modal'
+import { courseService } from '@/features/courses/services/course.service'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
@@ -52,6 +55,11 @@ export default function CourseDetailPage() {
     setShowPlacementPromptModal,
     isAddingToCart,
     progressDetail,
+    courseSchedule,
+    setCourseSchedule,
+    courseLockState,
+    setCourseLockState,
+    refreshCourseProgress,
     lockedChapterIdSet,
     hasNextLesson,
     hasPrevLesson,
@@ -74,6 +82,9 @@ export default function CourseDetailPage() {
     isAuthenticated,
     isInCart,
   } = useCourseWorkspace(courseId)
+
+  const [showScheduleBanner, setShowScheduleBanner] = useState(true)
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
 
   const handleBack = () => {
     if (course) {
@@ -171,6 +182,7 @@ export default function CourseDetailPage() {
               )}
               <LessonPlayer
                 lesson={currentLesson}
+                courseId={course.id}
                 isTrial={!isEnrolled}
                 onOpenCheckout={handleInitiateEnrollOrBuy}
                 onProgress={handleLessonProgress}
@@ -196,6 +208,39 @@ export default function CourseDetailPage() {
               onOpenUpgrade={() => setShowUpgradeModal(true)}
               onOpenAuth={() => window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))}
             />
+          )}
+
+          {isEnrolled && (showScheduleBanner || courseLockState?.is_locked) && (
+            <div className="px-4 sm:px-6 lg:px-8 pt-4 w-full max-w-7xl">
+              <CourseScheduleBanner
+                schedule={courseSchedule}
+                lockState={courseLockState}
+                onOpenModal={() => setShowScheduleModal(true)}
+                onDismiss={() => setShowScheduleBanner(false)}
+                onCancelSchedule={
+                  courseSchedule?.is_reminder_enabled
+                    ? async () => {
+                        try {
+                          await courseService.updateCourseSchedule(course.id, { is_reminder_enabled: false })
+                          setCourseSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
+                          toast.info('Đã hủy lịch nhắc nhở học tập của khóa học này.', 'Đã hủy lịch')
+                        } catch {
+                          toast.error('Không thể hủy lịch nhắc học.', 'Lỗi')
+                        }
+                      }
+                    : undefined
+                }
+                onRetest={() => {
+                  const retestOrder =
+                    courseLockState?.retest_chapter_order || ((courseLockState?.locked_chapter_order || 2) - 1)
+                  const retestChapter = course.chapters.find(
+                    (ch, idx) => Number(ch.order || idx + 1) === retestOrder
+                  )
+                  const targetModId = courseLockState?.retest_module_id || retestChapter?.id
+                  navigate(`/course/${course.id}/exam?type=challenge&chapterId=${targetModId || ''}`)
+                }}
+              />
+            </div>
           )}
 
           <CourseWorkspaceTabs
@@ -268,6 +313,7 @@ export default function CourseDetailPage() {
             setIsEnrolled(true)
             useEnrollmentStore.getState().addEnrolledCourse(course.id)
             toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
+            setShowScheduleModal(true)
           }}
         />
       )}
@@ -278,6 +324,29 @@ export default function CourseDetailPage() {
           onOpenChange={setShowPlacementPromptModal}
           onProceedPurchase={() => setShowCourseCheckoutModal(true)}
           courseTitle={course?.title}
+        />
+      )}
+
+      {showScheduleModal && course && (
+        <CourseScheduleModal
+          courseId={course.id}
+          courseTitle={course.title}
+          initialSchedule={courseSchedule}
+          onClose={() => setShowScheduleModal(false)}
+          onSaved={(newSched) => {
+            setCourseSchedule((prev) => ({
+              is_reminder_enabled: true,
+              reminder_time: newSched.reminder_time || prev?.reminder_time || '20:00',
+              reminder_days: newSched.reminder_days || prev?.reminder_days || ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+              study_duration_minutes: newSched.study_duration_minutes || prev?.study_duration_minutes || 30,
+              is_email_notification_enabled: newSched.is_email_notification_enabled ?? true,
+            }))
+            refreshCourseProgress()
+          }}
+          onCancelled={() => {
+            setCourseSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
+            refreshCourseProgress()
+          }}
         />
       )}
     </div>

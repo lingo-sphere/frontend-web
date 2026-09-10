@@ -7,6 +7,7 @@
 
 import { useState } from 'react'
 import type { Chapter, Lesson } from '@/features/courses/types/course'
+import type { CourseChapterLockState } from '@/features/courses/types/schedule.types'
 import { CourseSidebarChapterItem } from '@/features/courses/components/course.sidebar.chapter.item'
 import { CourseSidebarFinalExamCard } from '@/features/courses/components/course.sidebar.final.exam.card'
 
@@ -16,6 +17,7 @@ interface CourseSidebarContentProps {
   expandedChapters: string[]
   isEnrolled?: boolean
   lockedChapterIds?: Set<string>
+  lockState?: CourseChapterLockState | null
   modulesProgress?: Array<{
     module_id: string
     order_index?: number
@@ -25,6 +27,7 @@ interface CourseSidebarContentProps {
     is_passed_by_challenge?: boolean
     post_mini_score?: number
     post_mini_attempt_id?: string
+    is_locked_by_reminder?: boolean
     attempts?: Array<{
       attempt_id: string
       test_type?: string
@@ -58,6 +61,7 @@ export function CourseSidebarContent({
   expandedChapters,
   isEnrolled = true,
   lockedChapterIds,
+  lockState,
   modulesProgress,
   finalTestQuestionsCount = 0,
   finalTestScore,
@@ -166,6 +170,12 @@ export function CourseSidebarContent({
                   prevChapter?.challenge_passing_score ||
                   80))
         )
+        const isLockedByReminder = Boolean(
+          modProgress?.is_locked_by_reminder ||
+            (lockState?.is_locked &&
+              (lockState.locked_module_id === chapter.id ||
+                lockState.locked_chapter_order === currentOrder))
+        )
         const isChapterLocked = lockedChapterIds
           ? lockedChapterIds.has(chapter.id)
           : isEnrolled && chIdx > 0 && !prevPassedChallenge
@@ -178,6 +188,8 @@ export function CourseSidebarContent({
             isExpanded={isExpanded}
             isEnrolled={isEnrolled}
             isChapterLocked={isChapterLocked}
+            isLockedByReminder={isLockedByReminder}
+            violationCount={lockState?.violation_count || 0}
             isPassedChallenge={isPassedChallenge}
             hasTakenChallenge={hasTakenChallenge}
             challengeScore={challengeScore}

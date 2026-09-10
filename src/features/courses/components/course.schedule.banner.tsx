@@ -6,7 +6,8 @@
 'use client'
 
 import { useTranslation } from 'react-i18next'
-import { Clock, X, CalendarCheck2, Settings2, BellRing } from 'lucide-react'
+import { Clock, X, CalendarCheck2, Settings2, BellRing, Lock, AlertTriangle, RotateCcw } from 'lucide-react'
+import type { CourseChapterLockState } from '@/features/courses/types/schedule.types'
 
 export interface UserScheduleData {
   reminder_time?: string
@@ -68,19 +69,75 @@ export function formatReminderTime(time?: string, isVi: boolean = true): string 
 
 interface CourseScheduleBannerProps {
   schedule?: UserScheduleData | null
+  lockState?: CourseChapterLockState | null
   onOpenModal: () => void
   onDismiss: () => void
   onCancelSchedule?: () => void
+  onRetest?: () => void
 }
 
 export function CourseScheduleBanner({
   schedule,
+  lockState,
   onOpenModal,
   onDismiss,
   onCancelSchedule,
+  onRetest,
 }: CourseScheduleBannerProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
+
+  if (lockState?.is_locked) {
+    const lockedOrder = lockState.locked_chapter_order || 2
+    const retestOrder = lockState.retest_chapter_order || (lockedOrder - 1)
+    return (
+      <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative transition-all">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-600 text-white shadow-md shadow-rose-600/20">
+            <Lock size={22} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base sm:text-lg font-black text-rose-700 dark:text-rose-300">
+                {isVi
+                  ? `Chương ${lockedOrder} đang bị khóa do vắng học 5 lần nhắc nhở`
+                  : `Chapter ${lockedOrder} is locked due to 5 missed study reminders`}
+              </h3>
+              <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/20 border border-rose-500/30 px-2.5 py-0.5 text-[11px] font-extrabold text-rose-700 dark:text-rose-300">
+                <AlertTriangle size={12} />
+                5/5 lần vắng
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-3xl">
+              {isVi
+                ? `Để đảm bảo chuẩn đầu ra của khóa học, bạn cần làm lại bài kiểm tra Chương ${retestOrder} và đạt điểm tiêu chuẩn để mở khóa học tiếp tục Chương ${lockedOrder}.`
+                : `To ensure course quality, please retake the Chapter ${retestOrder} test and achieve the passing score to unlock Chapter ${lockedOrder}.`}
+            </p>
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              {onRetest && (
+                <button
+                  type="button"
+                  onClick={onRetest}
+                  className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-extrabold text-white hover:bg-rose-700 transition-all cursor-pointer shadow-md shadow-rose-600/25"
+                >
+                  <RotateCcw size={14} />
+                  {isVi ? `Làm lại bài kiểm tra Chương ${retestOrder}` : `Retake Chapter ${retestOrder} Test`}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onOpenModal}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs font-bold text-text-primary hover:bg-surface-hover transition-all cursor-pointer shadow-sm"
+              >
+                <Settings2 size={14} />
+                {isVi ? 'Đổi lịch nhắc học' : 'Change Schedule'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const hasActiveSchedule = Boolean(schedule?.is_reminder_enabled && schedule?.reminder_time)
   const formattedDays = formatReminderDays(schedule?.reminder_days, isVi)
@@ -99,7 +156,7 @@ export function CourseScheduleBanner({
           {hasActiveSchedule ? <CalendarCheck2 size={22} /> : <Clock size={22} />}
         </div>
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-sm sm:text-base font-bold text-text-primary">
               {hasActiveSchedule
                 ? (isVi ? 'Lịch nhắc học tập của bạn đang hoạt động' : 'Your Learning Schedule is Active')
@@ -109,6 +166,14 @@ export function CourseScheduleBanner({
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                 <BellRing size={12} className="animate-pulse" />
                 {formattedTime}
+              </span>
+            )}
+            {Boolean(lockState && lockState.violation_count > 0) && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11px] font-extrabold text-amber-700 dark:text-amber-300">
+                <AlertTriangle size={12} className="text-amber-500" />
+                {isVi
+                  ? `Cảnh báo vắng học: ${lockState?.violation_count}/5 lần`
+                  : `Absence warning: ${lockState?.violation_count}/5`}
               </span>
             )}
           </div>

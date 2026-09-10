@@ -8,9 +8,11 @@ import Hls from 'hls.js'
 import type { Lesson } from '@/features/courses/types/course'
 import { isDirectVideoUrl } from '@/features/courses/types/player.types'
 import { API_CONFIG } from '@/config/api.config'
+import { courseService } from '@/features/courses/services/course.service'
 
 interface UseLessonVideoPlayerProps {
   lesson: Lesson
+  courseId?: string
   hasNextLesson?: boolean
   onProgress?: (lessonId: string, progress: number) => void
   onLessonComplete?: (lessonId: string) => void
@@ -21,6 +23,7 @@ interface UseLessonVideoPlayerProps {
 
 export function useLessonVideoPlayer({
   lesson,
+  courseId,
   hasNextLesson = false,
   onProgress,
   onLessonComplete,
@@ -34,6 +37,7 @@ export function useLessonVideoPlayer({
   const progressBarRef = useRef<HTMLDivElement | null>(null)
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const lastHeartbeatRef = useRef<number>(0)
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -171,7 +175,13 @@ export function useLessonVideoPlayer({
     if (video.paused) {
       video
         .play()
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          setIsPlaying(true)
+          if (courseId && Date.now() - lastHeartbeatRef.current > 30000) {
+            lastHeartbeatRef.current = Date.now()
+            courseService.recordVideoWatchHeartbeat(courseId).catch(() => {})
+          }
+        })
         .catch(() => {})
       triggerFeedback('play')
     } else {
@@ -180,7 +190,7 @@ export function useLessonVideoPlayer({
       triggerFeedback('pause')
     }
     resetControlsTimeout()
-  }, [triggerFeedback, resetControlsTimeout])
+  }, [triggerFeedback, resetControlsTimeout, courseId])
 
   const toggleMute = useCallback(() => {
     const video = videoRef.current
@@ -296,7 +306,15 @@ export function useLessonVideoPlayer({
       const end = video.buffered.end(video.buffered.length - 1)
       setBufferedPercent(Math.min(100, (end / duration) * 100))
     }
-  }, [duration, lesson.id, onLessonComplete, onProgress, onTimeUpdate])
+
+    if (courseId) {
+      const now = Date.now()
+      if (now - lastHeartbeatRef.current > 60000) {
+        lastHeartbeatRef.current = now
+        courseService.recordVideoWatchHeartbeat(courseId).catch(() => {})
+      }
+    }
+  }, [duration, lesson.id, onLessonComplete, onProgress, onTimeUpdate, courseId])
 
   const handleEnded = useCallback(() => {
     setIsPlaying(false)

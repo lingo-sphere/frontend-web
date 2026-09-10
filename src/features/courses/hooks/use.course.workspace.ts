@@ -8,6 +8,7 @@ import { useCartStore } from '@/features/cart/store/cart.store'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { Course, Chapter, Lesson } from '@/features/courses/types/course'
+import type { CourseStudySchedule, CourseChapterLockState } from '@/features/courses/types/schedule.types'
 import { useCourseNotes } from '@/features/courses/hooks/use.course.notes'
 import { useCourseQnA } from '@/features/courses/hooks/use.course.qna'
 import { useCourseReviews } from '@/features/courses/hooks/use.course.reviews'
@@ -27,9 +28,19 @@ interface ModuleProgressInfo {
   challenge_taken?: boolean
   is_passed_by_challenge?: boolean
   post_mini_score?: number
+  is_locked_by_reminder?: boolean
 }
 
 interface CourseProgressDetailInfo {
+  course_progress?: {
+    schedule?: CourseStudySchedule
+    lock_state?: CourseChapterLockState
+    last_video_watched_at?: string
+    is_baseline_established?: boolean
+    baseline_score?: number
+    final_test_score?: number
+    final_test_attempts?: any[]
+  }
   modules_progress?: ModuleProgressInfo[]
   completed_lesson_ids?: string[]
 }
@@ -57,6 +68,8 @@ export function useCourseWorkspace(courseId: string) {
   const [showPlacementPromptModal, setShowPlacementPromptModal] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [progressDetail, setProgressDetail] = useState<CourseProgressDetailInfo | null>(null)
+  const [courseSchedule, setCourseSchedule] = useState<CourseStudySchedule | null>(null)
+  const [courseLockState, setCourseLockState] = useState<CourseChapterLockState | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -88,6 +101,12 @@ export function useCourseWorkspace(courseId: string) {
           }
           if (progressRes) {
             setProgressDetail(progressRes)
+            if (progressRes.course_progress?.schedule) {
+              setCourseSchedule(progressRes.course_progress.schedule)
+            }
+            if (progressRes.course_progress?.lock_state) {
+              setCourseLockState(progressRes.course_progress.lock_state)
+            }
           }
         }
 
@@ -136,9 +155,27 @@ export function useCourseWorkspace(courseId: string) {
     )
   }
 
+  const refreshCourseProgress = useCallback(async () => {
+    if (!courseId) return
+    try {
+      const updatedProgress = await courseService.getCourseProgressDetail(courseId)
+      if (updatedProgress) {
+        setProgressDetail(updatedProgress)
+        if (updatedProgress.course_progress?.schedule) {
+          setCourseSchedule(updatedProgress.course_progress.schedule)
+        }
+        if (updatedProgress.course_progress?.lock_state) {
+          setCourseLockState(updatedProgress.course_progress.lock_state)
+        }
+      }
+    } catch {}
+  }, [courseId])
+
   const lockedChapterIdSet = useMemo(() => {
     const set = new Set<string>()
     if (!course?.chapters || !isEnrolled) return set
+
+    const lockState = progressDetail?.course_progress?.lock_state
 
     for (let i = 1; i < course.chapters.length; i++) {
       const prevCh = course.chapters[i - 1]
@@ -158,10 +195,41 @@ export function useCourseWorkspace(courseId: string) {
         set.add(course.chapters[i].id)
       }
     }
+
+    course.chapters.forEach((ch, idx) => {
+      const currentOrder = Number(ch.order || idx + 1)
+      const mod = progressDetail?.modules_progress?.find(
+        (m: ModuleProgressInfo) => m.module_id === ch.id || m.order_index === currentOrder
+      )
+      if (mod?.is_locked_by_reminder) {
+        set.add(ch.id)
+      }
+      if (
+        lockState?.is_locked &&
+        (lockState.locked_module_id === ch.id || lockState.locked_chapter_order === currentOrder)
+      ) {
+        set.add(ch.id)
+      }
+    })
+
     return set
-  }, [course?.chapters, isEnrolled, progressDetail?.modules_progress])
+  }, [course?.chapters, isEnrolled, progressDetail])
 
   const handleSelectLesson = (chapter: Chapter, lesson: Lesson) => {
+    const lockState = progressDetail?.course_progress?.lock_state
+    const currentOrder = Number(chapter.order || 1)
+    const isLockedByReminder = Boolean(
+      lockState?.is_locked &&
+        (lockState.locked_module_id === chapter.id || lockState.locked_chapter_order === currentOrder)
+    )
+    if (isLockedByReminder) {
+      const retestOrder = lockState?.retest_chapter_order || (currentOrder - 1)
+      toast.error(
+        `Chương này đang bị khóa do vắng học 5 lần nhắc nhở liên tiếp. Vui lòng thi lại bài kiểm tra Chương ${retestOrder} để mở khóa!`,
+        'Chương bị khóa'
+      )
+      return
+    }
     if (lockedChapterIdSet.has(chapter.id)) {
       toast.warning(
         'Chương này đang bị khóa! Bạn cần hoàn thành và vượt qua bài test thử thách của chương trước để mở khóa nhé.',
@@ -437,6 +505,11 @@ export function useCourseWorkspace(courseId: string) {
     activeTestModal,
     setActiveTestModal,
     progressDetail,
+    courseSchedule,
+    setCourseSchedule,
+    courseLockState,
+    setCourseLockState,
+    refreshCourseProgress,
     lockedChapterIdSet,
     hasNextLesson,
     hasPrevLesson,

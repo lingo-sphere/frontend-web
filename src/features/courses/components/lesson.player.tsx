@@ -14,6 +14,7 @@ import { useLessonVideoPlayer } from '@/features/courses/hooks/use.lesson.video.
 
 interface LessonPlayerProps {
   lesson: Lesson
+  courseId?: string
   isTrial?: boolean
   onOpenCheckout?: () => void
   onProgress?: (lessonId: string, progress: number) => void
@@ -29,6 +30,7 @@ interface LessonPlayerProps {
 
 export function LessonPlayer({
   lesson,
+  courseId,
   isTrial = false,
   onOpenCheckout,
   onProgress,
@@ -95,6 +97,7 @@ export function LessonPlayer({
     handleTimelineMouseMove,
   } = useLessonVideoPlayer({
     lesson,
+    courseId,
     hasNextLesson,
     onProgress,
     onLessonComplete,

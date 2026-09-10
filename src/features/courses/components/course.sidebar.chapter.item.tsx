@@ -15,6 +15,8 @@ interface CourseSidebarChapterItemProps {
   isExpanded: boolean
   isEnrolled: boolean
   isChapterLocked: boolean
+  isLockedByReminder?: boolean
+  violationCount?: number
   isPassedChallenge: boolean
   hasTakenChallenge: boolean
   challengeScore: number
@@ -36,6 +38,8 @@ export function CourseSidebarChapterItem({
   isExpanded,
   isEnrolled,
   isChapterLocked,
+  isLockedByReminder = false,
+  violationCount = 0,
   isPassedChallenge,
   hasTakenChallenge,
   challengeScore,
@@ -66,7 +70,12 @@ export function CourseSidebarChapterItem({
               Chương {chapter.order || chIdx + 1}
             </span>
 
-            {isChapterLocked ? (
+            {isLockedByReminder ? (
+              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30 flex items-center gap-1">
+                <Lock size={10} className="text-rose-600" />
+                Khóa do vắng ({violationCount || 5}/5)
+              </span>
+            ) : isChapterLocked ? (
               <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center gap-1">
                 <Lock size={10} />
                 Đang khóa
@@ -103,8 +112,8 @@ export function CourseSidebarChapterItem({
       </button>
 
       {isExpanded && (
-        <div className="bg-surface-subtle/30 p-2.5 space-y-2">
-          <div className="space-y-1">
+        <div className="border-t border-border/60 bg-surface-subtle/30">
+          <div className="divide-y divide-border/40">
             {chapter.lessons.map((lesson) => (
               <CourseSidebarLessonRow
                 key={lesson.id}
@@ -114,6 +123,13 @@ export function CourseSidebarChapterItem({
                 isChapterLocked={isChapterLocked}
                 isResourceOpen={activeResourceDropdown === lesson.id}
                 onSelect={() => {
+                  if (isLockedByReminder) {
+                    toast.error(
+                      'Chương này đang bị khóa do bạn đã vắng mặt 5 lần nhắc học. Vui lòng thi lại bài kiểm tra của chương trước để mở khóa!',
+                      'Chương bị khóa'
+                    )
+                    return
+                  }
                   if (isChapterLocked) {
                     toast.warning(
                       `Chương này đang bị khóa! Bạn cần làm bài test thử thách của Chương ${prevChapter?.order || chIdx} (đạt tối thiểu ${prevChapter?.challengeTest?.passingScore || 80}%) để mở khóa nhé.`,

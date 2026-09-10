@@ -4,6 +4,12 @@ import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, LearningRoadmap, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
 import { CourseSchema, LessonSchema, PaginatedCoursesSchema } from '@/features/courses/schemas/course.schema'
+import type {
+  CourseStudySchedule,
+  CourseChapterLockState,
+  CourseScheduleResponse,
+  UpdateCourseSchedulePayload,
+} from '@/features/courses/types/schedule.types'
 
 export const courseService = {
 
@@ -145,6 +151,9 @@ export const courseService = {
       total_growth_percentage?: number
       final_test_score?: number
       growth_chart_data?: Array<{ stage: string; score: number; timestamp: string }>
+      schedule?: CourseStudySchedule
+      lock_state?: CourseChapterLockState
+      last_video_watched_at?: string
     }
     modules_progress?: Array<{
       module_id: string
@@ -155,6 +164,7 @@ export const courseService = {
       is_passed_by_challenge?: boolean
       post_mini_score?: number
       post_mini_attempt_id?: string
+      is_locked_by_reminder?: boolean
       progression_comparison?: {
         previous_stage: string
         previous_score: number
@@ -167,6 +177,18 @@ export const courseService = {
     completed_lesson_ids?: string[]
   }> {
     return api.get(`/progress/courses/${courseId}/detail`)
+  },
+
+  async getCourseSchedule(courseId: string): Promise<CourseScheduleResponse> {
+    return api.get(`/progress/courses/${courseId}/schedule`)
+  },
+
+  async updateCourseSchedule(courseId: string, payload: UpdateCourseSchedulePayload): Promise<CourseScheduleResponse> {
+    return api.post(`/progress/courses/${courseId}/schedule`, payload)
+  },
+
+  async recordVideoWatchHeartbeat(courseId: string): Promise<{ success: boolean; last_video_watched_at: string }> {
+    return api.post(`/progress/courses/${courseId}/heartbeat`, {})
   },
 
   async submitModuleChallenge(

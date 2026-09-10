@@ -1,4 +1,38 @@
-// Hằng số và hàm tiện ích cho bộ cài đặt lịch học tập hàng ngày
+// Hằng số, kiểu dữ liệu và hàm tiện ích cho bộ cài đặt lịch học tập và khóa chương học
+
+export interface CourseStudySchedule {
+  is_reminder_enabled: boolean
+  reminder_time: string
+  reminder_days: string[]
+  study_duration_minutes: number
+  is_email_notification_enabled: boolean
+}
+
+export interface CourseChapterLockState {
+  is_locked: boolean
+  locked_module_id?: string
+  locked_chapter_order?: number
+  retest_module_id?: string
+  retest_chapter_order?: number
+  violation_count: number
+  locked_at?: string
+  reason?: string
+}
+
+export interface CourseScheduleResponse {
+  course_id: string
+  schedule: CourseStudySchedule | null
+  lock_state: CourseChapterLockState
+  last_video_watched_at?: string
+}
+
+export interface UpdateCourseSchedulePayload {
+  is_reminder_enabled?: boolean
+  reminder_time?: string
+  reminder_days?: string[]
+  study_duration_minutes?: number
+  is_email_notification_enabled?: boolean
+}
 
 export const DAYS_OF_WEEK = [
   { id: 'T2', shortVi: 'T2', shortEn: 'Mon', labelVi: 'Thứ 2', labelEn: 'Monday' },

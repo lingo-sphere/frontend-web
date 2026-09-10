@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { userService } from '@/features/user/services/user.service'
+import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import type { UserScheduleData } from '@/features/courses/components/course.schedule.banner'
 import {
@@ -29,6 +30,8 @@ import { ScheduleDaysSelector } from '@/features/courses/components/schedule.day
 import { ScheduleTimePicker } from '@/features/courses/components/schedule.time.picker'
 
 interface CourseScheduleModalProps {
+  courseId?: string
+  courseTitle?: string
   initialSchedule?: UserScheduleData | null
   onClose: () => void
   onSaved: (newSchedule: UserScheduleData) => void
@@ -36,6 +39,8 @@ interface CourseScheduleModalProps {
 }
 
 export function CourseScheduleModal({
+  courseId,
+  courseTitle,
   initialSchedule,
   onClose,
   onSaved,
@@ -161,7 +166,11 @@ export function CourseScheduleModal({
         is_email_notification_enabled: enableEmail,
       }
 
-      await userService.updateMySettings(payload)
+      if (courseId) {
+        await courseService.updateCourseSchedule(courseId, payload)
+      } else {
+        await userService.updateMySettings(payload)
+      }
 
       toast.success(
         isVi
@@ -189,7 +198,11 @@ export function CourseScheduleModal({
         is_reminder_enabled: false,
       }
 
-      await userService.updateMySettings(payload)
+      if (courseId) {
+        await courseService.updateCourseSchedule(courseId, payload)
+      } else {
+        await userService.updateMySettings(payload)
+      }
 
       toast.info(
         isVi ? 'Đã hủy lịch nhắc nhở học tập hàng ngày.' : 'Cancelled daily study reminder schedule.',
@@ -223,10 +236,12 @@ export function CourseScheduleModal({
               <h3 className="text-base sm:text-lg font-extrabold text-text-primary">
                 {hasActiveSchedule
                   ? (isVi ? 'Chỉnh sửa lịch nhắc học' : 'Edit Study Reminder Schedule')
-                  : (isVi ? 'Lên lịch học tập hàng ngày' : 'Set Daily Study Schedule')}
+                  : (isVi ? 'Lên lịch học tập' : 'Set Daily Study Schedule')}
               </h3>
               <p className="text-xs text-text-secondary">
-                {isVi
+                {courseTitle
+                  ? (isVi ? `Khóa học: ${courseTitle}` : `Course: ${courseTitle}`)
+                  : isVi
                   ? 'Nhận email nhắc nhở tự động đúng khung giờ bạn chọn'
                   : 'Automated email notifications sent at your chosen time'}
               </p>
