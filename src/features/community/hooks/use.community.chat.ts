@@ -17,9 +17,14 @@ export function useCommunityChat() {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const [isOpen, setIsOpenState] = useState<boolean>(() => {
-    return storage.session.get<boolean>(STORAGE_KEYS.COMMUNITY_CHAT_OPEN, false) ?? false;
-  });
+  const [isOpen, setIsOpenState] = useState<boolean>(false);
+
+  useEffect(() => {
+    const saved = storage.session.get<boolean>(STORAGE_KEYS.COMMUNITY_CHAT_OPEN, false);
+    if (saved) {
+      setIsOpenState(true);
+    }
+  }, []);
 
   const setIsOpen = useCallback((open: boolean) => {
     setIsOpenState(open);

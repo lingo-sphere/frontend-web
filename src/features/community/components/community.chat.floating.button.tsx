@@ -1,13 +1,21 @@
 // Component nút tròn nổi ở góc dưới bên phải màn hình để đóng mở hộp thoại chat cộng đồng.
 'use client';
 
+import { useState, useEffect } from 'react';
 import { MessageSquare, X } from 'lucide-react';
 import { useCommunityChat } from '@/features/community/hooks/use.community.chat';
 import { CommunityChatWidget } from '@/features/community/components/community.chat.widget';
 
 export function CommunityChatFloatingButton() {
+  const [isMounted, setIsMounted] = useState(false);
   const chatState = useCommunityChat();
   const { isOpen, setIsOpen } = chatState;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null;
 
   return (
     <>
