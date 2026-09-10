@@ -1,15 +1,11 @@
-/**
- * @file header.wishlist.tsx
- * @description Dropdown danh sách khóa học yêu thích trên Header với giao diện hiện đại, tinh tế
- */
-
+// Dropdown danh sách khóa học yêu thích trên Header đồng bộ dữ liệu bằng TanStack Query.
 'use client'
 
 import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart, Check, X, ArrowRight, ChevronRight } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
-import { useWishlistStore } from '@/features/cart/store/wishlist.store'
-import { useCartStore } from '@/features/cart/store/cart.store'
+import { useWishlist } from '@/features/cart/hooks/use.wishlist.query'
+import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { toast } from '@/store/toast.store'
@@ -19,9 +15,9 @@ export function HeaderWishlistHover() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
-  const { items, removeItem } = useWishlistStore()
-  const { addToCart, isInCart } = useCartStore()
   const { user, isAuthenticated } = useAuthStore()
+  const { courseCards: items, removeFromWishlist } = useWishlist(isAuthenticated)
+  const { addToCart, isInCart } = useCart(isAuthenticated)
   const isEnrolled = useEnrollmentStore((state) => state.isEnrolled)
   const isPremiumUser = Boolean(user?.is_premium)
   const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
@@ -175,7 +171,7 @@ export function HeaderWishlistHover() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      removeItem(course.id)
+                      removeFromWishlist(course.id)
                       toast.info(
                         isVi ? 'Đã xóa khỏi danh sách yêu thích' : 'Removed from wishlist',
                         isVi ? 'Yêu thích' : 'Wishlist'

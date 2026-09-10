@@ -6,8 +6,8 @@ import { useTranslation } from 'react-i18next'
 import { Globe, Crown } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useCartStore } from '@/features/cart/store/cart.store'
-import { useWishlistStore } from '@/features/cart/store/wishlist.store'
+import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
+import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
 import { Icon } from '@/components/icon.map'
 import { getRemainingSubscriptionText } from '@/layouts/app.header'
 
@@ -28,10 +28,10 @@ export function HeaderUserHover({
   const isVi = currentLanguage === 'VI' || i18n.language === 'vi'
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const { getTotalItems } = useCartStore()
-  const { items: wishlistItems } = useWishlistStore()
-  const cartItemCount = getTotalItems ? getTotalItems() : 0
-  const wishlistCount = wishlistItems ? wishlistItems.length : 0
+  const { data: cart } = useCartQuery(Boolean(user))
+  const { data: wishlist } = useWishlistQuery(Boolean(user))
+  const cartItemCount = cart?.total_items || cart?.items?.length || 0
+  const wishlistCount = wishlist?.total_items || wishlist?.items?.length || 0
 
   if (!user) return null
 

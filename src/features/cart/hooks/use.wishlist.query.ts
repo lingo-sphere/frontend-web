@@ -1,10 +1,29 @@
-// Custom hook quản lý truy vấn và đột biến danh sách yêu thích với Optimistic Update bằng TanStack Query.
+// Custom hook quản lý truy vấn và đột biến danh sách yêu thích bằng TanStack Query v5 với Optimistic Update.
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { wishlistService } from '@/features/cart/services/wishlist.service'
 import { wishlistKeys } from '@/features/cart/keys/wishlist.keys'
-import type { Wishlist } from '@/features/cart/types/wishlist'
+import type { Wishlist, WishlistItem } from '@/features/cart/types/wishlist'
+import type { CourseCardData } from '@/features/courses/types/course'
+
+export const mapWishlistItemToCourseCard = (item: WishlistItem): CourseCardData => ({
+  id: item.course_id,
+  title: item.title,
+  thumbnail: item.thumbnail_url || '',
+  instructor: item.instructor_name || 'LingoSphere Academic Team',
+  price: item.price,
+  discountPrice: item.discount_price,
+  category: item.category || 'TOEIC_2_SKILLS',
+  level: item.level || 'BEGINNER',
+  description: '',
+  duration: '10 giờ',
+  totalLessons: 0,
+  chapters: 0,
+  students: 0,
+  rating: 4.8,
+  ratingCount: 0,
+})
 
 export function useWishlistQuery(enabled = true) {
   return useQuery<Wishlist>({
@@ -74,4 +93,30 @@ export function useRemoveWishlistMutation() {
       queryClient.invalidateQueries({ queryKey: wishlistKeys.all })
     },
   })
+}
+
+export function useWishlist(enabled = true) {
+  const query = useWishlistQuery(enabled)
+  const toggleMutation = useToggleWishlistMutation()
+  const removeMutation = useRemoveWishlistMutation()
+
+  const wishlist = query.data ?? null
+  const items = wishlist?.items ?? []
+  const courseCards = items.map(mapWishlistItemToCourseCard)
+  const totalItems = wishlist?.total_items ?? items.length
+
+  const isInWishlist = (courseId: string) => items.some((i) => i.course_id === courseId)
+
+  return {
+    ...query,
+    wishlist,
+    items,
+    courseCards,
+    totalItems,
+    isInWishlist,
+    toggleWishlist: toggleMutation.mutateAsync,
+    removeFromWishlist: removeMutation.mutateAsync,
+    isToggling: toggleMutation.isPending,
+    isRemoving: removeMutation.isPending,
+  }
 }

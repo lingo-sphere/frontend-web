@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ShoppingCart, ArrowLeft, ShieldCheck, Award, QrCode } from 'lucide-react'
-import { useCartStore } from '@/features/cart/store/cart.store'
+import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { CourseCheckoutModal, type CheckoutCourseItem } from '@/features/courses/components/course.checkout.modal'
 import { toast } from '@/store/toast.store'
@@ -16,10 +16,7 @@ export default function CartPage() {
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
-  const cart = useCartStore((state) => state.cart)
-  const fetchCart = useCartStore((state) => state.fetchCart)
-  const removeFromCart = useCartStore((state) => state.removeFromCart)
-  const clearCart = useCartStore((state) => state.clearCart)
+  const { cart, removeFromCart, clearCart } = useCart(isAuthenticated)
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
@@ -32,12 +29,8 @@ export default function CartPage() {
   useEffect(() => {
     if (!isAuthenticated && mounted) {
       navigate('/courses')
-      return
     }
-    if (isAuthenticated) {
-      fetchCart()
-    }
-  }, [isAuthenticated, mounted, fetchCart, navigate])
+  }, [isAuthenticated, mounted, navigate])
 
   const items = cart?.items || []
 

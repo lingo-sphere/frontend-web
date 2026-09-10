@@ -1,4 +1,4 @@
-// Custom hook quản lý truy vấn và đột biến dữ liệu giỏ hàng với Optimistic Update bằng TanStack Query.
+// Custom hook quản lý truy vấn và đột biến giỏ hàng bằng TanStack Query v5 với Optimistic Update.
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -112,4 +112,38 @@ export function useClearCartMutation() {
       queryClient.invalidateQueries({ queryKey: cartKeys.all })
     },
   })
+}
+
+export function useCart(enabled = true) {
+  const query = useCartQuery(enabled)
+  const addMutation = useAddToCartMutation()
+  const removeMutation = useRemoveFromCartMutation()
+  const clearMutation = useClearCartMutation()
+
+  const cart = query.data ?? null
+  const items = cart?.items ?? []
+  const totalItems = cart?.total_items ?? items.length
+  const totalAmount =
+    cart?.total_amount ??
+    items.reduce(
+      (acc, it) => acc + (it.discount_price && it.discount_price > 0 ? it.discount_price : it.price || 0),
+      0
+    )
+
+  const isInCart = (courseId: string) => items.some((i) => i.course_id === courseId)
+
+  return {
+    ...query,
+    cart,
+    items,
+    totalItems,
+    totalAmount,
+    isInCart,
+    addToCart: addMutation.mutateAsync,
+    removeFromCart: removeMutation.mutateAsync,
+    clearCart: clearMutation.mutateAsync,
+    isAdding: addMutation.isPending,
+    isRemoving: removeMutation.isPending,
+    isClearing: clearMutation.isPending,
+  }
 }

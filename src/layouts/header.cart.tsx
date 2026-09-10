@@ -1,19 +1,15 @@
-/**
- * @file header.cart.tsx
- * @description Component giao diện React HeaderCartHover cho học viên
- */
-
+// Component dropdown hiển thị tóm tắt giỏ hàng người dùng trên thanh điều hướng Header.
 'use client'
 
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import { useCartStore } from '@/features/cart/store/cart.store'
+import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 
 export function HeaderCartHover() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
-  const { cart } = useCartStore()
+  const { data: cart } = useCartQuery()
 
   const items = cart?.items || []
   const totalAmount = items.reduce(

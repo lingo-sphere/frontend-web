@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { courseService } from '@/features/courses/services/course.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
-import { useCartStore } from '@/features/cart/store/cart.store'
+import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { Course, Chapter, Lesson } from '@/features/courses/types/course'
@@ -48,8 +48,7 @@ interface CourseProgressDetailInfo {
 export function useCourseWorkspace(courseId: string) {
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const addToCart = useCartStore((s) => s.addToCart)
-  const isInCart = useCartStore((s) => s.isInCart)
+  const { addToCart, isInCart } = useCart(isAuthenticated)
 
   const [course, setCourse] = useState<Course | null>(null)
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
@@ -467,12 +466,14 @@ export function useCourseWorkspace(courseId: string) {
       return
     }
     setIsAddingToCart(true)
-    const result = await addToCart(course.id)
-    setIsAddingToCart(false)
-    if (result.success) {
+    try {
+      await addToCart(course.id)
       toast.success('Đã thêm khóa học vào giỏ hàng thành công!', 'Giỏ hàng')
-    } else {
-      toast.error(result.message || 'Không thể thêm vào giỏ hàng', 'Lỗi')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể thêm vào giỏ hàng'
+      toast.error(msg, 'Lỗi')
+    } finally {
+      setIsAddingToCart(false)
     }
   }
 

@@ -21,8 +21,8 @@ import { HeaderNotificationDropdown } from '@/layouts/header.notification'
 import { HeaderUserSection } from '@/layouts/header.user'
 import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useCartStore } from '@/features/cart/store/cart.store'
-import { useWishlistStore } from '@/features/cart/store/wishlist.store'
+import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
+import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { useNavigate } from '@/lib/navigation'
 import {
@@ -49,12 +49,10 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const toggleTheme = useDashboardStore((state) => state.toggleTheme)
   const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
   const { user, isAuthenticated, logout } = useAuthStore()
-  const fetchCart = useCartStore((state) => state.fetchCart)
-  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist)
-  const cart = useCartStore((state) => state.cart)
-  const cartItemCount = cart?.total_items || 0
-  const wishlistItems = useWishlistStore((state) => state.items)
-  const wishlistCount = wishlistItems?.length || 0
+  const { data: cart } = useCartQuery(isAuthenticated)
+  const { data: wishlist } = useWishlistQuery(isAuthenticated)
+  const cartItemCount = cart?.total_items || cart?.items?.length || 0
+  const wishlistCount = wishlist?.total_items || wishlist?.items?.length || 0
   const navigate = useNavigate()
   const [hoveredHeaderMenu, setHoveredHeaderMenu] = useState<string | null>(null)
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -82,11 +80,9 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchCart()
-      fetchWishlist()
       useEnrollmentStore.getState().fetchMyEnrollments()
     }
-  }, [isAuthenticated, fetchCart, fetchWishlist])
+  }, [isAuthenticated])
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 

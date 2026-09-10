@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import type { CourseCardData } from '@/features/courses/types/course'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useCartStore } from '@/features/cart/store/cart.store'
+import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { toast } from '@/store/toast.store'
 import { useQueryClient } from '@tanstack/react-query'
@@ -51,7 +51,7 @@ export function CourseCard({
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
-  const { addToCart, isInCart } = useCartStore()
+  const { addToCart, isInCart } = useCart(isAuthenticated)
   const isEnrolled = useEnrollmentStore((state) =>
     state.isEnrolled(course.id) || (course.slug ? state.isEnrolled(course.slug) : false)
   )
@@ -141,18 +141,18 @@ export function CourseCard({
       return
     }
     setIsAdding(true)
-    const result = await addToCart(course.id)
-    setIsAdding(false)
-    if (result.success) {
+    try {
+      await addToCart(course.id)
       toast.success(
         isVi ? 'Đã thêm khóa học vào giỏ hàng thành công!' : 'Course added to cart successfully!',
         isVi ? 'Giỏ hàng' : 'Shopping Cart'
       )
-    } else {
-      toast.error(
-        result.message || (isVi ? 'Không thể thêm vào giỏ hàng' : 'Failed to add to cart'),
-        isVi ? 'Lỗi' : 'Error'
-      )
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : isVi ? 'Không thể thêm vào giỏ hàng' : 'Failed to add to cart'
+      toast.error(msg, isVi ? 'Lỗi' : 'Error')
+    } finally {
+      setIsAdding(false)
     }
   }
 

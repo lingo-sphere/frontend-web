@@ -7,7 +7,7 @@ import { userService } from '@/features/user/services/user.service'
 import type { Course } from '@/types/api.types'
 import type { CourseCardData, CourseTabType } from '@/features/courses/types/course'
 import type { UserScheduleData } from '@/features/courses/components/course.schedule.banner'
-import { useWishlistStore } from '@/features/cart/store/wishlist.store'
+import { useWishlist } from '@/features/cart/hooks/use.wishlist.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { toast } from '@/store/toast.store'
@@ -18,7 +18,7 @@ export function useCoursesCatalog() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const searchParams = useSearchParams()
-  const { items: wishlistItems, toggleItem, isInWishlist, fetchWishlist } = useWishlistStore()
+  const { items: wishlistItems, toggleWishlist: toggleItemMutation, isInWishlist } = useWishlist()
   const { isAuthenticated, user } = useAuthStore()
   const isEnrolled = useEnrollmentStore((state) => state.isEnrolled)
   const enrolledCourseIds = useEnrollmentStore((state) => state.enrolledCourseIds)
@@ -114,10 +114,9 @@ export function useCoursesCatalog() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchWishlist()
       useEnrollmentStore.getState().fetchMyEnrollments()
     }
-  }, [isAuthenticated, fetchWishlist])
+  }, [isAuthenticated])
 
   const courses = useMemo<CourseCardData[]>(() => {
     if (!Array.isArray(liveCourses)) return []
@@ -235,24 +234,23 @@ export function useCoursesCatalog() {
       setActiveMenuId(null)
       return
     }
-    const targetCourse = courses.find((c) => c.id === id)
-    if (targetCourse) {
-      const res = await toggleItem(targetCourse)
-      if (res && res.success) {
-        if (res.isWishlisted) {
-          toast.success(
-            isVi ? 'Đã thêm khóa học vào danh sách yêu thích!' : 'Added course to wishlist!',
-            isVi ? 'Yêu thích' : 'Wishlist'
-          )
-        } else {
-          toast.info(
-            isVi ? 'Đã xóa khóa học khỏi danh sách yêu thích.' : 'Removed course from wishlist.',
-            isVi ? 'Yêu thích' : 'Wishlist'
-          )
-        }
-      } else if (res && !res.success && res.message) {
-        toast.error(res.message, isVi ? 'Lỗi' : 'Error')
+    const isAlreadyIn = isInWishlist(id)
+    try {
+      await toggleItemMutation(id)
+      if (!isAlreadyIn) {
+        toast.success(
+          isVi ? 'Đã thêm khóa học vào danh sách yêu thích!' : 'Added course to wishlist!',
+          isVi ? 'Yêu thích' : 'Wishlist'
+        )
+      } else {
+        toast.info(
+          isVi ? 'Đã xóa khóa học khỏi danh sách yêu thích.' : 'Removed course from wishlist.',
+          isVi ? 'Yêu thích' : 'Wishlist'
+        )
       }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể cập nhật danh sách yêu thích'
+      toast.error(msg, isVi ? 'Lỗi' : 'Error')
     }
     setActiveMenuId(null)
   }
