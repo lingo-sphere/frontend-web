@@ -20,7 +20,7 @@ export function useMyVocabularyEnrollmentsQuery(enabled = true) {
     queryKey: vocabularyKeys.myEnrollments(),
     queryFn: async () => {
       try {
-        const res = await (vocabularyService as unknown as { getMyEnrollments?: () => Promise<Deck[]> }).getMyEnrollments?.()
+        const res = await vocabularyService.getMyEnrollments()
         return Array.isArray(res) ? res : []
       } catch {
         return []

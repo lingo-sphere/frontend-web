@@ -6,23 +6,13 @@ import { progressService, type UserCourseProgressItem, type UserRoadmapProgress 
 import { examService, type ToeicLearningProfile } from '@/features/toeic/services/exam.service'
 import { userService, type GamificationProfile } from '@/features/user/services/user.service'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
-import { courseService } from '@/features/courses/services/course.service'
 import { progressKeys } from '@/features/progress/keys/progress.keys'
-import type { CourseEnrollment } from '@/types/api.types'
+export { useMyEnrollmentsQuery as useEnrolledCoursesQuery } from '@/features/courses/hooks/use.courses.query'
 
 export function useCoursesProgressQuery(enabled = true) {
   return useQuery<UserCourseProgressItem[]>({
     queryKey: progressKeys.courses(),
     queryFn: () => progressService.getMyCoursesProgress(),
-    enabled,
-    staleTime: 60 * 1000,
-  })
-}
-
-export function useEnrolledCoursesQuery(enabled = true) {
-  return useQuery<CourseEnrollment[]>({
-    queryKey: ['courses', 'enrolled'],
-    queryFn: () => courseService.getMyEnrolledCourses(),
     enabled,
     staleTime: 60 * 1000,
   })

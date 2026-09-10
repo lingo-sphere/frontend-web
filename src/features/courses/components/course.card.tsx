@@ -19,8 +19,7 @@ import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { toast } from '@/store/toast.store'
 import { useQueryClient } from '@tanstack/react-query'
-import { courseKeys } from '@/features/courses/keys/course.keys'
-import { courseService } from '@/features/courses/services/course.service'
+import { prefetchCourseDetail } from '@/features/courses/hooks/use.courses.query'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { formatCurrency, formatNumber } from '@/lib/format'
@@ -62,11 +61,7 @@ export function CourseCard({
 
   const handlePrefetch = () => {
     if (course.id) {
-      queryClient.prefetchQuery({
-        queryKey: courseKeys.detail(course.id),
-        queryFn: () => courseService.getCourseById(course.id),
-        staleTime: 5 * 60 * 1000,
-      })
+      prefetchCourseDetail(queryClient, course.id)
     }
   }
 

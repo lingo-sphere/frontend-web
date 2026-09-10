@@ -23,7 +23,6 @@ export interface ToeicHistoryItem {
   total_scaled_score: number
   listening_score?: number
   reading_score?: number
-  time_spent_seconds?: number
   total_time_seconds?: number
   is_best_attempt?: boolean
   status?: string
@@ -128,7 +127,7 @@ export function useExamHistory() {
         scoreValue: t.total_scaled_score || 0,
         isPassed: (t.total_scaled_score || 0) >= 450,
         submittedAt: t.submitted_at || new Date().toISOString(),
-        durationSeconds: t.time_spent_seconds || 0,
+        durationSeconds: t.total_time_seconds || 0,
       })
     })
 
