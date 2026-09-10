@@ -4,14 +4,14 @@
 
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
-import { SectionHeading } from '@/components/dashboard/section.heading'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useNavigate } from '@/lib/navigation'
-import { useProgressData } from '@/hooks/use.progress.data'
-import { ProgressMetricsHeader } from '@/components/progress/progress.metrics.header'
-import { ProgressCoursesTab } from '@/components/progress/progress.courses.tab'
-import { ProgressRoadmapTab } from '@/components/progress/progress.roadmap.tab'
-import { ProgressSkillsTab } from '@/components/progress/progress.skills.tab'
-import { ProgressRecentTestsTab } from '@/components/progress/progress.recent.tests.tab'
+import { useProgressData } from '@/features/progress/hooks/use.progress.data'
+import { ProgressMetricsHeader } from '@/features/progress/components/progress.metrics.header'
+import { ProgressCoursesTab } from '@/features/progress/components/progress.courses.tab'
+import { ProgressRoadmapTab } from '@/features/progress/components/progress.roadmap.tab'
+import { ProgressSkillsTab } from '@/features/progress/components/progress.skills.tab'
+import { ProgressRecentTestsTab } from '@/features/progress/components/progress.recent.tests.tab'
 
 export default function ProgressAppPage() {
   const navigate = useNavigate()

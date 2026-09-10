@@ -6,15 +6,15 @@
 'use client'
 
 import { useNavigate } from '@/lib/navigation'
-import { CourseSearchBar } from '@/components/course/course.search.bar'
-import { CourseScheduleBanner } from '@/components/course/course.schedule.banner'
-import { CourseScheduleModal } from '@/components/course/course.schedule.modal'
-import { CoursePlacementBanner } from '@/components/course/course.placement.banner'
-import { CourseCard } from '@/components/course/course.card'
-import { buildCourseUrl } from '@/lib/course.url'
-import { useCoursesCatalog } from '@/hooks/use.courses.catalog'
-import { CoursesCatalogTabsHeader } from './courses.catalog.tabs.header'
-import { CoursesEmptyState } from './courses.empty.state'
+import { CourseSearchBar } from '@/features/courses/components/course.search.bar'
+import { CourseScheduleBanner } from '@/features/courses/components/course.schedule.banner'
+import { CourseScheduleModal } from '@/features/courses/components/course.schedule.modal'
+import { CoursePlacementBanner } from '@/features/courses/components/course.placement.banner'
+import { CourseCard } from '@/features/courses/components/course.card'
+import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { useCoursesCatalog } from '@/features/courses/hooks/use.courses.catalog'
+import { CoursesCatalogTabsHeader } from '@/features/courses/components/courses.catalog.tabs.header'
+import { CoursesEmptyState } from '@/features/courses/components/courses.empty.state'
 
 export default function CoursesCatalogPage() {
   const navigate = useNavigate()

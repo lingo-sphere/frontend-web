@@ -6,8 +6,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon.map'
+import { Button } from '@/components/button'
+import { Icon } from '@/components/icon.map'
 import { api } from '@/services/api.client'
 
 interface JournalEvaluation {

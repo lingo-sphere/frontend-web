@@ -5,13 +5,13 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { RotateCcw, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useToeicExam } from '@/hooks/use.toeic.exam'
-import { ToeicExamResult } from '@/components/toeic/toeic.exam.result'
-import { ToeicQuestionCard } from '@/components/toeic/toeic.question.card'
-import { ToeicQuestionNav } from '@/components/toeic/toeic.question.nav'
-import { ToeicExamHeader } from '@/components/toeic/toeic.exam.header'
-import { PART_TIMINGS, PART_TIPS } from '@/components/toeic/toeic.constants'
+import { Button } from '@/components/button'
+import { useToeicExam } from '@/features/toeic/hooks/use.toeic.exam'
+import { ToeicExamResult } from '@/features/toeic/components/toeic.exam.result'
+import { ToeicQuestionCard } from '@/features/toeic/components/toeic.question.card'
+import { ToeicQuestionNav } from '@/features/toeic/components/toeic.question.nav'
+import { ToeicExamHeader } from '@/features/toeic/components/toeic.exam.header'
+import { PART_TIMINGS, PART_TIPS } from '@/features/toeic/components/toeic.constants'
 
 export default function ToeicExamAppPage() {
   const { i18n } = useTranslation()

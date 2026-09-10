@@ -7,17 +7,17 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { userService } from '@/services/user.service'
+import { userService } from '@/features/user/services/user.service'
 import type {
   LeaderboardType,
   MonthlyLeaderboardUser,
   MonthlyReward,
-} from '@/types/dashboard'
-import { LeaderboardCountdown } from '@/components/leaderboard/leaderboard.countdown'
-import { LeaderboardTabs } from '@/components/leaderboard/leaderboard.tabs'
-import { LeaderboardPodium } from '@/components/leaderboard/leaderboard.podium'
-import { LeaderboardList } from '@/components/leaderboard/leaderboard.list'
-import { LeaderboardRewards } from '@/components/leaderboard/leaderboard.rewards'
+} from '@/features/dashboard/types/dashboard'
+import { LeaderboardCountdown } from '@/features/leaderboard/components/leaderboard.countdown'
+import { LeaderboardTabs } from '@/features/leaderboard/components/leaderboard.tabs'
+import { LeaderboardPodium } from '@/features/leaderboard/components/leaderboard.podium'
+import { LeaderboardList } from '@/features/leaderboard/components/leaderboard.list'
+import { LeaderboardRewards } from '@/features/leaderboard/components/leaderboard.rewards'
 
 const avatarColors = [
   'bg-primary-soft text-primary',

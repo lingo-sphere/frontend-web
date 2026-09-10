@@ -7,13 +7,13 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon.map'
-import { Pagination } from '@/components/common/pagination'
-import { vocabularyService, type BackendGrammarPoint } from '@/services/vocabulary.service'
+import { Card, CardContent } from '@/components/card'
+import { Button } from '@/components/button'
+import { Input } from '@/components/input'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
+import { Icon } from '@/components/icon.map'
+import { Pagination } from '@/components/pagination'
+import { vocabularyService, type BackendGrammarPoint } from '@/features/vocabulary/services/vocabulary.service'
 
 const ITEMS_PER_PAGE = 12
 

@@ -5,7 +5,7 @@
 
 'use client'
 
-import { ComingSoon } from '@/components/common/coming.soon'
+import { ComingSoon } from '@/components/coming.soon'
 
 export default function CommunityAppPage() {
   return (

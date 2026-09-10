@@ -8,11 +8,11 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'motion/react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Icon } from '@/components/icons/icon.map'
-import { aiService, type AiChatMessage, type UserAiQuotaSummary } from '@/services/ai.service'
-import { useAuthStore } from '@/store/auth.store'
+import { Button } from '@/components/button'
+import { Input } from '@/components/input'
+import { Icon } from '@/components/icon.map'
+import { aiService, type AiChatMessage, type UserAiQuotaSummary } from '@/features/ai-learning/services/ai.service'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 
 const SUGGESTED_PROMPTS = [
   { icon: 'bookOpen', label: 'Giải thích ngữ pháp', text: 'Hãy giải thích cho tôi cấu trúc câu điều kiện loại 3 kèm 3 ví dụ dễ hiểu.' },

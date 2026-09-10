@@ -7,11 +7,11 @@
 
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import { Card, CardContent } from '@/components/ui/card'
-import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon.map'
+import { Card, CardContent } from '@/components/card'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
+import { Icon } from '@/components/icon.map'
 import { useApp } from '@/contexts/app.context'
-import { PRACTICE_CATEGORIES } from '@/config/practice.config'
+import { PRACTICE_CATEGORIES } from '@/features/practice/config/practice.config'
 
 export default function PracticeHubAppPage() {
   const { t, i18n } = useTranslation()

@@ -293,7 +293,7 @@ export type {
   StageMilestone,
   GrowthChartPoint,
   UserRoadmapProgress,
-} from '@/schemas/course.schema'
+} from '@/features/courses/schemas/course.schema'
 
 export interface LexicalItem {
   id: string

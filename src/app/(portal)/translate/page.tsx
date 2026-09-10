@@ -7,10 +7,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon.map'
-import { aiService, type TranslationResponse, type UserAiQuotaSummary } from '@/services/ai.service'
-import { useAuthStore } from '@/store/auth.store'
+import { Button } from '@/components/button'
+import { Icon } from '@/components/icon.map'
+import { aiService, type TranslationResponse, type UserAiQuotaSummary } from '@/features/ai-learning/services/ai.service'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 
 export default function AiTranslationAppPage() {
   const { user } = useAuthStore()

@@ -8,10 +8,10 @@
 import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from '@/lib/navigation'
 import { motion } from 'motion/react'
-import { Icon } from '@/components/icons/icon.map'
-import { Button } from '@/components/ui/button'
-import { authService } from '@/services/auth.service'
-import { useAuthStore } from '@/store/auth.store'
+import { Icon } from '@/components/icon.map'
+import { Button } from '@/components/button'
+import { authService } from '@/features/auth/services/auth.service'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 
 type VerifyState = 'VERIFYING' | 'SUCCESS' | 'ERROR'
 

@@ -7,17 +7,17 @@
 
 import { useState, useEffect } from 'react'
 import { useApp } from '@/contexts/app.context'
-import { ContinueLearningCard } from '@/components/dashboard/continue.learning.card'
-import { ExploreTopics } from '@/components/dashboard/explore.topics'
-import { InsightRail } from '@/components/dashboard/insight.rail'
-import { LearningRoadmap } from '@/components/dashboard/learning.roadmap'
-import { StreakHistory } from '@/components/dashboard/streak.history'
-import { StreakLeaderboard } from '@/components/dashboard/streak.leaderboard'
-import { StreakRewards } from '@/components/dashboard/streak.rewards'
-import { TodaysLearningCard } from '@/components/dashboard/todays.learning.card'
-import { WelcomeBanner } from '@/components/dashboard/welcome.banner'
-import { userService } from '@/services/user.service'
-import { vocabularyService } from '@/services/vocabulary.service'
+import { ContinueLearningCard } from '@/features/dashboard/components/continue.learning.card'
+import { ExploreTopics } from '@/features/dashboard/components/explore.topics'
+import { InsightRail } from '@/features/dashboard/components/insight.rail'
+import { LearningRoadmap } from '@/features/dashboard/components/learning.roadmap'
+import { StreakHistory } from '@/features/dashboard/components/streak.history'
+import { StreakLeaderboard } from '@/features/dashboard/components/streak.leaderboard'
+import { StreakRewards } from '@/features/dashboard/components/streak.rewards'
+import { TodaysLearningCard } from '@/features/dashboard/components/todays.learning.card'
+import { WelcomeBanner } from '@/features/dashboard/components/welcome.banner'
+import { userService } from '@/features/user/services/user.service'
+import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import type {
   HeatmapDay,
   HeatmapSummary,
@@ -26,7 +26,7 @@ import type {
   LearningTask,
   RoadmapUnit,
   StreakMilestone,
-} from '@/types/dashboard'
+} from '@/features/dashboard/types/dashboard'
 
 export default function HomeAppPage() {
   const { showAction } = useApp()

@@ -5,9 +5,9 @@
 
 import type { Metadata, Viewport } from 'next'
 import { Inter, Newsreader } from 'next/font/google'
-import './globals.css'
-import { AppClientProvider } from '@/components/providers/app.client.provider'
-import { PostHogProvider } from '@/components/providers/posthog.provider'
+import '@/app/globals.css'
+import { AppClientProvider } from '@/providers/app.client.provider'
+import { PostHogProvider } from '@/providers/posthog.provider'
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],

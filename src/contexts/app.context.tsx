@@ -6,7 +6,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { useDashboardStore } from '@/store/dashboard.store'
+import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 
 interface AppContextType {
   actionMessage: string

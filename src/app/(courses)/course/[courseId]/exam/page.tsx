@@ -4,12 +4,12 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useParams, useSearchParams, useNavigate } from '@/lib/navigation'
-import { courseService } from '@/services/course.service'
-import { mapCourseDataToWorkspace } from '@/components/course/workspace/course.workspace.adapter'
-import { CourseTestRunnerWorkspace } from '@/components/course/course.test.runner.workspace'
-import { CourseLoadingState } from '@/components/course/course.loading.state'
-import type { Course, Chapter } from '@/types/course'
-import { Button } from '@/components/ui/button'
+import { courseService } from '@/features/courses/services/course.service'
+import { mapCourseDataToWorkspace } from '@/features/courses/helpers/course.workspace.adapter'
+import { CourseTestRunnerWorkspace } from '@/features/courses/components/course.test.runner.workspace'
+import { CourseLoadingState } from '@/features/courses/components/course.loading.state'
+import type { Course, Chapter } from '@/features/courses/types/course'
+import { Button } from '@/components/button'
 import { AlertCircle, ArrowLeft } from 'lucide-react'
 
 function CourseExamContent() {

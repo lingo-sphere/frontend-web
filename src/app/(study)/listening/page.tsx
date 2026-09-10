@@ -7,14 +7,14 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon.map'
-import { Input } from '@/components/ui/input'
-import { practiceService, type BackendListeningExercise } from '@/services/practice.service'
-import type { ListeningExercise, ListeningAttempt } from '@/types/listening'
-import { ExerciseCard, FilterChip } from '@/components/listening/listening.cards'
-import { VideoDictationView } from '@/components/listening/listening.dictation.workspace'
-import { ResultView, ReviewView } from '@/components/listening/listening.result.modal'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
+import { Icon } from '@/components/icon.map'
+import { Input } from '@/components/input'
+import { practiceService, type BackendListeningExercise } from '@/features/practice/services/practice.service'
+import type { ListeningExercise, ListeningAttempt } from '@/features/practice/types/listening'
+import { ExerciseCard, FilterChip } from '@/features/practice/components/listening.cards'
+import { VideoDictationView } from '@/features/practice/components/listening.dictation.workspace'
+import { ResultView, ReviewView } from '@/features/practice/components/listening.result.modal'
 
 type ViewMode = 'list' | 'exercise' | 'result' | 'review'
 

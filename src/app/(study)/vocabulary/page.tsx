@@ -9,13 +9,13 @@ import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Layers3, Star, Globe, Info, Plus, Users, GraduationCap, Bookmark, HelpCircle } from 'lucide-react'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon.map'
-import { useDashboardStore } from '@/store/dashboard.store'
+import { Card, CardContent } from '@/components/card'
+import { Button } from '@/components/button'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
+import { Icon } from '@/components/icon.map'
+import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
-import { useVocabularyPage } from '@/hooks/use.vocabulary.page'
+import { useVocabularyPage } from '@/features/vocabulary/hooks/use.vocabulary.page'
 
 function StatItem({ icon, label, value }: { icon: string; label: string; value: string | number }) {
   return (

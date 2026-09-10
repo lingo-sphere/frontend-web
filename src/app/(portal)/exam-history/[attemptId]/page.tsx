@@ -13,18 +13,18 @@ import {
   Sparkles,
   Trophy,
 } from 'lucide-react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card } from '@/components/card'
+import { Button } from '@/components/button'
 import { useParams, useSearchParams, useNavigate } from '@/lib/navigation'
-import { examService } from '@/services/exam.service'
-import { courseService } from '@/services/course.service'
-import { AttemptSummaryCard } from '@/components/exam-history/attempt.summary.card'
+import { examService } from '@/features/toeic/services/exam.service'
+import { courseService } from '@/features/courses/services/course.service'
+import { AttemptSummaryCard } from '@/features/toeic/components/attempt.summary.card'
 import {
   AttemptAnswerDetail,
   CourseQuestionDetail,
   ToeicQuestionCard,
   CourseQuestionCard,
-} from '@/components/exam-history/attempt.question.item'
+} from '@/features/toeic/components/attempt.question.item'
 
 interface AttemptResultDetail {
   attempt?: {

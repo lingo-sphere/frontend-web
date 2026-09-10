@@ -10,11 +10,11 @@ import { useTranslation } from 'react-i18next'
 import { Bookmark, Eye, Search, Filter } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { SectionHeading } from '@/components/dashboard/section.heading'
+import { Card, CardContent } from '@/components/card'
+import { Button } from '@/components/button'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService } from '@/services/vocabulary.service'
+import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import type { Deck } from '@/types/api.types'
 
 interface FormattedDeck {

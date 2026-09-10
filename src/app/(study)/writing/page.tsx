@@ -8,20 +8,20 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
-import { WritingHome } from '@/components/writing/writing.home'
-import { WritingExerciseList } from '@/components/writing/writing.exercise.list'
-import { WritingExerciseDetail } from '@/components/writing/writing.exercise.detail'
-import { WritingWorkspace } from '@/components/writing/writing.workspace'
-import { WritingResult } from '@/components/writing/writing.result'
-import { WritingHistory } from '@/components/writing/writing.history'
-import { practiceService, type BackendWritingExercise } from '@/services/practice.service'
+import { WritingHome } from '@/features/practice/components/writing.home'
+import { WritingExerciseList } from '@/features/practice/components/writing.exercise.list'
+import { WritingExerciseDetail } from '@/features/practice/components/writing.exercise.detail'
+import { WritingWorkspace } from '@/features/practice/components/writing.workspace'
+import { WritingResult } from '@/features/practice/components/writing.result'
+import { WritingHistory } from '@/features/practice/components/writing.history'
+import { practiceService, type BackendWritingExercise } from '@/features/practice/services/practice.service'
 import type {
   WritingExercise,
   WritingSubmission,
   WritingStats,
   WritingProgress,
   WritingDraft,
-} from '@/types/writing'
+} from '@/features/practice/types/writing'
 
 type WritingView = 'home' | 'exercises' | 'detail' | 'workspace' | 'result' | 'history'
 

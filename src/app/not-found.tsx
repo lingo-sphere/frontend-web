@@ -4,8 +4,8 @@
  */
 
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon.map'
+import { Button } from '@/components/button'
+import { Icon } from '@/components/icon.map'
 
 export default function NotFound() {
   return (

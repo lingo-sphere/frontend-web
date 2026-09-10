@@ -8,12 +8,12 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, Star } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Pagination } from '@/components/common/pagination'
+import { Card, CardContent } from '@/components/card'
+import { Button } from '@/components/button'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
+import { Pagination } from '@/components/pagination'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService, type BackendTopic } from '@/services/vocabulary.service'
+import { vocabularyService, type BackendTopic } from '@/features/vocabulary/services/vocabulary.service'
 
 const ITEMS_PER_PAGE = 6
 

@@ -4,13 +4,13 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Icon } from '@/components/icons/icon.map'
+import { Card, CardContent } from '@/components/card'
+import { Button } from '@/components/button'
+import { Icon } from '@/components/icon.map'
 import { useNavigate } from '@/lib/navigation'
-import { notificationService } from '@/services/notification.service'
-import { getCategoryColor, getCategoryLabel } from '@/types/notification'
-import type { Notification, NotificationCategory } from '@/types/notification'
+import { notificationService } from '@/features/notifications/services/notification.service'
+import { getCategoryColor, getCategoryLabel } from '@/features/notifications/types/notification'
+import type { Notification, NotificationCategory } from '@/features/notifications/types/notification'
 
 const categoryTabs: { key: 'ALL' | NotificationCategory; label: { vi: string; en: string } }[] = [
   { key: 'ALL', label: { vi: 'Tất cả', en: 'All' } },

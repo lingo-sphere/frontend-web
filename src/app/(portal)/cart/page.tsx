@@ -4,12 +4,12 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ShoppingCart, ArrowLeft, ShieldCheck, Award, QrCode } from 'lucide-react'
-import { useCartStore } from '@/store/cart.store'
-import { useAuthStore } from '@/store/auth.store'
-import { CourseCheckoutModal, type CheckoutCourseItem } from '@/components/course/course.checkout.modal'
+import { useCartStore } from '@/features/cart/store/cart.store'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { CourseCheckoutModal, type CheckoutCourseItem } from '@/features/courses/components/course.checkout.modal'
 import { toast } from '@/store/toast.store'
 import { useNavigate } from '@/lib/navigation'
-import { CartItemCard } from './cart.item.card'
+import { CartItemCard } from '@/features/cart/components/cart.item.card'
 
 export default function CartPage() {
   const { i18n } = useTranslation()

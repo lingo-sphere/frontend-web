@@ -3,13 +3,13 @@
 'use client'
 
 import { BookOpen, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { SectionHeading } from '@/components/dashboard/section.heading'
+import { Button } from '@/components/button'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useNavigate } from '@/lib/navigation'
-import { useExamHistory, UnifiedTestAttempt } from '@/hooks/use.exam.history'
-import { ExamHistoryKpi } from '@/components/exam-history/exam.history.kpi'
-import { ExamHistoryFilters } from '@/components/exam-history/exam.history.filters'
-import { ExamHistoryTable } from '@/components/exam-history/exam.history.table'
+import { useExamHistory, UnifiedTestAttempt } from '@/features/toeic/hooks/use.exam.history'
+import { ExamHistoryKpi } from '@/features/toeic/components/exam.history.kpi'
+import { ExamHistoryFilters } from '@/features/toeic/components/exam.history.filters'
+import { ExamHistoryTable } from '@/features/toeic/components/exam.history.table'
 
 export default function ExamHistoryPage() {
   const navigate = useNavigate()

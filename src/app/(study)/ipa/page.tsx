@@ -7,12 +7,12 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon.map'
+import { Card, CardContent } from '@/components/card'
+import { Button } from '@/components/button'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
+import { Icon } from '@/components/icon.map'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService, type BackendIpaSymbol } from '@/services/vocabulary.service'
+import { vocabularyService, type BackendIpaSymbol } from '@/features/vocabulary/services/vocabulary.service'
 
 export default function IpaAppPage() {
   const { t, i18n } = useTranslation()

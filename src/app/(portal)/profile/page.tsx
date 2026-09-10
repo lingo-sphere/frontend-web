@@ -5,16 +5,16 @@
 
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
-import { SectionHeading } from '@/components/dashboard/section.heading'
-import { Icon } from '@/components/icons/icon.map'
-import { UserStatsHeader } from '@/components/user/user.header'
-import { StatCard } from '@/components/user/user.stats'
-import { UserBadgesList } from '@/components/user/user.badges'
-import { UserActivityList } from '@/components/user/user.activities'
-import { EditProfileModal } from '@/components/user/user.edit.modal'
-import { useProfileData, formatNumber } from '@/hooks/use.profile.data'
-import { ProfileOverviewTab } from './profile.overview.tab'
+import { Card, CardContent } from '@/components/card'
+import { SectionHeading } from '@/features/dashboard/components/section.heading'
+import { Icon } from '@/components/icon.map'
+import { UserStatsHeader } from '@/features/user/components/user.header'
+import { StatCard } from '@/features/user/components/user.stats'
+import { UserBadgesList } from '@/features/user/components/user.badges'
+import { UserActivityList } from '@/features/user/components/user.activities'
+import { EditProfileModal } from '@/features/user/components/user.edit.modal'
+import { useProfileData, formatNumber } from '@/features/user/hooks/use.profile.data'
+import { ProfileOverviewTab } from '@/features/user/components/profile.overview.tab'
 
 export default function ProfileAppPage() {
   const {

@@ -8,10 +8,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService } from '@/services/vocabulary.service'
-import type { VocabularyDeck, LearningResult, VocabularyItem } from '@/types/vocabulary.learn'
-import { VocabularyLearningSession } from '@/components/vocabulary-learning/vocabulary.learning.session'
-import { LearningResultView } from '@/components/vocabulary-learning/learning.result.view'
+import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import type { VocabularyDeck, LearningResult, VocabularyItem } from '@/features/vocabulary/types/vocabulary.learn'
+import { VocabularyLearningSession } from '@/features/vocabulary/components/vocabulary.learning.session'
+import { LearningResultView } from '@/features/vocabulary/components/learning.result.view'
 
 export default function VocabularyDeckLearnAppPage() {
   const navigate = useNavigate()
