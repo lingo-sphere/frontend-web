@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { courseService } from '@/features/courses/services/course.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
+import { getQueryClient } from '@/config/query.config'
+import { courseKeys } from '@/features/courses/keys/course.keys'
 import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
@@ -96,7 +97,7 @@ export function useCourseWorkspace(courseId: string) {
         if (isMounted) {
           setIsEnrolled(userIsEnrolled)
           if (userIsEnrolled) {
-            useEnrollmentStore.getState().addEnrolledCourse(courseId)
+            getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
           }
           if (progressRes) {
             setProgressDetail(progressRes)

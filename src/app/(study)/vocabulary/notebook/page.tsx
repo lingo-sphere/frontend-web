@@ -10,7 +10,6 @@ import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { Layers3, Bookmark } from 'lucide-react'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
 import { SelectDeckModal } from '@/features/vocabulary/components/select.deck.modal'
 import { ConfirmDeleteModal } from '@/features/vocabulary/components/confirm.delete.modal'
@@ -25,7 +24,6 @@ export default function NotebookAppPage() {
   const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
   const { showAction } = useApp()
-  const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
   const [activeTab, setActiveTab] = useState<'vocabulary' | 'decks'>('vocabulary')
 
   const [savedVocabulary, setSavedVocabulary] = useState<SavedVocabulary[]>([])
@@ -84,7 +82,6 @@ export default function NotebookAppPage() {
   }
 
   const handleDeckClick = (deckId: string) => {
-    setActiveNavItem('vocabulary')
     navigate(`/vocabulary/learn/${deckId}`)
     showAction(isVietnamese ? 'Bắt đầu học deck' : 'Starting deck learning')
   }

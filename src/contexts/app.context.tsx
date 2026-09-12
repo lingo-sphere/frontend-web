@@ -1,21 +1,41 @@
-/**
- * @file app.context.tsx
- * @description Mã nguồn thành phần AppContext.tsx
- */
-
+// Quản lý trạng thái giao diện toàn cục, thanh bên và hiển thị thông báo tác vụ nhanh
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
+
+export type ThemeMode = 'light' | 'dark'
 
 interface AppContextType {
   actionMessage: string
   showAction: (message: string) => void
+  theme: ThemeMode
+  setTheme: (theme: ThemeMode) => void
+  toggleTheme: () => void
+  sidebarCollapsed: boolean
+  setSidebarCollapsed: (collapsed: boolean) => void
+  toggleSidebarCollapsed: () => void
+  mobileSidebarOpen: boolean
+  setMobileSidebarOpen: (open: boolean) => void
+}
+
+const getInitialTheme = (): ThemeMode => {
+  if (typeof window === 'undefined') return 'light'
+  const saved = storage.get<ThemeMode>(STORAGE_KEYS.THEME)
+  return saved === 'dark' ? 'dark' : 'light'
 }
 
 export const AppContext = createContext<AppContextType>({
   actionMessage: '',
   showAction: () => {},
+  theme: 'light',
+  setTheme: () => {},
+  toggleTheme: () => {},
+  sidebarCollapsed: false,
+  setSidebarCollapsed: () => {},
+  toggleSidebarCollapsed: () => {},
+  mobileSidebarOpen: false,
+  setMobileSidebarOpen: () => {},
 })
 
 export function useApp() {
@@ -28,7 +48,26 @@ interface AppProviderProps {
 
 export function AppProvider({ children }: AppProviderProps) {
   const [actionMessage, setActionMessage] = useState('')
-  const theme = useDashboardStore((state) => state.theme)
+  const [theme, setThemeState] = useState<ThemeMode>(getInitialTheme)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+  const setTheme = useCallback((nextTheme: ThemeMode) => {
+    storage.set(STORAGE_KEYS.THEME, nextTheme)
+    setThemeState(nextTheme)
+  }, [])
+
+  const toggleTheme = useCallback(() => {
+    setThemeState((current) => {
+      const next: ThemeMode = current === 'light' ? 'dark' : 'light'
+      storage.set(STORAGE_KEYS.THEME, next)
+      return next
+    })
+  }, [])
+
+  const toggleSidebarCollapsed = useCallback(() => {
+    setSidebarCollapsed((prev) => !prev)
+  }, [])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -46,7 +85,20 @@ export function AppProvider({ children }: AppProviderProps) {
   }, [])
 
   return (
-    <AppContext.Provider value={{ actionMessage, showAction }}>
+    <AppContext.Provider
+      value={{
+        actionMessage,
+        showAction,
+        theme,
+        setTheme,
+        toggleTheme,
+        sidebarCollapsed,
+        setSidebarCollapsed,
+        toggleSidebarCollapsed,
+        mobileSidebarOpen,
+        setMobileSidebarOpen,
+      }}
+    >
       {children}
       {actionMessage && (
         <div
@@ -59,3 +111,4 @@ export function AppProvider({ children }: AppProviderProps) {
     </AppContext.Provider>
   )
 }
+

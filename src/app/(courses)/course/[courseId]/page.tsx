@@ -13,7 +13,8 @@ import { CourseLockedPlayer } from '@/features/courses/components/course.locked.
 import { CourseCheckoutModal } from '@/features/courses/components/course.checkout.modal'
 import { CoursePlacementPromptModal } from '@/features/courses/components/course.placement.prompt.modal'
 import { UpgradeModal } from '@/features/upgrade/components/upgrade.modal'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
+import { getQueryClient } from '@/config/query.config'
+import { courseKeys } from '@/features/courses/keys/course.keys'
 import { toast } from '@/store/toast.store'
 import { extractCourseId, buildCourseUrl } from '@/features/courses/lib/course.url'
 import { CourseWorkspaceTabs } from '@/features/courses/components/course.workspace.tabs'
@@ -305,7 +306,7 @@ export default function CourseDetailPage() {
           ]}
           onSuccess={() => {
             setIsEnrolled(true)
-            useEnrollmentStore.getState().addEnrolledCourse(course.id)
+            getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
             toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
             setShowScheduleModal(true)
           }}

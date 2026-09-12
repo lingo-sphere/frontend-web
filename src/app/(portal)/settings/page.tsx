@@ -8,7 +8,7 @@ import { useLanguage } from '@/hooks/use.language'
 
 import { Button } from '@/components/button'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { dashboardStore } from '@/features/dashboard/store/dashboard.store'
+import { useApp } from '@/contexts/app.context'
 import { userService } from '@/features/user/services/user.service'
 import { toast } from '@/store/toast.store'
 import { UpgradeModal } from '@/features/upgrade/components/upgrade.modal'
@@ -63,6 +63,7 @@ export default function SettingsAppPage() {
   const isVi = isVietnamese
   const navigate = useNavigate()
   const { user: authUser, setUser: setAuthUser } = useAuthStore()
+  const { setTheme } = useApp()
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('account')
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
@@ -171,9 +172,9 @@ export default function SettingsAppPage() {
     setPreferences((prev) => ({ ...prev, theme: newTheme }))
     if (newTheme === 'system') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      dashboardStore.getState().setTheme(prefersDark ? 'dark' : 'light')
+      setTheme(prefersDark ? 'dark' : 'light')
     } else {
-      dashboardStore.getState().setTheme(newTheme)
+      setTheme(newTheme)
     }
   }
 

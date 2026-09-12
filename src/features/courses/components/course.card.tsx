@@ -16,10 +16,9 @@ import {
 import type { CourseCardData } from '@/features/courses/types/course'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCart } from '@/features/cart/hooks/use.cart.query'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
+import { prefetchCourseDetail, useUserEnrollments } from '@/features/courses/hooks/use.courses.query'
 import { toast } from '@/store/toast.store'
 import { useQueryClient } from '@tanstack/react-query'
-import { prefetchCourseDetail } from '@/features/courses/hooks/use.courses.query'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { formatCurrency, formatNumber } from '@/lib/format'
@@ -48,9 +47,8 @@ export function CourseCard({
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
   const { addToCart, isInCart } = useCart(isAuthenticated)
-  const isEnrolled = useEnrollmentStore((state) =>
-    state.isEnrolled(course.id) || (course.slug ? state.isEnrolled(course.slug) : false)
-  )
+  const { isEnrolled: checkEnrolled } = useUserEnrollments(isAuthenticated)
+  const isEnrolled = checkEnrolled(course.id) || (course.slug ? checkEnrolled(course.slug) : false)
   const isPremiumUser = Boolean(user?.is_premium)
   const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
   const isAlreadyEnrolled = isEnrolled || isPremiumUser || isPrivilegedUser

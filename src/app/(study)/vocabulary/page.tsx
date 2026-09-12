@@ -13,7 +13,6 @@ import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Icon } from '@/components/icon.map'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
 import { useVocabularyPage } from '@/features/vocabulary/hooks/use.vocabulary.page'
 
@@ -34,7 +33,6 @@ export default function VocabularyAppPage() {
   const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
   const { showAction } = useApp()
-  const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
 
   const {
     publicDecks,
@@ -73,7 +71,6 @@ export default function VocabularyAppPage() {
             <Button
               className="gap-2 bg-primary hover:bg-primary-hover"
               onClick={() => {
-                setActiveNavItem('vocabulary')
                 navigate('/vocabulary/notebook')
               }}
             >
@@ -108,7 +105,6 @@ export default function VocabularyAppPage() {
                 <button
                   className="flex flex-col items-center justify-center gap-1 rounded-xl bg-primary px-4 py-3 text-white transition-all hover:opacity-90"
                   onClick={() => {
-                    setActiveNavItem('vocabulary')
                     navigate('/vocabulary/learn')
                   }}
                 >
@@ -118,7 +114,6 @@ export default function VocabularyAppPage() {
                 <button
                   className="flex flex-col items-center justify-center gap-1 rounded-xl bg-info px-4 py-3 text-white transition-all hover:opacity-90"
                   onClick={() => {
-                    setActiveNavItem('vocabulary')
                     navigate('/public-decks')
                   }}
                 >
@@ -231,7 +226,6 @@ export default function VocabularyAppPage() {
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Card className="dashboard-card cursor-pointer transition-all hover:-translate-y-0.5" onClick={() => {
-                setActiveNavItem('topics')
                 navigate('/topics')
               }}>
               <CardContent className="flex items-center gap-4 p-4">
@@ -245,7 +239,6 @@ export default function VocabularyAppPage() {
               </CardContent>
             </Card>
             <Card className="dashboard-card cursor-pointer transition-all hover:-translate-y-0.5" onClick={() => {
-                setActiveNavItem('public-decks')
                 navigate('/public-decks')
               }}>
               <CardContent className="flex items-center gap-4 p-4">

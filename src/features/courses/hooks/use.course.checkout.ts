@@ -6,7 +6,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { cartService } from '@/features/cart/services/cart.service'
 import { getQueryClient } from '@/config/query.config'
 import { cartKeys } from '@/features/cart/keys/cart.keys'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
+import { courseKeys } from '@/features/courses/keys/course.keys'
 import { courseService } from '@/features/courses/services/course.service'
 import { subscriptionService, type PaymentOrderResponse } from '@/features/upgrade/services/subscription.service'
 import { toast } from '@/store/toast.store'
@@ -79,8 +79,7 @@ export function useCourseCheckout({
 
     try {
       await Promise.all(courses.map((c) => courseService.enrollCourse(c.id).catch(() => null)))
-      courses.forEach((c) => useEnrollmentStore.getState().addEnrolledCourse(c.id))
-      await useEnrollmentStore.getState().fetchMyEnrollments()
+      getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
       await cartService.clearCart().catch(() => null)
       getQueryClient().invalidateQueries({ queryKey: cartKeys.all })
     } catch {}

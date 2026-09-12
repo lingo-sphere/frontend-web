@@ -9,10 +9,9 @@ import type { CourseCardData, CourseTabType } from '@/features/courses/types/cou
 import type { UserScheduleData } from '@/features/courses/components/course.schedule.banner'
 import { useWishlist } from '@/features/cart/hooks/use.wishlist.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
-import { useAllCoursesQuery } from '@/features/courses/hooks/use.courses.query'
+import { useAllCoursesQuery, useUserEnrollments } from '@/features/courses/hooks/use.courses.query'
 
 export function useCoursesCatalog() {
   const { i18n } = useTranslation()
@@ -20,8 +19,7 @@ export function useCoursesCatalog() {
   const searchParams = useSearchParams()
   const { items: wishlistItems, toggleWishlist: toggleItemMutation, isInWishlist } = useWishlist()
   const { isAuthenticated, user } = useAuthStore()
-  const isEnrolled = useEnrollmentStore((state) => state.isEnrolled)
-  const enrolledCourseIds = useEnrollmentStore((state) => state.enrolledCourseIds)
+  const { isEnrolled, enrolledCourseIds } = useUserEnrollments(isAuthenticated)
 
   const tabParam = searchParams.get('tab')
   const activeTab: CourseTabType =
@@ -104,11 +102,6 @@ export function useCoursesCatalog() {
     }
   }
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      useEnrollmentStore.getState().fetchMyEnrollments()
-    }
-  }, [isAuthenticated])
 
   const courses = useMemo<CourseCardData[]>(() => {
     if (!Array.isArray(liveCourses)) return []

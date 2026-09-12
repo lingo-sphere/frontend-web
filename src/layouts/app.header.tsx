@@ -19,11 +19,10 @@ import { HeaderSearchDictionary } from '@/layouts/header.search'
 import { HeaderStatsBadges } from '@/layouts/header.stats'
 import { HeaderNotificationDropdown } from '@/layouts/header.notification'
 import { HeaderUserSection } from '@/layouts/header.user'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
+import { useApp } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
 import { useNavigate } from '@/lib/navigation'
 import {
   useMyNotifications,
@@ -45,9 +44,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
-  const theme = useDashboardStore((state) => state.theme)
-  const toggleTheme = useDashboardStore((state) => state.toggleTheme)
-  const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
+  const { theme, toggleTheme, setMobileSidebarOpen } = useApp()
   const { user, isAuthenticated, logout } = useAuthStore()
   const { data: cart } = useCartQuery(isAuthenticated)
   const { data: wishlist } = useWishlistQuery(isAuthenticated)
@@ -78,11 +75,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
     }, 250)
   }
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      useEnrollmentStore.getState().fetchMyEnrollments()
-    }
-  }, [isAuthenticated])
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
