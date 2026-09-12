@@ -11,9 +11,10 @@ import { CourseResourcesTab } from '@/features/courses/components/course.resourc
 import { CourseQnATab } from '@/features/courses/components/course.qna.tab'
 import { CourseNotesTab } from '@/features/courses/components/course.notes.tab'
 import { CourseReviewsTab } from '@/features/courses/components/course.reviews.tab'
+import { LessonPracticeQuizView } from '@/features/courses/components/lesson.practice.quiz.view'
 import type { Course, Lesson } from '@/features/courses/types/course'
 
-export type BottomTab = 'overview' | 'progress' | 'resources' | 'qna' | 'notes' | 'reviews'
+export type BottomTab = 'overview' | 'progress' | 'quiz' | 'resources' | 'qna' | 'notes' | 'reviews'
 
 interface CourseWorkspaceTabsProps {
   course: Course
@@ -58,10 +59,14 @@ export function CourseWorkspaceTabs({
     { id: 'overview' as const, label: 'Tổng quan (Overview)' },
     { id: 'progress' as const, label: 'Tiến độ & Tăng trưởng' },
     {
-      id: 'resources' as const,
-      label: `Tài liệu (Resources) ${
-        (currentLesson?.resources?.length || 0) > 0 ? `(${currentLesson?.resources?.length})` : ''
+      id: 'quiz' as const,
+      label: `Luyện tập ôn bài ${
+        (currentLesson?.questions?.length || 0) > 0 ? `(${currentLesson?.questions?.length})` : ''
       }`,
+    },
+    {
+      id: 'resources' as const,
+      label: 'Tài liệu (Resources)',
     },
     {
       id: 'qna' as const,
@@ -125,6 +130,13 @@ export function CourseWorkspaceTabs({
             finalTestScore={progressDetail?.course_progress?.final_test_score}
           />
         </div>
+      )}
+
+      {activeTab === 'quiz' && (
+        <LessonPracticeQuizView
+          questions={currentLesson?.questions}
+          lessonTitle={currentLesson?.title}
+        />
       )}
 
       {activeTab === 'resources' && (

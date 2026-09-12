@@ -1,7 +1,4 @@
-/**
- * @file course.resources.tab.tsx
- * @description Component giao diện hiển thị danh sách tài liệu đính kèm (PDF, Slide, MP3, Cheatsheets) cho bài học và khóa học
- */
+// Component giao dien hien thi danh sach tai lieu dinh kem cho bai hoc, chuong va khoa hoc.
 
 'use client'
 
@@ -17,6 +14,42 @@ import {
   CourseResourcesFilterBar,
   type ResourceFilterType,
 } from '@/features/courses/components/course.resources.filter.bar'
+
+function detectFormat(url: string, title: string): EnrichedResource['format'] {
+  const lowerUrl = (url || '').toLowerCase()
+  const lowerTitle = (title || '').toLowerCase()
+  if (
+    lowerUrl.endsWith('.mp3') ||
+    lowerUrl.endsWith('.wav') ||
+    lowerUrl.endsWith('.m4a') ||
+    lowerTitle.includes('audio') ||
+    lowerTitle.includes('nghe')
+  ) {
+    return 'audio'
+  }
+  if (
+    lowerUrl.endsWith('.pptx') ||
+    lowerUrl.endsWith('.ppt') ||
+    lowerTitle.includes('slide') ||
+    lowerTitle.includes('thuyết trình')
+  ) {
+    return 'slide'
+  }
+  if (
+    lowerUrl.endsWith('.zip') ||
+    lowerUrl.endsWith('.rar') ||
+    lowerUrl.endsWith('.7z')
+  ) {
+    return 'archive'
+  }
+  if (
+    lowerUrl.endsWith('.doc') ||
+    lowerUrl.endsWith('.docx')
+  ) {
+    return 'doc'
+  }
+  return 'pdf'
+}
 
 interface CourseResourcesTabProps {
   currentLesson: Lesson | null
@@ -40,110 +73,69 @@ export function CourseResourcesTab({
     const list: EnrichedResource[] = []
 
     if (currentLesson) {
+      if (currentLesson.theory_file_url) {
+        list.push({
+          id: `les-theory-${currentLesson.id}`,
+          title: currentLesson.theory_file_name || `Tài liệu lý thuyết / Slide: ${currentLesson.title}`,
+          url: currentLesson.theory_file_url,
+          size: 'Tài liệu bài học',
+          format: detectFormat(currentLesson.theory_file_url, currentLesson.theory_file_name || currentLesson.title),
+          category: 'lesson',
+          lessonTitle: currentLesson.title,
+        })
+      }
+
       if (Array.isArray(currentLesson.resources) && currentLesson.resources.length > 0) {
         currentLesson.resources.forEach((r, idx) => {
-          const lowerUrl = (r.url || '').toLowerCase()
-          const lowerTitle = (r.title || '').toLowerCase()
-          let fmt: EnrichedResource['format'] = 'pdf'
-          if (
-            r.type === 'audio' ||
-            lowerUrl.endsWith('.mp3') ||
-            lowerUrl.endsWith('.wav') ||
-            lowerTitle.includes('audio') ||
-            lowerTitle.includes('nghe')
-          ) {
-            fmt = 'audio'
-          } else if (
-            lowerUrl.endsWith('.pptx') ||
-            lowerUrl.endsWith('.ppt') ||
-            lowerTitle.includes('slide') ||
-            lowerTitle.includes('bài giảng')
-          ) {
-            fmt = 'slide'
-          } else if (lowerUrl.endsWith('.zip') || lowerUrl.endsWith('.rar')) {
-            fmt = 'archive'
-          } else if (lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx')) {
-            fmt = 'doc'
-          }
-
           list.push({
             id: r.id || `cur-res-${idx}`,
             title: r.title || `Tài liệu đính kèm ${idx + 1}`,
             url: r.url || '#',
-            size: r.size || '1.8 MB',
+            size: r.size || 'Tài liệu bài học',
             type: r.type,
-            format: fmt,
+            format: detectFormat(r.url || '', r.title || ''),
             category: 'lesson',
             lessonTitle: currentLesson.title,
           })
         })
       }
-
-      list.push(
-        {
-          id: `les-pdf-${currentLesson.id}`,
-          title: `Tài liệu Slide & Tóm tắt kiến thức - ${currentLesson.title}`,
-          url: currentLesson.videoUrl || '#',
-          size: '2.4 MB',
-          type: 'pdf',
-          format: 'pdf',
-          category: 'lesson',
-          lessonTitle: currentLesson.title,
-        },
-        {
-          id: `les-audio-${currentLesson.id}`,
-          title: `File Audio luyện nghe ngữ điệu MP3 - ${currentLesson.title}`,
-          url: currentLesson.videoUrl || '#',
-          size: '4.6 MB',
-          type: 'audio',
-          format: 'audio',
-          category: 'lesson',
-          lessonTitle: currentLesson.title,
-        }
-      )
     }
 
     if (course) {
-      list.push(
-        {
-          id: `course-handbook-${course.id}`,
-          title: `Sổ tay Cẩm nang & Lộ trình học ${course.title} (PDF)`,
-          url: '#',
-          size: '8.5 MB',
-          type: 'pdf',
-          format: 'pdf',
+      if (course.document_url) {
+        list.push({
+          id: `course-doc-${course.id}`,
+          title: course.document_name || `Cẩm nang & Tài liệu tổng quan: ${course.title}`,
+          url: course.document_url,
+          size: 'Tài liệu toàn khóa',
+          format: detectFormat(course.document_url, course.document_name || course.title),
           category: 'course',
-        },
-        {
-          id: `course-vocab-${course.id}`,
-          title: `Trọn bộ Mindmap & Flashcard 600+ Từ vựng Trọng tâm (PDF)`,
-          url: '#',
-          size: '5.2 MB',
-          type: 'pdf',
-          format: 'slide',
-          category: 'course',
-        },
-        {
-          id: `course-cheatsheet-${course.id}`,
-          title: `Bảng Tra Cứu Cấu Trúc Ngữ Pháp & Mẹo Thi TOEIC Siêu Tốc`,
-          url: '#',
-          size: '3.1 MB',
-          type: 'doc',
-          format: 'doc',
-          category: 'course',
-        }
-      )
+        })
+      }
 
       course.chapters?.forEach((ch, chIdx) => {
+        if (ch.theory_file_url) {
+          list.push({
+            id: `ch-theory-${ch.id || chIdx}`,
+            title: ch.theory_file_name || `Tài liệu lý thuyết: Chương ${ch.order || chIdx + 1} - ${ch.title}`,
+            url: ch.theory_file_url,
+            size: 'Tài liệu chương',
+            format: detectFormat(ch.theory_file_url, ch.theory_file_name || ch.title),
+            category: 'chapter',
+            chapterTitle: ch.title,
+          })
+        }
+
         if (ch.test_audio_url || ch.challenge_audio_url || ch.audio_url) {
+          const audioUrl = ch.test_audio_url || ch.challenge_audio_url || ch.audio_url || ''
           list.push({
             id: `ch-audio-${ch.id || chIdx}`,
-            title: `File Audio đề kiểm tra Chương ${ch.order || chIdx + 1}: ${ch.title}`,
-            url: ch.test_audio_url || ch.challenge_audio_url || ch.audio_url || '#',
-            size: '7.8 MB',
+            title: `Audio kiểm tra Chương ${ch.order || chIdx + 1}: ${ch.title}`,
+            url: audioUrl,
+            size: 'Audio kiểm tra',
             type: 'audio',
             format: 'audio',
-            category: 'course',
+            category: 'chapter',
             chapterTitle: ch.title,
           })
         }

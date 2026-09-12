@@ -63,6 +63,9 @@ export function mapCourseDataToWorkspace(
         is_preview: Boolean(l.is_free_preview),
         resources: Array.isArray(l.resources) ? l.resources : [],
         content: typeof l.content === 'object' && l.content !== null ? l.content : { sections: [] },
+        theory_file_url: l.theory_file_url || '',
+        theory_file_name: l.theory_file_name || '',
+        questions: Array.isArray(l.questions) ? l.questions : [],
       }
     })
 
@@ -74,6 +77,8 @@ export function mapCourseDataToWorkspace(
       description: mod.description || '',
       status: chapterStatus,
       lessons: mappedLessons,
+      theory_file_url: mod.theory_file_url || '',
+      theory_file_name: mod.theory_file_name || '',
       challenge_questions: mod.challenge_questions || [],
       challenge_duration_minutes: mod.challenge_duration_minutes || 15,
       challenge_passing_score: mod.challenge_passing_score || 80,
@@ -141,6 +146,8 @@ export function mapCourseDataToWorkspace(
     duration: formatExactDuration(totalDurationSec),
     totalChapters: mappedChapters.length,
     totalLessons: totalLes,
+    document_url: courseObj.document_url || '',
+    document_name: courseObj.document_name || '',
     rating: typeof reviewsRes?.rating === 'number' ? reviewsRes.rating : 5.0,
     ratingCount: typeof reviewsRes?.rating_count === 'number' ? reviewsRes.rating_count : 0,
     studentsCount: Number(courseObj.students_count || 0),

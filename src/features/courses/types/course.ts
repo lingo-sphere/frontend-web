@@ -48,6 +48,18 @@ export interface LessonResource {
   size?: string
 }
 
+export interface LessonQuestion {
+  _id?: string
+  id?: string
+  question_text: string
+  options: string[]
+  correct_answer: string
+  explanation?: string | null
+  media_url?: string | null
+  audio_url?: string | null
+  image_url?: string | null
+}
+
 export interface Lesson {
   id: string
   chapterId: string
@@ -63,6 +75,9 @@ export interface Lesson {
   qualities?: Record<string, string>
   resources?: LessonResource[]
   content: LessonContent
+  theory_file_url?: string
+  theory_file_name?: string
+  questions?: LessonQuestion[]
 }
 
 export interface LessonContent {
@@ -116,6 +131,8 @@ export interface Chapter {
   order: number
   title: string
   description: string
+  theory_file_url?: string
+  theory_file_name?: string
   lessons: Lesson[]
   exercise?: ChapterExercise
   postMiniTest?: PostMiniTest
@@ -239,6 +256,8 @@ export interface Course {
   skills?: string[]
   thumbnail?: string
   thumbnail_url?: string
+  document_url?: string
+  document_name?: string
   price?: number
   qna?: QnAItem[]
   notes?: NoteItem[]
