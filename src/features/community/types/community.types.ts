@@ -42,7 +42,7 @@ export interface ChatRoom {
   title: string;
   is_chat_enabled: boolean;
   slow_mode_seconds: number;
-  pinned_message_ids?: string[];
+  pinned_message_ids?: string[] | ChatMessage[];
 }
 
 export interface ModeratorPermissions {

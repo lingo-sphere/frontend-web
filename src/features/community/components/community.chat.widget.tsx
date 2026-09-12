@@ -19,6 +19,7 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
     isOpen,
     setIsOpen,
     messages,
+    pinnedMessages,
     room,
     eligibility,
     isLoading,
@@ -108,8 +109,7 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
     eligibility?.role === 'ADMIN' ||
     (eligibility?.role === 'MODERATOR' && Boolean(eligibility?.member?.moderator_permissions?.can_pin_messages))
 
-  const pinnedMessages = messages.filter((m) => m.is_pinned && !m.is_deleted)
-  const activePinnedMsg = pinnedMessages[pinnedMessages.length - 1]
+  const activePinnedMsg = pinnedMessages.length > 0 ? pinnedMessages[pinnedMessages.length - 1] : undefined
 
   return (
     <div

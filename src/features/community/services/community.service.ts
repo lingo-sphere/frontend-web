@@ -2,6 +2,7 @@
 import { api } from '@/services/api.client';
 import { API_CONFIG } from '@/config/api.config';
 import type {
+  ChatMessage,
   ChatRoom,
   EligibilityResponse,
   MessagesResponse,
@@ -23,6 +24,10 @@ export const communityService = {
     return api.get<MessagesResponse>(API_CONFIG.ENDPOINTS.COMMUNITY.MESSAGES, params);
   },
 
+  async getPinnedMessages(): Promise<ChatMessage[]> {
+    return api.get<ChatMessage[]>(API_CONFIG.ENDPOINTS.COMMUNITY.PINNED_MESSAGES);
+  },
+
   async toggleReaction(
     messageId: string,
     emoji: string,
@@ -40,3 +45,4 @@ export const communityService = {
     return res?.url || res?.file_url || res?.public_url || '';
   },
 };
+
