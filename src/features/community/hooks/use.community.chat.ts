@@ -335,7 +335,6 @@ export function useCommunityChat() {
         setHasMore(false);
       }
     } catch {
-      // Silent error
     } finally {
       setIsLoadingMore(false);
     }

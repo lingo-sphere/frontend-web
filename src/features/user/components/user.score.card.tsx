@@ -1,4 +1,4 @@
-// Thẻ hiển thị điểm trình độ đánh giá đầu vào và mục tiêu TOEIC trong trang hồ sơ cá nhân
+// Thẻ hiển thị điểm trình độ đánh giá đầu vào và mục tiêu TOEIC trong trang hồ sơ cá nhân.
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -6,9 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Award,
   Sparkles,
-  Headphones,
   BookOpen,
-  Mic,
   FileEdit,
   ShieldCheck,
   AlertCircle,
@@ -17,6 +15,8 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
+import { UserSkillScoreGrid } from '@/features/user/components/user.skill.score.grid'
+import { getUserScoreLevelInfo } from '@/features/user/utils/user.score.utils'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 
@@ -92,43 +92,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
     }
   }
 
-  const getLevelInfo = (score: number) => {
-    if (!hasTested || score === 0) {
-      return {
-        name: 'Chưa xác định cấp độ',
-        desc: 'Hãy làm bài kiểm tra đầu vào hoặc tự điền điểm để nhận lộ trình phù hợp.',
-        badgeColor: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
-      }
-    }
-    if (score < 450) {
-      return {
-        name: 'Mất Gốc / Nền Tảng (Beginner)',
-        desc: 'Cần củng cố từ vựng cơ bản, phát âm và ngữ pháp thiết yếu.',
-        badgeColor: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800',
-      }
-    }
-    if (score < 650) {
-      return {
-        name: 'Trung Cấp (Intermediate)',
-        desc: 'Đã nắm vững cấu trúc cơ bản, cần tăng tốc độ làm bài & kỹ thuật bẫy TOEIC.',
-        badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800',
-      }
-    }
-    if (score < 800) {
-      return {
-        name: 'Nâng Cao (Upper-Intermediate)',
-        desc: 'Khả năng giao tiếp và làm bài tốt, hướng tới band 800+ và kỹ năng Speaking & Writing.',
-        badgeColor: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800',
-      }
-    }
-    return {
-      name: 'Cao Cấp / Master (Advanced)',
-      desc: 'Năng lực xuất sắc, làm quen với đề thi khó và bộ bẫy nâng cao 850 - 990.',
-      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800',
-    }
-  }
-
-  const level = getLevelInfo(totalScore)
+  const level = getUserScoreLevelInfo(totalScore, hasTested)
 
   return (
     <>
@@ -270,83 +234,14 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                Chi tiết điểm từng kỹ năng:
-              </h4>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                Đang xem: <strong className="text-teal-700 dark:text-teal-300">{selectedSkillsType === '4SKILLS' ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng'}</strong>
-              </span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/40 bg-indigo-50/30 dark:bg-indigo-950/20 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Headphones className="w-4 h-4 text-indigo-500" />
-                  <div>
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 block">Listening</span>
-                    <span className="text-[10px] text-slate-400">Tối đa 495</span>
-                  </div>
-                </div>
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {hasTested && listeningScore > 0 ? `${listeningScore} / 495` : 'Chưa có'}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/40 bg-indigo-50/30 dark:bg-indigo-950/20 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-indigo-500" />
-                  <div>
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 block">Reading</span>
-                    <span className="text-[10px] text-slate-400">Tối đa 495</span>
-                  </div>
-                </div>
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {hasTested && readingScore > 0 ? `${readingScore} / 495` : 'Chưa có'}
-                </span>
-              </div>
-
-              <div className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                selectedSkillsType === '4SKILLS'
-                  ? 'border-teal-200 dark:border-teal-900/50 bg-teal-50/40 dark:bg-teal-950/30'
-                  : 'border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20 opacity-85'
-              }`}>
-                <div className="flex items-center gap-2">
-                  <Mic className={`w-4 h-4 ${selectedSkillsType === '4SKILLS' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400'}`} />
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400 block">Speaking</span>
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 font-bold">4KN</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">Tối đa 200</span>
-                  </div>
-                </div>
-                <span className={`text-xs font-bold ${selectedSkillsType === '4SKILLS' ? 'text-teal-700 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
-                  {hasTested && speakingScore > 0 ? `${speakingScore} / 200` : (selectedSkillsType === '4SKILLS' ? 'Chưa có' : 'Chưa đánh giá')}
-                </span>
-              </div>
-
-              <div className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                selectedSkillsType === '4SKILLS'
-                  ? 'border-teal-200 dark:border-teal-900/50 bg-teal-50/40 dark:bg-teal-950/30'
-                  : 'border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20 opacity-85'
-              }`}>
-                <div className="flex items-center gap-2">
-                  <FileEdit className={`w-4 h-4 ${selectedSkillsType === '4SKILLS' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400'}`} />
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400 block">Writing</span>
-                      <span className="text-[9px] px-1 py-0.2 rounded bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 font-bold">4KN</span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">Tối đa 200</span>
-                  </div>
-                </div>
-                <span className={`text-xs font-bold ${selectedSkillsType === '4SKILLS' ? 'text-teal-700 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
-                  {hasTested && writingScore > 0 ? `${writingScore} / 200` : (selectedSkillsType === '4SKILLS' ? 'Chưa có' : 'Chưa đánh giá')}
-                </span>
-              </div>
-            </div>
-          </div>
+          <UserSkillScoreGrid
+            listeningScore={listeningScore}
+            readingScore={readingScore}
+            speakingScore={speakingScore}
+            writingScore={writingScore}
+            hasTested={hasTested}
+            selectedSkillsType={selectedSkillsType}
+          />
 
           <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-200/80 dark:border-indigo-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
