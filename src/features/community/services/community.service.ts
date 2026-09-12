@@ -5,6 +5,7 @@ import type {
   ChatRoom,
   EligibilityResponse,
   MessagesResponse,
+  MessageReaction,
 } from '@/features/community/types/community.types';
 
 export const communityService = {
@@ -22,12 +23,20 @@ export const communityService = {
     return api.get<MessagesResponse>(API_CONFIG.ENDPOINTS.COMMUNITY.MESSAGES, params);
   },
 
+  async toggleReaction(
+    messageId: string,
+    emoji: string,
+    action?: 'add' | 'remove',
+  ): Promise<{ reactions: MessageReaction[] }> {
+    return api.post<{ reactions: MessageReaction[] }>(`/community/messages/${messageId}/reactions`, { emoji, action });
+  },
+
   async uploadChatImage(file: File): Promise<string> {
     const res = await api.upload<{
       url?: string;
       file_url?: string;
       public_url?: string;
-    }>('/media/upload', file);
+    }>('/media/upload', file, { folder: 'comuniti', source_context: 'COMMUNITY_CHAT' });
     return res?.url || res?.file_url || res?.public_url || '';
   },
 };

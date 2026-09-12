@@ -53,16 +53,8 @@ export function useCoursesCatalog() {
         .then((settings) => {
           if (settings) {
             setUserSchedule({
-              reminder_time: (settings.reminder_time as string) || '20:00',
-              reminder_days: (settings.reminder_days as string[]) || [
-                'T2',
-                'T3',
-                'T4',
-                'T5',
-                'T6',
-                'T7',
-                'CN',
-              ],
+              reminder_time: (settings.reminder_time as string) || undefined,
+              reminder_days: (settings.reminder_days as string[]) || [],
               is_reminder_enabled: Boolean(settings.is_reminder_enabled),
               study_duration_minutes: (settings.study_duration_minutes as number) || 30,
               is_email_notification_enabled: Boolean(

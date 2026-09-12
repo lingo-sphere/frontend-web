@@ -11,20 +11,16 @@ import type {
   ChatMessage,
   ChatRoom,
   EligibilityResponse,
+  MessageReaction,
 } from '@/features/community/types/community.types';
 
 export function useCommunityChat() {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const [isOpen, setIsOpenState] = useState<boolean>(false);
-
-  useEffect(() => {
-    const saved = storage.session.get<boolean>(STORAGE_KEYS.COMMUNITY_CHAT_OPEN, false);
-    if (saved) {
-      setIsOpenState(true);
-    }
-  }, []);
+  const [isOpen, setIsOpenState] = useState<boolean>(() => {
+    return Boolean(storage.session.get<boolean>(STORAGE_KEYS.COMMUNITY_CHAT_OPEN, false));
+  });
 
   const setIsOpen = useCallback((open: boolean) => {
     setIsOpenState(open);
@@ -32,6 +28,9 @@ export function useCommunityChat() {
   }, []);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
   const [room, setRoom] = useState<ChatRoom | null>(null);
   const [eligibility, setEligibility] = useState<EligibilityResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,6 +61,8 @@ export function useCommunityChat() {
 
       if (roomData) setRoom(roomData);
       if (msgData?.messages) setMessages(msgData.messages);
+      setHasMore(Boolean(msgData?.has_more));
+      setNextCursor(msgData?.next_cursor);
     } catch {
       setErrorBanner('Không thể kết nối đến máy chủ cộng đồng');
     } finally {
@@ -70,14 +71,68 @@ export function useCommunityChat() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+    let isMounted = true;
+    const loadInitial = async () => {
+      try {
+        if (isAuthenticated) {
+          const elig = await communityService.getEligibility().catch(() => ({ is_eligible: true } as EligibilityResponse));
+          if (isMounted) setEligibility(elig);
+        } else {
+          if (isMounted) setEligibility({ is_eligible: false, status: 'UNAUTHORIZED' });
+        }
+
+        const [roomData, msgData] = await Promise.all([
+          communityService.getRoom().catch(() => null),
+          communityService.getMessages(50).catch(() => null),
+        ]);
+
+        if (isMounted) {
+          if (roomData) setRoom(roomData);
+          if (msgData?.messages) setMessages(msgData.messages);
+          setHasMore(Boolean(msgData?.has_more));
+          setNextCursor(msgData?.next_cursor);
+        }
+      } catch {
+        if (isMounted) setErrorBanner('Không thể kết nối đến máy chủ cộng đồng');
+      }
+    };
+
+    loadInitial();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isOpen) {
-      refreshData();
-    }
-  }, [isOpen, refreshData]);
+    if (!isOpen) return;
+    if (messages.length > 0) return;
+
+    let isMounted = true;
+    const loadOnOpen = async () => {
+      try {
+        const [roomData, msgData] = await Promise.all([
+          communityService.getRoom().catch(() => null),
+          communityService.getMessages(50).catch(() => null),
+        ]);
+
+        if (isMounted) {
+          if (roomData) setRoom(roomData);
+          if (msgData?.messages) setMessages(msgData.messages);
+          setHasMore(Boolean(msgData?.has_more));
+          setNextCursor(msgData?.next_cursor);
+        }
+      } catch {
+        if (isMounted) setErrorBanner('Không thể kết nối đến máy chủ cộng đồng');
+      }
+    };
+
+    loadOnOpen();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, messages.length]);
 
   useEffect(() => {
     if (!isOpen || !isAuthenticated) {
@@ -148,6 +203,12 @@ export function useCommunityChat() {
       setRoom((prev) => (prev ? { ...prev, pinned_message_ids: data.pinned_message_ids } : prev));
     });
 
+    socket.on('message:reaction', (data: { message_id: string; reactions: MessageReaction[] }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === data.message_id ? { ...m, reactions: data.reactions } : m)),
+      );
+    });
+
     socket.on('presence:online_count', (data: { online_count: number }) => {
       if (data?.online_count) {
         setOnlineCount(data.online_count);
@@ -197,10 +258,12 @@ export function useCommunityChat() {
   }, [isOpen, isAuthenticated, user?.user_id]);
 
   const sendMessage = useCallback((content: string, attachments?: string[]) => {
-    if (!socketRef.current || !content.trim()) return;
+    const hasContent = Boolean(content && content.trim());
+    const hasAttachments = Boolean(attachments && attachments.length > 0);
+    if (!socketRef.current || (!hasContent && !hasAttachments)) return;
 
     socketRef.current.emit('send_message', {
-      content: content.trim(),
+      content: (content || '').trim(),
       attachments: attachments || [],
       reply_to_message_id: replyTo?._id,
     });
@@ -236,6 +299,48 @@ export function useCommunityChat() {
     socketRef.current.emit('unpin_message', { message_id: messageId });
   }, []);
 
+  const reactToMessage = useCallback(async (messageId: string, emoji: string, action: 'add' | 'remove' = 'add') => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('react_message', { message_id: messageId, emoji, action });
+    } else {
+      try {
+        const res = await communityService.toggleReaction(messageId, emoji, action);
+        setMessages((prev) =>
+          prev.map((m) => (m._id === messageId ? { ...m, reactions: res.reactions } : m)),
+        );
+      } catch {
+      }
+    }
+  }, []);
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!hasMore || isLoadingMore || messages.length === 0) return;
+
+    const oldestMsg = messages[0];
+    const cursor = nextCursor || oldestMsg?._id;
+    if (!cursor) return;
+
+    setIsLoadingMore(true);
+    try {
+      const res = await communityService.getMessages(30, cursor);
+      if (res?.messages && res.messages.length > 0) {
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m._id));
+          const uniqueNew = res.messages.filter((m) => !existingIds.has(m._id));
+          return [...uniqueNew, ...prev];
+        });
+        setHasMore(Boolean(res.has_more));
+        setNextCursor(res.next_cursor);
+      } else {
+        setHasMore(false);
+      }
+    } catch {
+      // Silent error
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [hasMore, isLoadingMore, messages, nextCursor]);
+
   return {
     isOpen,
     setIsOpen,
@@ -249,11 +354,15 @@ export function useCommunityChat() {
     replyTo,
     setReplyTo,
     errorBanner,
+    hasMore,
+    isLoadingMore,
+    loadMoreMessages,
     refreshData,
     sendMessage,
     deleteMessage,
     pinMessage,
     unpinMessage,
+    reactToMessage,
     sendTyping,
     uploadChatImage: communityService.uploadChatImage,
   };

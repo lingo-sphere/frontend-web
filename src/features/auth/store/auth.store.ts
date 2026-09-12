@@ -52,12 +52,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score) {
-        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
-        if (cachedPlacement?.placement_test_score) {
-          Object.assign(finalUser, cachedPlacement)
-        }
-      }
       storage.set(STORAGE_KEYS.USER, finalUser)
       set({
         user: finalUser,
@@ -85,12 +79,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score) {
-        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
-        if (cachedPlacement?.placement_test_score) {
-          Object.assign(finalUser, cachedPlacement)
-        }
-      }
       storage.set(STORAGE_KEYS.USER, finalUser)
       set({
         user: finalUser,
@@ -107,6 +95,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (payload) => {
     set({ isLoading: true, error: null })
     try {
+      storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
       await authService.register(payload)
       set({ isLoading: false })
     } catch (err: unknown) {
@@ -173,6 +162,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await authService.logout()
     } finally {
+      storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
       set({ user: null, isAuthenticated: false, isLoading: false })
     }
   },
@@ -195,12 +185,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score) {
-        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
-        if (cachedPlacement?.placement_test_score) {
-          Object.assign(finalUser, cachedPlacement)
-        }
-      }
       storage.set(STORAGE_KEYS.USER, finalUser)
       set({ user: finalUser, isAuthenticated: true })
     } catch {

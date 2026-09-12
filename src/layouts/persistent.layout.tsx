@@ -1,7 +1,4 @@
-/**
- * @file persistent.layout.tsx
- * @description Layout tổng thể bọc sidebar, header và nội dung chính của ứng dụng
- */
+// Bố cục tổng thể bọc sidebar, header và nội dung chính của ứng dụng
 
 'use client'
 
@@ -24,8 +21,7 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const isStandalone =
     pathname === '/' ||
     pathname.startsWith('/verify-email') ||
-    pathname.startsWith('/course/') ||
-    pathname.startsWith('/toeic/exam/')
+    pathname.startsWith('/course/')
 
   if (isStandalone) {
     return <>{children}</>

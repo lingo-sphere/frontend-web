@@ -90,6 +90,7 @@ export const authService = {
     } finally {
       storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
       storage.remove(STORAGE_KEYS.USER)
+      storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
     }
   },
 

@@ -33,18 +33,21 @@ export function CoursePlacementBanner() {
   } | null>(null)
 
   useEffect(() => {
-
-    const rawUser = user as any
-    if (rawUser?.placement_test_score) {
-      setPlacementData({
-        score: rawUser.placement_test_score,
-        listening: rawUser.placement_listening_score,
-        reading: rawUser.placement_reading_score,
-        speaking: rawUser.placement_speaking_score,
-        writing: rawUser.placement_writing_score,
-        skillsType: rawUser.placement_skills_type || '2SKILLS',
-        testedAt: rawUser.placement_tested_at,
-      })
+    if (user) {
+      const rawUser = user as any
+      if (Number(rawUser?.placement_test_score) > 0) {
+        setPlacementData({
+          score: Number(rawUser.placement_test_score),
+          listening: rawUser.placement_listening_score,
+          reading: rawUser.placement_reading_score,
+          speaking: rawUser.placement_speaking_score,
+          writing: rawUser.placement_writing_score,
+          skillsType: rawUser.placement_skills_type || '2SKILLS',
+          testedAt: rawUser.placement_tested_at,
+        })
+      } else {
+        setPlacementData(null)
+      }
       return
     }
 
@@ -57,9 +60,9 @@ export function CoursePlacementBanner() {
       placement_skills_type?: string
       placement_tested_at?: string
     }>(STORAGE_KEYS.PLACEMENT_SCORE)
-    if (stored?.placement_test_score) {
+    if (stored?.placement_test_score && Number(stored.placement_test_score) > 0) {
       setPlacementData({
-        score: stored.placement_test_score,
+        score: Number(stored.placement_test_score),
         listening: stored.placement_listening_score,
         reading: stored.placement_reading_score,
         speaking: stored.placement_speaking_score,
@@ -67,6 +70,8 @@ export function CoursePlacementBanner() {
         skillsType: stored.placement_skills_type || '2SKILLS',
         testedAt: stored.placement_tested_at,
       })
+    } else {
+      setPlacementData(null)
     }
   }, [user])
 

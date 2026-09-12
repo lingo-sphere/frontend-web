@@ -22,7 +22,6 @@ import { CourseScheduleBanner } from '@/features/courses/components/course.sched
 import { CourseScheduleModal } from '@/features/courses/components/course.schedule.modal'
 import { courseService } from '@/features/courses/services/course.service'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export default function CourseDetailPage() {
   const params = useParams<{ courseId: string }>()
@@ -101,17 +100,12 @@ export default function CourseDetailPage() {
     }
 
     const hasPlacementScore = Boolean(
-      user?.placement_test_score ||
-      user?.current_estimated_score ||
+      (user?.placement_test_score && Number(user.placement_test_score) > 0) ||
+      (user?.current_estimated_score && Number(user.current_estimated_score) > 0) ||
       user?.placement_tested_at
     )
 
     if (!hasPlacementScore) {
-      const stored = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
-      if (stored && Number(stored.placement_test_score) > 0) {
-        setShowCourseCheckoutModal(true)
-        return
-      }
       setShowPlacementPromptModal(true)
     } else {
       setShowCourseCheckoutModal(true)

@@ -33,19 +33,20 @@ export function CommunityChatHeader({
 }: CommunityChatHeaderProps) {
   return (
     <>
-      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/80">
+      <div className="flex items-center justify-between border-b border-border/80 dark:border-white/10 bg-surface-subtle/80 dark:bg-[#162424]/90 px-4 py-3 backdrop-blur-md">
         <div className="flex items-center gap-1.5">
-          <span className="rounded-full bg-white px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-800 shadow-xs border border-slate-200/80 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+          <span className="flex items-center gap-1.5 rounded-full bg-primary/10 dark:bg-primary/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary dark:text-teal-300 border border-primary/25 dark:border-teal-400/40 shadow-xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Chat Cộng Đồng
           </span>
         </div>
 
-        <div className="flex items-center gap-2 text-slate-400">
+        <div className="flex items-center gap-1 text-text-secondary dark:text-text-tertiary">
           <button
             type="button"
             title="Thông tin phòng"
             onClick={onToggleRoomInfo}
-            className="rounded-full p-1.5 transition-colors hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer"
+            className="rounded-full p-1.5 transition-colors hover:bg-surface-hover dark:hover:bg-white/10 hover:text-text-primary cursor-pointer"
           >
             <FileText className="h-4 w-4" />
           </button>
@@ -54,7 +55,7 @@ export function CommunityChatHeader({
             title="Làm mới"
             onClick={onRefreshData}
             disabled={isLoading}
-            className="rounded-full p-1.5 transition-colors hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer disabled:opacity-50"
+            className="rounded-full p-1.5 transition-colors hover:bg-surface-hover dark:hover:bg-white/10 hover:text-text-primary cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -62,7 +63,7 @@ export function CommunityChatHeader({
             type="button"
             title="Đóng"
             onClick={onClose}
-            className="rounded-full p-1.5 transition-colors hover:bg-slate-200/60 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer"
+            className="rounded-full p-1.5 transition-colors hover:bg-surface-hover dark:hover:bg-white/10 hover:text-text-primary cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -70,15 +71,15 @@ export function CommunityChatHeader({
       </div>
 
       {errorBanner && (
-        <div className="bg-rose-50 px-4 py-1.5 text-center text-xs font-medium text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
+        <div className="bg-rose-500/10 px-4 py-1.5 text-center text-xs font-medium text-rose-600 dark:text-rose-400">
           {errorBanner}
         </div>
       )}
 
       {showRoomInfo && (
-        <div className="border-b border-slate-100 bg-slate-50 p-3 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
+        <div className="border-b border-border/80 dark:border-white/10 bg-surface-subtle/90 dark:bg-[#162323] p-3 text-xs text-text-secondary">
           <div className="flex items-center justify-between font-semibold">
-            <span>{room?.title || 'Kênh thảo luận chung'}</span>
+            <span className="text-text-primary">{room?.title || 'Kênh thảo luận chung'}</span>
             <span className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
               <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
               {onlineCount} đang online
@@ -98,12 +99,12 @@ export function CommunityChatHeader({
       )}
 
       {activePinnedMsg && (
-        <div className="flex items-center justify-between gap-2 border-b border-amber-200/80 bg-amber-50/90 px-3.5 py-2 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200 shrink-0">
+        <div className="flex items-center justify-between gap-2 border-b border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs text-amber-600 dark:text-amber-300 shrink-0">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <Pin className="h-3.5 w-3.5 shrink-0 fill-amber-500 text-amber-600 dark:text-amber-400" />
             <div className="min-w-0 flex-1 truncate">
               <span className="font-bold mr-1">@{activePinnedMsg.sender_name}:</span>
-              <span className="text-slate-700 dark:text-slate-300 truncate">{activePinnedMsg.content}</span>
+              <span className="text-text-secondary truncate">{activePinnedMsg.content}</span>
             </div>
           </div>
           {canPin && (
@@ -111,7 +112,7 @@ export function CommunityChatHeader({
               type="button"
               title="Bỏ ghim tin nhắn này"
               onClick={() => onUnpinMessage(activePinnedMsg._id)}
-              className="shrink-0 p-1 text-amber-700 hover:text-rose-600 dark:text-amber-400 dark:hover:text-rose-400 transition-colors cursor-pointer"
+              className="shrink-0 p-1 text-amber-600 hover:text-rose-600 dark:text-amber-400 dark:hover:text-rose-400 transition-colors cursor-pointer"
             >
               <PinOff className="h-3.5 w-3.5" />
             </button>

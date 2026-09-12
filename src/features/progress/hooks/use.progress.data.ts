@@ -204,19 +204,17 @@ export function useProgressData(navigate: (path: string) => void) {
     const currentScore = Number(
       activeUser?.current_estimated_score ||
         examProfile?.profile?.estimated_score ||
-        examProfile?.profile?.target_score ||
-        450
+        0
     )
     const targetScore = Number(
       activeUser?.target_toeic_score ||
         roadmapProgress?.target_score ||
         examProfile?.profile?.target_score ||
-        750
+        0
     )
-    const scoreProgressPercent = Math.min(
-      100,
-      Math.max(0, Math.round((currentScore / (targetScore || 990)) * 100))
-    )
+    const scoreProgressPercent = targetScore > 0
+      ? Math.min(100, Math.max(0, Math.round((currentScore / targetScore) * 100)))
+      : 0
 
     const streak = Number(gamification?.streak ?? activeUser?.streak_count ?? 0)
     const xp = Number(gamification?.total_xp ?? activeUser?.xp ?? 0)

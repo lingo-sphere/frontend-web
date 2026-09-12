@@ -76,7 +76,7 @@ export function useProfileData() {
     readingScore: 0,
     speakingScore: 0,
     writingScore: 0,
-    targetScore: 650,
+    targetScore: 0,
     skillsType: '2SKILLS',
     isManuallyEdited: false,
     hasTested: false,
@@ -85,19 +85,6 @@ export function useProfileData() {
 
   useEffect(() => {
     const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
-    const localScore = storage.get<{
-      placement_test_score?: number
-      placement_listening_score?: number
-      placement_reading_score?: number
-      placement_speaking_score?: number
-      placement_writing_score?: number
-      placement_skills_type?: string
-      target_toeic_score?: number
-      current_estimated_score?: number
-      is_score_manually_edited?: boolean
-      placement_tested_at?: string
-    }>(STORAGE_KEYS.PLACEMENT_SCORE)
-
     const auth = authUser || useAuthStore.getState().user
     if (auth) {
       setUser((prev) => ({
@@ -113,12 +100,16 @@ export function useProfileData() {
         stats: cachedStats ? { ...prev.stats, ...cachedStats } : prev.stats,
       }))
 
-      const sTotal = localScore?.placement_test_score ?? auth?.target_score ?? 0
-      const sList = localScore?.placement_listening_score ?? 0
-      const sRead = localScore?.placement_reading_score ?? 0
-      const sSpk = localScore?.placement_speaking_score ?? 0
-      const sWrt = localScore?.placement_writing_score ?? 0
+      const rawAuth = auth as any
+      const sTotal = Number(rawAuth?.placement_test_score || rawAuth?.current_estimated_score || 0)
+      const sList = Number(rawAuth?.placement_listening_score || 0)
+      const sRead = Number(rawAuth?.placement_reading_score || 0)
+      const sSpk = Number(rawAuth?.placement_speaking_score || 0)
+      const sWrt = Number(rawAuth?.placement_writing_score || 0)
       const hasScores = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
+      const isManual = Boolean(rawAuth?.is_score_manually_edited)
+      const rawTarget = rawAuth?.target_toeic_score ?? rawAuth?.target_score
+      const resolvedTarget = (hasScores || isManual) && rawTarget ? Number(rawTarget) : 0
 
       setUserScores({
         totalScore: sTotal,
@@ -126,11 +117,11 @@ export function useProfileData() {
         readingScore: sRead,
         speakingScore: sSpk,
         writingScore: sWrt,
-        targetScore: localScore?.target_toeic_score || 650,
-        skillsType: localScore?.placement_skills_type || '2SKILLS',
-        isManuallyEdited: localScore?.is_score_manually_edited ?? false,
+        targetScore: resolvedTarget,
+        skillsType: rawAuth?.placement_skills_type || '2SKILLS',
+        isManuallyEdited: isManual,
         hasTested: hasScores,
-        testedAt: localScore?.placement_tested_at || null,
+        testedAt: rawAuth?.placement_tested_at || null,
       })
     }
   }, [authUser])
@@ -183,6 +174,9 @@ export function useProfileData() {
               const sSpk = profileData?.placement_speaking_score ?? 0
               const sWrt = profileData?.placement_writing_score ?? 0
               const sHas = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
+              const isManual = Boolean(profileData?.is_score_manually_edited)
+              const rawTarget = profileData?.target_toeic_score ?? profileData?.target_score
+              const resolvedTarget = (sHas || isManual) && rawTarget ? Number(rawTarget) : 0
 
               setUserScores((prev) => ({
                 ...prev,
@@ -191,7 +185,9 @@ export function useProfileData() {
                 readingScore: sRead,
                 speakingScore: sSpk,
                 writingScore: sWrt,
-                targetScore: profileData?.target_score || prev.targetScore || 650,
+                targetScore: resolvedTarget,
+                skillsType: profileData?.placement_skills_type || prev.skillsType || '2SKILLS',
+                isManuallyEdited: isManual,
                 hasTested: sHas,
               }))
             }
