@@ -62,8 +62,19 @@ export default function SettingsAppPage() {
   const { currentLanguage, changeLanguage, isVietnamese } = useLanguage()
   const isVi = isVietnamese
   const navigate = useNavigate()
-  const { user: authUser, setUser: setAuthUser } = useAuthStore()
+  const { user: authUser, setUser: setAuthUser, isAuthenticated, isLoading } = useAuthStore()
   const { setTheme } = useApp()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted && !isLoading && !isAuthenticated) {
+      navigate('/')
+    }
+  }, [mounted, isLoading, isAuthenticated, navigate])
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('account')
   const [preferences, setPreferences] = useState<UserPreferences>(() => {
@@ -80,6 +91,9 @@ export default function SettingsAppPage() {
     if (authUser) {
       setFullName(authUser.full_name || '')
       setPhoneNumber(authUser?.phone_number || '')
+    } else {
+      setFullName('')
+      setPhoneNumber('')
     }
   }, [authUser])
 
@@ -194,6 +208,10 @@ export default function SettingsAppPage() {
     .join('')
     .slice(0, 2)
     .toUpperCase()
+
+  if (!mounted || (!isAuthenticated && !isLoading)) {
+    return null
+  }
 
   return (
     <>

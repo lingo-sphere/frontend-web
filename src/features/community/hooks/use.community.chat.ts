@@ -106,28 +106,28 @@ export function useCommunityChat() {
 
   useEffect(() => {
     if (!isOpen) return;
-    if (messages.length > 0) return;
 
     let isMounted = true;
-    const loadOnOpen = async () => {
+    const syncOnOpen = async () => {
       try {
         const [roomData, msgData] = await Promise.all([
           communityService.getRoom().catch(() => null),
-          communityService.getMessages(50).catch(() => null),
+          messages.length === 0 ? communityService.getMessages(50).catch(() => null) : Promise.resolve(null),
         ]);
 
         if (isMounted) {
           if (roomData) setRoom(roomData);
-          if (msgData?.messages) setMessages(msgData.messages);
-          setHasMore(Boolean(msgData?.has_more));
-          setNextCursor(msgData?.next_cursor);
+          if (msgData?.messages) {
+            setMessages(msgData.messages);
+            setHasMore(Boolean(msgData.has_more));
+            setNextCursor(msgData.next_cursor);
+          }
         }
       } catch {
-        if (isMounted) setErrorBanner('Không thể kết nối đến máy chủ cộng đồng');
       }
     };
 
-    loadOnOpen();
+    syncOnOpen();
 
     return () => {
       isMounted = false;
@@ -135,7 +135,7 @@ export function useCommunityChat() {
   }, [isOpen, messages.length]);
 
   useEffect(() => {
-    if (!isOpen || !isAuthenticated) {
+    if (!isAuthenticated) {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
@@ -234,6 +234,13 @@ export function useCommunityChat() {
       }
     });
 
+    socket.on('member:unmuted', (data: { target_user_id: string }) => {
+      if (user?.user_id === data.target_user_id) {
+        setErrorBanner(null);
+        communityService.getEligibility().then((elig) => setEligibility(elig)).catch(() => null);
+      }
+    });
+
     socket.on('member:kicked', (data: { message: string; kicked_cooldown_until: string }) => {
       setErrorBanner(data.message || 'Bạn đã bị đuổi khỏi phòng chat');
       socket.disconnect();
@@ -242,6 +249,19 @@ export function useCommunityChat() {
     socket.on('member:banned', (data: { message: string; reason: string }) => {
       setErrorBanner(data.message || 'Bạn đã bị cấm tham gia cộng đồng');
       socket.disconnect();
+    });
+
+    socket.on('member:unbanned', (data: { target_user_id: string }) => {
+      if (user?.user_id === data.target_user_id) {
+        setErrorBanner(null);
+        communityService.getEligibility().then((elig) => setEligibility(elig)).catch(() => null);
+      }
+    });
+
+    socket.on('member:moderator_updated', (data: { user_id: string; role: string }) => {
+      if (user?.user_id === data.user_id) {
+        communityService.getEligibility().then((elig) => setEligibility(elig)).catch(() => null);
+      }
     });
 
     socket.on('error', (err: { message: string }) => {
@@ -255,7 +275,7 @@ export function useCommunityChat() {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [isOpen, isAuthenticated, user?.user_id]);
+  }, [isAuthenticated, user?.user_id]);
 
   const sendMessage = useCallback((content: string, attachments?: string[]) => {
     const hasContent = Boolean(content && content.trim());

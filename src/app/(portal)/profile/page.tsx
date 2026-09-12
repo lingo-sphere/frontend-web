@@ -1,10 +1,8 @@
-/**
- * @file page.tsx
- * @description Trang hồ sơ cá nhân và quản lý tiến độ học tập của học viên LingoSphere
- */
+// Trang ho so ca nhan va quan ly tien do hoc tap cua hoc vien.
 
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/card'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Icon } from '@/components/icon.map'
@@ -15,8 +13,24 @@ import { UserActivityList } from '@/features/user/components/user.activities'
 import { EditProfileModal } from '@/features/user/components/user.edit.modal'
 import { useProfileData, formatNumber } from '@/features/user/hooks/use.profile.data'
 import { ProfileOverviewTab } from '@/features/user/components/profile.overview.tab'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { useNavigate } from '@/lib/navigation'
 
 export default function ProfileAppPage() {
+  const navigate = useNavigate()
+  const { isAuthenticated, isLoading } = useAuthStore()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted && !isLoading && !isAuthenticated) {
+      navigate('/')
+    }
+  }, [mounted, isLoading, isAuthenticated, navigate])
+
   const {
     user,
     isEditing,
@@ -28,6 +42,10 @@ export default function ProfileAppPage() {
     setUserScores,
     handleSaveProfile,
   } = useProfileData()
+
+  if (!mounted || (!isAuthenticated && !isLoading)) {
+    return null
+  }
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">

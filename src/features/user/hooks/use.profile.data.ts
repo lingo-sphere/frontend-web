@@ -10,83 +10,87 @@ export function formatNumber(val?: number): string {
   return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
+const defaultUserState: User = {
+  id: 'current_user',
+  user_id: '',
+  email: '',
+  full_name: 'Học viên',
+  avatar_url: '',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  role: 'student',
+  isVerified: true,
+  isActive: true,
+  is_premium: false,
+  stats: {
+    totalExercises: 0,
+    totalListeningExercises: 0,
+    totalVocabularyLearned: 0,
+    totalListeningTime: 0,
+    totalSpeakingTime: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    totalXP: 0,
+    level: 1,
+    badges: [],
+    averageAccuracy: 0,
+    totalCorrectAnswers: 0,
+    totalWrongAnswers: 0,
+    totalStudyTime: 0,
+    weeklyStudyTime: 0,
+    monthlyStudyTime: 0,
+  },
+  preferences: {
+    language: 'vi',
+    theme: 'system',
+    notifications: {
+      allEnabled: true,
+      email: true,
+      push: true,
+      sound: true,
+    },
+    learning: {
+      autoPlayAudio: true,
+      showPhonetic: true,
+      defaultExerciseDifficulty: 'medium',
+      dailyGoal: 20,
+    },
+    privacy: {
+      showProfile: true,
+      showProgress: true,
+      allowFriendRequests: true,
+    },
+  },
+}
+
+const defaultUserScores = {
+  totalScore: 0,
+  listeningScore: 0,
+  readingScore: 0,
+  speakingScore: 0,
+  writingScore: 0,
+  targetScore: 0,
+  skillsType: '2SKILLS',
+  isManuallyEdited: false,
+  hasTested: false,
+  testedAt: null as string | null,
+}
+
 export function useProfileData() {
   const { user: authUser } = useAuthStore()
 
-  const [user, setUser] = useState<User>({
-    id: 'current_user',
-    user_id: '',
-    email: '',
-    full_name: 'Học viên',
-    avatar_url: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    role: 'student',
-    isVerified: true,
-    isActive: true,
-    is_premium: false,
-    stats: {
-      totalExercises: 0,
-      totalListeningExercises: 0,
-      totalVocabularyLearned: 0,
-      totalListeningTime: 0,
-      totalSpeakingTime: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      totalXP: 0,
-      level: 1,
-      badges: [],
-      averageAccuracy: 0,
-      totalCorrectAnswers: 0,
-      totalWrongAnswers: 0,
-      totalStudyTime: 0,
-      weeklyStudyTime: 0,
-      monthlyStudyTime: 0,
-    },
-    preferences: {
-      language: 'vi',
-      theme: 'system',
-      notifications: {
-        allEnabled: true,
-        email: true,
-        push: true,
-        sound: true,
-      },
-      learning: {
-        autoPlayAudio: true,
-        showPhonetic: true,
-        defaultExerciseDifficulty: 'medium',
-        dailyGoal: 20,
-      },
-      privacy: {
-        showProfile: true,
-        showProgress: true,
-        allowFriendRequests: true,
-      },
-    },
-  })
+  const [user, setUser] = useState<User>(defaultUserState)
 
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'activity'>('overview')
   const [leaderboard, setLeaderboard] = useState<any[]>([])
 
-  const [userScores, setUserScores] = useState({
-    totalScore: 0,
-    listeningScore: 0,
-    readingScore: 0,
-    speakingScore: 0,
-    writingScore: 0,
-    targetScore: 0,
-    skillsType: '2SKILLS',
-    isManuallyEdited: false,
-    hasTested: false,
-    testedAt: null as string | null,
-  })
+  const [userScores, setUserScores] = useState(defaultUserScores)
 
   useEffect(() => {
-    const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
     const auth = authUser || useAuthStore.getState().user
     if (auth) {
+      const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
       setUser((prev) => ({
         ...prev,
         id: auth.user_id || auth.id || prev.id,
@@ -123,12 +127,17 @@ export function useProfileData() {
         hasTested: hasScores,
         testedAt: rawAuth?.placement_tested_at || null,
       })
+    } else {
+      setUser(defaultUserState)
+      setUserScores(defaultUserScores)
     }
   }, [authUser])
 
   useEffect(() => {
     let isMounted = true
     const loadProfileData = async () => {
+      const auth = authUser || useAuthStore.getState().user
+      if (!auth) return
       try {
         const [prof, gamify, lb] = await Promise.all([
           userService.getProfile().catch(() => null),

@@ -89,8 +89,16 @@ export const authService = {
     } catch {
     } finally {
       storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       storage.remove(STORAGE_KEYS.USER)
       storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
+      storage.remove(STORAGE_KEYS.PROFILE_STATS)
+      storage.remove(STORAGE_KEYS.USER_NOTES)
+      storage.remove(STORAGE_KEYS.WISHLIST)
+      storage.remove(STORAGE_KEYS.PENDING_ORDER)
+      storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+      storage.cookie.remove(STORAGE_KEYS.USER)
     }
   },
 

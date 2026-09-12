@@ -3,6 +3,7 @@ import { useSyncExternalStore } from 'react'
 import { authService } from '@/features/auth/services/auth.service'
 import { userService } from '@/features/user/services/user.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { getQueryClient } from '@/config/query.config'
 import type { User, LoginPayload, RegisterPayload, SocialLoginPayload } from '@/types/api.types'
 
 interface AuthState {
@@ -215,9 +216,28 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true })
     try {
       await authService.logout()
+    } catch {
     } finally {
-      storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
-      set({ user: null, isAuthenticated: false, isLoading: false })
+      if (typeof window !== 'undefined') {
+        getQueryClient().clear()
+      }
+      set({ user: null, isAuthenticated: false, isLoading: false, error: null })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
+        const path = window.location.pathname
+        const isProtected =
+          path.startsWith('/profile') ||
+          path.startsWith('/settings') ||
+          path.startsWith('/cart') ||
+          path.startsWith('/ai-learning') ||
+          path.startsWith('/notes') ||
+          path.startsWith('/journal') ||
+          path.startsWith('/progress') ||
+          path.startsWith('/exam-history')
+        if (isProtected) {
+          window.location.href = '/'
+        }
+      }
     }
   },
 

@@ -78,7 +78,7 @@ export function useProgressData(navigate: (path: string) => void) {
 
   useEffect(() => {
     if (mounted && !authService.isAuthenticated()) {
-      navigate('/login')
+      navigate('/')
     }
   }, [mounted, navigate])
 
