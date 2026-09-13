@@ -34,14 +34,27 @@ export function CourseSidebarFinalExamCard({
 }: CourseSidebarFinalExamCardProps) {
   if (finalTestQuestionsCount <= 0) return null
 
+  const displayScore =
+    finalTestScore !== undefined && finalTestScore !== null
+      ? finalTestScore
+      : Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0
+        ? Math.max(...finalTestAttempts.map((a: any) => Number(a?.score || 0)))
+        : 0
+
+  const hasCompletedTest =
+    (finalTestScore !== undefined && finalTestScore !== null && finalTestScore > 0) ||
+    (Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0)
+
+  const isUnlocked = allChaptersPassed || hasCompletedTest
+
   return (
     <div className="pt-2">
       <div
         onClick={onTakeTest}
         className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
-          !allChaptersPassed
+          !isUnlocked
             ? 'border-amber-500/25 bg-amber-500/5 opacity-80'
-            : finalTestScore !== undefined && finalTestScore > 0
+            : hasCompletedTest
               ? 'border-emerald-500/50 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/70 shadow-xs'
               : 'border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/60 shadow-xs'
         }`}
@@ -49,16 +62,16 @@ export function CourseSidebarFinalExamCard({
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white shadow-xs ${
-              !allChaptersPassed
+              !isUnlocked
                 ? 'bg-amber-500/80'
-                : finalTestScore !== undefined && finalTestScore > 0
+                : hasCompletedTest
                   ? 'bg-emerald-600 shadow-emerald-600/30'
                   : 'bg-emerald-600 shadow-emerald-600/30'
             }`}
           >
-            {!allChaptersPassed ? (
+            {!isUnlocked ? (
               <Lock size={14} />
-            ) : finalTestScore !== undefined && finalTestScore > 0 ? (
+            ) : hasCompletedTest ? (
               <CheckCircle2 size={16} />
             ) : (
               <Trophy size={16} />
@@ -68,22 +81,22 @@ export function CourseSidebarFinalExamCard({
             <div className="flex items-center gap-1.5 flex-wrap">
               <span
                 className={`text-xs font-bold transition-colors whitespace-nowrap ${
-                  finalTestScore !== undefined && finalTestScore > 0
+                  hasCompletedTest
                     ? 'text-emerald-700 dark:text-emerald-300'
                     : 'text-text-primary group-hover:text-emerald-600'
                 }`}
               >
                 Bài thi tốt nghiệp cuối khóa (Exit Test)
               </span>
-              {!allChaptersPassed ? (
+              {!isUnlocked ? (
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
                   <Lock size={9} />
                   Khóa
                 </span>
-              ) : finalTestScore !== undefined && finalTestScore > 0 ? (
+              ) : hasCompletedTest ? (
                 <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shrink-0">
                   <Crown size={10} className="text-amber-500 shrink-0" />
-                  <span>Kỷ lục: {finalTestScore}%</span>
+                  <span>Kỷ lục: {displayScore}%</span>
                 </span>
               ) : null}
               {Boolean(finalTestAudioUrl) && (
@@ -106,21 +119,21 @@ export function CourseSidebarFinalExamCard({
               )}
             </div>
             <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
-              {!allChaptersPassed
+              {!isUnlocked
                 ? 'Khóa • Cần vượt qua bài test thử thách của tất cả các chương để mở khóa'
-                : finalTestScore !== undefined && finalTestScore > 0
-                  ? `👑 Kỷ lục cao nhất: ${finalTestScore}%${Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0 ? ` • ${finalTestAttempts.length} lần thi` : ''} • Bấm để xem lịch sử & thi lại`
+                : hasCompletedTest
+                  ? `👑 Kỷ lục cao nhất: ${displayScore}%${Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0 ? ` • ${finalTestAttempts.length} lần thi` : ''} • Bấm để xem lịch sử & thi lại`
                   : `${finalTestQuestionsCount} câu • Đánh giá năng lực toàn khóa để cấp chứng chỉ`}
             </p>
           </div>
         </div>
 
         {isEnrolled ? (
-          !allChaptersPassed ? (
+          !isUnlocked ? (
             <span className="px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center gap-1 whitespace-nowrap shrink-0">
               <Lock size={11} /> Khóa
             </span>
-          ) : finalTestScore !== undefined && finalTestScore > 0 ? (
+          ) : hasCompletedTest ? (
             <span className="px-3.5 py-1.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-emerald-500/30 transition-all whitespace-nowrap shrink-0 flex items-center gap-1">
               <RotateCcw size={12} />
               <span>Thi lại</span>

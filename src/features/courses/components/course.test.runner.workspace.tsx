@@ -273,7 +273,9 @@ export function CourseTestRunnerWorkspace({
                   onExplainMistakes={() => {}}
                   onToggleAiDetails={() => setShowAiDetails(!showAiDetails)}
                   onBackToLessons={onClose}
-                  onNavigateCourse={(slugOrId) => navigate(`/course/${slugOrId}`)}
+                  onNavigateCourse={(slugOrId) =>
+                    navigate(slugOrId.startsWith('/') ? slugOrId : `/course/${slugOrId}`)
+                  }
                 />
               )}
               {rawQuestions.map((q, idx) => (

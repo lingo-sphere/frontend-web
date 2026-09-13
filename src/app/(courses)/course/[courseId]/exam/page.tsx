@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
 import { useParams, useSearchParams, useNavigate } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import { mapCourseDataToWorkspace } from '@/features/courses/helpers/course.workspace.adapter'
@@ -11,13 +11,18 @@ import { CourseLoadingState } from '@/features/courses/components/course.loading
 import type { Course, Chapter } from '@/features/courses/types/course'
 import { Button } from '@/components/button'
 import { AlertCircle, ArrowLeft } from 'lucide-react'
+import { extractCourseId, buildCourseUrl } from '@/features/courses/lib/course.url'
+import { getQueryClient } from '@/config/query.config'
+import { progressKeys } from '@/features/progress/keys/progress.keys'
+import { courseKeys } from '@/features/courses/keys/course.keys'
 
 function CourseExamContent() {
   const params = useParams<{ courseId: string }>()
   const searchParams = useSearchParams()
   const navigate = useNavigate()
 
-  const courseId = params?.courseId || ''
+  const rawParam = params?.courseId || ''
+  const courseId = useMemo(() => extractCourseId(rawParam), [rawParam])
   const testType = (searchParams.get('type') || 'final-test') as
     | 'challenge'
     | 'exercise'
@@ -76,8 +81,12 @@ function CourseExamContent() {
   }, [loadExamData])
 
   const handleBackToCourse = useCallback(() => {
-    navigate(`/course/${courseId}`)
-  }, [navigate, courseId])
+    if (course) {
+      navigate(buildCourseUrl(course))
+    } else {
+      navigate(`/course/${courseId}`)
+    }
+  }, [navigate, course, courseId])
 
   if (isLoading) {
     return <CourseLoadingState onBack={handleBackToCourse} />
@@ -197,7 +206,15 @@ function CourseExamContent() {
       highestScore={highestScore}
       previousAttempts={previousAttempts}
       onClose={handleBackToCourse}
-      onComplete={() => {}}
+      onComplete={async () => {
+        const qc = getQueryClient()
+        qc.invalidateQueries({ queryKey: progressKeys.all })
+        qc.invalidateQueries({ queryKey: courseKeys.all })
+        try {
+          const updated = await courseService.getCourseProgressDetail(courseId)
+          if (updated) setProgressDetail(updated)
+        } catch {}
+      }}
     />
   )
 }

@@ -327,7 +327,8 @@ export function useCourseTestRunner({
         }
         if (saveRes?.is_new_high_score) setIsNewHighScore(true)
         if (saveRes?.highest_score) setBestScore(saveRes.highest_score)
-        if (Array.isArray(saveRes?.attempts)) setAttemptsList(saveRes.attempts)
+        const returnedAttempts = saveRes?.final_test_attempts || saveRes?.attempts
+        if (Array.isArray(returnedAttempts)) setAttemptsList(returnedAttempts)
         onComplete?.(scorePercent, isPassed, saveRes)
       } catch {
         onComplete?.(scorePercent, isPassed)

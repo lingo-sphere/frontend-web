@@ -15,7 +15,7 @@ export const BankInfoSchema = z.object({
 export const PaymentOrderResponseSchema = z.object({
   order_code: z.string(),
   amount: z.number(),
-  billing_cycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY', 'LIFETIME']),
+  billing_cycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY', 'LIFETIME', 'ONCE']),
   qr_url: z.string(),
   bank_info: BankInfoSchema,
   expires_at: z.string(),
