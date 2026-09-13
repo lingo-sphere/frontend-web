@@ -1,16 +1,13 @@
-/**
- * @file course.workspace.sidebar.tsx
- * @description Thanh bên phải hiển thị danh sách các chương bài học và Trợ lý Gia sư AI.
- */
+// Thanh ben phai hien thi danh sach cac chuong bai hoc va Tai lieu khoa hoc.
 
 'use client'
 
-import { Sparkles, PanelRightClose, CheckCircle2 } from 'lucide-react'
+import { PanelRightClose, CheckCircle2, FileText } from 'lucide-react'
 import { CourseSidebarContent } from '@/features/courses/components/course.sidebar.content'
-import { CourseSidebarAiChat } from '@/features/courses/components/course.sidebar.ai.chat'
+import { CourseSidebarDocuments } from '@/features/courses/components/course.sidebar.documents'
 import type { Chapter, Course, Lesson } from '@/features/courses/types/course'
 
-export type SidebarTab = 'content' | 'ai'
+export type SidebarTab = 'content' | 'documents' | 'ai'
 
 interface CourseWorkspaceSidebarProps {
   isOpen: boolean
@@ -30,6 +27,7 @@ interface CourseWorkspaceSidebarProps {
     chapter: Chapter | null,
     testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   ) => void
+  onOpenPracticeQuiz?: (chapter: Chapter, lesson: Lesson) => void
 }
 
 export function CourseWorkspaceSidebar({
@@ -47,6 +45,7 @@ export function CourseWorkspaceSidebar({
   onSelectLesson,
   onToggleLessonComplete,
   onTakeTest,
+  onOpenPracticeQuiz,
 }: CourseWorkspaceSidebarProps) {
   if (!isOpen) return null
 
@@ -75,15 +74,15 @@ export function CourseWorkspaceSidebar({
               Nội dung khóa học
             </button>
             <button
-              onClick={() => onTabChange('ai')}
+              onClick={() => onTabChange('documents')}
               className={`rounded-lg px-3 py-1.5 text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'ai'
-                  ? 'bg-purple-600 text-white shadow-xs font-bold'
+                activeTab === 'documents' || activeTab === 'ai'
+                  ? 'bg-primary text-white shadow-xs font-bold'
                   : 'text-text-secondary hover:text-text-primary font-medium'
               }`}
             >
-              <Sparkles size={13} />
-              <span>Trợ lý AI</span>
+              <FileText size={13} />
+              <span>Tài liệu khóa học</span>
             </button>
           </div>
 
@@ -128,9 +127,16 @@ export function CourseWorkspaceSidebar({
           onSelectLesson={onSelectLesson}
           onToggleLessonComplete={onToggleLessonComplete}
           onTakeTest={onTakeTest}
+          onOpenPracticeQuiz={onOpenPracticeQuiz}
         />
       ) : (
-        <CourseSidebarAiChat currentLessonTitle={currentLesson?.title || ''} />
+        <CourseSidebarDocuments
+          course={course}
+          currentLesson={currentLesson}
+          isEnrolled={isEnrolled}
+          onSelectLesson={onSelectLesson}
+          onOpenPracticeQuiz={onOpenPracticeQuiz}
+        />
       )}
     </div>
   )

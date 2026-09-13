@@ -30,6 +30,7 @@ interface CourseSidebarChapterItemProps {
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
   onToggleResource: (lessonId: string, e: React.MouseEvent) => void
   onTakeTest?: () => void
+  onOpenPracticeQuiz?: (lesson: Lesson) => void
 }
 
 export function CourseSidebarChapterItem({
@@ -53,6 +54,7 @@ export function CourseSidebarChapterItem({
   onToggleLessonComplete,
   onToggleResource,
   onTakeTest,
+  onOpenPracticeQuiz,
 }: CourseSidebarChapterItemProps) {
   const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
   const chTotal = chapter.lessons.length
@@ -160,6 +162,7 @@ export function CourseSidebarChapterItem({
                   }
                   onToggleResource(lesson.id, e)
                 }}
+                onOpenPracticeQuiz={() => onOpenPracticeQuiz?.(lesson)}
               />
             ))}
           </div>

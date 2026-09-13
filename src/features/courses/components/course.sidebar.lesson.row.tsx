@@ -1,6 +1,6 @@
 // Thành phần hiển thị một bài học trong thanh danh sách bài giảng bên cạnh.
 
-import { Check, Download, FolderDown, Lock, PlayCircle } from 'lucide-react'
+import { Check, Download, FileText, FolderDown, HelpCircle, Lock, PlayCircle } from 'lucide-react'
 import type { Lesson } from '@/features/courses/types/course'
 
 interface CourseSidebarLessonRowProps {
@@ -12,6 +12,7 @@ interface CourseSidebarLessonRowProps {
   onSelect: () => void
   onToggleComplete: (e: React.MouseEvent) => void
   onToggleResource: (e: React.MouseEvent) => void
+  onOpenPracticeQuiz?: () => void
 }
 
 export function CourseSidebarLessonRow({
@@ -23,6 +24,7 @@ export function CourseSidebarLessonRow({
   onSelect,
   onToggleComplete,
   onToggleResource,
+  onOpenPracticeQuiz,
 }: CourseSidebarLessonRowProps) {
   const isDone = lesson.status === 'completed'
 
@@ -66,7 +68,7 @@ export function CourseSidebarLessonRow({
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-[11px] text-text-tertiary">
+        <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-text-tertiary">
           <span className="flex items-center gap-1 shrink-0">
             {isChapterLocked ? (
               <Lock size={11} className="text-amber-500/80" />
@@ -86,6 +88,35 @@ export function CourseSidebarLessonRow({
             )}
             {Math.round(lesson.duration / 60)} phút
           </span>
+
+          {lesson.theory_file_url && (
+            <a
+              href={lesson.theory_file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20 transition-colors border border-blue-500/20 shrink-0 cursor-pointer"
+              title={lesson.theory_file_name || 'Xem file đề lý thuyết của bài học'}
+            >
+              <FileText size={10} className="text-blue-600 dark:text-blue-400" />
+              <span>Lý thuyết</span>
+            </a>
+          )}
+
+          {Array.isArray(lesson.questions) && lesson.questions.length > 0 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenPracticeQuiz?.()
+              }}
+              className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20 shrink-0 cursor-pointer"
+              title={`Luyện tập trắc nghiệm bài học: ${lesson.questions.length} câu`}
+            >
+              <HelpCircle size={10} className="text-emerald-600 dark:text-emerald-400" />
+              <span>Luyện tập ({lesson.questions.length})</span>
+            </button>
+          )}
 
           {lesson.resources && lesson.resources.length > 0 && (
             <div className="relative shrink-0">

@@ -1,7 +1,4 @@
-/**
- * @file course.workspace.tabs.tsx
- * @description Quản lý hiển thị các tab nội dung bài học: Tổng quan, Tiến độ, Tài liệu, Hỏi đáp, Ghi chú và Đánh giá.
- */
+// Quan ly hien thi cac tab noi dung bai hoc: Tong quan, Tien do, Luyen tap, Tai lieu, Hoi dap, Ghi chu va Danh gia.
 
 'use client'
 

@@ -139,6 +139,38 @@ export function CourseResourcesTab({
             chapterTitle: ch.title,
           })
         }
+
+        ch.lessons?.forEach((les) => {
+          if (les.id !== currentLesson?.id) {
+            if (les.theory_file_url) {
+              list.push({
+                id: `les-theory-${les.id}`,
+                title: les.theory_file_name || `Đề lý thuyết: Bài ${les.order || 1} - ${les.title}`,
+                url: les.theory_file_url,
+                size: 'Tài liệu bài học',
+                format: detectFormat(les.theory_file_url, les.theory_file_name || les.title),
+                category: 'lesson',
+                lessonTitle: les.title,
+                chapterTitle: ch.title,
+              })
+            }
+            if (Array.isArray(les.resources)) {
+              les.resources.forEach((r, rIdx) => {
+                list.push({
+                  id: r.id || `les-res-${les.id}-${rIdx}`,
+                  title: r.title || `Tài liệu: Bài ${les.order || 1} - ${les.title}`,
+                  url: r.url || '#',
+                  size: r.size || 'Tài liệu bài học',
+                  type: r.type,
+                  format: detectFormat(r.url || '', r.title || ''),
+                  category: 'lesson',
+                  lessonTitle: les.title,
+                  chapterTitle: ch.title,
+                })
+              })
+            }
+          }
+        })
       })
     }
 
@@ -166,7 +198,11 @@ export function CourseResourcesTab({
   }, [allResources, filterType, searchQuery])
 
   const handleDownload = (resource: EnrichedResource) => {
-    if (!isEnrolled) {
+    const isFreePreviewLesson = currentLesson?.id && resource.category === 'lesson' && Boolean(currentLesson.is_free_preview)
+    const isCourseLevelDocument = resource.category === 'course'
+    const canAccess = isEnrolled || isFreePreviewLesson || isCourseLevelDocument
+
+    if (!canAccess) {
       toast.warning(
         'Vui lòng đăng ký khóa học để tải xuống trọn bộ tài liệu đính kèm!',
         'Khóa học chưa đăng ký'
@@ -179,7 +215,14 @@ export function CourseResourcesTab({
     setTimeout(() => {
       setDownloadingId(null)
       if (resource.url && resource.url !== '#' && resource.url.startsWith('http')) {
-        window.open(resource.url, '_blank')
+        const link = document.createElement('a')
+        link.href = resource.url
+        link.target = '_blank'
+        link.rel = 'noopener noreferrer'
+        link.download = `${resource.title.replace(/[/\\?%*:|"<>]/g, '_')}`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
       } else {
         const blob = new Blob(
           [
@@ -199,7 +242,7 @@ export function CourseResourcesTab({
         URL.revokeObjectURL(url)
       }
       toast.success(`Đã bắt đầu tải về: ${resource.title}`, 'Tải tài liệu thành công')
-    }, 600)
+    }, 400)
   }
 
   const handleCopyLink = (resource: EnrichedResource) => {
@@ -252,7 +295,7 @@ export function CourseResourcesTab({
             <CourseResourceItemCard
               key={res.id}
               resource={res}
-              isEnrolled={isEnrolled}
+              isEnrolled={isEnrolled || Boolean(currentLesson?.is_free_preview) || res.category === 'course'}
               isCopied={copiedId === res.id}
               isDownloading={downloadingId === res.id}
               onCopyLink={handleCopyLink}

@@ -65,7 +65,23 @@ export function mapCourseDataToWorkspace(
         content: typeof l.content === 'object' && l.content !== null ? l.content : { sections: [] },
         theory_file_url: l.theory_file_url || '',
         theory_file_name: l.theory_file_name || '',
-        questions: Array.isArray(l.questions) ? l.questions : [],
+        questions: (Array.isArray(l.questions) ? l.questions : Array.isArray(l.practice_questions) ? l.practice_questions : []).map((q: any, qIdx: number) => {
+          let opts: string[] = []
+          if (Array.isArray(q.options)) {
+            opts = q.options.map((o: any) => (typeof o === 'string' ? o : String(o?.text || o?.key || '')))
+          }
+          return {
+            _id: String(q._id || q.id || `lq_${lesId}_${qIdx}`),
+            id: String(q._id || q.id || `lq_${lesId}_${qIdx}`),
+            question_text: String(q.question_text || q.prompt || `Câu hỏi ${qIdx + 1}`),
+            options: opts,
+            correct_answer: String(q.correct_answer || q.correct_option || 'A'),
+            explanation: q.explanation || '',
+            media_url: q.audio_url || q.media_url || '',
+            audio_url: q.audio_url || q.media_url || '',
+            image_url: q.image_url || '',
+          }
+        }),
       }
     })
 

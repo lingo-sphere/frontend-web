@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from '@/lib/navigation'
-import { AlertCircle, ArrowLeft } from 'lucide-react'
+import { AlertCircle, ArrowLeft, ExternalLink, FileText, FolderDown, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/button'
 import { CourseWorkspaceHeader } from '@/features/courses/components/course.workspace.header'
 import { CourseRatingModal } from '@/features/courses/components/course.rating.modal'
@@ -189,6 +189,63 @@ export default function CourseDetailPage() {
                 onAddNoteAtTimestamp={handleAddNoteAtTimestamp}
                 onDurationChange={handleLessonDurationChange}
               />
+              <div className="bg-surface border-b border-border/80 px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xs font-bold text-text-secondary truncate">
+                    Bài {currentLesson.order || 1}: <strong className="text-text-primary">{currentLesson.title}</strong>
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {currentLesson.theory_file_url && (
+                    <a
+                      href={currentLesson.theory_file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/30 transition-all cursor-pointer shadow-2xs"
+                      title={currentLesson.theory_file_name || 'Xem file đề lý thuyết của bài học'}
+                    >
+                      <FileText size={13} className="text-blue-600 dark:text-blue-400" />
+                      <span>Đề lý thuyết (PDF)</span>
+                      <ExternalLink size={11} className="opacity-70" />
+                    </a>
+                  )}
+
+                  {Array.isArray(currentLesson.questions) && currentLesson.questions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveBottomTab('quiz')}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
+                        activeBottomTab === 'quiz'
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                      }`}
+                    >
+                      <HelpCircle
+                        size={13}
+                        className={
+                          activeBottomTab === 'quiz'
+                            ? 'text-white'
+                            : 'text-emerald-600 dark:text-emerald-400'
+                        }
+                      />
+                      <span>Đề luyện tập ({currentLesson.questions.length} câu)</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveSidebarTab('documents')
+                      setIsSidebarOpen(true)
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-subtle hover:bg-surface-hover text-text-secondary hover:text-text-primary text-xs font-bold border border-border transition-all cursor-pointer shadow-2xs"
+                  >
+                    <FolderDown size={13} className="text-primary" />
+                    <span>Tài liệu khóa học</span>
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <CourseLockedPlayer
@@ -274,6 +331,10 @@ export default function CourseDetailPage() {
           onSelectLesson={handleSelectLesson}
           onToggleLessonComplete={handleToggleLessonComplete}
           onTakeTest={handleTakeTest}
+          onOpenPracticeQuiz={(chapter, lesson) => {
+            handleSelectLesson(chapter, lesson)
+            setActiveBottomTab('quiz')
+          }}
         />
       </div>
 

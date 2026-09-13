@@ -53,6 +53,7 @@ interface CourseSidebarContentProps {
     chapter: Chapter | null,
     testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   ) => void
+  onOpenPracticeQuiz?: (chapter: Chapter, lesson: Lesson) => void
 }
 
 export function CourseSidebarContent({
@@ -75,6 +76,7 @@ export function CourseSidebarContent({
   onSelectLesson,
   onToggleLessonComplete,
   onTakeTest,
+  onOpenPracticeQuiz,
 }: CourseSidebarContentProps) {
   const [activeResourceDropdown, setActiveResourceDropdown] = useState<string | null>(null)
 
@@ -205,6 +207,7 @@ export function CourseSidebarContent({
               setActiveResourceDropdown(activeResourceDropdown === lesId ? null : lesId)
             }
             onTakeTest={() => onTakeTest?.(chapter, 'challenge')}
+            onOpenPracticeQuiz={(les) => onOpenPracticeQuiz?.(chapter, les)}
           />
         )
       })}

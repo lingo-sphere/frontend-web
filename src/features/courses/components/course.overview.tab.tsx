@@ -1,11 +1,8 @@
-/**
- * @file course.overview.tab.tsx
- * @description Component giao diện React CourseOverviewTab hiển thị thông tin chi tiết khóa học và giảng viên
- */
+// Component hien thi thong tin tong quan khoa hoc, muc tieu va tai lieu giao trinh dinh kem.
 
 'use client'
 
-import { Award, Check, Clock, Star, Users, User } from 'lucide-react'
+import { Award, Check, Clock, Star, Users, User, FileText, ExternalLink, Download } from 'lucide-react'
 import type { Course } from '@/features/courses/types/course'
 
 interface CourseOverviewTabProps {
@@ -29,7 +26,6 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      
       <div className="space-y-3">
         <h2 className="text-xl sm:text-2xl font-bold text-text-primary leading-snug">
           {course.title}
@@ -38,7 +34,6 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
           {course.description || 'Khóa học cung cấp kiến thức nền tảng và chuyên sâu giúp học viên tiến bộ nhanh chóng.'}
         </p>
 
-        
         <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-text-secondary pt-2">
           <div className="flex items-center gap-1.5 text-warning">
             <span className="font-extrabold text-sm">{ratingValue}</span>
@@ -69,7 +64,52 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
         </div>
       </div>
 
-      
+      {course.document_url && (
+        <div className="rounded-2xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-950/20 p-5 sm:p-6 space-y-3 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-purple-600/20">
+                <FileText size={22} />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                  Giáo trình & Cẩm nang học tập
+                </span>
+                <h4 className="text-sm sm:text-base font-bold text-text-primary">
+                  {course.document_name || 'Cẩm nang & Tài liệu tổng quan toàn khóa học (PDF)'}
+                </h4>
+                <p className="text-xs text-text-secondary">
+                  Tài liệu học tập chính thức do đội ngũ giảng viên biên soạn kèm khóa học.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 shrink-0">
+              <a
+                href={course.document_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+              >
+                <FileText size={14} />
+                <span>Xem tài liệu</span>
+                <ExternalLink size={12} className="opacity-80" />
+              </a>
+              <a
+                href={course.document_url}
+                download={course.document_name || 'giao-trinh-khoa-hoc'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-purple-200 dark:border-purple-800 bg-white dark:bg-slate-900 hover:bg-purple-50 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all cursor-pointer"
+              >
+                <Download size={14} />
+                <span>Tải về</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-border bg-surface p-6 space-y-4 shadow-sm">
         <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
           <Award className="text-primary" size={18} />
@@ -85,7 +125,6 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
         </div>
       </div>
 
-      
       {course.instructor && (
         <div className="rounded-2xl border border-border bg-surface p-6 space-y-4 shadow-sm">
           <h3 className="text-base font-bold text-text-primary">Giảng viên hướng dẫn</h3>
@@ -108,14 +147,11 @@ export function CourseOverviewTab({ course }: CourseOverviewTabProps) {
               <div className="flex items-center gap-4 text-[11px] text-text-tertiary pt-1">
                 <span className="flex items-center gap-1 font-bold text-warning">
                   <Star size={12} fill="currentColor" />
-                  {ratingValue} Đánh giá
+                  <span>5.0</span>
                 </span>
-                <span>{studentsCount.toLocaleString('vi-VN')} Học viên</span>
-                <span>{course.instructor.coursesCount || 1} Khóa học</span>
+                <span>•</span>
+                <span>Giảng viên hàng đầu LingoSphere</span>
               </div>
-              <p className="text-xs text-text-secondary leading-relaxed pt-2">
-                {course.instructor.bio}
-              </p>
             </div>
           </div>
         </div>
