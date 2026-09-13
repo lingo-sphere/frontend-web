@@ -41,11 +41,11 @@ export function UserScoreEditModal({
   const [skillsType, setSkillsType] = useState<'2SKILLS' | '4SKILLS'>(
     currentScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS'
   )
-  const [listeningScore, setListeningScore] = useState<number>(currentScores.listeningScore || 250)
-  const [readingScore, setReadingScore] = useState<number>(currentScores.readingScore || 250)
-  const [speakingScore, setSpeakingScore] = useState<number>(currentScores.speakingScore || 110)
-  const [writingScore, setWritingScore] = useState<number>(currentScores.writingScore || 110)
-  const [targetScore, setTargetScore] = useState<number>(currentScores.targetScore || 650)
+  const [listeningScore, setListeningScore] = useState<number>(currentScores.listeningScore ?? 0)
+  const [readingScore, setReadingScore] = useState<number>(currentScores.readingScore ?? 0)
+  const [speakingScore, setSpeakingScore] = useState<number>(currentScores.speakingScore ?? 0)
+  const [writingScore, setWritingScore] = useState<number>(currentScores.writingScore ?? 0)
+  const [targetScore, setTargetScore] = useState<number>(currentScores.targetScore ?? 0)
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
   if (!open) return null

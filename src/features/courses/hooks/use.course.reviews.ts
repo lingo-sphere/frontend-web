@@ -1,7 +1,4 @@
-/**
- * @file use.course.reviews.ts
- * @description Custom hook quản lý gửi đánh giá số sao và nhận xét khóa học
- */
+// Custom hook quản lý gửi đánh giá số sao và nhận xét khóa học.
 
 import { type Dispatch, type SetStateAction } from 'react'
 import { courseService } from '@/features/courses/services/course.service'
@@ -40,7 +37,7 @@ export function useCourseReviews({
       })) as { review: Record<string, unknown>; rating: number; rating_count: number }
 
       const newRev: CourseReviewItem = {
-        id: String(res?.review?._id || `rev-${Date.now()}`),
+        id: String(res?.review?._id || res?.review?.id || ''),
         author: 'Bạn (Học viên)',
         rating,
         date: 'Vừa xong',

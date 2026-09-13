@@ -282,13 +282,13 @@ export function CoursePlacementBanner() {
           onSuccess={(updated) => {
             if (updated) {
               setPlacementData({
-                score: updated.placement_test_score || 500,
+                score: updated.placement_test_score ?? 0,
                 listening: updated.placement_listening_score,
                 reading: updated.placement_reading_score,
                 speaking: updated.placement_speaking_score,
                 writing: updated.placement_writing_score,
                 skillsType: updated.placement_skills_type || '2SKILLS',
-                testedAt: updated.placement_tested_at || new Date().toISOString(),
+                testedAt: updated.placement_tested_at || '',
               })
             }
             setShowEditScoreModal(false)

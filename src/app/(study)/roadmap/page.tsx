@@ -146,7 +146,7 @@ export default function RoadmapAppPage() {
     }
 
     const growth = Number(current) - Number(baseline)
-    const target = Number(progress.roadmap.target_score || 650)
+    const target = Number(progress.roadmap.target_score ?? 0)
 
     return {
       stages,
@@ -162,7 +162,7 @@ export default function RoadmapAppPage() {
   }, [progress])
 
   const sortedCourses = useMemo(() => {
-    return [...courses].sort((a, b) => (a.target_score || 500) - (b.target_score || 500))
+    return [...courses].sort((a, b) => (a.target_score ?? 0) - (b.target_score ?? 0))
   }, [courses])
 
   if (isLoading) {

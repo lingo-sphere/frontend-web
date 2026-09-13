@@ -1,7 +1,4 @@
-/**
- * @file use.course.notes.ts
- * @description Custom hook quản lý ghi chú bài học cá nhân (tạo ghi chú theo mốc thời gian, xóa ghi chú)
- */
+// Custom hook quản lý ghi chú bài học cá nhân trong khóa học.
 
 import { type Dispatch, type SetStateAction } from 'react'
 import { courseService } from '@/features/courses/services/course.service'
@@ -50,7 +47,7 @@ export function useCourseNotes({
       })) as Record<string, unknown>
 
       const newNote: NoteItem = {
-        id: String(res?._id || `note-${Date.now()}`),
+        id: String(res?._id || res?.id || ''),
         lessonId: currentLesson.id,
         lessonTitle: currentLesson.title,
         timestamp,

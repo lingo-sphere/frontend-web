@@ -225,10 +225,10 @@ export function useSpeakingWorkspace() {
         console.error('Submit speaking attempt error:', submitErr)
       }
 
-      const attemptId = String(backendAttempt?._id || backendAttempt?.id || `sa-${Date.now()}`)
+      const attemptId = String(backendAttempt?._id || backendAttempt?.id || '')
       const newSubmission: SpeakingAttempt = {
         id: attemptId,
-        user_id: String(backendAttempt?.user_id || 'current_user'),
+        user_id: String(backendAttempt?.user_id || ''),
         exercise_id: selectedExercise.id,
         attempt_number: 1,
         is_best_attempt: true,

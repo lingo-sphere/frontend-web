@@ -99,7 +99,7 @@ export function ToeicCourseRecommendations({
               <div className="flex flex-col items-end">
                 <div className="text-[11px] uppercase tracking-wider text-indigo-300 font-bold">Cam Kết Đầu Ra</div>
                 <div className="text-2xl font-black text-teal-400">
-                  {recommendedRoadmap.target_score || 650}+
+                  {recommendedRoadmap.target_score ? `${recommendedRoadmap.target_score}+` : '-'}
                 </div>
               </div>
             </div>
@@ -108,7 +108,7 @@ export function ToeicCourseRecommendations({
             <div className="space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-2">
                 <Layers className="w-4 h-4 text-indigo-400" />
-                <span>Hành Trình Chinh Phục {recommendedRoadmap.stages?.length || 3} Chặng:</span>
+                <span>Hành Trình Chinh Phục {recommendedRoadmap.stages?.length || 0} Chặng:</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
