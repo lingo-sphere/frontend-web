@@ -34,16 +34,16 @@ export function CoursePlacementBanner() {
 
   useEffect(() => {
     if (user) {
-      const rawUser = user as any
-      if (Number(rawUser?.placement_test_score) > 0) {
+      const scoreNum = Number(user.placement_test_score)
+      if (scoreNum > 0) {
         setPlacementData({
-          score: Number(rawUser.placement_test_score),
-          listening: rawUser.placement_listening_score,
-          reading: rawUser.placement_reading_score,
-          speaking: rawUser.placement_speaking_score,
-          writing: rawUser.placement_writing_score,
-          skillsType: rawUser.placement_skills_type || '2SKILLS',
-          testedAt: rawUser.placement_tested_at,
+          score: scoreNum,
+          listening: typeof user.placement_listening_score === 'number' ? user.placement_listening_score : undefined,
+          reading: typeof user.placement_reading_score === 'number' ? user.placement_reading_score : undefined,
+          speaking: typeof user.placement_speaking_score === 'number' ? user.placement_speaking_score : undefined,
+          writing: typeof user.placement_writing_score === 'number' ? user.placement_writing_score : undefined,
+          skillsType: typeof user.placement_skills_type === 'string' ? user.placement_skills_type : '2SKILLS',
+          testedAt: typeof user.placement_tested_at === 'string' ? user.placement_tested_at : undefined,
         })
       } else {
         setPlacementData(null)
@@ -76,7 +76,7 @@ export function CoursePlacementBanner() {
   }, [user])
 
   if (placementData && placementData.score > 0) {
-    const is4Skills = placementData.skillsType === '4SKILLS' || (placementData.speaking && placementData.speaking > 0)
+    const is4Skills = placementData.skillsType === '4SKILLS' || Boolean(placementData.speaking && placementData.speaking > 0)
 
     return (
       <>
@@ -152,12 +152,14 @@ export function CoursePlacementBanner() {
               readingScore: placementData.reading,
               speakingScore: placementData.speaking,
               writingScore: placementData.writing,
-              skillsType: (placementData.skillsType as any) || '2SKILLS',
+              skillsType: (placementData.skillsType as '2SKILLS' | '4SKILLS') || '2SKILLS',
+              targetScore: Number(user?.target_toeic_score) || 450,
             }}
             onSuccess={(updated) => {
               if (updated) {
+                const newScore = Number(updated.placement_test_score) || placementData.score
                 setPlacementData({
-                  score: updated.placement_test_score || placementData.score,
+                  score: newScore,
                   listening: updated.placement_listening_score,
                   reading: updated.placement_reading_score,
                   speaking: updated.placement_speaking_score,
@@ -278,11 +280,13 @@ export function CoursePlacementBanner() {
             speakingScore: 110,
             writingScore: 110,
             skillsType: '2SKILLS',
+            targetScore: Number(user?.target_toeic_score) || 600,
           }}
           onSuccess={(updated) => {
             if (updated) {
+              const newScore = Number(updated.placement_test_score) || 0
               setPlacementData({
-                score: updated.placement_test_score ?? 0,
+                score: newScore,
                 listening: updated.placement_listening_score,
                 reading: updated.placement_reading_score,
                 speaking: updated.placement_speaking_score,

@@ -45,7 +45,14 @@ export function UserScoreEditModal({
   const [readingScore, setReadingScore] = useState<number>(currentScores.readingScore ?? 0)
   const [speakingScore, setSpeakingScore] = useState<number>(currentScores.speakingScore ?? 0)
   const [writingScore, setWritingScore] = useState<number>(currentScores.writingScore ?? 0)
-  const [targetScore, setTargetScore] = useState<number>(currentScores.targetScore ?? 0)
+  const [targetScore, setTargetScore] = useState<number>(() => {
+    if (typeof currentScores.targetScore === 'number' && currentScores.targetScore > 0) {
+      return currentScores.targetScore
+    }
+    const storedUser = useAuthStore.getState().user
+    const existingTarget = Number(storedUser?.target_toeic_score)
+    return existingTarget > 0 ? existingTarget : 450
+  })
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
   if (!open) return null
@@ -81,19 +88,20 @@ export function UserScoreEditModal({
         placement_speaking_score: skillsType === '4SKILLS' ? speakingScore : undefined,
         placement_writing_score: skillsType === '4SKILLS' ? writingScore : undefined,
         placement_skills_type: skillsType,
-        target_toeic_score: targetScore,
+        target_toeic_score: targetScore > 0 ? targetScore : undefined,
         current_estimated_score: calculatedTotal,
         is_score_manually_edited: true,
         placement_tested_at: new Date().toISOString(),
       }
 
-      await userService.updateProfile(payload).catch(() => null)
+      const updatedUser = await userService.updateProfile(payload)
 
       const { user, setUser } = useAuthStore.getState()
       if (user) {
         setUser({
           ...user,
           ...payload,
+          ...(updatedUser || {}),
         })
       }
 
@@ -102,8 +110,9 @@ export function UserScoreEditModal({
       toast.success('Cập nhật điểm trình độ thành công!')
       onSuccess(payload)
       onOpenChange(false)
-    } catch {
-      toast.error('Không thể cập nhật điểm. Vui lòng thử lại.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Không thể cập nhật điểm. Vui lòng thử lại.'
+      toast.error(message)
     } finally {
       setIsSaving(false)
     }
@@ -267,11 +276,11 @@ export function UserScoreEditModal({
             </label>
             <input
               type="number"
-              min={300}
+              min={0}
               max={990}
               step={5}
               value={targetScore}
-              onChange={(e) => setTargetScore(Math.min(990, Math.max(300, Number(e.target.value))))}
+              onChange={(e) => setTargetScore(Math.min(990, Math.max(0, Number(e.target.value))))}
               className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
