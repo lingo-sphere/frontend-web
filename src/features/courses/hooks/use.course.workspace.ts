@@ -70,8 +70,32 @@ export function useCourseWorkspace(courseId: string) {
     isAuthenticated && !isEnrolledInList
   )
 
+  const cachedEnrolled = useMemo(() => {
+    if (typeof window === 'undefined' || !courseId) return false
+    try {
+      return localStorage.getItem(`lingosphere_course_enrolled_${courseId}`) === 'true'
+    } catch {
+      return false
+    }
+  }, [courseId])
+
   const [overrideEnrolled, setOverrideEnrolled] = useState<boolean | null>(null)
-  const isEnrolled = overrideEnrolled ?? (isEnrolledInList || Boolean(enrollmentStatusRes?.is_enrolled))
+  const isEnrolled =
+    overrideEnrolled ??
+    (isEnrolledInList ||
+      Boolean(enrollmentStatusRes?.is_enrolled) ||
+      (isCourseLoading && cachedEnrolled))
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !courseId) return
+    try {
+      if (isEnrolledInList || enrollmentStatusRes?.is_enrolled) {
+        localStorage.setItem(`lingosphere_course_enrolled_${courseId}`, 'true')
+      } else if (enrollmentStatusRes && !enrollmentStatusRes.is_enrolled && !isEnrolledInList) {
+        localStorage.removeItem(`lingosphere_course_enrolled_${courseId}`)
+      }
+    } catch {}
+  }, [courseId, isEnrolledInList, enrollmentStatusRes])
 
   const { data: reviewsData } = useCourseReviewsQuery(courseId, Boolean(rawCourse))
   const { data: qnaData } = useCourseQnAQuery(courseId, Boolean(rawCourse))

@@ -47,7 +47,7 @@ export function useLessonVideoPlayer({
   const [isMuted, setIsMuted] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
   const [selectedQuality, setSelectedQuality] = useState<string>('auto')
-  const [autoResolvedQuality] = useState<'1080p' | '720p' | '360p'>('1080p')
+  const [autoResolvedQuality, setAutoResolvedQuality] = useState<'1080p' | '720p' | '360p'>('1080p')
   const [isTheater, setIsTheater] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isPipActive, setIsPipActive] = useState(false)
@@ -88,6 +88,12 @@ export function useLessonVideoPlayer({
 
   const effectiveVideoUrl = useMemo(() => {
     if (!baseVideoSource) return ''
+    if (lesson?.qualities && lesson.qualities[selectedQuality]) {
+      return lesson.qualities[selectedQuality]
+    }
+    if (lesson?.qualities && selectedQuality === 'auto' && lesson.qualities['auto']) {
+      return lesson.qualities['auto']
+    }
     let source = baseVideoSource
     const apiBase = (API_CONFIG.BASE_URL ?? '').replace(
       /\/+$/,
@@ -111,7 +117,7 @@ export function useLessonVideoPlayer({
         return source.replace('/1080p/', '/360p/')
     }
     return source
-  }, [baseVideoSource, effectiveQualityKey, isHlsStream])
+  }, [baseVideoSource, effectiveQualityKey, isHlsStream, lesson?.qualities, selectedQuality])
 
   useEffect(() => {
     const video = videoRef.current
@@ -128,8 +134,33 @@ export function useLessonVideoPlayer({
         hlsRef.current = hls
         hls.loadSource(effectiveVideoUrl)
         hls.attachMedia(video)
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+
+        hls.on(Hls.Events.MANIFEST_PARSED, (_event, data) => {
           setIsBuffering(false)
+          if (selectedQuality !== 'auto' && data.levels && data.levels.length > 0) {
+            const targetH = parseInt(selectedQuality.replace('p', ''), 10)
+            let bestIdx = -1
+            let minDiff = Infinity
+            data.levels.forEach((l, idx) => {
+              const diff = Math.abs(l.height - targetH)
+              if (diff < minDiff) {
+                minDiff = diff
+                bestIdx = idx
+              }
+            })
+            if (bestIdx !== -1) {
+              hls.currentLevel = bestIdx
+              hls.nextLevel = bestIdx
+            }
+          }
+        })
+
+        hls.on(Hls.Events.LEVEL_SWITCHED, (_event, data) => {
+          const currentLvl = hls.levels[data.level]
+          if (currentLvl) {
+            const resolved = currentLvl.height >= 1000 ? '1080p' : currentLvl.height >= 700 ? '720p' : '360p'
+            setAutoResolvedQuality(resolved)
+          }
         })
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = effectiveVideoUrl
@@ -254,10 +285,108 @@ export function useLessonVideoPlayer({
     [triggerFeedback]
   )
 
-  const handleQualityChange = useCallback((qKey: string) => {
-    setSelectedQuality(qKey)
-    setShowSettingsMenu(false)
-  }, [])
+  useEffect(() => {
+    const hls = hlsRef.current
+    if (!hls || !hls.levels || hls.levels.length === 0) return
+
+    if (selectedQuality === 'auto') {
+      if (hls.currentLevel !== -1) {
+        hls.currentLevel = -1
+      }
+    } else {
+      const targetH = parseInt(selectedQuality.replace('p', ''), 10)
+      let bestIdx = -1
+      let minDiff = Infinity
+      hls.levels.forEach((l, idx) => {
+        const diff = Math.abs(l.height - targetH)
+        if (diff < minDiff) {
+          minDiff = diff
+          bestIdx = idx
+        }
+      })
+      if (bestIdx !== -1 && hls.currentLevel !== bestIdx) {
+        hls.currentLevel = bestIdx
+        hls.nextLevel = bestIdx
+      }
+    }
+  }, [selectedQuality])
+
+  const handleQualityChange = useCallback(
+    (qKey: string) => {
+      setSelectedQuality(qKey)
+      setShowSettingsMenu(false)
+
+      const hls = hlsRef.current
+      if (hls && hls.levels && hls.levels.length > 0) {
+        if (qKey === 'auto') {
+          hls.currentLevel = -1
+          triggerFeedback('speed', 'Chất lượng: Tự động (Thích ứng)')
+        } else {
+          const targetH = parseInt(qKey.replace('p', ''), 10)
+          let bestIdx = -1
+          let minDiff = Infinity
+          hls.levels.forEach((l, idx) => {
+            const diff = Math.abs(l.height - targetH)
+            if (diff < minDiff) {
+              minDiff = diff
+              bestIdx = idx
+            }
+          })
+          if (bestIdx !== -1) {
+            hls.currentLevel = bestIdx
+            hls.nextLevel = bestIdx
+            const label =
+              qKey === '1080p'
+                ? '1080p (Full HD)'
+                : qKey === '720p'
+                ? '720p (HD)'
+                : '360p (Tiết kiệm)'
+            triggerFeedback('speed', `Chất lượng: ${label}`)
+          }
+        }
+        return
+      }
+
+      if (lesson?.qualities && lesson.qualities[qKey]) {
+        const targetUrl = lesson.qualities[qKey]
+        const video = videoRef.current
+        if (video && targetUrl !== video.src) {
+          const savedTime = video.currentTime
+          const wasPlaying = !video.paused
+          video.src = targetUrl
+          const handleLoaded = () => {
+            video.currentTime = savedTime
+            if (wasPlaying) {
+              video.play().catch(() => {})
+            }
+            video.removeEventListener('loadedmetadata', handleLoaded)
+          }
+          video.addEventListener('loadedmetadata', handleLoaded)
+        }
+        const label =
+          qKey === '1080p'
+            ? '1080p (Full HD)'
+            : qKey === '720p'
+            ? '720p (HD)'
+            : qKey === '360p'
+            ? '360p (Tiết kiệm)'
+            : 'Tự động'
+        triggerFeedback('speed', `Chất lượng: ${label}`)
+        return
+      }
+
+      const label =
+        qKey === '1080p'
+          ? '1080p (Full HD)'
+          : qKey === '720p'
+          ? '720p (HD)'
+          : qKey === '360p'
+          ? '360p (Tiết kiệm)'
+          : 'Tự động'
+      triggerFeedback('speed', `Chất lượng: ${label}`)
+    },
+    [lesson?.qualities, triggerFeedback]
+  )
 
   const toggleFullscreen = useCallback(() => {
     const container = containerRef.current
@@ -375,6 +504,8 @@ export function useLessonVideoPlayer({
     isMuted,
     playbackSpeed,
     selectedQuality,
+    autoResolvedQuality,
+    effectiveQualityKey,
     isTheater,
     setIsTheater,
     isFullscreen,
