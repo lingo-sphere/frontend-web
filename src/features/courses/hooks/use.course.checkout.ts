@@ -7,7 +7,6 @@ import { cartService } from '@/features/cart/services/cart.service'
 import { getQueryClient } from '@/config/query.config'
 import { cartKeys } from '@/features/cart/keys/cart.keys'
 import { courseKeys } from '@/features/courses/keys/course.keys'
-import { courseService } from '@/features/courses/services/course.service'
 import { subscriptionService, type PaymentOrderResponse } from '@/features/upgrade/services/subscription.service'
 import { toast } from '@/store/toast.store'
 
@@ -78,8 +77,8 @@ export function useCourseCheckout({
     setStep('SUCCESS')
 
     try {
-      await Promise.all(courses.map((c) => courseService.enrollCourse(c.id).catch(() => null)))
       getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
+      getQueryClient().invalidateQueries({ queryKey: courseKeys.all })
       await cartService.clearCart().catch(() => null)
       getQueryClient().invalidateQueries({ queryKey: cartKeys.all })
     } catch {}
