@@ -22,6 +22,7 @@ import { CourseWorkspaceSidebar } from '@/features/courses/components/course.wor
 import { CourseScheduleBanner } from '@/features/courses/components/course.schedule.banner'
 import { CourseScheduleModal } from '@/features/courses/components/course.schedule.modal'
 import { CourseLandingView } from '@/features/courses/components/course.landing.view'
+import { CourseLandingLoadingState } from '@/features/courses/components/course.landing.loading.state'
 import { courseService } from '@/features/courses/services/course.service'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
 
@@ -116,7 +117,10 @@ export default function CourseDetailPage() {
   }
 
   if (isLoading) {
-    return <CourseLoadingState onBack={handleBack} />
+    if (isEnrolled) {
+      return <CourseLoadingState onBack={handleBack} />
+    }
+    return <CourseLandingLoadingState onBack={handleBack} />
   }
 
   if (!course) {

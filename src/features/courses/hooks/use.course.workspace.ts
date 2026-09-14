@@ -55,7 +55,20 @@ export function useCourseWorkspace(courseId: string) {
   const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isEnrolled, setIsEnrolled] = useState(false)
+
+  const queryClient = getQueryClient()
+  const initialEnrolled = useMemo(() => {
+    if (!isAuthenticated || !courseId) return false
+    const cached = queryClient.getQueryData<Array<{ course_id?: string; id?: string; _id?: string }>>(
+      courseKeys.enrollments()
+    )
+    if (Array.isArray(cached)) {
+      return cached.some((e) => e.course_id === courseId || e.id === courseId || e._id === courseId)
+    }
+    return false
+  }, [courseId, isAuthenticated, queryClient])
+
+  const [isEnrolled, setIsEnrolled] = useState(initialEnrolled)
   const [expandedChapters, setExpandedChapters] = useState<string[]>([])
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('overview')
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('content')
@@ -73,70 +86,91 @@ export function useCourseWorkspace(courseId: string) {
 
   useEffect(() => {
     let isMounted = true
+
     async function fetchCourse() {
       if (!courseId) return
       setIsLoading(true)
+
       try {
-        const fetchedCourse = await courseService.getCourseById(courseId)
-        if (!fetchedCourse) {
+        const coursePromise = courseService.getCourseById(courseId)
+        const enrollmentPromise = isAuthenticated
+          ? courseService
+              .getEnrollmentStatus(courseId)
+              .then((r) => Boolean(r?.is_enrolled))
+              .catch(() => false)
+          : Promise.resolve(false)
+
+        const [fetchedCourse, userIsEnrolled] = await Promise.all([
+          coursePromise,
+          enrollmentPromise,
+        ])
+
+        if (!fetchedCourse || !isMounted) {
           if (isMounted) setIsLoading(false)
           return
         }
 
-        const courseObj = fetchedCourse
+        setIsEnrolled(userIsEnrolled)
 
-        const [enrollmentRes, progressRes] = await Promise.all([
-          courseService
-            .getEnrollmentStatus(courseId)
-            .then((r) => ({ enrolled: Boolean(r?.is_enrolled) }))
-            .catch(() => ({ enrolled: false })),
-          courseService.getCourseProgressDetail(courseId).catch(() => null),
-        ])
+        const initialStructured = mapCourseDataToWorkspace(
+          courseId,
+          fetchedCourse,
+          userIsEnrolled,
+          null,
+          null,
+          [],
+          []
+        )
 
-        const userIsEnrolled = Boolean(enrollmentRes?.enrolled)
-        if (isMounted) {
-          setIsEnrolled(userIsEnrolled)
-          if (userIsEnrolled) {
-            getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
-          }
-          if (progressRes) {
-            setProgressDetail(progressRes)
-            if (progressRes.course_progress?.schedule) {
-              setCourseSchedule(progressRes.course_progress.schedule)
-            }
-            if (progressRes.course_progress?.lock_state) {
-              setCourseLockState(progressRes.course_progress.lock_state)
-            }
-          }
-        }
+        const initialChapter = initialStructured.chapters[0] || null
+        const initialLesson = initialStructured.chapters[0]?.lessons[0] || null
 
-        const [reviewsRes, notesRes, qnaRes] = await Promise.all([
-          courseService.getCourseReviews(courseId).catch(() => null),
+        setCourse(initialStructured)
+        setCurrentChapter(initialChapter)
+        setCurrentLesson(initialLesson)
+        setExpandedChapters(initialStructured.chapters.map((ch) => ch.id))
+        setIsLoading(false)
+
+        const secondaryPromises: [
+          Promise<any>,
+          Promise<any>,
+          Promise<any>,
+          Promise<any>
+        ] = [
+          userIsEnrolled
+            ? courseService.getCourseProgressDetail(courseId).catch(() => null)
+            : Promise.resolve(null),
           userIsEnrolled && isAuthenticated
             ? courseService.getCourseNotes(courseId).catch(() => [])
             : Promise.resolve([]),
+          courseService.getCourseReviews(courseId).catch(() => null),
           courseService.getCourseQnA(courseId).catch(() => []),
-        ])
+        ]
 
-        const structuredCourse = mapCourseDataToWorkspace(
+        const [progressRes, notesRes, reviewsRes, qnaRes] = await Promise.all(secondaryPromises)
+
+        if (!isMounted) return
+
+        if (progressRes) {
+          setProgressDetail(progressRes)
+          if (progressRes.course_progress?.schedule) {
+            setCourseSchedule(progressRes.course_progress.schedule)
+          }
+          if (progressRes.course_progress?.lock_state) {
+            setCourseLockState(progressRes.course_progress.lock_state)
+          }
+        }
+
+        const fullyStructured = mapCourseDataToWorkspace(
           courseId,
-          courseObj,
+          fetchedCourse,
           userIsEnrolled,
           progressRes,
           reviewsRes,
           notesRes,
           qnaRes
         )
-
-        const initialChapter = structuredCourse.chapters[0] || null
-        const initialLesson = structuredCourse.chapters[0]?.lessons[0] || null
-
-        if (isMounted) {
-          setCourse(structuredCourse)
-          setCurrentChapter(initialChapter)
-          setCurrentLesson(initialLesson)
-          setExpandedChapters(structuredCourse.chapters.map((ch) => ch.id))
-        }
+        setCourse(fullyStructured)
       } catch {
       } finally {
         if (isMounted) setIsLoading(false)
