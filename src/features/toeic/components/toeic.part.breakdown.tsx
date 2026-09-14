@@ -27,7 +27,7 @@ export function ToeicPartBreakdown({
 
   return (
     <div className="p-6 sm:p-8 space-y-6">
-      <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+      <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
         <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-950/20">
           <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 block">
             {isVietnamese ? 'Số câu đúng' : 'Correct'}
@@ -67,7 +67,7 @@ export function ToeicPartBreakdown({
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto pt-4 border-t border-border">
+      <div className="w-full pt-4 border-t border-border">
         <h3 className="text-sm font-bold text-text-primary mb-3">
           {isVietnamese ? 'Phân Tích Chi Tiết Từng Phần (Part Breakdown)' : 'Part Accuracy Breakdown'}
         </h3>

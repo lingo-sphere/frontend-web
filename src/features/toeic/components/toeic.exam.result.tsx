@@ -71,45 +71,43 @@ export function ToeicExamResult({
   const incorrectCount = Math.max(0, results.total - results.correct)
 
   return (
-    <div className="min-h-screen bg-surface-secondary py-8 sm:py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
-        <Card className="dashboard-card overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm bg-surface">
-          <ToeicScoreOverview
-            results={results}
-            levelLabel={levelLabel}
-            targetBand={targetBand}
-            isVietnamese={isVietnamese}
-          />
-
-          <CardContent className="p-0">
-            <ToeicPartBreakdown
-              results={results}
-              statEntries={statEntries}
-              hasExplicitParts={hasExplicitParts}
-              isVietnamese={isVietnamese}
-              onRetry={onRetry}
-              onChooseAnother={onChooseAnother}
-            />
-          </CardContent>
-        </Card>
-
-        <ToeicCourseRecommendations
-          recommendedRoadmap={recommendedRoadmap}
-          courses={recommendedCourses}
-          targetBand={targetBand}
+    <main className="w-full min-h-screen bg-surface-secondary px-4 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-6 sm:space-y-8">
+      <Card className="dashboard-card overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm bg-surface">
+        <ToeicScoreOverview
+          results={results}
           levelLabel={levelLabel}
-          isLoading={isLoadingRecommendations}
-          baselineScore={results.estimatedTotal}
-        />
-
-        <ToeicQuestionsReview
-          questions={questions}
-          userAnswers={userAnswers}
-          correctCount={results.correct}
-          incorrectCount={incorrectCount}
+          targetBand={targetBand}
           isVietnamese={isVietnamese}
         />
-      </div>
-    </div>
+
+        <CardContent className="p-0">
+          <ToeicPartBreakdown
+            results={results}
+            statEntries={statEntries}
+            hasExplicitParts={hasExplicitParts}
+            isVietnamese={isVietnamese}
+            onRetry={onRetry}
+            onChooseAnother={onChooseAnother}
+          />
+        </CardContent>
+      </Card>
+
+      <ToeicCourseRecommendations
+        recommendedRoadmap={recommendedRoadmap}
+        courses={recommendedCourses}
+        targetBand={targetBand}
+        levelLabel={levelLabel}
+        isLoading={isLoadingRecommendations}
+        baselineScore={results.estimatedTotal}
+      />
+
+      <ToeicQuestionsReview
+        questions={questions}
+        userAnswers={userAnswers}
+        correctCount={results.correct}
+        incorrectCount={incorrectCount}
+        isVietnamese={isVietnamese}
+      />
+    </main>
   )
 }

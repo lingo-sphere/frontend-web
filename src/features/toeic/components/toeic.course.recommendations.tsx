@@ -18,6 +18,7 @@ import { Card } from '@/components/card'
 import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
 import { progressService } from '@/features/progress/services/progress.service'
+import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import type { Course, LearningRoadmap } from '@/types/api.types'
 
 export interface RecommendedCourseItem extends Course {
@@ -244,11 +245,13 @@ export function ToeicCourseRecommendations({
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {courses.map((course) => {
-              const courseId = (course as { _id?: string })._id || course.id || ''
+              const courseUrl = buildCourseUrl(course)
+              const courseKey = course.id || (course as { _id?: string })._id || course.title
               return (
                 <div
-                  key={courseId}
-                  className="group flex flex-col justify-between rounded-2xl border border-border bg-surface p-4 shadow-xs transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-md"
+                  key={courseKey}
+                  onClick={() => navigate(courseUrl)}
+                  className="group flex flex-col justify-between rounded-2xl border border-border bg-surface p-4 shadow-xs transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-md cursor-pointer"
                 >
                   <div>
                     <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
@@ -296,7 +299,10 @@ export function ToeicCourseRecommendations({
                     <Button
                       size="sm"
                       className="gap-1.5 bg-indigo-600 text-xs font-semibold text-white hover:bg-indigo-700 cursor-pointer"
-                      onClick={() => navigate(`/courses/${courseId}`)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate(courseUrl)
+                      }}
                     >
                       {isVietnamese ? 'Mua lẻ / Vào học' : 'Enroll'}
                       <ArrowRight size={14} />
