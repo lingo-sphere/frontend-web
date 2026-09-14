@@ -103,6 +103,7 @@ export default function CourseDetailPage() {
     const hasPlacementScore = Boolean(
       (user?.placement_test_score && Number(user.placement_test_score) > 0) ||
       (user?.current_estimated_score && Number(user.current_estimated_score) > 0) ||
+      (user?.target_toeic_score && Number(user.target_toeic_score) > 0) ||
       user?.placement_tested_at
     )
 
@@ -380,6 +381,10 @@ export default function CourseDetailPage() {
           onOpenChange={setShowPlacementPromptModal}
           onProceedPurchase={() => setShowCourseCheckoutModal(true)}
           courseTitle={course?.title}
+          courseCategory={course?.category}
+          courseSkills={course?.skills}
+          courseLevel={course?.level}
+          courseTargetScore={course?.target_score}
         />
       )}
 

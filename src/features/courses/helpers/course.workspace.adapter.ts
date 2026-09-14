@@ -199,6 +199,10 @@ export function mapCourseDataToWorkspace(
     final_test_writing_file_url: String(courseObj.final_test_writing_file_url || ''),
     category: String(courseObj.category || ''),
     skills: Array.isArray(courseObj.skills) ? (courseObj.skills as string[]) : [],
+    target_score: typeof courseObj.target_score === 'number' ? courseObj.target_score : undefined,
+    price: Number(courseObj.price || 0),
+    discount_price: typeof courseObj.discount_price === 'number' ? courseObj.discount_price : undefined,
+    thumbnail: courseObj.thumbnail_url || courseObj.thumbnail || '',
     finalTest: { status: userIsEnrolled ? 'available' : 'locked' },
   }
 }

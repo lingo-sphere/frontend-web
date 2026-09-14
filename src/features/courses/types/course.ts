@@ -258,7 +258,9 @@ export interface Course {
   thumbnail_url?: string
   document_url?: string
   document_name?: string
+  target_score?: number
   price?: number
+  discount_price?: number
   qna?: QnAItem[]
   notes?: NoteItem[]
   reviews?: CourseReviewItem[]
