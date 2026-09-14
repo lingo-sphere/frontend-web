@@ -21,6 +21,7 @@ import { CourseWorkspaceTabs } from '@/features/courses/components/course.worksp
 import { CourseWorkspaceSidebar } from '@/features/courses/components/course.workspace.sidebar'
 import { CourseScheduleBanner } from '@/features/courses/components/course.schedule.banner'
 import { CourseScheduleModal } from '@/features/courses/components/course.schedule.modal'
+import { CourseLandingView } from '@/features/courses/components/course.landing.view'
 import { courseService } from '@/features/courses/services/course.service'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
 
@@ -140,6 +141,72 @@ export default function CourseDetailPage() {
           </div>
         </div>
       </div>
+    )
+  }
+
+  if (!isEnrolled) {
+    return (
+      <>
+        <CourseLandingView
+          course={course}
+          onEnrollOrBuy={handleInitiateEnrollOrBuy}
+          onAddToCart={handleAddToCart}
+          isInCart={isInCart(course.id)}
+          isAddingToCart={isAddingToCart}
+          isAuthenticated={isAuthenticated}
+          userName={user?.full_name ?? undefined}
+          userAvatar={user?.avatar_url ?? undefined}
+        />
+
+        {showRatingModal && (
+          <CourseRatingModal
+            courseTitle={course.title}
+            onClose={() => setShowRatingModal(false)}
+            onSubmit={handleAddReview}
+          />
+        )}
+
+        {showUpgradeModal && (
+          <UpgradeModal
+            open={showUpgradeModal}
+            onOpenChange={setShowUpgradeModal}
+          />
+        )}
+
+        {showCourseCheckoutModal && course && (
+          <CourseCheckoutModal
+            open={showCourseCheckoutModal}
+            onOpenChange={setShowCourseCheckoutModal}
+            courses={[
+              {
+                id: course.id,
+                title: course.title,
+                price: course.price || 0,
+                thumbnail: course.thumbnail,
+              },
+            ]}
+            onSuccess={() => {
+              setIsEnrolled(true)
+              getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
+              toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
+              setShowScheduleModal(true)
+            }}
+          />
+        )}
+
+        {showPlacementPromptModal && (
+          <CoursePlacementPromptModal
+            open={showPlacementPromptModal}
+            onOpenChange={setShowPlacementPromptModal}
+            onProceedPurchase={() => setShowCourseCheckoutModal(true)}
+            courseTitle={course?.title}
+            courseCategory={course?.category}
+            courseSkills={course?.skills}
+            courseLevel={course?.level}
+            courseTargetScore={course?.target_score}
+          />
+        )}
+      </>
     )
   }
 
