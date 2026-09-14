@@ -47,6 +47,34 @@ export const courseQueries = {
       enabled,
       staleTime: 2 * 60 * 1000,
     }),
+  enrollmentStatus: (courseId: string, enabled = true) =>
+    queryOptions({
+      queryKey: [...courseKeys.detail(courseId), 'enrollment-status'] as const,
+      queryFn: () => courseService.getEnrollmentStatus(courseId),
+      enabled: Boolean(courseId) && enabled,
+      staleTime: 5 * 60 * 1000,
+    }),
+  reviews: (courseId: string, enabled = true) =>
+    queryOptions({
+      queryKey: [...courseKeys.detail(courseId), 'reviews'] as const,
+      queryFn: () => courseService.getCourseReviews(courseId),
+      enabled: Boolean(courseId) && enabled,
+      staleTime: 5 * 60 * 1000,
+    }),
+  qna: (courseId: string, enabled = true) =>
+    queryOptions({
+      queryKey: [...courseKeys.detail(courseId), 'qna'] as const,
+      queryFn: () => courseService.getCourseQnA(courseId),
+      enabled: Boolean(courseId) && enabled,
+      staleTime: 2 * 60 * 1000,
+    }),
+  progress: (courseId: string, enabled = true) =>
+    queryOptions({
+      queryKey: [...courseKeys.detail(courseId), 'progress'] as const,
+      queryFn: () => courseService.getCourseProgressDetail(courseId),
+      enabled: Boolean(courseId) && enabled,
+      staleTime: 1 * 60 * 1000,
+    }),
 }
 
 export function useAllCoursesQuery(params?: CourseQueryParams, enabled = true) {
@@ -55,6 +83,22 @@ export function useAllCoursesQuery(params?: CourseQueryParams, enabled = true) {
 
 export function useCourseDetailQuery(courseId: string, enabled = true) {
   return useQuery(courseQueries.detail(courseId, enabled))
+}
+
+export function useCourseEnrollmentStatusQuery(courseId: string, enabled = true) {
+  return useQuery(courseQueries.enrollmentStatus(courseId, enabled))
+}
+
+export function useCourseReviewsQuery(courseId: string, enabled = true) {
+  return useQuery(courseQueries.reviews(courseId, enabled))
+}
+
+export function useCourseQnAQuery(courseId: string, enabled = true) {
+  return useQuery(courseQueries.qna(courseId, enabled))
+}
+
+export function useCourseProgressQuery(courseId: string, enabled = true) {
+  return useQuery(courseQueries.progress(courseId, enabled))
 }
 
 export function useMyEnrollmentsQuery(enabled = true) {
