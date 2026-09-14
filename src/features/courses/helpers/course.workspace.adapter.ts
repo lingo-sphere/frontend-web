@@ -164,8 +164,12 @@ export function mapCourseDataToWorkspace(
     totalLessons: totalLes,
     document_url: courseObj.document_url || '',
     document_name: courseObj.document_name || '',
-    rating: typeof reviewsRes?.rating === 'number' ? reviewsRes.rating : 5.0,
-    ratingCount: typeof reviewsRes?.rating_count === 'number' ? reviewsRes.rating_count : 0,
+    rating: typeof reviewsRes?.rating === 'number' && reviewsRes.rating_count > 0
+      ? reviewsRes.rating
+      : (typeof courseObj.rating === 'number' ? courseObj.rating : 5.0),
+    ratingCount: typeof reviewsRes?.rating_count === 'number'
+      ? reviewsRes.rating_count
+      : Number(courseObj.rating_count || 0),
     studentsCount: Number(courseObj.students_count || 0),
     whatYouWillLearn: Array.isArray(courseObj.what_you_will_learn)
       ? (courseObj.what_you_will_learn as string[])
@@ -175,10 +179,10 @@ export function mapCourseDataToWorkspace(
       name: String(courseObj.author_name || 'Đội ngũ Giảng viên LingoSphere'),
       title: 'Giảng viên chuyên môn',
       avatar: String(courseObj.author_avatar || ''),
-      rating: 5.0,
-      studentsCount: 100,
+      rating: typeof courseObj.rating === 'number' ? courseObj.rating : 5.0,
+      studentsCount: Number(courseObj.students_count || 0),
       coursesCount: 1,
-      bio: 'Chuyên gia giảng dạy ngôn ngữ giàu kinh nghiệm thực chiến.',
+      bio: String(courseObj.author_bio || 'Chuyên gia giảng dạy ngôn ngữ giàu kinh nghiệm thực chiến.'),
     },
     overview: {
       whatYouWillLearn: Array.isArray(courseObj.what_you_will_learn)
@@ -205,4 +209,10 @@ export function mapCourseDataToWorkspace(
     thumbnail: courseObj.thumbnail_url || courseObj.thumbnail || '',
     finalTest: { status: userIsEnrolled ? 'available' : 'locked' },
   }
+}
+
+export function getCourseEffectivePrice(course: { price?: number; discount_price?: number }): number {
+  const rawPrice = typeof course.price === 'number' ? course.price : 0
+  const rawDiscount = typeof course.discount_price === 'number' ? course.discount_price : 0
+  return rawDiscount > 0 && rawDiscount < rawPrice ? rawDiscount : rawPrice
 }

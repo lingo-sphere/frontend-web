@@ -15,17 +15,17 @@ interface CourseLandingInstructorProps {
 export function CourseLandingInstructor({
   instructor,
   reviews = [],
-  rating = 4.8,
+  rating = 5.0,
   ratingCount = 0,
 }: CourseLandingInstructorProps) {
   const defaultInstructor: CourseInstructor = {
     name: 'Đội ngũ Giảng viên LingoSphere',
     title: 'Chuyên gia Luyện thi & Giảng dạy Ngoại ngữ Chuẩn Quốc tế',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    rating: 4.9,
-    ratingCount: 1250,
-    studentsCount: 18400,
-    coursesCount: 8,
+    rating: 5.0,
+    ratingCount: 0,
+    studentsCount: 0,
+    coursesCount: 1,
     bio: 'Đội ngũ chuyên gia LingoSphere quy tụ các giảng viên 990 TOEIC / 8.5 IELTS với hơn 8 năm kinh nghiệm giảng dạy và luyện thi đại học, chứng chỉ quốc tế. Hệ thống phương pháp giảng dạy độc quyền theo lộ trình cá nhân hóa, kết hợp thực hành và phân tích đề thực chiến sát cấu trúc đề thi thật nhất.',
   }
 
@@ -67,7 +67,7 @@ export function CourseLandingInstructor({
               </div>
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 text-emerald-500" />
-                <span><strong className="font-semibold">{currentInstructor.ratingCount?.toLocaleString() || ratingCount.toLocaleString()}</strong> đánh giá</span>
+                <span><strong className="font-semibold">{currentInstructor.ratingCount !== undefined && currentInstructor.ratingCount > 0 ? currentInstructor.ratingCount.toLocaleString() : ratingCount > 0 ? ratingCount.toLocaleString() : '0'}</strong> đánh giá</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-500" />
@@ -92,7 +92,9 @@ export function CourseLandingInstructor({
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Star className="w-6 h-6 text-amber-500 fill-amber-500" />
               <span>{rating.toFixed(1)} xếp hạng khóa học</span>
-              <span className="text-slate-400 font-normal text-lg">({ratingCount.toLocaleString()} xếp hạng)</span>
+              <span className="text-slate-400 font-normal text-lg">
+                ({ratingCount > 0 ? `${ratingCount.toLocaleString()} xếp hạng` : 'Chưa có xếp hạng'})
+              </span>
             </h2>
           </div>
         </div>

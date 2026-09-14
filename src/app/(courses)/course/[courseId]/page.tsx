@@ -25,6 +25,7 @@ import { CourseLandingView } from '@/features/courses/components/course.landing.
 import { CourseLandingLoadingState } from '@/features/courses/components/course.landing.loading.state'
 import { courseService } from '@/features/courses/services/course.service'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
+import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
 
 export default function CourseDetailPage() {
   const params = useParams<{ courseId: string }>()
@@ -185,7 +186,7 @@ export default function CourseDetailPage() {
               {
                 id: course.id,
                 title: course.title,
-                price: course.price || 0,
+                price: getCourseEffectivePrice(course),
                 thumbnail: course.thumbnail,
               },
             ]}
@@ -433,7 +434,7 @@ export default function CourseDetailPage() {
             {
               id: course.id,
               title: course.title,
-              price: course.price || 0,
+              price: getCourseEffectivePrice(course),
               thumbnail: course.thumbnail,
             },
           ]}

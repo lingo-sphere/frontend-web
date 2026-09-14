@@ -10,9 +10,9 @@ interface CourseLandingHeroProps {
 }
 
 export function CourseLandingHero({ course, onBack }: CourseLandingHeroProps) {
-  const ratingValue = Number(course.rating || 4.9).toFixed(1)
-  const ratingCount = course.ratingCount || 1143
-  const studentsCount = course.studentsCount || 10579
+  const ratingValue = Number(course.rating || 5.0).toFixed(1)
+  const ratingCount = course.ratingCount ?? 0
+  const studentsCount = course.studentsCount ?? 0
   const instructorName = course.instructor?.name || 'Đội ngũ Giảng viên LingoSphere'
   const categoryName = course.category || 'TOEIC Chuẩn Quốc Tế'
   const updatedDate = course.updatedAt
@@ -76,7 +76,9 @@ export function CourseLandingHero({ course, onBack }: CourseLandingHeroProps) {
                 ))}
               </div>
               <span className="text-indigo-300 underline cursor-pointer">
-                ({ratingCount.toLocaleString('vi-VN')} xếp hạng)
+                {ratingCount > 0
+                  ? `(${ratingCount.toLocaleString('vi-VN')} xếp hạng)`
+                  : '(Chưa có xếp hạng)'}
               </span>
             </div>
 
