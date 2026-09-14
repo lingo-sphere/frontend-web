@@ -2,6 +2,7 @@
 
 export interface CourseTestQuestion {
   id?: string
+  _id?: string
   question_text: string
   options: string[]
   correct_answer: string | number

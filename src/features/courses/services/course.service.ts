@@ -10,6 +10,7 @@ import type {
   CourseScheduleResponse,
   UpdateCourseSchedulePayload,
 } from '@/features/courses/types/schedule.types'
+import type { TestAttemptItem, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
 
 export const courseService = {
 
@@ -195,20 +196,29 @@ export const courseService = {
     courseId: string,
     moduleId: string,
     data: {
-      score: number
+      score?: number
       correct_count?: number
       total_questions?: number
       passing_score?: number
       challenge_attempt_id?: string
       order_index?: number
+      answers?: Array<{
+        question_index?: number
+        question_id?: string
+        selected_option?: string
+        selected_index?: number
+      }>
     }
   ): Promise<{
     is_passed: boolean
     score: number
     highest_score?: number
     passing_score: number
+    correct_count?: number
+    total_questions?: number
+    wrong_questions?: WrongQuestionItem[]
     status: string
-    attempts?: any[]
+    attempts?: TestAttemptItem[]
     message: string
   }> {
     return api.post(`/progress/courses/${courseId}/modules/${moduleId}/challenge`, data)
@@ -218,11 +228,17 @@ export const courseService = {
     courseId: string,
     moduleId: string,
     data: {
-      score: number
+      score?: number
       correct_count?: number
       total_questions?: number
       post_mini_attempt_id?: string
       order_index?: number
+      answers?: Array<{
+        question_index?: number
+        question_id?: string
+        selected_option?: string
+        selected_index?: number
+      }>
     }
   ): Promise<{
     message: string
@@ -230,7 +246,11 @@ export const courseService = {
     score: number
     highest_score?: number
     is_new_high_score?: boolean
-    attempts?: any[]
+    correct_count?: number
+    total_questions?: number
+    is_passed?: boolean
+    wrong_questions?: WrongQuestionItem[]
+    attempts?: TestAttemptItem[]
     progression_comparison?: {
       previous_stage: string
       previous_score: number
@@ -247,10 +267,16 @@ export const courseService = {
   async submitCourseFinalTest(
     courseId: string,
     data: {
-      score: number
+      score?: number
       correct_count?: number
       total_questions?: number
       final_test_attempt_id?: string
+      answers?: Array<{
+        question_index?: number
+        question_id?: string
+        selected_option?: string
+        selected_index?: number
+      }>
     }
   ): Promise<{
     message: string
@@ -258,7 +284,12 @@ export const courseService = {
     final_test_score: number
     highest_score?: number
     is_new_high_score?: boolean
-    final_test_attempts?: any[]
+    is_passed?: boolean
+    passing_score?: number
+    correct_count?: number
+    total_questions?: number
+    wrong_questions?: WrongQuestionItem[]
+    final_test_attempts?: TestAttemptItem[]
     baseline_score: number
     total_score_growth: number
     total_growth_percentage: number

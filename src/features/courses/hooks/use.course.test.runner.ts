@@ -235,103 +235,150 @@ export function useCourseTestRunner({
 
   const handleSubmitTest = useCallback(
     async (isTimeout = false) => {
-      let correct = 0
-      const wrongs: WrongQuestionItem[] = []
+      const answersPayload = rawQuestions.map((q, idx) => {
+        const chosen = selectedAnswers[idx]
+        const options = q.options ?? []
+        return {
+          question_index: idx,
+          question_id: q._id || q.id || String(idx),
+          selected_index: chosen !== undefined ? chosen : -1,
+          selected_option: chosen !== undefined && options[chosen] !== undefined ? options[chosen] : '',
+        }
+      })
 
+      let fallbackCorrect = 0
+      const fallbackWrongs: WrongQuestionItem[] = []
       rawQuestions.forEach((q, idx) => {
         const chosen = selectedAnswers[idx]
         const options = q.options ?? []
         const correctIdx = getCorrectOptionIndex(q, options)
-
         if (chosen !== undefined && chosen === correctIdx) {
-          correct++
+          fallbackCorrect++
         } else {
-          wrongs.push({
+          fallbackWrongs.push({
             question_number: idx + 1,
             question_text: q.question_text,
             user_selected_answer:
               chosen !== undefined
                 ? options[chosen] ?? String.fromCharCode(65 + chosen)
                 : 'Chưa làm',
-            correct_answer: options[correctIdx] ?? String.fromCharCode(65 + correctIdx),
+            correct_answer: typeof correctIdx === 'number' && correctIdx >= 0 && options[correctIdx] ? options[correctIdx] : 'Chưa cập nhật',
             category: chapter?.title ?? 'Kiến thức chung',
           })
         }
       })
-
-      const total = rawQuestions.length
-      const scorePercent = total > 0 ? Math.round((correct / total) * 100) : 100
-      const isPassed = scorePercent >= passingScore
-
-      setWrongQuestionsList(wrongs)
-      setScoreResult({
-        correctCount: correct,
-        totalQuestions: total,
-        score: scorePercent,
-        isPassed,
-      })
-      setIsSubmitted(true)
-      setShowSubmitConfirm(false)
-
-      if (isTimeout) toast.warning('Hết thời gian làm bài! Đã tự động nộp bài.')
-      else toast.success(`Nộp bài thành công! Điểm: ${scorePercent}%`)
-
-      if (wrongs.length > 0) {
-        setIsLoadingAi(true)
-        setShowAiDetails(true)
-        courseService
-          .explainTestMistakes(courseId, {
-            test_title: testTitle,
-            test_type: testType,
-            wrong_questions: wrongs,
-          })
-          .then((res: any) => setAiExplanations(res?.data || res))
-          .catch(() => {})
-          .finally(() => setIsLoadingAi(false))
-      }
+      const fallbackScore = rawQuestions.length > 0 ? Math.round((fallbackCorrect / rawQuestions.length) * 100) : 100
 
       setIsSaving(true)
       try {
-        let saveRes: any = null
+        let finalScore = fallbackScore
+        let finalCorrect = fallbackCorrect
+        let finalTotal = rawQuestions.length
+        let finalPassed = fallbackScore >= passingScore
+        let finalWrongs: WrongQuestionItem[] = fallbackWrongs
+        let completeRes: unknown = null
+
         if (testType === 'challenge' && chapter?.id) {
-          saveRes = await courseService.submitModuleChallenge(courseId, chapter.id, {
-            score: scorePercent,
-            correct_count: correct,
-            total_questions: total,
+          const saveRes = await courseService.submitModuleChallenge(courseId, chapter.id, {
+            score: fallbackScore,
+            correct_count: fallbackCorrect,
+            total_questions: rawQuestions.length,
             passing_score: passingScore,
             order_index: Number(chapter.order || 1),
+            answers: answersPayload,
           })
+          completeRes = saveRes
+          finalScore = saveRes.score
+          finalPassed = saveRes.is_passed
+          if (typeof saveRes.correct_count === 'number') finalCorrect = saveRes.correct_count
+          if (typeof saveRes.total_questions === 'number') finalTotal = saveRes.total_questions
+          if (Array.isArray(saveRes.wrong_questions)) finalWrongs = saveRes.wrong_questions
+          if (saveRes.highest_score) setBestScore(saveRes.highest_score)
+          if (Array.isArray(saveRes.attempts)) setAttemptsList(saveRes.attempts)
         } else if (testType === 'post-mini' && chapter?.id) {
-          saveRes = await courseService.submitModulePostMini(courseId, chapter.id, {
-            score: scorePercent,
-            correct_count: correct,
-            total_questions: total,
+          const saveRes = await courseService.submitModulePostMini(courseId, chapter.id, {
+            score: fallbackScore,
+            correct_count: fallbackCorrect,
+            total_questions: rawQuestions.length,
             order_index: Number(chapter.order || 1),
+            answers: answersPayload,
           })
+          completeRes = saveRes
+          finalScore = saveRes.score
+          if (typeof saveRes.is_passed === 'boolean') finalPassed = saveRes.is_passed
+          if (typeof saveRes.correct_count === 'number') finalCorrect = saveRes.correct_count
+          if (typeof saveRes.total_questions === 'number') finalTotal = saveRes.total_questions
+          if (Array.isArray(saveRes.wrong_questions)) finalWrongs = saveRes.wrong_questions
+          if (saveRes.progression_comparison) {
+            setGrowthDiff({
+              scoreDiff: saveRes.progression_comparison.score_diff,
+              percent: saveRes.progression_comparison.percentage_improvement,
+            })
+            setProgressionNote(saveRes.progression_comparison.comparison_note)
+          }
+          if (saveRes.is_new_high_score) setIsNewHighScore(true)
+          if (saveRes.highest_score) setBestScore(saveRes.highest_score)
+          if (Array.isArray(saveRes.attempts)) setAttemptsList(saveRes.attempts)
         } else if (testType === 'final-test') {
-          saveRes = await courseService.submitCourseFinalTest(courseId, {
-            score: scorePercent,
-            correct_count: correct,
-            total_questions: total,
+          const saveRes = await courseService.submitCourseFinalTest(courseId, {
+            score: fallbackScore,
+            correct_count: fallbackCorrect,
+            total_questions: rawQuestions.length,
+            answers: answersPayload,
           })
+          completeRes = saveRes
+          finalScore = saveRes.final_test_score
+          if (typeof saveRes.is_passed === 'boolean') finalPassed = saveRes.is_passed
+          if (typeof saveRes.correct_count === 'number') finalCorrect = saveRes.correct_count
+          if (typeof saveRes.total_questions === 'number') finalTotal = saveRes.total_questions
+          if (Array.isArray(saveRes.wrong_questions)) finalWrongs = saveRes.wrong_questions
+          if (saveRes.is_new_high_score) setIsNewHighScore(true)
+          if (saveRes.highest_score) setBestScore(saveRes.highest_score)
+          if (Array.isArray(saveRes.final_test_attempts)) setAttemptsList(saveRes.final_test_attempts)
         }
 
-        if (saveRes?.progression_comparison?.score_diff !== undefined) {
-          setGrowthDiff({
-            scoreDiff: saveRes.progression_comparison.score_diff,
-            percent: saveRes.progression_comparison.percentage_improvement,
-          })
+        setWrongQuestionsList(finalWrongs)
+        setScoreResult({
+          correctCount: finalCorrect,
+          totalQuestions: finalTotal,
+          score: finalScore,
+          isPassed: finalPassed,
+        })
+        setIsSubmitted(true)
+        setShowSubmitConfirm(false)
+
+        if (isTimeout) toast.warning('Hết thời gian làm bài! Đã tự động nộp bài.')
+        else toast.success(`Nộp bài thành công! Điểm: ${finalScore}%`)
+
+        if (finalWrongs.length > 0) {
+          setIsLoadingAi(true)
+          setShowAiDetails(true)
+          courseService
+            .explainTestMistakes(courseId, {
+              test_title: testTitle,
+              test_type: testType,
+              wrong_questions: finalWrongs,
+            })
+            .then((res: { data?: AiExplanationsData } | AiExplanationsData) => {
+              const data = 'data' in res && res.data ? res.data : (res as AiExplanationsData)
+              setAiExplanations(data)
+            })
+            .catch(() => {})
+            .finally(() => setIsLoadingAi(false))
         }
-        if (saveRes?.progression_comparison?.comparison_note) {
-          setProgressionNote(saveRes.progression_comparison.comparison_note)
-        }
-        if (saveRes?.is_new_high_score) setIsNewHighScore(true)
-        if (saveRes?.highest_score) setBestScore(saveRes.highest_score)
-        const returnedAttempts = saveRes?.final_test_attempts || saveRes?.attempts
-        if (Array.isArray(returnedAttempts)) setAttemptsList(returnedAttempts)
-        onComplete?.(scorePercent, isPassed, saveRes)
+
+        onComplete?.(finalScore, finalPassed, completeRes)
       } catch {
-        onComplete?.(scorePercent, isPassed)
+        setWrongQuestionsList(fallbackWrongs)
+        setScoreResult({
+          correctCount: fallbackCorrect,
+          totalQuestions: rawQuestions.length,
+          score: fallbackScore,
+          isPassed: fallbackScore >= passingScore,
+        })
+        setIsSubmitted(true)
+        setShowSubmitConfirm(false)
+        onComplete?.(fallbackScore, fallbackScore >= passingScore)
       } finally {
         setIsSaving(false)
       }
