@@ -90,8 +90,13 @@ export default function CourseDetailPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false)
 
   const handleBack = () => {
-    if (course) {
-      navigate(buildCourseUrl(course))
+    if (
+      typeof window !== 'undefined' &&
+      window.history.state &&
+      typeof window.history.state.idx === 'number' &&
+      window.history.state.idx > 0
+    ) {
+      navigate(-1)
     } else {
       navigate('/courses')
     }

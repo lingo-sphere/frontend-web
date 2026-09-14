@@ -60,6 +60,9 @@ export interface UnifiedTestAttempt {
   isPassed: boolean
   submittedAt: string
   durationSeconds?: number
+  listeningScore?: number
+  readingScore?: number
+  isBestAttempt?: boolean
 }
 
 export type ExamHistoryTab = 'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHALLENGE' | 'POST_MINI' | 'FINAL_TEST'
@@ -128,6 +131,9 @@ export function useExamHistory() {
         isPassed: (t.total_scaled_score || 0) >= 450,
         submittedAt: t.submitted_at || new Date().toISOString(),
         durationSeconds: t.total_time_seconds || 0,
+        listeningScore: t.listening_scaled_score,
+        readingScore: t.reading_scaled_score,
+        isBestAttempt: t.is_best_attempt,
       })
     })
 

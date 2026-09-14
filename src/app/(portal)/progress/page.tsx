@@ -3,7 +3,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, TrendingUp } from 'lucide-react'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useNavigate } from '@/lib/navigation'
 import { useProgressData } from '@/features/progress/hooks/use.progress.data'
@@ -12,10 +12,11 @@ import { ProgressCoursesTab } from '@/features/progress/components/progress.cour
 import { ProgressRoadmapTab } from '@/features/progress/components/progress.roadmap.tab'
 import { ProgressSkillsTab } from '@/features/progress/components/progress.skills.tab'
 import { ProgressRecentTestsTab } from '@/features/progress/components/progress.recent.tests.tab'
+import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
 
 export default function ProgressAppPage() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ROADMAP' | 'SKILLS' | 'RECENT_TESTS'>('OVERVIEW')
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ROADMAP' | 'SKILLS' | 'RECENT_TESTS' | 'GROWTH_ANALYTICS'>('OVERVIEW')
 
   const {
     isLoading,
@@ -98,6 +99,18 @@ export default function ProgressAppPage() {
         >
           Bài kiểm tra gần đây
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('GROWTH_ANALYTICS')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'GROWTH_ANALYTICS'
+              ? 'bg-gradient-to-r from-indigo-600 to-primary text-white shadow-xs'
+              : 'bg-surface-subtle text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <TrendingUp size={14} />
+          <span>Biểu đồ phát triển</span>
+        </button>
       </div>
 
       {isLoading ? (
@@ -126,9 +139,19 @@ export default function ProgressAppPage() {
           vocabStats={vocabStats}
           onNavigate={navigate}
         />
-      ) : (
+      ) : activeTab === 'RECENT_TESTS' ? (
         <ProgressRecentTestsTab
           recentActivities={recentActivities}
+          onNavigate={navigate}
+        />
+      ) : (
+        <ProgressGrowthAnalyticsTab
+          recentActivities={recentActivities}
+          enrolledCourseCards={enrolledCourseCards}
+          targetScore={metrics.targetScore || 650}
+          baselineScore={Number(activeUser?.placement_test_score) || 240}
+          listeningScore={listeningScore}
+          readingScore={readingScore}
           onNavigate={navigate}
         />
       )}
