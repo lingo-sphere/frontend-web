@@ -21,7 +21,7 @@ import type { CourseStudySchedule, CourseChapterLockState } from '@/features/cou
 import { useCourseNotes } from '@/features/courses/hooks/use.course.notes'
 import { useCourseQnA } from '@/features/courses/hooks/use.course.qna'
 import { useCourseReviews } from '@/features/courses/hooks/use.course.reviews'
-import { useCourseTests } from '@/features/courses/hooks/use.course.tests'
+import { useCourseTests, type FinalTestAttemptItem } from '@/features/courses/hooks/use.course.tests'
 import type { BottomTab } from '@/features/courses/components/course.workspace.tabs'
 import type { SidebarTab } from '@/features/courses/components/course.workspace.sidebar'
 import {
@@ -48,13 +48,13 @@ interface CourseProgressDetailInfo {
     is_baseline_established?: boolean
     baseline_score?: number
     final_test_score?: number
-    final_test_attempts?: any[]
+    final_test_attempts?: FinalTestAttemptItem[]
   }
   modules_progress?: ModuleProgressInfo[]
   completed_lesson_ids?: string[]
 }
 
-export function useCourseWorkspace(courseId: string) {
+export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean = false) {
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const { addToCart, isInCart } = useCart(isAuthenticated)
@@ -70,32 +70,26 @@ export function useCourseWorkspace(courseId: string) {
     isAuthenticated && !isEnrolledInList
   )
 
-  const cachedEnrolled = useMemo(() => {
-    if (typeof window === 'undefined' || !courseId) return false
-    try {
-      return localStorage.getItem(`lingosphere_course_enrolled_${courseId}`) === 'true'
-    } catch {
-      return false
-    }
-  }, [courseId])
-
   const [overrideEnrolled, setOverrideEnrolled] = useState<boolean | null>(null)
   const isEnrolled =
     overrideEnrolled ??
     (isEnrolledInList ||
       Boolean(enrollmentStatusRes?.is_enrolled) ||
-      (isCourseLoading && cachedEnrolled))
+      (isCourseLoading && initialIsEnrolled))
 
   useEffect(() => {
     if (typeof window === 'undefined' || !courseId) return
     try {
-      if (isEnrolledInList || enrollmentStatusRes?.is_enrolled) {
-        localStorage.setItem(`lingosphere_course_enrolled_${courseId}`, 'true')
+      const key = STORAGE_KEYS.COURSE_ENROLLED(courseId)
+      if (isEnrolledInList || enrollmentStatusRes?.is_enrolled || overrideEnrolled) {
+        localStorage.setItem(key, 'true')
+        storage.cookie.set(key, 'true', { days: 30, path: '/' })
       } else if (enrollmentStatusRes && !enrollmentStatusRes.is_enrolled && !isEnrolledInList) {
-        localStorage.removeItem(`lingosphere_course_enrolled_${courseId}`)
+        localStorage.removeItem(key)
+        storage.cookie.remove(key, '/')
       }
     } catch {}
-  }, [courseId, isEnrolledInList, enrollmentStatusRes])
+  }, [courseId, isEnrolledInList, enrollmentStatusRes, overrideEnrolled])
 
   const { data: reviewsData } = useCourseReviewsQuery(courseId, Boolean(rawCourse))
   const { data: qnaData } = useCourseQnAQuery(courseId, Boolean(rawCourse))
@@ -235,7 +229,7 @@ export function useCourseWorkspace(courseId: string) {
     })
 
     return set
-  }, [course?.chapters, isEnrolled, progressDetail])
+  }, [course, isEnrolled, progressDetail])
 
   const handleSelectLesson = (chapter: Chapter, lesson: Lesson) => {
     const lockState = progressDetail?.course_progress?.lock_state
@@ -366,12 +360,12 @@ export function useCourseWorkspace(courseId: string) {
       })
     })
     return list
-  }, [course?.chapters])
+  }, [course])
 
   const currentLessonIndex = useMemo(() => {
     if (!currentLesson) return -1
     return allFlatLessons.findIndex((item) => item.lesson.id === currentLesson.id)
-  }, [allFlatLessons, currentLesson?.id])
+  }, [allFlatLessons, currentLesson])
 
   const hasNextLesson =
     currentLessonIndex >= 0 &&

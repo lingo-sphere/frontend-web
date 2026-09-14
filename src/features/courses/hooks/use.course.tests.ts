@@ -5,7 +5,7 @@ import { useNavigate } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
 import type { Course, Chapter } from '@/features/courses/types/course'
 
-interface FinalTestAttemptItem {
+export interface FinalTestAttemptItem {
   attempt_id: string
   score: number
   is_passed: boolean

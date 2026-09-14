@@ -1,7 +1,7 @@
 // Custom hook quản lý truy vấn và thao tác khóa học bằng TanStack Query.
 'use client'
 
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient, queryOptions, type QueryClient } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
 import { courseKeys } from '@/features/courses/keys/course.keys'
@@ -119,6 +119,18 @@ export function useUserEnrollments(enabled = true) {
     })
     return Array.from(new Set(ids))
   }, [enrollments])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const authUser = storage.get<User>(STORAGE_KEYS.USER)
+    if (authUser?.is_premium || authUser?.role === 'ADMIN' || authUser?.role === 'INSTRUCTOR') {
+      storage.cookie.set(STORAGE_KEYS.IS_PRIVILEGED, 'true', { days: 30, path: '/' })
+    }
+    enrolledCourseIds.forEach((id) => {
+      storage.cookie.set(STORAGE_KEYS.COURSE_ENROLLED(id), 'true', { days: 30, path: '/' })
+      localStorage.setItem(STORAGE_KEYS.COURSE_ENROLLED(id), 'true')
+    })
+  }, [enrolledCourseIds])
 
   const isEnrolled = useCallback(
     (courseIdOrSlug: string) => {
