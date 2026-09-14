@@ -1,6 +1,7 @@
-// Custom hook tải và đồng bộ dữ liệu hồ sơ cá nhân, điểm đánh giá TOEIC và điểm XP
+// Custom hook tải và đồng bộ dữ liệu hồ sơ cá nhân và bảng xếp hạng bằng TanStack Query.
 import { useState, useEffect } from 'react'
 import { userService } from '@/features/user/services/user.service'
+import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
 import type { User, EditProfileForm } from '@/features/user/types/user'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
@@ -83,7 +84,7 @@ export function useProfileData() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'activity'>('overview')
-  const [leaderboard, setLeaderboard] = useState<any[]>([])
+  const { data: leaderboard = [] } = useLeaderboardQuery('weekly')
 
   const [userScores, setUserScores] = useState(defaultUserScores)
 
@@ -139,10 +140,9 @@ export function useProfileData() {
       const auth = authUser || useAuthStore.getState().user
       if (!auth) return
       try {
-        const [prof, gamify, lb] = await Promise.all([
+        const [prof, gamify] = await Promise.all([
           userService.getProfile().catch(() => null),
           userService.getGamificationProfile().catch(() => null),
-          userService.getLeaderboard('weekly').catch(() => []),
         ])
 
         if (isMounted) {
@@ -200,9 +200,6 @@ export function useProfileData() {
                 hasTested: sHas,
               }))
             }
-          }
-          if (Array.isArray(lb)) {
-            setLeaderboard(lb)
           }
         }
       } catch (err) {

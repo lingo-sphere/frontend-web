@@ -1,9 +1,10 @@
-// Hook tải dữ liệu chi tiết kết quả bài kiểm tra, chuẩn hóa câu hỏi và bộ lọc đáp án.
+// Hook tải dữ liệu chi tiết kết quả bài kiểm tra, chuẩn hóa câu hỏi và bộ lọc đáp án bằng TanStack Query.
+'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useSearchParams } from '@/lib/navigation'
-import { examService } from '@/features/toeic/services/exam.service'
-import { courseService } from '@/features/courses/services/course.service'
+import { useExamAttemptResultQuery } from '@/features/toeic/hooks/use.toeic.query'
+import { useCourseDetailQuery } from '@/features/courses/hooks/use.courses.query'
 import type { AttemptAnswerDetail, CourseQuestionDetail } from '@/features/toeic/components/attempt.question.item'
 
 export interface AttemptResultDetail {
@@ -42,129 +43,94 @@ export function useExamAttemptDetail() {
   const initialSubmittedAt = searchParams.get('submittedAt') || ''
   const initialDuration = searchParams.get('duration') ? Number(searchParams.get('duration')) : undefined
 
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [detailData, setDetailData] = useState<AttemptResultDetail | null>(null)
-  const [courseQuestions, setCourseQuestions] = useState<CourseQuestionDetail[]>([])
-  const [courseTitle, setCourseTitle] = useState<string>('')
   const [filterAnswerStatus, setFilterAnswerStatus] = useState<AnswerFilterStatus>('ALL')
 
   const isProfilePlacement = attemptId === 'profile-placement-baseline'
   const isCourseTest = sourceType === 'COURSE'
 
-  const loadAttemptDetail = useCallback(async () => {
-    if (!attemptId) return
-    setIsLoading(true)
-    try {
-      if (isCourseTest && courseId) {
-        const course = await courseService.getCourseById(courseId).catch(() => null)
-        if (course) {
-          const rawCourse = course as unknown as {
-            title?: string
-            final_test_questions?: unknown[]
-            modules?: Array<{
-              _id?: string
-              id?: string
-              order_index?: number
-              challenge_questions?: Array<{
-                question_text?: string
-                question?: string
-                options?: string[] | Array<{ text?: string; key?: string }>
-                correct_answer?: string
-                correct_option?: string
-                explanation?: string
-                explanation_vi?: string
-                explanation_en?: string
-                media_url?: string
-                audio_url?: string
-                image_url?: string
-              }>
-              post_mini_test_questions?: Array<{
-                question_text?: string
-                question?: string
-                options?: string[] | Array<{ text?: string; key?: string }>
-                correct_answer?: string
-                correct_option?: string
-                explanation?: string
-                explanation_vi?: string
-                explanation_en?: string
-                media_url?: string
-                audio_url?: string
-                image_url?: string
-              }>
-            }>
-          }
+  const toeicAttemptQuery = useExamAttemptResultQuery(
+    attemptId,
+    Boolean(attemptId && !isCourseTest && !isProfilePlacement)
+  )
+  const courseDetailQuery = useCourseDetailQuery(
+    courseId,
+    Boolean(isCourseTest && courseId)
+  )
 
-          if (rawCourse.title) setCourseTitle(rawCourse.title)
+  const isLoading = isCourseTest
+    ? courseDetailQuery.isLoading
+    : isProfilePlacement
+    ? false
+    : toeicAttemptQuery.isLoading
 
-          let qList: unknown[] = []
-          if (testType === 'final-test') {
-            qList = Array.isArray(rawCourse.final_test_questions) ? rawCourse.final_test_questions : []
-          } else if (rawCourse.modules && Array.isArray(rawCourse.modules)) {
-            const targetMod =
-              rawCourse.modules.find((m) => m._id === moduleId || m.id === moduleId) ||
-              rawCourse.modules[0]
+  const detailData = toeicAttemptQuery.data as unknown as AttemptResultDetail | undefined
 
-            if (targetMod) {
-              if (testType === 'challenge') {
-                qList = targetMod.challenge_questions || []
-              } else {
-                qList = targetMod.post_mini_test_questions || targetMod.challenge_questions || []
-              }
-            }
-          }
+  const { courseQuestions, courseTitle } = useMemo(() => {
+    if (!isCourseTest || !courseDetailQuery.data) {
+      return { courseQuestions: [], courseTitle: '' }
+    }
+    const rawCourse = courseDetailQuery.data as unknown as {
+      title?: string
+      final_test_questions?: unknown[]
+      modules?: Array<{
+        _id?: string
+        id?: string
+        order_index?: number
+        challenge_questions?: Array<Record<string, unknown>>
+        post_mini_test_questions?: Array<Record<string, unknown>>
+      }>
+    }
 
-          if (qList.length > 0) {
-            const parsedQuestions: CourseQuestionDetail[] = qList.map((item, idx) => {
-              const qObj = item as Record<string, unknown>
-              const optRaw = qObj.options
-              let cleanOptions: string[] = []
-              if (Array.isArray(optRaw)) {
-                cleanOptions = optRaw.map((opt) => {
-                  if (typeof opt === 'string') return opt
-                  if (opt && typeof opt === 'object') {
-                    const oRec = opt as Record<string, unknown>
-                    return String(oRec.text || oRec.key || '')
-                  }
-                  return ''
-                })
-              }
+    const cTitle = rawCourse.title || ''
+    let qList: unknown[] = []
+    if (testType === 'final-test') {
+      qList = Array.isArray(rawCourse.final_test_questions) ? rawCourse.final_test_questions : []
+    } else if (rawCourse.modules && Array.isArray(rawCourse.modules)) {
+      const targetMod =
+        rawCourse.modules.find((m) => m._id === moduleId || m.id === moduleId) ||
+        rawCourse.modules[0]
 
-              return {
-                question_number: idx + 1,
-                question_text: String(
-                  qObj.question_text || qObj.question || `Câu hỏi số ${idx + 1}`
-                ),
-                options: cleanOptions,
-                correct_answer: String(qObj.correct_answer || qObj.correct_option || 'A'),
-                explanation: String(
-                  qObj.explanation_vi || qObj.explanation || qObj.explanation_en || ''
-                ),
-                media_url: qObj.media_url
-                  ? String(qObj.media_url)
-                  : qObj.audio_url
-                  ? String(qObj.audio_url)
-                  : undefined,
-                image_url: qObj.image_url ? String(qObj.image_url) : undefined,
-              }
-            })
-            setCourseQuestions(parsedQuestions)
-          }
-        }
-      } else if (!isProfilePlacement) {
-        const res = await examService.getExamAttemptResult(attemptId).catch(() => null)
-        if (res) {
-          setDetailData(res as unknown as AttemptResultDetail)
+      if (targetMod) {
+        if (testType === 'challenge') {
+          qList = targetMod.challenge_questions || []
+        } else {
+          qList = targetMod.post_mini_test_questions || targetMod.challenge_questions || []
         }
       }
-    } catch {
-    } finally {
-      setIsLoading(false)
     }
-  }, [attemptId, isCourseTest, courseId, moduleId, testType, isProfilePlacement])
 
-  useEffect(() => {
-    loadAttemptDetail()
-  }, [loadAttemptDetail])
+    const parsedQuestions: CourseQuestionDetail[] = qList.map((item, idx) => {
+      const qObj = item as Record<string, unknown>
+      const optRaw = qObj.options
+      let cleanOptions: string[] = []
+      if (Array.isArray(optRaw)) {
+        cleanOptions = optRaw.map((opt) => {
+          if (typeof opt === 'string') return opt
+          if (opt && typeof opt === 'object') {
+            const oRec = opt as Record<string, unknown>
+            return String(oRec.text || oRec.key || '')
+          }
+          return ''
+        })
+      }
+
+      return {
+        question_number: idx + 1,
+        question_text: String(qObj.question_text || qObj.question || `Câu hỏi số ${idx + 1}`),
+        options: cleanOptions,
+        correct_answer: String(qObj.correct_answer || qObj.correct_option || 'A'),
+        explanation: String(qObj.explanation_vi || qObj.explanation || qObj.explanation_en || ''),
+        media_url: qObj.media_url
+          ? String(qObj.media_url)
+          : qObj.audio_url
+          ? String(qObj.audio_url)
+          : undefined,
+        image_url: qObj.image_url ? String(qObj.image_url) : undefined,
+      }
+    })
+
+    return { courseQuestions: parsedQuestions, courseTitle: cTitle }
+  }, [isCourseTest, courseDetailQuery.data, testType, moduleId])
 
   const title = detailData?.attempt?.exam_title || (isCourseTest && courseTitle ? courseTitle : initialTitle)
   const scoreDisplay = detailData?.attempt

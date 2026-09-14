@@ -1,11 +1,7 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/vocabulary/notebook
- */
-
+// Trang quản lý sổ tay từ vựng cá nhân và danh sách bộ thẻ đã lưu.
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { Layers3, Bookmark } from 'lucide-react'
@@ -15,7 +11,7 @@ import { SelectDeckModal } from '@/features/vocabulary/components/select.deck.mo
 import { ConfirmDeleteModal } from '@/features/vocabulary/components/confirm.delete.modal'
 import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary'
 import type { Deck } from '@/types/api.types'
-import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import { useMyVocabularyEnrollmentsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 import { VocabularyTab } from '@/features/vocabulary/components/notebook.word.manager'
 import { DecksTab, CreateDeckModal } from '@/features/vocabulary/components/notebook.deck.list'
 
@@ -27,32 +23,21 @@ export default function NotebookAppPage() {
   const [activeTab, setActiveTab] = useState<'vocabulary' | 'decks'>('vocabulary')
 
   const [savedVocabulary, setSavedVocabulary] = useState<SavedVocabulary[]>([])
-  const [userDecks, setUserDecks] = useState<UserDeck[]>([])
+  const [customDecks, setCustomDecks] = useState<UserDeck[]>([])
+  const { data: enrollments = [] } = useMyVocabularyEnrollmentsQuery()
 
-  useEffect(() => {
-    let isMounted = true
-    const loadNotebookData = async () => {
-      try {
-        const enrollments = await vocabularyService.getMyEnrollments().catch(() => [])
-        if (isMounted && Array.isArray(enrollments)) {
-          const mappedDecks: UserDeck[] = enrollments.map((d: Deck, idx: number) => ({
-            id: d._id || `deck-${idx}`,
-            name: d.name || 'Personal Deck',
-            title: d.name || 'Personal Deck',
-            cardCount: d.card_count || 0,
-            createdAt: d.created_at || new Date().toISOString(),
-          }))
-          setUserDecks(mappedDecks)
-        }
-      } catch (err) {
-        console.error('Failed to load notebook enrollments:', err)
-      }
-    }
-    loadNotebookData()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const userDecks: UserDeck[] = useMemo(() => {
+    const backendDecks = Array.isArray(enrollments)
+      ? enrollments.map((d: Deck, idx: number) => ({
+          id: d._id || `deck-${idx}`,
+          name: d.name || 'Personal Deck',
+          title: d.name || 'Personal Deck',
+          cardCount: d.card_count || 0,
+          createdAt: d.created_at || new Date().toISOString(),
+        }))
+      : []
+    return [...backendDecks, ...customDecks]
+  }, [enrollments, customDecks])
 
   const [selectDeckModal, setSelectDeckModal] = useState<{
     isOpen: boolean
@@ -106,7 +91,7 @@ export default function NotebookAppPage() {
         cardCount: 1,
         createdAt: new Date().toISOString(),
       }
-      setUserDecks((prev) => [...prev, newDeck])
+      setCustomDecks((prev) => [...prev, newDeck])
 
       setSavedVocabulary((prev) =>
         prev.map((item) =>
@@ -178,7 +163,7 @@ export default function NotebookAppPage() {
       createdAt: new Date().toISOString(),
     }
 
-    setUserDecks((prev) => [...prev, newDeck])
+    setCustomDecks((prev) => [...prev, newDeck])
     showAction(
       isVietnamese
         ? `Đã tạo deck "${newDeckTitle.trim()}"`
@@ -194,7 +179,7 @@ export default function NotebookAppPage() {
         item.deck_id === deck.id ? { ...item, deck_id: undefined } : item
       )
     )
-    setUserDecks((prev) => prev.filter((d) => d.id !== deck.id))
+    setCustomDecks((prev) => prev.filter((d) => d.id !== deck.id))
     showAction(
       isVietnamese
         ? `Đã xóa deck "${deck.name || deck.title}". Các từ đã được chuyển về Danh sách từ vựng.`

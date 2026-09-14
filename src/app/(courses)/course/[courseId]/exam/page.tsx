@@ -2,19 +2,25 @@
 
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
+import { useCallback, useMemo, Suspense } from 'react'
 import { useParams, useSearchParams, useNavigate } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import { mapCourseDataToWorkspace } from '@/features/courses/helpers/course.workspace.adapter'
 import { CourseTestRunnerWorkspace } from '@/features/courses/components/course.test.runner.workspace'
 import { CourseLoadingState } from '@/features/courses/components/course.loading.state'
 import type { Course, Chapter } from '@/features/courses/types/course'
+import type { TestAttemptItem } from '@/features/courses/types/test.runner.types'
 import { Button } from '@/components/button'
 import { AlertCircle, ArrowLeft } from 'lucide-react'
 import { extractCourseId, buildCourseUrl } from '@/features/courses/lib/course.url'
 import { getQueryClient } from '@/config/query.config'
 import { progressKeys } from '@/features/progress/keys/progress.keys'
 import { courseKeys } from '@/features/courses/keys/course.keys'
+import {
+  useCourseDetailQuery,
+  useCourseEnrollmentStatusQuery,
+  useCourseProgressQuery,
+} from '@/features/courses/hooks/use.courses.query'
 
 function CourseExamContent() {
   const params = useParams<{ courseId: string }>()
@@ -30,55 +36,27 @@ function CourseExamContent() {
     | 'final-test'
   const chapterId = searchParams.get('chapterId') || searchParams.get('moduleId')
 
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [course, setCourse] = useState<Course | null>(null)
-  const [progressDetail, setProgressDetail] = useState<any>(null)
+  const { data: fetchedCourse, isLoading: isCourseLoading } = useCourseDetailQuery(courseId, Boolean(courseId))
+  const { data: enrollmentRes, isLoading: isEnrollmentLoading } = useCourseEnrollmentStatusQuery(courseId, Boolean(courseId))
+  const { data: progressRes } = useCourseProgressQuery(courseId, Boolean(courseId))
 
-  const loadExamData = useCallback(async () => {
-    if (!courseId) return
-    setIsLoading(true)
-    setErrorMessage(null)
+  const isLoading = isCourseLoading || isEnrollmentLoading
+  const isEnrolled = Boolean(enrollmentRes?.is_enrolled)
 
-    try {
-      const [fetchedCourse, enrollmentRes, progressRes] = await Promise.all([
-        courseService.getCourseById(courseId).catch(() => null),
-        courseService
-          .getEnrollmentStatus(courseId)
-          .then((r) => ({ enrolled: Boolean(r?.is_enrolled) }))
-          .catch(() => ({ enrolled: true })),
-        courseService.getCourseProgressDetail(courseId).catch(() => null),
-      ])
+  const course: Course | null = useMemo(() => {
+    if (!fetchedCourse || !courseId) return null
+    return mapCourseDataToWorkspace(
+      courseId,
+      fetchedCourse,
+      isEnrolled,
+      progressRes,
+      null,
+      null,
+      null
+    )
+  }, [courseId, fetchedCourse, isEnrolled, progressRes])
 
-      if (!fetchedCourse) {
-        setErrorMessage('Không tìm thấy thông tin khóa học hoặc bài thi yêu cầu.')
-        setIsLoading(false)
-        return
-      }
-
-      setProgressDetail(progressRes)
-
-      const mapped = mapCourseDataToWorkspace(
-        courseId,
-        fetchedCourse,
-        enrollmentRes.enrolled,
-        progressRes,
-        null,
-        null,
-        null
-      )
-
-      setCourse(mapped)
-    } catch {
-      setErrorMessage('Đã xảy ra sự cố khi tải dữ liệu bài thi. Vui lòng thử lại sau.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [courseId])
-
-  useEffect(() => {
-    loadExamData()
-  }, [loadExamData])
+  const progressDetail = progressRes
 
   const handleBackToCourse = useCallback(() => {
     if (course) {
@@ -92,7 +70,7 @@ function CourseExamContent() {
     return <CourseLoadingState onBack={handleBackToCourse} />
   }
 
-  if (errorMessage || !course) {
+  if (!course) {
     return (
       <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-6 antialiased">
         <div className="w-full max-w-md p-8 bg-surface rounded-3xl border border-border shadow-xl text-center space-y-4">
@@ -101,7 +79,7 @@ function CourseExamContent() {
           </div>
           <h2 className="text-xl font-bold text-text-primary">Không thể mở bài thi</h2>
           <p className="text-sm text-text-secondary leading-relaxed">
-            {errorMessage || 'Dữ liệu khóa học chưa sẵn sàng để làm bài thi.'}
+            Dữ liệu khóa học chưa sẵn sàng để làm bài thi.
           </p>
           <div className="pt-2">
             <Button
@@ -154,20 +132,32 @@ function CourseExamContent() {
       ? Number(course.final_test_duration_minutes || 60)
       : Number(selectedChapter?.challenge_duration_minutes || 15)
 
+  const rawProgress = progressDetail as
+    | {
+        course_progress?: { final_test_score?: number; final_test_attempts?: TestAttemptItem[] }
+        modules_progress?: Array<{
+          module_id: string
+          order_index?: number
+          challenge_score?: number
+          attempts?: TestAttemptItem[]
+        }>
+      }
+    | undefined
+
   const previousAttempts =
     testType === 'final-test'
-      ? progressDetail?.course_progress?.final_test_attempts || []
-      : progressDetail?.modules_progress?.find(
-          (m: any) =>
+      ? rawProgress?.course_progress?.final_test_attempts || []
+      : rawProgress?.modules_progress?.find(
+          (m) =>
             String(m.module_id) === String(selectedChapter?.id) ||
             Number(m.order_index) === Number(selectedChapter?.order)
         )?.attempts || []
 
   const highestScore =
     testType === 'final-test'
-      ? progressDetail?.course_progress?.final_test_score || 0
-      : progressDetail?.modules_progress?.find(
-          (m: any) =>
+      ? rawProgress?.course_progress?.final_test_score || 0
+      : rawProgress?.modules_progress?.find(
+          (m) =>
             String(m.module_id) === String(selectedChapter?.id) ||
             Number(m.order_index) === Number(selectedChapter?.order)
         )?.challenge_score || 0
@@ -210,10 +200,6 @@ function CourseExamContent() {
         const qc = getQueryClient()
         qc.invalidateQueries({ queryKey: progressKeys.all })
         qc.invalidateQueries({ queryKey: courseKeys.all })
-        try {
-          const updated = await courseService.getCourseProgressDetail(courseId)
-          if (updated) setProgressDetail(updated)
-        } catch {}
       }}
     />
   )

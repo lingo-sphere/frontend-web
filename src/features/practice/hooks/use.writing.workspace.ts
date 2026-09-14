@@ -1,9 +1,12 @@
 // Hook quản lý trạng thái bài tập luyện viết, lưu bản nháp và gửi chấm điểm bài luận AI.
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
 import { practiceService, type BackendWritingExercise } from '@/features/practice/services/practice.service'
+import { useWritingExercisesQuery } from '@/features/practice/hooks/use.practice.query'
+import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import type {
   WritingExercise,
   WritingSubmission,
@@ -49,6 +52,7 @@ function toExerciseType(val?: string): ExerciseType {
 }
 
 export function useWritingWorkspace() {
+  const queryClient = useQueryClient()
   const { showAction } = useApp()
   const navigate = useNavigate()
   const params = useParams()
@@ -64,52 +68,38 @@ export function useWritingWorkspace() {
     return 'home'
   })
 
-  const [exerciseList, setExerciseList] = useState<WritingExercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<WritingExercise | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<WritingSubmission | null>(null)
   const [historySubmissions, setHistorySubmissions] = useState<WritingSubmission[]>([])
   const [draftContent, setDraftContent] = useState<string>('')
   const [draftVersion, setDraftVersion] = useState<number>(1)
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchWriting = async () => {
-      try {
-        const data = await practiceService.getWritingExercises()
-        if (isMounted && Array.isArray(data)) {
-          const mapped: WritingExercise[] = data.map((item: BackendWritingExercise) => ({
-            id: item._id,
-            title: item.title,
-            title_vi: item.title_vi || item.title,
-            description: item.description || '',
-            description_vi: item.description_vi || item.description || '',
-            domain: 'WRITING',
-            exercise_type: toExerciseType(item.exercise_type),
-            writing_level: toWritingLevel(item.writing_level),
-            toeic_part: item.toeic_part || 1,
-            prompt_en: item.prompt_en || item.title,
-            prompt_vi: item.prompt_vi || item.title_vi,
-            min_words: item.min_words || 150,
-            max_words: item.max_words || 300,
-            difficulty_level: toDifficultyLevel(item.difficulty_level),
-            cefr_level: item.cefr_level || 'B2',
-            total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
-            avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
-            status: 'PUBLISHED',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }))
-          setExerciseList(mapped)
-        }
-      } catch (err) {
-        console.error('Failed to load writing exercises:', err)
-      }
-    }
-    fetchWriting()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: rawWritingExercises = [] } = useWritingExercisesQuery()
+
+  const exerciseList: WritingExercise[] = useMemo(() => {
+    return rawWritingExercises.map((item: BackendWritingExercise) => ({
+      id: item._id,
+      title: item.title,
+      title_vi: item.title_vi || item.title,
+      description: item.description || '',
+      description_vi: item.description_vi || item.description || '',
+      domain: 'WRITING',
+      exercise_type: toExerciseType(item.exercise_type),
+      writing_level: toWritingLevel(item.writing_level),
+      toeic_part: item.toeic_part || 1,
+      prompt_en: item.prompt_en || item.title,
+      prompt_vi: item.prompt_vi || item.title_vi,
+      min_words: item.min_words || 150,
+      max_words: item.max_words || 300,
+      difficulty_level: toDifficultyLevel(item.difficulty_level),
+      cefr_level: item.cefr_level || 'B2',
+      total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
+      avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
+      status: 'PUBLISHED',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+  }, [rawWritingExercises])
 
   const stats: WritingStats = useMemo(() => {
     const total = historySubmissions.length
@@ -327,10 +317,11 @@ export function useWritingWorkspace() {
 
       setCurrentSubmission(newSubmission)
       setHistorySubmissions((prev) => [newSubmission, ...prev])
+      queryClient.invalidateQueries({ queryKey: practiceKeys.writing() })
       setCurrentView('result')
       navigate(`/writing/result/${newSubmission.id}`)
     },
-    [selectedExercise, draftVersion, navigate]
+    [selectedExercise, draftVersion, navigate, queryClient]
   )
 
   const handleViewSubmission = useCallback(

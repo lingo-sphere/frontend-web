@@ -1,11 +1,7 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/vocabulary/learn
- */
-
+// Trang trung tâm phiên học từ vựng và chọn bộ flashcard để luyện tập.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { GraduationCap } from 'lucide-react'
 
@@ -13,7 +9,7 @@ import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import { usePublicDecksQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 import type { VocabularyDeck, LearningResult } from '@/features/vocabulary/types/vocabulary.learn'
 import type { Deck } from '@/types/api.types'
 import { VocabularyLearningSession } from '@/features/vocabulary/components/vocabulary.learning.session'
@@ -25,41 +21,24 @@ export default function VocabularyLearnAppPage() {
   const navigate = useNavigate()
   const { showAction } = useApp()
   const [viewMode, setViewMode] = useState<ViewMode>('home')
-  const [decks, setDecks] = useState<VocabularyDeck[]>([])
   const [selectedDeck, setSelectedDeck] = useState<VocabularyDeck | null>(null)
   const [learningResult, setLearningResult] = useState<LearningResult | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchDecks = async () => {
-      try {
-        setIsLoading(true)
-        const liveDecks: Deck[] = await vocabularyService.getPublicDecks()
-        if (isMounted && Array.isArray(liveDecks)) {
-          const mapped: VocabularyDeck[] = liveDecks.map((d: Deck, index: number) => ({
-            id: d._id || `deck-${index}`,
-            title: d.name || 'Flashcard Deck',
-            description: d.description || '',
-            coverColor: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e', '#e17055'][index % 5],
-            cardCount: d.card_count || 0,
-            creatorType: 'SYSTEM',
-            visibility: 'PUBLIC',
-            vocabularyItems: [],
-          }))
-          setDecks(mapped)
-        }
-      } catch (err) {
-        console.error('Failed to fetch public decks:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchDecks()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: liveDecks = [], isLoading } = usePublicDecksQuery()
+
+  const decks: VocabularyDeck[] = useMemo(() => {
+    if (!Array.isArray(liveDecks)) return []
+    return liveDecks.map((d: Deck, index: number) => ({
+      id: d._id || `deck-${index}`,
+      title: d.name || 'Flashcard Deck',
+      description: d.description || '',
+      coverColor: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e', '#e17055'][index % 5],
+      cardCount: d.card_count || 0,
+      creatorType: 'SYSTEM',
+      visibility: 'PUBLIC',
+      vocabularyItems: [],
+    }))
+  }, [liveDecks])
 
   const handleSelectDeck = (deck: VocabularyDeck) => {
     navigate(`/vocabulary/learn/${deck.id}`)

@@ -1,17 +1,16 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/ai-learning
- */
-
+// Trang trò chuyện học tập cùng gia sư AI thông minh tích hợp TanStack Query.
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'motion/react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { Icon } from '@/components/icon.map'
 import { aiService, type AiChatMessage, type UserAiQuotaSummary } from '@/features/ai-learning/services/ai.service'
+import { useAiQuotaQuery } from '@/features/ai-learning/hooks/use.ai.query'
+import { aiKeys } from '@/features/ai-learning/keys/ai.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 
 const SUGGESTED_PROMPTS = [
@@ -22,7 +21,9 @@ const SUGGESTED_PROMPTS = [
 ]
 
 export default function AiLearningAppPage() {
+  const queryClient = useQueryClient()
   const { user } = useAuthStore()
+  const { data: quota } = useAiQuotaQuery()
   const [messages, setMessages] = useState<AiChatMessage[]>([
     {
       role: 'assistant',
@@ -31,24 +32,12 @@ export default function AiLearningAppPage() {
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [quota, setQuota] = useState<UserAiQuotaSummary | null>(null)
   const [errorBanner, setErrorBanner] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const isPremiumUser = Boolean(user?.is_premium || quota?.is_premium)
   const chatRemaining = quota ? (isPremiumUser ? 999999 : quota.chat.remaining) : 5
   const isOutOfQuota = !isPremiumUser && chatRemaining <= 0
-
-  const fetchQuota = async () => {
-    try {
-      const q = await aiService.getAiQuota()
-      if (q) setQuota(q)
-    } catch {}
-  }
-
-  useEffect(() => {
-    fetchQuota()
-  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -78,7 +67,7 @@ export default function AiLearningAppPage() {
       const aiReply = res?.response || 'Xin lỗi, tôi gặp trục trặc khi kết nối với máy chủ AI. Vui lòng thử lại sau.'
       setMessages((prev) => [...prev, { role: 'assistant', content: aiReply }])
       if (res?.quota) {
-        setQuota((prev) =>
+        queryClient.setQueryData(aiKeys.quota(), (prev: UserAiQuotaSummary | undefined) =>
           prev
             ? {
                 ...prev,
@@ -89,13 +78,13 @@ export default function AiLearningAppPage() {
                   used: (prev.chat.used || 0) + 1,
                 },
               }
-            : null
+            : prev
         )
       } else {
-        fetchQuota()
+        queryClient.invalidateQueries({ queryKey: aiKeys.quota() })
       }
-    } catch (err: any) {
-      const errMsg = err?.message || ''
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err || '')
       if (errMsg.includes('hết') || errMsg.includes('Premium') || errMsg.includes('hạn ngạch')) {
         setErrorBanner(errMsg)
       } else {

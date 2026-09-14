@@ -1,47 +1,22 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/ipa
- */
-
+// Trang bảng phiên âm quốc tế IPA tương tác và luyện phát âm chuẩn.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Icon } from '@/components/icon.map'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService, type BackendIpaSymbol } from '@/features/vocabulary/services/vocabulary.service'
+import type { BackendIpaSymbol } from '@/features/vocabulary/services/vocabulary.service'
+import { useIpaSymbolsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 
 export default function IpaAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const { showAction } = useApp()
   const [playingSymbol, setPlayingSymbol] = useState<string | null>(null)
-  const [ipaSymbols, setIpaSymbols] = useState<BackendIpaSymbol[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    let isMounted = true
-    const fetchIpa = async () => {
-      try {
-        setIsLoading(true)
-        const symbols = await vocabularyService.getIpaSymbols()
-        if (isMounted && Array.isArray(symbols)) {
-          setIpaSymbols(symbols)
-        }
-      } catch (err) {
-        console.error('Failed to load IPA symbols:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchIpa()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: ipaSymbols = [], isLoading } = useIpaSymbolsQuery()
 
   const vowels = ipaSymbols.filter((s) => s.symbol_type === 'VOWEL')
   const diphthongs = ipaSymbols.filter((s) => s.symbol_type === 'DIPHTHONG')

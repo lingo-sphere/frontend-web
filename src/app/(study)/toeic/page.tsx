@@ -1,17 +1,14 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/toeic
- */
-
+// Trang danh sách đề thi và bộ lọc luyện thi TOEIC trực tuyến.
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { Trophy, Headphones, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
-import { examService, type BackendToeicExam } from '@/features/toeic/services/exam.service'
+import type { BackendToeicExam } from '@/features/toeic/services/exam.service'
+import { useToeicExamsQuery } from '@/features/toeic/hooks/use.toeic.query'
 import type { ToeicExam, ToeicExamFilters } from '@/features/toeic/types/toeic'
 import { ExamCard } from '@/features/toeic/components/toeic.exam.card'
 import { ToeicFilterBar } from '@/features/toeic/components/toeic.filter.bar'
@@ -21,47 +18,29 @@ export default function ToeicHubPage() {
   const navigate = useNavigate()
   const isVietnamese = i18n.language === 'vi'
 
-  const [exams, setExams] = useState<ToeicExam[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: rawExams = [], isLoading } = useToeicExamsQuery()
   const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState<ToeicExamFilters>({})
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchExams = async () => {
-      try {
-        setIsLoading(true)
-        const res = await examService.getExams()
-        if (isMounted && Array.isArray(res)) {
-          const mapped: ToeicExam[] = res.map((e: BackendToeicExam, idx) => ({
-            id: e._id,
-            title: e.title,
-            code: e.slug || `TOEIC-TEST-${idx + 1}`,
-            description: e.description || 'ETS Official TOEIC Test',
-            thumbnailUrl: '',
-            examSeries: 'ETS TOEIC',
-            releaseYear: 2024,
-            examType: 'FULL_TEST',
-            skillsEnabled: 'LR',
-            targetScore: 750,
-            difficultyLevel: 'MEDIUM',
-            totalQuestions: e.total_questions || 200,
-            totalAttempts: e.attempts_count || 1500,
-            status: 'PUBLISHED',
-          }))
-          setExams(mapped)
-        }
-      } catch (err) {
-        console.error('Failed to load TOEIC exams:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchExams()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const exams: ToeicExam[] = useMemo(() => {
+    if (!Array.isArray(rawExams)) return []
+    return rawExams.map((e: BackendToeicExam, idx: number) => ({
+      id: e._id,
+      title: e.title,
+      code: e.slug || `TOEIC-TEST-${idx + 1}`,
+      description: e.description || 'ETS Official TOEIC Test',
+      thumbnailUrl: '',
+      examSeries: 'ETS TOEIC',
+      releaseYear: 2024,
+      examType: 'FULL_TEST',
+      skillsEnabled: 'LR',
+      targetScore: 750,
+      difficultyLevel: 'MEDIUM',
+      totalQuestions: e.total_questions || 200,
+      totalAttempts: e.attempts_count || 1500,
+      status: 'PUBLISHED',
+    }))
+  }, [rawExams])
 
   const filteredExams = useMemo(() => {
     return exams.filter((exam) => {
@@ -155,7 +134,7 @@ export default function ToeicHubPage() {
               <ExamCard
                 key={exam.id}
                 exam={exam}
-                onClick={() => navigate(`/exam/${exam.id}`)}
+                onClick={() => navigate(`/toeic/exam/${exam.id}`)}
                 isVietnamese={isVietnamese}
               />
             ))}

@@ -2,8 +2,11 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
 import { examService, type BackendToeicExam } from '@/features/toeic/services/exam.service'
+import { useToeicExamDetailQuery } from '@/features/toeic/hooks/use.toeic.query'
+import { toeicKeys } from '@/features/toeic/keys/toeic.keys'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useNavigate } from '@/lib/navigation'
@@ -33,8 +36,11 @@ export interface ExamState {
 
 export function useToeicExam(examId?: string) {
   const navigate = useNavigate()
-  const [examData, setExamData] = useState<BackendToeicExam | null>(null)
-  const [isLoadingExam, setIsLoadingExam] = useState<boolean>(true)
+  const queryClient = useQueryClient()
+  const { data: examData = null, isLoading: isLoadingExam } = useToeicExamDetailQuery(
+    examId || '',
+    Boolean(examId)
+  )
   const [allQuestions, setAllQuestions] = useState<ToeicQuestion[]>([])
   const [state, setState] = useState<ExamState>({
     mode: 'FULL',
@@ -61,72 +67,57 @@ export function useToeicExam(examId?: string) {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const attemptIdRef = useRef<string | null>(null)
+  const initializedExamIdRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!examId) {
-      setIsLoadingExam(false)
-      return
-    }
+    if (!examData || initializedExamIdRef.current === examData._id) return
 
-    setIsLoadingExam(true)
-    examService
-      .getExamById(examId)
-      .then((data) => {
-        if (data) {
-          setExamData(data)
-          const allParts = [1, 2, 3, 4, 5, 6, 7]
-          const questions = parseQuestionsFromExamData(data, allParts)
-          setAllQuestions(questions)
-          const time =
-            typeof data.duration_minutes === 'number' && data.duration_minutes > 0
-              ? data.duration_minutes * 60
-              : 120 * 60
+    initializedExamIdRef.current = examData._id
+    const allParts = [1, 2, 3, 4, 5, 6, 7]
+    const questions = parseQuestionsFromExamData(examData, allParts)
+    setAllQuestions(questions)
+    const time =
+      typeof examData.duration_minutes === 'number' && examData.duration_minutes > 0
+        ? examData.duration_minutes * 60
+        : 120 * 60
 
-          setState((prev) => ({
-            ...prev,
-            mode: 'FULL',
-            selectedParts: allParts,
-            currentQuestionIndex: 0,
-            answers: {},
-            flagged: [],
-            timeRemaining: time,
-            started: true,
-            submitted: false,
-            showAnswer: false,
-            timedMode: true,
-          }))
+    setState((prev) => ({
+      ...prev,
+      mode: 'FULL',
+      selectedParts: allParts,
+      currentQuestionIndex: 0,
+      answers: {},
+      flagged: [],
+      timeRemaining: time,
+      started: true,
+      submitted: false,
+      showAnswer: false,
+      timedMode: true,
+    }))
 
-          const isSystemPlacement = Boolean(
-            data.is_system_placement ||
-            data.placement_type ||
-            Boolean(data.code && data.code.includes('placement')) ||
-            data.title?.toLowerCase().includes('đầu vào') ||
-            data.title?.toLowerCase().includes('placement') ||
-            examId?.includes('placement')
-          )
+    const isSystemPlacement = Boolean(
+      examData.is_system_placement ||
+      examData.placement_type ||
+      Boolean(examData.code && examData.code.includes('placement')) ||
+      examData.title?.toLowerCase().includes('đầu vào') ||
+      examData.title?.toLowerCase().includes('placement') ||
+      examId?.includes('placement')
+    )
 
-          const authUser = useAuthStore.getState().user
-          if (authUser) {
-            examService
-              .startExamAttempt(examId, {
-                attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
-              })
-              .then((attemptRes) => {
-                if (attemptRes && attemptRes.attempt_id) {
-                  attemptIdRef.current = attemptRes.attempt_id
-                }
-              })
-              .catch(() => {})
+    const authUser = useAuthStore.getState().user
+    if (authUser && examId) {
+      examService
+        .startExamAttempt(examId, {
+          attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
+        })
+        .then((attemptRes) => {
+          if (attemptRes && attemptRes.attempt_id) {
+            attemptIdRef.current = attemptRes.attempt_id
           }
-        }
-      })
-      .catch((err) => {
-        console.warn('Lỗi khi tải dữ liệu đề thi:', err?.message || err)
-      })
-      .finally(() => {
-        setIsLoadingExam(false)
-      })
-  }, [examId])
+        })
+        .catch(() => {})
+    }
+  }, [examData, examId])
 
   const calculateResults = useCallback((): ExamResultMetrics => {
     return calculateToeicExamResults(allQuestions, state.answers)
@@ -207,6 +198,8 @@ export function useToeicExam(examId?: string) {
         }
         if (currentAttemptId) {
           await examService.submitExamAttempt(currentAttemptId, formattedAnswers, timeSpent)
+          queryClient.invalidateQueries({ queryKey: toeicKeys.history() })
+          queryClient.invalidateQueries({ queryKey: toeicKeys.courseAttempts() })
         }
       } catch (err) {
         console.warn('Lỗi khi nộp bài lên hệ thống:', err)
