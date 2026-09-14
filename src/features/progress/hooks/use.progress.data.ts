@@ -60,10 +60,20 @@ export interface ProgressRecentActivity {
   id: string
   courseId?: string
   type: 'TOEIC' | 'COURSE'
+  examType?: string
   title: string
   subtitle: string
   scoreText: string
+  scoreValue: number
+  maxScore: number
+  scorePercentage: number
+  correctCount: number
+  totalQuestions: number
+  listeningScore?: number
+  readingScore?: number
+  durationSeconds?: number
   isPassed: boolean
+  isBestAttempt?: boolean
   submittedAt: string
 }
 
@@ -240,13 +250,27 @@ export function useProgressData(navigate: (path: string) => void) {
     const list: ProgressRecentActivity[] = []
 
     toeicAttempts.forEach((t) => {
+      const correct = t.correct_questions || 0
+      const total = t.total_questions || 200
+      const pct = total > 0 ? Math.round((correct / total) * 100) : 0
+      const score = t.total_scaled_score || 0
       list.push({
         id: t._id,
         type: 'TOEIC',
+        examType: t.exam_type,
         title: t.exam_title || 'Bài thi TOEIC Full Test',
-        subtitle: `Điểm đạt: ${t.total_scaled_score || 0}/990 (${t.correct_questions || 0}/${t.total_questions || 200} câu đúng)`,
-        scoreText: `${t.total_scaled_score || 0} điểm`,
-        isPassed: (t.total_scaled_score || 0) >= 450,
+        subtitle: `Điểm đạt: ${score}/990 (${correct}/${total} câu đúng)`,
+        scoreText: `${score} điểm`,
+        scoreValue: score,
+        maxScore: 990,
+        scorePercentage: pct,
+        correctCount: correct,
+        totalQuestions: total,
+        listeningScore: t.listening_scaled_score,
+        readingScore: t.reading_scaled_score,
+        durationSeconds: t.total_time_seconds,
+        isPassed: score >= 450,
+        isBestAttempt: Boolean(t.is_best_attempt),
         submittedAt: t.submitted_at || new Date().toISOString(),
       })
     })
@@ -260,13 +284,24 @@ export function useProgressData(navigate: (path: string) => void) {
           ? `Thử thách chương ${c.order_index ?? ''}`
           : `Kiểm tra cuối chương ${c.order_index ?? ''}`
 
+      const score = Math.round(c.score || 0)
+      const correct = c.correct_count ?? 0
+      const total = c.total_questions ?? 0
+      const pct = total > 0 ? Math.round((correct / total) * 100) : score
+
       list.push({
         id: c.attempt_id,
         courseId: c.course_id,
         type: 'COURSE',
+        examType: c.test_type,
         title: testName,
         subtitle: courseMeta?.title || `Khóa học ID: ${c.course_id}`,
-        scoreText: `${c.score}%`,
+        scoreText: `${score}%`,
+        scoreValue: score,
+        maxScore: 100,
+        scorePercentage: pct,
+        correctCount: correct,
+        totalQuestions: total,
         isPassed: c.is_passed,
         submittedAt: c.submitted_at,
       })

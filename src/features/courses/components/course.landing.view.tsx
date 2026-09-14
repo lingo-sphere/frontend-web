@@ -45,6 +45,7 @@ export function CourseLandingView({
   const router = useRouter()
   const [previewLesson, setPreviewLesson] = useState<Lesson | null>(null)
   const [isDescExpanded, setIsDescExpanded] = useState(false)
+  const isLongDesc = (course.description?.trim().length || 0) > 400
 
   const defaultLearningOutcomes = [
     `Nắm vững toàn diện cấu trúc bài thi và bẫy thường gặp của bài thi ${course.level || 'TOEIC'}`,
@@ -204,30 +205,23 @@ export function CourseLandingView({
               </h2>
               <div className="relative">
                 <div
-                  className={`text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed space-y-3 transition-all ${
-                    !isDescExpanded ? 'max-h-48 overflow-hidden mask-fade-bottom' : ''
+                  className={`text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line transition-all ${
+                    !isDescExpanded && isLongDesc ? 'max-h-48 overflow-hidden mask-fade-bottom' : ''
                   }`}
                 >
-                  <p>
-                    {course.description ||
-                      'Khóa học được thiết kế chuyên biệt nhằm giúp học viên nắm vững kiến thức ngữ pháp, từ vựng và chiến thuật xử lý các dạng bài thi tiếng Anh chuẩn quốc tế. Từng bài học được chia nhỏ thành các chặng thực hành cô đọng, dễ hiểu, kết hợp các bài mini test và thử thách chặng giúp người học củng cố kiến thức ngay lập tức.'}
-                  </p>
-                  <p>
-                    Khóa học bao gồm hệ thống bài giảng video chất lượng cao, tài liệu độc quyền, bài tập trắc nghiệm có giải thích chi tiết đáp án và hệ thống mô phỏng đề thi bấm giờ thực tế.
-                  </p>
-                  <p>
-                    Học viên sẽ được hỗ trợ giải đáp thắc mắc liên tục từ đội ngũ giảng viên và trợ giảng qua mục Q&A của từng bài học, đồng thời được theo dõi biểu đồ tiến độ học tập chi tiết theo từng ngày.
-                  </p>
+                  <p>{course.description || 'Chưa có mô tả cho khóa học này.'}</p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsDescExpanded(!isDescExpanded)}
-                  className="mt-3 text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer inline-flex items-center gap-1"
-                >
-                  <span>{isDescExpanded ? 'Thu gọn' : 'Xem thêm'}</span>
-                  {isDescExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
+                {isLongDesc && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                    className="mt-3 text-xs sm:text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <span>{isDescExpanded ? 'Thu gọn' : 'Xem thêm'}</span>
+                    {isDescExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                )}
               </div>
             </section>
 

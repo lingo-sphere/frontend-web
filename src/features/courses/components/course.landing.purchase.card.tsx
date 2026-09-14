@@ -16,6 +16,7 @@ import {
   Share2,
 } from 'lucide-react'
 import type { Course } from '@/features/courses/types/course'
+import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
 
 interface CourseLandingPurchaseCardProps {
   course: Course
@@ -36,13 +37,10 @@ export function CourseLandingPurchaseCard({
 }: CourseLandingPurchaseCardProps) {
   const [isCopied, setIsCopied] = useState(false)
 
-  const rawPrice = course.price || 0
-  const rawDiscount = course.discount_price || 0
-  const effectivePrice =
-    rawDiscount > 0 && rawDiscount < rawPrice ? rawDiscount : rawPrice > 0 ? rawPrice : 279000
-  const originalPrice =
-    rawPrice > effectivePrice ? rawPrice : rawDiscount > effectivePrice ? rawDiscount : 1059000
-  const discountPercent = Math.max(0, Math.round(((originalPrice - effectivePrice) / originalPrice) * 100))
+  const effectivePrice = getCourseEffectivePrice(course)
+  const originalPrice = (course.price || 0) > effectivePrice ? (course.price || 0) : 0
+  const discountPercent =
+    originalPrice > 0 ? Math.max(0, Math.round(((originalPrice - effectivePrice) / originalPrice) * 100)) : 0
 
   const rawThumbnail =
     (course.thumbnail && course.thumbnail.trim()) ||
@@ -86,7 +84,7 @@ export function CourseLandingPurchaseCard({
         <div className="space-y-1">
           <div className="flex items-baseline gap-2.5 flex-wrap">
             <span className="text-3xl font-black text-slate-900 dark:text-slate-100">
-              ₫{effectivePrice.toLocaleString('vi-VN')}
+              {effectivePrice > 0 ? `₫${effectivePrice.toLocaleString('vi-VN')}` : 'Miễn phí'}
             </span>
             {originalPrice > effectivePrice && (
               <span className="text-sm text-slate-400 line-through font-semibold">

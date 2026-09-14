@@ -1,8 +1,7 @@
-// Banner gợi ý học viên làm bài test đầu vào hệ thống tại trang danh sách khóa học.
-
+// Banner hiển thị điểm số baseline đầu vào hoặc gợi ý làm bài kiểm tra năng lực
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import {
   Sparkles,
@@ -17,63 +16,95 @@ import { Button } from '@/components/button'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { useMounted } from '@/hooks/use.mounted'
+
+interface PlacementData {
+  score: number
+  listening?: number
+  reading?: number
+  speaking?: number
+  writing?: number
+  skillsType?: string
+  testedAt?: string
+}
+
+function resolvePlacementData(user: ReturnType<typeof useAuthStore.getState>['user']): PlacementData | null {
+  if (user) {
+    const scoreNum = Number(user.placement_test_score)
+    if (scoreNum > 0) {
+      return {
+        score: scoreNum,
+        listening: typeof user.placement_listening_score === 'number' ? user.placement_listening_score : undefined,
+        reading: typeof user.placement_reading_score === 'number' ? user.placement_reading_score : undefined,
+        speaking: typeof user.placement_speaking_score === 'number' ? user.placement_speaking_score : undefined,
+        writing: typeof user.placement_writing_score === 'number' ? user.placement_writing_score : undefined,
+        skillsType: typeof user.placement_skills_type === 'string' ? user.placement_skills_type : '2SKILLS',
+        testedAt: typeof user.placement_tested_at === 'string' ? user.placement_tested_at : undefined,
+      }
+    }
+    return null
+  }
+
+  const stored = storage.get<{
+    placement_test_score?: number
+    placement_listening_score?: number
+    placement_reading_score?: number
+    placement_speaking_score?: number
+    placement_writing_score?: number
+    placement_skills_type?: string
+    placement_tested_at?: string
+  }>(STORAGE_KEYS.PLACEMENT_SCORE)
+
+  if (stored?.placement_test_score && Number(stored.placement_test_score) > 0) {
+    return {
+      score: Number(stored.placement_test_score),
+      listening: stored.placement_listening_score,
+      reading: stored.placement_reading_score,
+      speaking: stored.placement_speaking_score,
+      writing: stored.placement_writing_score,
+      skillsType: stored.placement_skills_type || '2SKILLS',
+      testedAt: stored.placement_tested_at,
+    }
+  }
+
+  return null
+}
+
+export function CoursePlacementBannerSkeleton() {
+  return (
+    <div className="relative overflow-hidden rounded-3xl bg-slate-900/60 p-6 sm:p-7 border border-indigo-500/20 shadow-xl shadow-indigo-950/20 animate-pulse min-h-[148px] sm:min-h-[160px] flex flex-col md:flex-row md:items-center justify-between gap-5">
+      <div className="space-y-2.5 max-w-2xl w-full">
+        <div className="h-5 w-48 rounded-full bg-indigo-500/20" />
+        <div className="h-8 w-64 rounded-xl bg-white/10" />
+        <div className="flex gap-2 pt-1">
+          <div className="h-6 w-28 rounded-xl bg-white/10" />
+          <div className="h-6 w-28 rounded-xl bg-white/10" />
+        </div>
+      </div>
+      <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+        <div className="h-10 w-44 rounded-2xl bg-emerald-500/20" />
+        <div className="h-10 w-32 rounded-2xl bg-white/10" />
+      </div>
+    </div>
+  )
+}
 
 export function CoursePlacementBanner() {
   const navigate = useNavigate()
+  const mounted = useMounted()
   const { user } = useAuthStore()
   const [showEditScoreModal, setShowEditScoreModal] = useState(false)
-  const [placementData, setPlacementData] = useState<{
-    score: number
-    listening?: number
-    reading?: number
-    speaking?: number
-    writing?: number
-    skillsType?: string
-    testedAt?: string
-  } | null>(null)
+  const [customPlacementData, setCustomPlacementData] = useState<PlacementData | null>(null)
 
-  useEffect(() => {
-    if (user) {
-      const scoreNum = Number(user.placement_test_score)
-      if (scoreNum > 0) {
-        setPlacementData({
-          score: scoreNum,
-          listening: typeof user.placement_listening_score === 'number' ? user.placement_listening_score : undefined,
-          reading: typeof user.placement_reading_score === 'number' ? user.placement_reading_score : undefined,
-          speaking: typeof user.placement_speaking_score === 'number' ? user.placement_speaking_score : undefined,
-          writing: typeof user.placement_writing_score === 'number' ? user.placement_writing_score : undefined,
-          skillsType: typeof user.placement_skills_type === 'string' ? user.placement_skills_type : '2SKILLS',
-          testedAt: typeof user.placement_tested_at === 'string' ? user.placement_tested_at : undefined,
-        })
-      } else {
-        setPlacementData(null)
-      }
-      return
-    }
+  const placementData = useMemo(() => {
+    if (!mounted) return null
+    if (customPlacementData) return customPlacementData
+    return resolvePlacementData(user)
+  }, [mounted, customPlacementData, user])
 
-    const stored = storage.get<{
-      placement_test_score?: number
-      placement_listening_score?: number
-      placement_reading_score?: number
-      placement_speaking_score?: number
-      placement_writing_score?: number
-      placement_skills_type?: string
-      placement_tested_at?: string
-    }>(STORAGE_KEYS.PLACEMENT_SCORE)
-    if (stored?.placement_test_score && Number(stored.placement_test_score) > 0) {
-      setPlacementData({
-        score: Number(stored.placement_test_score),
-        listening: stored.placement_listening_score,
-        reading: stored.placement_reading_score,
-        speaking: stored.placement_speaking_score,
-        writing: stored.placement_writing_score,
-        skillsType: stored.placement_skills_type || '2SKILLS',
-        testedAt: stored.placement_tested_at,
-      })
-    } else {
-      setPlacementData(null)
-    }
-  }, [user])
+  if (!mounted) {
+    return <CoursePlacementBannerSkeleton />
+  }
 
   if (placementData && placementData.score > 0) {
     const is4Skills = placementData.skillsType === '4SKILLS' || Boolean(placementData.speaking && placementData.speaking > 0)
@@ -158,7 +189,7 @@ export function CoursePlacementBanner() {
             onSuccess={(updated) => {
               if (updated) {
                 const newScore = Number(updated.placement_test_score) || placementData.score
-                setPlacementData({
+                setCustomPlacementData({
                   score: newScore,
                   listening: updated.placement_listening_score,
                   reading: updated.placement_reading_score,
@@ -285,7 +316,7 @@ export function CoursePlacementBanner() {
           onSuccess={(updated) => {
             if (updated) {
               const newScore = Number(updated.placement_test_score) || 0
-              setPlacementData({
+              setCustomPlacementData({
                 score: newScore,
                 listening: updated.placement_listening_score,
                 reading: updated.placement_reading_score,

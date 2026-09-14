@@ -1,20 +1,28 @@
-/**
- * @file page.tsx
- * @description Trang danh mục khóa học (Courses Catalog Page) hiển thị các khóa học, tìm kiếm, lịch học và phân loại
- */
-
+// Trang danh mục khóa học hiển thị tìm kiếm, lịch học và phân loại
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useNavigate } from '@/lib/navigation'
 import { CourseSearchBar } from '@/features/courses/components/course.search.bar'
 import { CourseScheduleBanner } from '@/features/courses/components/course.schedule.banner'
 import { CourseScheduleModal } from '@/features/courses/components/course.schedule.modal'
-import { CoursePlacementBanner } from '@/features/courses/components/course.placement.banner'
+import { CoursePlacementBannerSkeleton } from '@/features/courses/components/course.placement.banner'
 import { CourseCard } from '@/features/courses/components/course.card'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { useCoursesCatalog } from '@/features/courses/hooks/use.courses.catalog'
 import { CoursesCatalogTabsHeader } from '@/features/courses/components/courses.catalog.tabs.header'
 import { CoursesEmptyState } from '@/features/courses/components/courses.empty.state'
+
+const CoursePlacementBanner = dynamic(
+  () =>
+    import('@/features/courses/components/course.placement.banner').then(
+      (mod) => mod.CoursePlacementBanner
+    ),
+  {
+    ssr: false,
+    loading: () => <CoursePlacementBannerSkeleton />,
+  }
+)
 
 export default function CoursesCatalogPage() {
   const navigate = useNavigate()
@@ -51,6 +59,7 @@ export default function CoursesCatalogPage() {
           activeTab={activeTab}
           isVi={isVi}
           count={filteredCourses.length}
+          loading={loading}
         />
 
         {activeTab === 'all' && <CoursePlacementBanner />}

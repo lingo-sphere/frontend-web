@@ -69,14 +69,7 @@ export function useTestAttemptsQuery(enabled = true) {
 }
 
 export function useExamHistoryQuery(enabled = true) {
-  return useQuery<Array<{
-    _id: string
-    exam_title: string
-    total_scaled_score: number
-    correct_questions: number
-    total_questions: number
-    submitted_at: string
-  }>>({
+  return useQuery({
     queryKey: progressKeys.examHistory(),
     queryFn: async () => {
       const res = await examService.getMyExamHistory()

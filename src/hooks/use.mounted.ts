@@ -1,21 +1,14 @@
-/**
- * @file use.mounted.ts
- * @description Custom React hook use-mounted hỗ trợ xử lý logic giao diện Web
- */
-
+// Custom hook xác định trạng thái đã mount trên client của component
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 
-let isClientMounted = false
+const emptySubscribe = () => () => {}
 
 export function useMounted(): boolean {
-  const [mounted, setMounted] = useState<boolean>(() => isClientMounted)
-
-  useEffect(() => {
-    isClientMounted = true
-    setMounted(true)
-  }, [])
-
-  return mounted
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  )
 }
