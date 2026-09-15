@@ -31,14 +31,16 @@ export const courseQueries = {
       queryKey: courseKeys.list(params),
       queryFn: () => courseService.getAllCourses(params),
       enabled,
-      staleTime: 5 * 60 * 1000,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
     }),
   detail: (courseId: string, enabled = true) =>
     queryOptions({
       queryKey: courseKeys.detail(courseId),
       queryFn: () => courseService.getCourseById(courseId),
       enabled: Boolean(courseId) && enabled,
-      staleTime: 5 * 60 * 1000,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
     }),
   enrollments: (enabled = true) =>
     queryOptions({
@@ -52,7 +54,8 @@ export const courseQueries = {
       queryKey: [...courseKeys.detail(courseId), 'enrollment-status'] as const,
       queryFn: () => courseService.getEnrollmentStatus(courseId),
       enabled: Boolean(courseId) && enabled,
-      staleTime: 5 * 60 * 1000,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
     }),
   reviews: (courseId: string, enabled = true) =>
     queryOptions({
