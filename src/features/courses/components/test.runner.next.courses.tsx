@@ -9,6 +9,7 @@ import type { Course } from '@/types/api.types'
 interface TestRunnerNextCoursesProps {
   isPassed: boolean
   passingScore: number
+  testType?: string
   recommendedNextCourses?: (Course & { recommendation_reason?: string; match_score?: number })[]
   onNavigateCourse?: (slugOrId: string) => void
   onBackToLessons?: () => void
@@ -18,11 +19,17 @@ interface TestRunnerNextCoursesProps {
 export function TestRunnerNextCourses({
   isPassed,
   passingScore,
+  testType,
   recommendedNextCourses = [],
   onNavigateCourse,
   onBackToLessons,
   onRetry,
 }: TestRunnerNextCoursesProps) {
+  const isFinalTest = testType === 'final-test'
+
+  if (!isFinalTest && isPassed) {
+    return null
+  }
   if (isPassed && recommendedNextCourses && recommendedNextCourses.length > 0) {
     return (
       <div className="p-5 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/70 dark:from-indigo-950/40 dark:via-slate-900 dark:to-purple-950/30 shadow-sm space-y-4">
