@@ -10,7 +10,7 @@ import type {
   CourseScheduleResponse,
   UpdateCourseSchedulePayload,
 } from '@/features/courses/types/schedule.types'
-import type { TestAttemptItem, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
+import type { GradedQuestionItem, TestAttemptItem, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
 
 export interface SpeakingSubmissionResponse {
   _id: string
@@ -245,6 +245,7 @@ export const courseService = {
     correct_count?: number
     total_questions?: number
     wrong_questions?: WrongQuestionItem[]
+    graded_questions?: GradedQuestionItem[]
     status: string
     attempts?: TestAttemptItem[]
     message: string
@@ -278,6 +279,7 @@ export const courseService = {
     total_questions?: number
     is_passed?: boolean
     wrong_questions?: WrongQuestionItem[]
+    graded_questions?: GradedQuestionItem[]
     attempts?: TestAttemptItem[]
     progression_comparison?: {
       previous_stage: string
@@ -317,6 +319,7 @@ export const courseService = {
     correct_count?: number
     total_questions?: number
     wrong_questions?: WrongQuestionItem[]
+    graded_questions?: GradedQuestionItem[]
     final_test_attempts?: TestAttemptItem[]
     baseline_score: number
     total_score_growth: number

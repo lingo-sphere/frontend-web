@@ -6,6 +6,7 @@ import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import {
   CourseTestQuestion,
+  GradedQuestionItem,
   TestAttemptItem,
   WrongQuestionItem,
   AiExplanationsData,
@@ -127,6 +128,7 @@ export function useCourseTestRunner({
   const [showAiDetails, setShowAiDetails] = useState(false)
   const [aiExplanations, setAiExplanations] = useState<AiExplanationsData | null>(null)
   const [wrongQuestionsList, setWrongQuestionsList] = useState<WrongQuestionItem[]>([])
+  const [revealedQuestions, setRevealedQuestions] = useState<CourseTestQuestion[] | null>(null)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
 
@@ -228,6 +230,7 @@ export function useCourseTestRunner({
     setScoreResult(null)
     setAiExplanations(null)
     setWrongQuestionsList([])
+    setRevealedQuestions(null)
     setShowAiDetails(false)
     setTimeLeft(effectiveDurationMinutes * 60)
     setHasAutoSubmitted(false)
@@ -278,6 +281,59 @@ export function useCourseTestRunner({
         let finalWrongs: WrongQuestionItem[] = fallbackWrongs
         let completeRes: unknown = null
 
+        const applyGradedResult = (
+          gradedList?: GradedQuestionItem[],
+          wrongs?: WrongQuestionItem[]
+        ) => {
+          if (Array.isArray(gradedList) && gradedList.length > 0) {
+            const updated = rawQuestions.map((q, idx) => {
+              const graded = gradedList.find(
+                (g) => g.question_index === idx || (g.question_id && g.question_id === (q._id || q.id))
+              )
+              if (graded) {
+                return {
+                  ...q,
+                  correct_index: graded.correct_index,
+                  correct_answer: graded.correct_answer,
+                  explanation: graded.explanation || q.explanation,
+                }
+              }
+              return q
+            })
+            setRevealedQuestions(updated)
+          } else if (Array.isArray(wrongs)) {
+            const updated = rawQuestions.map((q, idx) => {
+              const wrongItem = wrongs.find((w) => w.question_number === idx + 1)
+              if (wrongItem) {
+                let wCorrectIdx = -1
+                const opts = q.options ?? []
+                const wUpper = String(wrongItem.correct_answer || '').trim().toUpperCase()
+                if (wUpper === 'A') wCorrectIdx = 0
+                else if (wUpper === 'B') wCorrectIdx = 1
+                else if (wUpper === 'C') wCorrectIdx = 2
+                else if (wUpper === 'D') wCorrectIdx = 3
+                else {
+                  wCorrectIdx = opts.findIndex((opt) => opt.toLowerCase() === wrongItem.correct_answer.toLowerCase())
+                }
+                return {
+                  ...q,
+                  correct_index: wCorrectIdx,
+                  correct_answer: wrongItem.correct_answer,
+                  explanation: wrongItem.explanation || q.explanation,
+                }
+              } else {
+                const chosen = selectedAnswers[idx]
+                return {
+                  ...q,
+                  correct_index: chosen !== undefined ? chosen : 0,
+                  correct_answer: chosen !== undefined && q.options?.[chosen] ? q.options[chosen] : '',
+                }
+              }
+            })
+            setRevealedQuestions(updated)
+          }
+        }
+
         if (testType === 'challenge' && chapter?.id) {
           const saveRes = await courseService.submitModuleChallenge(courseId, chapter.id, {
             score: fallbackScore,
@@ -295,6 +351,7 @@ export function useCourseTestRunner({
           if (Array.isArray(saveRes.wrong_questions)) finalWrongs = saveRes.wrong_questions
           if (saveRes.highest_score) setBestScore(saveRes.highest_score)
           if (Array.isArray(saveRes.attempts)) setAttemptsList(saveRes.attempts)
+          applyGradedResult(saveRes.graded_questions, saveRes.wrong_questions)
         } else if (testType === 'post-mini' && chapter?.id) {
           const saveRes = await courseService.submitModulePostMini(courseId, chapter.id, {
             score: fallbackScore,
@@ -319,6 +376,7 @@ export function useCourseTestRunner({
           if (saveRes.is_new_high_score) setIsNewHighScore(true)
           if (saveRes.highest_score) setBestScore(saveRes.highest_score)
           if (Array.isArray(saveRes.attempts)) setAttemptsList(saveRes.attempts)
+          applyGradedResult(saveRes.graded_questions, saveRes.wrong_questions)
         } else if (testType === 'final-test') {
           const saveRes = await courseService.submitCourseFinalTest(courseId, {
             score: fallbackScore,
@@ -335,6 +393,7 @@ export function useCourseTestRunner({
           if (saveRes.is_new_high_score) setIsNewHighScore(true)
           if (saveRes.highest_score) setBestScore(saveRes.highest_score)
           if (Array.isArray(saveRes.final_test_attempts)) setAttemptsList(saveRes.final_test_attempts)
+          applyGradedResult(saveRes.graded_questions, saveRes.wrong_questions)
         }
 
         setWrongQuestionsList(finalWrongs)
@@ -441,7 +500,7 @@ export function useCourseTestRunner({
     setShowExitConfirm,
     showSubmitConfirm,
     setShowSubmitConfirm,
-    rawQuestions,
+    rawQuestions: revealedQuestions || rawQuestions,
     testAudioUrl,
     passingScore,
     testTitle,
