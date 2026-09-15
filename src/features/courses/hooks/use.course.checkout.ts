@@ -45,7 +45,10 @@ export function useCourseCheckout({
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const orderRef = useRef<PaymentOrderResponse | null>(null)
-  orderRef.current = order
+
+  useEffect(() => {
+    orderRef.current = order
+  }, [order])
 
   const totalAmount = courses.reduce((acc, c) => acc + (c.price || 0), 0)
   const formattedTotal =
@@ -96,7 +99,7 @@ export function useCourseCheckout({
       onOpenChange(false)
       onSuccess?.()
     }, 2500)
-  }, [courses, isVi, onOpenChange, onSuccess, stopAllTimers])
+  }, [isVi, onOpenChange, onSuccess, stopAllTimers])
 
   const checkPaymentStatus = useCallback(async () => {
     const currentOrder = orderRef.current
@@ -115,8 +118,6 @@ export function useCourseCheckout({
   useEffect(() => {
     if (!open || courses.length === 0) {
       stopAllTimers()
-      setStep('PAYMENT_QR')
-      setOrder(null)
       return
     }
 
@@ -171,10 +172,12 @@ export function useCourseCheckout({
     return () => {
       isMounted = false
       stopAllTimers()
+      setStep('PAYMENT_QR')
+      setOrder(null)
     }
   }, [
     open,
-    courses.length,
+    courses,
     totalAmount,
     isAuthenticated,
     user,
