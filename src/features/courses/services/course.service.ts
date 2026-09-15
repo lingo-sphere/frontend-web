@@ -220,6 +220,33 @@ export const courseService = {
     return api.post(`/progress/courses/${courseId}/heartbeat`, {})
   },
 
+  async getCourseAttemptDetail(attemptId: string): Promise<{
+    attempt_id: string
+    test_type: string
+    course_id: string
+    module_id?: string
+    score: number
+    correct_count: number
+    total_questions: number
+    is_passed: boolean
+    submitted_at: string
+    questions: Array<{
+      question_number: number
+      question_text: string
+      options: string[]
+      correct_answer: string
+      correct_index?: number
+      selected_index?: number
+      selected_option?: string
+      is_correct?: boolean
+      explanation?: string
+      media_url?: string
+      image_url?: string
+    }>
+  }> {
+    return api.get(`/progress/attempts/${attemptId}`)
+  },
+
   async submitModuleChallenge(
     courseId: string,
     moduleId: string,

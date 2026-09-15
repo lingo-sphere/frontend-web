@@ -2,9 +2,11 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useParams, useSearchParams } from '@/lib/navigation'
 import { useExamAttemptResultQuery } from '@/features/toeic/hooks/use.toeic.query'
 import { useCourseDetailQuery } from '@/features/courses/hooks/use.courses.query'
+import { courseService } from '@/features/courses/services/course.service'
 import type { AttemptAnswerDetail, CourseQuestionDetail } from '@/features/toeic/components/attempt.question.item'
 
 export interface AttemptResultDetail {
@@ -56,9 +58,15 @@ export function useExamAttemptDetail() {
     courseId,
     Boolean(isCourseTest && courseId)
   )
+  const courseAttemptDetailQuery = useQuery({
+    queryKey: ['course-attempt-detail', attemptId],
+    queryFn: () => courseService.getCourseAttemptDetail(attemptId),
+    enabled: Boolean(isCourseTest && attemptId && !isProfilePlacement),
+    staleTime: 5 * 60 * 1000,
+  })
 
   const isLoading = isCourseTest
-    ? courseDetailQuery.isLoading
+    ? courseAttemptDetailQuery.isLoading || (courseId ? courseDetailQuery.isLoading : false)
     : isProfilePlacement
     ? false
     : toeicAttemptQuery.isLoading
@@ -66,9 +74,65 @@ export function useExamAttemptDetail() {
   const detailData = toeicAttemptQuery.data as unknown as AttemptResultDetail | undefined
 
   const { courseQuestions, courseTitle } = useMemo(() => {
-    if (!isCourseTest || !courseDetailQuery.data) {
+    if (!isCourseTest) {
       return { courseQuestions: [], courseTitle: '' }
     }
+
+    const cAttempt = courseAttemptDetailQuery.data
+    if (cAttempt && Array.isArray(cAttempt.questions) && cAttempt.questions.length > 0) {
+      const parsedQuestions: CourseQuestionDetail[] = cAttempt.questions.map((item, idx) => {
+        const qObj = item as Record<string, unknown>
+        const optRaw = qObj.options
+        let cleanOptions: string[] = []
+        if (Array.isArray(optRaw)) {
+          cleanOptions = optRaw.map((opt) => {
+            if (typeof opt === 'string') return opt
+            if (opt && typeof opt === 'object') {
+              const oRec = opt as Record<string, unknown>
+              return String(oRec.text || oRec.key || '')
+            }
+            return ''
+          })
+        }
+
+        const selectedIdx = typeof qObj.selected_index === 'number' ? qObj.selected_index : undefined
+        const correctIdx = typeof qObj.correct_index === 'number' ? qObj.correct_index : undefined
+        const isCorrect = typeof qObj.is_correct === 'boolean' ? qObj.is_correct : undefined
+
+        return {
+          question_number: typeof qObj.question_number === 'number' ? qObj.question_number : idx + 1,
+          question_text: String(qObj.question_text || `Câu hỏi số ${idx + 1}`),
+          options: cleanOptions,
+          correct_answer: String(qObj.correct_answer || ''),
+          correct_index: correctIdx,
+          selected_index: selectedIdx,
+          selected_option: qObj.selected_option ? String(qObj.selected_option) : undefined,
+          is_correct: isCorrect,
+          explanation: String(qObj.explanation || ''),
+          media_url: qObj.media_url ? String(qObj.media_url) : undefined,
+          image_url: qObj.image_url ? String(qObj.image_url) : undefined,
+        }
+      })
+
+      const testName =
+        cAttempt.test_type === 'challenge'
+          ? 'Thử thách mở khóa chương'
+          : cAttempt.test_type === 'post-mini-test'
+          ? 'Bài kiểm tra cuối chương'
+          : cAttempt.test_type === 'final-test'
+          ? 'Bài thi tốt nghiệp khóa học'
+          : ''
+
+      return {
+        courseQuestions: parsedQuestions,
+        courseTitle: testName || (courseDetailQuery.data as { title?: string } | undefined)?.title || '',
+      }
+    }
+
+    if (!courseDetailQuery.data) {
+      return { courseQuestions: [], courseTitle: '' }
+    }
+
     const rawCourse = courseDetailQuery.data as unknown as {
       title?: string
       final_test_questions?: unknown[]
@@ -130,18 +194,25 @@ export function useExamAttemptDetail() {
     })
 
     return { courseQuestions: parsedQuestions, courseTitle: cTitle }
-  }, [isCourseTest, courseDetailQuery.data, testType, moduleId])
+  }, [isCourseTest, courseAttemptDetailQuery.data, courseDetailQuery.data, testType, moduleId])
 
-  const title = detailData?.attempt?.exam_title || (isCourseTest && courseTitle ? courseTitle : initialTitle)
+  const cAttempt = courseAttemptDetailQuery.data
+  const title =
+    detailData?.attempt?.exam_title ||
+    (isCourseTest && courseTitle ? courseTitle : initialTitle)
   const scoreDisplay = detailData?.attempt
     ? `${detailData.attempt.total_scaled_score ?? 0} / 990 điểm`
+    : cAttempt?.score !== undefined
+    ? `${cAttempt.score} / 100 điểm`
     : initialScore || 'Hoàn thành'
-  const totalQ = detailData?.attempt?.total_questions ?? initialTotal ?? 0
-  const correctQ = detailData?.attempt?.correct_questions ?? initialCorrect ?? 0
+  const totalQ = detailData?.attempt?.total_questions ?? cAttempt?.total_questions ?? initialTotal ?? 0
+  const correctQ = detailData?.attempt?.correct_questions ?? cAttempt?.correct_count ?? initialCorrect ?? 0
   const isPassed = detailData?.attempt
     ? (detailData.attempt.total_scaled_score ?? 0) >= 450
+    : cAttempt?.is_passed !== undefined
+    ? cAttempt.is_passed
     : initialIsPassed
-  const submittedAt = detailData?.attempt?.submitted_at || initialSubmittedAt
+  const submittedAt = detailData?.attempt?.submitted_at || cAttempt?.submitted_at || initialSubmittedAt
   const durationSeconds = detailData?.attempt?.total_time_seconds ?? initialDuration
 
   const formatDuration = (seconds?: number) => {
@@ -178,10 +249,24 @@ export function useExamAttemptDetail() {
     })
   }, [detailData?.answers, filterAnswerStatus])
 
+  const filteredCourseQuestions = useMemo(() => {
+    if (!courseQuestions || courseQuestions.length === 0) return []
+    return courseQuestions.filter((q) => {
+      const isAnswered =
+        (q.selected_index !== undefined && q.selected_index >= 0) || Boolean(q.selected_option)
+      if (filterAnswerStatus === 'CORRECT') return q.is_correct === true
+      if (filterAnswerStatus === 'INCORRECT')
+        return q.is_correct === false || (isAnswered && !q.is_correct)
+      if (filterAnswerStatus === 'SKIPPED') return !isAnswered
+      return true
+    })
+  }, [courseQuestions, filterAnswerStatus])
+
   return {
     isLoading,
     detailData,
     courseQuestions,
+    filteredCourseQuestions,
     filterAnswerStatus,
     setFilterAnswerStatus,
     filteredToeicAnswers,
