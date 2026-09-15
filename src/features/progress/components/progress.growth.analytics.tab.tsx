@@ -174,6 +174,24 @@ export function ProgressGrowthAnalyticsTab({
   const passRate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0
   const recentTopActivities = recentActivities.slice(0, 3)
 
+  const handleNavigateActivity = (act: ProgressRecentActivity) => {
+    const query = new URLSearchParams()
+    query.set('sourceType', act.type)
+    if (act.examType) query.set('testType', act.examType)
+    if (act.courseId) query.set('courseId', act.courseId)
+    if (act.moduleId) query.set('moduleId', act.moduleId)
+    if (act.title) query.set('title', act.title)
+    if (act.scoreText) query.set('score', act.scoreText)
+    if (act.scoreValue !== undefined) query.set('scoreVal', String(act.scoreValue))
+    if (act.correctCount !== undefined) query.set('correct', String(act.correctCount))
+    if (act.totalQuestions !== undefined) query.set('total', String(act.totalQuestions))
+    if (act.isPassed !== undefined) query.set('isPassed', String(act.isPassed))
+    if (act.submittedAt) query.set('submittedAt', act.submittedAt)
+    if (act.durationSeconds !== undefined) query.set('duration', String(act.durationSeconds))
+
+    onNavigate(`/exam-history/${act.id}?${query.toString()}`)
+  }
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -503,7 +521,7 @@ export function ProgressGrowthAnalyticsTab({
                 recentTopActivities.map((act) => (
                   <div
                     key={act.id}
-                    onClick={() => onNavigate(`/exam-history/${act.id}`)}
+                    onClick={() => handleNavigateActivity(act)}
                     className="flex items-center justify-between p-2 rounded-xl bg-surface-subtle/50 hover:bg-surface-subtle border border-border/40 transition-colors cursor-pointer text-xs"
                   >
                     <div className="min-w-0 flex-1 pr-2">

@@ -46,6 +46,7 @@ export default function ExamHistoryPage() {
     return unifiedList.map((item) => ({
       id: item.id,
       courseId: item.courseId,
+      moduleId: item.moduleId,
       type: item.sourceType,
       examType: item.testType,
       title: item.title,

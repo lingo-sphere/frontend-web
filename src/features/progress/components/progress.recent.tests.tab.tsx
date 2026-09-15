@@ -185,13 +185,21 @@ export function ProgressRecentTestsTab({
               <div
                 key={item.id}
                 onClick={() => {
-                  if (item.type === 'TOEIC') {
-                    onNavigate(`/exam-history/${item.id}`)
-                  } else if (item.courseId) {
-                    onNavigate(`/course/${item.courseId}`)
-                  } else {
-                    onNavigate('/exam-history')
-                  }
+                  const query = new URLSearchParams()
+                  query.set('sourceType', item.type)
+                  if (item.examType) query.set('testType', item.examType)
+                  if (item.courseId) query.set('courseId', item.courseId)
+                  if (item.moduleId) query.set('moduleId', item.moduleId)
+                  if (item.title) query.set('title', item.title)
+                  if (item.scoreText) query.set('score', item.scoreText)
+                  if (item.scoreValue !== undefined) query.set('scoreVal', String(item.scoreValue))
+                  if (item.correctCount !== undefined) query.set('correct', String(item.correctCount))
+                  if (item.totalQuestions !== undefined) query.set('total', String(item.totalQuestions))
+                  if (item.isPassed !== undefined) query.set('isPassed', String(item.isPassed))
+                  if (item.submittedAt) query.set('submittedAt', item.submittedAt)
+                  if (item.durationSeconds !== undefined) query.set('duration', String(item.durationSeconds))
+
+                  onNavigate(`/exam-history/${item.id}?${query.toString()}`)
                 }}
                 className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-border/70 bg-surface hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 cursor-pointer"
               >

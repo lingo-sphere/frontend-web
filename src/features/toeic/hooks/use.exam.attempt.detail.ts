@@ -33,10 +33,15 @@ export function useExamAttemptDetail() {
   const searchParams = useSearchParams()
 
   const attemptId = params?.attemptId || ''
-  const sourceType = searchParams.get('sourceType') || 'TOEIC'
-  const testType = searchParams.get('testType') || ''
-  const courseId = searchParams.get('courseId') || ''
-  const moduleId = searchParams.get('moduleId') || ''
+  const rawSourceType = searchParams.get('sourceType')
+  const isProfilePlacement = attemptId === 'profile-placement-baseline'
+  const isCourseAttemptId = attemptId.startsWith('att')
+  const isCourseTest = !isProfilePlacement && (rawSourceType === 'COURSE' || isCourseAttemptId)
+  const sourceType = isCourseTest ? 'COURSE' : (rawSourceType || 'TOEIC')
+
+  const queryTestType = searchParams.get('testType') || ''
+  const queryCourseId = searchParams.get('courseId') || ''
+  const queryModuleId = searchParams.get('moduleId') || ''
   const initialTitle = searchParams.get('title') || 'Chi tiết bài làm'
   const initialScore = searchParams.get('score') || ''
   const initialCorrect = searchParams.get('correct') ? Number(searchParams.get('correct')) : undefined
@@ -47,16 +52,9 @@ export function useExamAttemptDetail() {
 
   const [filterAnswerStatus, setFilterAnswerStatus] = useState<AnswerFilterStatus>('ALL')
 
-  const isProfilePlacement = attemptId === 'profile-placement-baseline'
-  const isCourseTest = sourceType === 'COURSE'
-
   const toeicAttemptQuery = useExamAttemptResultQuery(
     attemptId,
     Boolean(attemptId && !isCourseTest && !isProfilePlacement)
-  )
-  const courseDetailQuery = useCourseDetailQuery(
-    courseId,
-    Boolean(isCourseTest && courseId)
   )
   const courseAttemptDetailQuery = useQuery({
     queryKey: ['course-attempt-detail', attemptId],
@@ -65,8 +63,17 @@ export function useExamAttemptDetail() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const effectiveCourseId = queryCourseId || courseAttemptDetailQuery.data?.course_id || ''
+  const effectiveModuleId = queryModuleId || courseAttemptDetailQuery.data?.module_id || ''
+  const effectiveTestType = queryTestType || courseAttemptDetailQuery.data?.test_type || ''
+
+  const courseDetailQuery = useCourseDetailQuery(
+    effectiveCourseId,
+    Boolean(isCourseTest && effectiveCourseId)
+  )
+
   const isLoading = isCourseTest
-    ? courseAttemptDetailQuery.isLoading || (courseId ? courseDetailQuery.isLoading : false)
+    ? courseAttemptDetailQuery.isLoading || (effectiveCourseId ? courseDetailQuery.isLoading : false)
     : isProfilePlacement
     ? false
     : toeicAttemptQuery.isLoading
@@ -116,11 +123,11 @@ export function useExamAttemptDetail() {
 
       const testName =
         cAttempt.test_type === 'challenge'
-          ? 'Thử thách mở khóa chương'
-          : cAttempt.test_type === 'post-mini-test'
-          ? 'Bài kiểm tra cuối chương'
+          ? 'Kiểm tra chương'
+          : cAttempt.test_type === 'post-mini-test' || cAttempt.test_type === 'post-mini'
+          ? 'Kiểm tra chương'
           : cAttempt.test_type === 'final-test'
-          ? 'Bài thi tốt nghiệp khóa học'
+          ? 'Bài thi tốt nghiệp Exit Test'
           : ''
 
       return {
@@ -147,15 +154,15 @@ export function useExamAttemptDetail() {
 
     const cTitle = rawCourse.title || ''
     let qList: unknown[] = []
-    if (testType === 'final-test') {
+    if (effectiveTestType === 'final-test') {
       qList = Array.isArray(rawCourse.final_test_questions) ? rawCourse.final_test_questions : []
     } else if (rawCourse.modules && Array.isArray(rawCourse.modules)) {
       const targetMod =
-        rawCourse.modules.find((m) => m._id === moduleId || m.id === moduleId) ||
+        rawCourse.modules.find((m) => m._id === effectiveModuleId || m.id === effectiveModuleId) ||
         rawCourse.modules[0]
 
       if (targetMod) {
-        if (testType === 'challenge') {
+        if (effectiveTestType === 'challenge') {
           qList = targetMod.challenge_questions || []
         } else {
           qList = targetMod.post_mini_test_questions || targetMod.challenge_questions || []
@@ -194,7 +201,7 @@ export function useExamAttemptDetail() {
     })
 
     return { courseQuestions: parsedQuestions, courseTitle: cTitle }
-  }, [isCourseTest, courseAttemptDetailQuery.data, courseDetailQuery.data, testType, moduleId])
+  }, [isCourseTest, courseAttemptDetailQuery.data, courseDetailQuery.data, effectiveTestType, effectiveModuleId])
 
   const cAttempt = courseAttemptDetailQuery.data
   const title =
@@ -282,8 +289,8 @@ export function useExamAttemptDetail() {
     isCourseTest,
     isProfilePlacement,
     attemptId,
-    courseId,
-    testType,
-    moduleId,
+    courseId: effectiveCourseId,
+    testType: effectiveTestType,
+    moduleId: effectiveModuleId,
   }
 }

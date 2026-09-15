@@ -59,6 +59,7 @@ export interface ProgressMetrics {
 export interface ProgressRecentActivity {
   id: string
   courseId?: string
+  moduleId?: string
   type: 'TOEIC' | 'COURSE'
   examType?: string
   title: string
@@ -290,6 +291,7 @@ export function useProgressData(navigate: (path: string) => void) {
       list.push({
         id: c.attempt_id,
         courseId: c.course_id,
+        moduleId: c.module_id,
         type: 'COURSE',
         examType: c.test_type,
         title: testName,
