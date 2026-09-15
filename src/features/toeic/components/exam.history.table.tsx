@@ -44,7 +44,11 @@ export function ExamHistoryTable({
           <FileQuestion size={24} />
         </div>
         <h3 className="text-base font-bold text-text-primary">
-          {activeTab === 'PLACEMENT' ? 'Chưa có bài test đầu vào nào' : 'Chưa có bài kiểm tra nào'}
+          {activeTab === 'PLACEMENT'
+            ? 'Chưa có bài test đầu vào nào'
+            : activeTab === 'CHAPTER_TEST'
+            ? 'Chưa có bài kiểm tra chương nào'
+            : 'Chưa có bài kiểm tra nào'}
         </h3>
         <p className="text-xs text-text-secondary max-w-sm mx-auto">
           {activeTab === 'PLACEMENT'
@@ -86,7 +90,6 @@ export function ExamHistoryTable({
       {filteredList.map((item) => {
         const isToeic = item.sourceType === 'TOEIC'
         const isPlacement = item.testType === 'PLACEMENT'
-        const isChallenge = item.testType === 'challenge'
         const isFinal = item.testType === 'final-test'
 
         let badgeClass = 'bg-indigo-600 text-white'
@@ -96,10 +99,7 @@ export function ExamHistoryTable({
           badgeClass = 'bg-sky-600 text-white'
           badgeText = 'Test đầu vào'
         } else if (!isToeic) {
-          if (isChallenge) {
-            badgeClass = 'bg-amber-600 text-white'
-            badgeText = 'Thử thách chương'
-          } else if (isFinal) {
+          if (isFinal) {
             badgeClass = 'bg-purple-600 text-white'
             badgeText = 'Tốt nghiệp Exit Test'
           } else {

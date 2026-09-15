@@ -280,9 +280,7 @@ export function useProgressData(navigate: (path: string) => void) {
       const testName =
         c.test_type === 'final-test'
           ? 'Bài thi tốt nghiệp Exit Test'
-          : c.test_type === 'challenge'
-          ? `Thử thách chương ${c.order_index ?? ''}`
-          : `Kiểm tra cuối chương ${c.order_index ?? ''}`
+          : `Kiểm tra chương ${c.order_index ?? ''}`
 
       const score = Math.round(c.score || 0)
       const correct = c.correct_count ?? 0

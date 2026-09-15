@@ -65,7 +65,7 @@ export interface UnifiedTestAttempt {
   isBestAttempt?: boolean
 }
 
-export type ExamHistoryTab = 'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHALLENGE' | 'POST_MINI' | 'FINAL_TEST'
+export type ExamHistoryTab = 'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHAPTER_TEST' | 'FINAL_TEST'
 
 export function useExamHistory() {
   const queryClient = useQueryClient()
@@ -143,10 +143,8 @@ export function useExamHistory() {
 
       if (c.test_type === 'final-test') {
         testName = 'Bài thi tốt nghiệp Exit Test'
-      } else if (c.test_type === 'challenge') {
-        testName = `Thử thách chương ${c.order_index ?? ''}`
-      } else if (c.test_type === 'post-mini') {
-        testName = `Kiểm tra cuối chương ${c.order_index ?? ''}`
+      } else {
+        testName = `Kiểm tra chương ${c.order_index ?? ''}`
       }
 
       const courseTitle = courseTitleMap[c.course_id] || `Khóa học ID: ${c.course_id}`
@@ -181,10 +179,10 @@ export function useExamHistory() {
       result = result.filter((i) => i.testType === 'PLACEMENT')
     } else if (activeTab === 'TOEIC') {
       result = result.filter((i) => i.sourceType === 'TOEIC' && i.testType !== 'PLACEMENT')
-    } else if (activeTab === 'CHALLENGE') {
-      result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'challenge')
-    } else if (activeTab === 'POST_MINI') {
-      result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'post-mini')
+    } else if (activeTab === 'CHAPTER_TEST') {
+      result = result.filter(
+        (i) => i.sourceType === 'COURSE' && (i.testType === 'challenge' || i.testType === 'post-mini')
+      )
     } else if (activeTab === 'FINAL_TEST') {
       result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'final-test')
     }

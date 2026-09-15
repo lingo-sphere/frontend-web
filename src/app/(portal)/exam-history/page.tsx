@@ -118,8 +118,7 @@ export default function ExamHistoryPage() {
     all: unifiedList.length,
     placement: unifiedList.filter((i) => i.testType === 'PLACEMENT').length,
     toeic: unifiedList.filter((i) => i.sourceType === 'TOEIC' && i.testType !== 'PLACEMENT').length,
-    challenge: courseAttempts.filter((c) => c.test_type === 'challenge').length,
-    postMini: courseAttempts.filter((c) => c.test_type === 'post-mini').length,
+    chapterTest: courseAttempts.filter((c) => c.test_type === 'challenge' || c.test_type === 'post-mini').length,
     finalTest: courseAttempts.filter((c) => c.test_type === 'final-test').length,
   }
 
