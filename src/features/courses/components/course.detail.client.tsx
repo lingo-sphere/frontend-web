@@ -42,6 +42,7 @@ export function CourseDetailClient({
     course,
     currentLesson,
     isLoading,
+    isError,
     isEnrolled,
     setIsEnrolled,
     expandedChapters,
@@ -133,7 +134,7 @@ export function CourseDetailClient({
     return <CourseLandingLoadingState onBack={handleBack} />
   }
 
-  if (!course) {
+  if (isError || !course) {
     return (
       <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-6 antialiased">
         <div className="w-full max-w-md p-8 bg-surface rounded-3xl border border-border shadow-xl text-center space-y-4">

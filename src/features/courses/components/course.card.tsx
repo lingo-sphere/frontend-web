@@ -22,6 +22,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { formatCurrency, formatNumber } from '@/lib/format'
+import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 interface CourseCardProps {
   course: CourseCardData
@@ -116,6 +117,13 @@ export function CourseCard({
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (isAlreadyEnrolled) {
+      const cid = course.id
+      if (cid && typeof window !== 'undefined') {
+        try {
+          storage.cookie.set(STORAGE_KEYS.COURSE_ENROLLED(cid), 'true', { days: 30, path: '/' })
+          localStorage.setItem(STORAGE_KEYS.COURSE_ENROLLED(cid), 'true')
+        } catch {}
+      }
       navigate(buildCourseUrl(course))
       return
     }

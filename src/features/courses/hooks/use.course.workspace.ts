@@ -42,7 +42,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const { addToCart, isInCart } = useCart(isAuthenticated)
   const queryClient = useQueryClient()
 
-  const { data: rawCourse, isLoading: isCourseLoading } = useCourseDetailQuery(courseId)
+  const { data: rawCourse, isLoading: isCourseLoading, isError: isCourseError } = useCourseDetailQuery(courseId)
 
   const { isEnrolled: checkIsEnrolledByList } = useUserEnrollments(isAuthenticated)
   const isEnrolledInList = checkIsEnrolledByList(courseId)
@@ -57,7 +57,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     overrideEnrolled ??
     (isEnrolledInList ||
       Boolean(enrollmentStatusRes?.is_enrolled) ||
-      (isCourseLoading && initialIsEnrolled))
+      (enrollmentStatusRes === undefined && initialIsEnrolled))
 
   useEffect(() => {
     if (typeof window === 'undefined' || !courseId) return
@@ -77,7 +77,22 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const { data: qnaData } = useCourseQnAQuery(courseId, Boolean(rawCourse))
   const { data: progressData } = useCourseProgressQuery(courseId, Boolean(rawCourse && isEnrolled))
 
+  const derivedCourse = useMemo(() => {
+    if (!rawCourse) return null
+    return mapCourseDataToWorkspace(
+      courseId,
+      rawCourse,
+      isEnrolled,
+      progressData || null,
+      reviewsData || null,
+      [],
+      qnaData || []
+    )
+  }, [courseId, rawCourse, isEnrolled, progressData, reviewsData, qnaData])
+
   const [course, setCourse] = useState<Course | null>(null)
+  const activeCourse = course || derivedCourse
+
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('overview')
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('content')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -88,12 +103,12 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
 
   const lockedChapterIdSet = useMemo(() => {
     const set = new Set<string>()
-    if (!course?.chapters || !isEnrolled) return set
+    if (!activeCourse?.chapters || !isEnrolled) return set
 
     const lockState = progressDetail?.course_progress?.lock_state
 
-    for (let i = 1; i < course.chapters.length; i++) {
-      const prevCh = course.chapters[i - 1]
+    for (let i = 1; i < activeCourse.chapters.length; i++) {
+      const prevCh = activeCourse.chapters[i - 1]
       const prevMod = progressDetail?.modules_progress?.find(
         (m: ModuleProgressInfo) => m.module_id === prevCh.id || m.order_index === (prevCh.order || i)
       )
@@ -107,11 +122,11 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
           (Boolean(prevMod?.challenge_taken) && prevScore >= prevPassingScore)
       )
       if (!passedChallenge) {
-        set.add(course.chapters[i].id)
+        set.add(activeCourse.chapters[i].id)
       }
     }
 
-    course.chapters.forEach((ch, idx) => {
+    activeCourse.chapters.forEach((ch, idx) => {
       const currentOrder = Number(ch.order || idx + 1)
       const mod = progressDetail?.modules_progress?.find(
         (m: ModuleProgressInfo) => m.module_id === ch.id || m.order_index === currentOrder
@@ -128,17 +143,17 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     })
 
     return set
-  }, [course, isEnrolled, progressDetail])
+  }, [activeCourse, isEnrolled, progressDetail])
 
   const navigation = useCourseLessonNavigation({
-    course,
+    course: activeCourse,
     courseId,
     progressDetail,
     lockedChapterIdSet,
   })
 
   const modals = useCourseWorkspaceModals({
-    course,
+    course: activeCourse,
     isAuthenticated,
     isInCart,
     addToCart,
@@ -184,7 +199,9 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     }
   }, [progressData])
 
-  const isLoading = (isCourseLoading || (isAuthenticated && isEnrollmentLoading && !isEnrolledInList)) && !course
+  const isLoading =
+    (isCourseLoading || (!activeCourse && !isCourseError)) ||
+    (isAuthenticated && isEnrollmentLoading && !isEnrolledInList && !initialIsEnrolled)
 
   const setIsEnrolled = useCallback(
     (val: boolean) => {
@@ -214,7 +231,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
 
   const handleToggleLessonComplete = (lessonId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!course) return
+    if (!activeCourse) return
 
     if (!isEnrolled) {
       toast.warning(
@@ -227,7 +244,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     let targetStatus: Lesson['status'] = 'completed'
     let chapterId = navigation.currentChapter?.id || ''
 
-    const nextChapters = course.chapters.map((ch) => ({
+    const nextChapters = activeCourse.chapters.map((ch) => ({
       ...ch,
       lessons: ch.lessons.map((l) => {
         if (l.id === lessonId) {
@@ -243,14 +260,14 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       }),
     }))
 
-    setCourse({ ...course, chapters: nextChapters })
+    setCourse({ ...activeCourse, chapters: nextChapters })
 
-    const curChapId = chapterId || course.chapters[0]?.id || ''
+    const curChapId = chapterId || activeCourse.chapters[0]?.id || ''
     const isNowCompleted = targetStatus === 'completed'
 
     courseService
       .completeLesson({
-        course_id: String(course.id),
+        course_id: String(activeCourse.id),
         module_id: curChapId,
         lesson_id: lessonId,
         is_completed: isNowCompleted,
@@ -266,12 +283,12 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   }
 
   const handleLessonProgress = (lessonId: string, progress: number) => {
-    if (!course || !isEnrolled) return
+    if (!activeCourse || !isEnrolled) return
     let justCompleted = false
     let chapterId = navigation.currentChapter?.id || ''
     const isNowCompleted = progress >= 80 || progress >= 100
 
-    const nextChapters = course.chapters.map((ch) => ({
+    const nextChapters = activeCourse.chapters.map((ch) => ({
       ...ch,
       lessons: ch.lessons.map((l) => {
         if (l.id === lessonId) {
@@ -289,13 +306,13 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       }),
     }))
 
-    setCourse({ ...course, chapters: nextChapters })
+    setCourse({ ...activeCourse, chapters: nextChapters })
 
     if (justCompleted) {
-      const curChapId = chapterId || course.chapters[0]?.id || ''
+      const curChapId = chapterId || activeCourse.chapters[0]?.id || ''
       courseService
         .completeLesson({
-          course_id: String(course.id),
+          course_id: String(activeCourse.id),
           module_id: curChapId,
           lesson_id: lessonId,
           score: 100,
@@ -308,9 +325,10 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const handleLessonDurationChange = useCallback((lessonId: string, durationSec: number) => {
     if (durationSec <= 0) return
     setCourse((prev) => {
-      if (!prev) return prev
+      const target = prev || derivedCourse
+      if (!target) return prev
       let changed = false
-      const updatedChapters = prev.chapters.map((ch) => {
+      const updatedChapters = target.chapters.map((ch) => {
         const updatedLessons = ch.lessons.map((les) => {
           if (les.id === lessonId && les.duration !== durationSec) {
             changed = true
@@ -321,21 +339,21 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
         return { ...ch, lessons: updatedLessons }
       })
 
-      if (!changed) return prev
+      if (!changed) return target
       const newTotalSec = updatedChapters.reduce(
         (acc, ch) => acc + ch.lessons.reduce((lAcc, l) => lAcc + (Number(l.duration) || 0), 0),
         0
       )
       return {
-        ...prev,
+        ...target,
         chapters: updatedChapters,
         duration: formatExactDuration(newTotalSec),
       }
     })
-  }, [])
+  }, [derivedCourse])
 
   const { handleAddNoteAtTimestamp, handleDeleteNote } = useCourseNotes({
-    course,
+    course: activeCourse,
     setCourse,
     currentLesson: navigation.currentLesson,
     isAuthenticated,
@@ -345,7 +363,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   })
 
   const { handleCreateQnA, handleAddQnAAnswer, handleUpvoteQnA } = useCourseQnA({
-    course,
+    course: activeCourse,
     setCourse,
     currentLesson: navigation.currentLesson,
     isAuthenticated,
@@ -354,7 +372,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   })
 
   const { handleAddReview } = useCourseReviews({
-    course,
+    course: activeCourse,
     setCourse,
     isAuthenticated,
     user,
@@ -376,8 +394,9 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   })
 
   return {
-    course,
+    course: activeCourse,
     setCourse,
+    isError: isCourseError,
     currentChapter: navigation.currentChapter,
     currentLesson: navigation.currentLesson,
     isLoading,
