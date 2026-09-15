@@ -1,7 +1,4 @@
-/**
- * @file header.stats.tsx
- * @description Component hiển thị huy hiệu Kim cương, Chuỗi ngày Streak và Nút nâng cấp VIP
- */
+// Component hiển thị huy hiệu Kim cương, Chuỗi ngày Streak và Nút nâng cấp VIP.
 
 'use client'
 
@@ -12,6 +9,8 @@ interface HeaderStatsBadgesProps {
   mounted: boolean
   isPremium?: boolean
   isVi: boolean
+  gems?: number
+  streak?: number
   onAction: (msg: string) => void
   onOpenUpgrade: () => void
 }
@@ -20,6 +19,8 @@ export function HeaderStatsBadges({
   mounted,
   isPremium,
   isVi,
+  gems,
+  streak,
   onAction,
   onOpenUpgrade,
 }: HeaderStatsBadgesProps) {
@@ -31,7 +32,7 @@ export function HeaderStatsBadges({
         variant="ghost"
       >
         <Icon name="diamond" size={16} />
-        <span>1,250</span>
+        <span>{(gems ?? 0).toLocaleString('vi-VN')}</span>
       </Button>
 
       <Button
@@ -40,7 +41,7 @@ export function HeaderStatsBadges({
         variant="ghost"
       >
         <Icon name="flame" size={16} />
-        <span>12</span>
+        <span>{(streak ?? 0).toLocaleString('vi-VN')}</span>
       </Button>
 
       {mounted && !isPremium && (

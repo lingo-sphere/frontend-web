@@ -130,8 +130,8 @@ function RadialDonutGauge({
 export function ProgressGrowthAnalyticsTab({
   recentActivities,
   enrolledCourseCards,
-  targetScore = 650,
-  baselineScore = 240,
+  targetScore = 0,
+  baselineScore = 0,
   listeningScore = 0,
   readingScore = 0,
   onNavigate,
@@ -149,6 +149,7 @@ export function ProgressGrowthAnalyticsTab({
     netGrowth,
     totalCompletedLessons,
     avgCourseProgress,
+    hasExamData,
   } = useProgressGrowthAnalytics({
     recentActivities,
     enrolledCourseCards,
@@ -230,17 +231,23 @@ export function ProgressGrowthAnalyticsTab({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl sm:text-3xl font-black text-text-primary tracking-tight">
-                  {latestScore}đ
+                  {latestScore > 0 ? `${latestScore}đ` : '--'}
                 </span>
-                <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    netGrowth >= 0
-                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                  }`}
-                >
-                  {netGrowth >= 0 ? `+${netGrowth}đ` : `${netGrowth}đ`}
-                </span>
+                {hasExamData ? (
+                  <span
+                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                      netGrowth >= 0
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                    }`}
+                  >
+                    {netGrowth >= 0 ? `+${netGrowth}đ` : `${netGrowth}đ`}
+                  </span>
+                ) : (
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-surface-subtle text-text-tertiary">
+                    Chưa có bài thi
+                  </span>
+                )}
               </div>
               <span className="text-[11px] text-text-tertiary font-medium">Điểm số bài kiểm tra gần nhất</span>
             </div>
@@ -252,14 +259,14 @@ export function ProgressGrowthAnalyticsTab({
               height={200}
               minVal={0}
               maxVal={990}
-              targetValue={targetScore}
+              targetValue={targetScore > 0 ? targetScore : undefined}
               targetLabel="Mục tiêu"
-              baselineValue={baselineScore}
+              baselineValue={baselineScore > 0 ? baselineScore : undefined}
               baselineLabel="Baseline"
               colorTheme="indigo"
               valueSuffix="đ"
               yAxisTicks={[0, 250, 450, 650, 850, 990]}
-              emptyMessage="Chưa có bài thi nào được ghi nhận."
+              emptyMessage="Chưa có bài thi nào được ghi nhận. Hãy luyện đề hoặc làm bài kiểm tra đầu vào để theo dõi biến thiên năng lực."
             />
           </div>
 
@@ -271,11 +278,11 @@ export function ProgressGrowthAnalyticsTab({
               </span>
               <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
                 <span className="w-2.5 h-0.5 border-t-2 border-dashed border-amber-500" />
-                Mục tiêu ({targetScore}đ)
+                {targetScore > 0 ? `Mục tiêu (${targetScore}đ)` : 'Mục tiêu (Chưa đặt)'}
               </span>
               <span className="flex items-center gap-1 font-semibold text-slate-500">
                 <span className="w-2.5 h-0.5 border-t-2 border-dashed border-slate-400" />
-                Baseline ({baselineScore}đ)
+                {baselineScore > 0 ? `Baseline (${baselineScore}đ)` : 'Baseline (Chưa có)'}
               </span>
             </div>
             <Button
@@ -304,15 +311,21 @@ export function ProgressGrowthAnalyticsTab({
           <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-subtle/60 border border-border/60 text-center">
             <div>
               <span className="text-[10px] font-bold text-text-tertiary block">Baseline</span>
-              <span className="text-sm font-black text-text-primary">{baselineScore}đ</span>
+              <span className="text-sm font-black text-text-primary">
+                {baselineScore > 0 ? `${baselineScore}đ` : '--'}
+              </span>
             </div>
             <div className="border-x border-border/60">
               <span className="text-[10px] font-bold text-text-tertiary block">Kỷ lục</span>
-              <span className="text-sm font-black text-amber-600 dark:text-amber-400">{peakScore}đ</span>
+              <span className="text-sm font-black text-amber-600 dark:text-amber-400">
+                {peakScore > 0 ? `${peakScore}đ` : '--'}
+              </span>
             </div>
             <div>
               <span className="text-[10px] font-bold text-text-tertiary block">Mục tiêu</span>
-              <span className="text-sm font-black text-primary">{targetScore}đ</span>
+              <span className="text-sm font-black text-primary">
+                {targetScore > 0 ? `${targetScore}đ` : 'Chưa đặt'}
+              </span>
             </div>
           </div>
 

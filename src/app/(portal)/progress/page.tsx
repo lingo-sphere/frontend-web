@@ -148,8 +148,8 @@ export default function ProgressAppPage() {
         <ProgressGrowthAnalyticsTab
           recentActivities={recentActivities}
           enrolledCourseCards={enrolledCourseCards}
-          targetScore={metrics.targetScore || 650}
-          baselineScore={Number(activeUser?.placement_test_score) || 240}
+          targetScore={metrics.targetScore}
+          baselineScore={Number(activeUser?.placement_test_score) || 0}
           listeningScore={listeningScore}
           readingScore={readingScore}
           onNavigate={navigate}

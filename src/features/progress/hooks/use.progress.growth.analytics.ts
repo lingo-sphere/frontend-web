@@ -40,7 +40,7 @@ function formatFullDate(isoString?: string): string {
 export function useProgressGrowthAnalytics({
   recentActivities,
   enrolledCourseCards,
-  baselineScore = 240,
+  baselineScore = 0,
 }: UseProgressGrowthAnalyticsProps) {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('all')
 
@@ -152,16 +152,17 @@ export function useProgressGrowthAnalytics({
   }, [selectedCourseId, courseGrowthPoints, enrolledCourseCards])
 
   const peakScore = useMemo(() => {
-    if (recentActivities.length === 0) return baselineScore
-    return Math.max(...recentActivities.map((a) => a.scoreValue), baselineScore)
+    if (recentActivities.length === 0) return baselineScore > 0 ? baselineScore : 0
+    return Math.max(...recentActivities.map((a) => a.scoreValue), baselineScore > 0 ? baselineScore : 0)
   }, [recentActivities, baselineScore])
 
   const latestScore = useMemo(() => {
-    if (recentActivities.length === 0) return baselineScore
+    if (recentActivities.length === 0) return baselineScore > 0 ? baselineScore : 0
     return recentActivities[0].scoreValue
   }, [recentActivities, baselineScore])
 
-  const netGrowth = latestScore - baselineScore
+  const netGrowth = baselineScore > 0 && latestScore > 0 ? latestScore - baselineScore : 0
+  const hasExamData = recentActivities.length > 0 || baselineScore > 0
 
   const totalCompletedLessons = useMemo(() => {
     return enrolledCourseCards.reduce((acc, c) => acc + (c.completed_lessons_count || 0), 0)
@@ -185,5 +186,6 @@ export function useProgressGrowthAnalytics({
     netGrowth,
     totalCompletedLessons,
     avgCourseProgress,
+    hasExamData,
   }
 }

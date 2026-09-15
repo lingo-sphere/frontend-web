@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Heart, ShoppingCart } from 'lucide-react'
 import { useMounted } from '@/hooks/use.mounted'
 
@@ -23,13 +23,13 @@ import { useApp } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
+import { useGamificationProfileQuery } from '@/features/progress/hooks/use.progress.query'
 import { useNavigate } from '@/lib/navigation'
 import {
   useMyNotifications,
   useMarkNotificationAsReadMutation,
 } from '@/features/notifications/hooks/use.notifications.query'
 import { useLanguage } from '@/hooks/use.language'
-import type { Notification } from '@/features/notifications/types/notification'
 
 export { getRemainingSubscriptionText } from '@/layouts/header.utils'
 
@@ -56,6 +56,9 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
 
   const { data: notifications = [] } = useMyNotifications(undefined, isAuthenticated)
   const { mutate: markNotificationAsRead } = useMarkNotificationAsReadMutation()
+  const { data: gamification } = useGamificationProfileQuery(isAuthenticated)
+  const gems = gamification?.gems ?? user?.xp ?? 0
+  const streak = gamification?.current_streak ?? user?.streak_count ?? 0
 
   const handleMouseEnter = (menu: 'learning' | 'wishlist' | 'cart' | 'user') => {
     if (hoverTimerRef.current) {
@@ -99,6 +102,8 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             mounted={mounted}
             isPremium={Boolean(user?.is_premium)}
             isVi={isVi}
+            gems={gems}
+            streak={streak}
             onAction={onAction}
             onOpenUpgrade={() => setUpgradeOpen(true)}
           />
