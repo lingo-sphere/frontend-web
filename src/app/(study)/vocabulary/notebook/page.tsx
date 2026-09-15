@@ -1,311 +1,368 @@
 /**
  * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/vocabulary/notebook
+ * @description Trang Sổ tay từ vựng - hiển thị các từ đã lưu theo từng meaning riêng biệt
  */
 
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from '@/lib/navigation'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Layers3, Bookmark } from 'lucide-react'
+import { Bookmark, Search, Volume2, Volume1, ChevronLeft, ChevronRight, Loader2, Trash2, LogIn } from 'lucide-react'
+import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
-import { SelectDeckModal } from '@/features/vocabulary/components/select.deck.modal'
-import { ConfirmDeleteModal } from '@/features/vocabulary/components/confirm.delete.modal'
-import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary'
-import type { Deck } from '@/types/api.types'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
-import { VocabularyTab } from '@/features/vocabulary/components/notebook.word.manager'
-import { DecksTab, CreateDeckModal } from '@/features/vocabulary/components/notebook.deck.list'
+import { playAudio } from '@/utils/media.utils'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+
+interface SavedMeaningItem {
+  saved_id: string
+  lexical_item_id: string
+  word: string
+  ipa?: string
+  part_of_speech: string
+  cefr?: string
+  meaning_index: number
+  meaning: string
+  examples: Array<{ en: string; vi?: string }>
+  audio_us?: string
+  audio_uk?: string
+  saved_at: string
+}
+
+const ITEMS_PER_PAGE = 20
 
 export default function NotebookAppPage() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const navigate = useNavigate()
   const { showAction } = useApp()
-  const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
-  const [activeTab, setActiveTab] = useState<'vocabulary' | 'decks'>('vocabulary')
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
-  const [savedVocabulary, setSavedVocabulary] = useState<SavedVocabulary[]>([])
-  const [userDecks, setUserDecks] = useState<UserDeck[]>([])
+  // State
+  const [savedItems, setSavedItems] = useState<SavedMeaningItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [isUnsaveLoading, setIsUnsaveLoading] = useState<string | null>(null)
+
+  // Fetch saved vocabulary - chỉ khi đã login
+  const fetchSavedVocabulary = useCallback(async (pageNum: number) => {
+    if (!isAuthenticated) {
+      setSavedItems([])
+      setTotalItems(0)
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      const response = await vocabularyService.getSavedVocabulary({
+        page: pageNum,
+        limit: ITEMS_PER_PAGE,
+      })
+
+      console.log('[Notebook] API response:', response)
+      setSavedItems(response.items || [])
+      setTotalPages(response.pagination?.total_pages || 1)
+      setTotalItems(response.pagination?.total || 0)
+    } catch (err) {
+      console.error('Failed to fetch saved vocabulary:', err)
+      showAction(isVietnamese ? 'Không thể tải danh sách từ đã lưu' : 'Failed to load saved vocabulary')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [isAuthenticated, showAction, isVietnamese])
 
   useEffect(() => {
-    let isMounted = true
-    const loadNotebookData = async () => {
-      try {
-        const enrollments = await vocabularyService.getMyEnrollments().catch(() => [])
-        if (isMounted && Array.isArray(enrollments)) {
-          const mappedDecks: UserDeck[] = enrollments.map((d: Deck, idx: number) => ({
-            id: d._id || `deck-${idx}`,
-            name: d.name || 'Personal Deck',
-            title: d.name || 'Personal Deck',
-            cardCount: d.card_count || 0,
-            createdAt: d.created_at || new Date().toISOString(),
-          }))
-          setUserDecks(mappedDecks)
-        }
-      } catch (err) {
-        console.error('Failed to load notebook enrollments:', err)
-      }
-    }
-    loadNotebookData()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+    fetchSavedVocabulary(page)
+  }, [fetchSavedVocabulary, page, isAuthenticated])
 
-  const [selectDeckModal, setSelectDeckModal] = useState<{
-    isOpen: boolean
-    word: SavedVocabulary | null
-  }>({ isOpen: false, word: null })
-
-  const [deleteWordModal, setDeleteWordModal] = useState<{
-    isOpen: boolean
-    word: SavedVocabulary | null
-  }>({ isOpen: false, word: null })
-
-  const [createDeckModal, setCreateDeckModal] = useState<boolean>(false)
-  const [newDeckTitle, setNewDeckTitle] = useState('')
-
-  const deckWordCounts = useMemo(() => {
-    const counts: Record<string, number> = {}
-    savedVocabulary.forEach((item) => {
-      if (item.deck_id) {
-        counts[item.deck_id] = (counts[item.deck_id] || 0) + 1
-      }
-    })
-    return counts
-  }, [savedVocabulary])
-
-  const wordsInDeck = (deckId: string) => {
-    return savedVocabulary.filter((item) => item.deck_id === deckId)
-  }
-
-  const handleDeckClick = (deckId: string) => {
-    setActiveNavItem('vocabulary')
-    navigate(`/vocabulary/learn/${deckId}`)
-    showAction(isVietnamese ? 'Bắt đầu học deck' : 'Starting deck learning')
-  }
-
-  const handleAddToDeck = (word: SavedVocabulary) => {
-    setSelectDeckModal({ isOpen: true, word })
-  }
-
-  const handleSelectDeck = (
-    deckId: string | null,
-    createNew: boolean,
-    newDeckTitle?: string
-  ) => {
-    const word = selectDeckModal.word
-    if (!word) return
-
-    if (createNew && newDeckTitle) {
-      const newDeck: UserDeck = {
-        id: `deck-${Date.now()}`,
-        name: newDeckTitle,
-        title: newDeckTitle,
-        cardCount: 1,
-        createdAt: new Date().toISOString(),
-      }
-      setUserDecks((prev) => [...prev, newDeck])
-
-      setSavedVocabulary((prev) =>
-        prev.map((item) =>
-          item.id === word.id ? { ...item, deck_id: newDeck.id } : item
+  // Filter by search
+  const filteredItems = searchQuery
+    ? savedItems.filter((item) => {
+        const query = searchQuery.toLowerCase()
+        return (
+          item.word.toLowerCase().includes(query) ||
+          item.meaning.toLowerCase().includes(query) ||
+          item.part_of_speech.toLowerCase().includes(query)
         )
-      )
+      })
+    : savedItems
+
+  // Handle unsave
+  const handleUnsave = async (item: SavedMeaningItem) => {
+    try {
+      setIsUnsaveLoading(item.saved_id)
+      await vocabularyService.unsaveVocabulary(item.lexical_item_id, item.meaning_index)
+
+      // Update UI
+      setSavedItems((prev) => prev.filter((i) => i.saved_id !== item.saved_id))
+      setTotalItems((prev) => Math.max(0, prev - 1))
 
       showAction(
         isVietnamese
-          ? `Đã tạo deck "${newDeckTitle}" và thêm từ`
-          : `Created deck "${newDeckTitle}" and added word`
+          ? `Đã bỏ lưu "${item.word}"`
+          : `Unsaved "${item.word}"`
       )
-    } else if (deckId) {
-      setSavedVocabulary((prev) =>
-        prev.map((item) =>
-          item.id === word.id ? { ...item, deck_id: deckId } : item
-        )
-      )
-
-      const targetDeck = userDecks.find((d) => d.id === deckId)
-      showAction(
-        isVietnamese
-          ? `Đã thêm từ vào deck "${targetDeck?.title || ''}"`
-          : `Added word to deck "${targetDeck?.title || ''}"`
-      )
+    } catch (err) {
+      console.error('Failed to unsave:', err)
+      showAction(isVietnamese ? 'Không thể bỏ lưu từ này' : 'Failed to unsave')
+    } finally {
+      setIsUnsaveLoading(null)
     }
-
-    setSelectDeckModal({ isOpen: false, word: null })
   }
 
-  const handleDeleteWord = (word: SavedVocabulary) => {
-    setDeleteWordModal({ isOpen: true, word })
-  }
-
-  const confirmDeleteWord = () => {
-    const word = deleteWordModal.word
-    if (!word) return
-
-    setSavedVocabulary((prev) => prev.filter((item) => item.id !== word.id))
-    showAction(
-      isVietnamese
-        ? `Đã xóa từ "${word.lexical_item.word}" khỏi sổ tay`
-        : `Deleted word "${word.lexical_item.word}" from notebook`
-    )
-    setDeleteWordModal({ isOpen: false, word: null })
-  }
-
-  const handleRemoveFromDeck = (word: SavedVocabulary) => {
-    setSavedVocabulary((prev) =>
-      prev.map((item) =>
-        item.id === word.id ? { ...item, deck_id: undefined } : item
-      )
-    )
-    showAction(
-      isVietnamese
-        ? `Đã chuyển từ "${word.lexical_item.word}" về danh sách từ vựng`
-        : `Moved word "${word.lexical_item.word}" back to general list`
-    )
-  }
-
-  const handleCreateDeck = () => {
-    if (!newDeckTitle.trim()) return
-
-    const newDeck: UserDeck = {
-      id: `deck-${Date.now()}`,
-      name: newDeckTitle.trim(),
-      title: newDeckTitle.trim(),
-      cardCount: 0,
-      createdAt: new Date().toISOString(),
+  // Play audio
+  const handlePlayAudio = (type: 'us' | 'uk', item: SavedMeaningItem) => {
+    const audioUrl = type === 'us' ? item.audio_us : item.audio_uk
+    if (audioUrl) {
+      playAudio(audioUrl)
     }
-
-    setUserDecks((prev) => [...prev, newDeck])
-    showAction(
-      isVietnamese
-        ? `Đã tạo deck "${newDeckTitle.trim()}"`
-        : `Created deck "${newDeckTitle.trim()}"`
-    )
-    setNewDeckTitle('')
-    setCreateDeckModal(false)
-  }
-
-  const handleDeleteDeck = (deck: UserDeck) => {
-    setSavedVocabulary((prev) =>
-      prev.map((item) =>
-        item.deck_id === deck.id ? { ...item, deck_id: undefined } : item
-      )
-    )
-    setUserDecks((prev) => prev.filter((d) => d.id !== deck.id))
-    showAction(
-      isVietnamese
-        ? `Đã xóa deck "${deck.name || deck.title}". Các từ đã được chuyển về Danh sách từ vựng.`
-        : `Deleted deck "${deck.name || deck.title}". Words moved back to General Vocabulary.`
-    )
   }
 
   return (
-    <>
-      <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-        <SectionHeading
-          eyebrow={t('vocabulary.title')}
-          title={isVietnamese ? 'Sổ tay từ vựng' : 'Vocabulary Notebook'}
-          description={
-            isVietnamese
-              ? 'Quản lý từ vựng đã lưu và phân loại vào các bộ thẻ'
-              : 'Manage saved vocabulary and organize them into decks'
-          }
-        />
+    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+      <SectionHeading
+        eyebrow={isVietnamese ? 'Từ vựng' : 'Vocabulary'}
+        title={isVietnamese ? 'Sổ tay từ vựng' : 'Vocabulary Notebook'}
+        description={
+          isVietnamese
+            ? 'Quản lý các từ đã lưu theo từng nghĩa riêng biệt'
+            : 'Manage saved words by individual meanings'
+        }
+      />
 
-        <div className="mt-6 flex gap-2 border-b border-border">
-          <button
-            onClick={() => setActiveTab('vocabulary')}
-            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-[14px] font-medium transition-colors ${
-              activeTab === 'vocabulary'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <Bookmark size={16} />
-            {isVietnamese ? 'Danh sách từ vựng' : 'Vocabulary List'}
-            <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-tertiary">
-              {savedVocabulary.length}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab('decks')}
-            className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-[14px] font-medium transition-colors ${
-              activeTab === 'decks'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <Layers3 size={16} />
-            {isVietnamese ? 'Bộ thẻ cá nhân' : 'Personal Decks'}
-            <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-tertiary">
-              {userDecks.length}
-            </span>
-          </button>
+      {/* Search & Stats */}
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+          <input
+            type="text"
+            placeholder={
+              isVietnamese ? 'Tìm kiếm từ đã lưu...' : 'Search saved words...'
+            }
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none"
+          />
         </div>
 
-        <div className="mt-6">
-          {activeTab === 'vocabulary' ? (
-            <VocabularyTab
-              savedVocabulary={savedVocabulary}
-              userDecks={userDecks}
-              onAddToDeck={handleAddToDeck}
-              onRemoveFromDeck={handleRemoveFromDeck}
-              onDeleteWord={handleDeleteWord}
-              onAction={showAction}
-              isVietnamese={isVietnamese}
-            />
-          ) : (
-            <DecksTab
-              decks={userDecks}
-              deckWordCounts={deckWordCounts}
-              wordsInDeck={wordsInDeck}
-              onDeckClick={handleDeckClick}
-              onDeleteDeck={handleDeleteDeck}
-              onCreateDeck={() => setCreateDeckModal(true)}
-              onAction={showAction}
-              isVietnamese={isVietnamese}
-            />
+        <div className="text-sm text-text-secondary">
+          {isVietnamese ? 'Tổng cộng' : 'Total'}: <span className="font-medium text-text-primary">{totalItems}</span>{' '}
+          {isVietnamese ? 'từ đã lưu' : 'saved words'}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="mt-6">
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : !isAuthenticated ? (
+          /* Chưa đăng nhập */
+          <div className="flex h-64 flex-col items-center justify-center text-center">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-surface-subtle">
+              <Bookmark className="text-text-tertiary" size={40} />
+            </div>
+            <h3 className="text-[16px] font-semibold text-text-primary">
+              {isVietnamese ? 'Đăng nhập để lưu từ vựng' : 'Login to save vocabulary'}
+            </h3>
+            <p className="mt-2 max-w-sm text-[14px] text-text-secondary">
+              {isVietnamese
+                ? 'Đăng nhập để lưu các từ vựng yêu thích và xây dựng bộ sưu tập của riêng bạn.'
+                : 'Login to save your favorite words and build your personal vocabulary collection.'}
+            </p>
+            <Button className="mt-6 gap-2" onClick={() => window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))}>
+              <LogIn size={16} />
+              {isVietnamese ? 'Đăng nhập' : 'Login'}
+            </Button>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="flex h-64 flex-col items-center justify-center text-center">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-surface-subtle">
+              <Bookmark className="text-text-tertiary" size={40} />
+            </div>
+            <h3 className="text-[16px] font-semibold text-text-primary">
+              {searchQuery
+                ? (isVietnamese ? 'Không tìm thấy từ nào' : 'No words found')
+                : (isVietnamese ? 'Chưa có từ nào đã lưu' : 'No saved words yet')}
+            </h3>
+            <p className="mt-2 max-w-sm text-[14px] text-text-secondary">
+              {searchQuery
+                ? (isVietnamese ? 'Thử tìm kiếm với từ khóa khác' : 'Try a different search term')
+                : (isVietnamese
+                  ? 'Bắt đầu lưu từ từ điển để xây dựng bộ sưu tập từ vựng cá nhân của bạn.'
+                  : 'Start saving words from the dictionary to build your personal vocabulary collection.')}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Cards Grid */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredItems.map((item) => (
+                <SavedMeaningCard
+                  key={`${item.lexical_item_id}-${item.meaning_index}`}
+                  item={item}
+                  onUnsave={handleUnsave}
+                  onPlayAudio={handlePlayAudio}
+                  isUnsaveLoading={isUnsaveLoading === item.saved_id}
+                  isVietnamese={isVietnamese}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && !searchQuery && (
+              <div className="mt-6 flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft size={16} />
+                </Button>
+
+                <span className="px-3 text-sm text-text-secondary">
+                  {page} / {totalPages}
+                </span>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  <ChevronRight size={16} />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </main>
+  )
+}
+
+// ==================== SAVED MEANING CARD ====================
+
+interface SavedMeaningCardProps {
+  item: SavedMeaningItem
+  onUnsave: (item: SavedMeaningItem) => void
+  onPlayAudio: (type: 'us' | 'uk', item: SavedMeaningItem) => void
+  isUnsaveLoading: boolean
+  isVietnamese: boolean
+}
+
+function SavedMeaningCard({
+  item,
+  onUnsave,
+  onPlayAudio,
+  isUnsaveLoading,
+  isVietnamese,
+}: SavedMeaningCardProps) {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString(isVietnamese ? 'vi-VN' : 'en-US', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
+  return (
+    <div className="group relative rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary/30 hover:shadow-md">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <h3 className="text-lg font-bold text-text-primary">{item.word}</h3>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            {item.cefr && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                {item.cefr}
+              </span>
+            )}
+            <span className="text-xs text-text-secondary">{item.part_of_speech}</span>
+          </div>
+        </div>
+
+        {/* Audio buttons */}
+        <div className="flex gap-1">
+          {item.audio_us && (
+            <button
+              onClick={() => onPlayAudio('us', item)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+              title={isVietnamese ? 'Phát âm US' : 'Play US'}
+            >
+              <Volume1 size={14} />
+            </button>
+          )}
+          {item.audio_uk && (
+            <button
+              onClick={() => onPlayAudio('uk', item)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 transition-colors hover:bg-emerald-500/20"
+              title={isVietnamese ? 'Phát âm UK' : 'Play UK'}
+            >
+              <Volume2 size={14} />
+            </button>
           )}
         </div>
+      </div>
 
-        <SelectDeckModal
-          isOpen={selectDeckModal.isOpen}
-          word={selectDeckModal.word?.lexical_item?.word || ''}
-          existingDecks={userDecks}
-          onClose={() => setSelectDeckModal({ isOpen: false, word: null })}
-          onSelectDeck={handleSelectDeck}
-        />
+      {/* IPA */}
+      {item.ipa && (
+        <p className="mt-2 font-mono text-sm text-primary">/{item.ipa}/</p>
+      )}
 
-        <ConfirmDeleteModal
-          isOpen={deleteWordModal.isOpen}
-          title={isVietnamese ? 'Xóa từ vựng' : 'Delete Word'}
-          message={
-            isVietnamese
-              ? `Bạn có chắc muốn xóa từ "${deleteWordModal.word?.lexical_item?.word || ''}"?`
-              : `Are you sure you want to delete "${deleteWordModal.word?.lexical_item?.word || ''}"?`
-          }
-          onClose={() => setDeleteWordModal({ isOpen: false, word: null })}
-          onConfirm={confirmDeleteWord}
-        />
+      {/* Meaning */}
+      <div className="mt-3">
+        <span className="text-xs font-medium text-text-tertiary">
+          {isVietnamese ? 'Nghĩa' : 'Meaning'} #{item.meaning_index + 1}:
+        </span>
+        <p className="mt-1 text-sm text-text-primary">{item.meaning}</p>
+      </div>
 
-        <CreateDeckModal
-          isOpen={createDeckModal}
-          deckTitle={newDeckTitle}
-          onClose={() => {
-            setCreateDeckModal(false)
-            setNewDeckTitle('')
-          }}
-          onDeckTitleChange={setNewDeckTitle}
-          onCreate={handleCreateDeck}
-          isVietnamese={isVietnamese}
-        />
-      </main>
-    </>
+      {/* Examples */}
+      {item.examples && item.examples.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {item.examples.slice(0, 1).map((ex, idx) => (
+            <div key={idx} className="rounded-lg border-l-2 border-primary/30 bg-surface-hover/50 px-3 py-2">
+              <p className="text-xs italic text-text-primary">"{ex.en}"</p>
+              {ex.vi && (
+                <p className="mt-0.5 text-xs text-text-secondary">{ex.vi}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+        <span className="text-xs text-text-tertiary">
+          {formatDate(item.saved_at)}
+        </span>
+
+        <button
+          onClick={() => onUnsave(item)}
+          disabled={isUnsaveLoading}
+          className="flex items-center gap-1 text-xs text-text-tertiary transition-colors hover:text-red-500 disabled:opacity-50"
+        >
+          {isUnsaveLoading ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            <Trash2 size={14} />
+          )}
+          {isVietnamese ? 'Xóa' : 'Remove'}
+        </button>
+      </div>
+
+      {/* Saved indicator */}
+      <div className="absolute right-3 top-3">
+        <Bookmark size={16} className="fill-primary text-primary" />
+      </div>
+    </div>
   )
 }
