@@ -124,6 +124,8 @@ export default function ExamAttemptDetailPage() {
         formatDateTime={formatDateTime}
         listeningScore={detailData?.attempt?.listening_scaled_score}
         readingScore={detailData?.attempt?.reading_scaled_score}
+        teacherFeedback={detailData?.attempt?.teacher_feedback}
+        isScoreManuallyEdited={detailData?.attempt?.is_score_manually_edited}
       />
 
       {isCourseTest && courseQuestions.length > 0 && (

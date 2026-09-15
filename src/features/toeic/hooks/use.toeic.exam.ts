@@ -21,6 +21,20 @@ import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export type PracticeMode = 'FULL' | 'LISTENING' | 'READING' | 'PART'
 
+export interface EvaluatedAnswerItem {
+  whisper_transcript?: string
+  ai_score?: number
+  ai_feedback?: {
+    pronunciation_score?: number
+    fluency_score?: number
+    grammar_score?: number
+    vocabulary_score?: number
+    detailed_comment?: string
+    improvement_tips?: string[]
+  }
+  is_correct?: boolean
+}
+
 export interface ExamState {
   mode: PracticeMode
   selectedParts: number[]
@@ -54,6 +68,9 @@ export function useToeicExam(examId?: string) {
     showAnswer: false,
     timedMode: true,
   })
+
+  const [evaluatedAnswers, setEvaluatedAnswers] = useState<Record<number, EvaluatedAnswerItem>>({})
+  const [isSubmittingAttempt, setIsSubmittingAttempt] = useState<boolean>(false)
 
   const [recommendedCourses, setRecommendedCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
@@ -120,8 +137,8 @@ export function useToeicExam(examId?: string) {
   }, [examData, examId])
 
   const calculateResults = useCallback((): ExamResultMetrics => {
-    return calculateToeicExamResults(allQuestions, state.answers)
-  }, [allQuestions, state.answers])
+    return calculateToeicExamResults(allQuestions, state.answers, evaluatedAnswers)
+  }, [allQuestions, state.answers, evaluatedAnswers])
 
   useEffect(() => {
     if (!state.submitted) return
@@ -186,6 +203,7 @@ export function useToeicExam(examId?: string) {
 
     const submitAttemptToBackend = async () => {
       try {
+        setIsSubmittingAttempt(true)
         let currentAttemptId = attemptIdRef.current
         if (!currentAttemptId && examId) {
           const newAttempt = await examService.startExamAttempt(examId, {
@@ -197,12 +215,57 @@ export function useToeicExam(examId?: string) {
           }
         }
         if (currentAttemptId) {
-          await examService.submitExamAttempt(currentAttemptId, formattedAnswers, timeSpent)
+          const submitRes = await examService.submitExamAttempt(currentAttemptId, formattedAnswers, timeSpent)
+          if (submitRes && Array.isArray((submitRes as Record<string, unknown>).answers)) {
+            const rawAnswers = (submitRes as Record<string, unknown>).answers as Array<Record<string, unknown>>
+            const evalMap: Record<number, EvaluatedAnswerItem> = {}
+            rawAnswers.forEach((ans) => {
+              const qNum = typeof ans.question_number === 'number' ? ans.question_number : Number(ans.question_number)
+              if (qNum) {
+                evalMap[qNum] = {
+                  whisper_transcript: typeof ans.whisper_transcript === 'string' ? ans.whisper_transcript : undefined,
+                  ai_score: typeof ans.ai_score === 'number' ? ans.ai_score : undefined,
+                  ai_feedback: ans.ai_feedback as EvaluatedAnswerItem['ai_feedback'],
+                  is_correct: typeof ans.is_correct === 'boolean' ? ans.is_correct : undefined,
+                }
+              }
+            })
+            setEvaluatedAnswers(evalMap)
+            const updatedRes = calculateToeicExamResults(allQuestions, state.answers, evalMap)
+            const is4SkillsUpdated = Boolean(
+              examId?.includes('4skills') ||
+                examData?.skills_enabled === 'ALL' ||
+                (updatedRes.speakingTotal && updatedRes.speakingTotal > 0) ||
+                (updatedRes.writingTotal && updatedRes.writingTotal > 0)
+            )
+            const updatedPlacementData = {
+              placement_test_score: updatedRes.estimatedTotal,
+              placement_listening_score: updatedRes.estimatedListening,
+              placement_reading_score: updatedRes.estimatedReading,
+              placement_speaking_score: is4SkillsUpdated ? (updatedRes.estimatedSpeaking ?? 0) : undefined,
+              placement_writing_score: is4SkillsUpdated ? (updatedRes.estimatedWriting ?? 0) : undefined,
+              placement_skills_type: is4SkillsUpdated ? '4SKILLS' : '2SKILLS',
+              target_toeic_score: Math.min(990, updatedRes.estimatedTotal + 150),
+              current_estimated_score: updatedRes.estimatedTotal,
+              is_score_manually_edited: false,
+              placement_tested_at: new Date().toISOString(),
+            }
+            try {
+              storage.set(STORAGE_KEYS.PLACEMENT_SCORE, updatedPlacementData)
+              userService.updateProfile(updatedPlacementData).catch(() => null)
+              const { user, setUser } = useAuthStore.getState()
+              if (user) {
+                setUser({ ...user, ...updatedPlacementData })
+              }
+            } catch {}
+          }
           queryClient.invalidateQueries({ queryKey: toeicKeys.history() })
           queryClient.invalidateQueries({ queryKey: toeicKeys.courseAttempts() })
         }
       } catch (err) {
         console.warn('Lỗi khi nộp bài lên hệ thống:', err)
+      } finally {
+        setIsSubmittingAttempt(false)
       }
     }
     submitAttemptToBackend()
@@ -329,5 +392,7 @@ export function useToeicExam(examId?: string) {
     handleRetry,
     handleChooseAnother,
     calculateResults,
+    evaluatedAnswers,
+    isSubmittingAttempt,
   }
 }

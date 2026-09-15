@@ -1,5 +1,5 @@
 // Component hiển thị chi tiết câu hỏi, lựa chọn và giải thích cho từng câu bài làm.
-import { CheckCircle, XCircle, AlertCircle, Mic } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, Mic, Bot, Sparkles, Lightbulb, Volume2, PenTool } from 'lucide-react'
 import { Card } from '@/components/card'
 import { Badge } from '@/components/badge'
 
@@ -9,6 +9,16 @@ export interface AttemptAnswerDetail {
   correct_option: string
   is_correct: boolean
   is_skipped: boolean
+  whisper_transcript?: string
+  ai_score?: number
+  ai_feedback?: {
+    pronunciation_score?: number
+    fluency_score?: number
+    grammar_score?: number
+    vocabulary_score?: number
+    detailed_comment?: string
+    improvement_tips?: string[]
+  }
   question_id?: {
     question_text_en?: string
     question_text_vi?: string
@@ -203,6 +213,106 @@ export function ToeicQuestionCard({ answer }: ToeicQuestionCardProps) {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {!isAudioAns && rawAnswer.length > 15 && (!q?.options || q.options.length === 0) && (
+        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1.5">
+          <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-bold text-xs">
+            <PenTool size={13} className="text-indigo-600" />
+            <span>Bài viết của bạn:</span>
+          </div>
+          <p className="text-xs text-text-primary leading-relaxed whitespace-pre-wrap bg-white dark:bg-slate-900 p-3 rounded-lg border border-border">
+            {rawAnswer}
+          </p>
+        </div>
+      )}
+
+      {(answer.whisper_transcript || answer.ai_score !== undefined || answer.ai_feedback) && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-violet-50/90 via-purple-50/60 to-indigo-50/40 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 border border-violet-200/80 dark:border-violet-800/60 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-violet-700 dark:text-violet-300">
+              <Bot size={15} className="text-violet-600" />
+              <span>Đánh Giá & Chấm Điểm Từ AI (Whisper STT + AI Evaluator):</span>
+            </div>
+            {answer.ai_score !== undefined && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-violet-600 text-white shadow-xs">
+                Điểm AI: {answer.ai_score}/100
+              </span>
+            )}
+          </div>
+
+          {answer.whisper_transcript && (
+            <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-violet-100 dark:border-violet-900/40 space-y-1">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-violet-600 dark:text-violet-400">
+                <Volume2 size={13} />
+                <span>Nội dung bài nói đã nhận diện (Whisper STT Transcript):</span>
+              </div>
+              <p className="text-xs text-text-primary font-medium italic pl-1">
+                "{answer.whisper_transcript}"
+              </p>
+            </div>
+          )}
+
+          {answer.ai_feedback && (
+            <div className="space-y-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {answer.ai_feedback.pronunciation_score !== undefined && (
+                  <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                    <span className="text-[10px] font-bold text-text-tertiary uppercase block">Phát âm</span>
+                    <span className="text-xs font-black text-violet-600 dark:text-violet-400">
+                      {answer.ai_feedback.pronunciation_score}/100
+                    </span>
+                  </div>
+                )}
+                {answer.ai_feedback.fluency_score !== undefined && (
+                  <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                    <span className="text-[10px] font-bold text-text-tertiary uppercase block">Trôi chảy</span>
+                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">
+                      {answer.ai_feedback.fluency_score}/100
+                    </span>
+                  </div>
+                )}
+                {answer.ai_feedback.grammar_score !== undefined && (
+                  <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                    <span className="text-[10px] font-bold text-text-tertiary uppercase block">Ngữ pháp</span>
+                    <span className="text-xs font-black text-blue-600 dark:text-blue-400">
+                      {answer.ai_feedback.grammar_score}/100
+                    </span>
+                  </div>
+                )}
+                {answer.ai_feedback.vocabulary_score !== undefined && (
+                  <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                    <span className="text-[10px] font-bold text-text-tertiary uppercase block">Từ vựng</span>
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      {answer.ai_feedback.vocabulary_score}/100
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {answer.ai_feedback.detailed_comment && (
+                <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-violet-100 dark:border-violet-900/40 text-xs text-text-primary space-y-1">
+                  <span className="font-bold text-violet-700 dark:text-violet-300 block">Nhận xét chi tiết từ AI:</span>
+                  <p className="leading-relaxed whitespace-pre-wrap">{answer.ai_feedback.detailed_comment}</p>
+                </div>
+              )}
+
+              {answer.ai_feedback.improvement_tips && answer.ai_feedback.improvement_tips.length > 0 && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                  <span className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                    <Lightbulb size={14} />
+                    <span>Gợi ý cải thiện:</span>
+                  </span>
+                  <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
+                    {answer.ai_feedback.improvement_tips.map((tip, tIdx) => (
+                      <li key={tIdx}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

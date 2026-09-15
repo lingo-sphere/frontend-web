@@ -37,6 +37,8 @@ export default function ToeicExamAppPage() {
     handleRetry,
     handleChooseAnother,
     calculateResults,
+    evaluatedAnswers,
+    isSubmittingAttempt,
   } = useToeicExam(examId)
 
   if (isLoadingExam) {
@@ -82,6 +84,8 @@ export default function ToeicExamAppPage() {
         results={results}
         questions={allQuestions}
         userAnswers={state.answers}
+        evaluatedAnswers={evaluatedAnswers}
+        isEvaluatingAI={isSubmittingAttempt}
         recommendedCourses={recommendedCourses}
         recommendedRoadmap={recommendedRoadmap}
         targetBand={targetBand}

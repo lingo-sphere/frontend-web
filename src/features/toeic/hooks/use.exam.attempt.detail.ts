@@ -22,6 +22,9 @@ export interface AttemptResultDetail {
     total_questions?: number
     total_time_seconds?: number
     submitted_at?: string
+    teacher_feedback?: string
+    is_score_manually_edited?: boolean
+    score_edited_at?: string
   }
   answers?: AttemptAnswerDetail[]
 }
