@@ -104,9 +104,7 @@ export function useCourseCheckout({
 
     try {
       const res = await subscriptionService.getPaymentOrderStatus(currentOrder.order_code)
-      const status =
-        res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
-      if (status === 'PAID') {
+      if (res.status === 'PAID') {
         handlePaymentSuccess()
         return true
       }
