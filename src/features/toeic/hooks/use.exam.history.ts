@@ -90,9 +90,9 @@ export function useExamHistory() {
   const courseTitleMap = useMemo(() => {
     const titleMap: Record<string, string> = {}
     allCourses.forEach((c) => {
-      const cid = c.id || c._id
-      if (cid && c.title) {
-        titleMap[cid] = c.title
+      if (c.title) {
+        if (c.id) titleMap[String(c.id)] = c.title
+        if (c._id) titleMap[String(c._id)] = c.title
       }
     })
     return titleMap
@@ -147,7 +147,7 @@ export function useExamHistory() {
         testName = `Kiểm tra chương ${c.order_index ?? ''}`
       }
 
-      const courseTitle = courseTitleMap[c.course_id] || `Khóa học ID: ${c.course_id}`
+      const courseTitle = courseTitleMap[c.course_id] || 'Khóa học'
 
       list.push({
         id: c.attempt_id,
@@ -156,6 +156,7 @@ export function useExamHistory() {
         title: testName,
         subtitle: courseTitle,
         courseId: c.course_id,
+        moduleId: c.module_id,
         orderIndex: c.order_index,
         totalQuestions: c.total_questions || 10,
         correctCount: c.correct_count ?? Math.round(((c.score || 0) / 100) * (c.total_questions || 10)),
@@ -253,6 +254,8 @@ export function useExamHistory() {
     filteredList,
     unifiedList,
     courseAttempts,
+    courseTitleMap,
+    allCourses,
     loadAllHistory,
     formatDuration,
     formatDate,

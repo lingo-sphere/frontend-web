@@ -256,9 +256,9 @@ export function CourseQuestionCard({
             </span>
           )}
         </div>
-        {(courseTitle || courseId) && (
+        {courseTitle && (
           <Badge variant="outline" className="text-[10px] font-bold">
-            Khóa học: {courseTitle || courseId}
+            {courseTitle}
           </Badge>
         )}
       </div>

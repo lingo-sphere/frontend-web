@@ -30,6 +30,8 @@ export default function ExamHistoryPage() {
     filteredList,
     unifiedList,
     courseAttempts,
+    courseTitleMap,
+    allCourses,
     loadAllHistory,
     formatDate,
     formatDuration,
@@ -69,20 +71,27 @@ export default function ExamHistoryPage() {
   }, [unifiedList])
 
   const enrolledCourseCards = useMemo<UnifiedCourseCardItem[]>(() => {
-    return coursesProgress.map((cp) => ({
-      course_id: cp.course_id,
-      title: `Khóa học: ${cp.course_id}`,
-      level: 'Mọi cấp độ',
-      category: 'TOEIC',
-      progress_percentage: cp.progress_percentage || 0,
-      completed_lessons_count: cp.completed_lessons_count || 0,
-      total_lessons_count: cp.total_lessons_count || 1,
-      completed_modules_count: cp.completed_modules_count || 0,
-      total_modules_count: cp.total_modules_count || 1,
-      status: (cp.progress_percentage || 0) >= 100 ? 'COMPLETED' : 'STUDYING',
-      enrolled_at: new Date().toISOString(),
-    }))
-  }, [coursesProgress])
+    return coursesProgress.map((cp) => {
+      const matched = allCourses.find(
+        (c) => String(c._id) === String(cp.course_id) || String(c.id) === String(cp.course_id)
+      )
+      const courseTitle = matched?.title || courseTitleMap[cp.course_id] || 'Khóa học'
+
+      return {
+        course_id: cp.course_id,
+        title: courseTitle,
+        level: matched?.level || 'Mọi cấp độ',
+        category: matched?.category || 'TOEIC',
+        progress_percentage: cp.progress_percentage || 0,
+        completed_lessons_count: cp.completed_lessons_count || 0,
+        total_lessons_count: cp.total_lessons_count || matched?.total_lessons || 1,
+        completed_modules_count: cp.completed_modules_count || 0,
+        total_modules_count: cp.total_modules_count || matched?.total_modules || 1,
+        status: (cp.progress_percentage || 0) >= 100 ? 'COMPLETED' : 'STUDYING',
+        enrolled_at: new Date().toISOString(),
+      }
+    })
+  }, [coursesProgress, allCourses, courseTitleMap])
 
   const handleNavigateDetail = (item: UnifiedTestAttempt) => {
     const query = new URLSearchParams()

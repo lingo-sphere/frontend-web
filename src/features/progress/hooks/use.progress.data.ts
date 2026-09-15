@@ -162,7 +162,7 @@ export function useProgressData(navigate: (path: string) => void) {
       const progress = courseProgressMap.get(courseId)
       const catalogCourse = coursesMap.get(courseId) || enrollment?.course
 
-      const title = catalogCourse?.title || `Khóa học: ${courseId}`
+      const title = catalogCourse?.title || 'Khóa học'
       const thumbnail_url = catalogCourse?.thumbnail_url
       const level = catalogCourse?.level || 'Mọi cấp độ'
       const category = catalogCourse?.category || 'TOEIC'
@@ -295,7 +295,7 @@ export function useProgressData(navigate: (path: string) => void) {
         type: 'COURSE',
         examType: c.test_type,
         title: testName,
-        subtitle: courseMeta?.title || `Khóa học ID: ${c.course_id}`,
+        subtitle: courseMeta?.title || 'Khóa học',
         scoreText: `${score}%`,
         scoreValue: score,
         maxScore: 100,
