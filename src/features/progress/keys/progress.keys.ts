@@ -8,4 +8,5 @@ export const progressKeys = {
   gamification: () => [...progressKeys.all, 'gamification'] as const,
   examHistory: () => [...progressKeys.all, 'exam-history'] as const,
   vocabProgress: () => [...progressKeys.all, 'vocab-progress'] as const,
+  growthChart: (courseId: string) => [...progressKeys.all, 'growth-chart', courseId] as const,
 }

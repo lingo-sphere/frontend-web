@@ -94,3 +94,13 @@ export function useVocabProgressQuery(enabled = true) {
     staleTime: 60 * 1000,
   })
 }
+
+export function useGrowthChartQuery(courseId: string, enabled = true) {
+  return useQuery({
+    queryKey: progressKeys.growthChart(courseId),
+    queryFn: () => progressService.getGrowthChart(courseId),
+    enabled: Boolean(courseId) && courseId !== 'all' && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+

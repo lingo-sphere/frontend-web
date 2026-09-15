@@ -1,9 +1,9 @@
 // Quản lý truy vấn dữ liệu biểu đồ tăng trưởng và tính toán các mốc phát triển năng lực của học viên.
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import type { GrowthChartDataPoint } from '@/components/growth.area.chart'
 import type { ProgressRecentActivity, UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
-import { progressService } from '@/features/progress/services/progress.service'
+import { useGrowthChartQuery } from '@/features/progress/hooks/use.progress.query'
 
 interface UseProgressGrowthAnalyticsProps {
   recentActivities: ProgressRecentActivity[]
@@ -43,29 +43,18 @@ export function useProgressGrowthAnalytics({
   baselineScore = 240,
 }: UseProgressGrowthAnalyticsProps) {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('all')
-  const [courseGrowthPoints, setCourseGrowthPoints] = useState<Array<{ stage: string; score: number; timestamp?: string }>>([])
-  const [isLoadingCourseChart, setIsLoadingCourseChart] = useState<boolean>(false)
 
-  useEffect(() => {
-    if (selectedCourseId !== 'all') {
-      setIsLoadingCourseChart(true)
-      progressService
-        .getGrowthChart(selectedCourseId)
-        .then((res) => {
-          if (res?.growth_chart_data && Array.isArray(res.growth_chart_data)) {
-            setCourseGrowthPoints(res.growth_chart_data)
-          } else {
-            setCourseGrowthPoints([])
-          }
-        })
-        .catch(() => {
-          setCourseGrowthPoints([])
-        })
-        .finally(() => {
-          setIsLoadingCourseChart(false)
-        })
+  const { data: chartDataRes, isLoading: isLoadingCourseChart } = useGrowthChartQuery(
+    selectedCourseId,
+    selectedCourseId !== 'all'
+  )
+
+  const courseGrowthPoints = useMemo(() => {
+    if (selectedCourseId !== 'all' && chartDataRes?.growth_chart_data && Array.isArray(chartDataRes.growth_chart_data)) {
+      return chartDataRes.growth_chart_data
     }
-  }, [selectedCourseId])
+    return []
+  }, [selectedCourseId, chartDataRes])
 
   const examTimelinePoints = useMemo<GrowthChartDataPoint[]>(() => {
     const sorted = [...recentActivities].sort(

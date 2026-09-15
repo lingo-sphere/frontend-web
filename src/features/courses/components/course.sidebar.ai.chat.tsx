@@ -1,14 +1,11 @@
-/**
- * @file course.sidebar.ai.chat.tsx
- * @description Component giao diện React CourseSidebarAiChat cho học viên
- */
-
+// Khung trò chuyện với Gia sư AI trong thanh bên bài giảng khóa học.
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Bot, Send, Sparkles, AlertCircle } from 'lucide-react'
 import { aiService, type AiChatMessage, type UserAiQuotaSummary } from '@/features/ai-learning/services/ai.service'
+import { useAiQuotaQuery } from '@/features/ai-learning/hooks/use.ai.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 
 interface CourseSidebarAiChatProps {
@@ -36,16 +33,11 @@ export function CourseSidebarAiChat({ currentLessonTitle }: CourseSidebarAiChatP
   const chatRemaining = quota ? (isPremiumUser ? 999999 : quota.chat.remaining) : 5
   const isOutOfQuota = !isPremiumUser && chatRemaining <= 0
 
-  const fetchQuota = async () => {
-    try {
-      const q = await aiService.getAiQuota()
-      if (q) setQuota(q)
-    } catch {}
-  }
+  const { data: serverQuota, refetch: refetchQuota } = useAiQuotaQuery(Boolean(user))
 
   useEffect(() => {
-    fetchQuota()
-  }, [])
+    if (serverQuota) setQuota(serverQuota)
+  }, [serverQuota])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -98,7 +90,7 @@ export function CourseSidebarAiChat({ currentLessonTitle }: CourseSidebarAiChatP
             : null
         )
       } else {
-        fetchQuota()
+        refetchQuota()
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err || '')

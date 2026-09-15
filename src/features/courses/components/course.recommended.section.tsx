@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import {
   Sparkles,
@@ -11,7 +11,7 @@ import {
   Star,
   ArrowRight,
 } from 'lucide-react'
-import { courseService } from '@/features/courses/services/course.service'
+import { useAllCoursesQuery } from '@/features/courses/hooks/use.courses.query'
 import type { Course } from '@/types/api.types'
 
 interface CourseItem {
@@ -47,43 +47,36 @@ export function RecommendedCoursesSection({
   targetScore = 750,
   courses,
 }: RecommendedCoursesSectionProps) {
-  const [fetchedCourses, setFetchedCourses] = useState<CourseItem[]>([])
+  const shouldFetch = !courses || courses.length === 0
+  const { data: rawCourses = [] } = useAllCoursesQuery(
+    { limit: 10, is_published: true },
+    shouldFetch
+  )
 
-  useEffect(() => {
-    if (courses && courses.length > 0) {
-      setFetchedCourses(courses)
-      return
-    }
+  const fetchedCourses = useMemo<CourseItem[]>(() => {
+    if (courses && courses.length > 0) return courses
 
-    courseService
-      .getAllCourses({ limit: 10, is_published: true })
-      .then((res: Course[]) => {
-        const list = Array.isArray(res) ? res : []
-        if (list.length > 0) {
-          const mapped: CourseItem[] = list.map((c: Course) => {
-            const courseTarget = typeof c.target_score === 'number' ? c.target_score : undefined
-            return {
-              id: c.id || c._id || '',
-              title: c.title,
-              slug: c.slug,
-              description: c.description,
-              thumbnail: c.thumbnail_url || '',
-              target_score: courseTarget,
-              min_score: courseTarget ? Math.max(0, courseTarget - 150) : 0,
-              max_score: courseTarget || 0,
-              level: c.level || '',
-              price: typeof c.price === 'number' ? c.price : (c.discount_price ?? 0),
-              students_count: c.students_count ?? 0,
-              rating: typeof c.rating === 'number' ? c.rating : undefined,
-              duration_hours: c.total_duration_minutes ? Math.round(c.total_duration_minutes / 60) : undefined,
-              tags: Array.isArray(c.skills) ? c.skills : [],
-            }
-          })
-          setFetchedCourses(mapped)
-        }
-      })
-      .catch(() => {})
-  }, [courses])
+    const list = Array.isArray(rawCourses) ? rawCourses : []
+    return list.map((c: Course) => {
+      const courseTarget = typeof c.target_score === 'number' ? c.target_score : undefined
+      return {
+        id: c.id || c._id || '',
+        title: c.title,
+        slug: c.slug,
+        description: c.description,
+        thumbnail: c.thumbnail_url || '',
+        target_score: courseTarget,
+        min_score: courseTarget ? Math.max(0, courseTarget - 150) : 0,
+        max_score: courseTarget || 0,
+        level: c.level || '',
+        price: typeof c.price === 'number' ? c.price : (c.discount_price ?? 0),
+        students_count: c.students_count ?? 0,
+        rating: typeof c.rating === 'number' ? c.rating : undefined,
+        duration_hours: c.total_duration_minutes ? Math.round(c.total_duration_minutes / 60) : undefined,
+        tags: Array.isArray(c.skills) ? c.skills : [],
+      }
+    })
+  }, [courses, rawCourses])
 
   const recommendedList = useMemo(() => {
     const listToProcess = courses || fetchedCourses

@@ -11,6 +11,7 @@ import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
 import { getRemainingSubscriptionText } from '@/layouts/header.utils'
 import { getPlans, type Plan } from '@/features/upgrade/components/upgrade.data'
+import { useSubscriptionPlansQuery } from '@/features/upgrade/hooks/use.subscription.query'
 
 interface UseUpgradePaymentOptions {
   open: boolean
@@ -36,27 +37,23 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
 
   const { user, isAuthenticated, setUser } = useAuthStore()
   const [plans, setPlans] = useState<Plan[]>(getPlans())
+  const { data: rawPlans } = useSubscriptionPlansQuery()
 
   useEffect(() => {
-    let isMounted = true
-    subscriptionService
-      .getPlans()
-      .then((raw: SubscriptionPlanDto[]) => {
-        if (!isMounted) return
-        const dbPlans = Array.isArray(raw) ? raw : []
-        if (dbPlans.length === 0) return
+    const dbPlans = Array.isArray(rawPlans) ? rawPlans : []
+    if (dbPlans.length === 0) return
 
-        const activePaidPlans = dbPlans
-          .filter(
-            (dp: SubscriptionPlanDto) =>
-              dp.slug !== 'free' &&
-              dp.plan_type !== 'FREE' &&
-              dp.tier > 0 &&
-              dp.is_active !== false
-          )
-          .sort((a: SubscriptionPlanDto, b: SubscriptionPlanDto) => (a.tier || 0) - (b.tier || 0))
+    const activePaidPlans = dbPlans
+      .filter(
+        (dp: SubscriptionPlanDto) =>
+          dp.slug !== 'free' &&
+          dp.plan_type !== 'FREE' &&
+          dp.tier > 0 &&
+          dp.is_active !== false
+      )
+      .sort((a: SubscriptionPlanDto, b: SubscriptionPlanDto) => (a.tier || 0) - (b.tier || 0))
 
-        if (activePaidPlans.length === 0) return
+    if (activePaidPlans.length === 0) return
 
         const mappedPlans: Plan[] = activePaidPlans.map((dp: SubscriptionPlanDto) => {
           const isMonthly = dp.slug === 'vip-1-month' || dp.billing_cycle === 'MONTHLY'
@@ -132,13 +129,7 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
           const popular = mappedPlans.find((p) => p.recommended)
           return popular ? popular.id : mappedPlans[0]?.id || '12-month'
         })
-      })
-      .catch(() => {})
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  }, [rawPlans])
 
   const isPremium = Boolean(user?.is_premium || user?.subscription_expires_at)
   const remainingTimeText = isPremium

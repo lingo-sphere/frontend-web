@@ -2,8 +2,9 @@
 
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { FileText } from 'lucide-react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { Card, CardContent } from '@/components/card'
 import type { ToeicQuestion } from '@/features/toeic/types/toeic'
 import { ToeicReviewQuestionCard } from '@/features/toeic/components/toeic.review.question.card'
@@ -25,6 +26,7 @@ export function ToeicQuestionsReview({
 }: ToeicQuestionsReviewProps) {
   const [reviewFilter, setReviewFilter] = useState<'ALL' | 'CORRECT' | 'WRONG'>('ALL')
   const [expandedQuestions, setExpandedQuestions] = useState<Record<number, boolean>>({})
+  const parentRef = useRef<HTMLDivElement>(null)
 
   const toggleQuestionExpand = (qNum: number) => {
     setExpandedQuestions((prev) => ({ ...prev, [qNum]: !prev[qNum] }))
@@ -60,6 +62,13 @@ export function ToeicQuestionsReview({
       return true
     })
   }, [questions, userAnswers, reviewFilter])
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredQuestions.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 180,
+    overscan: 5,
+  })
 
   if (!questions || questions.length === 0) return null
 
@@ -120,17 +129,50 @@ export function ToeicQuestionsReview({
           </div>
         </div>
 
-        <div className="space-y-4">
-          {filteredQuestions.map((q) => (
-            <ToeicReviewQuestionCard
-              key={q.id || q.questionNumber}
-              question={q}
-              userAnswer={userAnswers[q.questionNumber]}
-              isExpanded={Boolean(expandedQuestions[q.questionNumber])}
-              onToggleExpand={() => toggleQuestionExpand(q.questionNumber)}
-            />
-          ))}
-        </div>
+        {filteredQuestions.length === 0 ? (
+          <div className="py-8 text-center text-xs text-text-tertiary">
+            {isVietnamese
+              ? 'Không có câu hỏi nào phù hợp với bộ lọc.'
+              : 'No questions match the selected filter.'}
+          </div>
+        ) : (
+          <div ref={parentRef} className="max-h-[750px] overflow-y-auto pr-1">
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const q = filteredQuestions[virtualRow.index]
+                return (
+                  <div
+                    key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <div className="pb-4">
+                      <ToeicReviewQuestionCard
+                        question={q}
+                        userAnswer={userAnswers[q.questionNumber]}
+                        isExpanded={Boolean(expandedQuestions[q.questionNumber])}
+                        onToggleExpand={() => toggleQuestionExpand(q.questionNumber)}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
