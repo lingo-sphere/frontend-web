@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { userService } from '@/features/user/services/user.service'
 import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
 import type { User, EditProfileForm } from '@/features/user/types/user'
+import type { UserScoreData } from '@/features/user/utils/user.score.utils'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
@@ -86,7 +87,7 @@ export function useProfileData() {
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'activity'>('overview')
   const { data: leaderboard = [] } = useLeaderboardQuery('weekly')
 
-  const [userScores, setUserScores] = useState(defaultUserScores)
+  const [userScores, setUserScores] = useState<UserScoreData>(defaultUserScores)
 
   useEffect(() => {
     const auth = authUser || useAuthStore.getState().user
@@ -105,7 +106,7 @@ export function useProfileData() {
         stats: cachedStats ? { ...prev.stats, ...cachedStats } : prev.stats,
       }))
 
-      const rawAuth = auth as any
+      const rawAuth = auth
       const sTotal = Number(rawAuth?.placement_test_score || rawAuth?.current_estimated_score || 0)
       const sList = Number(rawAuth?.placement_listening_score || 0)
       const sRead = Number(rawAuth?.placement_reading_score || 0)

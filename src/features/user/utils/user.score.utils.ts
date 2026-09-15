@@ -6,6 +6,40 @@ export interface UserScoreLevelInfo {
   badgeColor: string
 }
 
+export interface UserScoreData {
+  totalScore?: number
+  listeningScore?: number
+  readingScore?: number
+  speakingScore?: number
+  writingScore?: number
+  targetScore?: number
+  skillsType?: '2SKILLS' | '4SKILLS' | string
+  isManuallyEdited?: boolean
+  hasTested?: boolean
+  testedAt?: string | null
+  placement_test_score?: number
+  placement_listening_score?: number
+  placement_reading_score?: number
+  placement_speaking_score?: number
+  placement_writing_score?: number
+  placement_skills_type?: '2SKILLS' | '4SKILLS' | string
+  target_toeic_score?: number
+  current_estimated_score?: number
+  is_score_manually_edited?: boolean
+  placement_tested_at?: string
+}
+
+export interface LeaderboardEntry {
+  user_id?: string
+  username?: string
+  user_name?: string
+  full_name?: string
+  xp_total?: number
+  xp?: number
+  avatar_url?: string
+  rank?: number
+}
+
 export function getUserScoreLevelInfo(score: number, hasTested: boolean): UserScoreLevelInfo {
   if (!hasTested || score === 0) {
     return {

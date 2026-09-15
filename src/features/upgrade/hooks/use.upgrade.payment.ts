@@ -6,6 +6,7 @@ import {
   subscriptionService,
   type PaymentOrderResponse,
 } from '@/features/upgrade/services/subscription.service'
+import type { SubscriptionPlanDto } from '@/features/upgrade/schemas/subscription.schema'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
 import { getRemainingSubscriptionText } from '@/layouts/header.utils'
@@ -40,24 +41,24 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
     let isMounted = true
     subscriptionService
       .getPlans()
-      .then((raw: any) => {
+      .then((raw: SubscriptionPlanDto[]) => {
         if (!isMounted) return
-        const dbPlans = Array.isArray(raw) ? raw : raw?.data || []
-        if (!Array.isArray(dbPlans) || dbPlans.length === 0) return
+        const dbPlans = Array.isArray(raw) ? raw : []
+        if (dbPlans.length === 0) return
 
         const activePaidPlans = dbPlans
           .filter(
-            (dp: any) =>
+            (dp: SubscriptionPlanDto) =>
               dp.slug !== 'free' &&
               dp.plan_type !== 'FREE' &&
               dp.tier > 0 &&
               dp.is_active !== false
           )
-          .sort((a: any, b: any) => (a.tier || 0) - (b.tier || 0))
+          .sort((a: SubscriptionPlanDto, b: SubscriptionPlanDto) => (a.tier || 0) - (b.tier || 0))
 
         if (activePaidPlans.length === 0) return
 
-        const mappedPlans: Plan[] = activePaidPlans.map((dp: any) => {
+        const mappedPlans: Plan[] = activePaidPlans.map((dp: SubscriptionPlanDto) => {
           const isMonthly = dp.slug === 'vip-1-month' || dp.billing_cycle === 'MONTHLY'
           const isQuarterly = dp.slug === 'vip-3-month' || dp.billing_cycle === 'QUARTERLY'
           const isYearly = dp.slug === 'vip-1-year' || dp.billing_cycle === 'YEARLY'
@@ -81,12 +82,13 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
             ? 'YEARLY'
             : 'LIFETIME'
 
+          const days = Number(dp.duration_days || 0)
           const duration =
-            isLifetime || dp.duration_days >= 36500
+            isLifetime || days >= 36500
               ? { en: 'Lifetime', vi: 'Vĩnh viễn' }
-              : isYearly || dp.duration_days >= 365
+              : isYearly || days >= 365
               ? { en: '1 Year', vi: '1 năm' }
-              : isQuarterly || dp.duration_days >= 90
+              : isQuarterly || days >= 90
               ? { en: '3 Months', vi: '3 tháng' }
               : { en: '1 Month', vi: '1 tháng' }
 
@@ -98,14 +100,16 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
             ? `~${new Intl.NumberFormat('vi-VN').format(Math.round(dp.price / 12))}đ/tháng`
             : 'Trọn đời'
 
+          const originalPriceNum = dp.original_price ? Number(dp.original_price) : 0
+
           return {
             id,
             cycle,
             duration,
             price: Number(dp.price),
             originalPrice:
-              dp.original_price && Number(dp.original_price) > Number(dp.price)
-                ? Number(dp.original_price)
+              originalPriceNum > Number(dp.price)
+                ? originalPriceNum
                 : undefined,
             perMonth: {
               en: formattedPerMonth,
@@ -113,8 +117,8 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
             },
             discount:
               dp.discount ||
-              (dp.original_price && Number(dp.original_price) > Number(dp.price)
-                ? `-${Math.round(((dp.original_price - dp.price) / dp.original_price) * 100)}%`
+              (originalPriceNum > Number(dp.price)
+                ? `-${Math.round(((originalPriceNum - dp.price) / originalPriceNum) * 100)}%`
                 : undefined),
             recommended: Boolean(dp.is_popular),
           }

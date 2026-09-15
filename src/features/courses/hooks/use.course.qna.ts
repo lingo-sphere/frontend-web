@@ -1,19 +1,17 @@
-/**
- * @file use.course.qna.ts
- * @description Custom hook quản lý thảo luận Hỏi & Đáp (đăng câu hỏi, trả lời câu hỏi và bình chọn upvote)
- */
+// Custom hook quản lý thảo luận Hỏi & Đáp (đăng câu hỏi, trả lời câu hỏi và bình chọn upvote).
 
 import { type Dispatch, type SetStateAction } from 'react'
 import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import type { Course, Lesson, QnAItem } from '@/features/courses/types/course'
+import type { User } from '@/types/api.types'
 
 interface UseCourseQnAParams {
   course: Course | null
   setCourse: Dispatch<SetStateAction<Course | null>>
   currentLesson: Lesson | null
   isAuthenticated: boolean
-  user: any
+  user: User | null
   isEnrolled: boolean
 }
 

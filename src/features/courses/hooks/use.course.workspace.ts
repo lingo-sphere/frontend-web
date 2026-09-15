@@ -16,43 +16,25 @@ import {
 import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
-import type { Course, Chapter, Lesson } from '@/features/courses/types/course'
+import type {
+  Course,
+  Lesson,
+  CourseProgressDetailInfo,
+  ModuleProgressInfo,
+} from '@/features/courses/types/course'
 import type { CourseStudySchedule, CourseChapterLockState } from '@/features/courses/types/schedule.types'
 import { useCourseNotes } from '@/features/courses/hooks/use.course.notes'
 import { useCourseQnA } from '@/features/courses/hooks/use.course.qna'
 import { useCourseReviews } from '@/features/courses/hooks/use.course.reviews'
-import { useCourseTests, type FinalTestAttemptItem } from '@/features/courses/hooks/use.course.tests'
+import { useCourseTests } from '@/features/courses/hooks/use.course.tests'
+import { useCourseWorkspaceModals } from '@/features/courses/hooks/use.course.workspace.modals'
+import { useCourseLessonNavigation } from '@/features/courses/hooks/use.course.lesson.navigation'
 import type { BottomTab } from '@/features/courses/components/course.workspace.tabs'
 import type { SidebarTab } from '@/features/courses/components/course.workspace.sidebar'
 import {
   mapCourseDataToWorkspace,
   formatExactDuration,
 } from '@/features/courses/helpers/course.workspace.adapter'
-
-interface ModuleProgressInfo {
-  module_id?: string
-  order_index?: number
-  status?: string
-  challenge_score?: number
-  challenge_taken?: boolean
-  is_passed_by_challenge?: boolean
-  post_mini_score?: number
-  is_locked_by_reminder?: boolean
-}
-
-interface CourseProgressDetailInfo {
-  course_progress?: {
-    schedule?: CourseStudySchedule
-    lock_state?: CourseChapterLockState
-    last_video_watched_at?: string
-    is_baseline_established?: boolean
-    baseline_score?: number
-    final_test_score?: number
-    final_test_attempts?: FinalTestAttemptItem[]
-  }
-  modules_progress?: ModuleProgressInfo[]
-  completed_lesson_ids?: string[]
-}
 
 export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean = false) {
   const user = useAuthStore((s) => s.user)
@@ -96,96 +78,13 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const { data: progressData } = useCourseProgressQuery(courseId, Boolean(rawCourse && isEnrolled))
 
   const [course, setCourse] = useState<Course | null>(null)
-  const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
-  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null)
-  const [expandedChapters, setExpandedChapters] = useState<string[]>([])
   const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('overview')
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('content')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [playerCurrentTime, setPlayerCurrentTime] = useState(0)
-
-  const [showRatingModal, setShowRatingModal] = useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [showCourseCheckoutModal, setShowCourseCheckoutModal] = useState(false)
-  const [showPlacementPromptModal, setShowPlacementPromptModal] = useState(false)
-  const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [progressDetail, setProgressDetail] = useState<CourseProgressDetailInfo | null>(null)
   const [courseSchedule, setCourseSchedule] = useState<CourseStudySchedule | null>(null)
   const [courseLockState, setCourseLockState] = useState<CourseChapterLockState | null>(null)
-
-  useEffect(() => {
-    if (!rawCourse) return
-
-    const structured = mapCourseDataToWorkspace(
-      courseId,
-      rawCourse,
-      isEnrolled,
-      progressData || null,
-      reviewsData || null,
-      [],
-      qnaData || []
-    )
-
-    setCourse((prev) => {
-      if (!prev) return structured
-      return {
-        ...structured,
-        chapters: prev.chapters.length > 0 ? prev.chapters : structured.chapters,
-        reviews: reviewsData ? structured.reviews : prev.reviews,
-        qna: qnaData ? structured.qna : prev.qna,
-      }
-    })
-
-    setCurrentChapter((prev) => prev || structured.chapters[0] || null)
-    setCurrentLesson((prev) => prev || structured.chapters[0]?.lessons[0] || null)
-    setExpandedChapters((prev) => (prev.length > 0 ? prev : structured.chapters.map((c) => c.id)))
-  }, [rawCourse, isEnrolled, progressData, reviewsData, qnaData, courseId])
-
-  useEffect(() => {
-    if (progressData) {
-      setProgressDetail(progressData)
-      if (progressData.course_progress?.schedule) {
-        setCourseSchedule(progressData.course_progress.schedule)
-      }
-      if (progressData.course_progress?.lock_state) {
-        setCourseLockState(progressData.course_progress.lock_state)
-      }
-    }
-  }, [progressData])
-
-  const isLoading = (isCourseLoading || (isAuthenticated && isEnrollmentLoading && !isEnrolledInList)) && !course
-
-  const setIsEnrolled = useCallback(
-    (val: boolean) => {
-      setOverrideEnrolled(val)
-      queryClient.invalidateQueries({ queryKey: courseKeys.enrollments() })
-      queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'enrollment-status'] })
-    },
-    [courseId, queryClient]
-  )
-
-  const toggleChapter = (chapterId: string) => {
-    setExpandedChapters((prev) =>
-      prev.includes(chapterId) ? prev.filter((id) => id !== chapterId) : [...prev, chapterId]
-    )
-  }
-
-  const refreshCourseProgress = useCallback(async () => {
-    if (!courseId) return
-    queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'progress'] })
-    try {
-      const updatedProgress = await courseService.getCourseProgressDetail(courseId)
-      if (updatedProgress) {
-        setProgressDetail(updatedProgress)
-        if (updatedProgress.course_progress?.schedule) {
-          setCourseSchedule(updatedProgress.course_progress.schedule)
-        }
-        if (updatedProgress.course_progress?.lock_state) {
-          setCourseLockState(updatedProgress.course_progress.lock_state)
-        }
-      }
-    } catch {}
-  }, [courseId])
 
   const lockedChapterIdSet = useMemo(() => {
     const set = new Set<string>()
@@ -231,32 +130,87 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     return set
   }, [course, isEnrolled, progressDetail])
 
-  const handleSelectLesson = (chapter: Chapter, lesson: Lesson) => {
-    const lockState = progressDetail?.course_progress?.lock_state
-    const currentOrder = Number(chapter.order || 1)
-    const isLockedByReminder = Boolean(
-      lockState?.is_locked &&
-        (lockState.locked_module_id === chapter.id || lockState.locked_chapter_order === currentOrder)
+  const navigation = useCourseLessonNavigation({
+    course,
+    courseId,
+    progressDetail,
+    lockedChapterIdSet,
+  })
+
+  const modals = useCourseWorkspaceModals({
+    course,
+    isAuthenticated,
+    isInCart,
+    addToCart,
+  })
+
+  useEffect(() => {
+    if (!rawCourse) return
+
+    const structured = mapCourseDataToWorkspace(
+      courseId,
+      rawCourse,
+      isEnrolled,
+      progressData || null,
+      reviewsData || null,
+      [],
+      qnaData || []
     )
-    if (isLockedByReminder) {
-      const retestOrder = lockState?.retest_chapter_order || (currentOrder - 1)
-      toast.error(
-        `Chương này đang bị khóa do vắng học 5 lần nhắc nhở liên tiếp. Vui lòng thi lại bài kiểm tra Chương ${retestOrder} để mở khóa!`,
-        'Chương bị khóa'
-      )
-      return
+
+    setCourse((prev) => {
+      if (!prev) return structured
+      return {
+        ...structured,
+        chapters: prev.chapters.length > 0 ? prev.chapters : structured.chapters,
+        reviews: reviewsData ? structured.reviews : prev.reviews,
+        qna: qnaData ? structured.qna : prev.qna,
+      }
+    })
+
+    navigation.setCurrentChapter((prev) => prev || structured.chapters[0] || null)
+    navigation.setCurrentLesson((prev) => prev || structured.chapters[0]?.lessons[0] || null)
+    navigation.setExpandedChapters((prev) => (prev.length > 0 ? prev : structured.chapters.map((c) => c.id)))
+  }, [rawCourse, isEnrolled, progressData, reviewsData, qnaData, courseId])
+
+  useEffect(() => {
+    if (progressData) {
+      setProgressDetail(progressData)
+      if (progressData.course_progress?.schedule) {
+        setCourseSchedule(progressData.course_progress.schedule)
+      }
+      if (progressData.course_progress?.lock_state) {
+        setCourseLockState(progressData.course_progress.lock_state)
+      }
     }
-    if (lockedChapterIdSet.has(chapter.id)) {
-      toast.warning(
-        'Chương này đang bị khóa! Bạn cần hoàn thành và vượt qua bài test thử thách của chương trước để mở khóa nhé.',
-        'Chương đang khóa'
-      )
-      return
-    }
-    setCurrentChapter(chapter)
-    setCurrentLesson(lesson)
-    storage.set(STORAGE_KEYS.COURSE_LAST_WATCHED(courseId), lesson.id)
-  }
+  }, [progressData])
+
+  const isLoading = (isCourseLoading || (isAuthenticated && isEnrollmentLoading && !isEnrolledInList)) && !course
+
+  const setIsEnrolled = useCallback(
+    (val: boolean) => {
+      setOverrideEnrolled(val)
+      queryClient.invalidateQueries({ queryKey: courseKeys.enrollments() })
+      queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'enrollment-status'] })
+    },
+    [courseId, queryClient]
+  )
+
+  const refreshCourseProgress = useCallback(async () => {
+    if (!courseId) return
+    queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'progress'] })
+    try {
+      const updatedProgress = await courseService.getCourseProgressDetail(courseId)
+      if (updatedProgress) {
+        setProgressDetail(updatedProgress)
+        if (updatedProgress.course_progress?.schedule) {
+          setCourseSchedule(updatedProgress.course_progress.schedule)
+        }
+        if (updatedProgress.course_progress?.lock_state) {
+          setCourseLockState(updatedProgress.course_progress.lock_state)
+        }
+      }
+    } catch {}
+  }, [courseId, queryClient])
 
   const handleToggleLessonComplete = (lessonId: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -271,7 +225,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     }
 
     let targetStatus: Lesson['status'] = 'completed'
-    let chapterId = currentChapter?.id || ''
+    let chapterId = navigation.currentChapter?.id || ''
 
     const nextChapters = course.chapters.map((ch) => ({
       ...ch,
@@ -314,7 +268,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const handleLessonProgress = (lessonId: string, progress: number) => {
     if (!course || !isEnrolled) return
     let justCompleted = false
-    let chapterId = currentChapter?.id || ''
+    let chapterId = navigation.currentChapter?.id || ''
     const isNowCompleted = progress >= 80 || progress >= 100
 
     const nextChapters = course.chapters.map((ch) => ({
@@ -351,58 +305,6 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     }
   }
 
-  const allFlatLessons = useMemo(() => {
-    if (!course?.chapters) return []
-    const list: Array<{ chapter: Chapter; lesson: Lesson }> = []
-    course.chapters.forEach((ch) => {
-      ch.lessons.forEach((les) => {
-        list.push({ chapter: ch, lesson: les })
-      })
-    })
-    return list
-  }, [course])
-
-  const currentLessonIndex = useMemo(() => {
-    if (!currentLesson) return -1
-    return allFlatLessons.findIndex((item) => item.lesson.id === currentLesson.id)
-  }, [allFlatLessons, currentLesson])
-
-  const hasNextLesson =
-    currentLessonIndex >= 0 &&
-    currentLessonIndex < allFlatLessons.length - 1 &&
-    (!allFlatLessons[currentLessonIndex + 1] ||
-      !lockedChapterIdSet.has(allFlatLessons[currentLessonIndex + 1].chapter.id))
-  const hasPrevLesson = currentLessonIndex > 0
-
-  const handleNextLesson = useCallback(() => {
-    if (hasNextLesson) {
-      const nextItem = allFlatLessons[currentLessonIndex + 1]
-      if (lockedChapterIdSet.has(nextItem.chapter.id)) {
-        toast.warning(
-          'Chương tiếp theo đang bị khóa! Bạn cần hoàn thành và vượt qua bài test thử thách của chương trước để mở khóa.',
-          'Chương đang khóa'
-        )
-        return
-      }
-      setCurrentChapter(nextItem.chapter)
-      setCurrentLesson(nextItem.lesson)
-      if (!expandedChapters.includes(nextItem.chapter.id)) {
-        setExpandedChapters((prev) => [...prev, nextItem.chapter.id])
-      }
-    }
-  }, [hasNextLesson, allFlatLessons, currentLessonIndex, expandedChapters, lockedChapterIdSet])
-
-  const handlePrevLesson = useCallback(() => {
-    if (hasPrevLesson) {
-      const prevItem = allFlatLessons[currentLessonIndex - 1]
-      setCurrentChapter(prevItem.chapter)
-      setCurrentLesson(prevItem.lesson)
-      if (!expandedChapters.includes(prevItem.chapter.id)) {
-        setExpandedChapters((prev) => [...prev, prevItem.chapter.id])
-      }
-    }
-  }, [hasPrevLesson, allFlatLessons, currentLessonIndex, expandedChapters])
-
   const handleLessonDurationChange = useCallback((lessonId: string, durationSec: number) => {
     if (durationSec <= 0) return
     setCourse((prev) => {
@@ -435,7 +337,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const { handleAddNoteAtTimestamp, handleDeleteNote } = useCourseNotes({
     course,
     setCourse,
-    currentLesson,
+    currentLesson: navigation.currentLesson,
     isAuthenticated,
     user,
     isEnrolled,
@@ -445,7 +347,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const { handleCreateQnA, handleAddQnAAnswer, handleUpvoteQnA } = useCourseQnA({
     course,
     setCourse,
-    currentLesson,
+    currentLesson: navigation.currentLesson,
     isAuthenticated,
     user,
     isEnrolled,
@@ -473,36 +375,15 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     setCourse,
   })
 
-  const handleAddToCart = async () => {
-    if (!isAuthenticated) {
-      window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
-      return
-    }
-    if (!course) return
-    if (isInCart(course.id)) {
-      return
-    }
-    setIsAddingToCart(true)
-    try {
-      await addToCart(course.id)
-      toast.success('Đã thêm khóa học vào giỏ hàng thành công!', 'Giỏ hàng')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể thêm vào giỏ hàng'
-      toast.error(msg, 'Lỗi')
-    } finally {
-      setIsAddingToCart(false)
-    }
-  }
-
   return {
     course,
     setCourse,
-    currentChapter,
-    currentLesson,
+    currentChapter: navigation.currentChapter,
+    currentLesson: navigation.currentLesson,
     isLoading,
     isEnrolled,
     setIsEnrolled,
-    expandedChapters,
+    expandedChapters: navigation.expandedChapters,
     activeBottomTab,
     setActiveBottomTab,
     activeSidebarTab,
@@ -511,15 +392,15 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     setIsSidebarOpen,
     playerCurrentTime,
     setPlayerCurrentTime,
-    showRatingModal,
-    setShowRatingModal,
-    showUpgradeModal,
-    setShowUpgradeModal,
-    showCourseCheckoutModal,
-    setShowCourseCheckoutModal,
-    showPlacementPromptModal,
-    setShowPlacementPromptModal,
-    isAddingToCart,
+    showRatingModal: modals.showRatingModal,
+    setShowRatingModal: modals.setShowRatingModal,
+    showUpgradeModal: modals.showUpgradeModal,
+    setShowUpgradeModal: modals.setShowUpgradeModal,
+    showCourseCheckoutModal: modals.showCourseCheckoutModal,
+    setShowCourseCheckoutModal: modals.setShowCourseCheckoutModal,
+    showPlacementPromptModal: modals.showPlacementPromptModal,
+    setShowPlacementPromptModal: modals.setShowPlacementPromptModal,
+    isAddingToCart: modals.isAddingToCart,
     activeTestModal,
     setActiveTestModal,
     progressDetail,
@@ -529,15 +410,15 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     setCourseLockState,
     refreshCourseProgress,
     lockedChapterIdSet,
-    hasNextLesson,
-    hasPrevLesson,
+    hasNextLesson: navigation.hasNextLesson,
+    hasPrevLesson: navigation.hasPrevLesson,
     currentTestModalData,
-    toggleChapter,
-    handleSelectLesson,
+    toggleChapter: navigation.toggleChapter,
+    handleSelectLesson: navigation.handleSelectLesson,
     handleToggleLessonComplete,
     handleLessonProgress,
-    handleNextLesson,
-    handlePrevLesson,
+    handleNextLesson: navigation.handleNextLesson,
+    handlePrevLesson: navigation.handlePrevLesson,
     handleLessonDurationChange,
     handleAddNoteAtTimestamp,
     handleDeleteNote,
@@ -545,7 +426,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     handleAddQnAAnswer,
     handleUpvoteQnA,
     handleAddReview,
-    handleAddToCart,
+    handleAddToCart: modals.handleAddToCart,
     handleTakeTest,
     handleTestComplete,
     user,

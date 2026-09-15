@@ -5,7 +5,7 @@
 import { PanelRightClose, CheckCircle2, FileText } from 'lucide-react'
 import { CourseSidebarContent } from '@/features/courses/components/course.sidebar.content'
 import { CourseSidebarDocuments } from '@/features/courses/components/course.sidebar.documents'
-import type { Chapter, Course, Lesson } from '@/features/courses/types/course'
+import type { Chapter, Course, Lesson, CourseProgressDetailInfo } from '@/features/courses/types/course'
 
 export type SidebarTab = 'content' | 'documents' | 'ai'
 
@@ -17,7 +17,7 @@ interface CourseWorkspaceSidebarProps {
   expandedChapters: string[]
   isEnrolled: boolean
   lockedChapterIds: Set<string>
-  progressDetail: any
+  progressDetail: CourseProgressDetailInfo | null
   onTabChange: (tab: SidebarTab) => void
   onCloseSidebar: () => void
   onToggleChapter: (chapterId: string) => void

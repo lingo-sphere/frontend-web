@@ -1,14 +1,12 @@
-/**
- * @file course.sidebar.final.exam.card.tsx
- * @description Card kích hoạt và hiển thị trạng thái bài thi tốt nghiệp cuối khóa trong thanh bên
- */
+// Card kích hoạt và hiển thị trạng thái bài thi tốt nghiệp cuối khóa trong thanh bên.
 
 import { CheckCircle2, Crown, FileText, Lock, Mic, RotateCcw, Trophy, Volume2 } from 'lucide-react'
+import type { FinalTestAttemptItem } from '@/features/courses/types/course'
 
 interface CourseSidebarFinalExamCardProps {
   finalTestQuestionsCount: number
   finalTestScore?: number
-  finalTestAttempts?: any[]
+  finalTestAttempts?: FinalTestAttemptItem[]
   finalTestAudioUrl?: string
   finalTestSpeakingPrompt?: string
   finalTestSpeakingFileUrl?: string
@@ -38,7 +36,7 @@ export function CourseSidebarFinalExamCard({
     finalTestScore !== undefined && finalTestScore !== null
       ? finalTestScore
       : Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0
-        ? Math.max(...finalTestAttempts.map((a: any) => Number(a?.score || 0)))
+        ? Math.max(...finalTestAttempts.map((a: FinalTestAttemptItem) => Number(a?.score || 0)))
         : 0
 
   const hasCompletedTest =

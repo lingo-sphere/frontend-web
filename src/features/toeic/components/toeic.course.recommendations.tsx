@@ -19,7 +19,7 @@ import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
 import { progressService } from '@/features/progress/services/progress.service'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
-import type { Course, LearningRoadmap } from '@/types/api.types'
+import type { Course, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
 
 export interface RecommendedCourseItem extends Course {
   recommendation_reason?: string
@@ -27,7 +27,7 @@ export interface RecommendedCourseItem extends Course {
 }
 
 interface ToeicCourseRecommendationsProps {
-  recommendedRoadmap?: (LearningRoadmap & { stages?: any[] }) | null
+  recommendedRoadmap?: (LearningRoadmap & { stages?: LearningRoadmapStage[] }) | null
   courses: RecommendedCourseItem[]
   targetBand?: string
   levelLabel?: string
@@ -113,7 +113,7 @@ export function ToeicCourseRecommendations({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {(recommendedRoadmap.stages || []).map((stage: any, idx: number) => {
+                {(recommendedRoadmap.stages || []).map((stage: LearningRoadmapStage, idx: number) => {
                   const isFirst = idx === 0
                   const courseTitle = stage.course?.title || stage.stage_title || `Chặng ${idx + 1}`
                   return (

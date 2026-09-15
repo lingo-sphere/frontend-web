@@ -4,12 +4,13 @@ import { type Dispatch, type SetStateAction } from 'react'
 import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import type { Course, CourseReviewItem } from '@/features/courses/types/course'
+import type { User } from '@/types/api.types'
 
 interface UseCourseReviewsParams {
   course: Course | null
   setCourse: Dispatch<SetStateAction<Course | null>>
   isAuthenticated: boolean
-  user: any
+  user: User | null
   isEnrolled: boolean
 }
 

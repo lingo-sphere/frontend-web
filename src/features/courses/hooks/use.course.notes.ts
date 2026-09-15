@@ -4,15 +4,17 @@ import { type Dispatch, type SetStateAction } from 'react'
 import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import type { Course, Lesson, NoteItem } from '@/features/courses/types/course'
+import type { User } from '@/types/api.types'
+import type { BottomTab } from '@/features/courses/components/course.workspace.tabs'
 
 interface UseCourseNotesParams {
   course: Course | null
   setCourse: Dispatch<SetStateAction<Course | null>>
   currentLesson: Lesson | null
   isAuthenticated: boolean
-  user: any
+  user: User | null
   isEnrolled: boolean
-  setActiveBottomTab: (tab: any) => void
+  setActiveBottomTab: (tab: BottomTab) => void
 }
 
 export function useCourseNotes({

@@ -1,7 +1,4 @@
-/**
- * @file course.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
- */
+// Định nghĩa các kiểu dữ liệu và giao diện TypeScript cho module khóa học.
 
 export type LessonStatus = 'locked' | 'available' | 'in-progress' | 'completed'
 export type ChapterStatus = 'locked' | 'available' | 'in-progress' | 'completed'
@@ -17,7 +14,7 @@ export interface CourseProgress {
   baselineScore: BaselineScore | null
   currentChapterIndex: number
   currentLessonId: string | null
-  currentProgress: number 
+  currentProgress: number
 }
 
 export interface BaselineScore {
@@ -37,7 +34,7 @@ export interface TestResult {
   speakingScore?: number
   writingScore?: number
   completedAt: string
-  improvement?: number 
+  improvement?: number
 }
 
 export interface LessonResource {
@@ -265,7 +262,7 @@ export interface Course {
   notes?: NoteItem[]
   reviews?: CourseReviewItem[]
   announcements?: CourseAnnouncement[]
-  final_test_questions?: Array<Record<string, unknown>>
+  final_test_questions?: import('@/features/courses/types/test.runner.types').CourseTestQuestion[]
   final_test_duration_minutes?: number
   final_test_audio_url?: string
   final_test_speaking_prompt?: string
@@ -307,3 +304,51 @@ export interface CourseCardData {
   hasCertificate?: boolean
   isArchived?: boolean
 }
+
+export interface FinalTestAttemptItem {
+  attempt_id?: string
+  score: number
+  total_questions?: number
+  correct_count?: number
+  is_passed?: boolean
+  submitted_at?: string | Date
+}
+
+export interface ModuleAttemptItem {
+  attempt_id?: string
+  test_type?: string
+  score: number
+  is_passed?: boolean
+  submitted_at?: string | Date
+}
+
+export interface ModuleProgressInfo {
+  module_id?: string
+  order_index?: number
+  status?: string
+  challenge_score?: number
+  challenge_taken?: boolean
+  is_passed_by_challenge?: boolean
+  post_mini_score?: number
+  is_locked_by_reminder?: boolean
+  attempts?: ModuleAttemptItem[]
+}
+
+export interface CourseProgressDetailInfo {
+  course_progress?: {
+    schedule?: import('@/features/courses/types/schedule.types').CourseStudySchedule
+    lock_state?: import('@/features/courses/types/schedule.types').CourseChapterLockState
+    last_video_watched_at?: string
+    is_baseline_established?: boolean
+    baseline_score?: number
+    baseline_source?: string
+    total_score_growth?: number
+    total_growth_percentage?: number
+    growth_chart_data?: import('@/features/courses/components/course.growth.chart').GrowthPoint[]
+    final_test_score?: number
+    final_test_attempts?: FinalTestAttemptItem[]
+  }
+  modules_progress?: ModuleProgressInfo[]
+  completed_lesson_ids?: string[]
+}
+

@@ -49,7 +49,7 @@ function CourseExamContent() {
       courseId,
       fetchedCourse,
       isEnrolled,
-      progressRes,
+      progressRes || null,
       null,
       null,
       null
@@ -169,7 +169,7 @@ function CourseExamContent() {
       chapter={selectedChapter}
       testType={testType}
       durationMinutes={durationMins}
-      finalTestQuestions={course.final_test_questions as any}
+      finalTestQuestions={course.final_test_questions}
       finalTestAudioUrl={course.final_test_audio_url}
       speakingPrompt={
         testType === 'final-test'

@@ -16,24 +16,13 @@ import {
 import { Card, CardContent } from '@/components/card'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
 import { UserSkillScoreGrid } from '@/features/user/components/user.skill.score.grid'
-import { getUserScoreLevelInfo } from '@/features/user/utils/user.score.utils'
+import { getUserScoreLevelInfo, type UserScoreData } from '@/features/user/utils/user.score.utils'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 
 interface UserScoreCardProps {
-  userScores: {
-    totalScore?: number
-    listeningScore?: number
-    readingScore?: number
-    speakingScore?: number
-    writingScore?: number
-    targetScore?: number
-    skillsType?: '2SKILLS' | '4SKILLS' | string
-    isManuallyEdited?: boolean
-    hasTested?: boolean
-    testedAt?: string | null
-  }
-  onScoresUpdated?: (newScores: any) => void
+  userScores: UserScoreData
+  onScoresUpdated?: (newScores: Partial<UserScoreData>) => void
 }
 
 export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProps) {

@@ -3,44 +3,17 @@
 import { useState, useMemo, type Dispatch, type SetStateAction } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
-import type { Course, Chapter } from '@/features/courses/types/course'
+import type {
+  Course,
+  Chapter,
+  CourseProgressDetailInfo,
+  FinalTestAttemptItem,
+  ModuleAttemptItem,
+  ModuleProgressInfo,
+} from '@/features/courses/types/course'
 
-export interface FinalTestAttemptItem {
-  attempt_id: string
-  score: number
-  is_passed: boolean
-  submitted_at: Date | string
-}
-
-interface ModuleAttemptItem {
-  attempt_id: string
-  test_type: string
-  score: number
-  is_passed: boolean
-  submitted_at: Date | string
-}
-
-interface ModuleProgressStateItem {
-  module_id?: string
-  order_index?: number
-  status?: string
-  challenge_score?: number
-  challenge_taken?: boolean
-  is_passed_by_challenge?: boolean
-  post_mini_score?: number
-  attempts?: ModuleAttemptItem[]
-}
-
-interface CourseProgressState {
-  final_test_score?: number
-  final_test_attempts?: FinalTestAttemptItem[]
-}
-
-export interface CourseProgressDetailData {
-  course_progress?: CourseProgressState
-  modules_progress?: ModuleProgressStateItem[]
-  completed_lesson_ids?: string[]
-}
+export type { FinalTestAttemptItem }
+export type CourseProgressDetailData = CourseProgressDetailInfo
 
 interface ActiveTestModalState {
   isOpen: boolean
@@ -139,7 +112,7 @@ export function useCourseTests({
           is_passed: isPassed,
           submitted_at: new Date(),
         }
-        const updatedMod: ModuleProgressStateItem = {
+        const updatedMod: ModuleProgressInfo = {
           module_id: finishedChId,
           order_index: finishedChOrder,
           status: isPassed ? 'COMPLETED' : prevMod?.status || 'IN_PROGRESS',

@@ -1,7 +1,4 @@
-/**
- * @file user.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
- */
+// Định nghĩa các kiểu dữ liệu và giao diện TypeScript cho người dùng và hồ sơ cá nhân.
 
 export interface User {
   id: string
@@ -27,6 +24,18 @@ export interface User {
   is_premium?: boolean
   subscription_expires_at?: string
   subscription_plan?: string
+
+  target_score?: number | null
+  target_toeic_score?: number | null
+  current_estimated_score?: number | null
+  placement_test_score?: number | null
+  placement_listening_score?: number | null
+  placement_reading_score?: number | null
+  placement_speaking_score?: number | null
+  placement_writing_score?: number | null
+  placement_skills_type?: '2SKILLS' | '4SKILLS' | string | null
+  placement_tested_at?: string | null
+  is_score_manually_edited?: boolean
 
   createdAt: string
   updatedAt: string

@@ -9,7 +9,7 @@ import { CourseQnATab } from '@/features/courses/components/course.qna.tab'
 import { CourseNotesTab } from '@/features/courses/components/course.notes.tab'
 import { CourseReviewsTab } from '@/features/courses/components/course.reviews.tab'
 import { LessonPracticeQuizView } from '@/features/courses/components/lesson.practice.quiz.view'
-import type { Course, Lesson } from '@/features/courses/types/course'
+import type { Course, Lesson, CourseProgressDetailInfo } from '@/features/courses/types/course'
 
 export type BottomTab = 'overview' | 'progress' | 'quiz' | 'resources' | 'qna' | 'notes' | 'reviews'
 
@@ -22,7 +22,7 @@ interface CourseWorkspaceTabsProps {
   currentUserId?: string
   currentUserRole?: string
   playerCurrentTime: number
-  progressDetail: any
+  progressDetail: CourseProgressDetailInfo | null
   onTabChange: (tab: BottomTab) => void
   onInitiateEnrollOrBuy: () => void
   onCreateQnA: (title: string, body: string, isAnonymous?: boolean) => void

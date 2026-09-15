@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { courseService } from '@/features/courses/services/course.service'
+import type { Course } from '@/types/api.types'
 
 interface CourseItem {
   id: string
@@ -56,25 +57,28 @@ export function RecommendedCoursesSection({
 
     courseService
       .getAllCourses({ limit: 10, is_published: true })
-      .then((res: any) => {
-        const list = Array.isArray(res) ? res : res?.courses || res?.data || []
-        if (Array.isArray(list) && list.length > 0) {
-          const mapped: CourseItem[] = list.map((c: any) => ({
-            id: c.id || c._id || '',
-            title: c.title,
-            slug: c.slug,
-            description: c.description,
-            thumbnail: c.thumbnail_url || c.thumbnail || '',
-            target_score: typeof c.target_score === 'number' ? c.target_score : undefined,
-            min_score: typeof c.min_score === 'number' ? c.min_score : 0,
-            max_score: typeof c.max_score === 'number' ? c.max_score : 0,
-            level: c.level || '',
-            price: typeof c.price === 'number' ? c.price : (c.discount_price ?? 0),
-            students_count: c.students_count ?? c.total_students ?? 0,
-            rating: typeof c.rating === 'number' ? c.rating : undefined,
-            duration_hours: typeof c.duration_hours === 'number' ? c.duration_hours : undefined,
-            tags: Array.isArray(c.tags) ? c.tags : [],
-          }))
+      .then((res: Course[]) => {
+        const list = Array.isArray(res) ? res : []
+        if (list.length > 0) {
+          const mapped: CourseItem[] = list.map((c: Course) => {
+            const courseTarget = typeof c.target_score === 'number' ? c.target_score : undefined
+            return {
+              id: c.id || c._id || '',
+              title: c.title,
+              slug: c.slug,
+              description: c.description,
+              thumbnail: c.thumbnail_url || '',
+              target_score: courseTarget,
+              min_score: courseTarget ? Math.max(0, courseTarget - 150) : 0,
+              max_score: courseTarget || 0,
+              level: c.level || '',
+              price: typeof c.price === 'number' ? c.price : (c.discount_price ?? 0),
+              students_count: c.students_count ?? 0,
+              rating: typeof c.rating === 'number' ? c.rating : undefined,
+              duration_hours: c.total_duration_minutes ? Math.round(c.total_duration_minutes / 60) : undefined,
+              tags: Array.isArray(c.skills) ? c.skills : [],
+            }
+          })
           setFetchedCourses(mapped)
         }
       })

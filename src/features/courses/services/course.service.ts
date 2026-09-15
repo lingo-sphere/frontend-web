@@ -2,7 +2,7 @@
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, LearningRoadmap, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
+import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, LearningRoadmap, LearningRoadmapStage, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
 import { CourseSchema, LessonSchema, PaginatedCoursesSchema } from '@/features/courses/schemas/course.schema'
 import type {
   CourseStudySchedule,
@@ -11,6 +11,34 @@ import type {
   UpdateCourseSchedulePayload,
 } from '@/features/courses/types/schedule.types'
 import type { TestAttemptItem, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
+
+export interface SpeakingSubmissionResponse {
+  _id: string
+  ai_score: number
+  whisper_transcript: string
+  ai_feedback: {
+    pronunciation_score: number
+    fluency_score: number
+    grammar_score: number
+    vocabulary_score: number
+    detailed_comment: string
+    improvement_tips: string[]
+  }
+  status: string
+}
+
+export interface WritingSubmissionResponse {
+  _id: string
+  ai_score: number
+  ai_feedback: {
+    fluency_score: number
+    grammar_score: number
+    vocabulary_score: number
+    detailed_comment: string
+    improvement_tips: string[]
+  }
+  status: string
+}
 
 export const courseService = {
 
@@ -105,7 +133,7 @@ export const courseService = {
     writing_score?: number
     skills_type?: string
   }): Promise<{
-    recommended_roadmap: LearningRoadmap & { stages: any[] }
+    recommended_roadmap: LearningRoadmap & { stages: LearningRoadmapStage[] }
     individual_courses: Course[]
     note?: string
   }> {
@@ -486,20 +514,7 @@ export const courseService = {
       test_type?: string
       prompt?: string
     }
-  ): Promise<{
-    _id: string
-    ai_score: number
-    whisper_transcript: string
-    ai_feedback: {
-      pronunciation_score: number
-      fluency_score: number
-      grammar_score: number
-      vocabulary_score: number
-      detailed_comment: string
-      improvement_tips: string[]
-    }
-    status: string
-  }> {
+  ): Promise<SpeakingSubmissionResponse> {
     return api.post(`/progress/courses/${courseId}/speaking`, data)
   },
 
@@ -511,18 +526,7 @@ export const courseService = {
       test_type?: string
       prompt?: string
     }
-  ): Promise<{
-    _id: string
-    ai_score: number
-    ai_feedback: {
-      fluency_score: number
-      grammar_score: number
-      vocabulary_score: number
-      detailed_comment: string
-      improvement_tips: string[]
-    }
-    status: string
-  }> {
+  ): Promise<WritingSubmissionResponse> {
     return api.post(`/progress/courses/${courseId}/writing`, data)
   },
 

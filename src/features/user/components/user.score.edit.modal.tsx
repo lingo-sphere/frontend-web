@@ -16,20 +16,13 @@ import { toast } from '@/store/toast.store'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import type { UserScoreData } from '@/features/user/utils/user.score.utils'
 
 interface UserScoreEditModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  currentScores: {
-    totalScore?: number
-    listeningScore?: number
-    readingScore?: number
-    speakingScore?: number
-    writingScore?: number
-    targetScore?: number
-    skillsType?: '2SKILLS' | '4SKILLS' | string
-  }
-  onSuccess: (updatedScores: any) => void
+  currentScores: UserScoreData
+  onSuccess: (updatedScores: Partial<UserScoreData>) => void
 }
 
 export function UserScoreEditModal({

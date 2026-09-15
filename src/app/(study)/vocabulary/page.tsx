@@ -1,8 +1,4 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/vocabulary
- */
-
+// Trang giao diện khám phá và quản lý các bộ thẻ từ vựng LingoSphere.
 'use client'
 
 import { useNavigate } from '@/lib/navigation'
@@ -15,6 +11,7 @@ import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Icon } from '@/components/icon.map'
 import { useApp } from '@/contexts/app.context'
 import { useVocabularyPage } from '@/features/vocabulary/hooks/use.vocabulary.page'
+import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
 
 function StatItem({ icon, label, value }: { icon: string; label: string; value: string | number }) {
   return (
@@ -185,7 +182,7 @@ export default function VocabularyAppPage() {
             </div>
           ) : publicDecks.length > 0 ? (
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {publicDecks.map((deck: any, idx) => (
+              {publicDecks.map((deck: Deck, idx) => (
                 <Card
                   key={deck._id || idx}
                   className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
@@ -278,7 +275,7 @@ export default function VocabularyAppPage() {
 
           {filteredPacks.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredPacks.map((pack: any, idx) => (
+              {filteredPacks.map((pack: Deck, idx) => (
                 <Card
                   key={pack._id || idx}
                   className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
