@@ -97,7 +97,6 @@ export const API_CONFIG = {
       ITEMS: '/vocabulary/lexical-items',
       ITEM_BY_ID: (id: string) => `/vocabulary/lexical-items/${id}`,
       SEARCH: '/vocabulary/lexical-items/search',
-      LOOKUP: '/vocabulary/lookup',
       TOPICS: '/vocabulary/topics',
       TOPIC_BY_ID: (id: string) => `/vocabulary/topics/${id}`,
       IPA_SYMBOLS: '/vocabulary/ipa-symbols',
@@ -115,8 +114,6 @@ export const API_CONFIG = {
       SUBMIT_REVIEW: (sessionId: string) => `/vocabulary/reviews/${sessionId}/submit`,
       MY_PROGRESS: '/vocabulary/progress/my',
       SETTINGS: '/vocabulary/settings',
-      SEARCH_HISTORY: '/vocabulary/search-history',
-      SAVED: '/vocabulary/saved',
     },
 
     EXAMS: {
