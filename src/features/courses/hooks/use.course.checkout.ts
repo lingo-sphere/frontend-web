@@ -6,8 +6,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { cartService } from '@/features/cart/services/cart.service'
 import { getQueryClient } from '@/config/query.config'
 import { cartKeys } from '@/features/cart/keys/cart.keys'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
-import { courseService } from '@/features/courses/services/course.service'
+import { courseKeys } from '@/features/courses/keys/course.keys'
 import { subscriptionService, type PaymentOrderResponse } from '@/features/upgrade/services/subscription.service'
 import { toast } from '@/store/toast.store'
 
@@ -46,7 +45,10 @@ export function useCourseCheckout({
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const orderRef = useRef<PaymentOrderResponse | null>(null)
-  orderRef.current = order
+
+  useEffect(() => {
+    orderRef.current = order
+  }, [order])
 
   const totalAmount = courses.reduce((acc, c) => acc + (c.price || 0), 0)
   const formattedTotal =
@@ -78,9 +80,8 @@ export function useCourseCheckout({
     setStep('SUCCESS')
 
     try {
-      await Promise.all(courses.map((c) => courseService.enrollCourse(c.id).catch(() => null)))
-      courses.forEach((c) => useEnrollmentStore.getState().addEnrolledCourse(c.id))
-      await useEnrollmentStore.getState().fetchMyEnrollments()
+      getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
+      getQueryClient().invalidateQueries({ queryKey: courseKeys.all })
       await cartService.clearCart().catch(() => null)
       getQueryClient().invalidateQueries({ queryKey: cartKeys.all })
     } catch {}
@@ -98,7 +99,7 @@ export function useCourseCheckout({
       onOpenChange(false)
       onSuccess?.()
     }, 2500)
-  }, [courses, isVi, onOpenChange, onSuccess, stopAllTimers])
+  }, [isVi, onOpenChange, onSuccess, stopAllTimers])
 
   const checkPaymentStatus = useCallback(async () => {
     const currentOrder = orderRef.current
@@ -106,9 +107,7 @@ export function useCourseCheckout({
 
     try {
       const res = await subscriptionService.getPaymentOrderStatus(currentOrder.order_code)
-      const status =
-        res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
-      if (status === 'PAID') {
+      if (res.status === 'PAID') {
         handlePaymentSuccess()
         return true
       }
@@ -119,8 +118,6 @@ export function useCourseCheckout({
   useEffect(() => {
     if (!open || courses.length === 0) {
       stopAllTimers()
-      setStep('PAYMENT_QR')
-      setOrder(null)
       return
     }
 
@@ -175,10 +172,12 @@ export function useCourseCheckout({
     return () => {
       isMounted = false
       stopAllTimers()
+      setStep('PAYMENT_QR')
+      setOrder(null)
     }
   }, [
     open,
-    courses.length,
+    courses,
     totalAmount,
     isAuthenticated,
     user,

@@ -1,12 +1,7 @@
-/**
- * @file toast.store.ts
- * @description Store quản lý thông báo Toast cho frontend-web
- */
-
+// Quản lý thông báo Toast dạng pub-sub phản ứng không phụ thuộc thư viện ngoài
 'use client'
 
 import { useSyncExternalStore } from 'react'
-import { createStore } from 'zustand/vanilla'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -28,60 +23,81 @@ interface ToastState {
   info: (message: string, title?: string) => void
 }
 
-export const toastStore = createStore<ToastState>()((set, get) => ({
+const listeners = new Set<() => void>()
+
+function notifyListeners() {
+  listeners.forEach((listener) => listener())
+}
+
+const addToast = (item: Omit<ToastItem, 'id'>): string => {
+  const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+  const duration = item.duration ?? 4000
+  state = { ...state, toasts: [...state.toasts, { ...item, id }] }
+  notifyListeners()
+
+  if (duration > 0) {
+    setTimeout(() => {
+      removeToast(id)
+    }, duration)
+  }
+  return id
+}
+
+const removeToast = (id: string): void => {
+  state = { ...state, toasts: state.toasts.filter((t) => t.id !== id) }
+  notifyListeners()
+}
+
+const success = (message: string, title?: string): void => {
+  addToast({ type: 'success', title, message })
+}
+
+const error = (message: string, title?: string): void => {
+  addToast({ type: 'error', title, message })
+}
+
+const warning = (message: string, title?: string): void => {
+  addToast({ type: 'warning', title, message })
+}
+
+const info = (message: string, title?: string): void => {
+  addToast({ type: 'info', title, message })
+}
+
+let state: ToastState = {
   toasts: [],
+  addToast,
+  removeToast,
+  success,
+  error,
+  warning,
+  info,
+}
 
-  addToast: (toast) => {
-    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
-    const duration = toast.duration ?? 4000
-
-    set((state) => ({
-      toasts: [...state.toasts, { ...toast, id }],
-    }))
-
-    if (duration > 0) {
-      setTimeout(() => {
-        get().removeToast(id)
-      }, duration)
+export const toastStore = {
+  subscribe: (listener: () => void) => {
+    listeners.add(listener)
+    return () => {
+      listeners.delete(listener)
     }
-
-    return id
   },
+  getState: (): ToastState => state,
+  getInitialState: (): ToastState => state,
+}
 
-  removeToast: (id) => {
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-    }))
-  },
-
-  success: (message, title) => {
-    get().addToast({ type: 'success', title, message })
-  },
-
-  error: (message, title) => {
-    get().addToast({ type: 'error', title, message })
-  },
-
-  warning: (message, title) => {
-    get().addToast({ type: 'warning', title, message })
-  },
-
-  info: (message, title) => {
-    get().addToast({ type: 'info', title, message })
-  },
-}))
-
-export function useToastStore<T>(selector: (state: ToastState) => T): T {
+export function useToastStore(): ToastState
+export function useToastStore<T>(selector: (state: ToastState) => T): T
+export function useToastStore<T>(selector?: (state: ToastState) => T): T | ToastState {
   return useSyncExternalStore(
     toastStore.subscribe,
-    () => selector(toastStore.getState()),
-    () => selector(toastStore.getInitialState()),
+    () => (selector ? selector(state) : state),
+    () => (selector ? selector(state) : state),
   )
 }
 
 export const toast = {
-  success: (msg: string, title?: string) => toastStore.getState().success(msg, title),
-  error: (msg: string, title?: string) => toastStore.getState().error(msg, title),
-  warning: (msg: string, title?: string) => toastStore.getState().warning(msg, title),
-  info: (msg: string, title?: string) => toastStore.getState().info(msg, title),
+  success,
+  error,
+  warning,
+  info,
 }

@@ -140,6 +140,18 @@ export interface SocialLoginPayload {
   rememberMe?: boolean
 }
 
+export interface LessonQuestion {
+  _id?: string
+  id?: string
+  question_text: string
+  options: string[]
+  correct_answer: string
+  explanation?: string | null
+  media_url?: string | null
+  audio_url?: string | null
+  image_url?: string | null
+}
+
 export interface Lesson {
   _id: string
   id?: string
@@ -154,6 +166,9 @@ export interface Lesson {
   order_index: number
   is_free_preview: boolean
   lesson_notes?: string
+  theory_file_url?: string
+  theory_file_name?: string
+  questions?: LessonQuestion[]
 }
 
 export interface CourseModule {
@@ -164,6 +179,8 @@ export interface CourseModule {
   description?: string
   order_index: number
   is_free_preview?: boolean
+  theory_file_url?: string
+  theory_file_name?: string
   challenge_test_exam_id?: string
   challenge_passing_score?: number
   challenge_duration_minutes?: number
@@ -198,6 +215,8 @@ export interface Course {
   slug: string
   description: string
   thumbnail_url?: string
+  document_url?: string
+  document_name?: string
   target_score?: number
   skills?: string[]
   price: number

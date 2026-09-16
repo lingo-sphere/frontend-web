@@ -1,8 +1,4 @@
-/**
- * @file test.runner.writing.section.tsx
- * @description Phần thi kỹ năng Viết (Writing Section) hỗ trợ nộp bài luận và nhận đánh giá từ AI
- */
-
+// Phần thi kỹ năng Viết hỗ trợ nộp bài luận và nhận đánh giá từ AI.
 'use client'
 
 import { useState, useRef } from 'react'
@@ -18,7 +14,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/button'
-import { courseService } from '@/features/courses/services/course.service'
+import { courseService, type WritingSubmissionResponse } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 
 interface TestRunnerWritingSectionProps {
@@ -43,7 +39,7 @@ export function TestRunnerWritingSection({
   const [uploadedEssayFileName, setUploadedEssayFileName] = useState<string | null>(null)
   const essayFileInputRef = useRef<HTMLInputElement>(null)
   const [isSubmittingWriting, setIsSubmittingWriting] = useState(false)
-  const [writingResult, setWritingResult] = useState<any>(null)
+  const [writingResult, setWritingResult] = useState<WritingSubmissionResponse | null>(null)
 
   const handleEssayFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

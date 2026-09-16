@@ -58,6 +58,8 @@ export function LessonPlayer({
     isMuted,
     playbackSpeed,
     selectedQuality,
+    autoResolvedQuality,
+    effectiveQualityKey,
     isTheater,
     setIsTheater,
     isFullscreen,
@@ -209,6 +211,8 @@ export function LessonPlayer({
           isMuted={isMuted}
           playbackSpeed={playbackSpeed}
           selectedQuality={selectedQuality}
+          autoResolvedQuality={autoResolvedQuality}
+          effectiveQualityKey={effectiveQualityKey}
           isTheater={isTheater}
           isFullscreen={isFullscreen}
           autoPlayNext={autoPlayNext}

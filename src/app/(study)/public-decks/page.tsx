@@ -1,20 +1,19 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/public-decks
- */
-
+// Trang khám phá và lưu trữ các bộ flashcard từ vựng công khai của cộng đồng.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, Eye, Search, Filter } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useApp } from '@/contexts/app.context'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import { usePublicDecksQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
+import { vocabularyKeys } from '@/features/vocabulary/keys/vocabulary.keys'
 import type { Deck } from '@/types/api.types'
 
 interface FormattedDeck {
@@ -35,56 +34,43 @@ export default function PublicDecksAppPage() {
   const isVietnamese = i18n.language === 'vi'
   const { showAction } = useApp()
   const navigate = useNavigate()
-  const [decks, setDecks] = useState<FormattedDeck[]>([])
+  const queryClient = useQueryClient()
+
+  const { data: liveDecks = [], isLoading } = usePublicDecksQuery()
   const [sortBy, setSortBy] = useState<SortOption>('views')
   const [searchQuery, setSearchQuery] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchDecks = async () => {
-      try {
-        setIsLoading(true)
-        const liveDecks: Deck[] = await vocabularyService.getPublicDecks()
-        if (isMounted && Array.isArray(liveDecks)) {
-          const mapped: FormattedDeck[] = liveDecks.map((d: Deck, i: number) => ({
-            id: d._id || `deck-${i}`,
-            title: d.name || 'Community Deck',
-            author: 'LingoSphere Official',
-            authorAvatar: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e', '#e17055'][i % 5],
-            wordCount: d.card_count || 0,
-            views: 120 + i * 25,
-            saves: 30 + i * 5,
-            topic: 'General',
-          }))
-          setDecks(mapped)
-        }
-      } catch (err) {
-        console.error('Failed to load public decks:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchDecks()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const decks: FormattedDeck[] = useMemo(() => {
+    if (!Array.isArray(liveDecks)) return []
+    return liveDecks.map((d: Deck, i: number) => ({
+      id: d._id || `deck-${i}`,
+      title: d.name || 'Community Deck',
+      author: 'LingoSphere Official',
+      authorAvatar: ['#6b5ce7', '#00b894', '#0984e3', '#fdcb6e', '#e17055'][i % 5],
+      wordCount: d.card_count || 0,
+      views: 120 + i * 25,
+      saves: 30 + i * 5,
+      topic: 'General',
+    }))
+  }, [liveDecks])
 
-  const filteredDecks = decks
-    .filter((deck) =>
-      deck.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      deck.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      deck.topic.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => b[sortBy] - a[sortBy])
+  const filteredDecks = useMemo(() => {
+    return decks
+      .filter((deck) =>
+        deck.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deck.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        deck.topic.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      .sort((a, b) => b[sortBy] - a[sortBy])
+  }, [decks, searchQuery, sortBy])
 
   const handleSaveDeck = async (deck: FormattedDeck) => {
     try {
       await vocabularyService.enrollDeck(deck.id)
+      queryClient.invalidateQueries({ queryKey: vocabularyKeys.myEnrollments() })
       showAction(isVietnamese ? `Đã lưu deck "${deck.title}" vào sổ tay` : `Saved deck "${deck.title}" to notebook`)
     } catch {
-      showAction(isVietnamese ? `Đã lưu deck "${deck.title}"` : `Saved deck "${deck.title}"`)
+      showAction(isVietnamese ? 'Không thể lưu deck. Vui lòng thử lại' : 'Failed to save deck')
     }
   }
 

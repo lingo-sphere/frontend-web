@@ -126,7 +126,7 @@ export function CourseTestRunnerWorkspace({
   >([])
 
   useEffect(() => {
-    if (isSubmitted && scoreResult?.isPassed) {
+    if (testType === 'final-test' && isSubmitted && scoreResult?.isPassed) {
       let isMounted = true
       courseService
         .getRecommendedCourses({
@@ -138,12 +138,16 @@ export function CourseTestRunnerWorkspace({
             setNextCourses(res.recommendations)
           }
         })
-        .catch(() => {})
+        .catch(() => {
+          if (isMounted) setNextCourses([])
+        })
       return () => {
         isMounted = false
       }
+    } else {
+      setNextCourses([])
     }
-  }, [isSubmitted, scoreResult?.isPassed, courseId, category])
+  }, [testType, isSubmitted, scoreResult?.isPassed, courseId, category])
 
   return (
     <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col antialiased">
@@ -273,7 +277,9 @@ export function CourseTestRunnerWorkspace({
                   onExplainMistakes={() => {}}
                   onToggleAiDetails={() => setShowAiDetails(!showAiDetails)}
                   onBackToLessons={onClose}
-                  onNavigateCourse={(slugOrId) => navigate(`/course/${slugOrId}`)}
+                  onNavigateCourse={(slugOrId) =>
+                    navigate(slugOrId.startsWith('/') ? slugOrId : `/course/${slugOrId}`)
+                  }
                 />
               )}
               {rawQuestions.map((q, idx) => (

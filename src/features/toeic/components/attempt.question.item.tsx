@@ -1,6 +1,5 @@
 // Component hiển thị chi tiết câu hỏi, lựa chọn và giải thích cho từng câu bài làm.
-
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, Mic, Bot, Sparkles, Lightbulb, Volume2, PenTool } from 'lucide-react'
 import { Card } from '@/components/card'
 import { Badge } from '@/components/badge'
 
@@ -10,6 +9,16 @@ export interface AttemptAnswerDetail {
   correct_option: string
   is_correct: boolean
   is_skipped: boolean
+  whisper_transcript?: string
+  ai_score?: number
+  ai_feedback?: {
+    pronunciation_score?: number
+    fluency_score?: number
+    grammar_score?: number
+    vocabulary_score?: number
+    detailed_comment?: string
+    improvement_tips?: string[]
+  }
   question_id?: {
     question_text_en?: string
     question_text_vi?: string
@@ -27,6 +36,10 @@ export interface CourseQuestionDetail {
   question_text: string
   options: string[]
   correct_answer: string
+  correct_index?: number
+  selected_index?: number
+  selected_option?: string
+  is_correct?: boolean
   explanation?: string
   media_url?: string
   image_url?: string
@@ -36,11 +49,42 @@ interface ToeicQuestionCardProps {
   answer: AttemptAnswerDetail
 }
 
+const getAudioSrc = (str?: string): string => {
+  if (!str) return ''
+  const trimmed = str.trim()
+  if (/^data:audio/i.test(trimmed)) {
+    const commaIdx = trimmed.indexOf(',')
+    if (commaIdx !== -1) {
+      const header = trimmed.substring(0, commaIdx).toLowerCase()
+      const body = trimmed.substring(commaIdx + 1)
+      return `${header},${body}`
+    }
+  }
+  return trimmed
+}
+
+const isAudioString = (str?: string): boolean => {
+  if (!str) return false
+  const s = str.trim().toLowerCase()
+  return (
+    s.startsWith('data:audio/') ||
+    s.startsWith('blob:') ||
+    s.includes('audio/webm') ||
+    s.includes('audio/mp3') ||
+    s.includes('audio/wav') ||
+    s.includes('audio/ogg') ||
+    s.includes('audio/m4a') ||
+    /\.(mp3|wav|ogg|webm|m4a|aac)(\?.*)?$/i.test(s)
+  )
+}
+
 export function ToeicQuestionCard({ answer }: ToeicQuestionCardProps) {
   const q = answer.question_id
   const isCorrect = answer.is_correct
   const isSkipped = answer.is_skipped || !answer.selected_option
   const correctKey = answer.correct_option
+  const rawAnswer = answer.selected_option || ''
+  const isAudioAns = isAudioString(rawAnswer)
 
   return (
     <Card
@@ -91,30 +135,186 @@ export function ToeicQuestionCard({ answer }: ToeicQuestionCardProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
-        <div className="p-3 rounded-xl bg-surface border border-border">
-          <span className="font-semibold text-text-secondary block">
-            Lựa chọn của bạn:
-          </span>
-          <span
-            className={`text-sm font-black ${
-              isCorrect
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-rose-600 dark:text-rose-400'
-            }`}
-          >
-            {answer.selected_option ?? 'Chưa chọn'}
-          </span>
+      {isAudioAns ? (
+        <div className="p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2">
+          <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-bold">
+            <Mic size={14} className="text-indigo-600" />
+            <span>Bản ghi âm bài nói của bạn:</span>
+          </div>
+          <audio controls className="w-full h-9 rounded-lg" src={getAudioSrc(rawAnswer)} preload="auto" />
         </div>
-        <div className="p-3 rounded-xl bg-surface border border-border">
-          <span className="font-semibold text-text-secondary block">
-            Đáp án chuẩn xác:
-          </span>
-          <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-            {correctKey}
-          </span>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+          <div className="p-3 rounded-xl bg-surface border border-border">
+            <span className="font-semibold text-text-secondary block">
+              Lựa chọn của bạn:
+            </span>
+            <span
+              className={`text-sm font-black ${
+                isCorrect
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : isSkipped
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-rose-600 dark:text-rose-400 line-through'
+              }`}
+            >
+              {answer.selected_option ?? 'Chưa chọn'}
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-surface border border-border">
+            <span className="font-semibold text-text-secondary block">
+              Đáp án chuẩn xác:
+            </span>
+            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+              {correctKey}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
+
+      {q?.options && q.options.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+          {q.options.map((opt, oIdx) => {
+            const optKey = opt.key || ['A', 'B', 'C', 'D'][oIdx]
+            const isUserChoice = answer.selected_option === optKey
+            const isOptCorrect = correctKey === optKey
+
+            return (
+              <div
+                key={oIdx}
+                className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all ${
+                  isOptCorrect
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-semibold'
+                    : isUserChoice
+                    ? 'border-rose-500/40 bg-rose-500/10 text-rose-800 dark:text-rose-300 font-semibold'
+                    : 'border-border bg-surface-subtle/50 text-text-secondary'
+                }`}
+              >
+                <span
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                    isOptCorrect
+                      ? 'bg-emerald-600 text-white'
+                      : isUserChoice
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-border text-text-tertiary'
+                  }`}
+                >
+                  {optKey}
+                </span>
+                <span className={`flex-1 ${!isOptCorrect && isUserChoice ? 'line-through' : ''}`}>
+                  {opt.text_en || opt.text_vi}
+                </span>
+                {isOptCorrect && (
+                  <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                )}
+                {!isOptCorrect && isUserChoice && (
+                  <XCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0" />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {!isAudioAns && rawAnswer.length > 15 && (!q?.options || q.options.length === 0) && (
+        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1.5">
+          <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-bold text-xs">
+            <PenTool size={13} className="text-indigo-600" />
+            <span>Bài viết của bạn:</span>
+          </div>
+          <p className="text-xs text-text-primary leading-relaxed whitespace-pre-wrap bg-white dark:bg-slate-900 p-3 rounded-lg border border-border">
+            {rawAnswer}
+          </p>
+        </div>
+      )}
+
+      {(answer.whisper_transcript || answer.ai_score !== undefined || answer.ai_feedback) && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-violet-50/90 via-purple-50/60 to-indigo-50/40 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-indigo-950/20 border border-violet-200/80 dark:border-violet-800/60 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-violet-700 dark:text-violet-300">
+              <Bot size={15} className="text-violet-600" />
+              <span>Đánh Giá & Chấm Điểm Từ AI (Whisper STT + AI Evaluator):</span>
+            </div>
+            {answer.ai_score !== undefined && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-violet-600 text-white shadow-xs">
+                Điểm AI: {answer.ai_score}/100
+              </span>
+            )}
+          </div>
+
+          {answer.whisper_transcript && (
+            <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-violet-100 dark:border-violet-900/40 space-y-1">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-violet-600 dark:text-violet-400">
+                <Volume2 size={13} />
+                <span>Nội dung bài nói đã nhận diện (Whisper STT Transcript):</span>
+              </div>
+              <p className="text-xs text-text-primary font-medium italic pl-1">
+                "{answer.whisper_transcript}"
+              </p>
+            </div>
+          )}
+
+          {answer.ai_feedback && (
+            <div className="space-y-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {answer.ai_feedback.pronunciation_score !== undefined && (
+                  <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                    <span className="text-[10px] font-bold text-text-tertiary uppercase block">Phát âm</span>
+                    <span className="text-xs font-black text-violet-600 dark:text-violet-400">
+                      {answer.ai_feedback.pronunciation_score}/100
+                    </span>
+                  </div>
+                )}
+                {answer.ai_feedback.fluency_score !== undefined && (
+                  <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                    <span className="text-[10px] font-bold text-text-tertiary uppercase block">Trôi chảy</span>
+                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">
+                      {answer.ai_feedback.fluency_score}/100
+                    </span>
+                  </div>
+                )}
+                {answer.ai_feedback.grammar_score !== undefined && (
+                  <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                    <span className="text-[10px] font-bold text-text-tertiary uppercase block">Ngữ pháp</span>
+                    <span className="text-xs font-black text-blue-600 dark:text-blue-400">
+                      {answer.ai_feedback.grammar_score}/100
+                    </span>
+                  </div>
+                )}
+                {answer.ai_feedback.vocabulary_score !== undefined && (
+                  <div className="p-2 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-violet-100 dark:border-violet-900/40 text-center">
+                    <span className="text-[10px] font-bold text-text-tertiary uppercase block">Từ vựng</span>
+                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      {answer.ai_feedback.vocabulary_score}/100
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {answer.ai_feedback.detailed_comment && (
+                <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-violet-100 dark:border-violet-900/40 text-xs text-text-primary space-y-1">
+                  <span className="font-bold text-violet-700 dark:text-violet-300 block">Nhận xét chi tiết từ AI:</span>
+                  <p className="leading-relaxed whitespace-pre-wrap">{answer.ai_feedback.detailed_comment}</p>
+                </div>
+              )}
+
+              {answer.ai_feedback.improvement_tips && answer.ai_feedback.improvement_tips.length > 0 && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                  <span className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                    <Lightbulb size={14} />
+                    <span>Gợi ý cải thiện:</span>
+                  </span>
+                  <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
+                    {answer.ai_feedback.improvement_tips.map((tip, tIdx) => (
+                      <li key={tIdx}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {q?.explanation_en && (
         <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-900 dark:text-blue-200">
@@ -147,15 +347,70 @@ export function CourseQuestionCard({
   courseTitle,
   courseId,
 }: CourseQuestionCardProps) {
+  const isAnswered =
+    (question.selected_index !== undefined && question.selected_index >= 0) ||
+    Boolean(question.selected_option)
+  const isCorrect = question.is_correct === true
+  const isSkipped = !isAnswered
+
+  const selectedLabel = (() => {
+    if (question.selected_index !== undefined && question.selected_index >= 0) {
+      const letter = ['A', 'B', 'C', 'D'][question.selected_index] || String(question.selected_index + 1)
+      const text = question.options?.[question.selected_index]
+      return text ? `${letter}. ${text}` : letter
+    }
+    if (question.selected_option) {
+      return question.selected_option
+    }
+    return 'Chưa chọn'
+  })()
+
+  const correctLabel = (() => {
+    if (question.correct_index !== undefined && question.correct_index >= 0) {
+      const letter = ['A', 'B', 'C', 'D'][question.correct_index] || String(question.correct_index + 1)
+      const text = question.options?.[question.correct_index]
+      return text ? `${letter}. ${text}` : letter
+    }
+    if (question.correct_answer) {
+      return question.correct_answer
+    }
+    return 'Đang cập nhật'
+  })()
+
   return (
-    <Card className="p-5 rounded-2xl border border-border bg-surface text-xs space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-black text-text-primary text-sm">
-          Câu {question.question_number}:
-        </span>
-        <Badge variant="outline" className="text-[10px] font-bold">
-          Khóa học: {courseTitle || courseId}
-        </Badge>
+    <Card
+      className={`p-5 rounded-2xl border text-xs space-y-3 transition-all ${
+        isCorrect
+          ? 'border-emerald-500/30 bg-emerald-500/5'
+          : isSkipped
+          ? 'border-amber-500/30 bg-amber-500/5'
+          : 'border-rose-500/30 bg-rose-500/5'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="font-black text-text-primary text-sm">
+            Câu {question.question_number}:
+          </span>
+          {isCorrect ? (
+            <span className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/15 px-2.5 py-1 rounded-full text-xs">
+              <CheckCircle size={13} /> Làm đúng (+1 điểm)
+            </span>
+          ) : isSkipped ? (
+            <span className="inline-flex items-center gap-1 font-bold text-amber-700 dark:text-amber-300 bg-amber-500/15 px-2.5 py-1 rounded-full text-xs">
+              <AlertCircle size={13} /> Chưa làm
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 font-bold text-rose-700 dark:text-rose-300 bg-rose-500/15 px-2.5 py-1 rounded-full text-xs">
+              <XCircle size={13} /> Chưa chính xác (0 điểm)
+            </span>
+          )}
+        </div>
+        {courseTitle && (
+          <Badge variant="outline" className="text-[10px] font-bold">
+            {courseTitle}
+          </Badge>
+        )}
       </div>
 
       {question.question_text && (
@@ -178,36 +433,89 @@ export function CourseQuestionCard({
         </div>
       )}
 
+      {isAudioString(question.selected_option) ? (
+        <div className="p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2">
+          <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-bold">
+            <Mic size={14} className="text-indigo-600" />
+            <span>Bản ghi âm bài nói của bạn:</span>
+          </div>
+          <audio controls className="w-full h-9 rounded-lg" src={question.selected_option} preload="auto" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+          <div className="p-3 rounded-xl bg-surface border border-border">
+            <span className="font-semibold text-text-secondary block">
+              Lựa chọn của bạn:
+            </span>
+            <span
+              className={`text-sm font-black ${
+                isCorrect
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : isSkipped
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-rose-600 dark:text-rose-400 line-through'
+              }`}
+            >
+              {selectedLabel}
+            </span>
+          </div>
+          <div className="p-3 rounded-xl bg-surface border border-border">
+            <span className="font-semibold text-text-secondary block">
+              Đáp án chuẩn xác:
+            </span>
+            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+              {correctLabel}
+            </span>
+          </div>
+        </div>
+      )}
+
       {question.options && question.options.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
           {question.options.map((opt, oIdx) => {
             const optKey = ['A', 'B', 'C', 'D'][oIdx] || String(oIdx + 1)
-            const isCorrect =
+            const isOptCorrect =
+              question.correct_index === oIdx ||
               question.correct_answer === optKey ||
-              question.correct_answer.toLowerCase() === opt.toLowerCase() ||
-              question.correct_answer.startsWith(optKey)
+              question.correct_answer?.toLowerCase() === opt.toLowerCase() ||
+              question.correct_answer?.startsWith(optKey)
+
+            const isOptSelected =
+              question.selected_index === oIdx ||
+              question.selected_option === optKey ||
+              question.selected_option?.toLowerCase() === opt.toLowerCase() ||
+              question.selected_option?.startsWith(optKey)
 
             return (
               <div
                 key={oIdx}
                 className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all ${
-                  isCorrect
+                  isOptCorrect
                     ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-semibold'
+                    : isOptSelected
+                    ? 'border-rose-500/40 bg-rose-500/10 text-rose-800 dark:text-rose-300 font-semibold'
                     : 'border-border bg-surface-subtle/50 text-text-secondary'
                 }`}
               >
                 <span
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                    isCorrect
+                    isOptCorrect
                       ? 'bg-emerald-600 text-white'
+                      : isOptSelected
+                      ? 'bg-rose-600 text-white'
                       : 'bg-border text-text-tertiary'
                   }`}
                 >
                   {optKey}
                 </span>
-                <span className="flex-1">{opt}</span>
-                {isCorrect && (
+                <span className={`flex-1 ${!isOptCorrect && isOptSelected ? 'line-through' : ''}`}>
+                  {opt}
+                </span>
+                {isOptCorrect && (
                   <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                )}
+                {!isOptCorrect && isOptSelected && (
+                  <XCircle size={16} className="text-rose-600 dark:text-rose-400 shrink-0" />
                 )}
               </div>
             )

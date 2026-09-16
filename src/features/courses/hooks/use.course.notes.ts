@@ -1,21 +1,20 @@
-/**
- * @file use.course.notes.ts
- * @description Custom hook quản lý ghi chú bài học cá nhân (tạo ghi chú theo mốc thời gian, xóa ghi chú)
- */
+// Custom hook quản lý ghi chú bài học cá nhân trong khóa học.
 
 import { type Dispatch, type SetStateAction } from 'react'
 import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import type { Course, Lesson, NoteItem } from '@/features/courses/types/course'
+import type { User } from '@/types/api.types'
+import type { BottomTab } from '@/features/courses/components/course.workspace.tabs'
 
 interface UseCourseNotesParams {
   course: Course | null
   setCourse: Dispatch<SetStateAction<Course | null>>
   currentLesson: Lesson | null
   isAuthenticated: boolean
-  user: any
+  user: User | null
   isEnrolled: boolean
-  setActiveBottomTab: (tab: any) => void
+  setActiveBottomTab: (tab: BottomTab) => void
 }
 
 export function useCourseNotes({
@@ -50,7 +49,7 @@ export function useCourseNotes({
       })) as Record<string, unknown>
 
       const newNote: NoteItem = {
-        id: String(res?._id || `note-${Date.now()}`),
+        id: String(res?._id || res?.id || ''),
         lessonId: currentLesson.id,
         lessonTitle: currentLesson.title,
         timestamp,

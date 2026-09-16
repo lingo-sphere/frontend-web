@@ -21,6 +21,32 @@ interface SpeakingWorkspaceProps {
   onBack: () => void
 }
 
+interface ISpeechRecognitionResult {
+  [index: number]: { transcript: string }
+  length: number
+}
+
+interface ISpeechRecognitionEvent {
+  results: {
+    [index: number]: ISpeechRecognitionResult
+    length: number
+  }
+}
+
+interface ISpeechRecognitionInstance {
+  continuous?: boolean
+  interimResults?: boolean
+  lang: string
+  onresult: ((event: ISpeechRecognitionEvent) => void) | null
+  onerror?: (() => void) | null
+  start: () => void
+  stop?: () => void
+}
+
+interface SpeechRecognitionConstructor {
+  new (): ISpeechRecognitionInstance
+}
+
 const needsPreparation = (type: SpeakingExerciseType): boolean => {
   return type === 'TOPIC' || type === 'RESPOND_SITUATION'
 }
@@ -36,7 +62,7 @@ export function SpeakingWorkspace({
   const isVietnamese = i18n.language === 'vi'
 
   const [transcription, setTranscription] = useState('')
-  const speechRecognitionRef = useRef<any>(null)
+  const speechRecognitionRef = useRef<ISpeechRecognitionInstance | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const audioBlobRef = useRef<Blob | null>(null)
@@ -102,7 +128,7 @@ export function SpeakingWorkspace({
         stream.getTracks().forEach((track) => track.stop())
       }
 
-      const win = typeof window !== 'undefined' ? (window as unknown as { SpeechRecognition?: new () => any; webkitSpeechRecognition?: new () => any }) : {}
+      const win = typeof window !== 'undefined' ? (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }) : {}
       const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition
       if (SpeechRec) {
         try {
@@ -110,7 +136,7 @@ export function SpeakingWorkspace({
           recognition.continuous = true
           recognition.interimResults = true
           recognition.lang = 'en-US'
-          recognition.onresult = (evt: any) => {
+          recognition.onresult = (evt: ISpeechRecognitionEvent) => {
             let text = ''
             for (let i = 0; i < evt.results.length; i++) {
               text += evt.results[i][0].transcript + ' '
@@ -142,7 +168,7 @@ export function SpeakingWorkspace({
   const stopRecording = useCallback(() => {
     if (speechRecognitionRef.current) {
       try {
-        speechRecognitionRef.current.stop()
+        speechRecognitionRef.current.stop?.()
       } catch {}
       speechRecognitionRef.current = null
     }

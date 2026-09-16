@@ -12,7 +12,7 @@ import { useMounted } from '@/hooks/use.mounted'
 import { Button } from '@/components/button'
 import { SidebarNav } from '@/layouts/sidebar.nav'
 import { NAV_GROUPS } from '@/config/navigation.config'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
+import { useApp } from '@/contexts/app.context'
 
 interface SidebarProps {
   mobile?: boolean
@@ -22,16 +22,11 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   const { t, i18n } = useTranslation()
   const mounted = useMounted()
   const navigate = useNavigate()
-  const activeNavItem = useDashboardStore((state) => state.activeNavItem)
-  const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
-  const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
-  const sidebarCollapsed = useDashboardStore((state) => state.sidebarCollapsed)
-  const toggleSidebarCollapsed = useDashboardStore((state) => state.toggleSidebarCollapsed)
+  const { sidebarCollapsed, toggleSidebarCollapsed, setMobileSidebarOpen } = useApp()
 
   const isVietnamese = mounted ? i18n.language === 'vi' : true
 
-  const handleNavigate = (id: string) => {
-    setActiveNavItem(id)
+  const handleNavigate = (_id?: string) => {
     setMobileSidebarOpen(false)
   }
 
@@ -68,7 +63,6 @@ export function Sidebar({ mobile = false }: SidebarProps) {
         </div>
       </div>
       <SidebarNav
-        activeItem={activeNavItem}
         groups={NAV_GROUPS}
         onNavigate={handleNavigate}
         collapsed={sidebarCollapsed}

@@ -1,7 +1,9 @@
-// Custom hook tải và đồng bộ dữ liệu hồ sơ cá nhân, điểm đánh giá TOEIC và điểm XP
+// Custom hook tải và đồng bộ dữ liệu hồ sơ cá nhân và bảng xếp hạng bằng TanStack Query.
 import { useState, useEffect } from 'react'
 import { userService } from '@/features/user/services/user.service'
+import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
 import type { User, EditProfileForm } from '@/features/user/types/user'
+import type { UserScoreData } from '@/features/user/utils/user.score.utils'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
@@ -10,96 +12,87 @@ export function formatNumber(val?: number): string {
   return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
+const defaultUserState: User = {
+  id: 'current_user',
+  user_id: '',
+  email: '',
+  full_name: 'Học viên',
+  avatar_url: '',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  role: 'student',
+  isVerified: true,
+  isActive: true,
+  is_premium: false,
+  stats: {
+    totalExercises: 0,
+    totalListeningExercises: 0,
+    totalVocabularyLearned: 0,
+    totalListeningTime: 0,
+    totalSpeakingTime: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    totalXP: 0,
+    level: 1,
+    badges: [],
+    averageAccuracy: 0,
+    totalCorrectAnswers: 0,
+    totalWrongAnswers: 0,
+    totalStudyTime: 0,
+    weeklyStudyTime: 0,
+    monthlyStudyTime: 0,
+  },
+  preferences: {
+    language: 'vi',
+    theme: 'system',
+    notifications: {
+      allEnabled: true,
+      email: true,
+      push: true,
+      sound: true,
+    },
+    learning: {
+      autoPlayAudio: true,
+      showPhonetic: true,
+      defaultExerciseDifficulty: 'medium',
+      dailyGoal: 20,
+    },
+    privacy: {
+      showProfile: true,
+      showProgress: true,
+      allowFriendRequests: true,
+    },
+  },
+}
+
+const defaultUserScores = {
+  totalScore: 0,
+  listeningScore: 0,
+  readingScore: 0,
+  speakingScore: 0,
+  writingScore: 0,
+  targetScore: 0,
+  skillsType: '2SKILLS',
+  isManuallyEdited: false,
+  hasTested: false,
+  testedAt: null as string | null,
+}
+
 export function useProfileData() {
   const { user: authUser } = useAuthStore()
 
-  const [user, setUser] = useState<User>({
-    id: 'current_user',
-    user_id: '',
-    email: '',
-    full_name: 'Học viên',
-    avatar_url: '',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    role: 'student',
-    isVerified: true,
-    isActive: true,
-    is_premium: false,
-    stats: {
-      totalExercises: 0,
-      totalListeningExercises: 0,
-      totalVocabularyLearned: 0,
-      totalListeningTime: 0,
-      totalSpeakingTime: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      totalXP: 0,
-      level: 1,
-      badges: [],
-      averageAccuracy: 0,
-      totalCorrectAnswers: 0,
-      totalWrongAnswers: 0,
-      totalStudyTime: 0,
-      weeklyStudyTime: 0,
-      monthlyStudyTime: 0,
-    },
-    preferences: {
-      language: 'vi',
-      theme: 'system',
-      notifications: {
-        allEnabled: true,
-        email: true,
-        push: true,
-        sound: true,
-      },
-      learning: {
-        autoPlayAudio: true,
-        showPhonetic: true,
-        defaultExerciseDifficulty: 'medium',
-        dailyGoal: 20,
-      },
-      privacy: {
-        showProfile: true,
-        showProgress: true,
-        allowFriendRequests: true,
-      },
-    },
-  })
+  const [user, setUser] = useState<User>(defaultUserState)
 
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'activity'>('overview')
-  const [leaderboard, setLeaderboard] = useState<any[]>([])
+  const { data: leaderboard = [] } = useLeaderboardQuery('weekly')
 
-  const [userScores, setUserScores] = useState({
-    totalScore: 0,
-    listeningScore: 0,
-    readingScore: 0,
-    speakingScore: 0,
-    writingScore: 0,
-    targetScore: 650,
-    skillsType: '2SKILLS',
-    isManuallyEdited: false,
-    hasTested: false,
-    testedAt: null as string | null,
-  })
+  const [userScores, setUserScores] = useState<UserScoreData>(defaultUserScores)
 
   useEffect(() => {
-    const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
-    const localScore = storage.get<{
-      placement_test_score?: number
-      placement_listening_score?: number
-      placement_reading_score?: number
-      placement_speaking_score?: number
-      placement_writing_score?: number
-      placement_skills_type?: string
-      target_toeic_score?: number
-      current_estimated_score?: number
-      is_score_manually_edited?: boolean
-      placement_tested_at?: string
-    }>(STORAGE_KEYS.PLACEMENT_SCORE)
-
     const auth = authUser || useAuthStore.getState().user
     if (auth) {
+      const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
       setUser((prev) => ({
         ...prev,
         id: auth.user_id || auth.id || prev.id,
@@ -113,12 +106,16 @@ export function useProfileData() {
         stats: cachedStats ? { ...prev.stats, ...cachedStats } : prev.stats,
       }))
 
-      const sTotal = localScore?.placement_test_score ?? auth?.target_score ?? 0
-      const sList = localScore?.placement_listening_score ?? 0
-      const sRead = localScore?.placement_reading_score ?? 0
-      const sSpk = localScore?.placement_speaking_score ?? 0
-      const sWrt = localScore?.placement_writing_score ?? 0
+      const rawAuth = auth
+      const sTotal = Number(rawAuth?.placement_test_score || rawAuth?.current_estimated_score || 0)
+      const sList = Number(rawAuth?.placement_listening_score || 0)
+      const sRead = Number(rawAuth?.placement_reading_score || 0)
+      const sSpk = Number(rawAuth?.placement_speaking_score || 0)
+      const sWrt = Number(rawAuth?.placement_writing_score || 0)
       const hasScores = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
+      const isManual = Boolean(rawAuth?.is_score_manually_edited)
+      const rawTarget = rawAuth?.target_toeic_score ?? rawAuth?.target_score
+      const resolvedTarget = (hasScores || isManual) && rawTarget ? Number(rawTarget) : 0
 
       setUserScores({
         totalScore: sTotal,
@@ -126,23 +123,27 @@ export function useProfileData() {
         readingScore: sRead,
         speakingScore: sSpk,
         writingScore: sWrt,
-        targetScore: localScore?.target_toeic_score || 650,
-        skillsType: localScore?.placement_skills_type || '2SKILLS',
-        isManuallyEdited: localScore?.is_score_manually_edited ?? false,
+        targetScore: resolvedTarget,
+        skillsType: rawAuth?.placement_skills_type || '2SKILLS',
+        isManuallyEdited: isManual,
         hasTested: hasScores,
-        testedAt: localScore?.placement_tested_at || null,
+        testedAt: rawAuth?.placement_tested_at || null,
       })
+    } else {
+      setUser(defaultUserState)
+      setUserScores(defaultUserScores)
     }
   }, [authUser])
 
   useEffect(() => {
     let isMounted = true
     const loadProfileData = async () => {
+      const auth = authUser || useAuthStore.getState().user
+      if (!auth) return
       try {
-        const [prof, gamify, lb] = await Promise.all([
+        const [prof, gamify] = await Promise.all([
           userService.getProfile().catch(() => null),
           userService.getGamificationProfile().catch(() => null),
-          userService.getLeaderboard('weekly').catch(() => []),
         ])
 
         if (isMounted) {
@@ -183,6 +184,9 @@ export function useProfileData() {
               const sSpk = profileData?.placement_speaking_score ?? 0
               const sWrt = profileData?.placement_writing_score ?? 0
               const sHas = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
+              const isManual = Boolean(profileData?.is_score_manually_edited)
+              const rawTarget = profileData?.target_toeic_score ?? profileData?.target_score
+              const resolvedTarget = (sHas || isManual) && rawTarget ? Number(rawTarget) : 0
 
               setUserScores((prev) => ({
                 ...prev,
@@ -191,13 +195,12 @@ export function useProfileData() {
                 readingScore: sRead,
                 speakingScore: sSpk,
                 writingScore: sWrt,
-                targetScore: profileData?.target_score || prev.targetScore || 650,
+                targetScore: resolvedTarget,
+                skillsType: profileData?.placement_skills_type || prev.skillsType || '2SKILLS',
+                isManuallyEdited: isManual,
                 hasTested: sHas,
               }))
             }
-          }
-          if (Array.isArray(lb)) {
-            setLeaderboard(lb)
           }
         }
       } catch (err) {

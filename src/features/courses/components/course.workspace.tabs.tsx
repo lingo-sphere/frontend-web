@@ -1,7 +1,4 @@
-/**
- * @file course.workspace.tabs.tsx
- * @description Quản lý hiển thị các tab nội dung bài học: Tổng quan, Tiến độ, Tài liệu, Hỏi đáp, Ghi chú và Đánh giá.
- */
+// Quan ly hien thi cac tab noi dung bai hoc: Tong quan, Tien do, Luyen tap, Tai lieu, Hoi dap, Ghi chu va Danh gia.
 
 'use client'
 
@@ -11,9 +8,10 @@ import { CourseResourcesTab } from '@/features/courses/components/course.resourc
 import { CourseQnATab } from '@/features/courses/components/course.qna.tab'
 import { CourseNotesTab } from '@/features/courses/components/course.notes.tab'
 import { CourseReviewsTab } from '@/features/courses/components/course.reviews.tab'
-import type { Course, Lesson } from '@/features/courses/types/course'
+import { LessonPracticeQuizView } from '@/features/courses/components/lesson.practice.quiz.view'
+import type { Course, Lesson, CourseProgressDetailInfo } from '@/features/courses/types/course'
 
-export type BottomTab = 'overview' | 'progress' | 'resources' | 'qna' | 'notes' | 'reviews'
+export type BottomTab = 'overview' | 'progress' | 'quiz' | 'resources' | 'qna' | 'notes' | 'reviews'
 
 interface CourseWorkspaceTabsProps {
   course: Course
@@ -24,7 +22,7 @@ interface CourseWorkspaceTabsProps {
   currentUserId?: string
   currentUserRole?: string
   playerCurrentTime: number
-  progressDetail: any
+  progressDetail: CourseProgressDetailInfo | null
   onTabChange: (tab: BottomTab) => void
   onInitiateEnrollOrBuy: () => void
   onCreateQnA: (title: string, body: string, isAnonymous?: boolean) => void
@@ -58,10 +56,14 @@ export function CourseWorkspaceTabs({
     { id: 'overview' as const, label: 'Tổng quan (Overview)' },
     { id: 'progress' as const, label: 'Tiến độ & Tăng trưởng' },
     {
-      id: 'resources' as const,
-      label: `Tài liệu (Resources) ${
-        (currentLesson?.resources?.length || 0) > 0 ? `(${currentLesson?.resources?.length})` : ''
+      id: 'quiz' as const,
+      label: `Luyện tập ôn bài ${
+        (currentLesson?.questions?.length || 0) > 0 ? `(${currentLesson?.questions?.length})` : ''
       }`,
+    },
+    {
+      id: 'resources' as const,
+      label: 'Tài liệu (Resources)',
     },
     {
       id: 'qna' as const,
@@ -125,6 +127,13 @@ export function CourseWorkspaceTabs({
             finalTestScore={progressDetail?.course_progress?.final_test_score}
           />
         </div>
+      )}
+
+      {activeTab === 'quiz' && (
+        <LessonPracticeQuizView
+          questions={currentLesson?.questions}
+          lessonTitle={currentLesson?.title}
+        />
       )}
 
       {activeTab === 'resources' && (

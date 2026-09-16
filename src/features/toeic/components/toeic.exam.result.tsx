@@ -38,6 +38,20 @@ interface ToeicExamResultProps {
   results: ExamResultMetrics
   questions?: ToeicQuestion[]
   userAnswers?: Record<number, string>
+  evaluatedAnswers?: Record<number, {
+    whisper_transcript?: string
+    ai_score?: number
+    ai_feedback?: {
+      pronunciation_score?: number
+      fluency_score?: number
+      grammar_score?: number
+      vocabulary_score?: number
+      detailed_comment?: string
+      improvement_tips?: string[]
+    }
+    is_correct?: boolean
+  }>
+  isEvaluatingAI?: boolean
   recommendedCourses: RecommendedCourseItem[]
   recommendedRoadmap?: (LearningRoadmap & { stages?: unknown[] }) | null
   targetBand?: string
@@ -51,6 +65,8 @@ export function ToeicExamResult({
   results,
   questions = [],
   userAnswers = {},
+  evaluatedAnswers = {},
+  isEvaluatingAI = false,
   recommendedCourses,
   recommendedRoadmap,
   targetBand,
@@ -71,45 +87,45 @@ export function ToeicExamResult({
   const incorrectCount = Math.max(0, results.total - results.correct)
 
   return (
-    <div className="min-h-screen bg-surface-secondary py-8 sm:py-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
-        <Card className="dashboard-card overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm bg-surface">
-          <ToeicScoreOverview
-            results={results}
-            levelLabel={levelLabel}
-            targetBand={targetBand}
-            isVietnamese={isVietnamese}
-          />
-
-          <CardContent className="p-0">
-            <ToeicPartBreakdown
-              results={results}
-              statEntries={statEntries}
-              hasExplicitParts={hasExplicitParts}
-              isVietnamese={isVietnamese}
-              onRetry={onRetry}
-              onChooseAnother={onChooseAnother}
-            />
-          </CardContent>
-        </Card>
-
-        <ToeicCourseRecommendations
-          recommendedRoadmap={recommendedRoadmap}
-          courses={recommendedCourses}
-          targetBand={targetBand}
+    <main className="w-full min-h-screen bg-surface-secondary px-4 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-6 sm:space-y-8">
+      <Card className="dashboard-card overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm bg-surface">
+        <ToeicScoreOverview
+          results={results}
           levelLabel={levelLabel}
-          isLoading={isLoadingRecommendations}
-          baselineScore={results.estimatedTotal}
-        />
-
-        <ToeicQuestionsReview
-          questions={questions}
-          userAnswers={userAnswers}
-          correctCount={results.correct}
-          incorrectCount={incorrectCount}
+          targetBand={targetBand}
           isVietnamese={isVietnamese}
         />
-      </div>
-    </div>
+
+        <CardContent className="p-0">
+          <ToeicPartBreakdown
+            results={results}
+            statEntries={statEntries}
+            hasExplicitParts={hasExplicitParts}
+            isVietnamese={isVietnamese}
+            onRetry={onRetry}
+            onChooseAnother={onChooseAnother}
+          />
+        </CardContent>
+      </Card>
+
+      <ToeicCourseRecommendations
+        recommendedRoadmap={recommendedRoadmap}
+        courses={recommendedCourses}
+        targetBand={targetBand}
+        levelLabel={levelLabel}
+        isLoading={isLoadingRecommendations}
+        baselineScore={results.estimatedTotal}
+      />
+
+      <ToeicQuestionsReview
+        questions={questions}
+        userAnswers={userAnswers}
+        evaluatedAnswers={evaluatedAnswers}
+        isEvaluatingAI={isEvaluatingAI}
+        correctCount={results.correct}
+        incorrectCount={incorrectCount}
+        isVietnamese={isVietnamese}
+      />
+    </main>
   )
 }

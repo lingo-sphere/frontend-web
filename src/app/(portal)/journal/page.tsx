@@ -1,14 +1,11 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/journal
- */
-
+// Trang nhật ký học viên hàng ngày kết hợp trợ lý AI chấm điểm bài viết.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
 import { api } from '@/services/api.client'
+import { useDailyJournalPromptQuery } from '@/features/practice/hooks/use.practice.query'
 
 interface JournalEvaluation {
   overall_score: number
@@ -20,39 +17,20 @@ interface JournalEvaluation {
 }
 
 export default function DailyJournalAppPage() {
-  const [dailyPrompt, setDailyPrompt] = useState<{ title: string; prompt: string; hints: string[] }>({
-    title: 'Hôm nay bạn học được điều gì mới mẻ?',
-    prompt: 'Write about a memorable experience you had this week and what lessons you learned from it.',
-    hints: ['Use past simple and present perfect tense', 'Include at least 3 descriptive adjectives', 'Minimum 50 words'],
-  })
+  const { data: promptData } = useDailyJournalPromptQuery()
+
+  const dailyPrompt = useMemo(() => ({
+    title: promptData?.topic_vi || 'Chủ đề Nhật ký hôm nay',
+    prompt:
+      promptData?.topic_en ||
+      'Write about a memorable experience you had this week and what lessons you learned from it.',
+    hints: ['Describe in 50-150 words', 'Check your grammar & tenses'],
+  }), [promptData])
 
   const [journalContent, setJournalContent] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [evaluation, setEvaluation] = useState<JournalEvaluation | null>(null)
   const [wordCount, setWordCount] = useState<number>(0)
-
-  useEffect(() => {
-    const fetchPrompt = async () => {
-      try {
-        const res = await api.get<{ title?: string; prompt?: string; hints?: string[] }>(
-          '/practice/writing/journal/daily-prompt',
-        )
-        if (res && res.prompt) {
-          setDailyPrompt({
-            title: res.title ? res.title : 'Chủ đề Nhật ký hôm nay',
-            prompt: res.prompt,
-            hints:
-              res.hints && res.hints.length > 0
-                ? res.hints
-                : ['Describe in 50-150 words', 'Check your grammar & tenses'],
-          })
-        }
-      } catch {
-
-      }
-    }
-    fetchPrompt()
-  }, [])
 
   useEffect(() => {
     const words = journalContent.trim().split(/\s+/).filter(Boolean)

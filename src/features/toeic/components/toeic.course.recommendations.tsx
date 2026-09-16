@@ -18,7 +18,8 @@ import { Card } from '@/components/card'
 import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
 import { progressService } from '@/features/progress/services/progress.service'
-import type { Course, LearningRoadmap } from '@/types/api.types'
+import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import type { Course, LearningRoadmap, LearningRoadmapStage } from '@/types/api.types'
 
 export interface RecommendedCourseItem extends Course {
   recommendation_reason?: string
@@ -26,7 +27,7 @@ export interface RecommendedCourseItem extends Course {
 }
 
 interface ToeicCourseRecommendationsProps {
-  recommendedRoadmap?: (LearningRoadmap & { stages?: any[] }) | null
+  recommendedRoadmap?: (LearningRoadmap & { stages?: LearningRoadmapStage[] }) | null
   courses: RecommendedCourseItem[]
   targetBand?: string
   levelLabel?: string
@@ -99,7 +100,7 @@ export function ToeicCourseRecommendations({
               <div className="flex flex-col items-end">
                 <div className="text-[11px] uppercase tracking-wider text-indigo-300 font-bold">Cam Kết Đầu Ra</div>
                 <div className="text-2xl font-black text-teal-400">
-                  {recommendedRoadmap.target_score || 650}+
+                  {recommendedRoadmap.target_score ? `${recommendedRoadmap.target_score}+` : '-'}
                 </div>
               </div>
             </div>
@@ -108,11 +109,11 @@ export function ToeicCourseRecommendations({
             <div className="space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-2">
                 <Layers className="w-4 h-4 text-indigo-400" />
-                <span>Hành Trình Chinh Phục {recommendedRoadmap.stages?.length || 3} Chặng:</span>
+                <span>Hành Trình Chinh Phục {recommendedRoadmap.stages?.length || 0} Chặng:</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {(recommendedRoadmap.stages || []).map((stage: any, idx: number) => {
+                {(recommendedRoadmap.stages || []).map((stage: LearningRoadmapStage, idx: number) => {
                   const isFirst = idx === 0
                   const courseTitle = stage.course?.title || stage.stage_title || `Chặng ${idx + 1}`
                   return (
@@ -244,11 +245,13 @@ export function ToeicCourseRecommendations({
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {courses.map((course) => {
-              const courseId = (course as { _id?: string })._id || course.id || ''
+              const courseUrl = buildCourseUrl(course)
+              const courseKey = course.id || (course as { _id?: string })._id || course.title
               return (
                 <div
-                  key={courseId}
-                  className="group flex flex-col justify-between rounded-2xl border border-border bg-surface p-4 shadow-xs transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-md"
+                  key={courseKey}
+                  onClick={() => navigate(courseUrl)}
+                  className="group flex flex-col justify-between rounded-2xl border border-border bg-surface p-4 shadow-xs transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-md cursor-pointer"
                 >
                   <div>
                     <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
@@ -296,7 +299,10 @@ export function ToeicCourseRecommendations({
                     <Button
                       size="sm"
                       className="gap-1.5 bg-indigo-600 text-xs font-semibold text-white hover:bg-indigo-700 cursor-pointer"
-                      onClick={() => navigate(`/courses/${courseId}`)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate(courseUrl)
+                      }}
                     >
                       {isVietnamese ? 'Mua lẻ / Vào học' : 'Enroll'}
                       <ArrowRight size={14} />

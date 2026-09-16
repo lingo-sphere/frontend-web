@@ -1,7 +1,10 @@
 // Hook quản lý trạng thái bài tập luyện nói, quy trình thu âm và chấm điểm phát âm AI.
 
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { practiceService, type BackendSpeakingExercise } from '@/features/practice/services/practice.service'
+import { useSpeakingExercisesQuery } from '@/features/practice/hooks/use.practice.query'
+import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import type {
   SpeakingExercise,
   SpeakingAttempt,
@@ -32,8 +35,8 @@ function toDifficultyLevel(val?: string): DifficultyLevel {
 }
 
 export function useSpeakingWorkspace() {
+  const queryClient = useQueryClient()
   const [view, setView] = useState<SpeakingView>('home')
-  const [exerciseList, setExerciseList] = useState<SpeakingExercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<SpeakingExercise | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<SpeakingAttempt | null>(null)
   const [historyAttempts, setHistoryAttempts] = useState<SpeakingAttempt[]>([])
@@ -48,44 +51,31 @@ export function useSpeakingWorkspace() {
     playbackPosition: 0,
   })
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchSpeaking = async () => {
-      try {
-        const data = await practiceService.getSpeakingExercises()
-        if (isMounted && Array.isArray(data)) {
-          const mapped: SpeakingExercise[] = data.map((item: BackendSpeakingExercise) => ({
-            id: item._id,
-            title: item.title,
-            title_vi: item.title_vi || item.title,
-            description: item.description || '',
-            description_vi: item.description_vi || item.description || '',
-            domain: 'SPEAKING',
-            exercise_type: toSpeakingExerciseType(item.exercise_type),
-            toeic_part: item.toeic_part || 1,
-            preparation_time_seconds: item.preparation_time_seconds || 45,
-            response_time_seconds: item.response_time_seconds || 45,
-            prompt_text_en: item.prompt_text_en || item.title,
-            prompt_text_vi: item.prompt_text_vi || item.title_vi,
-            difficulty_level: toDifficultyLevel(item.difficulty_level),
-            cefr_level: item.cefr_level || 'B1',
-            total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
-            avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
-            status: 'PUBLISHED',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }))
-          setExerciseList(mapped)
-        }
-      } catch (err) {
-        console.error('Failed to load speaking exercises:', err)
-      }
-    }
-    fetchSpeaking()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: rawSpeakingExercises = [] } = useSpeakingExercisesQuery()
+
+  const exerciseList: SpeakingExercise[] = useMemo(() => {
+    return rawSpeakingExercises.map((item: BackendSpeakingExercise) => ({
+      id: item._id,
+      title: item.title,
+      title_vi: item.title_vi || item.title,
+      description: item.description || '',
+      description_vi: item.description_vi || item.description || '',
+      domain: 'SPEAKING',
+      exercise_type: toSpeakingExerciseType(item.exercise_type),
+      toeic_part: item.toeic_part || 1,
+      preparation_time_seconds: item.preparation_time_seconds || 45,
+      response_time_seconds: item.response_time_seconds || 45,
+      prompt_text_en: item.prompt_text_en || item.title,
+      prompt_text_vi: item.prompt_text_vi || item.title_vi,
+      difficulty_level: toDifficultyLevel(item.difficulty_level),
+      cefr_level: item.cefr_level || 'B1',
+      total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
+      avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
+      status: 'PUBLISHED',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+  }, [rawSpeakingExercises])
 
   const stats: SpeakingStats = useMemo(() => {
     const total = historyAttempts.length
@@ -221,14 +211,15 @@ export function useSpeakingWorkspace() {
           fluency_score: fluencyScore,
           overall_score: overallScore,
         })
+        queryClient.invalidateQueries({ queryKey: practiceKeys.speaking() })
       } catch (submitErr) {
         console.error('Submit speaking attempt error:', submitErr)
       }
 
-      const attemptId = String(backendAttempt?._id || backendAttempt?.id || `sa-${Date.now()}`)
+      const attemptId = String(backendAttempt?._id || backendAttempt?.id || '')
       const newSubmission: SpeakingAttempt = {
         id: attemptId,
-        user_id: String(backendAttempt?.user_id || 'current_user'),
+        user_id: String(backendAttempt?.user_id || ''),
         exercise_id: selectedExercise.id,
         attempt_number: 1,
         is_best_attempt: true,

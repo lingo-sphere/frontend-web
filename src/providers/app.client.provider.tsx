@@ -85,7 +85,8 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
           path.startsWith('/ai-learning') ||
           path.startsWith('/notes') ||
           path.startsWith('/journal') ||
-          path.startsWith('/progress')
+          path.startsWith('/progress') ||
+          path.startsWith('/exam-history')
         if (isProtected) {
           window.location.href = '/'
         }

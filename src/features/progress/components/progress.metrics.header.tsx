@@ -24,12 +24,12 @@ export function ProgressMetricsHeader({ metrics }: ProgressMetricsHeaderProps) {
               {metrics.currentScore > 0 ? metrics.currentScore : '--'}
             </span>
             <span className="text-xs font-semibold text-amber-800 dark:text-amber-400">
-              Mục tiêu: {metrics.targetScore}
+              Mục tiêu: {metrics.targetScore > 0 ? metrics.targetScore : 'Chưa đặt'}
             </span>
           </div>
           <Progress value={metrics.scoreProgressPercent} className="h-2 bg-amber-500/20" />
           <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
-            Đạt {metrics.scoreProgressPercent}% chặng đường TOEIC
+            {metrics.targetScore > 0 ? `Đạt ${metrics.scoreProgressPercent}% chặng đường TOEIC` : 'Chưa thiết lập mục tiêu'}
           </p>
         </div>
       </div>

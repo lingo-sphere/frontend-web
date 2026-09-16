@@ -1,8 +1,5 @@
-/**
- * @file streak.leaderboard.tsx
- * @description Component giao diện React StreakLeaderboard cho học viên
- */
-
+// Component giao diện React StreakLeaderboard cho học viên
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/button'
@@ -10,7 +7,6 @@ import { Card, CardContent } from '@/components/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/tabs'
 import { Icon } from '@/components/icon.map'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import type { LeaderboardData, LeaderboardPeriod } from '@/features/dashboard/types/dashboard'
 
 interface StreakLeaderboardProps {
@@ -21,8 +17,7 @@ interface StreakLeaderboardProps {
 export function StreakLeaderboard({ leaderboard, onAction }: StreakLeaderboardProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const period = useDashboardStore((state) => state.leaderboardPeriod)
-  const setPeriod = useDashboardStore((state) => state.setLeaderboardPeriod)
+  const [period, setPeriod] = useState<LeaderboardPeriod>('week')
   const entries = leaderboard[period]
 
   const periodLabels: Record<LeaderboardPeriod, { vi: string; en: string }> = {

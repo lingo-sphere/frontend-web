@@ -12,8 +12,7 @@ interface ExamHistoryFiltersProps {
     all: number
     placement: number
     toeic: number
-    challenge: number
-    postMini: number
+    chapterTest: number
     finalTest: number
   }
 }
@@ -63,25 +62,14 @@ export function ExamHistoryFilters({
         </button>
         <button
           type="button"
-          onClick={() => onSelectTab('CHALLENGE')}
+          onClick={() => onSelectTab('CHAPTER_TEST')}
           className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'CHALLENGE'
-              ? 'bg-amber-600 text-white shadow-xs'
-              : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-          }`}
-        >
-          Thử thách chương ({counts.challenge})
-        </button>
-        <button
-          type="button"
-          onClick={() => onSelectTab('POST_MINI')}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'POST_MINI'
+            activeTab === 'CHAPTER_TEST'
               ? 'bg-emerald-600 text-white shadow-xs'
               : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
           }`}
         >
-          Kiểm tra chương ({counts.postMini})
+          Kiểm tra chương ({counts.chapterTest})
         </button>
         <button
           type="button"

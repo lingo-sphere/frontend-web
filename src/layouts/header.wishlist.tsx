@@ -7,7 +7,7 @@ import { useNavigate } from '@/lib/navigation'
 import { useWishlist } from '@/features/cart/hooks/use.wishlist.query'
 import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
+import { useUserEnrollments } from '@/features/courses/hooks/use.courses.query'
 import { toast } from '@/store/toast.store'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { formatCurrency } from '@/lib/format'
@@ -19,7 +19,7 @@ export function HeaderWishlistHover() {
   const { user, isAuthenticated } = useAuthStore()
   const { courseCards: items, removeFromWishlist } = useWishlist(isAuthenticated)
   const { addToCart, isInCart } = useCart(isAuthenticated)
-  const isEnrolled = useEnrollmentStore((state) => state.isEnrolled)
+  const { isEnrolled } = useUserEnrollments(isAuthenticated)
   const isPremiumUser = Boolean(user?.is_premium)
   const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
 

@@ -1,8 +1,4 @@
-/**
- * @file profile.overview.tab.tsx
- * @description Thành phần hiển thị nội dung tab Tổng quan trong hồ sơ học viên (Điểm số, Tiến độ XP, Thành tích, Bảng xếp hạng, Khóa học gợi ý)
- */
-
+// Thành phần hiển thị nội dung tab Tổng quan trong hồ sơ học viên (Điểm số, Tiến độ XP, Thành tích, Bảng xếp hạng, Khóa học gợi ý).
 'use client'
 
 import { Card, CardContent } from '@/components/card'
@@ -13,23 +9,13 @@ import { UserBadgesList } from '@/features/user/components/user.badges'
 import { UserScoreCard } from '@/features/user/components/user.score.card'
 import { RecommendedCoursesSection } from '@/features/courses/components/course.recommended.section'
 import { ProfileLeaderboardCard } from '@/features/user/components/profile.leaderboard.card'
+import type { UserScoreData, LeaderboardEntry } from '@/features/user/utils/user.score.utils'
 
 interface ProfileOverviewTabProps {
   user: User
-  userScores: {
-    totalScore: number
-    listeningScore: number
-    readingScore: number
-    speakingScore: number
-    writingScore: number
-    targetScore: number
-    skillsType: string
-    isManuallyEdited: boolean
-    hasTested: boolean
-    testedAt: string | null
-  }
-  leaderboard: any[]
-  setUserScores: React.Dispatch<React.SetStateAction<any>>
+  userScores: UserScoreData
+  leaderboard: LeaderboardEntry[]
+  setUserScores: React.Dispatch<React.SetStateAction<UserScoreData>>
 }
 
 export function ProfileOverviewTab({
@@ -43,7 +29,7 @@ export function ProfileOverviewTab({
       <UserScoreCard
         userScores={userScores}
         onScoresUpdated={(updated) => {
-          setUserScores((prev: any) => ({ ...prev, ...updated }))
+          setUserScores((prev) => ({ ...prev, ...updated }))
         }}
       />
 

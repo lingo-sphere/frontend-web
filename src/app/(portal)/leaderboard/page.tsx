@@ -1,13 +1,10 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/leaderboard
- */
-
+// Trang bảng xếp hạng thi đua tuần của cộng đồng học viên.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { userService } from '@/features/user/services/user.service'
+import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
+import type { LeaderboardEntry } from '@/features/user/services/user.service'
 import type {
   LeaderboardType,
   MonthlyLeaderboardUser,
@@ -31,8 +28,6 @@ export default function LeaderboardAppPage() {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const [leaderboardType, setLeaderboardType] = useState<LeaderboardType>('streak')
-  const [users, setUsers] = useState<MonthlyLeaderboardUser[]>([])
-  const [isLoading, setIsLoading] = useState(true)
 
   const defaultRewards: MonthlyReward[] = [
     { rank: 1, diamonds: 500, specialBadge: 'Quán quân' },
@@ -40,38 +35,23 @@ export default function LeaderboardAppPage() {
     { rank: 3, diamonds: 150, specialBadge: 'Top 3' },
   ]
 
-  useEffect(() => {
-    let isMounted = true
-    const fetchLeaderboard = async () => {
-      try {
-        setIsLoading(true)
-        const data = await userService.getLeaderboard('weekly')
-        if (isMounted && Array.isArray(data)) {
-          const mapped: MonthlyLeaderboardUser[] = data.map((entry: any, idx: number) => ({
-            rank: idx + 1,
-            name: entry.full_name || `Học viên #${idx + 1}`,
-            avatarColor: avatarColors[idx % avatarColors.length],
-            streakDays: entry.current_streak ?? entry.streak_days ?? 1,
-            totalMinutes: entry.total_minutes || 60 + idx * 10,
-            questionsAnswered: entry.questions_answered || 20 + idx * 5,
-            wordsLearned: entry.words_learned || 15 + idx * 3,
-            diamonds: entry.diamonds || 50,
-            freezes: entry.freezes || 1,
-            isCurrentUser: idx === 0,
-          }))
-          setUsers(mapped)
-        }
-      } catch (err) {
-        console.error('Failed to load leaderboard:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchLeaderboard()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: rawEntries = [], isLoading } = useLeaderboardQuery('weekly')
+
+  const users: MonthlyLeaderboardUser[] = useMemo(() => {
+    if (!Array.isArray(rawEntries)) return []
+    return rawEntries.map((entry: LeaderboardEntry, idx: number) => ({
+      rank: idx + 1,
+      name: entry.full_name || `Học viên #${idx + 1}`,
+      avatarColor: avatarColors[idx % avatarColors.length],
+      streakDays: entry.current_streak ?? entry.streak_days ?? 1,
+      totalMinutes: 60 + idx * 10,
+      questionsAnswered: 20 + idx * 5,
+      wordsLearned: 15 + idx * 3,
+      diamonds: 50,
+      freezes: 1,
+      isCurrentUser: Boolean(entry.is_current_user ?? (idx === 0)),
+    }))
+  }, [rawEntries])
 
   return (
     <>

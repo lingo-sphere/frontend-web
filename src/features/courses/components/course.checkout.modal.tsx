@@ -1,7 +1,4 @@
-/**
- * @file course.checkout.modal.tsx
- * @description Modal thanh toán chuyển khoản ngân hàng qua VietQR kèm xác thực tự động cho Khóa học LingoSphere
- */
+// Modal thanh toán chuyển khoản ngân hàng qua VietQR kèm xác thực tự động cho Khóa học LingoSphere.
 
 'use client'
 

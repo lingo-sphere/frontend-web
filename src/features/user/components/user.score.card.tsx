@@ -1,15 +1,12 @@
 // Thẻ hiển thị điểm trình độ đánh giá đầu vào và mục tiêu TOEIC trong trang hồ sơ cá nhân.
-
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Award,
   Sparkles,
-  Headphones,
   BookOpen,
-  Mic,
   FileEdit,
   ShieldCheck,
   AlertCircle,
@@ -18,34 +15,34 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
+import { UserSkillScoreGrid } from '@/features/user/components/user.skill.score.grid'
+import { getUserScoreLevelInfo, type UserScoreData } from '@/features/user/utils/user.score.utils'
+import { userService } from '@/features/user/services/user.service'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 
 interface UserScoreCardProps {
-  userScores: {
-    totalScore?: number
-    listeningScore?: number
-    readingScore?: number
-    speakingScore?: number
-    writingScore?: number
-    targetScore?: number
-    skillsType?: '2SKILLS' | '4SKILLS' | string
-    isManuallyEdited?: boolean
-    hasTested?: boolean
-    testedAt?: string | null
-  }
-  onScoresUpdated?: (newScores: any) => void
+  userScores: UserScoreData
+  onScoresUpdated?: (newScores: Partial<UserScoreData>) => void
 }
 
 export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProps) {
   const router = useRouter()
   const [showEditModal, setShowEditModal] = useState<boolean>(false)
+  const [selectedSkillsType, setSelectedSkillsType] = useState<'2SKILLS' | '4SKILLS'>(
+    userScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS'
+  )
+
+  useEffect(() => {
+    if (userScores.skillsType) {
+      setSelectedSkillsType(userScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS')
+    }
+  }, [userScores.skillsType])
 
   const rawTotal = userScores.totalScore || 0
   const listeningScore = userScores.listeningScore || 0
   const readingScore = userScores.readingScore || 0
   const speakingScore = userScores.speakingScore || 0
   const writingScore = userScores.writingScore || 0
-  const targetScore = userScores.targetScore || 650
-  const is4Skills = userScores.skillsType === '4SKILLS'
   const isManuallyEdited = userScores.isManuallyEdited ?? false
   const hasTested = Boolean(
     rawTotal > 0 ||
@@ -56,44 +53,35 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
     userScores.testedAt
   )
   const totalScore = hasTested ? (rawTotal || listeningScore + readingScore) : 0
+  const hasTargetScore = Boolean(
+    userScores.targetScore &&
+    userScores.targetScore > 0 &&
+    (hasTested || isManuallyEdited)
+  )
 
-  const getLevelInfo = (score: number) => {
-    if (!hasTested || score === 0) {
-      return {
-        name: 'Chưa xác định cấp độ',
-        desc: 'Hãy làm bài kiểm tra đầu vào hoặc tự điền điểm để nhận lộ trình phù hợp.',
-        badgeColor: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+  const handleSelectSkillsType = async (type: '2SKILLS' | '4SKILLS') => {
+    setSelectedSkillsType(type)
+    try {
+      await userService.updateProfile({ placement_skills_type: type })
+      const { user, setUser } = useAuthStore.getState()
+      if (user) {
+        setUser({
+          ...user,
+          placement_skills_type: type,
+        })
       }
-    }
-    if (score < 450) {
-      return {
-        name: 'Mất Gốc / Nền Tảng (Beginner)',
-        desc: 'Cần củng cố từ vựng cơ bản, phát âm và ngữ pháp thiết yếu.',
-        badgeColor: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800',
+      if (onScoresUpdated) {
+        onScoresUpdated({
+          ...userScores,
+          skillsType: type,
+        })
       }
-    }
-    if (score < 650) {
-      return {
-        name: 'Trung Cấp (Intermediate)',
-        desc: 'Đã nắm vững cấu trúc cơ bản, cần tăng tốc độ làm bài & kỹ thuật bẫy TOEIC.',
-        badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800',
-      }
-    }
-    if (score < 800) {
-      return {
-        name: 'Nâng Cao (Upper-Intermediate)',
-        desc: 'Khả năng giao tiếp và làm bài tốt, hướng tới band 800+ và kỹ năng Speaking & Writing.',
-        badgeColor: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800',
-      }
-    }
-    return {
-      name: 'Cao Cấp / Master (Advanced)',
-      desc: 'Năng lực xuất sắc, làm quen với đề thi khó và bộ bẫy nâng cao 850 - 990.',
-      badgeColor: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800',
+    } catch (err) {
+      console.error(err)
     }
   }
 
-  const level = getLevelInfo(totalScore)
+  const level = getUserScoreLevelInfo(totalScore, hasTested)
 
   return (
     <>
@@ -144,7 +132,6 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
         </div>
 
         <CardContent className="p-5 sm:p-6 space-y-6">
-          
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 space-y-1">
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -170,86 +157,81 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                 <span>Mục tiêu TOEIC:</span>
               </span>
               <div className="text-2xl font-black text-violet-600 dark:text-violet-400">
-                {targetScore} <span className="text-xs font-normal text-slate-400">/ 990</span>
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                {hasTested ? (
+                {hasTargetScore ? (
                   <>
-                    Cần tích lũy thêm: <strong>{Math.max(0, targetScore - totalScore)} điểm</strong>
+                    {userScores.targetScore} <span className="text-xs font-normal text-slate-400">/ 990</span>
                   </>
                 ) : (
-                  <span>Mục tiêu đầu ra dự kiến</span>
+                  <span className="text-base font-bold text-slate-400">Chưa thiết lập</span>
+                )}
+              </div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                {hasTargetScore ? (
+                  hasTested ? (
+                    <>
+                      Cần tích lũy thêm: <strong>{Math.max(0, (userScores.targetScore || 0) - totalScore)} điểm</strong>
+                    </>
+                  ) : (
+                    <span>Mục tiêu đầu ra dự kiến</span>
+                  )
+                ) : (
+                  <span>Chưa đặt mục tiêu đầu ra</span>
                 )}
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 space-y-1">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Hình thức đánh giá:
-              </span>
-              <div className="flex items-center gap-1.5 text-sm font-bold text-teal-800 dark:text-teal-300 pt-1">
-                <Layers className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                <span>{is4Skills ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng'}</span>
+            <div className="p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Hình thức đánh giá:
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300">
+                  {selectedSkillsType === '4SKILLS' ? '4 Kỹ Năng' : '2 Kỹ Năng'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-white/90 dark:bg-slate-900/80 rounded-xl border border-teal-200/60 dark:border-teal-800/50">
+                <button
+                  type="button"
+                  onClick={() => handleSelectSkillsType('2SKILLS')}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    selectedSkillsType === '2SKILLS'
+                      ? 'bg-teal-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                  <span>2 Kỹ Năng</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectSkillsType('4SKILLS')}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    selectedSkillsType === '4SKILLS'
+                      ? 'bg-teal-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5 shrink-0" />
+                  <span>4 Kỹ Năng</span>
+                </button>
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                {is4Skills ? 'Listening, Reading + Speaking & Writing' : 'Listening & Reading'}
+                {selectedSkillsType === '4SKILLS'
+                  ? 'Listening & Reading + Speaking & Writing'
+                  : 'Listening & Reading (Thang điểm 990)'}
               </div>
             </div>
           </div>
 
-          
-          <div>
-            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3">
-              Chi tiết điểm từng kỹ năng:
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Headphones className="w-4 h-4 text-indigo-500" />
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Listening</span>
-                </div>
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {hasTested ? `${listeningScore} / 495` : 'Chưa có'}
-                </span>
-              </div>
+          <UserSkillScoreGrid
+            listeningScore={listeningScore}
+            readingScore={readingScore}
+            speakingScore={speakingScore}
+            writingScore={writingScore}
+            hasTested={hasTested}
+            selectedSkillsType={selectedSkillsType}
+          />
 
-              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-indigo-500" />
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Reading</span>
-                </div>
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                  {hasTested ? `${readingScore} / 495` : 'Chưa có'}
-                </span>
-              </div>
-
-              {is4Skills && (
-                <>
-                  <div className="p-3 rounded-xl border border-teal-100 dark:border-teal-900/40 bg-teal-50/30 dark:bg-teal-950/20 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Mic className="w-4 h-4 text-teal-500" />
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Speaking</span>
-                    </div>
-                    <span className="text-xs font-bold text-teal-700 dark:text-teal-300">
-                      {hasTested ? `${speakingScore} / 200` : 'Chưa có'}
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-xl border border-teal-100 dark:border-teal-900/40 bg-teal-50/30 dark:bg-teal-950/20 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileEdit className="w-4 h-4 text-teal-500" />
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Writing</span>
-                    </div>
-                    <span className="text-xs font-bold text-teal-700 dark:text-teal-300">
-                      {hasTested ? `${writingScore} / 200` : 'Chưa có'}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          
           <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-200/80 dark:border-indigo-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
               <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">
@@ -290,8 +272,8 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
             readingScore,
             speakingScore: userScores.speakingScore,
             writingScore: userScores.writingScore,
-            targetScore,
-            skillsType: userScores.skillsType,
+            targetScore: userScores.targetScore,
+            skillsType: selectedSkillsType,
           }}
           onSuccess={(updated) => {
             if (onScoresUpdated) onScoresUpdated(updated)

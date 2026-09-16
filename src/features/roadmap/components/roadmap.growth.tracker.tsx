@@ -120,13 +120,15 @@ export function RoadmapGrowthTracker({ progress, roadmapStats }: RoadmapGrowthTr
             
             <div className="flex flex-col items-center gap-2 z-10 opacity-70">
               <span className="text-xs font-black text-teal-600 dark:text-teal-400 px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800">
-                {roadmapStats?.target}+đ
+                {roadmapStats?.target ? `${roadmapStats.target}+đ` : '-'}
               </span>
               <div
                 className="w-4 sm:w-8 rounded-t-xl border-2 border-dashed border-teal-500 bg-teal-500/10"
                 style={{
                   height: `${
-                    Math.min(100, Math.round(((roadmapStats?.target || 650) / 990) * 100)) * 1.1
+                    roadmapStats?.target
+                      ? Math.min(100, Math.round((roadmapStats.target / 990) * 100)) * 1.1
+                      : 0
                   }px`,
                 }}
               />

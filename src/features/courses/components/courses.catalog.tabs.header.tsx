@@ -1,20 +1,18 @@
-/**
- * @file courses.catalog.tabs.header.tsx
- * @description Header tiêu đề trang danh mục khóa học cùng bộ đếm số lượng khóa học
- */
-
+// Header tiêu đề trang danh mục khóa học cùng bộ đếm số lượng khóa học
 import type { CourseTabType } from '@/features/courses/types/course'
 
 interface CoursesCatalogTabsHeaderProps {
   activeTab: CourseTabType
   isVi: boolean
   count: number
+  loading?: boolean
 }
 
 export function CoursesCatalogTabsHeader({
   activeTab,
   isVi,
   count,
+  loading = false,
 }: CoursesCatalogTabsHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
@@ -48,9 +46,13 @@ export function CoursesCatalogTabsHeader({
       </div>
       <div className="flex items-center gap-2 self-start sm:self-auto rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary">
         <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
-        <span>
-          {count} {isVi ? 'Khóa học' : 'Courses'}
-        </span>
+        {loading ? (
+          <span className="inline-block h-3.5 w-14 rounded-full bg-primary/20 animate-pulse" />
+        ) : (
+          <span>
+            {count} {isVi ? 'Khóa học' : 'Courses'}
+          </span>
+        )}
       </div>
     </div>
   )

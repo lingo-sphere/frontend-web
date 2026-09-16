@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import {
   Sparkles,
@@ -11,7 +11,8 @@ import {
   Star,
   ArrowRight,
 } from 'lucide-react'
-import { courseService } from '@/features/courses/services/course.service'
+import { useAllCoursesQuery } from '@/features/courses/hooks/use.courses.query'
+import type { Course } from '@/types/api.types'
 
 interface CourseItem {
   id: string
@@ -46,55 +47,49 @@ export function RecommendedCoursesSection({
   targetScore = 750,
   courses,
 }: RecommendedCoursesSectionProps) {
-  const [fetchedCourses, setFetchedCourses] = useState<CourseItem[]>([])
+  const shouldFetch = !courses || courses.length === 0
+  const { data: rawCourses = [] } = useAllCoursesQuery(
+    { limit: 10, is_published: true },
+    shouldFetch
+  )
 
-  useEffect(() => {
-    if (courses && courses.length > 0) {
-      setFetchedCourses(courses)
-      return
-    }
+  const fetchedCourses = useMemo<CourseItem[]>(() => {
+    if (courses && courses.length > 0) return courses
 
-    courseService
-      .getAllCourses({ limit: 10, is_published: true })
-      .then((res: any) => {
-        const list = Array.isArray(res) ? res : res?.courses || res?.data || []
-        if (Array.isArray(list) && list.length > 0) {
-          const mapped: CourseItem[] = list.map((c: any) => ({
-            id: c._id || c.id,
-            title: c.title,
-            slug: c.slug,
-            description: c.description,
-            thumbnail: c.thumbnail || c.thumbnail_url || 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&auto=format&fit=crop&q=80',
-            target_score: c.target_score || 650,
-            min_score: c.min_score ?? 0,
-            max_score: c.max_score ?? 990,
-            level: c.level || 'INTERMEDIATE',
-            price: c.price ?? c.discount_price ?? 0,
-            students_count: c.total_students || c.students_count || 0,
-            rating: c.rating || c.rating_avg || 5.0,
-            duration_hours: c.duration_hours || 40,
-            tags: c.tags || ['TOEIC', 'Luyện thi'],
-          }))
-          setFetchedCourses(mapped)
-        }
-      })
-      .catch(() => {})
-  }, [courses])
+    const list = Array.isArray(rawCourses) ? rawCourses : []
+    return list.map((c: Course) => {
+      const courseTarget = typeof c.target_score === 'number' ? c.target_score : undefined
+      return {
+        id: c.id || c._id || '',
+        title: c.title,
+        slug: c.slug,
+        description: c.description,
+        thumbnail: c.thumbnail_url || '',
+        target_score: courseTarget,
+        min_score: courseTarget ? Math.max(0, courseTarget - 150) : 0,
+        max_score: courseTarget || 0,
+        level: c.level || '',
+        price: typeof c.price === 'number' ? c.price : (c.discount_price ?? 0),
+        students_count: c.students_count ?? 0,
+        rating: typeof c.rating === 'number' ? c.rating : undefined,
+        duration_hours: c.total_duration_minutes ? Math.round(c.total_duration_minutes / 60) : undefined,
+        tags: Array.isArray(c.skills) ? c.skills : [],
+      }
+    })
+  }, [courses, rawCourses])
 
   const recommendedList = useMemo(() => {
     const listToProcess = courses || fetchedCourses
     return listToProcess
       .map((course) => {
-        let matchRate = 85
+        let matchRate = 80
         const min = course.min_score ?? 0
-        const max = course.max_score ?? 990
+        const max = course.max_score ?? course.target_score ?? 0
 
-        if (currentScore >= min && currentScore <= max) {
+        if (max > 0 && currentScore >= min && currentScore <= max) {
           matchRate = 98
-        } else if (currentScore < min && currentScore >= min - 100) {
+        } else if (min > 0 && currentScore < min && currentScore >= min - 100) {
           matchRate = 90
-        } else {
-          matchRate = 82
         }
 
         return {

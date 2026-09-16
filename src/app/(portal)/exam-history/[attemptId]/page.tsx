@@ -27,6 +27,7 @@ export default function ExamAttemptDetailPage() {
     isLoading,
     detailData,
     courseQuestions,
+    filteredCourseQuestions,
     filterAnswerStatus,
     setFilterAnswerStatus,
     filteredToeicAnswers,
@@ -123,7 +124,74 @@ export default function ExamAttemptDetailPage() {
         formatDateTime={formatDateTime}
         listeningScore={detailData?.attempt?.listening_scaled_score}
         readingScore={detailData?.attempt?.reading_scaled_score}
+        teacherFeedback={detailData?.attempt?.teacher_feedback}
+        isScoreManuallyEdited={detailData?.attempt?.is_score_manually_edited}
       />
+
+      {isCourseTest && courseQuestions.length > 0 && (
+        <div className="flex items-center gap-2 border-b border-border pb-3 overflow-x-auto scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setFilterAnswerStatus('ALL')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              filterAnswerStatus === 'ALL'
+                ? 'bg-primary text-white shadow-xs'
+                : 'bg-surface-subtle text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            Tất cả ({courseQuestions.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterAnswerStatus('CORRECT')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              filterAnswerStatus === 'CORRECT'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+            }`}
+          >
+            Làm đúng ({courseQuestions.filter((q) => q.is_correct === true).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterAnswerStatus('INCORRECT')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              filterAnswerStatus === 'INCORRECT'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'
+            }`}
+          >
+            Làm sai (
+            {
+              courseQuestions.filter(
+                (q) =>
+                  q.is_correct === false ||
+                  (((q.selected_index !== undefined && q.selected_index >= 0) || Boolean(q.selected_option)) &&
+                    !q.is_correct)
+              ).length
+            }
+            )
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterAnswerStatus('SKIPPED')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              filterAnswerStatus === 'SKIPPED'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+            }`}
+          >
+            Chưa làm (
+            {
+              courseQuestions.filter(
+                (q) =>
+                  (q.selected_index === undefined || q.selected_index < 0) && !q.selected_option
+              ).length
+            }
+            )
+          </button>
+        </div>
+      )}
 
       {detailData?.answers && detailData.answers.length > 0 && (
         <div className="flex items-center gap-2 border-b border-border pb-3 overflow-x-auto scrollbar-none">
@@ -191,9 +259,11 @@ export default function ExamAttemptDetailPage() {
             <div className="space-y-4">
               <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
                 <BookOpen size={18} className="text-primary" />
-                <span>Danh sách câu hỏi bài kiểm tra khóa học</span>
+                <span>
+                  Danh sách câu hỏi bài kiểm tra khóa học ({filteredCourseQuestions.length}/{courseQuestions.length} câu)
+                </span>
               </h3>
-              {courseQuestions.map((q) => (
+              {filteredCourseQuestions.map((q) => (
                 <CourseQuestionCard
                   key={q.question_number}
                   question={q}

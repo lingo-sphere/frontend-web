@@ -1,8 +1,4 @@
-/**
- * @file course.url.ts
- * @description Tiện ích tạo và bóc tách URL khóa học chuẩn SEO dạng [slug]-c[id].html
- */
-
+// Tiện ích tạo và bóc tách URL khóa học chuẩn SEO dạng [slug]-c[id].html.
 export function slugify(text: string): string {
   if (!text) return 'khoa-hoc'
   return text
@@ -26,7 +22,7 @@ export function buildCourseUrl(course: {
 }): string {
   const id = course.id || course._id || ''
   const baseSlug = course.slug
-    ? course.slug.replace(/\.html$/i, '').replace(/-c[a-zA-Z0-9_-]+$/i, '')
+    ? course.slug.replace(/\.html$/i, '').replace(/-c[^-]+$/i, '')
     : slugify(course.title || 'khoa-hoc')
 
   return `/course/${baseSlug}-c${id}.html`
@@ -35,7 +31,7 @@ export function buildCourseUrl(course: {
 export function extractCourseId(param: string): string {
   if (!param) return ''
   const decoded = decodeURIComponent(param)
-  const match = decoded.match(/-c([a-zA-Z0-9_-]+)\.html$/i)
+  const match = decoded.match(/-c([^-]+)\.html$/i)
   if (match && match[1]) {
     return match[1]
   }

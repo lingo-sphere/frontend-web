@@ -1,10 +1,11 @@
-// Trang làm bài thi TOEIC trực tuyến.
-
+// Trang làm bài thi TOEIC trực tuyến và hiển thị kết quả đánh giá năng lực
 'use client'
 
 import { useTranslation } from 'react-i18next'
+import Link from 'next/link'
 import { useNavigate, useParams } from '@/lib/navigation'
-import { RotateCcw, AlertCircle } from 'lucide-react'
+import { RotateCcw, Sparkles } from 'lucide-react'
+import { ToeicExamEmptyState } from '@/features/toeic/components/toeic.exam.empty.state'
 import { Button } from '@/components/button'
 import { useToeicExam } from '@/features/toeic/hooks/use.toeic.exam'
 import { ToeicExamResult } from '@/features/toeic/components/toeic.exam.result'
@@ -36,16 +37,30 @@ export default function ToeicExamAppPage() {
     handleRetry,
     handleChooseAnother,
     calculateResults,
+    evaluatedAnswers,
+    isSubmittingAttempt,
   } = useToeicExam(examId)
 
   if (isLoadingExam) {
     return (
-      <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-3 text-text-secondary">
-          <RotateCcw className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-sm font-semibold">
-            {isVietnamese ? 'Đang tải thông tin đề thi...' : 'Loading exam data...'}
-          </p>
+      <div className="min-h-[calc(100vh-140px)] flex items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+          <div className="relative flex items-center justify-center">
+            <div className="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/40 flex items-center justify-center shadow-lg shadow-indigo-500/10">
+              <RotateCcw className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <Sparkles className="w-5 h-5 text-amber-500 absolute -top-1 -right-1 animate-pulse" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+              {isVietnamese ? 'Đang chuẩn bị đề thi...' : 'Preparing exam...'}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {isVietnamese
+                ? 'Hệ thống đang tải câu hỏi và cấu trúc bài thi, vui lòng đợi trong giây lát.'
+                : 'Loading questions and exam structure, please wait a moment.'}
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -53,34 +68,12 @@ export default function ToeicExamAppPage() {
 
   if (!examData || allQuestions.length === 0) {
     return (
-      <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
-        <div className="max-w-md rounded-2xl bg-surface p-6 text-center border border-border shadow-sm space-y-4">
-          <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 mx-auto flex items-center justify-center">
-            <AlertCircle className="w-6 h-6" />
-          </div>
-          <h2 className="text-lg font-bold text-text-primary">
-            {!examData
-              ? isVietnamese
-                ? 'Không tìm thấy đề thi'
-                : 'Exam Not Found'
-              : isVietnamese
-                ? 'Đề thi chưa có câu hỏi'
-                : 'No questions in this exam'}
-          </h2>
-          <p className="text-xs text-text-secondary">
-            {!examData
-              ? isVietnamese
-                ? 'Bài thi này hiện chưa được khởi tạo hoặc chưa được xuất bản trên hệ thống. Vui lòng quay lại sau.'
-                : 'This exam does not exist or has not been published yet.'
-              : isVietnamese
-                ? 'Bài thi này hiện chưa được cập nhật nội dung câu hỏi trên hệ thống. Vui lòng quay lại sau hoặc liên hệ ban quản trị.'
-                : 'This exam currently has no questions. Please check back later.'}
-          </p>
-          <Button onClick={() => navigate(-1)} variant="outline" className="mt-2">
-            {isVietnamese ? 'Quay lại' : 'Go back'}
-          </Button>
-        </div>
-      </div>
+      <ToeicExamEmptyState
+        examId={examId}
+        isVietnamese={isVietnamese}
+        hasExamData={Boolean(examData)}
+        onNavigate={navigate}
+      />
     )
   }
 
@@ -91,6 +84,8 @@ export default function ToeicExamAppPage() {
         results={results}
         questions={allQuestions}
         userAnswers={state.answers}
+        evaluatedAnswers={evaluatedAnswers}
+        isEvaluatingAI={isSubmittingAttempt}
         recommendedCourses={recommendedCourses}
         recommendedRoadmap={recommendedRoadmap}
         targetBand={targetBand}

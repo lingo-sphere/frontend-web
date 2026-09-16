@@ -162,6 +162,10 @@ export interface ToeicAttempt {
   isBestAttempt?: boolean
   improvementVsPrevious?: number
   previousAttemptId?: string
+  teacher_feedback?: string
+  is_score_manually_edited?: boolean
+  score_edited_by?: string
+  score_edited_at?: string
 }
 
 export interface ToeicAnswer {
@@ -176,9 +180,18 @@ export interface ToeicAnswer {
   correctOption: string
   isCorrect: boolean
   isSkipped?: boolean
-  confidenceLevel?: 1 | 2 | 3 | 4 | 5
   answerTimeSeconds?: number
   flaggedForReview?: boolean
+  whisper_transcript?: string
+  ai_score?: number
+  ai_feedback?: {
+    pronunciation_score?: number
+    fluency_score?: number
+    grammar_score?: number
+    vocabulary_score?: number
+    detailed_comment?: string
+    improvement_tips?: string[]
+  }
   createdAt?: string
 }
 

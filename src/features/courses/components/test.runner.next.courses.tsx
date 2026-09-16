@@ -2,13 +2,14 @@
 
 'use client'
 
-import { Sparkles, GraduationCap, ArrowRight, BookOpen, RotateCcw } from 'lucide-react'
+import { Sparkles, GraduationCap, ArrowRight, BookOpen, RotateCcw, Trophy, Compass } from 'lucide-react'
 import { Button } from '@/components/button'
 import type { Course } from '@/types/api.types'
 
 interface TestRunnerNextCoursesProps {
   isPassed: boolean
   passingScore: number
+  testType?: string
   recommendedNextCourses?: (Course & { recommendation_reason?: string; match_score?: number })[]
   onNavigateCourse?: (slugOrId: string) => void
   onBackToLessons?: () => void
@@ -18,11 +19,17 @@ interface TestRunnerNextCoursesProps {
 export function TestRunnerNextCourses({
   isPassed,
   passingScore,
+  testType,
   recommendedNextCourses = [],
   onNavigateCourse,
   onBackToLessons,
   onRetry,
 }: TestRunnerNextCoursesProps) {
+  const isFinalTest = testType === 'final-test'
+
+  if (!isFinalTest && isPassed) {
+    return null
+  }
   if (isPassed && recommendedNextCourses && recommendedNextCourses.length > 0) {
     return (
       <div className="p-5 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/70 dark:from-indigo-950/40 dark:via-slate-900 dark:to-purple-950/30 shadow-sm space-y-4">
@@ -90,6 +97,70 @@ export function TestRunnerNextCourses({
               </div>
             )
           })}
+        </div>
+      </div>
+    )
+  }
+
+  if (isPassed && (!recommendedNextCourses || recommendedNextCourses.length === 0)) {
+    return (
+      <div className="p-5 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/70 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/30 shadow-sm space-y-4 animate-in fade-in duration-200">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+            <Trophy size={20} />
+          </div>
+          <div className="space-y-1.5 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide bg-emerald-600 text-white shadow-2xs">
+                Chinh Phục Xuất Sắc
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                Đạt chuẩn ≥ {passingScore}%
+              </span>
+            </div>
+            <h4 className="text-sm sm:text-base font-bold text-text-primary">
+              Bạn Đã Đạt Cấp Độ Cao Nhất Trong Lộ Trình Này!
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              Chúc mừng bạn đã hoàn thành xuất sắc bài kiểm tra! Hiện tại trong hệ thống chưa có khóa học cấp độ tiếp theo phù hợp hơn cấp độ của bạn. Bạn đã nắm vững toàn bộ kiến thức trọng tâm của khóa học này. Hãy thử sức ngay với các đề thi thử TOEIC thực chiến để đánh giá năng lực toàn diện hoặc khám phá thêm các khóa học kỹ năng khác.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5 pl-0 sm:pl-13 border-t border-emerald-200/50 dark:border-emerald-800/50 pt-3">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => onNavigateCourse ? onNavigateCourse('/toeic') : (window.location.href = '/toeic')}
+            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 cursor-pointer flex items-center gap-1.5 shadow-xs"
+          >
+            <Sparkles size={14} />
+            <span>Thực chiến tại Phòng thi thử TOEIC</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigateCourse ? onNavigateCourse('/courses') : (window.location.href = '/courses')}
+            className="rounded-xl border-emerald-500/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/10 font-bold text-xs px-3.5 py-2 cursor-pointer flex items-center gap-1.5"
+          >
+            <Compass size={14} />
+            <span>Khám phá thêm các khóa học khác</span>
+          </Button>
+
+          {onBackToLessons && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onBackToLessons}
+              className="rounded-xl text-text-secondary hover:text-text-primary text-xs px-3 py-2 cursor-pointer flex items-center gap-1.5"
+            >
+              <BookOpen size={14} />
+              <span>Xem lại bài giảng</span>
+            </Button>
+          )}
         </div>
       </div>
     )

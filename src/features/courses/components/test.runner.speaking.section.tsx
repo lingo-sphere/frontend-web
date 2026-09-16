@@ -1,8 +1,4 @@
-/**
- * @file test.runner.speaking.section.tsx
- * @description Speaking practice and exam runner panel supporting direct audio recording and file uploads
- */
-
+// Component làm bài luyện nói Speaking với ghi âm trực tiếp và tải lên file âm thanh.
 'use client'
 
 import { useState, useRef } from 'react'
@@ -18,7 +14,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/button'
-import { courseService } from '@/features/courses/services/course.service'
+import { courseService, type SpeakingSubmissionResponse } from '@/features/courses/services/course.service'
 import { api } from '@/services/api.client'
 import { toast } from '@/store/toast.store'
 import { useSpeakingRecorder } from '@/features/practice/hooks/use.speaking.recorder'
@@ -28,7 +24,7 @@ interface TestRunnerSpeakingSectionProps {
   courseId: string
   moduleId?: string
   testType: string
-  prompt: string
+  prompt?: string
   fileUrl?: string
   onScoreUpdated?: (score: number) => void
 }
@@ -43,7 +39,7 @@ export function TestRunnerSpeakingSection({
 }: TestRunnerSpeakingSectionProps) {
   const [speakingInputMode, setSpeakingInputMode] = useState<'RECORD' | 'UPLOAD'>('RECORD')
   const [isSubmittingSpeaking, setIsSubmittingSpeaking] = useState(false)
-  const [speakingResult, setSpeakingResult] = useState<any>(null)
+  const [speakingResult, setSpeakingResult] = useState<SpeakingSubmissionResponse | null>(null)
   const audioFileInputRef = useRef<HTMLInputElement>(null)
 
   const {
