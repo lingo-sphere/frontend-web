@@ -77,6 +77,7 @@ export function TestRunnerResultView({
       <TestRunnerNextCourses
         isPassed={scoreResult.isPassed}
         passingScore={passingScore}
+        testType={testType}
         recommendedNextCourses={recommendedNextCourses}
         onNavigateCourse={onNavigateCourse}
         onBackToLessons={onBackToLessons}

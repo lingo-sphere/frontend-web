@@ -1,13 +1,16 @@
 // Trang lộ trình học tập cá nhân hóa và danh mục khóa học theo nấc thang điểm số.
-
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { RotateCcw } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { progressService } from '@/features/progress/services/progress.service'
-import { courseService } from '@/features/courses/services/course.service'
+import { useRoadmapProgressQuery } from '@/features/progress/hooks/use.progress.query'
+import { progressKeys } from '@/features/progress/keys/progress.keys'
+import { useAllRoadmapsQuery } from '@/features/roadmap/hooks/use.roadmap.query'
+import { useAllCoursesQuery } from '@/features/courses/hooks/use.courses.query'
 import { toast } from '@/store/toast.store'
 import type { UserRoadmapProgress, LearningRoadmap, Course } from '@/types/api.types'
 import { RoadmapHeroBanner } from '@/features/roadmap/components/roadmap.hero.banner'
@@ -23,48 +26,22 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 export default function RoadmapAppPage() {
   const { i18n } = useTranslation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { user } = useAuthStore()
   const isVi = i18n.language === 'vi'
 
-  const [progress, setProgress] = useState<UserRoadmapProgress | null>(null)
-  const [availableRoadmaps, setAvailableRoadmaps] = useState<LearningRoadmap[]>([])
-  const [courses, setCourses] = useState<Course[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const { data: myProgress, isLoading: isProgressLoading } = useRoadmapProgressQuery()
+  const { data: roadmapsList = [], isLoading: isRoadmapsLoading } = useAllRoadmapsQuery({ is_published: true })
+  const { data: coursesList = [], isLoading: isCoursesLoading } = useAllCoursesQuery({ is_published: true, limit: 12 })
+
+  const isLoading = isProgressLoading || isRoadmapsLoading || isCoursesLoading
+  const availableRoadmaps = roadmapsList
+  const courses = coursesList
+  const progress = myProgress || null
+
   const [activeCheckpointStage, setActiveCheckpointStage] = useState<number | null>(null)
   const [checkpointScoreInput, setCheckpointScoreInput] = useState<number>(80)
   const [isSubmittingCheckpoint, setIsSubmittingCheckpoint] = useState<boolean>(false)
-
-  const loadData = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const [myProgress, roadmapsList, coursesList] = await Promise.all([
-        progressService.getMyRoadmapProgress(),
-        courseService.getAllRoadmaps({ is_published: true }),
-        courseService.getAllCourses({ is_published: true, limit: 12 }),
-      ])
-
-      if (myProgress && !myProgress.roadmap && myProgress.roadmap_id) {
-        try {
-          const rm = await courseService.getRoadmapById(myProgress.roadmap_id)
-          if (rm) {
-            myProgress.roadmap = rm
-          }
-        } catch {}
-      }
-
-      setProgress(myProgress)
-      setAvailableRoadmaps(Array.isArray(roadmapsList) ? roadmapsList : [])
-      setCourses(Array.isArray(coursesList) ? coursesList : [])
-    } catch (err) {
-      console.warn('Lỗi khi tải dữ liệu lộ trình:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadData()
-  }, [loadData])
 
   const handleEnrollRoadmap = async (roadmapId: string) => {
     try {
@@ -72,11 +49,11 @@ export default function RoadmapAppPage() {
         user?.placement_test_score ??
         user?.current_estimated_score ??
         0
-      const result = await progressService.enrollRoadmap({
+      await progressService.enrollRoadmap({
         roadmap_id: roadmapId,
         baseline_score: userBaseline,
       })
-      setProgress(result)
+      queryClient.invalidateQueries({ queryKey: progressKeys.roadmap() })
       toast.success('Đã kích hoạt Lộ trình học tập thành công!')
     } catch (err) {
       console.error('Lỗi khi đăng ký lộ trình:', err)
@@ -97,19 +74,18 @@ export default function RoadmapAppPage() {
 
     setIsSubmittingCheckpoint(true)
     try {
-      const updated = await progressService.recordCheckpointResult({
+      await progressService.recordCheckpointResult({
         roadmap_id: progress.roadmap_id,
         stage_order: activeCheckpointStage,
         course_id: `course-stage-${activeCheckpointStage}`,
         checkpoint_score: checkpointScoreInput,
       })
-      setProgress(updated)
+      queryClient.invalidateQueries({ queryKey: progressKeys.roadmap() })
       setActiveCheckpointStage(null)
       toast.success(
         `🎉 Chúc mừng bạn đã hoàn thành bài thi Chặng ${activeCheckpointStage} xuất sắc (${checkpointScoreInput}%)! Chặng tiếp theo đã được mở khóa.`,
         'Vượt Cấp Thành Công'
       )
-      loadData()
     } catch (err) {
       console.error('Lỗi khi cập nhật bài kiểm tra chặng:', err)
       toast.error('Không thể ghi nhận kết quả bài thi lúc này. Vui lòng thử lại sau.')
@@ -146,7 +122,7 @@ export default function RoadmapAppPage() {
     }
 
     const growth = Number(current) - Number(baseline)
-    const target = Number(progress.roadmap.target_score || 650)
+    const target = Number(progress.roadmap.target_score ?? 0)
 
     return {
       stages,
@@ -162,7 +138,7 @@ export default function RoadmapAppPage() {
   }, [progress])
 
   const sortedCourses = useMemo(() => {
-    return [...courses].sort((a, b) => (a.target_score || 500) - (b.target_score || 500))
+    return [...courses].sort((a, b) => (a.target_score ?? 0) - (b.target_score ?? 0))
   }, [courses])
 
   if (isLoading) {

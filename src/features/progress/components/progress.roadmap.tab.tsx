@@ -69,7 +69,7 @@ export function ProgressRoadmapTab({
   }
 
   const baselineVal = extractScore(roadmapProgress.baseline_score) ?? baselineScore ?? null
-  const targetVal = roadmapProgress.roadmap?.target_score ?? targetScore ?? 800
+  const targetVal = roadmapProgress.roadmap?.target_score ?? targetScore ?? null
 
   const roadmapStages = roadmapProgress.roadmap?.stages ?? []
   const stageMilestones = roadmapProgress.stage_milestones ?? []
@@ -137,7 +137,7 @@ export function ProgressRoadmapTab({
           <div className="p-3.5 rounded-xl border border-border bg-surface-subtle/50">
             <span className="text-[11px] font-semibold text-text-tertiary block">Điểm mục tiêu:</span>
             <span className="text-lg font-black text-primary">
-              {targetVal} điểm
+              {targetVal !== null && targetVal > 0 ? `${targetVal} điểm` : 'Chưa đặt'}
             </span>
           </div>
           <div className="p-3.5 rounded-xl border border-border bg-surface-subtle/50">

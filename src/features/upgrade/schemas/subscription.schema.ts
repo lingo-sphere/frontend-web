@@ -1,9 +1,29 @@
-/**
- * @file subscription.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ subscription
- */
+// Zod Schemas và kiểu dữ liệu TypeScript cho gói dịch vụ nâng cấp tài khoản subscription.
 
 import { z } from 'zod'
+
+export interface SubscriptionPlanDto {
+  _id?: string
+  id?: string
+  name?: string
+  name_vi?: string | null
+  name_en?: string | null
+  slug: string
+  description?: string
+  tier: number
+  plan_type?: string
+  price: number
+  original_price?: number | null
+  discount?: string | null
+  currency?: string
+  duration_days?: number
+  discount_price?: number
+  billing_cycle?: 'MONTHLY' | 'QUARTERLY' | 'YEARLY' | 'LIFETIME' | string | null
+  features?: string[]
+  is_active?: boolean
+  is_popular?: boolean
+  badge?: string | null
+}
 
 export const BankInfoSchema = z.object({
   bank_name: z.string(),
@@ -15,7 +35,7 @@ export const BankInfoSchema = z.object({
 export const PaymentOrderResponseSchema = z.object({
   order_code: z.string(),
   amount: z.number(),
-  billing_cycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY', 'LIFETIME']),
+  billing_cycle: z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY', 'LIFETIME', 'ONCE']),
   qr_url: z.string(),
   bank_info: BankInfoSchema,
   expires_at: z.string(),

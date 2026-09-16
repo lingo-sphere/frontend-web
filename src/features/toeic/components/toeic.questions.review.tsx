@@ -2,8 +2,9 @@
 
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { FileText } from 'lucide-react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { Card, CardContent } from '@/components/card'
 import type { ToeicQuestion } from '@/features/toeic/types/toeic'
 import { ToeicReviewQuestionCard } from '@/features/toeic/components/toeic.review.question.card'
@@ -11,6 +12,20 @@ import { ToeicReviewQuestionCard } from '@/features/toeic/components/toeic.revie
 interface ToeicQuestionsReviewProps {
   questions: ToeicQuestion[]
   userAnswers: Record<number, string>
+  evaluatedAnswers?: Record<number, {
+    whisper_transcript?: string
+    ai_score?: number
+    ai_feedback?: {
+      pronunciation_score?: number
+      fluency_score?: number
+      grammar_score?: number
+      vocabulary_score?: number
+      detailed_comment?: string
+      improvement_tips?: string[]
+    }
+    is_correct?: boolean
+  }>
+  isEvaluatingAI?: boolean
   correctCount: number
   incorrectCount: number
   isVietnamese: boolean
@@ -19,20 +34,27 @@ interface ToeicQuestionsReviewProps {
 export function ToeicQuestionsReview({
   questions,
   userAnswers,
-  correctCount,
-  incorrectCount,
+  evaluatedAnswers = {},
+  isEvaluatingAI = false,
   isVietnamese,
 }: ToeicQuestionsReviewProps) {
   const [reviewFilter, setReviewFilter] = useState<'ALL' | 'CORRECT' | 'WRONG'>('ALL')
   const [expandedQuestions, setExpandedQuestions] = useState<Record<number, boolean>>({})
+  const parentRef = useRef<HTMLDivElement>(null)
 
   const toggleQuestionExpand = (qNum: number) => {
     setExpandedQuestions((prev) => ({ ...prev, [qNum]: !prev[qNum] }))
   }
 
-  const filteredQuestions = useMemo(() => {
-    if (!questions || questions.length === 0) return []
-    return questions.filter((q) => {
+  const { correctList, incorrectList } = useMemo(() => {
+    if (!questions || questions.length === 0) {
+      return { correctList: [], incorrectList: [] }
+    }
+
+    const correct: ToeicQuestion[] = []
+    const incorrect: ToeicQuestion[] = []
+
+    questions.forEach((q) => {
       const isWriting =
         q.questionType === 'WRITING' ||
         q.skillType === 'WRITING' ||
@@ -47,19 +69,42 @@ export function ToeicQuestionsReview({
       const isAnswered = selected !== undefined && selected !== ''
 
       if (isWriting || isSpeaking) {
-        if (reviewFilter === 'CORRECT') return isAnswered
-        if (reviewFilter === 'WRONG') return false
-        return true
+        const evalInfo = evaluatedAnswers[q.questionNumber]
+        const isPass = evalInfo
+          ? (evalInfo.is_correct ?? (evalInfo.ai_score !== undefined ? evalInfo.ai_score >= 50 : false))
+          : false
+
+        if (isPass) {
+          correct.push(q)
+        } else {
+          incorrect.push(q)
+        }
+        return
       }
 
       const isCorrect = isAnswered && selected.trim().toUpperCase() === q.correctOption.trim().toUpperCase()
-      const isWrong = isAnswered && !isCorrect
-
-      if (reviewFilter === 'CORRECT') return isCorrect
-      if (reviewFilter === 'WRONG') return isWrong
-      return true
+      if (isCorrect) {
+        correct.push(q)
+      } else {
+        incorrect.push(q)
+      }
     })
-  }, [questions, userAnswers, reviewFilter])
+
+    return { correctList: correct, incorrectList: incorrect }
+  }, [questions, userAnswers, evaluatedAnswers])
+
+  const filteredQuestions = useMemo(() => {
+    if (reviewFilter === 'CORRECT') return correctList
+    if (reviewFilter === 'WRONG') return incorrectList
+    return questions || []
+  }, [reviewFilter, correctList, incorrectList, questions])
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredQuestions.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 180,
+    overscan: 5,
+  })
 
   if (!questions || questions.length === 0) return null
 
@@ -104,7 +149,7 @@ export function ToeicQuestionsReview({
                   : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
               }`}
             >
-              Làm đúng ({correctCount})
+              Làm đúng ({correctList.length})
             </button>
             <button
               type="button"
@@ -115,22 +160,59 @@ export function ToeicQuestionsReview({
                   : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
               }`}
             >
-              Làm sai ({incorrectCount})
+              Làm sai ({incorrectList.length})
             </button>
           </div>
         </div>
 
-        <div className="space-y-4">
-          {filteredQuestions.map((q) => (
-            <ToeicReviewQuestionCard
-              key={q.id || q.questionNumber}
-              question={q}
-              userAnswer={userAnswers[q.questionNumber]}
-              isExpanded={Boolean(expandedQuestions[q.questionNumber])}
-              onToggleExpand={() => toggleQuestionExpand(q.questionNumber)}
-            />
-          ))}
-        </div>
+        {filteredQuestions.length === 0 ? (
+          <div className="py-8 text-center text-xs text-text-tertiary">
+            {isVietnamese
+              ? 'Không có câu hỏi nào phù hợp với bộ lọc.'
+              : 'No questions match the selected filter.'}
+          </div>
+        ) : (
+          <div ref={parentRef} className="max-h-[750px] overflow-y-auto pr-1">
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const q = filteredQuestions[virtualRow.index]
+                return (
+                  <div
+                    key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <div className="pb-4">
+                      <ToeicReviewQuestionCard
+                        question={q}
+                        userAnswer={userAnswers[q.questionNumber]}
+                        isExpanded={Boolean(expandedQuestions[q.questionNumber])}
+                        onToggleExpand={() => toggleQuestionExpand(q.questionNumber)}
+                        whisperTranscript={evaluatedAnswers[q.questionNumber]?.whisper_transcript}
+                        aiScore={evaluatedAnswers[q.questionNumber]?.ai_score}
+                        aiFeedback={evaluatedAnswers[q.questionNumber]?.ai_feedback}
+                        isEvaluatingAI={isEvaluatingAI}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

@@ -35,6 +35,7 @@ export const DeckSchema = z.object({
   cefr_level: z.string().optional(),
   card_count: z.number().default(0),
   total_cards: z.number().optional(),
+  total_users: z.number().optional(),
   visibility: z.string().optional(),
   is_public: z.boolean().optional(),
   creator_id: z.string().optional(),

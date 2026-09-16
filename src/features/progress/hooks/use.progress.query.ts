@@ -69,14 +69,7 @@ export function useTestAttemptsQuery(enabled = true) {
 }
 
 export function useExamHistoryQuery(enabled = true) {
-  return useQuery<Array<{
-    _id: string
-    exam_title: string
-    total_scaled_score: number
-    correct_questions: number
-    total_questions: number
-    submitted_at: string
-  }>>({
+  return useQuery({
     queryKey: progressKeys.examHistory(),
     queryFn: async () => {
       const res = await examService.getMyExamHistory()
@@ -101,3 +94,13 @@ export function useVocabProgressQuery(enabled = true) {
     staleTime: 60 * 1000,
   })
 }
+
+export function useGrowthChartQuery(courseId: string, enabled = true) {
+  return useQuery({
+    queryKey: progressKeys.growthChart(courseId),
+    queryFn: () => progressService.getGrowthChart(courseId),
+    enabled: Boolean(courseId) && courseId !== 'all' && enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+

@@ -1,8 +1,5 @@
-/**
- * @file streak.history.tsx
- * @description Component giao diện React StreakHistory cho học viên
- */
-
+// Component giao diện React StreakHistory cho học viên
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CalendarDays } from 'lucide-react'
 
@@ -10,7 +7,6 @@ import { Card, CardContent } from '@/components/card'
 import { HeatmapDetailCard } from '@/features/dashboard/components/heatmap.detail.card'
 import { HeatmapGrid } from '@/features/dashboard/components/heatmap.grid'
 import { HeatmapSummaryCard } from '@/features/dashboard/components/heatmap.summary.card'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import type { HeatmapDay, HeatmapSummary } from '@/features/dashboard/types/dashboard'
 
 interface StreakHistoryProps {
@@ -20,8 +16,7 @@ interface StreakHistoryProps {
 
 export function StreakHistory({ days, summary }: StreakHistoryProps) {
   const { t } = useTranslation()
-  const selectedDayId = useDashboardStore((state) => state.selectedHeatmapDayId)
-  const setSelectedHeatmapDay = useDashboardStore((state) => state.setSelectedHeatmapDay)
+  const [selectedDayId, setSelectedHeatmapDay] = useState<string>('2026-08-14')
   const selectedDay = days.find((day) => day.id === selectedDayId) ?? days.at(-1)!
 
   return (

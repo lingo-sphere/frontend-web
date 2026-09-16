@@ -1,11 +1,7 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/topics
- */
-
+// Trang danh sách chủ đề từ vựng và tra cứu theo ngữ cảnh.
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
@@ -13,7 +9,8 @@ import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Pagination } from '@/components/pagination'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService, type BackendTopic } from '@/features/vocabulary/services/vocabulary.service'
+import type { BackendTopic } from '@/features/vocabulary/services/vocabulary.service'
+import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 
 const ITEMS_PER_PAGE = 6
 
@@ -21,31 +18,9 @@ export default function TopicsAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const { showAction } = useApp()
-  const [topicList, setTopicList] = useState<BackendTopic[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: topicList = [], isLoading } = useTopicsQuery()
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-
-  useEffect(() => {
-    let isMounted = true
-    const fetchTopics = async () => {
-      try {
-        setIsLoading(true)
-        const data = await vocabularyService.getTopics()
-        if (isMounted && Array.isArray(data)) {
-          setTopicList(data)
-        }
-      } catch (err) {
-        console.error('Failed to load topics:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchTopics()
-    return () => {
-      isMounted = false
-    }
-  }, [])
 
   const filteredTopics = useMemo(() => {
     return topicList.filter(

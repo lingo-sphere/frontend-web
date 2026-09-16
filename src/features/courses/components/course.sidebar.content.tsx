@@ -1,12 +1,8 @@
-/**
- * @file course.sidebar.content.tsx
- * @description Thanh danh sách các chương học, bài giảng và đề thi đánh giá trong giao diện học tập khóa học
- */
-
+// Thanh danh sách các chương học, bài giảng và đề thi đánh giá trong giao diện học tập khóa học.
 'use client'
 
 import { useState } from 'react'
-import type { Chapter, Lesson } from '@/features/courses/types/course'
+import type { Chapter, Lesson, FinalTestAttemptItem, ModuleProgressInfo } from '@/features/courses/types/course'
 import type { CourseChapterLockState } from '@/features/courses/types/schedule.types'
 import { CourseSidebarChapterItem } from '@/features/courses/components/course.sidebar.chapter.item'
 import { CourseSidebarFinalExamCard } from '@/features/courses/components/course.sidebar.final.exam.card'
@@ -18,29 +14,10 @@ interface CourseSidebarContentProps {
   isEnrolled?: boolean
   lockedChapterIds?: Set<string>
   lockState?: CourseChapterLockState | null
-  modulesProgress?: Array<{
-    module_id: string
-    order_index?: number
-    status: string
-    challenge_score?: number
-    challenge_taken?: boolean
-    is_passed_by_challenge?: boolean
-    post_mini_score?: number
-    post_mini_attempt_id?: string
-    is_locked_by_reminder?: boolean
-    attempts?: Array<{
-      attempt_id: string
-      test_type?: string
-      score: number
-      is_passed: boolean
-      correct_count?: number
-      total_questions?: number
-      submitted_at?: any
-    }>
-  }>
+  modulesProgress?: ModuleProgressInfo[]
   finalTestQuestionsCount?: number
   finalTestScore?: number
-  finalTestAttempts?: any[]
+  finalTestAttempts?: FinalTestAttemptItem[]
   finalTestAudioUrl?: string
   finalTestSpeakingPrompt?: string
   finalTestSpeakingFileUrl?: string
@@ -53,6 +30,7 @@ interface CourseSidebarContentProps {
     chapter: Chapter | null,
     testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   ) => void
+  onOpenPracticeQuiz?: (chapter: Chapter, lesson: Lesson) => void
 }
 
 export function CourseSidebarContent({
@@ -75,6 +53,7 @@ export function CourseSidebarContent({
   onSelectLesson,
   onToggleLessonComplete,
   onTakeTest,
+  onOpenPracticeQuiz,
 }: CourseSidebarContentProps) {
   const [activeResourceDropdown, setActiveResourceDropdown] = useState<string | null>(null)
 
@@ -205,6 +184,7 @@ export function CourseSidebarContent({
               setActiveResourceDropdown(activeResourceDropdown === lesId ? null : lesId)
             }
             onTakeTest={() => onTakeTest?.(chapter, 'challenge')}
+            onOpenPracticeQuiz={(les) => onOpenPracticeQuiz?.(chapter, les)}
           />
         )
       })}

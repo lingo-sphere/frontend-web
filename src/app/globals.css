@@ -2,6 +2,8 @@
 @import '../styles/tokens.css';
 @import 'tw-animate-css';
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
 @theme inline {
   --font-sans: var(--font-sans);
   --font-heading: var(--font-sans);
@@ -77,6 +79,15 @@
     background: var(--background);
     color: var(--text-primary);
     overflow-x: clip;
+    width: 100% !important;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  html body {
+    width: 100% !important;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
   }
 
   button,

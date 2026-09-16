@@ -1,8 +1,4 @@
-/**
- * @file dictionary.modal.tsx
- * @description Component giao diện React DictionaryModal cho học viên
- */
-
+// Hộp thoại tra cứu từ điển thông minh và lưu từ vựng vào bộ thẻ học viên.
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -11,6 +7,21 @@ import { createPortal } from 'react-dom'
 import { Search, X, Volume2, Plus, BookOpen } from 'lucide-react'
 import { Button } from '@/components/button'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import type { LexicalItem } from '@/types/api.types'
+
+interface RawMeaning {
+  part_of_speech?: string
+  definition_vi?: string
+  definition_en?: string
+  examples?: string[]
+}
+
+interface LexicalSearchResult extends LexicalItem {
+  word_type?: string
+  pronunciation_us?: string
+  pronunciation_uk?: string
+  meanings?: RawMeaning[]
+}
 
 interface DictionaryItem {
   id: string
@@ -50,18 +61,27 @@ export function DictionaryModal({ open, onOpenChange, onAction }: DictionaryModa
         setIsLoading(true)
         const liveItems = await vocabularyService.searchVocabulary({ q: query.trim() })
         if (Array.isArray(liveItems)) {
-          const mapped: DictionaryItem[] = liveItems.map((item: any) => ({
+          const mapped: DictionaryItem[] = (liveItems as LexicalSearchResult[]).map((item) => ({
             id: item._id || item.id,
             word: item.word,
-            wordType: item.word_type || 'noun',
-            pronunciationUs: item.pronunciation_us,
-            pronunciationUk: item.pronunciation_uk,
-            meanings: (item.meanings || []).map((m: any) => ({
-              partOfSpeech: m.part_of_speech || item.word_type || 'noun',
-              definitionVi: m.definition_vi || item.meaning_vi || '',
-              definitionEn: m.definition_en || item.meaning_en || '',
-              examples: m.examples || [],
-            })),
+            wordType: item.word_type || item.part_of_speech || 'noun',
+            pronunciationUs: item.pronunciation_us || item.ipa,
+            pronunciationUk: item.pronunciation_uk || item.ipa,
+            meanings: item.meanings && item.meanings.length > 0
+              ? item.meanings.map((m) => ({
+                  partOfSpeech: m.part_of_speech || item.word_type || item.part_of_speech || 'noun',
+                  definitionVi: m.definition_vi || item.meaning_vi || '',
+                  definitionEn: m.definition_en || item.meaning_en || '',
+                  examples: m.examples || [],
+                }))
+              : [
+                  {
+                    partOfSpeech: item.part_of_speech || 'noun',
+                    definitionVi: item.meaning_vi || '',
+                    definitionEn: item.meaning_en || '',
+                    examples: item.example_sentence ? [item.example_sentence] : [],
+                  },
+                ],
           }))
           setResults(mapped)
         }

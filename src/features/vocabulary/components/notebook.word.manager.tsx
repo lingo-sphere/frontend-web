@@ -1,7 +1,8 @@
 // Quản lý danh sách từ vựng trong sổ từ.
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Bookmark, Search } from 'lucide-react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { Button } from '@/components/button'
 import { VocabularyCard } from '@/features/vocabulary/components/vocabulary.card'
 import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary'
@@ -16,8 +17,6 @@ interface VocabularyTabProps {
   isVietnamese: boolean
 }
 
-const ITEMS_PER_PAGE = 20
-
 export function VocabularyTab({
   savedVocabulary,
   userDecks,
@@ -29,65 +28,63 @@ export function VocabularyTab({
 }: VocabularyTabProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterDeck, setFilterDeck] = useState<string | 'all' | 'inbox'>('all')
-  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE)
-  const [isLoading, setIsLoading] = useState(false)
-
-  const filteredWords = savedVocabulary.filter((item) => {
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      const meanings =
-        item.meanings || (item.primary_meaning ? [item.primary_meaning] : [])
-      const matchesSearch =
-        item.lexical_item.word.toLowerCase().includes(query) ||
-        meanings.some(
-          (m) =>
-            m.definition_vi?.toLowerCase().includes(query) ||
-            m.definition_en?.toLowerCase().includes(query)
-        )
-      if (!matchesSearch) return false
-    }
-
-    if (filterDeck === 'inbox') {
-      return !item.deck_id
-    } else if (filterDeck !== 'all' && item.deck_id !== filterDeck) {
-      return false
-    }
-
-    return true
-  })
+  const [columns, setColumns] = useState(4)
+  const parentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setDisplayCount(ITEMS_PER_PAGE)
-  }, [searchQuery, filterDeck])
+    const updateColumns = () => {
+      const width = window.innerWidth
+      if (width >= 1280) setColumns(5)
+      else if (width >= 1024) setColumns(4)
+      else if (width >= 768) setColumns(3)
+      else if (width >= 640) setColumns(2)
+      else setColumns(1)
+    }
+    updateColumns()
+    window.addEventListener('resize', updateColumns)
+    return () => window.removeEventListener('resize', updateColumns)
+  }, [])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } =
-        document.documentElement
-      const scrollPosition = scrollTop + clientHeight
-      const scrollThreshold = scrollHeight * 0.8
-
-      if (
-        scrollPosition >= scrollThreshold &&
-        displayCount < filteredWords.length &&
-        !isLoading
-      ) {
-        setIsLoading(true)
-        setTimeout(() => {
-          setDisplayCount((prev) =>
-            Math.min(prev + ITEMS_PER_PAGE, filteredWords.length)
+  const filteredWords = useMemo(() => {
+    return savedVocabulary.filter((item) => {
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        const meanings =
+          item.meanings || (item.primary_meaning ? [item.primary_meaning] : [])
+        const matchesSearch =
+          item.lexical_item.word.toLowerCase().includes(query) ||
+          meanings.some(
+            (m) =>
+              m.definition_vi?.toLowerCase().includes(query) ||
+              m.definition_en?.toLowerCase().includes(query)
           )
-          setIsLoading(false)
-        }, 300)
+        if (!matchesSearch) return false
       }
+
+      if (filterDeck === 'inbox') {
+        return !item.deck_id
+      } else if (filterDeck !== 'all' && item.deck_id !== filterDeck) {
+        return false
+      }
+
+      return true
+    })
+  }, [savedVocabulary, searchQuery, filterDeck])
+
+  const rows = useMemo(() => {
+    const chunks: SavedVocabulary[][] = []
+    for (let i = 0; i < filteredWords.length; i += columns) {
+      chunks.push(filteredWords.slice(i, i + columns))
     }
+    return chunks
+  }, [filteredWords, columns])
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [displayCount, filteredWords.length, isLoading])
-
-  const displayedWords = filteredWords.slice(0, displayCount)
-  const hasMore = displayCount < filteredWords.length
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 240,
+    overscan: 2,
+  })
 
   if (savedVocabulary.length === 0) {
     return (
@@ -153,44 +150,12 @@ export function VocabularyTab({
 
       <div className="flex gap-4 text-[12px] text-text-secondary">
         <span>
-          {isVietnamese ? 'Đang hiển thị' : 'Showing'}: {displayedWords.length}/
-          {filteredWords.length} {isVietnamese ? 'từ' : 'words'}
+          {isVietnamese ? 'Đang hiển thị' : 'Showing'}: {filteredWords.length}{' '}
+          {isVietnamese ? 'từ' : 'words'}
         </span>
-        {hasMore && (
-          <span className="text-primary">
-            • {isVietnamese ? 'Cuộn xuống để xem thêm' : 'Scroll down for more'}
-          </span>
-        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {displayedWords.map((item) => (
-          <VocabularyCard
-            key={item.id}
-            item={item}
-            userDecks={userDecks}
-            onAddToDeck={onAddToDeck}
-            onRemoveFromDeck={onRemoveFromDeck}
-            onDeleteWord={onDeleteWord}
-            onAction={onAction}
-          />
-        ))}
-      </div>
-
-      {isLoading && (
-        <div className="py-4 text-center">
-          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-      )}
-
-      {!hasMore && filteredWords.length > 0 && (
-        <p className="py-4 text-center text-[12px] text-text-tertiary">
-          {isVietnamese ? 'Đã hiển thị tất cả' : 'Showing all'}{' '}
-          {filteredWords.length} {isVietnamese ? 'từ' : 'words'}
-        </p>
-      )}
-
-      {filteredWords.length === 0 && searchQuery && (
+      {filteredWords.length === 0 && searchQuery ? (
         <div className="py-8 text-center">
           <p className="text-[14px] text-text-secondary">
             {isVietnamese
@@ -198,6 +163,48 @@ export function VocabularyTab({
               : 'No words found matching'}{' '}
             "{searchQuery}"
           </p>
+        </div>
+      ) : (
+        <div ref={parentRef} className="max-h-[720px] overflow-y-auto pr-1">
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const rowItems = rows[virtualRow.index]
+              return (
+                <div
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 pb-4">
+                    {rowItems.map((item) => (
+                      <VocabularyCard
+                        key={item.id}
+                        item={item}
+                        userDecks={userDecks}
+                        onAddToDeck={onAddToDeck}
+                        onRemoveFromDeck={onRemoveFromDeck}
+                        onDeleteWord={onDeleteWord}
+                        onAction={onAction}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>

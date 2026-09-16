@@ -80,7 +80,7 @@ export function RoadmapCoursesSection({
                     <div className="absolute top-2.5 left-2.5">
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black bg-indigo-600/90 text-white shadow-md backdrop-blur-xs">
                         <Target className="w-3 h-3 text-amber-300" />
-                        <span>{c.target_score || 500}+</span>
+                        <span>{c.target_score ? `${c.target_score}+` : '-'}</span>
                       </span>
                     </div>
                     {c.category && (

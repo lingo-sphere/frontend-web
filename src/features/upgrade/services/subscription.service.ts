@@ -1,7 +1,4 @@
-/**
- * @file subscription.service.ts
- * @description Service xử lý các logic nghiệp vụ chính cho dịch vụ subscription
- */
+// Service xử lý các yêu cầu API liên quan đến gói dịch vụ nâng cấp subscription và đơn hàng thanh toán.
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
@@ -13,9 +10,10 @@ import {
   type SubscriptionResponse,
   type PaymentOrderResponse,
   type PaymentOrderStatusResponse,
+  type SubscriptionPlanDto,
 } from '@/features/upgrade/schemas/subscription.schema'
 
-export type { BankInfo, SubscriptionResponse, PaymentOrderResponse, PaymentOrderStatusResponse }
+export type { BankInfo, SubscriptionResponse, PaymentOrderResponse, PaymentOrderStatusResponse, SubscriptionPlanDto }
 
 export interface SubscribePayload {
   plan_slug: string
@@ -32,8 +30,8 @@ export interface CreateOrderPayload {
 }
 
 export const subscriptionService = {
-  async getPlans(): Promise<any[]> {
-    return api.get(API_CONFIG.ENDPOINTS.SUBSCRIPTION.PLANS)
+  async getPlans(): Promise<SubscriptionPlanDto[]> {
+    return api.get<SubscriptionPlanDto[]>(API_CONFIG.ENDPOINTS.SUBSCRIPTION.PLANS)
   },
 
   async subscribe(payload: SubscribePayload): Promise<SubscriptionResponse> {

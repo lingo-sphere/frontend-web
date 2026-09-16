@@ -1,6 +1,6 @@
 // Component hiển thị thẻ tổng quan điểm số và thời gian làm bài của lượt thi.
 
-import { Trophy, CheckCircle2, Clock, Calendar, CheckCircle, AlertCircle } from 'lucide-react'
+import { Trophy, CheckCircle2, Clock, Calendar, CheckCircle, AlertCircle, MessageSquareQuote } from 'lucide-react'
 import { Card } from '@/components/card'
 import { Badge } from '@/components/badge'
 
@@ -15,6 +15,8 @@ interface AttemptSummaryCardProps {
   formatDateTime: (dateStr?: string) => string
   listeningScore?: number
   readingScore?: number
+  teacherFeedback?: string
+  isScoreManuallyEdited?: boolean
 }
 
 export function AttemptSummaryCard({
@@ -28,6 +30,8 @@ export function AttemptSummaryCard({
   formatDateTime,
   listeningScore,
   readingScore,
+  teacherFeedback,
+  isScoreManuallyEdited,
 }: AttemptSummaryCardProps) {
   return (
     <div className="space-y-4">
@@ -153,6 +157,25 @@ export function AttemptSummaryCard({
             </div>
           </Card>
         </div>
+      )}
+
+      {teacherFeedback && (
+        <Card className="p-4 sm:p-5 rounded-2xl border border-primary/25 bg-primary/5 space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-primary font-bold text-sm">
+              <MessageSquareQuote size={18} className="text-primary shrink-0" />
+              <span>Nhận xét và đánh giá từ giáo viên / người chấm</span>
+            </div>
+            {isScoreManuallyEdited && (
+              <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] font-bold">
+                Điểm đã được hiệu chỉnh
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs sm:text-sm text-text-secondary whitespace-pre-line leading-relaxed pl-6">
+            {teacherFeedback}
+          </p>
+        </Card>
       )}
     </div>
   )

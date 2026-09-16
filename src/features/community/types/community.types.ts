@@ -1,4 +1,18 @@
 // Định nghĩa các kiểu dữ liệu và giao diện cho tính năng phòng chat cộng đồng.
+export interface ReactionUser {
+  user_id: string;
+  user_name: string;
+  user_avatar?: string;
+  count?: number;
+}
+
+export interface MessageReaction {
+  emoji: string;
+  count: number;
+  user_ids: string[];
+  users?: ReactionUser[];
+}
+
 export interface ChatMessage {
   _id: string;
   room_code: string;
@@ -15,6 +29,7 @@ export interface ChatMessage {
     sender_name: string;
     content: string;
   };
+  reactions?: MessageReaction[];
   is_pinned: boolean;
   is_deleted: boolean;
   deleted_by?: string;
@@ -27,7 +42,7 @@ export interface ChatRoom {
   title: string;
   is_chat_enabled: boolean;
   slow_mode_seconds: number;
-  pinned_message_ids?: string[];
+  pinned_message_ids?: string[] | ChatMessage[];
 }
 
 export interface ModeratorPermissions {

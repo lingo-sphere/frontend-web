@@ -60,9 +60,12 @@ export interface UnifiedTestAttempt {
   isPassed: boolean
   submittedAt: string
   durationSeconds?: number
+  listeningScore?: number
+  readingScore?: number
+  isBestAttempt?: boolean
 }
 
-export type ExamHistoryTab = 'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHALLENGE' | 'POST_MINI' | 'FINAL_TEST'
+export type ExamHistoryTab = 'ALL' | 'PLACEMENT' | 'TOEIC' | 'CHAPTER_TEST' | 'FINAL_TEST'
 
 export function useExamHistory() {
   const queryClient = useQueryClient()
@@ -87,9 +90,9 @@ export function useExamHistory() {
   const courseTitleMap = useMemo(() => {
     const titleMap: Record<string, string> = {}
     allCourses.forEach((c) => {
-      const cid = c.id || c._id
-      if (cid && c.title) {
-        titleMap[cid] = c.title
+      if (c.title) {
+        if (c.id) titleMap[String(c.id)] = c.title
+        if (c._id) titleMap[String(c._id)] = c.title
       }
     })
     return titleMap
@@ -128,6 +131,9 @@ export function useExamHistory() {
         isPassed: (t.total_scaled_score || 0) >= 450,
         submittedAt: t.submitted_at || new Date().toISOString(),
         durationSeconds: t.total_time_seconds || 0,
+        listeningScore: t.listening_scaled_score,
+        readingScore: t.reading_scaled_score,
+        isBestAttempt: t.is_best_attempt,
       })
     })
 
@@ -137,13 +143,11 @@ export function useExamHistory() {
 
       if (c.test_type === 'final-test') {
         testName = 'Bài thi tốt nghiệp Exit Test'
-      } else if (c.test_type === 'challenge') {
-        testName = `Thử thách chương ${c.order_index ?? ''}`
-      } else if (c.test_type === 'post-mini') {
-        testName = `Kiểm tra cuối chương ${c.order_index ?? ''}`
+      } else {
+        testName = `Kiểm tra chương ${c.order_index ?? ''}`
       }
 
-      const courseTitle = courseTitleMap[c.course_id] || `Khóa học ID: ${c.course_id}`
+      const courseTitle = courseTitleMap[c.course_id] || 'Khóa học'
 
       list.push({
         id: c.attempt_id,
@@ -152,6 +156,7 @@ export function useExamHistory() {
         title: testName,
         subtitle: courseTitle,
         courseId: c.course_id,
+        moduleId: c.module_id,
         orderIndex: c.order_index,
         totalQuestions: c.total_questions || 10,
         correctCount: c.correct_count ?? Math.round(((c.score || 0) / 100) * (c.total_questions || 10)),
@@ -175,10 +180,10 @@ export function useExamHistory() {
       result = result.filter((i) => i.testType === 'PLACEMENT')
     } else if (activeTab === 'TOEIC') {
       result = result.filter((i) => i.sourceType === 'TOEIC' && i.testType !== 'PLACEMENT')
-    } else if (activeTab === 'CHALLENGE') {
-      result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'challenge')
-    } else if (activeTab === 'POST_MINI') {
-      result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'post-mini')
+    } else if (activeTab === 'CHAPTER_TEST') {
+      result = result.filter(
+        (i) => i.sourceType === 'COURSE' && (i.testType === 'challenge' || i.testType === 'post-mini')
+      )
     } else if (activeTab === 'FINAL_TEST') {
       result = result.filter((i) => i.sourceType === 'COURSE' && i.testType === 'final-test')
     }
@@ -249,6 +254,8 @@ export function useExamHistory() {
     filteredList,
     unifiedList,
     courseAttempts,
+    courseTitleMap,
+    allCourses,
     loadAllHistory,
     formatDuration,
     formatDate,

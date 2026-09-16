@@ -7,7 +7,7 @@ import { Check, Copy, Download, FileArchive, FileCode, FileText, Lock, Music, Sl
 import type { LessonResource } from '@/features/courses/types/course'
 
 export interface EnrichedResource extends LessonResource {
-  category: 'lesson' | 'course'
+  category: 'lesson' | 'chapter' | 'course'
   chapterTitle?: string
   lessonTitle?: string
   format: 'pdf' | 'audio' | 'slide' | 'doc' | 'archive'
@@ -40,27 +40,33 @@ export function CourseResourceItemCard({
         }
       case 'audio':
         return {
-          icon: <Music className="w-5 h-5 text-violet-500" />,
+          icon: <Music className="w-5 h-5 text-amber-500" />,
           badge: 'Audio MP3',
-          bgColor: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
+          bgColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
         }
       case 'slide':
         return {
-          icon: <SlidersHorizontal className="w-5 h-5 text-amber-500" />,
-          badge: 'Slide Deck / Mindmap',
-          bgColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+          icon: <SlidersHorizontal className="w-5 h-5 text-indigo-500" />,
+          badge: 'Slide / Presentation',
+          bgColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+        }
+      case 'doc':
+        return {
+          icon: <FileCode className="w-5 h-5 text-blue-500" />,
+          badge: 'Word / Notes',
+          bgColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
         }
       case 'archive':
         return {
-          icon: <FileArchive className="w-5 h-5 text-indigo-500" />,
-          badge: 'Zip Package',
-          bgColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+          icon: <FileArchive className="w-5 h-5 text-purple-500" />,
+          badge: 'ZIP Archive',
+          bgColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
         }
       default:
         return {
-          icon: <FileCode className="w-5 h-5 text-emerald-500" />,
-          badge: 'Tài liệu học',
-          bgColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+          icon: <FileText className="w-5 h-5 text-text-tertiary" />,
+          badge: 'Tài liệu',
+          bgColor: 'bg-surface text-text-secondary border-border',
         }
     }
   }
@@ -68,14 +74,14 @@ export function CourseResourceItemCard({
   const formatMeta = getFormatBadge(resource.format)
 
   return (
-    <div className="group p-4.5 rounded-2xl bg-surface border border-border hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between space-y-4">
-      <div className="space-y-3">
+    <div className="group p-4 rounded-2xl bg-surface border border-border/80 hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between gap-4">
+      <div>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-background border border-border/80 group-hover:scale-105 transition-transform shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-background border border-border/70 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               {formatMeta.icon}
             </div>
-            <div className="min-w-0">
+            <div>
               <span
                 className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider border ${formatMeta.bgColor} mb-1`}
               >
@@ -101,12 +107,22 @@ export function CourseResourceItemCard({
 
       <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
         <div className="flex items-center gap-2 text-text-tertiary font-medium text-[11px]">
-          <span>
-            Dung lượng: <strong className="text-text-primary">{resource.size || '2.0 MB'}</strong>
-          </span>
-          {resource.category === 'lesson' && (
+          {resource.size && (
+            <span>
+              <strong className="text-text-primary">{resource.size}</strong>
+            </span>
+          )}
+          {resource.category === 'lesson' ? (
             <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-bold text-[10px]">
-              Theo bài
+              Theo bài học
+            </span>
+          ) : resource.category === 'chapter' ? (
+            <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-[10px]">
+              Theo chương
+            </span>
+          ) : (
+            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-[10px]">
+              Toàn khóa
             </span>
           )}
         </div>

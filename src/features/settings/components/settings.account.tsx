@@ -89,10 +89,11 @@ export function SettingsAccountTab({
       )
       setOldPassword('')
       setNewPassword('')
-      setConfirmPassword('')
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiErr = error as { response?: { data?: { message?: string } }; message?: string }
       const msg =
-        error?.response?.data?.message ||
+        apiErr?.response?.data?.message ||
+        apiErr?.message ||
         (isVi ? 'Mật khẩu hiện tại không đúng hoặc lỗi hệ thống.' : 'Current password incorrect.')
       toast.error(msg, isVi ? 'Lỗi đổi mật khẩu' : 'Error')
     } finally {

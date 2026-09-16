@@ -1,16 +1,13 @@
-/**
- * @file profile.leaderboard.card.tsx
- * @description Thành phần hiển thị thẻ Bảng xếp hạng tuần trong trang thông tin hồ sơ
- */
-
+// Thành phần hiển thị thẻ Bảng xếp hạng tuần trong trang thông tin hồ sơ cá nhân.
 'use client'
 
 import { Card, CardContent } from '@/components/card'
 import { Icon } from '@/components/icon.map'
 import { formatNumber } from '@/features/user/hooks/use.profile.data'
+import type { LeaderboardEntry } from '@/features/user/utils/user.score.utils'
 
 interface ProfileLeaderboardCardProps {
-  leaderboard: any[]
+  leaderboard: LeaderboardEntry[]
 }
 
 export function ProfileLeaderboardCard({ leaderboard }: ProfileLeaderboardCardProps) {

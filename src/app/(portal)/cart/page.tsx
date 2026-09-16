@@ -7,6 +7,7 @@ import { ShoppingCart, ArrowLeft, ShieldCheck, Award, QrCode } from 'lucide-reac
 import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { CourseCheckoutModal, type CheckoutCourseItem } from '@/features/courses/components/course.checkout.modal'
+import { CoursePlacementPromptModal } from '@/features/courses/components/course.placement.prompt.modal'
 import { toast } from '@/store/toast.store'
 import { useNavigate } from '@/lib/navigation'
 import { CartItemCard } from '@/features/cart/components/cart.item.card'
@@ -15,11 +16,12 @@ export default function CartPage() {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const { cart, removeFromCart, clearCart } = useCart(isAuthenticated)
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
+  const [showPlacementPromptModal, setShowPlacementPromptModal] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -73,7 +75,19 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (items.length === 0) return
-    setShowCheckoutModal(true)
+
+    const hasPlacementScore = Boolean(
+      (user?.placement_test_score && Number(user.placement_test_score) > 0) ||
+      (user?.current_estimated_score && Number(user.current_estimated_score) > 0) ||
+      (user?.target_toeic_score && Number(user.target_toeic_score) > 0) ||
+      user?.placement_tested_at
+    )
+
+    if (!hasPlacementScore) {
+      setShowPlacementPromptModal(true)
+    } else {
+      setShowCheckoutModal(true)
+    }
   }
 
   const checkoutCourses: CheckoutCourseItem[] = items.map((it) => {
@@ -269,6 +283,15 @@ export default function CartPage() {
           onSuccess={() => {
             navigate('/courses')
           }}
+        />
+      )}
+
+      {showPlacementPromptModal && items.length > 0 && (
+        <CoursePlacementPromptModal
+          open={showPlacementPromptModal}
+          onOpenChange={setShowPlacementPromptModal}
+          onProceedPurchase={() => setShowCheckoutModal(true)}
+          courseTitle={items[0]?.title}
         />
       )}
     </>

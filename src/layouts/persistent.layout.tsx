@@ -1,7 +1,4 @@
-/**
- * @file persistent.layout.tsx
- * @description Layout tổng thể bọc sidebar, header và nội dung chính của ứng dụng
- */
+// Bố cục tổng thể bọc sidebar, header và nội dung chính của ứng dụng
 
 'use client'
 
@@ -10,22 +7,17 @@ import { usePathname } from 'next/navigation'
 import { Sheet, SheetContent } from '@/components/sheet'
 import { Sidebar } from '@/layouts/app.sidebar'
 import { UtilityHeader } from '@/layouts/app.header'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
 import { CommunityChatFloatingButton } from '@/features/community/components/community.chat.floating.button'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
-  const { showAction } = useApp()
-  const mobileSidebarOpen = useDashboardStore((state) => state.mobileSidebarOpen)
-  const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
-  const sidebarCollapsed = useDashboardStore((state) => state.sidebarCollapsed)
+  const { showAction, mobileSidebarOpen, setMobileSidebarOpen, sidebarCollapsed } = useApp()
 
   const isStandalone =
     pathname === '/' ||
     pathname.startsWith('/verify-email') ||
-    pathname.startsWith('/course/') ||
-    pathname.startsWith('/toeic/exam/')
+    pathname.startsWith('/course/')
 
   if (isStandalone) {
     return <>{children}</>

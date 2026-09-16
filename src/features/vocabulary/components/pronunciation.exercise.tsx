@@ -14,6 +14,33 @@ interface PronunciationExerciseProps {
   onSpeakSentence: () => void
 }
 
+interface ISpeechRecognitionResult {
+  [index: number]: { transcript: string }
+  length: number
+}
+
+interface ISpeechRecognitionEvent {
+  results: {
+    [index: number]: ISpeechRecognitionResult
+    length: number
+  }
+}
+
+interface ISpeechRecognitionInstance {
+  continuous?: boolean
+  interimResults: boolean
+  lang: string
+  maxAlternatives?: number
+  onresult: ((event: ISpeechRecognitionEvent) => void) | null
+  onerror: (() => void) | null
+  start: () => void
+  stop: () => void
+}
+
+interface SpeechRecognitionConstructor {
+  new (): ISpeechRecognitionInstance
+}
+
 export function PronunciationExercise({ word, isAnswered, onAnswer, onNext, onSpeakWord }: PronunciationExerciseProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
@@ -23,7 +50,7 @@ export function PronunciationExercise({ word, isAnswered, onAnswer, onNext, onSp
   const [hasRecorded, setHasRecorded] = useState(false)
   const [pronunciationScore, setPronunciationScore] = useState<number | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const recognitionRef = useRef<any>(null)
+  const recognitionRef = useRef<ISpeechRecognitionInstance | null>(null)
   const transcriptRef = useRef<string>('')
 
   useEffect(() => {
@@ -43,23 +70,22 @@ export function PronunciationExercise({ word, isAnswered, onAnswer, onNext, onSp
     transcriptRef.current = ''
     timerRef.current = setInterval(() => setRecordingTime((prev) => prev + 1), 1000)
 
-    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const win = typeof window !== 'undefined' ? (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }) : {}
+    const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition
     if (SpeechRec) {
       try {
         const recognition = new SpeechRec()
         recognition.lang = 'en-US'
         recognition.interimResults = false
         recognition.maxAlternatives = 1
-        recognition.onresult = (event: any) => {
+        recognition.onresult = (event: ISpeechRecognitionEvent) => {
           const text = event.results?.[0]?.[0]?.transcript || ''
           transcriptRef.current = text.trim().toLowerCase()
         }
         recognition.onerror = () => {}
         recognition.start()
         recognitionRef.current = recognition
-      } catch {
-
-      }
+      } catch {}
     }
   }
 

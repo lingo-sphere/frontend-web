@@ -1,11 +1,7 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/grammar
- */
-
+// Trang tra cứu cấu trúc và điểm ngữ pháp tiếng Anh theo cấp độ CEFR.
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
@@ -13,7 +9,8 @@ import { Input } from '@/components/input'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Icon } from '@/components/icon.map'
 import { Pagination } from '@/components/pagination'
-import { vocabularyService, type BackendGrammarPoint } from '@/features/vocabulary/services/vocabulary.service'
+import type { BackendGrammarPoint } from '@/features/vocabulary/services/vocabulary.service'
+import { useGrammarPointsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 
 const ITEMS_PER_PAGE = 12
 
@@ -110,32 +107,10 @@ export default function GrammarAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  const [grammarItems, setGrammarItems] = useState<BackendGrammarPoint[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: grammarItems = [], isLoading } = useGrammarPointsQuery()
   const [selectedType, setSelectedType] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-
-  useEffect(() => {
-    let isMounted = true
-    const fetchGrammar = async () => {
-      try {
-        setIsLoading(true)
-        const items = await vocabularyService.getGrammarPoints()
-        if (isMounted && Array.isArray(items)) {
-          setGrammarItems(items)
-        }
-      } catch (err) {
-        console.error('Failed to load grammar points:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchGrammar()
-    return () => {
-      isMounted = false
-    }
-  }, [])
 
   const filteredGrammarPoints = useMemo(() => {
     return grammarItems.filter((item) => {

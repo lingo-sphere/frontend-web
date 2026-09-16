@@ -1,19 +1,20 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/translate
- */
-
+// Trang dịch thuật AI đa ngữ cảnh tích hợp TanStack Query.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
 import { aiService, type TranslationResponse, type UserAiQuotaSummary } from '@/features/ai-learning/services/ai.service'
+import { useAiQuotaQuery } from '@/features/ai-learning/hooks/use.ai.query'
+import { aiKeys } from '@/features/ai-learning/keys/ai.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 
 export default function AiTranslationAppPage() {
+  const queryClient = useQueryClient()
   const { user } = useAuthStore()
+  const { data: quota } = useAiQuotaQuery()
   const [sourceText, setSourceText] = useState<string>(
     'The rapid advancement of artificial intelligence is fundamentally transforming the landscape of modern education.',
   )
@@ -21,23 +22,11 @@ export default function AiTranslationAppPage() {
   const [targetLang, setTargetLang] = useState<string>('vi')
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [result, setResult] = useState<TranslationResponse | null>(null)
-  const [quota, setQuota] = useState<UserAiQuotaSummary | null>(null)
   const [errorBanner, setErrorBanner] = useState<string | null>(null)
 
   const isPremiumUser = Boolean(user?.is_premium || quota?.is_premium)
   const transRemaining = quota ? (isPremiumUser ? 999999 : quota.translation.remaining) : 5
   const isOutOfQuota = !isPremiumUser && transRemaining <= 0
-
-  const fetchQuota = async () => {
-    try {
-      const q = await aiService.getAiQuota()
-      if (q) setQuota(q)
-    } catch {}
-  }
-
-  useEffect(() => {
-    fetchQuota()
-  }, [])
 
   const handleTranslate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,7 +54,7 @@ export default function AiTranslationAppPage() {
       if (res && res.translated_text) {
         setResult(res)
         if (res.quota) {
-          setQuota((prev) =>
+          queryClient.setQueryData(aiKeys.quota(), (prev: UserAiQuotaSummary | undefined) =>
             prev
               ? {
                   ...prev,
@@ -76,14 +65,14 @@ export default function AiTranslationAppPage() {
                     used: (prev.translation.used || 0) + 1,
                   },
                 }
-              : null
+              : prev
           )
         } else {
-          fetchQuota()
+          queryClient.invalidateQueries({ queryKey: aiKeys.quota() })
         }
       }
-    } catch (err: any) {
-      const errMsg = err?.message || ''
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err || '')
       if (errMsg.includes('hết') || errMsg.includes('Premium') || errMsg.includes('hạn ngạch') || errMsg.includes('1.000 tokens')) {
         setErrorBanner(errMsg)
       } else {

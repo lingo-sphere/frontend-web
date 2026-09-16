@@ -3,7 +3,6 @@
 
 import { useState } from 'react'
 import { useNavigate } from '@/lib/navigation'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
 import { useApp } from '@/contexts/app.context'
 import {
   usePublicDecksQuery,
@@ -16,7 +15,6 @@ const VOCABULARY_TAGS = ['all', 'TOEIC', 'General', 'Business', 'Communication',
 export function useVocabularyPage() {
   const navigate = useNavigate()
   const { showAction } = useApp()
-  const setActiveNavItem = useDashboardStore((state) => state.setActiveNavItem)
 
   const [activeTag, setActiveTag] = useState('all')
 
@@ -39,7 +37,6 @@ export function useVocabularyPage() {
   )
 
   const handleDeckClick = (deck: Deck) => {
-    setActiveNavItem('vocabulary')
     navigate(`/vocabulary/learn/${deck._id}`)
     showAction(`Bắt đầu học bộ thẻ "${deck.name}"`)
   }

@@ -2,15 +2,27 @@
 
 export interface CourseTestQuestion {
   id?: string
+  _id?: string
   question_text: string
   options: string[]
-  correct_answer: string | number
+  correct_answer?: string | number
   correct_index?: number
   explanation?: string
   media_url?: string
   image_url?: string
   skill_type?: string
   part_number?: number
+}
+
+export interface GradedQuestionItem {
+  question_index: number
+  question_id?: string
+  is_correct: boolean
+  selected_index?: number
+  selected_option?: string
+  correct_index: number
+  correct_answer: string
+  explanation?: string
 }
 
 export interface TestAttemptItem {
@@ -29,6 +41,7 @@ export interface WrongQuestionItem {
   user_selected_answer: string
   correct_answer: string
   category?: string
+  explanation?: string
 }
 
 export interface AiExplanationDetail {
@@ -74,5 +87,5 @@ export function getCorrectOptionIndex(q: CourseTestQuestion, options: string[]):
     )
     if (textMatchIdx !== -1) return textMatchIdx
   }
-  return 0
+  return -1
 }

@@ -2,9 +2,11 @@
 import { api } from '@/services/api.client';
 import { API_CONFIG } from '@/config/api.config';
 import type {
+  ChatMessage,
   ChatRoom,
   EligibilityResponse,
   MessagesResponse,
+  MessageReaction,
 } from '@/features/community/types/community.types';
 
 export const communityService = {
@@ -22,12 +24,25 @@ export const communityService = {
     return api.get<MessagesResponse>(API_CONFIG.ENDPOINTS.COMMUNITY.MESSAGES, params);
   },
 
+  async getPinnedMessages(): Promise<ChatMessage[]> {
+    return api.get<ChatMessage[]>(API_CONFIG.ENDPOINTS.COMMUNITY.PINNED_MESSAGES);
+  },
+
+  async toggleReaction(
+    messageId: string,
+    emoji: string,
+    action?: 'add' | 'remove',
+  ): Promise<{ reactions: MessageReaction[] }> {
+    return api.post<{ reactions: MessageReaction[] }>(`/community/messages/${messageId}/reactions`, { emoji, action });
+  },
+
   async uploadChatImage(file: File): Promise<string> {
     const res = await api.upload<{
       url?: string;
       file_url?: string;
       public_url?: string;
-    }>('/media/upload', file);
+    }>('/media/upload', file, { folder: 'comuniti', source_context: 'COMMUNITY_CHAT' });
     return res?.url || res?.file_url || res?.public_url || '';
   },
 };
+

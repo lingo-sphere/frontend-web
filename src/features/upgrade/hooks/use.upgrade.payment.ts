@@ -6,10 +6,12 @@ import {
   subscriptionService,
   type PaymentOrderResponse,
 } from '@/features/upgrade/services/subscription.service'
+import type { SubscriptionPlanDto } from '@/features/upgrade/schemas/subscription.schema'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
 import { getRemainingSubscriptionText } from '@/layouts/header.utils'
 import { getPlans, type Plan } from '@/features/upgrade/components/upgrade.data'
+import { useSubscriptionPlansQuery } from '@/features/upgrade/hooks/use.subscription.query'
 
 interface UseUpgradePaymentOptions {
   open: boolean
@@ -35,29 +37,25 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
 
   const { user, isAuthenticated, setUser } = useAuthStore()
   const [plans, setPlans] = useState<Plan[]>(getPlans())
+  const { data: rawPlans } = useSubscriptionPlansQuery()
 
   useEffect(() => {
-    let isMounted = true
-    subscriptionService
-      .getPlans()
-      .then((raw: any) => {
-        if (!isMounted) return
-        const dbPlans = Array.isArray(raw) ? raw : raw?.data || []
-        if (!Array.isArray(dbPlans) || dbPlans.length === 0) return
+    const dbPlans = Array.isArray(rawPlans) ? rawPlans : []
+    if (dbPlans.length === 0) return
 
-        const activePaidPlans = dbPlans
-          .filter(
-            (dp: any) =>
-              dp.slug !== 'free' &&
-              dp.plan_type !== 'FREE' &&
-              dp.tier > 0 &&
-              dp.is_active !== false
-          )
-          .sort((a: any, b: any) => (a.tier || 0) - (b.tier || 0))
+    const activePaidPlans = dbPlans
+      .filter(
+        (dp: SubscriptionPlanDto) =>
+          dp.slug !== 'free' &&
+          dp.plan_type !== 'FREE' &&
+          dp.tier > 0 &&
+          dp.is_active !== false
+      )
+      .sort((a: SubscriptionPlanDto, b: SubscriptionPlanDto) => (a.tier || 0) - (b.tier || 0))
 
-        if (activePaidPlans.length === 0) return
+    if (activePaidPlans.length === 0) return
 
-        const mappedPlans: Plan[] = activePaidPlans.map((dp: any) => {
+        const mappedPlans: Plan[] = activePaidPlans.map((dp: SubscriptionPlanDto) => {
           const isMonthly = dp.slug === 'vip-1-month' || dp.billing_cycle === 'MONTHLY'
           const isQuarterly = dp.slug === 'vip-3-month' || dp.billing_cycle === 'QUARTERLY'
           const isYearly = dp.slug === 'vip-1-year' || dp.billing_cycle === 'YEARLY'
@@ -81,12 +79,13 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
             ? 'YEARLY'
             : 'LIFETIME'
 
+          const days = Number(dp.duration_days || 0)
           const duration =
-            isLifetime || dp.duration_days >= 36500
+            isLifetime || days >= 36500
               ? { en: 'Lifetime', vi: 'Vĩnh viễn' }
-              : isYearly || dp.duration_days >= 365
+              : isYearly || days >= 365
               ? { en: '1 Year', vi: '1 năm' }
-              : isQuarterly || dp.duration_days >= 90
+              : isQuarterly || days >= 90
               ? { en: '3 Months', vi: '3 tháng' }
               : { en: '1 Month', vi: '1 tháng' }
 
@@ -98,14 +97,16 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
             ? `~${new Intl.NumberFormat('vi-VN').format(Math.round(dp.price / 12))}đ/tháng`
             : 'Trọn đời'
 
+          const originalPriceNum = dp.original_price ? Number(dp.original_price) : 0
+
           return {
             id,
             cycle,
             duration,
             price: Number(dp.price),
             originalPrice:
-              dp.original_price && Number(dp.original_price) > Number(dp.price)
-                ? Number(dp.original_price)
+              originalPriceNum > Number(dp.price)
+                ? originalPriceNum
                 : undefined,
             perMonth: {
               en: formattedPerMonth,
@@ -113,8 +114,8 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
             },
             discount:
               dp.discount ||
-              (dp.original_price && Number(dp.original_price) > Number(dp.price)
-                ? `-${Math.round(((dp.original_price - dp.price) / dp.original_price) * 100)}%`
+              (originalPriceNum > Number(dp.price)
+                ? `-${Math.round(((originalPriceNum - dp.price) / originalPriceNum) * 100)}%`
                 : undefined),
             recommended: Boolean(dp.is_popular),
           }
@@ -128,13 +129,7 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
           const popular = mappedPlans.find((p) => p.recommended)
           return popular ? popular.id : mappedPlans[0]?.id || '12-month'
         })
-      })
-      .catch(() => {})
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  }, [rawPlans])
 
   const isPremium = Boolean(user?.is_premium || user?.subscription_expires_at)
   const remainingTimeText = isPremium

@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Heart, ShoppingCart } from 'lucide-react'
 import { useMounted } from '@/hooks/use.mounted'
 
@@ -19,18 +19,17 @@ import { HeaderSearchDictionary } from '@/layouts/header.search'
 import { HeaderStatsBadges } from '@/layouts/header.stats'
 import { HeaderNotificationDropdown } from '@/layouts/header.notification'
 import { HeaderUserSection } from '@/layouts/header.user'
-import { useDashboardStore } from '@/features/dashboard/store/dashboard.store'
+import { useApp } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
-import { useEnrollmentStore } from '@/features/courses/store/enrollment.store'
+import { useGamificationProfileQuery } from '@/features/progress/hooks/use.progress.query'
 import { useNavigate } from '@/lib/navigation'
 import {
   useMyNotifications,
   useMarkNotificationAsReadMutation,
 } from '@/features/notifications/hooks/use.notifications.query'
 import { useLanguage } from '@/hooks/use.language'
-import type { Notification } from '@/features/notifications/types/notification'
 
 export { getRemainingSubscriptionText } from '@/layouts/header.utils'
 
@@ -45,9 +44,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
-  const theme = useDashboardStore((state) => state.theme)
-  const toggleTheme = useDashboardStore((state) => state.toggleTheme)
-  const setMobileSidebarOpen = useDashboardStore((state) => state.setMobileSidebarOpen)
+  const { theme, toggleTheme, setMobileSidebarOpen } = useApp()
   const { user, isAuthenticated, logout } = useAuthStore()
   const { data: cart } = useCartQuery(isAuthenticated)
   const { data: wishlist } = useWishlistQuery(isAuthenticated)
@@ -59,6 +56,9 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
 
   const { data: notifications = [] } = useMyNotifications(undefined, isAuthenticated)
   const { mutate: markNotificationAsRead } = useMarkNotificationAsReadMutation()
+  const { data: gamification } = useGamificationProfileQuery(isAuthenticated)
+  const gems = gamification?.gems ?? user?.xp ?? 0
+  const streak = gamification?.current_streak ?? user?.streak_count ?? 0
 
   const handleMouseEnter = (menu: 'learning' | 'wishlist' | 'cart' | 'user') => {
     if (hoverTimerRef.current) {
@@ -79,10 +79,15 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   }
 
   useEffect(() => {
-    if (isAuthenticated) {
-      useEnrollmentStore.getState().fetchMyEnrollments()
+    const handleOpenAuthModal = () => {
+      setAuthModalOpen(true)
     }
-  }, [isAuthenticated])
+    window.addEventListener('lingosphere:open-auth-modal', handleOpenAuthModal)
+
+    return () => {
+      window.removeEventListener('lingosphere:open-auth-modal', handleOpenAuthModal)
+    }
+  }, [])
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
@@ -107,6 +112,8 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             mounted={mounted}
             isPremium={Boolean(user?.is_premium)}
             isVi={isVi}
+            gems={gems}
+            streak={streak}
             onAction={onAction}
             onOpenUpgrade={() => setUpgradeOpen(true)}
           />

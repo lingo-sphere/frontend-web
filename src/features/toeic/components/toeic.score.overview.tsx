@@ -54,7 +54,7 @@ export function ToeicScoreOverview({
           : 'LingoSphere system analyzed your submission and calculated your official ETS TOEIC scaled score (10 - 990) to match suitable learning pathways.'}
       </p>
 
-      <div className="mt-8 max-w-5xl mx-auto">
+      <div className="mt-8 w-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 items-stretch">
           <div className="rounded-2xl border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 p-5 flex flex-col justify-between text-left shadow-2xs">
             <div>

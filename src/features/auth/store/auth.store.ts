@@ -1,8 +1,9 @@
 // Store quản lý trạng thái xác thực và thông tin phiên học viên
-import { create } from 'zustand'
+import { useSyncExternalStore } from 'react'
 import { authService } from '@/features/auth/services/auth.service'
 import { userService } from '@/features/user/services/user.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { getQueryClient } from '@/config/query.config'
 import type { User, LoginPayload, RegisterPayload, SocialLoginPayload } from '@/types/api.types'
 
 interface AuthState {
@@ -21,6 +22,60 @@ interface AuthState {
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
   clearError: () => void
+}
+
+interface StoreApi<T> {
+  getState: () => T
+  getInitialState: () => T
+  setState: (updater: Partial<T> | ((state: T) => Partial<T>)) => void
+  subscribe: (listener: () => void) => () => void
+}
+
+interface UseStore<T> extends StoreApi<T> {
+  (): T
+  <U>(selector: (state: T) => U): U
+}
+
+function create<T>(
+  initializer: (
+    set: (updater: Partial<T> | ((state: T) => Partial<T>)) => void,
+    get: () => T,
+  ) => T,
+): UseStore<T> {
+  let state: T
+  const listeners = new Set<() => void>()
+  const getState = () => state
+  const setState = (updater: Partial<T> | ((state: T) => Partial<T>)) => {
+    const next = typeof updater === 'function' ? updater(state) : updater
+    state = { ...state, ...next }
+    listeners.forEach((listener) => listener())
+  }
+  const subscribe = (listener: () => void) => {
+    listeners.add(listener)
+    return () => {
+      listeners.delete(listener)
+    }
+  }
+
+  state = initializer(setState, getState)
+  const initialState = state
+
+  function useStore(): T
+  function useStore<U>(selector: (state: T) => U): U
+  function useStore<U>(selector?: (state: T) => U): T | U {
+    return useSyncExternalStore(
+      subscribe,
+      () => (selector ? selector(state) : state),
+      () => (selector ? selector(initialState) : initialState),
+    )
+  }
+
+  useStore.getState = getState
+  useStore.getInitialState = () => initialState
+  useStore.setState = setState
+  useStore.subscribe = subscribe
+
+  return useStore
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -52,12 +107,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score) {
-        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
-        if (cachedPlacement?.placement_test_score) {
-          Object.assign(finalUser, cachedPlacement)
-        }
-      }
       storage.set(STORAGE_KEYS.USER, finalUser)
       set({
         user: finalUser,
@@ -85,12 +134,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score) {
-        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
-        if (cachedPlacement?.placement_test_score) {
-          Object.assign(finalUser, cachedPlacement)
-        }
-      }
       storage.set(STORAGE_KEYS.USER, finalUser)
       set({
         user: finalUser,
@@ -107,6 +150,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (payload) => {
     set({ isLoading: true, error: null })
     try {
+      storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
       await authService.register(payload)
       set({ isLoading: false })
     } catch (err: unknown) {
@@ -172,8 +216,28 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true })
     try {
       await authService.logout()
+    } catch {
     } finally {
-      set({ user: null, isAuthenticated: false, isLoading: false })
+      if (typeof window !== 'undefined') {
+        getQueryClient().clear()
+      }
+      set({ user: null, isAuthenticated: false, isLoading: false, error: null })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
+        const path = window.location.pathname
+        const isProtected =
+          path.startsWith('/profile') ||
+          path.startsWith('/settings') ||
+          path.startsWith('/cart') ||
+          path.startsWith('/ai-learning') ||
+          path.startsWith('/notes') ||
+          path.startsWith('/journal') ||
+          path.startsWith('/progress') ||
+          path.startsWith('/exam-history')
+        if (isProtected) {
+          window.location.href = '/'
+        }
+      }
     }
   },
 
@@ -195,12 +259,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...user, ...profileUser, is_premium: isPremium }
-      if (!finalUser.placement_test_score) {
-        const cachedPlacement = storage.get<{ placement_test_score?: number }>(STORAGE_KEYS.PLACEMENT_SCORE)
-        if (cachedPlacement?.placement_test_score) {
-          Object.assign(finalUser, cachedPlacement)
-        }
-      }
       storage.set(STORAGE_KEYS.USER, finalUser)
       set({ user: finalUser, isAuthenticated: true })
     } catch {

@@ -6,4 +6,7 @@ export const vocabularyKeys = {
   myEnrollments: () => [...vocabularyKeys.all, 'my-enrollments'] as const,
   deck: (deckId: string) => [...vocabularyKeys.all, 'deck', deckId] as const,
   topics: (params?: { cefr_level?: string }) => [...vocabularyKeys.all, 'topics', params ?? {}] as const,
+  ipaSymbols: (symbolType?: string) => [...vocabularyKeys.all, 'ipa-symbols', symbolType ?? 'all'] as const,
+  grammarPoints: (params?: { grammarType?: string; cefrLevel?: string }) =>
+    [...vocabularyKeys.all, 'grammar-points', params ?? {}] as const,
 }

@@ -1,8 +1,4 @@
-/**
- * @file course.workspace.header.tsx
- * @description Header cho khu vực học tập bài giảng của học viên
- */
-
+// Header khu vực học tập bài giảng của học viên
 'use client'
 
 import { ArrowLeft, Share2, Star, PanelRightClose, PanelRightOpen } from 'lucide-react'

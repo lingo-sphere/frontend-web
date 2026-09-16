@@ -1,11 +1,7 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (portal)/home
- */
-
+// Trang chủ bảng điều khiển học tập cá nhân (Learner Dashboard).
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import { useApp } from '@/contexts/app.context'
 import { ContinueLearningCard } from '@/features/dashboard/components/continue.learning.card'
 import { ExploreTopics } from '@/features/dashboard/components/explore.topics'
@@ -16,8 +12,10 @@ import { StreakLeaderboard } from '@/features/dashboard/components/streak.leader
 import { StreakRewards } from '@/features/dashboard/components/streak.rewards'
 import { TodaysLearningCard } from '@/features/dashboard/components/todays.learning.card'
 import { WelcomeBanner } from '@/features/dashboard/components/welcome.banner'
-import { userService } from '@/features/user/services/user.service'
-import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
+import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
+import type { LeaderboardEntry } from '@/features/user/services/user.service'
+import type { BackendTopic } from '@/features/vocabulary/services/vocabulary.service'
 import type {
   HeatmapDay,
   HeatmapSummary,
@@ -30,67 +28,34 @@ import type {
 
 export default function HomeAppPage() {
   const { showAction } = useApp()
-  const [leaderboard, setLeaderboard] = useState<LeaderboardData>({
-    week: [
-      { rank: 1, name: 'Nguyễn Văn A', streakDays: 15 },
-      { rank: 2, name: 'Trần Thị B', streakDays: 12 },
-      { rank: 3, name: 'Lê Hoàng C', streakDays: 10 },
-    ],
-    month: [
-      { rank: 1, name: 'Nguyễn Văn A', streakDays: 30 },
-      { rank: 2, name: 'Trần Thị B', streakDays: 28 },
-      { rank: 3, name: 'Lê Hoàng C', streakDays: 25 },
-    ],
-    year: [
-      { rank: 1, name: 'Nguyễn Văn A', streakDays: 120 },
-      { rank: 2, name: 'Trần Thị B', streakDays: 95 },
-      { rank: 3, name: 'Lê Hoàng C', streakDays: 80 },
-    ],
-  })
-  const [topics, setTopics] = useState<Topic[]>([])
+  const { data: lbData = [] } = useLeaderboardQuery('weekly')
+  const { data: topData = [] } = useTopicsQuery()
 
-  useEffect(() => {
-    let isMounted = true
-    const loadHomeData = async () => {
-      try {
-        const [lbData, topData] = await Promise.all([
-          userService.getLeaderboard('weekly').catch(() => []),
-          vocabularyService.getTopics().catch(() => []),
-        ])
+  const leaderboard: LeaderboardData = useMemo(() => {
+    const mappedEntries = Array.isArray(lbData)
+      ? lbData.map((u: LeaderboardEntry, idx: number) => ({
+          rank: idx + 1,
+          name: u.full_name || `Học viên #${idx + 1}`,
+          streakDays: u.current_streak ?? u.streak_days ?? 1,
+        }))
+      : []
 
-        if (isMounted) {
-          if (Array.isArray(lbData) && lbData.length > 0) {
-            const mappedEntries = lbData.map((u: any, idx: number) => ({
-              rank: idx + 1,
-              name: u.full_name || `Học viên #${idx + 1}`,
-              streakDays: u.current_streak ?? u.streak_days ?? 1,
-            }))
-            setLeaderboard({
-              week: mappedEntries,
-              month: mappedEntries,
-              year: mappedEntries,
-            })
-          }
-
-          if (Array.isArray(topData) && topData.length > 0) {
-            const mappedTopics: Topic[] = topData.map((t: any) => ({
-              id: t._id || `topic-${t.code || ''}`,
-              label: t.name_vi || t.name_en || 'Chủ đề',
-              emoji: '📚',
-              words: t.lexical_count || 0,
-            }))
-            setTopics(mappedTopics)
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching home dashboard data:', err)
-      }
+    return {
+      week: mappedEntries,
+      month: mappedEntries,
+      year: mappedEntries,
     }
-    loadHomeData()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  }, [lbData])
+
+  const topics: Topic[] = useMemo(() => {
+    if (!Array.isArray(topData)) return []
+    return topData.map((t: BackendTopic) => ({
+      id: t._id || `topic-${t.code || ''}`,
+      label: t.name_vi || t.name_en || 'Chủ đề',
+      emoji: '📚',
+      words: t.lexical_count || 0,
+    }))
+  }, [topData])
 
   const defaultHeatmap: HeatmapDay[] = Array.from({ length: 35 }, (_, i) => ({
     id: `day-${i}`,

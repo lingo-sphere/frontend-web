@@ -168,11 +168,13 @@ export function SettingsLearningTab({
 
         <CardContent className="p-5 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { key: 'easy', title: isVi ? 'Dễ' : 'Easy', desc: isVi ? 'Từ vựng & ngữ pháp cơ bản' : 'Basic vocabulary' },
-              { key: 'medium', title: isVi ? 'Trung bình' : 'Medium', desc: isVi ? 'Cân bằng giữa nghe, nói, đọc' : 'Balanced level' },
-              { key: 'hard', title: isVi ? 'Nâng cao' : 'Hard', desc: isVi ? 'Tăng tốc độ đọc và đề thi thực tế' : 'Advanced challenges' },
-            ].map((diff) => {
+            {(
+              [
+                { key: 'easy', title: isVi ? 'Dễ' : 'Easy', desc: isVi ? 'Từ vựng & ngữ pháp cơ bản' : 'Basic vocabulary' },
+                { key: 'medium', title: isVi ? 'Trung bình' : 'Medium', desc: isVi ? 'Cân bằng giữa nghe, nói, đọc' : 'Balanced level' },
+                { key: 'hard', title: isVi ? 'Nâng cao' : 'Hard', desc: isVi ? 'Tăng tốc độ đọc và đề thi thực tế' : 'Advanced challenges' },
+              ] as const
+            ).map((diff) => {
               const isSelected = preferences.learning.defaultExerciseDifficulty === diff.key
               return (
                 <div
@@ -180,7 +182,7 @@ export function SettingsLearningTab({
                   onClick={() =>
                     setPreferences((prev) => ({
                       ...prev,
-                      learning: { ...prev.learning, defaultExerciseDifficulty: diff.key as any },
+                      learning: { ...prev.learning, defaultExerciseDifficulty: diff.key },
                     }))
                   }
                   className={`p-4 rounded-xl border transition-all cursor-pointer ${

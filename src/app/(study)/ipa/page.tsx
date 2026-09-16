@@ -1,47 +1,22 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (study)/ipa
- */
-
+// Trang bảng phiên âm quốc tế IPA tương tác và luyện phát âm chuẩn.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Icon } from '@/components/icon.map'
 import { useApp } from '@/contexts/app.context'
-import { vocabularyService, type BackendIpaSymbol } from '@/features/vocabulary/services/vocabulary.service'
+import type { BackendIpaSymbol } from '@/features/vocabulary/services/vocabulary.service'
+import { useIpaSymbolsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 
 export default function IpaAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const { showAction } = useApp()
   const [playingSymbol, setPlayingSymbol] = useState<string | null>(null)
-  const [ipaSymbols, setIpaSymbols] = useState<BackendIpaSymbol[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    let isMounted = true
-    const fetchIpa = async () => {
-      try {
-        setIsLoading(true)
-        const symbols = await vocabularyService.getIpaSymbols()
-        if (isMounted && Array.isArray(symbols)) {
-          setIpaSymbols(symbols)
-        }
-      } catch (err) {
-        console.error('Failed to load IPA symbols:', err)
-      } finally {
-        if (isMounted) setIsLoading(false)
-      }
-    }
-    fetchIpa()
-    return () => {
-      isMounted = false
-    }
-  }, [])
+  const { data: ipaSymbols = [], isLoading } = useIpaSymbolsQuery()
 
   const vowels = ipaSymbols.filter((s) => s.symbol_type === 'VOWEL')
   const diphthongs = ipaSymbols.filter((s) => s.symbol_type === 'DIPHTHONG')
@@ -53,12 +28,18 @@ export default function IpaAppPage() {
       const audio = new Audio(symbol.audio_url)
       audio.play().catch(() => {})
     }
-    showAction(`${isVietnamese ? 'Phát âm' : 'Pronouncing'}: /${symbol.symbol}/ (${symbol.example_word})`)
+    showAction(
+      `${isVietnamese ? 'Phát âm' : 'Pronouncing'}: /${symbol.symbol}/ (${symbol.example_word})`
+    )
     setTimeout(() => setPlayingSymbol(null), 400)
   }
 
   const handlePractice = () => {
-    showAction(isVietnamese ? 'Đã mở chế độ Luyện tập ngữ âm IPA' : 'Opened IPA Practice Mode')
+    showAction(
+      isVietnamese
+        ? 'Đã mở chế độ Luyện tập ngữ âm IPA'
+        : 'Opened IPA Practice Mode'
+    )
   }
 
   const renderSymbolCard = (item: BackendIpaSymbol) => {
@@ -93,7 +74,11 @@ export default function IpaAppPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <SectionHeading
             eyebrow={t('practice.title')}
-            title={isVietnamese ? 'Bảng phiên âm quốc tế IPA (44 âm)' : 'International Phonetic Alphabet (44 Sounds)'}
+            title={
+              isVietnamese
+                ? 'Bảng phiên âm quốc tế IPA (44 âm)'
+                : 'International Phonetic Alphabet (44 Sounds)'
+            }
             description={
               isVietnamese
                 ? 'Nắm vững 44 âm trong tiếng Anh chuẩn quốc tế để phát âm chuẩn xác'
@@ -117,7 +102,10 @@ export default function IpaAppPage() {
           <>
             <section className="mt-8">
               <h3 className="mb-3 text-[16px] font-bold text-text-primary">
-                {isVietnamese ? '1. Nguyên âm đơn (Monophthongs)' : '1. Monophthongs'} ({vowels.length})
+                {isVietnamese
+                  ? '1. Nguyên âm đơn (Monophthongs)'
+                  : '1. Monophthongs'}{' '}
+                ({vowels.length})
               </h3>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
                 {vowels.map(renderSymbolCard)}
@@ -126,7 +114,10 @@ export default function IpaAppPage() {
 
             <section className="mt-8">
               <h3 className="mb-3 text-[16px] font-bold text-text-primary">
-                {isVietnamese ? '2. Nguyên âm đôi (Diphthongs)' : '2. Diphthongs'} ({diphthongs.length})
+                {isVietnamese
+                  ? '2. Nguyên âm đôi (Diphthongs)'
+                  : '2. Diphthongs'}{' '}
+                ({diphthongs.length})
               </h3>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
                 {diphthongs.map(renderSymbolCard)}
@@ -135,7 +126,8 @@ export default function IpaAppPage() {
 
             <section className="mt-8">
               <h3 className="mb-3 text-[16px] font-bold text-text-primary">
-                {isVietnamese ? '3. Phụ âm (Consonants)' : '3. Consonants'} ({consonants.length})
+                {isVietnamese ? '3. Phụ âm (Consonants)' : '3. Consonants'} (
+                {consonants.length})
               </h3>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
                 {consonants.map(renderSymbolCard)}
