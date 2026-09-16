@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Heart, ShoppingCart } from 'lucide-react'
 import { useMounted } from '@/hooks/use.mounted'
 
@@ -78,6 +78,16 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
     }, 250)
   }
 
+  useEffect(() => {
+    const handleOpenAuthModal = () => {
+      setAuthModalOpen(true)
+    }
+    window.addEventListener('lingosphere:open-auth-modal', handleOpenAuthModal)
+
+    return () => {
+      window.removeEventListener('lingosphere:open-auth-modal', handleOpenAuthModal)
+    }
+  }, [])
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
