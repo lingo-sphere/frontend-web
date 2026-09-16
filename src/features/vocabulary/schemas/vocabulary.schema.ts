@@ -43,17 +43,7 @@ export const DeckSchema = z.object({
   category: z.string().optional(),
 })
 
-// DeckListSchema handle cả array và object {data: [...]}
-export const DeckListSchema: z.ZodType<Deck[] | { data?: Deck[]; results?: Deck[]; decks?: Deck[] }> = z.union([
-  z.array(DeckSchema),
-  z.object({
-    data: z.array(DeckSchema).optional(),
-    results: z.array(DeckSchema).optional(),
-    decks: z.array(DeckSchema).optional(),
-    total: z.number().optional(),
-    page: z.number().optional(),
-  }).passthrough(),
-])
+export const DeckListSchema = z.array(DeckSchema)
 
 export const BackendTopicSchema = z.object({
   _id: z.string(),
@@ -72,9 +62,7 @@ export const BackendTopicSchema = z.object({
 export const BackendTopicListSchema = z.array(BackendTopicSchema)
 
 export const BackendIpaSymbolSchema = z.object({
-  // Backend trả về 'id', không phải '_id'
-  id: z.string(),
-  _id: z.string().optional(),
+  _id: z.string(),
   symbol: z.string(),
   symbol_type: z.enum(['VOWEL', 'CONSONANT', 'DIPHTHONG']).or(z.string()),
   description_en: z.string().optional(),
@@ -83,9 +71,7 @@ export const BackendIpaSymbolSchema = z.object({
   example_word_ipa: z.string().default(''),
   audio_url: z.string().optional(),
   example_audio_url: z.string().optional(),
-  related_symbols: z.array(z.string()).optional(),
-  cefr_min_level: z.string().optional(),
-})
+}).passthrough()
 
 export const BackendIpaSymbolListSchema = z.array(BackendIpaSymbolSchema)
 
@@ -122,45 +108,3 @@ export type Deck = z.infer<typeof DeckSchema>
 export type BackendTopic = z.infer<typeof BackendTopicSchema>
 export type BackendIpaSymbol = z.infer<typeof BackendIpaSymbolSchema>
 export type BackendGrammarPoint = z.infer<typeof BackendGrammarPointSchema>
-
-// ==================== LOOKUP SCHEMAS ====================
-
-export const LookupResultItemSchema = z.object({
-  id: z.string(),
-  word: z.string(),
-  ipa: z.string().optional(),
-  pos: z.array(z.string()),
-  cefr: z.string().optional(),
-  meaning: z.string().optional(),
-  matchType: z.enum(['exact', 'prefix', 'fuzzy']),
-})
-
-export const LookupResponseSchema = z.object({
-  query: z.string(),
-  results: z.array(LookupResultItemSchema),
-  total: z.number(),
-})
-
-export type LookupResultItem = z.infer<typeof LookupResultItemSchema>
-export type LookupResponse = z.infer<typeof LookupResponseSchema>
-
-// ==================== SEARCH HISTORY SCHEMAS ====================
-
-export const SearchHistoryItemSchema = z.object({
-  _id: z.string(),
-  vocabularyId: z.string().optional(),
-  word: z.string().optional(),
-  ipa: z.string().optional(),
-  cefr: z.string().optional(),
-  searchQuery: z.string().optional(),
-  searchType: z.string().optional(),
-  searchedAt: z.date().or(z.string()),
-})
-
-export const SearchHistoryResponseSchema = z.object({
-  results: z.array(SearchHistoryItemSchema),
-  total: z.number(),
-})
-
-export type SearchHistoryItem = z.infer<typeof SearchHistoryItemSchema>
-export type SearchHistoryResponse = z.infer<typeof SearchHistoryResponseSchema>

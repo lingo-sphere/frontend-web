@@ -1,229 +1,119 @@
 /**
  * @file dictionary.modal.tsx
- * @description Component giao diện React DictionaryModal với autocomplete cho học viên
+ * @description Component giao diện React DictionaryModal cho học viên
  */
 
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { Search, X, BookOpen, Clock, Trash2 } from 'lucide-react'
+import { Search, X, Volume2, Plus, BookOpen } from 'lucide-react'
+import { Button } from '@/components/button'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
-import { VocabularyDetailModal } from './vocabulary-detail.modal'
-import type { LookupResultItem, SearchHistoryResponse } from '@/features/vocabulary/schemas/vocabulary.schema'
+
+interface DictionaryItem {
+  id: string
+  word: string
+  wordType: string
+  pronunciationUs?: string
+  pronunciationUk?: string
+  meanings: Array<{
+    partOfSpeech: string
+    definitionVi: string
+    definitionEn?: string
+    examples?: string[]
+  }>
+}
 
 interface DictionaryModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAction: (message: string) => void
-  userId?: string | null
 }
 
-export function DictionaryModal({ open, onOpenChange, onAction, userId }: DictionaryModalProps) {
+export function DictionaryModal({ open, onOpenChange, onAction }: DictionaryModalProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-
   const [query, setQuery] = useState('')
-  const [suggestions, setSuggestions] = useState<LookupResultItem[]>([])
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryResponse['results']>([])
+  const [results, setResults] = useState<DictionaryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedIndex, setSelectedIndex] = useState(-1)
-  const [showHistory, setShowHistory] = useState(false)
 
-  // Vocabulary detail modal state
-  const [detailModalOpen, setDetailModalOpen] = useState(false)
-  const [selectedVocab, setSelectedVocab] = useState<{ id: string; word: string } | null>(null)
-
-  const inputRef = useRef<HTMLInputElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Fetch search history when focus (empty query)
-  const fetchSearchHistory = useCallback(async () => {
-    if (!userId) return
-    try {
-      const history = await vocabularyService.getSearchHistory(userId, 10)
-      setSearchHistory(history.results || [])
-    } catch (err) {
-      console.error('Failed to fetch search history:', err)
-    }
-  }, [userId])
-
-  // Fetch suggestions with debounce
-  const fetchSuggestions = useCallback(async (q: string) => {
-    if (q.trim().length < 2) {
-      setSuggestions([])
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      const response = await vocabularyService.lookup(q.trim(), 8)
-      setSuggestions(response.results || [])
-    } catch (err) {
-      console.error('Lookup failed:', err)
-      setSuggestions([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  // Handle input change with debounce
   useEffect(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
-    }
-
     if (!query.trim()) {
-      setSuggestions([])
-      setShowHistory(true)
-      fetchSearchHistory()
+      setResults([])
       return
     }
 
-    setShowHistory(false)
-
-    if (query.trim().length < 2) {
-      setSuggestions([])
-      return
-    }
-
-    debounceRef.current = setTimeout(() => {
-      fetchSuggestions(query)
-    }, 200)
-
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
-      }
-    }
-  }, [query, fetchSuggestions, fetchSearchHistory])
-
-  // Save search history when selecting a vocabulary
-  const saveToHistory = useCallback(async (item: LookupResultItem) => {
-    if (!userId) return
-    try {
-      await vocabularyService.saveSearchHistory(userId, {
-        vocabularyId: item.id,
-        searchQuery: item.word,
-        searchType: item.matchType.toUpperCase(),
-      })
-    } catch (err) {
-      console.error('Failed to save search history:', err)
-    }
-  }, [userId])
-
-  // Handle select vocabulary - mở modal chi tiết
-  const handleSelect = (item: LookupResultItem) => {
-    // Lưu vào lịch sử
-    saveToHistory(item)
-
-    // Lưu từ đã chọn và mở modal chi tiết
-    setSelectedVocab({ id: item.id, word: item.word })
-    setDetailModalOpen(true)
-
-    // Đóng search dropdown
-    setSuggestions([])
-    setShowHistory(false)
-  }
-
-  // Handle history select
-  const handleHistorySelect = (item: SearchHistoryResponse['results'][0]) => {
-    if (item.searchQuery) {
-      setQuery(item.searchQuery)
-      setShowHistory(false)
-    }
-  }
-
-  // Handle clear history
-  const handleClearHistory = async () => {
-    if (!userId) return
-    try {
-      await vocabularyService.clearSearchHistory(userId)
-      setSearchHistory([])
-    } catch (err) {
-      console.error('Failed to clear history:', err)
-    }
-  }
-
-  // Keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    const items = showHistory ? searchHistory : suggestions
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault()
-        setSelectedIndex(prev => Math.min(prev + 1, items.length - 1))
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        setSelectedIndex(prev => Math.max(prev - 1, -1))
-        break
-      case 'Enter':
-        e.preventDefault()
-        if (selectedIndex >= 0 && !showHistory && suggestions[selectedIndex]) {
-          handleSelect(suggestions[selectedIndex])
-        } else if (query.trim()) {
-          // Fallback: search with current query
-          fetchSuggestions(query)
+    const timer = setTimeout(async () => {
+      try {
+        setIsLoading(true)
+        const liveItems = await vocabularyService.searchVocabulary({ q: query.trim() })
+        if (Array.isArray(liveItems)) {
+          const mapped: DictionaryItem[] = liveItems.map((item: any) => ({
+            id: item._id || item.id,
+            word: item.word,
+            wordType: item.word_type || 'noun',
+            pronunciationUs: item.pronunciation_us,
+            pronunciationUk: item.pronunciation_uk,
+            meanings: (item.meanings || []).map((m: any) => ({
+              partOfSpeech: m.part_of_speech || item.word_type || 'noun',
+              definitionVi: m.definition_vi || item.meaning_vi || '',
+              definitionEn: m.definition_en || item.meaning_en || '',
+              examples: m.examples || [],
+            })),
+          }))
+          setResults(mapped)
         }
-        break
-      case 'Escape':
-        e.preventDefault()
-        setSuggestions([])
-        setShowHistory(false)
-        onOpenChange(false)
-        break
-    }
+      } catch (err) {
+        console.error('Dictionary search failed:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [query])
+
+  const handleSave = (word: DictionaryItem) => {
+    onAction(isVietnamese ? `Đã lưu "${word.word}"` : `Saved "${word.word}"`)
   }
 
-  // Reset state when modal opens
-  useEffect(() => {
-    if (open) {
-      setQuery('')
-      setSuggestions([])
-      setSelectedIndex(-1)
-      setShowHistory(true)
-      fetchSearchHistory()
-      setTimeout(() => inputRef.current?.focus(), 100)
-    }
-  }, [open, fetchSearchHistory])
+  const handlePlay = (word: DictionaryItem) => {
+    onAction(`${isVietnamese ? 'Phát âm' : 'Pronouncing'}: ${word.word}`)
+  }
 
-  // Body scroll lock
+  useEffect(() => {
+    if (!open) {
+      setQuery('')
+      setResults([])
+    }
+  }, [open])
+
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
     else document.body.style.overflow = ''
-    return () => { document.body.style.overflow = '' }
-  }, [open])
-
-  // Close on outside click
-  const handleOutsideClick = (e: React.MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-      onOpenChange(false)
+    return () => {
+      document.body.style.overflow = ''
     }
-  }
+  }, [open])
 
   if (!open) return null
 
-  const showDropdown = (showHistory && searchHistory.length > 0) || suggestions.length > 0 || (isLoading && query.length >= 2)
-
   const modalContent = (
     <div
-      className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 p-4 pt-[15vh]"
-      onClick={handleOutsideClick}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4"
+      onClick={() => onOpenChange(false)}
     >
       <div
-        ref={dropdownRef}
-        className="w-full max-w-2xl overflow-hidden rounded-2xl bg-surface shadow-2xl"
+        className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <BookOpen className="text-primary" size={20} />
             <h2 className="text-lg font-semibold text-text-primary">
-              {isVietnamese ? 'Tra từ điển' : 'Dictionary'}
+              {isVietnamese ? 'Từ điển' : 'Dictionary'}
             </h2>
           </div>
           <button
@@ -234,12 +124,10 @@ export function DictionaryModal({ open, onOpenChange, onAction, userId }: Dictio
           </button>
         </div>
 
-        {/* Search Input */}
         <div className="border-b border-border px-5 py-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
             <input
-              ref={inputRef}
               autoFocus
               type="text"
               placeholder={
@@ -249,18 +137,9 @@ export function DictionaryModal({ open, onOpenChange, onAction, userId }: Dictio
               }
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => {
-                if (!query.trim()) setShowHistory(true)
-              }}
-              className="h-10 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none"
+              className="h-10 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none"
             />
-            {isLoading && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              </div>
-            )}
-            {query && !isLoading && (
+            {query && (
               <button
                 onClick={() => setQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
@@ -271,139 +150,120 @@ export function DictionaryModal({ open, onOpenChange, onAction, userId }: Dictio
           </div>
         </div>
 
-        {/* Dropdown Content */}
-        {showDropdown && (
-          <div className="max-h-[50vh] overflow-y-auto">
-            {/* Recent Searches */}
-            {showHistory && searchHistory.length > 0 && (
-              <div className="border-b border-border">
-                <div className="flex items-center justify-between px-4 py-2">
-                  <div className="flex items-center gap-2 text-[12px] font-medium text-text-secondary">
-                    <Clock size={14} />
-                    {isVietnamese ? 'Tìm kiếm gần đây' : 'Recent Searches'}
-                  </div>
-                  <button
-                    onClick={handleClearHistory}
-                    className="flex items-center gap-1 text-[12px] text-text-tertiary hover:text-primary"
-                  >
-                    <Trash2 size={12} />
-                    {isVietnamese ? 'Xóa tất cả' : 'Clear all'}
-                  </button>
-                </div>
-                {searchHistory.map((item, idx) => (
-                  <button
-                    key={item._id}
-                    onClick={() => handleHistorySelect(item)}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-hover ${
-                      selectedIndex === idx ? 'bg-surface-hover' : ''
-                    }`}
-                  >
-                    <Clock size={14} className="text-text-tertiary" />
-                    <span className="flex-1 text-[14px] text-text-primary">
-                      {item.searchQuery || item.word}
-                    </span>
-                    {item.cefr && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                        {item.cefr}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Suggestions */}
-            {suggestions.length > 0 && (
-              <div className="py-2">
-                {suggestions.map((item, idx) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelect(item)}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-hover ${
-                      selectedIndex === idx ? 'bg-surface-hover' : ''
-                    }`}
-                  >
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          {query.trim() === '' ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <BookOpen className="mb-3 text-text-tertiary" size={48} />
+              <p className="text-[14px] text-text-secondary">
+                {isVietnamese
+                  ? 'Nhập từ hoặc cụm từ để tra cứu'
+                  : 'Enter a word or phrase to search'}
+              </p>
+              <p className="mt-1 text-[12px] text-text-tertiary">
+                e.g. innovate, business, collaborate
+              </p>
+            </div>
+          ) : isLoading ? (
+            <div className="flex h-32 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : results.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Search className="mb-3 text-text-tertiary" size={48} />
+              <p className="text-[14px] text-text-secondary">
+                {isVietnamese
+                  ? `Không tìm thấy kết quả cho "${query}"`
+                  : `No results found for "${query}"`}
+              </p>
+              <p className="mt-1 text-[12px] text-text-tertiary">
+                {isVietnamese
+                  ? 'Thử từ khác hoặc kiểm tra chính tả'
+                  : 'Try a different word or check spelling'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {results.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary/30"
+                >
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[15px] font-semibold text-text-primary">
-                          {item.word}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-[18px] font-bold text-text-primary">
+                          {entry.word}
+                        </h3>
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                          {entry.wordType}
                         </span>
-                        {item.cefr && (
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                            {item.cefr}
-                          </span>
-                        )}
-                        {item.matchType === 'fuzzy' && (
-                          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-600">
-                            {isVietnamese ? 'Gợi ý' : 'Did you mean?'}
-                          </span>
-                        )}
                       </div>
-                      <div className="mt-0.5 flex items-center gap-2 text-[12px] text-text-secondary">
-                        {item.pos.length > 0 && (
-                          <span className="italic text-text-tertiary">
-                            {item.pos[0]}
-                          </span>
+                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[12px] text-text-secondary">
+                        {entry.pronunciationUk && (
+                          <button
+                            onClick={() => handlePlay(entry)}
+                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-surface-hover"
+                          >
+                            <span className="text-text-tertiary">UK</span>
+                            <span className="font-mono">
+                              /{entry.pronunciationUk}/
+                            </span>
+                            <Volume2 size={12} className="text-primary" />
+                          </button>
                         )}
-                        {item.meaning && (
-                          <span className="truncate text-text-secondary">
-                            · {item.meaning}
-                          </span>
+                        {entry.pronunciationUs && (
+                          <button
+                            onClick={() => handlePlay(entry)}
+                            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-surface-hover"
+                          >
+                            <span className="text-text-tertiary">US</span>
+                            <span className="font-mono">
+                              /{entry.pronunciationUs}/
+                            </span>
+                            <Volume2 size={12} className="text-primary" />
+                          </button>
                         )}
                       </div>
                     </div>
-                    {item.ipa && (
-                      <span className="font-mono text-[12px] text-text-tertiary">
-                        /{item.ipa}/
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 text-xs"
+                      onClick={() => handleSave(entry)}
+                    >
+                      <Plus size={14} />
+                      {isVietnamese ? 'Lưu từ' : 'Save'}
+                    </Button>
+                  </div>
 
-            {/* No results */}
-            {!showHistory && query.length >= 2 && suggestions.length === 0 && !isLoading && (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Search className="mb-2 text-text-tertiary" size={32} />
-                <p className="text-[14px] text-text-secondary">
-                  {isVietnamese
-                    ? `Không tìm thấy kết quả cho "${query}"`
-                    : `No results found for "${query}"`}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Footer hint */}
-        <div className="border-t border-border px-4 py-2">
-          <p className="text-[11px] text-text-tertiary">
-            {isVietnamese
-              ? 'Nhấn ↑↓ để chọn, Enter để tra, Esc để đóng'
-              : 'Press ↑↓ to select, Enter to search, Esc to close'}
-          </p>
+                  {entry.meanings.map((m, idx) => (
+                    <div
+                      key={idx}
+                      className="mt-3 border-t border-border/50 pt-2"
+                    >
+                      <p className="text-[13px] font-medium text-text-primary">
+                        {m.definitionVi}
+                      </p>
+                      {m.definitionEn && (
+                        <p className="text-[12px] text-text-secondary">
+                          {m.definitionEn}
+                        </p>
+                      )}
+                      {m.examples && m.examples.length > 0 && (
+                        <p className="mt-1 text-[11px] italic text-text-tertiary">
+                          "{m.examples[0]}"
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 
-  return createPortal(
-    <>
-      {modalContent}
-
-      {/* Vocabulary Detail Modal */}
-      <VocabularyDetailModal
-        wordId={selectedVocab?.id || ''}
-        word={selectedVocab?.word || ''}
-        open={detailModalOpen}
-        onOpenChange={(open) => {
-          setDetailModalOpen(open)
-          // Khi đóng detail modal, có thể mở lại dictionary nếu muốn
-        }}
-        onAction={onAction}
-      />
-    </>,
-    document.body
-  )
+  return createPortal(modalContent, document.body)
 }
