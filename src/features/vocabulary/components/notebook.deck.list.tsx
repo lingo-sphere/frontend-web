@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { Plus, Layers3, BookOpen, X } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
-import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary'
+import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary.learn'
 
 interface DecksTabProps {
   decks: UserDeck[]

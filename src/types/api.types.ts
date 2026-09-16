@@ -25,7 +25,6 @@ export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'PENDING'
 
 export interface User {
   user_id: string
-  id?: string
   email: string
   full_name: string
   phone_number?: string | null
