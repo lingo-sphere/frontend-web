@@ -11,4 +11,7 @@ export const practiceKeys = {
   writingDetail: (id: string) => [...practiceKeys.all, 'writing', id] as const,
   dailyJournalPrompt: () => [...practiceKeys.all, 'daily-journal-prompt'] as const,
   dailyJournalHistory: () => [...practiceKeys.all, 'daily-journal-history'] as const,
+  mistakes: (params?: unknown) => [...practiceKeys.all, 'mistakes', params ?? {}] as const,
+  mistakesDue: () => [...practiceKeys.all, 'mistakes', 'due'] as const,
+  topicDrill: (tag: string, limit?: number) => [...practiceKeys.all, 'topic-drill', tag, limit ?? 10] as const,
 }

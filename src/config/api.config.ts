@@ -115,7 +115,6 @@ export const API_CONFIG = {
       SUBMIT_REVIEW: (sessionId: string) => `/vocabulary/reviews/${sessionId}/submit`,
       MY_PROGRESS: '/vocabulary/progress/my',
       SETTINGS: '/vocabulary/settings',
-      // Saved vocabulary endpoints
       SAVED: '/vocabulary/saved',
       LOOKUP_WORD: '/vocabulary/lookup',
       SEARCH_HISTORY: '/vocabulary/search-history',
@@ -155,6 +154,11 @@ export const API_CONFIG = {
       DAILY_JOURNAL_SUBMIT: '/practice/writing/journal/submit',
       DAILY_JOURNAL_HISTORY: '/practice/writing/journal/history',
       MY_PRACTICE_PROFILE: '/practice/profile/my',
+      MISTAKES_RECORD_BATCH: '/practice/mistakes/record-batch',
+      MISTAKES_MY: '/practice/mistakes/my',
+      MISTAKES_DUE: '/practice/mistakes/srs-due',
+      MISTAKE_REVIEW: (id: string) => `/practice/mistakes/${id}/review`,
+      TOPIC_DRILL: '/practice/topic-drill',
     },
 
     AI: {

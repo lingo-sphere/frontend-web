@@ -37,7 +37,7 @@ export function useMyVocabularyEnrollmentsQuery(enabled = true) {
 }
 
 export function useDeckDetailQuery(deckId: string, enabled = true) {
-  return useQuery<Deck>({
+  return useQuery<Deck | null>({
     queryKey: vocabularyKeys.deck(deckId),
     queryFn: () => vocabularyService.getDeckById(deckId),
     enabled: Boolean(deckId) && enabled,

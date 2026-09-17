@@ -39,6 +39,9 @@ export default function PracticeHubAppPage() {
       case 'toeic':
         navigate('/toeic')
         break
+      case 'mistakes':
+        navigate('/practice/mistakes')
+        break
       default:
         showAction(`${isVietnamese ? 'Đã mở' : 'Opened'} ${label}`)
     }

@@ -58,9 +58,9 @@ export const DeckSchema = z.object({
   cards: z.array(LexicalItemSchema).optional(),
   tags: z.array(z.string()).optional(),
   category: z.string().optional(),
+  total_users: z.number().optional(),
 })
 
-// DeckListSchema handle cả array và object {data: [...]}
 export const DeckListSchema: z.ZodType<Deck[] | { data?: Deck[]; results?: Deck[]; decks?: Deck[] }> = z.union([
   z.array(DeckSchema),
   z.object({

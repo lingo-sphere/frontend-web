@@ -95,7 +95,7 @@ export function useProfileData() {
       const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
       setUser((prev) => ({
         ...prev,
-        id: auth.user_id || auth.id || prev.id,
+        id: auth.user_id || prev.id,
         user_id: auth.user_id || prev.user_id,
         email: auth.email || prev.email,
         full_name: auth.full_name || prev.full_name,

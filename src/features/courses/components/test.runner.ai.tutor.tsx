@@ -11,6 +11,7 @@ import {
   Target,
   XCircle,
   CheckCircle,
+  BookmarkCheck,
 } from 'lucide-react'
 import { Button } from '@/components/button'
 import type { WrongQuestionItem, AiExplanationsData } from '@/features/courses/types/test.runner.types'
@@ -22,6 +23,8 @@ interface TestRunnerAiTutorProps {
   aiExplanations: AiExplanationsData | null
   onExplainMistakes: () => void
   onToggleAiDetails: () => void
+  onDrillTopic?: (topic: string) => void
+  onOpenMistakeVault?: () => void
 }
 
 export function TestRunnerAiTutor({
@@ -31,11 +34,30 @@ export function TestRunnerAiTutor({
   aiExplanations,
   onExplainMistakes,
   onToggleAiDetails,
+  onDrillTopic,
+  onOpenMistakeVault,
 }: TestRunnerAiTutorProps) {
   if (wrongQuestionsList.length === 0) return null
 
   return (
     <div className="p-4 rounded-2xl bg-purple-50/90 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 space-y-3">
+      <div className="flex items-center justify-between p-2.5 rounded-xl bg-purple-100/70 dark:bg-purple-900/40 border border-purple-300/60 dark:border-purple-800/50 text-xs text-purple-950 dark:text-purple-200">
+        <div className="flex items-center gap-2 font-medium">
+          <BookmarkCheck size={15} className="text-purple-600 dark:text-purple-400 shrink-0" />
+          <span>
+            Các câu sai đã được lưu vào <strong>Sổ tay lỗi sai & Luyện tập ngắt quãng (SRS)</strong>.
+          </span>
+        </div>
+        {onOpenMistakeVault && (
+          <button
+            type="button"
+            onClick={onOpenMistakeVault}
+            className="text-[11px] font-bold text-purple-700 dark:text-purple-300 hover:underline cursor-pointer ml-2 shrink-0"
+          >
+            Mở Sổ tay câu sai →
+          </button>
+        )}
+      </div>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-purple-600 text-white shadow-xs">
@@ -125,10 +147,22 @@ export function TestRunnerAiTutor({
                       Câu {item.question_number}: {item.question_text}
                     </span>
                     {item.recommended_topic && (
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/70 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-700 flex items-center gap-1">
-                        <Target size={10} className="text-purple-600 dark:text-purple-400" />
-                        <span>Chủ điểm: {item.recommended_topic}</span>
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/70 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-700 flex items-center gap-1">
+                          <Target size={10} className="text-purple-600 dark:text-purple-400" />
+                          <span>Chủ điểm: {item.recommended_topic}</span>
+                        </span>
+                        {onDrillTopic && (
+                          <Button
+                            onClick={() => onDrillTopic(item.recommended_topic)}
+                            size="sm"
+                            className="h-6 text-[10px] px-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center gap-1 cursor-pointer"
+                          >
+                            <Target size={10} />
+                            <span>Luyện đề chủ đề này</span>
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
 

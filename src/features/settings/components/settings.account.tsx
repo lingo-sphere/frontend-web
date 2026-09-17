@@ -69,7 +69,7 @@ export function SettingsAccountTab({
       )
       return
     }
-    if (!authUser?.id) {
+    if (!authUser?.user_id) {
       toast.error(
         isVi ? 'Vui lòng đăng nhập lại để đổi mật khẩu.' : 'Please re-login to change password.',
         isVi ? 'Lỗi xác thực' : 'Authentication error'
@@ -79,7 +79,7 @@ export function SettingsAccountTab({
 
     setIsChangingPass(true)
     try {
-      await authService.changePassword(authUser.id, {
+      await authService.changePassword(authUser.user_id, {
         old_password: oldPassword,
         new_password: newPassword,
       })

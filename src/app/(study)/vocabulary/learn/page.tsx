@@ -11,7 +11,7 @@ import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useApp } from '@/contexts/app.context'
 import { usePublicDecksQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 import type { VocabularyDeck, LearningResult } from '@/features/vocabulary/types/vocabulary.learn'
-import type { Deck } from '@/types/api.types'
+import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
 import { VocabularyLearningSession } from '@/features/vocabulary/components/vocabulary.learning.session'
 import { LearningResultView } from '@/features/vocabulary/components/learning.result.view'
 

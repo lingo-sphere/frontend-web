@@ -14,7 +14,7 @@ import { useApp } from '@/contexts/app.context'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { usePublicDecksQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 import { vocabularyKeys } from '@/features/vocabulary/keys/vocabulary.keys'
-import type { Deck } from '@/types/api.types'
+import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
 
 interface FormattedDeck {
   id: string

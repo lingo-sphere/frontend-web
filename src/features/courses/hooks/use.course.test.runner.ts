@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import type { Chapter } from '@/features/courses/types/course'
 import { courseService } from '@/features/courses/services/course.service'
+import { mistakeService } from '@/features/practice/services/mistake.service'
 import { toast } from '@/store/toast.store'
 import {
   CourseTestQuestion,
@@ -421,8 +422,50 @@ export function useCourseTestRunner({
             .then((res: { data?: AiExplanationsData } | AiExplanationsData) => {
               const data = 'data' in res && res.data ? res.data : (res as AiExplanationsData)
               setAiExplanations(data)
+
+              const explanationMap = new Map<number, { topic?: string; focus?: string; why_wrong?: string }>()
+              if (Array.isArray(data?.explanations)) {
+                data.explanations.forEach((item) => {
+                  explanationMap.set(item.question_number, {
+                    topic: item.recommended_topic,
+                    focus: item.study_focus,
+                    why_wrong: item.why_wrong,
+                  })
+                })
+              }
+
+              const mistakePayloads = finalWrongs.map((w, idx) => {
+                const ex = explanationMap.get(w.question_number || idx + 1)
+                const rawQ = rawQuestions[(w.question_number || idx + 1) - 1]
+                return {
+                  question_id: rawQ?.id || rawQ?._id || `q_${Date.now()}_${idx}`,
+                  question_text: w.question_text,
+                  options: rawQ?.options || [],
+                  user_answer: w.user_selected_answer,
+                  correct_answer: w.correct_answer,
+                  explanation: ex?.why_wrong || w.explanation || '',
+                  topic_tags: ex?.topic ? [ex.topic] : (w.category ? [w.category] : []),
+                  topic_name_vi: ex?.topic || w.category || '',
+                  source_context: `${testTitle} (${testType})`,
+                }
+              })
+
+              mistakeService.recordBatchMistakes({ mistakes: mistakePayloads }).catch(() => {})
             })
-            .catch(() => {})
+            .catch(() => {
+              const fallbackMistakes = finalWrongs.map((w, idx) => {
+                const rawQ = rawQuestions[(w.question_number || idx + 1) - 1]
+                return {
+                  question_id: rawQ?.id || rawQ?._id || `q_${Date.now()}_${idx}`,
+                  question_text: w.question_text,
+                  options: rawQ?.options || [],
+                  user_answer: w.user_selected_answer,
+                  correct_answer: w.correct_answer,
+                  source_context: `${testTitle} (${testType})`,
+                }
+              })
+              mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})
+            })
             .finally(() => setIsLoadingAi(false))
         }
 
@@ -437,6 +480,20 @@ export function useCourseTestRunner({
         })
         setIsSubmitted(true)
         setShowSubmitConfirm(false)
+        if (fallbackWrongs.length > 0) {
+          const fallbackMistakes = fallbackWrongs.map((w, idx) => {
+            const rawQ = rawQuestions[(w.question_number || idx + 1) - 1]
+            return {
+              question_id: rawQ?.id || rawQ?._id || `q_${Date.now()}_${idx}`,
+              question_text: w.question_text,
+              options: rawQ?.options || [],
+              user_answer: w.user_selected_answer,
+              correct_answer: w.correct_answer,
+              source_context: `${testTitle} (${testType})`,
+            }
+          })
+          mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})
+        }
         onComplete?.(fallbackScore, fallbackScore >= passingScore)
       } finally {
         setIsSaving(false)

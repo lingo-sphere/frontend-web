@@ -145,7 +145,7 @@ export default function SettingsAppPage() {
         reminder_time: preferences.notifications.quietHoursStart || '22:00',
       })
 
-      if (authUser?.id) {
+      if (authUser?.user_id) {
         await userService.updateProfile({
           full_name: fullName,
           phone_number: phoneNumber,

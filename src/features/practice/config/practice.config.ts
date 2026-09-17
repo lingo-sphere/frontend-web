@@ -97,4 +97,20 @@ export const PRACTICE_CATEGORIES: PracticeCategory[] = [
       },
     ],
   },
+  {
+    title: 'Self-Correction & Mastery',
+    titleVi: 'Khắc phục lỗi sai & Luyện đề',
+    items: [
+      {
+        id: 'mistakes',
+        label: 'Mistake Vault (SRS)',
+        labelVi: 'Sổ tay lỗi sai & Ôn tập SRS',
+        description: 'Spaced repetition review for your past test mistakes',
+        descriptionVi: 'Tự động nhắc nhở ôn tập ngắt quãng SM-2 và luyện đề theo chủ điểm',
+        icon: 'bookmarkCheck',
+        color: 'text-rose-500',
+        badge: 'SRS SM-2',
+      },
+    ],
+  },
 ]

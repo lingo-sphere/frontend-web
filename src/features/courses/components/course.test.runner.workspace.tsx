@@ -20,6 +20,7 @@ import {
   TestRunnerExitConfirmModal,
   TestRunnerSubmitConfirmModal,
 } from '@/features/courses/components/test.runner.confirm.modal'
+import { TopicDrillModal } from '@/features/practice/components/topic.drill.modal'
 import { useCourseTestRunner } from '@/features/courses/hooks/use.course.test.runner'
 import type { CourseTestQuestion, TestAttemptItem } from '@/features/courses/types/test.runner.types'
 
@@ -121,6 +122,7 @@ export function CourseTestRunnerWorkspace({
   })
 
   const navigate = useNavigate()
+  const [drillTopic, setDrillTopic] = useState<string | null>(null)
   const [nextCourses, setNextCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
   >([])
@@ -280,6 +282,8 @@ export function CourseTestRunnerWorkspace({
                   onNavigateCourse={(slugOrId) =>
                     navigate(slugOrId.startsWith('/') ? slugOrId : `/course/${slugOrId}`)
                   }
+                  onDrillTopic={(topic) => setDrillTopic(topic)}
+                  onOpenMistakeVault={() => navigate('/practice/mistakes')}
                 />
               )}
               {rawQuestions.map((q, idx) => (
@@ -363,6 +367,13 @@ export function CourseTestRunnerWorkspace({
         onCancel={() => setShowSubmitConfirm(false)}
         onConfirmSubmit={() => handleSubmitTest(false)}
       />
+      {drillTopic && (
+        <TopicDrillModal
+          open={Boolean(drillTopic)}
+          onClose={() => setDrillTopic(null)}
+          topicTag={drillTopic}
+        />
+      )}
     </div>
   )
 }
