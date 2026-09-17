@@ -1,7 +1,4 @@
-/**
- * @file sidebar.nav.tsx
- * @description Component giao diện React SidebarNav cho học viên
- */
+// Component giao diện SidebarNav cho học viên.
 
 'use client'
 
@@ -40,7 +37,6 @@ const routeMap: Record<string, string> = {
   community: '/community',
   leaderboard: '/leaderboard',
   notes: '/notes',
-  roadmap: '/roadmap',
   'public-decks': '/public-decks',
   topics: '/topics',
   progress: '/progress',

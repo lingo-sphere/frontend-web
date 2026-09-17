@@ -560,14 +560,6 @@ export function ProgressGrowthAnalyticsTab({
 
           <div className="pt-1 flex items-center justify-end gap-2 border-t border-border/60">
             <Button
-              onClick={() => onNavigate('/roadmap')}
-              variant="outline"
-              size="sm"
-              className="rounded-xl text-xs font-bold h-7 px-3 cursor-pointer"
-            >
-              Lộ trình
-            </Button>
-            <Button
               onClick={() => onNavigate('/courses')}
               size="sm"
               className="bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold h-7 px-3 cursor-pointer"

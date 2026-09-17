@@ -1,4 +1,4 @@
-// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và điều phối gợi ý lộ trình.
+// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và gợi ý khóa học.
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -10,7 +10,7 @@ import { toeicKeys } from '@/features/toeic/keys/toeic.keys'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useNavigate } from '@/lib/navigation'
-import type { Course, LearningRoadmap } from '@/types/api.types'
+import type { Course } from '@/types/api.types'
 import type { ToeicQuestion } from '@/features/toeic/types/toeic'
 import type { ExamResultMetrics } from '@/features/toeic/components/toeic.exam.result'
 import { parseQuestionsFromExamData } from '@/features/toeic/helpers/toeic.question.parser'
@@ -75,9 +75,6 @@ export function useToeicExam(examId?: string) {
   const [recommendedCourses, setRecommendedCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
   >([])
-  const [recommendedRoadmap, setRecommendedRoadmap] = useState<
-    (LearningRoadmap & { stages?: unknown[] }) | null
-  >(null)
   const [targetBand, setTargetBand] = useState<string>('')
   const [levelLabel, setLevelLabel] = useState<string>('')
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false)
@@ -276,32 +273,18 @@ export function useToeicExam(examId?: string) {
     if (res.listeningTotal > 0 && res.listeningCorrect / res.listeningTotal < 0.6) weakSkills.push('LISTENING')
     if (res.readingTotal > 0 && res.readingCorrect / res.readingTotal < 0.6) weakSkills.push('READING')
 
-    const skillsType =
-      examData?.skills_enabled === 'ALL' || examData?.placement_type === '4SKILLS' ? '4SKILLS' : '2SKILLS'
-
-    Promise.allSettled([
-      courseService.getRecommendedCourses({
+    courseService
+      .getRecommendedCourses({
         total_score: res.estimatedTotal,
         listening_score: res.estimatedListening,
         reading_score: res.estimatedReading,
         weak_skills: weakSkills,
-      }),
-      courseService.getRecommendedRoadmap({
-        total_score: res.estimatedTotal,
-        listening_score: res.estimatedListening,
-        reading_score: res.estimatedReading,
-        skills_type: skillsType,
-      }),
-    ])
-      .then(([coursesRes, roadmapRes]) => {
-        if (coursesRes.status === 'fulfilled' && coursesRes.value?.recommendations) {
-          setRecommendedCourses(coursesRes.value.recommendations)
-          setTargetBand(coursesRes.value.target_band || '')
-          setLevelLabel(coursesRes.value.level_label || '')
-        }
-
-        if (roadmapRes.status === 'fulfilled' && roadmapRes.value) {
-          setRecommendedRoadmap(roadmapRes.value.recommended_roadmap)
+      })
+      .then((coursesRes) => {
+        if (coursesRes?.recommendations) {
+          setRecommendedCourses(coursesRes.recommendations)
+          setTargetBand(coursesRes.target_band || '')
+          setLevelLabel(coursesRes.level_label || '')
         }
       })
       .catch((err) => {
@@ -372,7 +355,7 @@ export function useToeicExam(examId?: string) {
   }
 
   const handleChooseAnother = () => {
-    navigate('/roadmap')
+    navigate('/toeic')
   }
 
   return {
@@ -381,7 +364,6 @@ export function useToeicExam(examId?: string) {
     allQuestions,
     state,
     recommendedCourses,
-    recommendedRoadmap,
     targetBand,
     levelLabel,
     isLoadingRecommendations,

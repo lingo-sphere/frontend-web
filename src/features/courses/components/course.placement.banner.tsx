@@ -152,11 +152,11 @@ export function CoursePlacementBanner() {
             <div className="flex flex-wrap items-center gap-2.5 shrink-0">
               <Button
                 type="button"
-                onClick={() => navigate('/roadmap')}
+                onClick={() => navigate('/toeic')}
                 className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm px-5 py-2.5 shadow-lg shadow-emerald-500/25 cursor-pointer flex items-center gap-2 transition-all hover:scale-102"
               >
                 <Compass size={16} />
-                <span>Xem lộ trình cá nhân</span>
+                <span>Luyện đề TOEIC</span>
                 <ArrowRight size={15} />
               </Button>
 

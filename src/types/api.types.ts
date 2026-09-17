@@ -304,14 +304,6 @@ export interface UserCourseProgressItem {
   updated_at?: string
 }
 
-export type {
-  LearningRoadmapStage,
-  LearningRoadmap,
-  StageMilestone,
-  GrowthChartPoint,
-  UserRoadmapProgress,
-} from '@/features/courses/schemas/course.schema'
-
 export interface LexicalItem {
   id: string
   _id?: string

@@ -6,7 +6,6 @@ import { useApp } from '@/contexts/app.context'
 import { ContinueLearningCard } from '@/features/dashboard/components/continue.learning.card'
 import { ExploreTopics } from '@/features/dashboard/components/explore.topics'
 import { InsightRail } from '@/features/dashboard/components/insight.rail'
-import { LearningRoadmap } from '@/features/dashboard/components/learning.roadmap'
 import { StreakHistory } from '@/features/dashboard/components/streak.history'
 import { StreakLeaderboard } from '@/features/dashboard/components/streak.leaderboard'
 import { StreakRewards } from '@/features/dashboard/components/streak.rewards'
@@ -22,7 +21,6 @@ import type {
   LeaderboardData,
   Topic,
   LearningTask,
-  RoadmapUnit,
   StreakMilestone,
 } from '@/features/dashboard/types/dashboard'
 
@@ -102,23 +100,6 @@ export default function HomeAppPage() {
     },
   ]
 
-  const roadmapUnits: RoadmapUnit[] = [
-    {
-      id: 'unit-1',
-      label: 'Unit 1: Giao tiếp hàng ngày & Phát âm',
-      status: 'completed',
-    },
-    {
-      id: 'unit-2',
-      label: 'Unit 2: Từ vựng văn phòng & Phỏng vấn',
-      status: 'current',
-    },
-    {
-      id: 'unit-3',
-      label: 'Unit 3: Phản xạ giao tiếp nâng cao',
-      status: 'locked',
-    },
-  ]
 
   const milestones: StreakMilestone[] = [
     { days: 3, reward: '+50 XP', status: 'done' },
@@ -140,7 +121,6 @@ export default function HomeAppPage() {
           <div className="flex h-full flex-col gap-6">
             <ContinueLearningCard onAction={showAction} />
             <TodaysLearningCard onAction={showAction} tasks={tasks} />
-            <LearningRoadmap onAction={showAction} units={roadmapUnits} />
           </div>
           <InsightRail onAction={showAction} />
         </div>

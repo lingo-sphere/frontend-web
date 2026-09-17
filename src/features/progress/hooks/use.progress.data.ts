@@ -9,7 +9,6 @@ import { progressKeys } from '@/features/progress/keys/progress.keys'
 import { courseKeys } from '@/features/courses/keys/course.keys'
 import {
   useCoursesProgressQuery,
-  useRoadmapProgressQuery,
   useExamProfileQuery,
   useGamificationProfileQuery,
   useTestAttemptsQuery,
@@ -98,7 +97,6 @@ export function useProgressData(navigate: (path: string) => void) {
   const coursesProgressQuery = useCoursesProgressQuery(isEnabled)
   const myEnrollmentsQuery = useMyEnrollmentsQuery(isEnabled)
   const allCoursesQuery = useAllCoursesQuery(undefined, isEnabled)
-  const roadmapProgressQuery = useRoadmapProgressQuery(isEnabled)
   const examProfileQuery = useExamProfileQuery(isEnabled)
   const gamificationQuery = useGamificationProfileQuery(isEnabled)
   const testAttemptsQuery = useTestAttemptsQuery(isEnabled)
@@ -110,7 +108,6 @@ export function useProgressData(navigate: (path: string) => void) {
   const courseProgresses = coursesProgressQuery.data || []
   const myEnrolledCourses = myEnrollmentsQuery.data || []
   const allCourses = allCoursesQuery.data || []
-  const roadmapProgress = roadmapProgressQuery.data || null
   const examProfile = examProfileQuery.data || null
   const gamification = gamificationQuery.data || null
   const testAttempts = testAttemptsQuery.data || []
@@ -219,7 +216,6 @@ export function useProgressData(navigate: (path: string) => void) {
     )
     const targetScore = Number(
       activeUser?.target_toeic_score ||
-        roadmapProgress?.target_score ||
         examProfile?.profile?.target_score ||
         0
     )
@@ -245,7 +241,7 @@ export function useProgressData(navigate: (path: string) => void) {
       xp,
       level,
     }
-  }, [enrolledCourseCards, testAttempts, toeicAttempts, activeUser, examProfile, roadmapProgress, gamification])
+  }, [enrolledCourseCards, testAttempts, toeicAttempts, activeUser, examProfile, gamification])
 
   const recentActivities: ProgressRecentActivity[] = useMemo(() => {
     const list: ProgressRecentActivity[] = []
@@ -334,7 +330,6 @@ export function useProgressData(navigate: (path: string) => void) {
   return {
     isLoading,
     activeUser,
-    roadmapProgress,
     enrolledCourseCards,
     metrics,
     recentActivities,

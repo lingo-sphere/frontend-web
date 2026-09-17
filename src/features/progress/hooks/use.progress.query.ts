@@ -2,7 +2,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { progressService, type UserCourseProgressItem, type UserRoadmapProgress } from '@/features/progress/services/progress.service'
+import { progressService, type UserCourseProgressItem } from '@/features/progress/services/progress.service'
 import { examService, type ToeicLearningProfile } from '@/features/toeic/services/exam.service'
 import { userService, type GamificationProfile } from '@/features/user/services/user.service'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
@@ -18,14 +18,6 @@ export function useCoursesProgressQuery(enabled = true) {
   })
 }
 
-export function useRoadmapProgressQuery(enabled = true) {
-  return useQuery<UserRoadmapProgress | null>({
-    queryKey: progressKeys.roadmap(),
-    queryFn: () => progressService.getMyRoadmapProgress(),
-    enabled,
-    staleTime: 60 * 1000,
-  })
-}
 
 export function useExamProfileQuery(enabled = true) {
   return useQuery<ToeicLearningProfile | null>({

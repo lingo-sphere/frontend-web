@@ -2,7 +2,7 @@
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, LearningRoadmap, LearningRoadmapStage, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
+import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
 import { CourseSchema, LessonSchema, PaginatedCoursesSchema } from '@/features/courses/schemas/course.schema'
 import type {
   CourseStudySchedule,
@@ -123,37 +123,6 @@ export const courseService = {
     if (params?.current_course_id) queryParams.current_course_id = params.current_course_id
 
     return api.get(API_CONFIG.ENDPOINTS.COURSES.RECOMMENDATIONS, queryParams)
-  },
-
-  async getRecommendedRoadmap(params?: {
-    total_score?: number
-    listening_score?: number
-    reading_score?: number
-    speaking_score?: number
-    writing_score?: number
-    skills_type?: string
-  }): Promise<{
-    recommended_roadmap: LearningRoadmap & { stages: LearningRoadmapStage[] }
-    individual_courses: Course[]
-    note?: string
-  }> {
-    const queryParams: Record<string, string | number> = {}
-    if (params?.total_score !== undefined) queryParams.total_score = params.total_score
-    if (params?.listening_score !== undefined) queryParams.listening_score = params.listening_score
-    if (params?.reading_score !== undefined) queryParams.reading_score = params.reading_score
-    if (params?.speaking_score !== undefined) queryParams.speaking_score = params.speaking_score
-    if (params?.writing_score !== undefined) queryParams.writing_score = params.writing_score
-    if (params?.skills_type) queryParams.skills_type = params.skills_type
-
-    return api.get(API_CONFIG.ENDPOINTS.COURSES.ROADMAP_RECOMMENDATION, queryParams)
-  },
-
-  async getAllRoadmaps(params?: { skills_focus?: string; is_published?: boolean }): Promise<LearningRoadmap[]> {
-    return api.get<LearningRoadmap[]>(API_CONFIG.ENDPOINTS.COURSES.ROADMAPS, params as Record<string, unknown>)
-  },
-
-  async getRoadmapById(id: string): Promise<LearningRoadmap> {
-    return api.get<LearningRoadmap>(API_CONFIG.ENDPOINTS.COURSES.ROADMAP_BY_ID(id))
   },
 
   async completeLesson(data: {

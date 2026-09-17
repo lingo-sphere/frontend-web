@@ -1,12 +1,8 @@
-/**
- * @file dashboard.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
- */
+// Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện bảng điều khiển học tập.
 
 export type ThemeMode = 'light' | 'dark'
 export type NavSectionId = 'home' | 'learning' | 'ai' | 'community' | 'leaderboard' | 'progress' | 'system'
 export type LearningTaskKind = 'vocabulary' | 'listening' | 'writing' | 'speaking'
-export type RoadmapUnitStatus = 'completed' | 'current' | 'locked'
 export type MilestoneStatus = 'done' | 'current' | 'locked'
 export type LeaderboardPeriod = 'week' | 'month' | 'year'
 export type HeatmapIntensity = 0 | 1 | 2 | 3 | 4
@@ -35,11 +31,6 @@ export interface LearningTask {
   completed: boolean
 }
 
-export interface RoadmapUnit {
-  id: string
-  label: string
-  status: RoadmapUnitStatus
-}
 
 export interface StreakMilestone {
   days: number
@@ -84,7 +75,6 @@ export interface HeatmapSummary {
 export interface DashboardData {
   navGroups: NavGroup[]
   tasks: LearningTask[]
-  roadmap: RoadmapUnit[]
   milestones: StreakMilestone[]
   leaderboard: LeaderboardData
   topics: Topic[]

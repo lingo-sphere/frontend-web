@@ -1,7 +1,4 @@
-/**
- * @file navigation.config.ts
- * @description Mã nguồn thành phần navigation.config.ts
- */
+// Cấu hình danh mục điều hướng chính cho ứng dụng frontend-web.
 
 export interface NavItem {
   id: string

@@ -9,19 +9,17 @@ import { useNavigate } from '@/lib/navigation'
 import { useProgressData } from '@/features/progress/hooks/use.progress.data'
 import { ProgressMetricsHeader } from '@/features/progress/components/progress.metrics.header'
 import { ProgressCoursesTab } from '@/features/progress/components/progress.courses.tab'
-import { ProgressRoadmapTab } from '@/features/progress/components/progress.roadmap.tab'
 import { ProgressSkillsTab } from '@/features/progress/components/progress.skills.tab'
 import { ProgressRecentTestsTab } from '@/features/progress/components/progress.recent.tests.tab'
 import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
 
 export default function ProgressAppPage() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ROADMAP' | 'SKILLS' | 'RECENT_TESTS' | 'GROWTH_ANALYTICS'>('OVERVIEW')
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'SKILLS' | 'RECENT_TESTS' | 'GROWTH_ANALYTICS'>('OVERVIEW')
 
   const {
     isLoading,
     activeUser,
-    roadmapProgress,
     enrolledCourseCards,
     metrics,
     recentActivities,
@@ -65,17 +63,6 @@ export default function ProgressAppPage() {
           }`}
         >
           Khóa học ({enrolledCourseCards.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('ROADMAP')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'ROADMAP'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-surface-subtle text-text-secondary hover:text-text-primary'
-          }`}
-        >
-          Lộ trình mục tiêu
         </button>
         <button
           type="button"
@@ -123,14 +110,6 @@ export default function ProgressAppPage() {
           enrolledCourseCards={enrolledCourseCards}
           onNavigate={navigate}
           formatDate={formatDate}
-        />
-      ) : activeTab === 'ROADMAP' ? (
-        <ProgressRoadmapTab
-          roadmapProgress={roadmapProgress}
-          currentScore={metrics.currentScore}
-          targetScore={metrics.targetScore}
-          baselineScore={activeUser?.placement_test_score}
-          onNavigate={navigate}
         />
       ) : activeTab === 'SKILLS' ? (
         <ProgressSkillsTab

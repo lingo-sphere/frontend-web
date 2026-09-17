@@ -26,7 +26,6 @@ export default function ToeicExamAppPage() {
     allQuestions,
     state,
     recommendedCourses,
-    recommendedRoadmap,
     targetBand,
     levelLabel,
     isLoadingRecommendations,
@@ -87,7 +86,6 @@ export default function ToeicExamAppPage() {
         evaluatedAnswers={evaluatedAnswers}
         isEvaluatingAI={isSubmittingAttempt}
         recommendedCourses={recommendedCourses}
-        recommendedRoadmap={recommendedRoadmap}
         targetBand={targetBand}
         levelLabel={levelLabel}
         isLoadingRecommendations={isLoadingRecommendations}

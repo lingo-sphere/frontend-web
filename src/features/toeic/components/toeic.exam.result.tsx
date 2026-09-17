@@ -8,7 +8,6 @@ import {
   ToeicCourseRecommendations,
   type RecommendedCourseItem,
 } from '@/features/toeic/components/toeic.course.recommendations'
-import type { LearningRoadmap } from '@/types/api.types'
 import type { ToeicQuestion } from '@/features/toeic/types/toeic'
 import { ToeicScoreOverview } from '@/features/toeic/components/toeic.score.overview'
 import { ToeicPartBreakdown } from '@/features/toeic/components/toeic.part.breakdown'
@@ -53,7 +52,6 @@ interface ToeicExamResultProps {
   }>
   isEvaluatingAI?: boolean
   recommendedCourses: RecommendedCourseItem[]
-  recommendedRoadmap?: (LearningRoadmap & { stages?: unknown[] }) | null
   targetBand?: string
   levelLabel?: string
   isLoadingRecommendations?: boolean
@@ -68,7 +66,6 @@ export function ToeicExamResult({
   evaluatedAnswers = {},
   isEvaluatingAI = false,
   recommendedCourses,
-  recommendedRoadmap,
   targetBand,
   levelLabel,
   isLoadingRecommendations = false,
@@ -109,12 +106,10 @@ export function ToeicExamResult({
       </Card>
 
       <ToeicCourseRecommendations
-        recommendedRoadmap={recommendedRoadmap}
         courses={recommendedCourses}
         targetBand={targetBand}
         levelLabel={levelLabel}
         isLoading={isLoadingRecommendations}
-        baselineScore={results.estimatedTotal}
       />
 
       <ToeicQuestionsReview
