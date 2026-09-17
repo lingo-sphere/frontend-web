@@ -312,7 +312,6 @@ export function mapCourseDataToWorkspace(
   return {
     id: String(courseObj._id || courseObj.id || courseId),
     title: String(courseObj.title || 'Khóa học LingoSphere'),
-    level: String(courseObj.level || 'Intermediate'),
     description: String(courseObj.description || ''),
     duration: formatExactDuration(totalDurationSec),
     totalChapters: mappedChapters.length,

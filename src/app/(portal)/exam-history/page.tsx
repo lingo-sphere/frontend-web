@@ -80,7 +80,7 @@ export default function ExamHistoryPage() {
       return {
         course_id: cp.course_id,
         title: courseTitle,
-        level: matched?.level || 'Mọi cấp độ',
+        target_score: matched?.target_score,
         category: matched?.category || 'TOEIC',
         progress_percentage: cp.progress_percentage || 0,
         completed_lessons_count: cp.completed_lessons_count || 0,

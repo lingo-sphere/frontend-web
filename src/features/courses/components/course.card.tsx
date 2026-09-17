@@ -285,9 +285,11 @@ export function CourseCard({
             {course.totalLessons} {isVi ? 'bài giảng' : 'lectures'}
           </span>
 
-          <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">
-            {course.level || 'All Levels'}
-          </span>
+          {course.targetScore ? (
+            <span className="rounded border border-teal-500/30 bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-600 dark:text-teal-400">
+              {course.targetScore}+ TOEIC
+            </span>
+          ) : null}
         </div>
       </div>
 

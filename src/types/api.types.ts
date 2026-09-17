@@ -220,7 +220,6 @@ export interface Course {
   skills?: string[]
   price: number
   discount_price?: number
-  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | string
   category: string
   instructor_id?: string
   instructor_name?: string

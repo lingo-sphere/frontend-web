@@ -116,12 +116,6 @@ export function useCoursesCatalog() {
             60) / 60
         )
       )
-      const rawLevel = String(c.level || '')
-      let levelDisplay = 'TOEIC'
-      if (rawLevel === 'BEGINNER') levelDisplay = 'Sơ cấp (Beginner)'
-      else if (rawLevel === 'INTERMEDIATE') levelDisplay = 'Trung cấp (Intermediate)'
-      else if (rawLevel === 'ADVANCED') levelDisplay = 'Nâng cao (Advanced)'
-      else if (rawLevel) levelDisplay = rawLevel
 
       const rawPrice = Number(raw.price ?? 0)
       const rawDiscount = Number(raw.discount_price ?? 0)
@@ -148,7 +142,6 @@ export function useCoursesCatalog() {
           c.thumbnail_url ||
           'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop',
         category: c.category || 'TOEIC_2_SKILLS',
-        level: levelDisplay,
         description: c.description || '',
         duration: `${durationHrs} giờ`,
         totalLessons: Number(c.total_lessons) || 0,

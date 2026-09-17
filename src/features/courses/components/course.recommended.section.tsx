@@ -68,7 +68,6 @@ export function RecommendedCoursesSection({
         target_score: courseTarget,
         min_score: courseTarget ? Math.max(0, courseTarget - 150) : 0,
         max_score: courseTarget || 0,
-        level: c.level || '',
         price: typeof c.price === 'number' ? c.price : (c.discount_price ?? 0),
         students_count: c.students_count ?? 0,
         rating: typeof c.rating === 'number' ? c.rating : undefined,

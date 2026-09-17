@@ -227,7 +227,6 @@ export interface Course {
   id: string
   _id?: string
   title: string
-  level: string
   description: string
   duration: string
   duration_minutes?: number
@@ -288,7 +287,6 @@ export interface CourseCardData {
   instructor: string
   thumbnail: string
   category: string
-  level: string
   description: string
   duration: string
   totalLessons: number

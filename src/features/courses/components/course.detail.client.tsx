@@ -207,7 +207,6 @@ export function CourseDetailClient({
             courseTitle={course?.title}
             courseCategory={course?.category}
             courseSkills={course?.skills}
-            courseLevel={course?.level}
             courseTargetScore={course?.target_score}
           />
         )}
@@ -455,7 +454,6 @@ export function CourseDetailClient({
           courseTitle={course?.title}
           courseCategory={course?.category}
           courseSkills={course?.skills}
-          courseLevel={course?.level}
           courseTargetScore={course?.target_score}
         />
       )}

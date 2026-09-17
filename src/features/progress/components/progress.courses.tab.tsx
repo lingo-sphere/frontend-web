@@ -65,9 +65,11 @@ export function ProgressCoursesTab({
                     <Badge className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-md">
                       {c.category}
                     </Badge>
-                    <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0.5 rounded-md">
-                      {c.level}
-                    </Badge>
+                    {c.target_score ? (
+                      <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-md border-teal-500/30 text-teal-600 dark:text-teal-400 bg-teal-500/10">
+                        🎯 Mục tiêu {c.target_score}+
+                      </Badge>
+                    ) : null}
                     {isCompleted && (
                       <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md">
                         <CheckCircle2 size={11} className="mr-1" /> Đã hoàn thành

@@ -29,7 +29,6 @@ interface CoursePlacementPromptModalProps {
   courseTitle?: string
   courseCategory?: string
   courseSkills?: string[]
-  courseLevel?: string
   courseTargetScore?: number
 }
 

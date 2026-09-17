@@ -30,7 +30,7 @@ export interface UnifiedCourseCardItem {
   course_id: string
   title: string
   thumbnail_url?: string
-  level: string
+  target_score?: number
   category: string
   progress_percentage: number
   completed_lessons_count: number
@@ -164,7 +164,7 @@ export function useProgressData(navigate: (path: string) => void) {
 
       const title = catalogCourse?.title || 'Khóa học'
       const thumbnail_url = catalogCourse?.thumbnail_url
-      const level = catalogCourse?.level || 'Mọi cấp độ'
+      const target_score = catalogCourse?.target_score
       const category = catalogCourse?.category || 'TOEIC'
 
       const completedLessons = progress?.completed_lessons_count ?? 0
@@ -177,7 +177,7 @@ export function useProgressData(navigate: (path: string) => void) {
         course_id: courseId,
         title,
         thumbnail_url,
-        level,
+        target_score,
         category,
         progress_percentage: Math.min(100, Math.max(0, Math.round(progressPercent))),
         completed_lessons_count: completedLessons,

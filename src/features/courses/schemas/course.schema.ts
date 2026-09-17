@@ -48,7 +48,6 @@ export const CourseBaseSchema = z.object({
   skills: z.array(z.string()).nullable().optional().transform((v) => v ?? undefined),
   price: z.number().nullable().optional().transform((v) => v ?? 0),
   discount_price: z.number().nullable().optional().transform((v) => v ?? undefined),
-  level: z.string().nullable().optional().transform((v) => v ?? 'BEGINNER'),
   category: z.string().nullable().optional().transform((v) => v ?? 'TOEIC'),
   instructor_id: z.string().nullable().optional().transform((v) => v ?? undefined),
   instructor_name: z.string().nullable().optional().transform((v) => v ?? undefined),

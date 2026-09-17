@@ -142,7 +142,7 @@ export function useProgressGrowthAnalytics({
       date: formatFullDate(c.enrolled_at),
       tag: c.category,
       tooltipTitle: c.title,
-      tooltipSubtitle: `${c.level} • ${c.completed_lessons_count}/${c.total_lessons_count} bài`,
+      tooltipSubtitle: `${c.target_score ? `Mục tiêu ${c.target_score}+ • ` : ''}${c.completed_lessons_count}/${c.total_lessons_count} bài`,
       details: [
         { label: 'Tiến độ', value: `${c.progress_percentage}%` },
         { label: 'Bài học', value: `${c.completed_lessons_count}/${c.total_lessons_count}` },

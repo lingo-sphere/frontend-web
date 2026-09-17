@@ -48,7 +48,7 @@ export function CourseLandingView({
   const isLongDesc = (course.description?.trim().length || 0) > 400
 
   const defaultLearningOutcomes = [
-    `Nắm vững toàn diện cấu trúc bài thi và bẫy thường gặp của bài thi ${course.level || 'TOEIC'}`,
+    'Nắm vững toàn diện cấu trúc bài thi và bẫy thường gặp của bài thi TOEIC',
     'Làm chủ hơn 1.200+ từ vựng học thuật & cụm diễn đạt thực chiến theo từng chủ đề',
     'Tối ưu hóa tốc độ làm bài với phương pháp quản lý thời gian độc quyền của LingoSphere',
     'Thực hành phản xạ với ngân hàng đề thi mô phỏng định dạng chuẩn mới nhất',
