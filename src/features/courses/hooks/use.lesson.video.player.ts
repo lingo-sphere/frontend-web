@@ -108,14 +108,8 @@ export function useLessonVideoPlayer({
     if (qualities && selectedQuality === 'auto' && qualities['auto']) {
       return qualities['auto']
     }
-    if (source.includes('/1080p/')) {
-      if (effectiveQualityKey === '720p')
-        return source.replace('/1080p/', '/720p/')
-      if (effectiveQualityKey === '360p')
-        return source.replace('/1080p/', '/360p/')
-    }
     return source
-  }, [baseVideoSource, effectiveQualityKey, isHlsStream, lesson, selectedQuality])
+  }, [baseVideoSource, isHlsStream, lesson, selectedQuality])
 
   const selectedQualityRef = useRef(selectedQuality)
   useEffect(() => {
@@ -535,6 +529,7 @@ export function useLessonVideoPlayer({
     setShowEndedScreen,
     countdownSeconds,
     isDirectVideo,
+    isHlsStream,
     effectiveVideoUrl,
     resetControlsTimeout,
     togglePlay,

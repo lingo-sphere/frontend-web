@@ -1,7 +1,4 @@
-/**
- * @file lesson.player.tsx
- * @description Trình phát video bài học phong cách YouTube cao cấp cho học viên LingoSphere
- */
+// Trình phát video bài học phong cách YouTube cao cấp cho học viên LingoSphere.
 
 'use client'
 
@@ -82,6 +79,7 @@ export function LessonPlayer({
     setShowEndedScreen,
     countdownSeconds,
     isDirectVideo,
+    isHlsStream,
     effectiveVideoUrl,
     resetControlsTimeout,
     togglePlay,
@@ -120,12 +118,15 @@ export function LessonPlayer({
           ? 'w-screen h-screen'
           : 'aspect-video rounded-3xl shadow-2xl border border-border/80'
       }`}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <div className="relative w-full h-full flex items-center justify-center bg-black">
         {isDirectVideo ? (
           <video
             ref={videoRef}
             playsInline
+            controlsList="nodownload"
+            onContextMenu={(e) => e.preventDefault()}
             className="w-full h-full object-contain cursor-pointer"
             onClick={togglePlay}
             onTimeUpdate={handleTimeUpdate}
@@ -213,6 +214,7 @@ export function LessonPlayer({
           selectedQuality={selectedQuality}
           autoResolvedQuality={autoResolvedQuality}
           effectiveQualityKey={effectiveQualityKey}
+          isHls={isHlsStream}
           isTheater={isTheater}
           isFullscreen={isFullscreen}
           autoPlayNext={autoPlayNext}

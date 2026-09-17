@@ -1,7 +1,4 @@
-/**
- * @file player.settings.menu.tsx
- * @description Menu cài đặt trình phát video (tốc độ phát, chất lượng video và tự động chuyển bài)
- */
+// Menu cài đặt trình phát video cho phép điều chỉnh tốc độ phát và chất lượng video.
 
 'use client'
 
@@ -22,6 +19,7 @@ interface PlayerSettingsMenuProps {
   selectedQuality: string
   autoResolvedQuality: '1080p' | '720p' | '360p'
   effectiveQualityKey: string
+  isHls?: boolean
   onToggleMenu: () => void
   onSpeedChange: (speed: number) => void
   onQualityChange: (qualityId: string) => void
@@ -33,6 +31,7 @@ export function PlayerSettingsMenu({
   selectedQuality,
   autoResolvedQuality,
   effectiveQualityKey,
+  isHls = false,
   onToggleMenu,
   onSpeedChange,
   onQualityChange,
@@ -52,7 +51,7 @@ export function PlayerSettingsMenu({
         title="Cài đặt (Tốc độ & Chất lượng)"
       >
         <Settings size={18} />
-        {(effectiveQualityKey === '1080p' || effectiveQualityKey === '720p') && (
+        {isHls && (effectiveQualityKey === '1080p' || effectiveQualityKey === '720p') && (
           <span className="absolute -top-0.5 -right-0.5 bg-[#ff0000] text-white text-[8px] font-black px-1 rounded-sm leading-tight tracking-tighter shadow-sm pointer-events-none">
             HD
           </span>
@@ -63,23 +62,25 @@ export function PlayerSettingsMenu({
         <div className="absolute bottom-full right-0 mb-3 min-w-[270px] w-max max-w-xs rounded-2xl bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 text-white">
           {settingsSubmenu === 'main' && (
             <div className="space-y-1">
-              <button
-                onClick={() => setSettingsSubmenu('quality')}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium hover:bg-white/10 transition-colors cursor-pointer gap-4"
-              >
-                <span className="flex items-center gap-2.5 text-white/90 shrink-0 whitespace-nowrap">
-                  <SlidersHorizontal size={15} className="text-[#ff0000]" />
-                  <span className="font-semibold whitespace-nowrap">Chất lượng</span>
-                </span>
-                <span className="flex items-center gap-1 text-[11px] text-white/60 shrink-0 whitespace-nowrap">
-                  <span className="whitespace-nowrap">
-                    {selectedQuality === 'auto'
-                      ? `Tự động (${autoResolvedQuality})`
-                      : selectedQuality.toUpperCase()}
+              {isHls && (
+                <button
+                  onClick={() => setSettingsSubmenu('quality')}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium hover:bg-white/10 transition-colors cursor-pointer gap-4"
+                >
+                  <span className="flex items-center gap-2.5 text-white/90 shrink-0 whitespace-nowrap">
+                    <SlidersHorizontal size={15} className="text-[#ff0000]" />
+                    <span className="font-semibold whitespace-nowrap">Chất lượng</span>
                   </span>
-                  <ChevronRight size={13} />
-                </span>
-              </button>
+                  <span className="flex items-center gap-1 text-[11px] text-white/60 shrink-0 whitespace-nowrap">
+                    <span className="whitespace-nowrap">
+                      {selectedQuality === 'auto'
+                        ? `Tự động (${autoResolvedQuality})`
+                        : selectedQuality.toUpperCase()}
+                    </span>
+                    <ChevronRight size={13} />
+                  </span>
+                </button>
+              )}
 
               <button
                 onClick={() => setSettingsSubmenu('speed')}

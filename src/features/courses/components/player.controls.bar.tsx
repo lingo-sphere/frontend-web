@@ -1,7 +1,4 @@
-/**
- * @file player.controls.bar.tsx
- * @description Thanh điều khiển video bài học (play/pause, timeline, âm lượng, tốc độ phát và toàn màn hình)
- */
+// Thanh điều khiển video bài học bao gồm play/pause, timeline, âm lượng, tốc độ phát và toàn màn hình.
 
 'use client'
 
@@ -34,6 +31,7 @@ interface PlayerControlsBarProps {
   selectedQuality: string
   autoResolvedQuality?: '1080p' | '720p' | '360p'
   effectiveQualityKey?: string
+  isHls?: boolean
   showSettingsMenu: boolean
   isTheater: boolean
   isFullscreen: boolean
@@ -79,6 +77,7 @@ export function PlayerControlsBar({
   selectedQuality,
   autoResolvedQuality = '1080p',
   effectiveQualityKey = 'auto',
+  isHls = false,
   showSettingsMenu,
   isTheater,
   isFullscreen,
@@ -259,6 +258,7 @@ export function PlayerControlsBar({
             selectedQuality={selectedQuality}
             autoResolvedQuality={autoResolvedQuality}
             effectiveQualityKey={effectiveQualityKey}
+            isHls={isHls}
             onToggleMenu={handleToggleSettingsMenu}
             onSpeedChange={onSpeedChange}
             onQualityChange={onQualityChange}
