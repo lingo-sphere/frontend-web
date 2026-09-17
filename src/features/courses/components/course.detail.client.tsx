@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import { AlertCircle, ArrowLeft, ExternalLink, FileText, FolderDown, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/button'
+import { AppResult } from '@/components/status/app.result'
 import { CourseWorkspaceHeader } from '@/features/courses/components/course.workspace.header'
 import { CourseRatingModal } from '@/features/courses/components/course.rating.modal'
 import { CourseLoadingState } from '@/features/courses/components/course.loading.state'
@@ -136,25 +137,14 @@ export function CourseDetailClient({
 
   if (isError || !course) {
     return (
-      <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-6 antialiased">
-        <div className="w-full max-w-md p-8 bg-surface rounded-3xl border border-border shadow-xl text-center space-y-4">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center">
-            <AlertCircle size={28} />
-          </div>
-          <h2 className="text-xl font-bold text-text-primary">Không tìm thấy khóa học</h2>
-          <p className="text-sm text-text-secondary leading-relaxed">
-            Khóa học bạn yêu cầu không tồn tại hoặc đã ngừng xuất bản trên hệ thống.
-          </p>
-          <div className="pt-2">
-            <Button
-              onClick={handleBack}
-              className="w-full bg-primary text-white font-bold rounded-xl gap-2 cursor-pointer shadow-md"
-            >
-              <ArrowLeft size={16} />
-              <span>Quay lại danh sách khóa học</span>
-            </Button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-4 antialiased">
+        <AppResult
+          status="404"
+          title="404"
+          subTitle="Khóa học bạn yêu cầu không tồn tại hoặc đã ngừng xuất bản trên hệ thống."
+          onBack={handleBack}
+          backText="Quay lại danh sách khóa học"
+        />
       </div>
     )
   }
