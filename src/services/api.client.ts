@@ -81,61 +81,61 @@ apiClient.interceptors.response.use(
 
       if (!originalRequest._retry) {
         if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`
-            }
-            return apiClient(originalRequest)
+          return new Promise<string>((resolve, reject) => {
+            failedQueue.push({ resolve, reject })
           })
-          .catch((err) => Promise.reject(err))
-      }
+            .then((token) => {
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${token}`
+              }
+              return apiClient(originalRequest)
+            })
+            .catch((err) => Promise.reject(err))
+        }
 
-      originalRequest._retry = true
-      isRefreshing = true
+        originalRequest._retry = true
+        isRefreshing = true
 
-      try {
-        const res = await axios.post<ApiResponse<{ access_token: string }>>(
-          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
-          {},
-          {
-            withCredentials: true,
-          },
-        )
+        try {
+          const res = await axios.post<ApiResponse<{ access_token: string }>>(
+            `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
+            {},
+            {
+              withCredentials: true,
+            },
+          )
 
-        const responseData = res.data as unknown as { data?: { access_token?: string }; access_token?: string }
-        const newAccessToken = responseData?.data?.access_token ? responseData.data.access_token : responseData?.access_token
+          const responseData = res.data as unknown as { data?: { access_token?: string }; access_token?: string }
+          const newAccessToken = responseData?.data?.access_token ? responseData.data.access_token : responseData?.access_token
 
-        if (newAccessToken) {
-          storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+          if (newAccessToken) {
+            storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
 
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+            }
+
+            processQueue(null, newAccessToken)
+
+            return apiClient(originalRequest)
+          } else {
+            throw new Error('Invalid token response structure')
           }
+        } catch (refreshErr) {
+          processQueue(refreshErr, null)
+          console.warn('Phiên đăng nhập học viên đã hết hạn. Đang đăng xuất...', refreshErr)
 
-          processQueue(null, newAccessToken)
-
-          return apiClient(originalRequest)
-        } else {
-          throw new Error('Invalid token response structure')
+          storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+          storage.remove(STORAGE_KEYS.USER)
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
+          }
+          return Promise.reject(refreshErr)
+        } finally {
+          isRefreshing = false
         }
-      } catch (refreshErr) {
-        processQueue(refreshErr, null)
-        console.warn('Phiên đăng nhập học viên đã hết hạn. Đang đăng xuất...', refreshErr)
-
-        storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
-        storage.remove(STORAGE_KEYS.USER)
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
-        }
-        return Promise.reject(refreshErr)
-      } finally {
-        isRefreshing = false
       }
     }
-  }
 
     let rawError = error.response?.data?.message || error.response?.data?.error || error.response?.data || error.message
     const rawStr = Array.isArray(rawError) ? rawError.join(', ') : String(rawError || '')
@@ -170,18 +170,42 @@ apiClient.interceptors.response.use(
 
 function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): T {
   if (!schema) return data as T
-  let parsed = schema.safeParse(data)
-  if (!parsed.success && data === '') {
-    parsed = schema.safeParse(null)
+
+  // Final fallback for empty data
+  if (data === '' || data === null || data === undefined) {
+    return [] as unknown as T
   }
-  if (!parsed.success) {
-    const errorDetails = parsed.error.issues
-      .map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`)
-      .join('; ')
-    console.error(`[ZodValidationError] Endpoint ${endpoint}: ${errorDetails}`, parsed.error.issues)
-    throw new Error(`Dữ liệu từ máy chủ không đúng định dạng (${endpoint}): ${errorDetails}`)
+
+  // If data is an object with nested array, try unwrapping first
+  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+    const obj = data as Record<string, unknown>
+    const arrayKeys = ['items', 'data', 'results', 'decks', 'vocabularies', 'lexical_items']
+    for (const key of arrayKeys) {
+      const nestedArray = obj[key]
+      if (nestedArray && Array.isArray(nestedArray)) {
+        const parsed = schema.safeParse(nestedArray)
+        if (parsed.success) return parsed.data
+      }
+    }
+
+    // If data is an object but no array found, return empty array for list schemas
+    const schemaStr = schema.toString().toLowerCase()
+    if (schemaStr.includes('array') || schemaStr.includes('list')) {
+      console.warn(`[parseWithSchema] No array found in response for ${endpoint}, returning empty array`)
+      return [] as unknown as T
+    }
   }
-  return parsed.data
+
+  // Try direct parse
+  const parsed = schema.safeParse(data)
+  if (parsed.success) return parsed.data
+
+  // All failed
+  const errorDetails = parsed.error.issues
+    .map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`)
+    .join('; ')
+  console.error(`[ZodValidationError] Endpoint ${endpoint}: ${errorDetails}`, parsed.error.issues)
+  throw new Error(`Dữ liệu từ máy chủ không đúng định dạng (${endpoint}): ${errorDetails}`)
 }
 
 export const api = {

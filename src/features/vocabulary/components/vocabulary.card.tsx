@@ -1,7 +1,7 @@
 // Thẻ hiển thị từ vựng đã lưu trong sổ từ.
 import { useTranslation } from 'react-i18next'
 import { Volume2, Plus, Trash2, Folder } from 'lucide-react'
-import type { SavedVocabulary, UserDeck, Meaning } from '@/features/vocabulary/types/vocabulary'
+import type { SavedVocabulary, UserDeck, Meaning } from '@/features/vocabulary/types/vocabulary.learn'
 
 interface VocabularyCardProps {
   item: SavedVocabulary

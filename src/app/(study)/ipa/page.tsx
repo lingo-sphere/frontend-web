@@ -22,8 +22,8 @@ export default function IpaAppPage() {
   const diphthongs = ipaSymbols.filter((s) => s.symbol_type === 'DIPHTHONG')
   const consonants = ipaSymbols.filter((s) => s.symbol_type === 'CONSONANT')
 
-  const handlePlaySound = (symbol: BackendIpaSymbol) => {
-    setPlayingSymbol(symbol._id)
+  const handlePlaySound = (symbol: BackendIpaSymbol, index: number) => {
+    setPlayingSymbol(symbol._id || `symbol-${index}`)
     if (symbol.audio_url) {
       const audio = new Audio(symbol.audio_url)
       audio.play().catch(() => {})
@@ -42,16 +42,17 @@ export default function IpaAppPage() {
     )
   }
 
-  const renderSymbolCard = (item: BackendIpaSymbol) => {
-    const isPlaying = playingSymbol === item._id
+  const renderSymbolCard = (item: BackendIpaSymbol, index: number) => {
+    const key = item._id || `symbol-${index}`
+    const isPlaying = playingSymbol === key
 
     return (
       <Card
-        key={item._id}
+        key={key}
         className={`cursor-pointer transition-all hover:scale-105 hover:shadow-md ${
           isPlaying ? 'border-primary ring-2 ring-primary/20' : ''
         }`}
-        onClick={() => handlePlaySound(item)}
+        onClick={() => handlePlaySound(item, index)}
       >
         <CardContent className="flex flex-col items-center p-3 text-center">
           <span className="font-mono text-[22px] font-bold text-primary">

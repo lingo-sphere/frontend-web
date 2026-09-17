@@ -9,7 +9,7 @@ import { Layers3, Plus, Check } from 'lucide-react'
 import { Modal } from '@/components/modal'
 import { Button } from '@/components/button'
 import { Input } from '@/components/input'
-import type { UserDeck } from '@/features/vocabulary/types/vocabulary'
+import type { UserDeck } from '@/features/vocabulary/types/vocabulary.learn'
 
 interface SelectDeckModalProps {
   isOpen: boolean

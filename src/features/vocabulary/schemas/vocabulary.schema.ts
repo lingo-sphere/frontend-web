@@ -5,23 +5,40 @@
 
 import { z } from 'zod'
 
-export const LexicalItemSchema = z.object({
-  id: z.string().default(''),
-  _id: z.string().optional(),
-  word: z.string(),
-  ipa: z.string().default(''),
-  meaning_vi: z.string(),
-  meaning_en: z.string().optional(),
-  part_of_speech: z.string().default('noun'),
-  cefr_level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']).default('A1'),
-  example_sentence: z.string().default(''),
-  example_translation_vi: z.string().default(''),
-  audio_url: z.string().optional(),
-  image_url: z.string().optional(),
-  topic_tags: z.array(z.string()).optional(),
+// ==================== BACKEND VOCABULARY FORMAT ====================
+// Backend formatResponse trả: word, word_lowercase, pronunciation, cefr_level, lexical_type, primary_meaning
+
+export const BackendExampleSchema = z.object({
+  e: z.string().optional(),    // sentence_en
+  v: z.string().optional(),   // sentence_vi
 })
 
-export const LexicalItemListSchema = z.array(LexicalItemSchema)
+export const BackendMeaningSchema = z.object({
+  pri: z.boolean().optional(), // is_primary
+  p: z.string().optional(),    // part_of_speech
+  d: z.string().optional(),    // definition_vi
+  sm: z.string().optional(),  // short_meaning
+  ex: z.array(BackendExampleSchema).optional(),  // examples
+})
+
+// Schema cho vocabulary search response (format từ backend)
+export const LexicalItemSchema = z.object({
+  _id: z.string().optional(),
+  id: z.string().optional(),
+  word: z.string().optional(),              // ✅
+  word_lowercase: z.string().optional(),    // ✅
+  pronunciation: z.string().nullable().optional(),  // ✅
+  cefr_level: z.string().optional(),        // ✅
+  lexical_type: z.string().optional(),       // ✅
+  primary_meaning: BackendMeaningSchema.nullable().optional(), // ✅
+})
+
+export const LexicalItemListSchema = z.union([
+  z.array(LexicalItemSchema),
+  z.object({ items: z.array(LexicalItemSchema) }),
+  z.object({ data: z.array(LexicalItemSchema) }),
+  z.object({ results: z.array(LexicalItemSchema) }),
+])
 
 export const DeckSchema = z.object({
   _id: z.string(),
@@ -35,7 +52,6 @@ export const DeckSchema = z.object({
   cefr_level: z.string().optional(),
   card_count: z.number().default(0),
   total_cards: z.number().optional(),
-  total_users: z.number().optional(),
   visibility: z.string().optional(),
   is_public: z.boolean().optional(),
   creator_id: z.string().optional(),
@@ -44,7 +60,17 @@ export const DeckSchema = z.object({
   category: z.string().optional(),
 })
 
-export const DeckListSchema = z.array(DeckSchema)
+// DeckListSchema handle cả array và object {data: [...]}
+export const DeckListSchema: z.ZodType<Deck[] | { data?: Deck[]; results?: Deck[]; decks?: Deck[] }> = z.union([
+  z.array(DeckSchema),
+  z.object({
+    data: z.array(DeckSchema).optional(),
+    results: z.array(DeckSchema).optional(),
+    decks: z.array(DeckSchema).optional(),
+    total: z.number().optional(),
+    page: z.number().optional(),
+  }).passthrough(),
+])
 
 export const BackendTopicSchema = z.object({
   _id: z.string(),
@@ -63,7 +89,9 @@ export const BackendTopicSchema = z.object({
 export const BackendTopicListSchema = z.array(BackendTopicSchema)
 
 export const BackendIpaSymbolSchema = z.object({
-  _id: z.string(),
+  // Backend trả về 'id', không phải '_id'
+  id: z.string(),
+  _id: z.string().optional(),
   symbol: z.string(),
   symbol_type: z.enum(['VOWEL', 'CONSONANT', 'DIPHTHONG']).or(z.string()),
   description_en: z.string().optional(),
@@ -72,7 +100,9 @@ export const BackendIpaSymbolSchema = z.object({
   example_word_ipa: z.string().default(''),
   audio_url: z.string().optional(),
   example_audio_url: z.string().optional(),
-}).passthrough()
+  related_symbols: z.array(z.string()).optional(),
+  cefr_min_level: z.string().optional(),
+})
 
 export const BackendIpaSymbolListSchema = z.array(BackendIpaSymbolSchema)
 
@@ -109,3 +139,46 @@ export type Deck = z.infer<typeof DeckSchema>
 export type BackendTopic = z.infer<typeof BackendTopicSchema>
 export type BackendIpaSymbol = z.infer<typeof BackendIpaSymbolSchema>
 export type BackendGrammarPoint = z.infer<typeof BackendGrammarPointSchema>
+
+// ==================== LOOKUP SCHEMAS ====================
+
+export const LookupResultItemSchema = z.object({
+  id: z.string(),
+  word: z.string(),
+  ipa: z.string().optional(),
+  pos: z.array(z.string()),
+  cefr: z.string().optional(),
+  meaning: z.string().optional(),
+  matchType: z.enum(['exact', 'prefix', 'fuzzy']),
+})
+
+export const LookupResponseSchema = z.object({
+  query: z.string(),
+  results: z.array(LookupResultItemSchema),
+  total: z.number(),
+})
+
+export type LookupResultItem = z.infer<typeof LookupResultItemSchema>
+export type LookupResponse = z.infer<typeof LookupResponseSchema>
+
+// ==================== SEARCH HISTORY SCHEMAS ====================
+
+export const SearchHistoryItemSchema = z.object({
+  _id: z.string(),
+  vocabularyId: z.string().optional(),
+  clicked_item_id: z.string().optional(),  // Backend field
+  word: z.string().optional(),
+  searchQuery: z.string().optional(),
+  ipa: z.string().optional(),
+  cefr: z.string().optional(),
+  searchType: z.string().optional(),
+  searchedAt: z.date().or(z.string()),
+})
+
+export const SearchHistoryResponseSchema = z.object({
+  results: z.array(SearchHistoryItemSchema),
+  total: z.number(),
+})
+
+export type SearchHistoryItem = z.infer<typeof SearchHistoryItemSchema>
+export type SearchHistoryResponse = z.infer<typeof SearchHistoryResponseSchema>

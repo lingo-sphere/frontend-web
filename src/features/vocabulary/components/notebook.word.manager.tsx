@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Bookmark, Search } from 'lucide-react'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { useVirtualizer, type VirtualItem } from '@tanstack/react-virtual'
 import { Button } from '@/components/button'
 import { VocabularyCard } from '@/features/vocabulary/components/vocabulary.card'
-import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary'
+import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary.learn'
 
 interface VocabularyTabProps {
   savedVocabulary: SavedVocabulary[]
@@ -173,7 +173,7 @@ export function VocabularyTab({
               position: 'relative',
             }}
           >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            {rowVirtualizer.getVirtualItems().map((virtualRow: VirtualItem) => {
               const rowItems = rows[virtualRow.index]
               return (
                 <div
