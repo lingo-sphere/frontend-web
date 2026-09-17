@@ -1,11 +1,9 @@
-/**
- * @file auth.otp.form.tsx
- * @description Component nhập mã OTP 6 số để xác thực tài khoản Email
- */
+// Component nhập mã OTP 6 số để xác thực tài khoản Email.
 
 'use client'
 
 import React, { RefObject } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Icon } from '@/components/icon.map'
 
 interface AuthOtpFormProps {
@@ -31,16 +29,17 @@ export function AuthOtpForm({
   onOtpPaste,
   onResendOtp,
 }: AuthOtpFormProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="space-y-4 text-center py-2">
       <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-1">
         <Icon name="mail" size={24} />
       </div>
       <div>
-        <h3 className="text-base font-bold text-text-primary">Xác thực tài khoản Email</h3>
+        <h3 className="text-base font-bold text-text-primary">{t('auth.verifyOtpTitle')}</h3>
         <p className="text-xs text-text-secondary mt-1">
-          Nhập mã xác thực 6 số đã được gửi tới email <br />
-          <span className="font-semibold text-text-primary">{email}</span>
+          {t('auth.verifyOtpDesc', { email })}
         </p>
       </div>
 
@@ -66,14 +65,14 @@ export function AuthOtpForm({
       </div>
 
       <div className="flex items-center justify-center gap-2 text-xs text-text-secondary">
-        <span>Chưa nhận được mã?</span>
+        <span>{t('auth.didNotReceiveOtp')}</span>
         <button
           type="button"
           disabled={resendCooldown > 0 || isLoading}
           onClick={onResendOtp}
           className="font-semibold text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          {resendCooldown > 0 ? `Gửi lại mã (${resendCooldown}s)` : 'Gửi lại mã OTP'}
+          {resendCooldown > 0 ? t('auth.resendOtpCountdown', { seconds: resendCooldown }) : t('auth.resendOtp')}
         </button>
       </div>
     </div>

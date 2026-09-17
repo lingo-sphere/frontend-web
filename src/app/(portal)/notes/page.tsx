@@ -9,7 +9,7 @@ import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Icon } from '@/components/icon.map'
 import { Pagination } from '@/components/pagination'
 import type { UserNote, NoteTargetType, CreateNoteForm } from '@/features/notes/types/notes'
-import { NOTE_TARGET_LABELS, NOTE_TARGET_ICONS } from '@/features/notes/types/notes'
+import { getNoteTargetLabel, NOTE_TARGET_ICONS } from '@/features/notes/types/notes'
 import { NoteCard } from '@/features/notes/components/note.card'
 import { NoteModal } from '@/features/notes/components/note.modal'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
@@ -129,7 +129,7 @@ export default function NotesAppPage() {
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <SectionHeading
-            eyebrow={t('dashboard.notes') || 'Ghi chú'}
+            eyebrow={t('dashboard.notes')}
             title={isVietnamese ? 'Sổ tay ghi chú học tập' : 'Learning Notes'}
             description={
               isVietnamese
@@ -185,7 +185,7 @@ export default function NotesAppPage() {
                   ? isVietnamese
                     ? 'Tất cả'
                     : 'All'
-                  : NOTE_TARGET_LABELS[type]}
+                  : getNoteTargetLabel(type, isVietnamese)}
               </Button>
             ))}
           </div>

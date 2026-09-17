@@ -1,11 +1,9 @@
-/**
- * @file auth.reset.password.form.tsx
- * @description Component yêu cầu khôi phục và đặt lại mật khẩu mới
- */
+// Component yêu cầu khôi phục và đặt lại mật khẩu mới.
 
 'use client'
 
 import React, { RefObject } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Icon } from '@/components/icon.map'
 import { Input } from '@/components/input'
 
@@ -42,6 +40,8 @@ export function AuthResetPasswordForm({
   onOtpPaste,
   onResendOtp,
 }: AuthResetPasswordFormProps) {
+  const { t } = useTranslation()
+
   if (mode === 'forgot_password') {
     return (
       <div className="space-y-4">
@@ -49,22 +49,22 @@ export function AuthResetPasswordForm({
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-warning/10 text-warning mb-1">
             <Icon name="key" size={24} />
           </div>
-          <h3 className="text-base font-bold text-text-primary">Khôi phục mật khẩu</h3>
+          <h3 className="text-base font-bold text-text-primary">{t('auth.forgotPasswordTitle')}</h3>
           <p className="text-xs text-text-secondary mt-1">
-            Nhập địa chỉ email đăng ký để nhận mã xác thực đặt lại mật khẩu.
+            {t('auth.forgotPasswordDesc')}
           </p>
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-            Địa chỉ Email <span className="text-error">*</span>
+            {t('auth.email')} <span className="text-error">*</span>
           </label>
           <Input
             type="email"
             required
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
-            placeholder="nguyennamtinh9999@gmail.com"
+            placeholder={t('auth.emailPlaceholder')}
             className="bg-surface-subtle"
           />
         </div>
@@ -75,9 +75,9 @@ export function AuthResetPasswordForm({
   return (
     <div className="space-y-4">
       <div className="text-center py-1">
-        <h3 className="text-base font-bold text-text-primary">Đặt lại mật khẩu mới</h3>
+        <h3 className="text-base font-bold text-text-primary">{t('auth.resetPasswordTitle')}</h3>
         <p className="text-xs text-text-secondary mt-1">
-          Nhập mã OTP 6 số và thiết lập mật khẩu mới cho tài khoản của bạn.
+          {t('auth.resetPasswordDesc')}
         </p>
       </div>
 
@@ -104,27 +104,27 @@ export function AuthResetPasswordForm({
 
       <div>
         <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-          Mật khẩu mới <span className="text-error">*</span>
+          {t('auth.newPassword')} <span className="text-error">*</span>
         </label>
         <Input
           type={showPassword ? 'text' : 'password'}
           required
           value={newPassword}
           onChange={(e) => onNewPasswordChange(e.target.value)}
-          placeholder="Tối thiểu 6 ký tự"
+          placeholder={t('auth.passwordPlaceholder')}
           className="bg-surface-subtle"
         />
       </div>
 
       <div className="flex items-center justify-between text-xs text-text-secondary">
-        <span>Chưa nhận được mã?</span>
+        <span>{t('auth.didNotReceiveOtp')}</span>
         <button
           type="button"
           disabled={resendCooldown > 0 || isLoading}
           onClick={onResendOtp}
           className="font-semibold text-primary hover:underline disabled:opacity-50 cursor-pointer"
         >
-          {resendCooldown > 0 ? `Gửi lại (${resendCooldown}s)` : 'Gửi lại OTP'}
+          {resendCooldown > 0 ? t('auth.resendOtpCountdown', { seconds: resendCooldown }) : t('auth.resendOtp')}
         </button>
       </div>
     </div>

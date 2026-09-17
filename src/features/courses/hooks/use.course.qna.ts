@@ -1,6 +1,6 @@
-// Custom hook quản lý thảo luận Hỏi & Đáp (đăng câu hỏi, trả lời câu hỏi và bình chọn upvote).
-
+// Custom hook quản lý thảo luận Hỏi & Đáp trong khóa học.
 import { type Dispatch, type SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import type { Course, Lesson, QnAItem } from '@/features/courses/types/course'
@@ -23,21 +23,30 @@ export function useCourseQnA({
   user,
   isEnrolled,
 }: UseCourseQnAParams) {
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+
   const handleCreateQnA = async (title: string, body: string, isAnonymous?: boolean) => {
     if (!course || !currentLesson) return
     if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để đặt câu hỏi!', 'Chưa đăng nhập')
+      toast.error(
+        isVietnamese ? 'Vui lòng đăng nhập để đặt câu hỏi!' : 'Please sign in to ask a question!',
+        isVietnamese ? 'Chưa đăng nhập' : 'Not signed in'
+      )
       return
     }
     if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học để gửi câu hỏi Hỏi & Đáp!', 'Chưa sở hữu khóa học')
+      toast.error(
+        isVietnamese ? 'Bạn cần mua hoặc đăng ký khóa học để gửi câu hỏi Hỏi & Đáp!' : 'You need to enroll in this course to post Q&A questions!',
+        isVietnamese ? 'Chưa sở hữu khóa học' : 'Course not enrolled'
+      )
       return
     }
     try {
       const userPayload = user as unknown as Record<string, unknown>
       const authorName = isAnonymous
-        ? 'Học viên ẩn danh'
-        : user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || 'Học viên'
+        ? (isVietnamese ? 'Học viên ẩn danh' : 'Anonymous learner')
+        : user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || (isVietnamese ? 'Học viên' : 'Learner')
       const authorAvatar = isAnonymous ? '' : user.avatar_url || (userPayload?.avatar as string) || ''
 
       const res = (await courseService.createCourseQnA(String(course.id), {
@@ -59,7 +68,7 @@ export function useCourseQnA({
         authorAvatar: authorAvatar || undefined,
         title,
         body,
-        createdAt: 'Vừa xong',
+        createdAt: isVietnamese ? 'Vừa xong' : 'Just now',
         upvotes: 0,
         answersCount: 1,
         isAnswered: true,
@@ -67,9 +76,11 @@ export function useCourseQnA({
           {
             id: `ans-${Date.now()}`,
             author: 'LingoSphere AI Tutor',
-            authorRole: 'Gia sư AI',
-            body: `Chào bạn! Cảm ơn câu hỏi về "${title}". Giảng viên và Trợ lý AI đã ghi nhận thắc mắc và sẽ phản hồi chi tiết trong giây lát!`,
-            createdAt: 'Vừa xong',
+            authorRole: isVietnamese ? 'Gia sư AI' : 'AI Tutor',
+            body: isVietnamese
+              ? `Chào bạn! Cảm ơn câu hỏi về "${title}". Giảng viên và Trợ lý AI đã ghi nhận thắc mắc và sẽ phản hồi chi tiết trong giây lát!`
+              : `Hello! Thank you for asking about "${title}". Our instructor and AI assistant have received your question and will provide feedback shortly!`,
+            createdAt: isVietnamese ? 'Vừa xong' : 'Just now',
             upvotes: 0,
           },
         ],
@@ -78,28 +89,34 @@ export function useCourseQnA({
       setCourse((prev) => (prev ? { ...prev, qna: [newQnA, ...(prev.qna || [])] } : null))
       toast.success(
         isAnonymous
-          ? 'Câu hỏi ẩn danh của bạn đã được đăng thành công!'
-          : 'Câu hỏi của bạn đã được đăng thành công!',
-        'Hỏi & Đáp'
+          ? (isVietnamese ? 'Câu hỏi ẩn danh của bạn đã được đăng thành công!' : 'Your anonymous question has been posted successfully!')
+          : (isVietnamese ? 'Câu hỏi của bạn đã được đăng thành công!' : 'Your question has been posted successfully!'),
+        isVietnamese ? 'Hỏi & Đáp' : 'Q&A'
       )
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể đăng câu hỏi'
-      toast.error(msg, 'Lỗi đăng câu hỏi')
+      const msg = err instanceof Error ? err.message : (isVietnamese ? 'Không thể đăng câu hỏi' : 'Could not post question')
+      toast.error(msg, isVietnamese ? 'Lỗi đăng câu hỏi' : 'Error posting question')
     }
   }
 
   const handleAddQnAAnswer = async (qnaId: string, answerText: string) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để trả lời!', 'Chưa đăng nhập')
+      toast.error(
+        isVietnamese ? 'Vui lòng đăng nhập để trả lời!' : 'Please sign in to reply!',
+        isVietnamese ? 'Chưa đăng nhập' : 'Not signed in'
+      )
       return
     }
     if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học để trả lời câu hỏi!', 'Chưa sở hữu khóa học')
+      toast.error(
+        isVietnamese ? 'Bạn cần mua hoặc đăng ký khóa học để trả lời câu hỏi!' : 'You need to enroll in this course to reply!',
+        isVietnamese ? 'Chưa sở hữu khóa học' : 'Course not enrolled'
+      )
       return
     }
     try {
       const userPayload = user as unknown as Record<string, unknown>
-      const authorName = user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || 'Học viên'
+      const authorName = user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || (isVietnamese ? 'Học viên' : 'Learner')
       const authorAvatar = user.avatar_url || (userPayload?.avatar as string) || ''
 
       await courseService.addQnAAnswer(qnaId, {
@@ -110,10 +127,10 @@ export function useCourseQnA({
       const newAns = {
         id: `ans-${Date.now()}`,
         author: authorName,
-        authorRole: 'Học viên',
+        authorRole: isVietnamese ? 'Học viên' : 'Learner',
         authorAvatar: authorAvatar || undefined,
         body: answerText,
-        createdAt: 'Vừa xong',
+        createdAt: isVietnamese ? 'Vừa xong' : 'Just now',
         upvotes: 0,
       }
       setCourse((prev) => {
@@ -127,20 +144,29 @@ export function useCourseQnA({
           ),
         }
       })
-      toast.success('Đã gửi câu trả lời thành công!', 'Hỏi & Đáp')
+      toast.success(
+        isVietnamese ? 'Đã gửi câu trả lời thành công!' : 'Reply submitted successfully!',
+        isVietnamese ? 'Hỏi & Đáp' : 'Q&A'
+      )
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể gửi câu trả lời'
-      toast.error(msg, 'Lỗi trả lời Q&A')
+      const msg = err instanceof Error ? err.message : (isVietnamese ? 'Không thể gửi câu trả lời' : 'Could not submit reply')
+      toast.error(msg, isVietnamese ? 'Lỗi trả lời Q&A' : 'Error replying')
     }
   }
 
   const handleUpvoteQnA = async (qnaId: string) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để bình chọn!', 'Chưa đăng nhập')
+      toast.error(
+        isVietnamese ? 'Vui lòng đăng nhập để bình chọn!' : 'Please sign in to upvote!',
+        isVietnamese ? 'Chưa đăng nhập' : 'Not signed in'
+      )
       return
     }
     if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học để bình chọn!', 'Chưa sở hữu khóa học')
+      toast.error(
+        isVietnamese ? 'Bạn cần mua hoặc đăng ký khóa học để bình chọn!' : 'You need to enroll in this course to upvote!',
+        isVietnamese ? 'Chưa sở hữu khóa học' : 'Course not enrolled'
+      )
       return
     }
     try {
@@ -155,8 +181,8 @@ export function useCourseQnA({
         }
       })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể bình chọn'
-      toast.error(msg, 'Lỗi bình chọn')
+      const msg = err instanceof Error ? err.message : (isVietnamese ? 'Không thể bình chọn' : 'Could not upvote')
+      toast.error(msg, isVietnamese ? 'Lỗi bình chọn' : 'Error upvoting')
     }
   }
 

@@ -1,12 +1,10 @@
-/**
- * @file auth.modal.tsx
- * @description Modal đăng nhập, đăng ký, xác thực OTP và khôi phục mật khẩu người dùng
- */
+// Modal đăng nhập, đăng ký, xác thực OTP và khôi phục mật khẩu người dùng.
 
 'use client'
 
 import { motion, AnimatePresence } from 'motion/react'
 import { GoogleLogin } from '@react-oauth/google'
+import { useTranslation } from 'react-i18next'
 import { Icon } from '@/components/icon.map'
 import { Button } from '@/components/button'
 import { useAuthModal, type AuthMode } from '@/features/auth/hooks/use.auth.modal'
@@ -23,6 +21,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) {
+  const { t } = useTranslation()
   const {
     mode,
     email,
@@ -91,7 +90,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
                     : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
-                Đăng nhập
+                {t('auth.login')}
               </button>
               <button
                 type="button"
@@ -102,7 +101,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
                     : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
-                Đăng ký mới
+                {t('auth.register')}
               </button>
             </div>
           )}
@@ -180,18 +179,18 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  <span>Đang xử lý...</span>
+                  <span>{t('common.loading')}</span>
                 </div>
               ) : mode === 'login' ? (
-                'Đăng nhập tài khoản'
+                t('auth.login')
               ) : mode === 'register' ? (
-                'Tạo tài khoản & Nhận mã OTP'
+                t('auth.registerSubmit')
               ) : mode === 'verify_email_otp' ? (
-                'Xác nhận & Kích hoạt tài khoản'
+                t('auth.verifyAndContinue')
               ) : mode === 'forgot_password' ? (
-                'Gửi mã xác thực OTP'
+                t('auth.sendOtp')
               ) : (
-                'Lưu mật khẩu mới'
+                t('auth.saveNewPassword')
               )}
             </Button>
 
@@ -202,7 +201,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
                     <div className="w-full border-t border-surface-border" />
                   </div>
                   <span className="relative bg-surface px-3 text-xs text-text-tertiary">
-                    Hoặc tiếp tục với
+                    {t('auth.orContinueWith')}
                   </span>
                 </div>
 
@@ -226,13 +225,13 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
                 onClick={() => switchMode('login')}
                 className="w-full text-center text-xs font-semibold text-text-secondary hover:text-primary transition-colors py-1 cursor-pointer"
               >
-                ← Quay lại đăng nhập
+                ← {t('auth.backToLogin')}
               </button>
             )}
           </form>
 
           <div className="bg-surface-subtle px-6 py-4 text-center text-xs text-text-tertiary border-t border-surface-border">
-            Bằng việc tiếp tục, bạn đồng ý với Điều khoản dịch vụ và Chính sách bảo mật của LingoSphere.
+            {t('auth.agreeTerms')}
           </div>
         </motion.div>
       </div>

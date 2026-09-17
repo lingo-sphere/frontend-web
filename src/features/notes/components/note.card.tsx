@@ -1,7 +1,7 @@
-// Component giao diện NoteCard cho học viên
+// Component giao diện NoteCard hiển thị thông tin ghi chú học tập.
 import { Icon } from '@/components/icon.map'
 import type { UserNote } from '@/features/notes/types/notes'
-import { NOTE_TARGET_LABELS } from '@/features/notes/types/notes'
+import { getNoteTargetLabel } from '@/features/notes/types/notes'
 import { formatDate, truncateText } from '@/lib/format'
 
 interface NoteCardProps {
@@ -19,7 +19,6 @@ export function NoteCard({
   onTogglePin,
   isVietnamese,
 }: NoteCardProps) {
-
   return (
     <div
       className={`bg-surface-subtle rounded-xl p-4 transition-all hover:shadow-md cursor-pointer group ${
@@ -30,7 +29,7 @@ export function NoteCard({
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs px-2 py-0.5 bg-primary-10 text-primary rounded-full shrink-0">
-            {NOTE_TARGET_LABELS[note.targetType]}
+            {getNoteTargetLabel(note.targetType, isVietnamese)}
           </span>
           {note.isPinned && (
             <Icon name="pin" size={12} className="text-primary shrink-0" />
@@ -43,7 +42,7 @@ export function NoteCard({
               onTogglePin(note)
             }}
             className="p-1 hover:bg-surface rounded"
-            title="Ghim ghi chú"
+            title={isVietnamese ? 'Ghim ghi chú' : 'Pin note'}
           >
             <Icon
               name="pin"
@@ -57,7 +56,7 @@ export function NoteCard({
               onDelete(note)
             }}
             className="p-1 hover:bg-surface rounded text-text-tertiary hover:text-error"
-            title="Xóa ghi chú"
+            title={isVietnamese ? 'Xóa ghi chú' : 'Delete note'}
           >
             <Icon name="trash-2" size={14} />
           </button>
@@ -78,3 +77,4 @@ export function NoteCard({
     </div>
   )
 }
+

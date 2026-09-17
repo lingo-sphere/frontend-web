@@ -1,8 +1,4 @@
-/**
- * @file welcome.banner.tsx
- * @description Banner chào mừng học viên, hiển thị streak, mục tiêu học tập hàng ngày và thông điệp động lực
- */
-
+// Banner chào mừng học viên và hiển thị lời chào theo thời gian.
 'use client'
 
 import { useState, useEffect } from 'react'

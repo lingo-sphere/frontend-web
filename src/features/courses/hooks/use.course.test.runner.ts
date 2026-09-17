@@ -1,6 +1,7 @@
 // Quản lý trạng thái bài kiểm tra khóa học, đếm ngược thời gian, chấm điểm và AI giải thích.
 
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Chapter } from '@/features/courses/types/course'
 import { courseService } from '@/features/courses/services/course.service'
 import { mistakeService } from '@/features/practice/services/mistake.service'
@@ -51,6 +52,9 @@ export function useCourseTestRunner({
   previousAttempts = [],
   onComplete,
 }: UseCourseTestRunnerOptions) {
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+
   const hasSpeaking = Boolean(speakingPrompt || chapter?.speaking_prompt)
   const hasWriting = Boolean(writingPrompt || chapter?.writing_prompt)
 
@@ -186,12 +190,12 @@ export function useCourseTestRunner({
 
   const testTitle =
     testType === 'challenge'
-      ? `Bài test thử thách cuối chương - ${chapter?.title || ''}`
+      ? (isVietnamese ? `Bài test thử thách cuối chương - ${chapter?.title || ''}` : `Chapter Challenge Test - ${chapter?.title || ''}`)
       : testType === 'post-mini'
-      ? `Bài kiểm tra cuối chương - ${chapter?.title || ''}`
+      ? (isVietnamese ? `Bài kiểm tra cuối chương - ${chapter?.title || ''}` : `Chapter End Test - ${chapter?.title || ''}`)
       : testType === 'final-test'
-      ? `Bài thi tốt nghiệp khóa học (Exit Test)`
-      : `Bài luyện tập trắc nghiệm (${chapter?.title || ''})`
+      ? (isVietnamese ? 'Bài thi tốt nghiệp khóa học (Exit Test)' : 'Course Final Graduation Test (Exit Test)')
+      : (isVietnamese ? `Bài luyện tập trắc nghiệm (${chapter?.title || ''})` : `Multiple Choice Practice (${chapter?.title || ''})`)
 
   const effectiveDurationMinutes = useMemo(() => {
     if (typeof durationMinutes === 'number' && durationMinutes > 0) return durationMinutes
@@ -265,9 +269,9 @@ export function useCourseTestRunner({
             user_selected_answer:
               chosen !== undefined
                 ? options[chosen] ?? String.fromCharCode(65 + chosen)
-                : 'Chưa làm',
-            correct_answer: typeof correctIdx === 'number' && correctIdx >= 0 && options[correctIdx] ? options[correctIdx] : 'Chưa cập nhật',
-            category: chapter?.title ?? 'Kiến thức chung',
+                : (isVietnamese ? 'Chưa làm' : 'Unanswered'),
+            correct_answer: typeof correctIdx === 'number' && correctIdx >= 0 && options[correctIdx] ? options[correctIdx] : (isVietnamese ? 'Chưa cập nhật' : 'Not updated'),
+            category: chapter?.title ?? (isVietnamese ? 'Kiến thức chung' : 'General Knowledge'),
           })
         }
       })
@@ -407,8 +411,8 @@ export function useCourseTestRunner({
         setIsSubmitted(true)
         setShowSubmitConfirm(false)
 
-        if (isTimeout) toast.warning('Hết thời gian làm bài! Đã tự động nộp bài.')
-        else toast.success(`Nộp bài thành công! Điểm: ${finalScore}%`)
+        if (isTimeout) toast.warning(isVietnamese ? 'Hết thời gian làm bài! Đã tự động nộp bài.' : 'Time is up! Exam auto-submitted.')
+        else toast.success(isVietnamese ? `Nộp bài thành công! Điểm: ${finalScore}%` : `Submitted successfully! Score: ${finalScore}%`)
 
         if (finalWrongs.length > 0) {
           setIsLoadingAi(true)

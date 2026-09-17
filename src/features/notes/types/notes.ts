@@ -1,7 +1,4 @@
-/**
- * @file notes.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
- */
+// Định nghĩa kiểu dữ liệu TypeScript cho ghi chú học viên.
 
 export interface UserNote {
   id: string
@@ -50,6 +47,20 @@ export const NOTE_TARGET_LABELS: Record<NoteTargetType, string> = {
   LISTENING_SEGMENT: 'Đoạn nghe',
   SPEAKING_EXERCISE: 'Bài luyện nói',
   WRITING_EXERCISE: 'Bài luyện viết',
+}
+
+export const NOTE_TARGET_LABELS_EN: Record<NoteTargetType, string> = {
+  VOCABULARY: 'Vocabulary',
+  GRAMMAR: 'Grammar',
+  IPA: 'IPA',
+  PRACTICE_QUESTION: 'Practice Question',
+  LISTENING_SEGMENT: 'Listening Segment',
+  SPEAKING_EXERCISE: 'Speaking Exercise',
+  WRITING_EXERCISE: 'Writing Exercise',
+}
+
+export function getNoteTargetLabel(type: NoteTargetType, isVietnamese: boolean): string {
+  return isVietnamese ? NOTE_TARGET_LABELS[type] : NOTE_TARGET_LABELS_EN[type]
 }
 
 export const NOTE_TARGET_ICONS: Record<NoteTargetType, string> = {

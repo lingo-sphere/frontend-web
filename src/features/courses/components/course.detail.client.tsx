@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { AlertCircle, ArrowLeft, ExternalLink, FileText, FolderDown, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/button'
@@ -37,6 +38,8 @@ export function CourseDetailClient({
   courseId,
   initialIsEnrolled,
 }: CourseDetailClientProps) {
+  const { t, i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
 
   const {
@@ -141,9 +144,9 @@ export function CourseDetailClient({
         <AppResult
           status="404"
           title="404"
-          subTitle="Khóa học bạn yêu cầu không tồn tại hoặc đã ngừng xuất bản trên hệ thống."
+          subTitle={isVietnamese ? 'Khóa học bạn yêu cầu không tồn tại hoặc đã ngừng xuất bản trên hệ thống.' : 'The requested course does not exist or has been unpublished.'}
           onBack={handleBack}
-          backText="Quay lại danh sách khóa học"
+          backText={isVietnamese ? 'Quay lại danh sách khóa học' : 'Back to courses'}
         />
       </div>
     )
@@ -193,7 +196,7 @@ export function CourseDetailClient({
             onSuccess={() => {
               setIsEnrolled(true)
               getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
-              toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
+              toast.success(t('courses.unlockSuccess'), isVietnamese ? 'Đã mở khóa' : 'Unlocked')
               setShowScheduleModal(true)
             }}
           />
@@ -236,14 +239,14 @@ export function CourseDetailClient({
                 <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 shadow-md">
                   <div className="flex items-center gap-2">
                     <span className="text-sm">✨</span>
-                    <span>Bạn đang học thử miễn phí: <strong>{currentLesson?.title}</strong></span>
+                    <span>{t('courses.trialBanner', { title: currentLesson?.title })}</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleInitiateEnrollOrBuy}
                     className="px-3 py-1 rounded-lg bg-white text-emerald-800 hover:bg-emerald-50 text-[11px] font-extrabold shadow-xs transition-all cursor-pointer"
                   >
-                    Đăng ký mua khóa học để mở khóa toàn bộ bài học & đề thi
+                    {t('courses.buyToUnlockAll')}
                   </button>
                 </div>
               )}
@@ -264,7 +267,7 @@ export function CourseDetailClient({
               <div className="bg-surface border-b border-border/80 px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-xs font-bold text-text-secondary truncate">
-                    Bài {currentLesson.order || 1}: <strong className="text-text-primary">{currentLesson.title}</strong>
+                    {isVietnamese ? 'Bài' : 'Lesson'} {currentLesson.order || 1}: <strong className="text-text-primary">{currentLesson.title}</strong>
                   </span>
                 </div>
 
@@ -275,10 +278,10 @@ export function CourseDetailClient({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/30 transition-all cursor-pointer shadow-2xs"
-                      title={currentLesson.theory_file_name || 'Xem file đề lý thuyết của bài học'}
+                      title={currentLesson.theory_file_name || (isVietnamese ? 'Xem file đề lý thuyết của bài học' : 'View lesson theory file')}
                     >
                       <FileText size={13} className="text-blue-600 dark:text-blue-400" />
-                      <span>Đề lý thuyết (PDF)</span>
+                      <span>{t('courses.theoryPdf')}</span>
                       <ExternalLink size={11} className="opacity-70" />
                     </a>
                   )}
@@ -301,7 +304,7 @@ export function CourseDetailClient({
                             : 'text-emerald-600 dark:text-emerald-400'
                         }
                       />
-                      <span>Đề luyện tập ({currentLesson.questions.length} câu)</span>
+                      <span>{t('courses.practiceQuizCount', { count: currentLesson.questions.length })}</span>
                     </button>
                   )}
 
@@ -314,7 +317,7 @@ export function CourseDetailClient({
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-subtle hover:bg-surface-hover text-text-secondary hover:text-text-primary text-xs font-bold border border-border transition-all cursor-pointer shadow-2xs"
                   >
                     <FolderDown size={13} className="text-primary" />
-                    <span>Tài liệu khóa học</span>
+                    <span>{t('courses.documents')}</span>
                   </button>
                 </div>
               </div>
@@ -347,9 +350,9 @@ export function CourseDetailClient({
                         try {
                           await courseService.updateCourseSchedule(course.id, { is_reminder_enabled: false })
                           setCourseSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
-                          toast.info('Đã hủy lịch nhắc nhở học tập của khóa học này.', 'Đã hủy lịch')
+                          toast.info(t('courses.cancelReminderSuccess'), isVietnamese ? 'Đã hủy lịch' : 'Cancelled')
                         } catch {
-                          toast.error('Không thể hủy lịch nhắc học.', 'Lỗi')
+                          toast.error(t('courses.cancelReminderError'), isVietnamese ? 'Lỗi' : 'Error')
                         }
                       }
                     : undefined
@@ -440,7 +443,7 @@ export function CourseDetailClient({
           onSuccess={() => {
             setIsEnrolled(true)
             getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
-            toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
+            toast.success(t('courses.unlockSuccess'), isVietnamese ? 'Đã mở khóa' : 'Unlocked')
             setShowScheduleModal(true)
           }}
         />

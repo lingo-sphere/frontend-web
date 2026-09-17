@@ -1,12 +1,9 @@
-/**
- * @file error.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến error.tsx
- */
-
+// Trang hiển thị lỗi hệ thống toàn cục hỗ trợ đa ngôn ngữ cho học viên
 'use client'
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
 
@@ -17,6 +14,8 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const { t } = useTranslation()
+
   useEffect(() => {
     console.error('Unhandled Next.js client error:', error)
   }, [error])
@@ -29,15 +28,15 @@ export default function GlobalError({
         </div>
 
         <h1 className="text-2xl font-extrabold tracking-tight text-text-primary sm:text-3xl">
-          Đã Xảy Ra Lỗi Xử Lý
+          {t('errors.serverErrorTitle')}
         </h1>
         <p className="mt-2.5 max-w-md text-sm text-text-secondary">
-          Hệ thống gặp sự cố tạm thời khi tải nội dung này. Bạn có thể thử tải lại hoặc quay về trang chủ.
+          {t('errors.serverErrorDesc')}
         </p>
 
         {error.digest && (
           <p className="mt-2 font-mono text-xs text-text-tertiary">
-            Mã lỗi hệ thống: {error.digest}
+            {t('common.error')}: {error.digest}
           </p>
         )}
 
@@ -47,12 +46,12 @@ export default function GlobalError({
             className="gap-2 bg-primary px-5 font-semibold text-white shadow-md hover:bg-primary/90 cursor-pointer"
           >
             <Icon name="rotateCcw" size={16} />
-            Thử Lại Ngay
+            {t('common.retry')}
           </Button>
           <Link href="/home">
             <Button variant="outline" className="gap-2 cursor-pointer">
               <Icon name="home" size={16} />
-              Quay Về Trang Chủ
+              {t('common.backHome')}
             </Button>
           </Link>
         </div>

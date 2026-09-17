@@ -17,9 +17,9 @@ export const toeicSeriesFilters = [
 export const toeicYearFilters = ['2024', '2023', '2022', '2021', '2020', '2019']
 
 export const toeicDifficultyFilters = [
-  { id: 'EASY', label: 'Dễ (Beginner)' },
-  { id: 'MEDIUM', label: 'Trung bình' },
-  { id: 'HARD', label: 'Nâng cao' },
+  { id: 'EASY', labelVi: 'Cơ bản', labelEn: 'Easy' },
+  { id: 'MEDIUM', labelVi: 'Trung bình', labelEn: 'Medium' },
+  { id: 'HARD', labelVi: 'Nâng cao', labelEn: 'Hard' },
 ]
 
 interface ToeicFilterBarProps {
@@ -98,7 +98,7 @@ export function ToeicFilterBar({
         {toeicDifficultyFilters.map((d) => (
           <FilterChip
             key={d.id}
-            label={d.label}
+            label={isVietnamese ? d.labelVi : d.labelEn}
             active={filters.difficulty === d.id}
             onClick={() =>
               onFilterChange({

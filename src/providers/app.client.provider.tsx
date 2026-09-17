@@ -3,6 +3,13 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { useTranslation } from 'react-i18next'
+import { ConfigProvider } from 'antd'
+import viVN from 'antd/locale/vi_VN'
+import enUS from 'antd/locale/en_US'
+import dayjs from 'dayjs'
+import 'dayjs/locale/vi'
+import 'dayjs/locale/en'
 import '@/i18n/i18n.config'
 import { TooltipProvider } from '@/components/tooltip'
 import { AppProvider } from '@/contexts/app.context'
@@ -11,7 +18,6 @@ import { API_CONFIG } from '@/config/api.config'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { Modal } from '@/components/modal'
 import { Button } from '@/components/button'
-
 import { PersistentLayout } from '@/layouts/persistent.layout'
 import { ToastContainer } from '@/components/toast.container'
 
@@ -22,23 +28,27 @@ interface AppClientProviderProps {
 }
 
 export function AppClientProvider({ children }: AppClientProviderProps) {
+  const { i18n, t } = useTranslation()
+  const currentLanguage = ((i18n.language || 'vi').toLowerCase().startsWith('en') ? 'en' : 'vi') as 'vi' | 'en'
   const checkAuth = useAuthStore((s) => s.checkAuth)
   const setUser = useAuthStore((s) => s.setUser)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [kickoutMessage, setKickoutMessage] = useState<string | null>(null)
   const lastVerifiedAt = useRef<number>(0)
 
+  useEffect(() => {
+    dayjs.locale(currentLanguage)
+  }, [currentLanguage])
+
   const triggerKickout = (message?: string) => {
     if (typeof window === 'undefined') return
     if (Date.now() - lastVerifiedAt.current < 8000) {
-
       checkAuth()
       return
     }
     setUser(null)
     setKickoutMessage(
-      message ||
-        'Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác. Bạn đã bị đăng xuất để đảm bảo an toàn.'
+      message || t('common.sessionTerminatedDesc')
     )
   }
 
@@ -142,37 +152,39 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   }, [isAuthenticated, setUser])
 
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <AppProvider>
-        <TooltipProvider>
-          <PersistentLayout>{children}</PersistentLayout>
-          <ToastContainer />
+    <ConfigProvider locale={currentLanguage === 'vi' ? viVN : enUS}>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <AppProvider>
+          <TooltipProvider>
+            <PersistentLayout>{children}</PersistentLayout>
+            <ToastContainer />
 
-          <Modal
-            open={Boolean(kickoutMessage)}
-            onClose={() => setKickoutMessage(null)}
-            title="Đăng Nhập Từ Thiết Bị Khác"
-            size="sm"
-            footer={
-              <Button
-                className="w-full bg-primary font-semibold text-white shadow-md hover:bg-primary/90"
-                onClick={() => {
-                  setKickoutMessage(null)
-                  if (typeof window !== 'undefined') {
-                    window.location.href = '/'
-                  }
-                }}
-              >
-                Đã hiểu & Đăng nhập lại
-              </Button>
-            }
-          >
-            <div className="flex flex-col items-center gap-3 py-2 text-center">
-              <p className="text-sm text-text-secondary">{kickoutMessage}</p>
-            </div>
-          </Modal>
-        </TooltipProvider>
-      </AppProvider>
-    </GoogleOAuthProvider>
+            <Modal
+              open={Boolean(kickoutMessage)}
+              onClose={() => setKickoutMessage(null)}
+              title={t('common.sessionTerminatedTitle')}
+              size="sm"
+              footer={
+                <Button
+                  className="w-full bg-primary font-semibold text-white shadow-md hover:bg-primary/90 cursor-pointer"
+                  onClick={() => {
+                    setKickoutMessage(null)
+                    if (typeof window !== 'undefined') {
+                      window.location.href = '/'
+                    }
+                  }}
+                >
+                  {t('common.understandAndReLogin')}
+                </Button>
+              }
+            >
+              <div className="flex flex-col items-center gap-3 py-2 text-center">
+                <p className="text-sm text-text-secondary">{kickoutMessage}</p>
+              </div>
+            </Modal>
+          </TooltipProvider>
+        </AppProvider>
+      </GoogleOAuthProvider>
+    </ConfigProvider>
   )
 }

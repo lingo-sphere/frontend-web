@@ -1,6 +1,6 @@
 // Custom hook quản lý ghi chú bài học cá nhân trong khóa học.
-
 import { type Dispatch, type SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import { courseService } from '@/features/courses/services/course.service'
 import { toast } from '@/store/toast.store'
 import type { Course, Lesson, NoteItem } from '@/features/courses/types/course'
@@ -26,18 +26,27 @@ export function useCourseNotes({
   isEnrolled,
   setActiveBottomTab,
 }: UseCourseNotesParams) {
+  const { t, i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+
   const handleAddNoteAtTimestamp = async (timestamp: number, noteContent?: string) => {
     if (!course || !currentLesson) return
     if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để lưu ghi chú bài học!', 'Chưa đăng nhập')
+      toast.error(
+        isVietnamese ? 'Vui lòng đăng nhập để lưu ghi chú bài học!' : 'Please sign in to save lesson notes!',
+        isVietnamese ? 'Chưa đăng nhập' : 'Not signed in'
+      )
       return
     }
     if (!isEnrolled) {
-      toast.error('Bạn cần mua hoặc đăng ký khóa học này để tạo ghi chú bài giảng!', 'Chưa sở hữu khóa học')
+      toast.error(
+        isVietnamese ? 'Bạn cần mua hoặc đăng ký khóa học này để tạo ghi chú bài giảng!' : 'You need to enroll in this course to create lesson notes!',
+        isVietnamese ? 'Chưa sở hữu khóa học' : 'Course not enrolled'
+      )
       return
     }
     const formatted = `${Math.floor(timestamp / 60)}:${String(Math.floor(timestamp % 60)).padStart(2, '0')}`
-    const content = noteContent || `Ghi chú bài học tại mốc ${formatted}`
+    const content = noteContent || (isVietnamese ? `Ghi chú bài học tại mốc ${formatted}` : `Lesson note at ${formatted}`)
 
     try {
       const res = (await courseService.createCourseNote(String(course.id), {
@@ -55,20 +64,26 @@ export function useCourseNotes({
         timestamp,
         formattedTime: formatted,
         content,
-        createdAt: 'Vừa xong',
+        createdAt: isVietnamese ? 'Vừa xong' : 'Just now',
       }
       setCourse((prev) => (prev ? { ...prev, notes: [newNote, ...(prev.notes || [])] } : null))
       setActiveBottomTab('notes')
-      toast.success(`Đã lưu ghi chú tại mốc ${formatted} vào cơ sở dữ liệu!`, 'Ghi chú bài học')
+      toast.success(
+        isVietnamese ? `Đã lưu ghi chú tại mốc ${formatted}!` : `Saved note at ${formatted}!`,
+        isVietnamese ? 'Ghi chú bài học' : 'Lesson note'
+      )
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể lưu ghi chú'
-      toast.error(msg, 'Lỗi lưu ghi chú')
+      const msg = err instanceof Error ? err.message : (isVietnamese ? 'Không thể lưu ghi chú' : 'Could not save note')
+      toast.error(msg, isVietnamese ? 'Lỗi lưu ghi chú' : 'Error saving note')
     }
   }
 
   const handleDeleteNote = async (noteId: string) => {
     if (!isAuthenticated || !user) {
-      toast.error('Vui lòng đăng nhập để xóa ghi chú!', 'Chưa đăng nhập')
+      toast.error(
+        isVietnamese ? 'Vui lòng đăng nhập để xóa ghi chú!' : 'Please sign in to delete notes!',
+        isVietnamese ? 'Chưa đăng nhập' : 'Not signed in'
+      )
       return
     }
     try {
@@ -76,10 +91,13 @@ export function useCourseNotes({
       setCourse((prev) =>
         prev ? { ...prev, notes: (prev.notes || []).filter((n) => n.id !== noteId) } : null
       )
-      toast.success('Đã xóa ghi chú thành công!', 'Xóa ghi chú')
+      toast.success(
+        t('notes.deleteSuccess'),
+        isVietnamese ? 'Xóa ghi chú' : 'Delete note'
+      )
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể xóa ghi chú'
-      toast.error(msg, 'Lỗi xóa ghi chú')
+      const msg = err instanceof Error ? err.message : (isVietnamese ? 'Không thể xóa ghi chú' : 'Could not delete note')
+      toast.error(msg, isVietnamese ? 'Lỗi xóa ghi chú' : 'Error deleting note')
     }
   }
 

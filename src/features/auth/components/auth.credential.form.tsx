@@ -1,10 +1,7 @@
-/**
- * @file auth.credential.form.tsx
- * @description Component nhập thông tin đăng nhập và đăng ký tài khoản
- */
-
+// Component nhập thông tin tài khoản đăng nhập và đăng ký hỗ trợ đa ngôn ngữ
 'use client'
 
+import { useTranslation } from 'react-i18next'
 import { Icon } from '@/components/icon.map'
 import { Input } from '@/components/input'
 
@@ -37,19 +34,21 @@ export function AuthCredentialForm({
   onToggleShowPassword,
   onForgotPasswordClick,
 }: AuthCredentialFormProps) {
+  const { t } = useTranslation()
+
   return (
     <>
       {mode === 'register' && (
         <div>
           <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-            Họ và tên <span className="text-error">*</span>
+            {t('auth.fullName')} <span className="text-error">*</span>
           </label>
           <Input
             type="text"
             required
             value={fullName}
             onChange={(e) => onFullNameChange(e.target.value)}
-            placeholder="Ví dụ: Nguyễn Nam Tính"
+            placeholder={t('auth.fullNamePlaceholder')}
             className="bg-surface-subtle"
           />
         </div>
@@ -57,14 +56,14 @@ export function AuthCredentialForm({
 
       <div>
         <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-          Địa chỉ Email <span className="text-error">*</span>
+          {t('auth.email')} <span className="text-error">*</span>
         </label>
         <Input
           type="email"
           required
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
-          placeholder="nguyennamtinh9999@gmail.com"
+          placeholder={t('auth.emailPlaceholder')}
           className="bg-surface-subtle"
         />
       </div>
@@ -72,13 +71,13 @@ export function AuthCredentialForm({
       {mode === 'register' && (
         <div>
           <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-            Số điện thoại
+            {t('auth.phoneNumber')}
           </label>
           <Input
             type="tel"
             value={phoneNumber}
             onChange={(e) => onPhoneNumberChange(e.target.value)}
-            placeholder="0987654321"
+            placeholder={t('auth.phoneNumberPlaceholder')}
             className="bg-surface-subtle"
           />
         </div>
@@ -87,7 +86,7 @@ export function AuthCredentialForm({
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label className="block text-xs font-semibold text-text-secondary">
-            Mật khẩu <span className="text-error">*</span>
+            {t('auth.password')} <span className="text-error">*</span>
           </label>
           {mode === 'login' && (
             <button
@@ -95,7 +94,7 @@ export function AuthCredentialForm({
               onClick={onForgotPasswordClick}
               className="text-xs font-semibold text-primary hover:underline cursor-pointer"
             >
-              Quên mật khẩu?
+              {t('auth.forgotPassword')}
             </button>
           )}
         </div>
@@ -105,12 +104,13 @@ export function AuthCredentialForm({
             required
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
-            placeholder="Tối thiểu 6 ký tự"
+            placeholder={t('auth.passwordPlaceholder')}
             className="bg-surface-subtle pr-10"
           />
           <button
             type="button"
             onClick={onToggleShowPassword}
+            title={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary cursor-pointer"
           >
             <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} />

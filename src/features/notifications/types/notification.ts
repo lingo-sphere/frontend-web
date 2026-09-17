@@ -113,8 +113,21 @@ export function getCategoryColor(category: NotificationCategory): string {
   return colors[category] || 'bg-gray-500'
 }
 
-export function getCategoryLabel(category: NotificationCategory): string {
-  const labels: Record<NotificationCategory, string> = {
+export function getCategoryLabel(category: NotificationCategory, isVietnamese = false): string {
+  const labelsVi: Record<NotificationCategory, string> = {
+    AUTH: 'Bảo mật & Tài khoản',
+    SUBSCRIPTION: 'Gói đăng ký',
+    USER: 'Người dùng',
+    VOCABULARY: 'Từ vựng',
+    PRACTICE: 'Luyện tập',
+    EXAM: 'Bài thi',
+    COURSE: 'Khóa học',
+    AI: 'AI hỗ trợ',
+    GAMIFICATION: 'Nhiệm vụ & Điểm',
+    MARKETING: 'Khuyến mãi',
+    SYSTEM: 'Hệ thống',
+  }
+  const labelsEn: Record<NotificationCategory, string> = {
     AUTH: 'Auth & Security',
     SUBSCRIPTION: 'Subscription',
     USER: 'User',
@@ -122,10 +135,10 @@ export function getCategoryLabel(category: NotificationCategory): string {
     PRACTICE: 'Practice',
     EXAM: 'Exam',
     COURSE: 'Course',
-    AI: 'AI',
+    AI: 'AI Assistant',
     GAMIFICATION: 'Gamification',
     MARKETING: 'Marketing',
     SYSTEM: 'System',
   }
-  return labels[category] || category
+  return isVietnamese ? (labelsVi[category] || category) : (labelsEn[category] || category)
 }

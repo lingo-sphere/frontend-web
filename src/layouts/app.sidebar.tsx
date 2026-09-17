@@ -58,7 +58,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
             className="mt-0.5 text-[11px] font-medium leading-4 text-text-tertiary"
             suppressHydrationWarning
           >
-            {isVietnamese ? 'Học tiếng Anh' : 'English learning'}
+            {t('nav.englishLearning')}
           </p>
         </div>
       </div>
@@ -69,7 +69,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       />
       {!mobile && (
         <Button
-          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={sidebarCollapsed ? t('common.expand') : t('common.collapse')}
           className={`mt-auto h-8 w-full justify-center gap-2 rounded-lg py-1 text-text-tertiary hover:bg-surface-hover hover:text-text-primary ${
             sidebarCollapsed ? '!px-0' : ''
           }`}
@@ -82,7 +82,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
             <>
               <PanelLeftClose className="h-3.5 w-3.5" />
               <span className="text-[11px] font-medium" suppressHydrationWarning>
-                {isVietnamese ? 'Thu gọn' : 'Collapse'}
+                {t('common.collapse')}
               </span>
             </>
           )}

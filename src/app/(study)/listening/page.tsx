@@ -135,7 +135,7 @@ export default function ListeningAppPage() {
     <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <SectionHeading
-          eyebrow={t('listening.title')}
+          eyebrow={t('practice.listeningPractice')}
           title={isVietnamese ? 'Luyện nghe & Chép chính tả' : 'Listening & Dictation Practice'}
           description={
             isVietnamese

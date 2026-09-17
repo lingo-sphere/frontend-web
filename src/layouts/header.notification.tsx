@@ -112,7 +112,7 @@ export function HeaderNotificationDropdown({
                         <div className="mt-1 flex items-center gap-2">
                           <span className="text-[10px] text-text-tertiary">{formatNotifTime(notif.created_at)}</span>
                           <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${getCategoryColor(notif.notification_category)} text-white`}>
-                            {getCategoryLabel(notif.notification_category)}
+                            {getCategoryLabel(notif.notification_category, isVi)}
                           </span>
                         </div>
                       </div>

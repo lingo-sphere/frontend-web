@@ -1,7 +1,4 @@
-/**
- * @file course.search.bar.tsx
- * @description Component giao diện React CourseSearchBar cho học viên
- */
+// Component thanh tìm kiếm và lọc danh mục khóa học cho học viên.
 
 'use client'
 
@@ -21,13 +18,13 @@ export function CourseSearchBar({
   selectedCategory,
   onCategoryChange,
 }: CourseSearchBarProps) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
   const categories = [
-    { id: 'all', label: isVi ? 'Tất cả' : 'All' },
-    { id: 'TOEIC_2_SKILLS', label: isVi ? 'TOEIC 2 Kỹ Năng' : 'TOEIC 2 Skills' },
-    { id: 'TOEIC_4_SKILLS', label: isVi ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 4 Skills' },
+    { id: 'all', label: t('courses.allCategories') },
+    { id: 'TOEIC_2_SKILLS', label: t('courses.toeic2Skills') },
+    { id: 'TOEIC_4_SKILLS', label: t('courses.toeic4Skills') },
   ]
 
   return (

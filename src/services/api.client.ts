@@ -1,5 +1,6 @@
-// Service API client kết nối backend cho api-client
+// Service API client kết nối backend hỗ trợ đa ngôn ngữ và correlation id
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
+import i18n from '@/i18n/i18n.config'
 import { API_CONFIG } from '@/config/api.config'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { ApiResponse } from '@/types/api.types'
@@ -149,19 +150,19 @@ apiClient.interceptors.response.use(
       cleanMessage.includes('Failed to fetch') ||
       cleanMessage.includes('ENOTFOUND')
     ) {
-      cleanMessage = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại dịch vụ hoặc kết nối mạng.'
+      cleanMessage = i18n.t('errors.networkErrorDesc')
     } else if (cleanMessage.includes('timeout') || cleanMessage.includes('ETIMEDOUT')) {
-      cleanMessage = 'Yêu cầu xử lý quá thời gian quy định. Vui lòng thử lại.'
+      cleanMessage = i18n.t('errors.timeoutError')
     } else if (cleanMessage.includes('Internal server error') || cleanMessage.includes('Internal Server Error')) {
-      cleanMessage = 'Hệ thống đang bận hoặc xảy ra sự cố khi xử lý dữ liệu. Vui lòng thử lại sau.'
+      cleanMessage = i18n.t('errors.systemBusy')
     } else if (cleanMessage.includes('<!DOCTYPE') || cleanMessage.includes('<html')) {
-      cleanMessage = 'Dịch vụ tạm thời không phản hồi. Vui lòng thử lại sau ít phút.'
+      cleanMessage = i18n.t('errors.serviceUnavailable')
     } else if (cleanMessage.includes('Request failed with status code 401')) {
-      cleanMessage = 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!'
+      cleanMessage = i18n.t('auth.loginFailed')
     } else if (cleanMessage.includes('Request failed with status code 403')) {
-      cleanMessage = 'Bạn không có quyền thực hiện thao tác này.'
+      cleanMessage = i18n.t('errors.forbiddenDesc')
     } else if (cleanMessage.includes('Request failed with status code 404')) {
-      cleanMessage = 'Không tìm thấy dữ liệu yêu cầu.'
+      cleanMessage = i18n.t('errors.notFoundDesc')
     }
 
     return Promise.reject(new Error(cleanMessage))

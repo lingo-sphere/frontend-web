@@ -1,15 +1,11 @@
-/**
- * @file note.modal.tsx
- * @description Component giao diện React NoteModal cho học viên
- */
-
+// Modal tạo mới hoặc chỉnh sửa ghi chú học tập.
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { Icon } from '@/components/icon.map'
 import type { UserNote, NoteTargetType, CreateNoteForm } from '@/features/notes/types/notes'
-import { NOTE_TARGET_LABELS, NOTE_TARGET_ICONS } from '@/features/notes/types/notes'
+import { getNoteTargetLabel, NOTE_TARGET_ICONS } from '@/features/notes/types/notes'
 
 interface NoteModalProps {
   note?: UserNote
@@ -144,7 +140,7 @@ export function NoteModal({
                     }`}
                   >
                     <Icon name={NOTE_TARGET_ICONS[type]} size={14} />
-                    {NOTE_TARGET_LABELS[type]}
+                    {getNoteTargetLabel(type, isVietnamese)}
                   </button>
                 ))}
               </div>
