@@ -60,6 +60,7 @@ export default function CoursesCatalogPage() {
           isVi={isVi}
           count={filteredCourses.length}
           loading={loading}
+          isAuthenticated={isAuthenticated}
         />
 
         {activeTab === 'all' && <CoursePlacementBanner />}
@@ -77,12 +78,14 @@ export default function CoursesCatalogPage() {
           />
         )}
 
-        <CourseSearchBar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
+        {!( !isAuthenticated && (activeTab === 'my-courses' || activeTab === 'wishlist') ) && (
+          <CourseSearchBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+        )}
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
