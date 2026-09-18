@@ -54,7 +54,7 @@ export default function CoursesCatalogPage() {
 
   return (
     <div className="min-h-screen bg-background text-text-primary">
-      <main className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+      <main className="w-full px-4 py-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-4.5">
         <CoursesCatalogTabsHeader
           activeTab={activeTab}
           isVi={isVi}
@@ -65,18 +65,19 @@ export default function CoursesCatalogPage() {
 
         {activeTab === 'all' && <CoursePlacementBanner />}
 
-        {activeTab === 'all' && showScheduleBanner && (
-          <CourseScheduleBanner
-            schedule={userSchedule}
-            onOpenModal={handleOpenScheduleModal}
-            onDismiss={handleDismissScheduleBanner}
-            onCancelSchedule={
-              userSchedule?.is_reminder_enabled
-                ? handleCancelScheduleFromBanner
-                : undefined
-            }
-          />
-        )}
+        {showScheduleBanner &&
+          (activeTab === 'my-courses' || (isAuthenticated && userSchedule?.is_reminder_enabled)) && (
+            <CourseScheduleBanner
+              schedule={userSchedule}
+              onOpenModal={handleOpenScheduleModal}
+              onDismiss={handleDismissScheduleBanner}
+              onCancelSchedule={
+                userSchedule?.is_reminder_enabled
+                  ? handleCancelScheduleFromBanner
+                  : undefined
+              }
+            />
+          )}
 
         {!( !isAuthenticated && (activeTab === 'my-courses' || activeTab === 'wishlist') ) && (
           <CourseSearchBar
