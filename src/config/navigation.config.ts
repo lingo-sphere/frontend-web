@@ -38,6 +38,7 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       { id: 'vocabulary', labelVi: 'Từ vựng (SRS)', labelEn: 'Vocabulary', icon: 'cards', path: '/vocabulary' },
+      { id: 'mistakes', labelVi: 'Sổ tay lỗi sai (SRS)', labelEn: 'Mistake Vault (SRS)', icon: 'bookmarkCheck', path: '/practice/mistakes', badge: 'SRS', badgeColor: 'bg-rose-500' },
       { id: 'toeic', labelVi: 'Đề thi TOEIC', labelEn: 'TOEIC Exam', icon: 'fileText', path: '/toeic', badge: 'ETS', badgeColor: 'bg-primary' },
     ],
   },

@@ -1,7 +1,4 @@
-/**
- * @file icon.map.tsx
- * @description Component giao diện React icon-map cho học viên
- */
+// Ánh xạ tên icon chuỗi sang các biểu tượng Lucide icon cho toàn bộ ứng dụng.
 
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -17,6 +14,7 @@ import {
   BellOff,
   BookOpen,
   BookOpenCheck,
+  BookmarkCheck,
   BriefcaseBusiness,
   CalendarDays,
   Camera,
@@ -112,6 +110,7 @@ const iconMap: Record<string, LucideIcon> = {
   bellOff: BellOff,
   book: BookOpen,
   bookCheck: BookOpenCheck,
+  bookmarkCheck: BookmarkCheck,
   briefcase: BriefcaseBusiness,
   calendar: CalendarDays,
   camera: Camera,

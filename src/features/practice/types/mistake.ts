@@ -37,6 +37,9 @@ export interface RecordMistakeItemPayload {
   topic_tags?: string[]
   topic_name_vi?: string
   source_context?: string
+  source_type?: string
+  source_id?: string
+  source_title?: string
 }
 
 export interface BatchRecordMistakesPayload {

@@ -451,6 +451,9 @@ export function useCourseTestRunner({
                   topic_tags: ex?.topic ? [ex.topic] : (w.category ? [w.category] : []),
                   topic_name_vi: ex?.topic || w.category || '',
                   source_context: `${testTitle} (${testType})`,
+                  source_type: 'COURSE_CHAPTER_TEST',
+                  source_id: courseId,
+                  source_title: testTitle,
                 }
               })
 
@@ -466,6 +469,9 @@ export function useCourseTestRunner({
                   user_answer: w.user_selected_answer,
                   correct_answer: w.correct_answer,
                   source_context: `${testTitle} (${testType})`,
+                  source_type: 'COURSE_CHAPTER_TEST',
+                  source_id: courseId,
+                  source_title: testTitle,
                 }
               })
               mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})
@@ -494,6 +500,9 @@ export function useCourseTestRunner({
               user_answer: w.user_selected_answer,
               correct_answer: w.correct_answer,
               source_context: `${testTitle} (${testType})`,
+              source_type: 'COURSE_CHAPTER_TEST',
+              source_id: courseId,
+              source_title: testTitle,
             }
           })
           mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})

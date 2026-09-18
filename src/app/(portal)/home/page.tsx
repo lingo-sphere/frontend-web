@@ -11,6 +11,7 @@ import { StreakLeaderboard } from '@/features/dashboard/components/streak.leader
 import { StreakRewards } from '@/features/dashboard/components/streak.rewards'
 import { TodaysLearningCard } from '@/features/dashboard/components/todays.learning.card'
 import { WelcomeBanner } from '@/features/dashboard/components/welcome.banner'
+import { MistakeDueBanner } from '@/features/dashboard/components/mistake.due.banner'
 import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
 import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 import type { LeaderboardEntry } from '@/features/user/services/user.service'
@@ -114,6 +115,7 @@ export default function HomeAppPage() {
         className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
       >
         <WelcomeBanner />
+        <MistakeDueBanner />
         <section>
           <StreakHistory days={defaultHeatmap} summary={heatmapSummary} />
         </section>

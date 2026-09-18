@@ -26,6 +26,7 @@ const routeMap: Record<string, string> = {
   'courses-liked': '/courses?tab=wishlist',
   toeic: '/toeic',
   vocabulary: '/vocabulary',
+  mistakes: '/practice/mistakes',
   listening: '/listening',
   writing: '/writing',
   speaking: '/speaking',
