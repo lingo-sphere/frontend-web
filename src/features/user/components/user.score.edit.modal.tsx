@@ -30,6 +30,7 @@ export function UserScoreEditModal({
   currentScores,
   onSuccess,
 }: UserScoreEditModalProps) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const [skillsType, setSkillsType] = useState<'2SKILLS' | '4SKILLS'>(
     currentScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS'
   )
@@ -52,6 +53,11 @@ export function UserScoreEditModal({
   const calculatedTotal = listeningScore + readingScore
 
   const handleSave = async () => {
+    if (!isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để cập nhật điểm trình độ của bạn.')
+      return
+    }
+
     if (listeningScore < 0 || listeningScore > 495) {
       toast.error('Điểm Nghe (Listening) phải từ 0 đến 495.')
       return
@@ -87,7 +93,6 @@ export function UserScoreEditModal({
       }
 
       const updatedUser = await userService.updateProfile(payload)
-
       const { user, setUser } = useAuthStore.getState()
       if (user) {
         setUser({
@@ -96,7 +101,6 @@ export function UserScoreEditModal({
           ...(updatedUser || {}),
         })
       }
-
       toast.success('Cập nhật điểm trình độ thành công!')
       onSuccess(payload)
       onOpenChange(false)
@@ -143,6 +147,16 @@ export function UserScoreEditModal({
         </div>
 
         
+        {!isAuthenticated && (
+          <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11.5px] text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold">Yêu cầu đăng nhập: </span>
+              <span>Bạn cần đăng nhập tài khoản LingoSphere để lưu và cập nhật điểm trình độ vào hệ thống.</span>
+            </div>
+          </div>
+        )}
+
         <div className="p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
@@ -285,14 +299,26 @@ export function UserScoreEditModal({
           >
             Hủy bỏ
           </button>
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={handleSave}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold hover:shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
-          >
-            {isSaving ? 'Đang lưu...' : 'Xác nhận cập nhật điểm'}
-          </button>
+          {!isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => {
+                toast.warning('Vui lòng đăng nhập để cập nhật điểm trình độ của bạn.')
+              }}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold hover:shadow-md transition-all cursor-pointer flex items-center gap-2"
+            >
+              Đăng nhập để cập nhật điểm
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={handleSave}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold hover:shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
+            >
+              {isSaving ? 'Đang lưu...' : 'Xác nhận cập nhật điểm'}
+            </button>
+          )}
         </div>
       </div>
     </div>

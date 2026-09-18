@@ -44,6 +44,7 @@ export function CoursePlacementPromptModal({
   const router = useRouter()
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   const [showManualInput, setShowManualInput] = useState(false)
   const [listeningScore, setListeningScore] = useState<number>(300)
@@ -135,6 +136,16 @@ export function CoursePlacementPromptModal({
       }
     }
 
+    const { isAuthenticated: authCheck, user, setUser } = useAuthStore.getState()
+    if (!authCheck) {
+      toast.warning(
+        isVietnamese
+          ? 'Vui lòng đăng nhập để lưu điểm đầu vào vào tài khoản của bạn.'
+          : 'Please log in to save your placement score to your account.'
+      )
+      return
+    }
+
     setIsSavingScore(true)
     try {
       const skillsType = is4SkillsCourse ? '4SKILLS' : '2SKILLS'
@@ -151,9 +162,7 @@ export function CoursePlacementPromptModal({
         placement_tested_at: new Date().toISOString(),
       }
 
-      await userService.updateProfile(payload).catch(() => null)
-
-      const { user, setUser } = useAuthStore.getState()
+      await userService.updateProfile(payload)
       if (user) {
         setUser({
           ...user,
@@ -532,28 +541,49 @@ export function CoursePlacementPromptModal({
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleSaveManualScore}
-                  disabled={isSavingScore}
-                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                >
-                  {isSavingScore ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{isVietnamese ? 'Đang lưu điểm...' : 'Saving score...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>
-                        {isVietnamese
-                          ? 'Lưu Điểm Đầu Vào & Tiếp Tục Mua Khóa Học'
-                          : 'Save Placement Score & Continue Purchase'}
-                      </span>
-                    </>
-                  )}
-                </button>
+                {!isAuthenticated ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast.warning(
+                        isVietnamese
+                          ? 'Vui lòng đăng nhập để lưu điểm đầu vào vào tài khoản của bạn.'
+                          : 'Please log in to save your placement score to your account.'
+                      )
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>
+                      {isVietnamese
+                        ? 'Đăng nhập để lưu điểm đầu vào'
+                        : 'Log in to save placement score'}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSaveManualScore}
+                    disabled={isSavingScore}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  >
+                    {isSavingScore ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{isVietnamese ? 'Đang lưu điểm...' : 'Saving score...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>
+                          {isVietnamese
+                            ? 'Lưu Điểm Đầu Vào & Tiếp Tục Mua Khóa Học'
+                            : 'Save Placement Score & Continue Purchase'}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </div>

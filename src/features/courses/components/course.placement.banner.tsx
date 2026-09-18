@@ -13,6 +13,7 @@ import {
   Compass,
 } from 'lucide-react'
 import { Button } from '@/components/button'
+import { toast } from '@/store/toast.store'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
 import { useMounted } from '@/hooks/use.mounted'
@@ -28,18 +29,18 @@ interface PlacementData {
 }
 
 function resolvePlacementData(user: ReturnType<typeof useAuthStore.getState>['user']): PlacementData | null {
-  if (!user) return null
-
-  const scoreNum = Number(user.placement_test_score)
-  if (scoreNum > 0) {
-    return {
-      score: scoreNum,
-      listening: typeof user.placement_listening_score === 'number' ? user.placement_listening_score : undefined,
-      reading: typeof user.placement_reading_score === 'number' ? user.placement_reading_score : undefined,
-      speaking: typeof user.placement_speaking_score === 'number' ? user.placement_speaking_score : undefined,
-      writing: typeof user.placement_writing_score === 'number' ? user.placement_writing_score : undefined,
-      skillsType: typeof user.placement_skills_type === 'string' ? user.placement_skills_type : '2SKILLS',
-      testedAt: typeof user.placement_tested_at === 'string' ? user.placement_tested_at : undefined,
+  if (user) {
+    const scoreNum = Number(user.placement_test_score)
+    if (scoreNum > 0) {
+      return {
+        score: scoreNum,
+        listening: typeof user.placement_listening_score === 'number' ? user.placement_listening_score : undefined,
+        reading: typeof user.placement_reading_score === 'number' ? user.placement_reading_score : undefined,
+        speaking: typeof user.placement_speaking_score === 'number' ? user.placement_speaking_score : undefined,
+        writing: typeof user.placement_writing_score === 'number' ? user.placement_writing_score : undefined,
+        skillsType: typeof user.placement_skills_type === 'string' ? user.placement_skills_type : '2SKILLS',
+        testedAt: typeof user.placement_tested_at === 'string' ? user.placement_tested_at : undefined,
+      }
     }
   }
 
@@ -139,7 +140,13 @@ export function CoursePlacementBanner() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowEditScoreModal(true)}
+                onClick={() => {
+                  if (!user) {
+                    toast.warning('Vui lòng đăng nhập để cập nhật điểm trình độ.')
+                    return
+                  }
+                  setShowEditScoreModal(true)
+                }}
                 className="rounded-2xl bg-white/10 hover:bg-white/20 text-white border-white/20 font-bold text-xs px-4 py-2.5 cursor-pointer flex items-center gap-1.5"
               >
                 <RotateCcw size={14} />
@@ -267,7 +274,13 @@ export function CoursePlacementBanner() {
 
             <button
               type="button"
-              onClick={() => setShowEditScoreModal(true)}
+              onClick={() => {
+                if (!user) {
+                  toast.warning('Vui lòng đăng nhập để cập nhật điểm trình độ.')
+                  return
+                }
+                setShowEditScoreModal(true)
+              }}
               className="text-[11.5px] font-bold text-indigo-200 hover:text-white underline underline-offset-4 text-center cursor-pointer pt-1"
             >
               Đã có điểm thi thật? Nhập điểm để nhận gợi ý ngay
