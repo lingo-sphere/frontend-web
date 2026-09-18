@@ -1,7 +1,7 @@
 // Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện bảng điều khiển học tập.
 
 export type ThemeMode = 'light' | 'dark'
-export type NavSectionId = 'home' | 'learning' | 'ai' | 'community' | 'leaderboard' | 'progress' | 'system'
+export type NavSectionId = 'home' | 'learning' | 'ai' | 'leaderboard' | 'progress' | 'system'
 export type LearningTaskKind = 'vocabulary' | 'listening' | 'writing' | 'speaking'
 export type MilestoneStatus = 'done' | 'current' | 'locked'
 export type LeaderboardPeriod = 'week' | 'month' | 'year'

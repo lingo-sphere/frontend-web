@@ -55,13 +55,12 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: 'ai-community',
-    titleVi: 'AI & Cộng đồng',
-    titleEn: 'AI & Community',
+    id: 'ai-tools',
+    titleVi: 'AI & Tiện ích',
+    titleEn: 'AI & Tools',
     items: [
       { id: 'ai-learning', labelVi: 'Gia sư AI', labelEn: 'AI Tutor', icon: 'sparkles', path: '/ai-learning', badge: 'Groq', badgeColor: 'bg-success' },
       { id: 'translate', labelVi: 'Dịch Thuật AI', labelEn: 'AI Translation', icon: 'volume2', path: '/translate', badge: 'AI', badgeColor: 'bg-accent' },
-      { id: 'community', labelVi: 'Cộng đồng', labelEn: 'Community', icon: 'users', path: '/community' },
       { id: 'leaderboard', labelVi: 'Bảng xếp hạng', labelEn: 'Leaderboard', icon: 'trophy', path: '/leaderboard' },
       { id: 'notes', labelVi: 'Sổ tay ghi chú', labelEn: 'Notebook', icon: 'notes', path: '/notes' },
     ],

@@ -34,7 +34,6 @@ const routeMap: Record<string, string> = {
   ipa: '/ipa',
   'ai-learning': '/ai-learning',
   translate: '/translate',
-  community: '/community',
   leaderboard: '/leaderboard',
   notes: '/notes',
   'public-decks': '/public-decks',
