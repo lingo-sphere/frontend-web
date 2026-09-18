@@ -22,8 +22,8 @@ const SUGGESTED_PROMPTS = [
 
 export default function AiLearningAppPage() {
   const queryClient = useQueryClient()
-  const { user } = useAuthStore()
-  const { data: quota } = useAiQuotaQuery()
+  const { user, isAuthenticated } = useAuthStore()
+  const { data: quota } = useAiQuotaQuery(Boolean(user))
   const [messages, setMessages] = useState<AiChatMessage[]>([
     {
       role: 'assistant',
@@ -36,8 +36,8 @@ export default function AiLearningAppPage() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const isPremiumUser = Boolean(user?.is_premium || quota?.is_premium)
-  const chatRemaining = quota ? (isPremiumUser ? 999999 : quota.chat.remaining) : 5
-  const isOutOfQuota = !isPremiumUser && chatRemaining <= 0
+  const chatRemaining = quota ? (isPremiumUser ? 999999 : quota.chat.remaining) : (isAuthenticated ? 5 : 0)
+  const isOutOfQuota = isAuthenticated && !isPremiumUser && chatRemaining <= 0
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -50,6 +50,14 @@ export default function AiLearningAppPage() {
   const handleSend = async (textToSend?: string) => {
     const query = textToSend || input
     if (!query.trim() || isLoading) return
+
+    if (!isAuthenticated) {
+      setErrorBanner('Vui lòng đăng nhập để trò chuyện và học tập cùng Gia sư AI.')
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      }
+      return
+    }
 
     if (isOutOfQuota) {
       setErrorBanner('Bạn đã sử dụng hết 5 câu hỏi miễn phí của Gia sư AI. Vui lòng nâng cấp gói Premium để tiếp tục học tập không giới hạn!')

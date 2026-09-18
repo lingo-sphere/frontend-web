@@ -5,6 +5,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
 import { api } from '@/services/api.client'
+import { toast } from '@/store/toast.store'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useDailyJournalPromptQuery } from '@/features/practice/hooks/use.practice.query'
 
 interface JournalEvaluation {
@@ -17,6 +19,7 @@ interface JournalEvaluation {
 }
 
 export default function DailyJournalAppPage() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const { data: promptData } = useDailyJournalPromptQuery()
 
   const dailyPrompt = useMemo(() => ({
@@ -41,6 +44,14 @@ export default function DailyJournalAppPage() {
     e.preventDefault()
     if (!journalContent.trim() || wordCount < 10) return
 
+    if (!isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để nộp bài và nhận đánh giá từ Gia sư AI.')
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      }
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const res = await api.post<JournalEvaluation>('/practice/writing/journal/submit', {
@@ -49,23 +60,11 @@ export default function DailyJournalAppPage() {
       })
       if (res) {
         setEvaluation(res)
+        toast.success('Đã nhận đánh giá bài viết từ Gia sư AI!')
       }
-    } catch {
-      setEvaluation({
-        overall_score: 8.5,
-        word_count: wordCount,
-        corrected_text: journalContent.replace(/i /g, 'I '),
-        grammar_feedback: [
-          'Cấu trúc câu phong phú và sử dụng thì quá khứ đơn chính xác.',
-          'Lưu ý viết hoa đại từ nhân xưng "I" và dấu câu cuối mỗi đoạn.',
-        ],
-        vocabulary_suggestions: [
-          'Thử thay "good" bằng "exceptional" hoặc "remarkable" để văn phong tự nhiên hơn.',
-          'Sử dụng liên từ nối "Furthermore", "In addition" để tạo tính liên kết.',
-        ],
-        teacher_advice:
-          'Bài viết có chiều sâu và diễn đạt ý tưởng mạch lạc. Hãy duy trì thói quen viết nhật ký mỗi ngày nhé!',
-      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể kết nối đến hệ thống chấm điểm AI. Vui lòng thử lại sau.'
+      toast.error(msg)
     } finally {
       setIsSubmitting(false)
     }

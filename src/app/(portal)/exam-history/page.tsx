@@ -17,7 +17,7 @@ import type { ProgressRecentActivity, UnifiedCourseCardItem } from '@/features/p
 
 export default function ExamHistoryPage() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user, isAuthenticated } = useAuthStore()
   const [viewMode, setViewMode] = useState<'LIST' | 'CHART'>('LIST')
 
   const {
@@ -37,7 +37,7 @@ export default function ExamHistoryPage() {
     formatDuration,
   } = useExamHistory()
 
-  const { data: coursesProgress = [] } = useCoursesProgressQuery()
+  const { data: coursesProgress = [] } = useCoursesProgressQuery(Boolean(user))
 
   const baselineScore = Number(user?.placement_test_score) || 240
   const targetScore = Number(user?.target_toeic_score) || 650
@@ -160,6 +160,26 @@ export default function ExamHistoryPage() {
       </div>
 
       <ExamHistoryKpi stats={stats} />
+
+      {!isAuthenticated && (
+        <div className="rounded-2xl border border-dashed border-border bg-surface/50 p-8 text-center flex flex-col items-center justify-center gap-3">
+          <BookOpen size={40} className="text-text-tertiary" />
+          <h3 className="text-base font-bold text-text-primary">Đăng nhập để theo dõi lịch sử làm bài thi</h3>
+          <p className="text-xs text-text-secondary max-w-md">
+            Lưu lại toàn bộ kết quả thi thử, điểm Listening/Reading, và biểu đồ phát triển năng lực chuẩn xác nhất.
+          </p>
+          <Button
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+              }
+            }}
+            className="mt-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer"
+          >
+            Đăng nhập ngay
+          </Button>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <button

@@ -98,9 +98,7 @@ apiClient.interceptors.response.use(
         isRefreshing = true
 
         try {
-          const storedRefreshToken =
-            storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
-            storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+          const storedRefreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
 
           const refreshHeaders: Record<string, string> = {}
           if (storedRefreshToken) {
@@ -129,8 +127,8 @@ apiClient.interceptors.response.use(
             storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
             storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken, { days: 1 })
             if (newRefreshToken) {
-              storage.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken)
               storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken, { days: 7 })
+              storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
             }
 
             if (originalRequest.headers) {

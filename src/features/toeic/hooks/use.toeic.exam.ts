@@ -197,6 +197,11 @@ export function useToeicExam(examId?: string) {
     const timeSpent = Math.max(1, totalSeconds - state.timeRemaining)
 
     const submitAttemptToBackend = async () => {
+      const { user } = useAuthStore.getState()
+      if (!user) {
+        toast.info('Kết quả làm bài đã được chấm điểm! Đăng nhập để lưu kết quả vào lịch sử thi.')
+        return
+      }
       try {
         setIsSubmittingAttempt(true)
         let currentAttemptId = attemptIdRef.current

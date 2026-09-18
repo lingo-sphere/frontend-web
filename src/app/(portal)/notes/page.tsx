@@ -13,12 +13,15 @@ import { getNoteTargetLabel, NOTE_TARGET_ICONS } from '@/features/notes/types/no
 import { NoteCard } from '@/features/notes/components/note.card'
 import { NoteModal } from '@/features/notes/components/note.modal'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 
 const ITEMS_PER_PAGE = 9
 
 export default function NotesAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const user = useAuthStore((state) => state.user)
 
   const [notes, setNotes] = useState<UserNote[]>([])
   const [selectedType, setSelectedType] = useState<NoteTargetType | 'ALL'>('ALL')
@@ -28,11 +31,15 @@ export default function NotesAppPage() {
   const [editingNote, setEditingNote] = useState<UserNote | undefined>()
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setNotes([])
+      return
+    }
     const saved = storage.get<UserNote[]>(STORAGE_KEYS.USER_NOTES)
     if (saved && Array.isArray(saved)) {
       setNotes(saved)
     }
-  }, [])
+  }, [isAuthenticated])
 
   const saveNotes = (updated: UserNote[]) => {
     setNotes(updated)
@@ -92,7 +99,7 @@ export default function NotesAppPage() {
     } else {
       const newNote: UserNote = {
         id: `note-${Date.now()}`,
-        userId: 'current_user',
+        userId: user?.user_id || '',
         title: formData.title,
         content: formData.content,
         targetType: formData.targetType,
@@ -191,7 +198,30 @@ export default function NotesAppPage() {
           </div>
         </div>
 
-        {paginatedNotes.length > 0 ? (
+        {!isAuthenticated ? (
+          <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+            <Icon name="lock" size={48} className="mb-3 text-text-tertiary" />
+            <h3 className="text-lg font-semibold text-text-primary">
+              {isVietnamese ? 'Đăng nhập để xem sổ tay ghi chú' : 'Log in to view learning notes'}
+            </h3>
+            <p className="mt-1 text-sm text-text-secondary max-w-md">
+              {isVietnamese
+                ? 'Đăng nhập vào tài khoản để tạo mới, lưu trữ và đồng bộ toàn bộ ghi chú học tập trên mọi thiết bị.'
+                : 'Log in to create, manage, and sync all your learning notes across all devices.'}
+            </p>
+            <Button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+                }
+              }}
+              className="mt-5 gap-2 bg-primary hover:bg-primary-hover shadow-md cursor-pointer text-white"
+            >
+              <Icon name="logIn" size={16} />
+              {isVietnamese ? 'Đăng nhập ngay' : 'Log In Now'}
+            </Button>
+          </div>
+        ) : paginatedNotes.length > 0 ? (
           <>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {paginatedNotes.map((note) => (
