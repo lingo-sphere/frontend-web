@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import {
   X,
   Play,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react'
 import type { Course, Lesson } from '@/features/courses/types/course'
 import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
+import { CoursePreviewVideoPlayer } from '@/features/courses/components/course.preview.video.player'
 
 interface CourseLandingPreviewModalProps {
   open: boolean
@@ -33,15 +35,6 @@ function formatDurationSeconds(sec?: number): string {
   const m = Math.floor(sec / 60)
   const s = Math.floor(sec % 60)
   return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`
-}
-
-function getYouTubeEmbedUrl(url?: string): string | null {
-  if (!url) return null
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-  const match = url.match(regExp)
-  return match && match[2].length === 11
-    ? `https://www.youtube.com/embed/${match[2]}?autoplay=1&rel=0`
-    : null
 }
 
 export function CourseLandingPreviewModal({
@@ -124,18 +117,14 @@ export function CourseLandingPreviewModal({
 
   const activeLesson = currentLesson || lesson
 
-  if (!open || !activeLesson) return null
-
   const rawVideoSrc =
-    activeLesson.videoUrl ||
-    activeLesson.content?.videoUrl ||
+    activeLesson?.videoUrl ||
+    activeLesson?.content?.videoUrl ||
     ''
   const videoSrc =
     rawVideoSrc.trim() !== ''
       ? rawVideoSrc
       : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-
-  const youtubeEmbedUrl = getYouTubeEmbedUrl(videoSrc)
 
   const effectivePrice = course ? getCourseEffectivePrice(course) : (coursePrice || 0)
   const originalPrice = (course?.price || 0) > effectivePrice ? (course?.price || 0) : 0
@@ -144,16 +133,33 @@ export function CourseLandingPreviewModal({
   const displayTitle = course?.title || courseTitle || 'Khóa học LingoSphere'
 
   return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-200"
-    >
-      <div
-        className="relative w-full max-w-5xl bg-slate-900 border border-slate-700/70 rounded-3xl shadow-2xl shadow-black/90 overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200 text-white"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      {open && activeLesson && (
+        <motion.div
+          key="course-preview-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose()
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 bg-black/75 backdrop-blur-sm"
+        >
+          <motion.div
+            key="course-preview-card"
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{
+              type: 'spring',
+              damping: 28,
+              stiffness: 340,
+              mass: 0.75,
+            }}
+            className="relative w-full max-w-5xl bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl shadow-black/90 overflow-hidden flex flex-col max-h-[92vh] text-white ring-1 ring-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
         <div className="flex items-center justify-between px-5 sm:px-7 py-3.5 sm:py-4 border-b border-slate-800 bg-slate-950/70 backdrop-blur-md shrink-0">
           <div className="min-w-0 pr-4 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -183,27 +189,11 @@ export function CourseLandingPreviewModal({
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-150px)]">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
             <div className="lg:col-span-8 space-y-4">
-              <div className="relative aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex items-center justify-center">
-                {youtubeEmbedUrl ? (
-                  <iframe
-                    key={youtubeEmbedUrl}
-                    src={youtubeEmbedUrl}
-                    title={activeLesson.title}
-                    className="w-full h-full border-0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <video
-                    key={videoSrc}
-                    src={videoSrc}
-                    controls
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-contain bg-black"
-                  />
-                )}
-              </div>
+              <CoursePreviewVideoPlayer
+                videoSrc={videoSrc}
+                title={activeLesson.title}
+                autoPlay
+              />
 
               <div className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-1 min-w-0">
@@ -361,7 +351,9 @@ export function CourseLandingPreviewModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
