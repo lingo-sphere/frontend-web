@@ -10,7 +10,7 @@ import enUS from 'antd/locale/en_US'
 import dayjs from 'dayjs'
 import 'dayjs/locale/vi'
 import 'dayjs/locale/en'
-import '@/i18n/i18n.config'
+import { initClientLanguage } from '@/i18n/i18n.config'
 import { TooltipProvider } from '@/components/tooltip'
 import { AppProvider } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -35,6 +35,10 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [kickoutMessage, setKickoutMessage] = useState<string | null>(null)
   const lastVerifiedAt = useRef<number>(0)
+
+  useEffect(() => {
+    initClientLanguage()
+  }, [])
 
   useEffect(() => {
     dayjs.locale(currentLanguage)
