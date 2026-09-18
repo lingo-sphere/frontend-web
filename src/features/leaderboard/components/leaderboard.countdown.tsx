@@ -1,10 +1,7 @@
-/**
- * @file leaderboard.countdown.tsx
- * @description Component giao diện React LeaderboardCountdown cho học viên
- */
-
+// Component giao diện hiển thị đồng hồ đếm ngược thời hạn bảng xếp hạng.
 import { useTranslation } from 'react-i18next'
 import { Clock3 } from 'lucide-react'
+import { useMounted } from '@/hooks/use.mounted'
 
 interface LeaderboardCountdownProps {
   daysLeft: number
@@ -13,12 +10,13 @@ interface LeaderboardCountdownProps {
 
 export function LeaderboardCountdown({ daysLeft, isCurrentMonth }: LeaderboardCountdownProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVietnamese = mounted ? i18n.language === 'vi' : true
 
   if (!isCurrentMonth) {
     return (
       <div className="rounded-2xl border border-border bg-surface p-6 text-center">
-        <p className="text-[14px] font-semibold text-text-secondary">
+        <p className="text-[14px] font-semibold text-text-secondary" suppressHydrationWarning>
           {isVietnamese ? 'Bảng xếp hạng tháng này đã đóng' : "This month's rankings are closed"}
         </p>
       </div>
@@ -36,24 +34,24 @@ export function LeaderboardCountdown({ daysLeft, isCurrentMonth }: LeaderboardCo
           <Clock3 className="h-7 w-7 text-warning" />
         </div>
         <div className="flex-1 text-center sm:text-left">
-          <p className="text-[13px] font-medium text-text-secondary">
+          <p className="text-[13px] font-medium text-text-secondary" suppressHydrationWarning>
             {isVietnamese ? 'Thời gian còn lại trong tháng' : 'Time remaining to complete this month'}
           </p>
-          <p className="mt-1 text-[28px] font-bold text-warning sm:text-[32px]">
+          <p className="mt-1 text-[28px] font-bold text-warning sm:text-[32px]" suppressHydrationWarning>
             {daysLeft} {isVietnamese ? 'ngày' : 'days'}
           </p>
         </div>
         <div className="hidden items-center gap-4 sm:flex">
           <div className="text-center">
             <p className="text-[24px] font-bold text-warning">{daysLeft}</p>
-            <p className="text-[11px] text-text-tertiary">{isVietnamese ? 'Ngày' : 'Days'}</p>
+            <p className="text-[11px] text-text-tertiary" suppressHydrationWarning>{isVietnamese ? 'Ngày' : 'Days'}</p>
           </div>
           <span className="text-[24px] font-bold text-text-tertiary">:</span>
           <div className="text-center">
             <p className="text-[24px] font-bold text-warning">
               {String(Math.floor((daysLeft * 24) % 24)).padStart(2, '0')}
             </p>
-            <p className="text-[11px] text-text-tertiary">{isVietnamese ? 'Giờ' : 'Hours'}</p>
+            <p className="text-[11px] text-text-tertiary" suppressHydrationWarning>{isVietnamese ? 'Giờ' : 'Hours'}</p>
           </div>
         </div>
       </div>

@@ -1,15 +1,16 @@
 // Component giao diện React LeaderboardPodium cho học viên.
 
 import { useTranslation } from 'react-i18next'
-import { Crown } from "lucide-react";
+import { Crown } from "lucide-react"
+import { useMounted } from '@/hooks/use.mounted'
 import type {
   LeaderboardType,
   MonthlyLeaderboardUser,
-} from "@/features/dashboard/types/dashboard";
+} from "@/features/dashboard/types/dashboard"
 
 interface LeaderboardPodiumProps {
-  users: MonthlyLeaderboardUser[];
-  type: LeaderboardType;
+  users: MonthlyLeaderboardUser[]
+  type: LeaderboardType
 }
 
 const podiumConfig = [
@@ -37,15 +38,25 @@ const podiumConfig = [
     medalSoft: "#fdf2e9",
     label: "3rd",
   },
-];
+]
 
 export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVietnamese = mounted ? i18n.language === 'vi' : true
 
-  const sortedUsers = podiumConfig.map(
-    (p) => users.find((u) => u.rank === p.rank)!
-  );
+  const podiumEntries = podiumConfig
+    .map((config) => {
+      const user = users.find((u) => u.rank === config.rank)
+      if (!user) return null
+      return { config, user }
+    })
+    .filter(
+      (item): item is { config: (typeof podiumConfig)[0]; user: MonthlyLeaderboardUser } =>
+        Boolean(item)
+    )
+
+  if (podiumEntries.length === 0) return null
 
   const getTypeLabel = () => {
     if (type === "streak") return isVietnamese ? 'Chuỗi' : 'Streak'
@@ -64,13 +75,11 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
 
   return (
     <div className="flex items-end justify-center gap-3 sm:gap-6">
-      {sortedUsers.map((user, idx) => {
-        const config = podiumConfig[idx];
-        const isFirst = config.rank === 1;
+      {podiumEntries.map(({ config, user }) => {
+        const isFirst = config.rank === 1
 
         return (
-          <div key={user.rank} className="flex flex-col items-center">
-
+          <div key={`podium-user-${user.rank}-${user.name}`} className="flex flex-col items-center">
             <div
               className={`flex w-full min-h-[180px] flex-col items-center rounded-2xl border p-4 transition-transform ${
                 isFirst
@@ -78,7 +87,6 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
                   : "border-border bg-surface"
               }`}
             >
-
               {config.rank === 1 && (
                 <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-warning to-warning/70 shadow-md">
                   <Crown className="h-4 w-4 text-white" />
@@ -97,9 +105,9 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
 
               <div
                 className="mb-2 flex h-12 w-12 items-center justify-center rounded-full text-[18px] font-bold text-white shadow-md"
-                style={{ backgroundColor: user.avatarColor }}
+                style={{ backgroundColor: user.avatarColor || config.medal }}
               >
-                {user.name.charAt(0)}
+                {(user.name || '?').charAt(0)}
               </div>
 
               <p className="mb-1 text-[13px] font-semibold text-text-primary text-center line-clamp-1">
@@ -136,8 +144,8 @@ export function LeaderboardPodium({ users, type }: LeaderboardPodiumProps) {
               </p>
             </div>
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

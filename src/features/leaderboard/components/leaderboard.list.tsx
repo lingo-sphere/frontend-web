@@ -1,9 +1,6 @@
-/**
- * @file leaderboard.list.tsx
- * @description Component giao diện React LeaderboardList cho học viên
- */
-
+// Component giao diện hiển thị danh sách người dùng trên bảng xếp hạng.
 import { useTranslation } from 'react-i18next'
+import { useMounted } from '@/hooks/use.mounted'
 import type { LeaderboardType, MonthlyLeaderboardUser } from '@/features/dashboard/types/dashboard'
 
 interface LeaderboardListProps {
@@ -13,7 +10,8 @@ interface LeaderboardListProps {
 
 export function LeaderboardList({ users, type }: LeaderboardListProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVietnamese = mounted ? i18n.language === 'vi' : true
 
   const rankedUsers = users.slice(3)
 
@@ -66,9 +64,9 @@ export function LeaderboardList({ users, type }: LeaderboardListProps) {
             <div className="flex flex-1 items-center gap-3">
               <div
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[14px] font-bold text-white"
-                style={{ backgroundColor: user.avatarColor }}
+                style={{ backgroundColor: user.avatarColor || '#4f46e5' }}
               >
-                {user.name.charAt(0)}
+                {(user.name || '?').charAt(0)}
               </div>
               <span className="text-[14px] font-medium text-text-primary">{user.name}</span>
             </div>

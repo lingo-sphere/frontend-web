@@ -1,10 +1,7 @@
-/**
- * @file leaderboard.rewards.tsx
- * @description Component giao diện React LeaderboardRewards cho học viên
- */
-
+// Component giao diện hiển thị danh sách phần thưởng hàng tháng trên bảng xếp hạng.
 import { useTranslation } from 'react-i18next'
 import { Diamond } from 'lucide-react'
+import { useMounted } from '@/hooks/use.mounted'
 import type { MonthlyReward } from '@/features/dashboard/types/dashboard'
 
 interface LeaderboardRewardsProps {
@@ -19,11 +16,12 @@ const rewardColors = [
 
 export function LeaderboardRewards({ rewards }: LeaderboardRewardsProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVietnamese = mounted ? i18n.language === 'vi' : true
 
   return (
     <div className="dashboard-card p-5">
-      <h3 className="mb-4 text-[16px] font-bold text-text-primary">
+      <h3 className="mb-4 text-[16px] font-bold text-text-primary" suppressHydrationWarning>
         {isVietnamese ? 'Phần thưởng hàng tháng' : 'Monthly Rewards'}
       </h3>
       <div className="grid grid-cols-3 gap-4">

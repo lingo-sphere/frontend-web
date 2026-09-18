@@ -1,10 +1,7 @@
-/**
- * @file leaderboard.tabs.tsx
- * @description Component giao diện React LeaderboardTabs cho học viên
- */
-
+// Component tab lựa chọn tiêu chí bảng xếp hạng (chuỗi, học tập, từ vựng).
 import { useTranslation } from 'react-i18next'
 import { Flame, BookOpen, GraduationCap } from 'lucide-react'
+import { useMounted } from '@/hooks/use.mounted'
 import type { LeaderboardType } from '@/features/dashboard/types/dashboard'
 
 interface LeaderboardTabsProps {
@@ -14,42 +11,46 @@ interface LeaderboardTabsProps {
 
 export function LeaderboardTabs({ active, onChange }: LeaderboardTabsProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVietnamese = mounted ? i18n.language === 'vi' : true
 
   return (
     <div className="inline-flex rounded-xl border border-border bg-surface p-1">
       <button
-        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all ${
+        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all cursor-pointer ${
           active === 'streak'
             ? 'bg-gradient-to-br from-warning/20 to-warning/10 text-warning shadow-sm'
             : 'text-text-secondary hover:text-text-primary'
         }`}
         onClick={() => onChange('streak')}
+        suppressHydrationWarning
       >
         <Flame className="h-4 w-4" />
-        {isVietnamese ? 'Chuỗi' : 'Streak'}
+        <span>{isVietnamese ? 'Chuỗi' : 'Streak'}</span>
       </button>
       <button
-        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all ${
+        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all cursor-pointer ${
           active === 'learning'
             ? 'bg-gradient-to-br from-primary/20 to-primary/10 text-primary shadow-sm'
             : 'text-text-secondary hover:text-text-primary'
         }`}
         onClick={() => onChange('learning')}
+        suppressHydrationWarning
       >
         <BookOpen className="h-4 w-4" />
-        {isVietnamese ? 'Học tập' : 'Learning'}
+        <span>{isVietnamese ? 'Học tập' : 'Learning'}</span>
       </button>
       <button
-        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all ${
+        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all cursor-pointer ${
           active === 'vocabulary'
             ? 'bg-gradient-to-br from-info/20 to-info/10 text-info shadow-sm'
             : 'text-text-secondary hover:text-text-primary'
         }`}
         onClick={() => onChange('vocabulary')}
+        suppressHydrationWarning
       >
         <GraduationCap className="h-4 w-4" />
-        {isVietnamese ? 'Từ vựng' : 'Vocabulary'}
+        <span>{isVietnamese ? 'Từ vựng' : 'Vocabulary'}</span>
       </button>
     </div>
   )
