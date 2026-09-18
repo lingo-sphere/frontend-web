@@ -12,6 +12,8 @@ import {
   Eye,
 } from 'lucide-react'
 import type { Chapter, Lesson } from '@/features/courses/types/course'
+import { toast } from '@/store/toast.store'
+import { useLanguage } from '@/hooks/use.language'
 
 interface CourseLandingCurriculumProps {
   chapters: Chapter[]
@@ -33,6 +35,7 @@ export function CourseLandingCurriculum({
   totalDuration,
   onOpenPreviewLesson,
 }: CourseLandingCurriculumProps) {
+  const { isVietnamese } = useLanguage()
   const [expandedChapterIds, setExpandedChapterIds] = useState<string[]>(() => {
     return chapters.length > 0 ? [chapters[0].id] : []
   })
@@ -52,6 +55,15 @@ export function CourseLandingCurriculum({
       prev.includes(chapterId)
         ? prev.filter((id) => id !== chapterId)
         : [...prev, chapterId]
+    )
+  }
+
+  const handleLockedLessonClick = () => {
+    toast.info(
+      isVietnamese
+        ? 'Bài học này đang bị khóa. Hãy đăng ký hoặc mua khóa học để mở khóa toàn bộ bài học!'
+        : 'This lesson is locked. Please purchase or enroll in the course to unlock full content!',
+      isVietnamese ? 'Bài học khóa' : 'Locked lesson'
     )
   }
 
@@ -122,7 +134,12 @@ export function CourseLandingCurriculum({
                     return (
                       <div
                         key={lesson.id || lIdx}
-                        className="p-3.5 pl-6 sm:pl-10 flex items-center justify-between gap-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors"
+                        onClick={!isPreviewable ? handleLockedLessonClick : undefined}
+                        className={`p-3.5 pl-6 sm:pl-10 flex items-center justify-between gap-3 transition-colors ${
+                          !isPreviewable
+                            ? 'hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer'
+                            : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/30'
+                        }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {lesson.type === 'reading' ? (
@@ -146,7 +163,14 @@ export function CourseLandingCurriculum({
                               <span>Xem trước</span>
                             </button>
                           ) : (
-                            <Lock className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
+                            <button
+                              type="button"
+                              onClick={handleLockedLessonClick}
+                              className="text-slate-300 dark:text-slate-600 hover:text-amber-500 dark:hover:text-amber-400 transition-colors cursor-pointer p-0.5"
+                              title={isVietnamese ? 'Bài học đang bị khóa' : 'Locked lesson'}
+                            >
+                              <Lock className="w-3.5 h-3.5" />
+                            </button>
                           )}
                           <span className="text-[11px] text-slate-400 font-mono">
                             {durationText}

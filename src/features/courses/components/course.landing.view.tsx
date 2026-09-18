@@ -20,6 +20,8 @@ import { CourseLandingPurchaseCard } from '@/features/courses/components/course.
 import { CourseLandingCurriculum } from '@/features/courses/components/course.landing.curriculum'
 import { CourseLandingInstructor } from '@/features/courses/components/course.landing.instructor'
 import { CourseLandingPreviewModal } from '@/features/courses/components/course.landing.preview.modal'
+import { toast } from '@/store/toast.store'
+import { useLanguage } from '@/hooks/use.language'
 
 interface CourseLandingViewProps {
   course: Course
@@ -43,6 +45,7 @@ export function CourseLandingView({
   userAvatar,
 }: CourseLandingViewProps) {
   const router = useRouter()
+  const { isVietnamese } = useLanguage()
   const [previewLesson, setPreviewLesson] = useState<Lesson | null>(null)
   const [isDescExpanded, setIsDescExpanded] = useState(false)
   const isLongDesc = (course.description?.trim().length || 0) > 400
@@ -88,6 +91,19 @@ export function CourseLandingView({
     setPreviewLesson(firstPreviewLesson)
   }
 
+  const handleHeaderCartClick = () => {
+    if (!isAuthenticated) {
+      toast.warning(
+        isVietnamese
+          ? 'Vui lòng đăng nhập để xem giỏ hàng của bạn.'
+          : 'Please log in to view your cart.',
+        isVietnamese ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
+      return
+    }
+    router.push('/cart')
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
@@ -105,7 +121,7 @@ export function CourseLandingView({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.push('/cart')}
+            onClick={handleHeaderCartClick}
             className="relative p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             title="Giỏ hàng của bạn"
           >

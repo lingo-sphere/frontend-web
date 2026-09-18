@@ -1,6 +1,7 @@
 // Quản lý trạng thái hiển thị các modal và tương tác giỏ hàng trong không gian học tập.
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Course } from '@/features/courses/types/course'
 import { toast } from '@/store/toast.store'
 
@@ -17,6 +18,8 @@ export function useCourseWorkspaceModals({
   isInCart,
   addToCart,
 }: UseCourseWorkspaceModalsProps) {
+  const { i18n } = useTranslation()
+  const isVietnamese = (i18n.language || 'vi').startsWith('vi')
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showCourseCheckoutModal, setShowCourseCheckoutModal] = useState(false)
@@ -25,7 +28,12 @@ export function useCourseWorkspaceModals({
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
-      window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      toast.warning(
+        isVietnamese
+          ? 'Vui lòng đăng nhập để thêm khóa học vào giỏ hàng.'
+          : 'Please log in to add courses to your cart.',
+        isVietnamese ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
       return
     }
     if (!course) return
@@ -35,10 +43,13 @@ export function useCourseWorkspaceModals({
     setIsAddingToCart(true)
     try {
       await addToCart(course.id)
-      toast.success('Đã thêm khóa học vào giỏ hàng thành công!', 'Giỏ hàng')
+      toast.success(
+        isVietnamese ? 'Đã thêm khóa học vào giỏ hàng thành công!' : 'Course added to cart successfully!',
+        isVietnamese ? 'Giỏ hàng' : 'Cart'
+      )
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể thêm vào giỏ hàng'
-      toast.error(msg, 'Lỗi')
+      const msg = err instanceof Error ? err.message : isVietnamese ? 'Không thể thêm vào giỏ hàng' : 'Could not add to cart'
+      toast.error(msg, isVietnamese ? 'Lỗi' : 'Error')
     } finally {
       setIsAddingToCart(false)
     }

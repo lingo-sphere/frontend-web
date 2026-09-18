@@ -113,7 +113,12 @@ export function CourseDetailClient({
 
   const handleInitiateEnrollOrBuy = () => {
     if (!isAuthenticated) {
-      window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      toast.warning(
+        isVietnamese
+          ? 'Vui lòng đăng nhập để đăng ký hoặc mua khóa học.'
+          : 'Please log in to purchase or enroll in this course.',
+        isVietnamese ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
       return
     }
 

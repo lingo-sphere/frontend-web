@@ -11,7 +11,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip";
 import { Icon } from "@/components/icon.map";
 import { DictionaryModal } from "@/features/vocabulary/components/dictionary.modal";
 import { UpgradeModal } from "@/features/upgrade/components/upgrade.modal";
-import { AuthModal } from "@/features/auth/components/auth.modal";
 import { HeaderMyLearningHover } from "@/layouts/header.learning";
 import { HeaderWishlistHover } from "@/layouts/header.wishlist";
 import { HeaderCartHover } from "@/layouts/header.cart";
@@ -42,7 +41,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const { currentLanguage, toggleLanguage, isVietnamese } = useLanguage();
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const { theme, toggleTheme, setMobileSidebarOpen } = useApp();
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -85,20 +83,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
       hoverTimerRef.current = null;
     }, 250);
   };
-
-  useEffect(() => {
-    const handleOpenAuthModal = () => {
-      setAuthModalOpen(true);
-    };
-    window.addEventListener("lingosphere:open-auth-modal", handleOpenAuthModal);
-
-    return () => {
-      window.removeEventListener(
-        "lingosphere:open-auth-modal",
-        handleOpenAuthModal
-      );
-    };
-  }, []);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -214,7 +198,9 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
               className="relative h-9 w-9 rounded-xl border-border cursor-pointer"
               onClick={() => {
                 if (!isAuthenticated) {
-                  setAuthModalOpen(true);
+                  window.dispatchEvent(
+                    new CustomEvent("lingosphere:open-auth-modal")
+                  );
                 } else {
                   navigate("/cart");
                 }
@@ -254,17 +240,16 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             onCloseHover={() => setHoveredHeaderMenu(null)}
             onLanguageToggle={toggleLanguage}
             currentLanguage={languageLabel as "VI" | "EN"}
-            onOpenAuth={() => setAuthModalOpen(true)}
+            onOpenAuth={() =>
+              window.dispatchEvent(
+                new CustomEvent("lingosphere:open-auth-modal")
+              )
+            }
             onOpenUpgrade={() => setUpgradeOpen(true)}
             onLogout={() => logout()}
           />
         </div>
       </header>
-
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-      />
 
       <DictionaryModal
         open={dictionaryOpen}
