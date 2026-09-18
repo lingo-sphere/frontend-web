@@ -39,13 +39,19 @@ export const PaymentOrderResponseSchema = z.object({
   qr_url: z.string(),
   bank_info: BankInfoSchema,
   expires_at: z.string(),
+  status: z.enum(['PENDING', 'PAID', 'UNDERPAID', 'EXPIRED', 'CANCELLED']).optional(),
+  received_amount: z.number().optional(),
+  remaining_amount: z.number().optional(),
 }).passthrough()
 
 export const PaymentOrderStatusResponseSchema = z.object({
   order_code: z.string(),
-  status: z.enum(['PENDING', 'PAID', 'EXPIRED', 'CANCELLED']),
+  status: z.enum(['PENDING', 'PAID', 'UNDERPAID', 'EXPIRED', 'CANCELLED']),
   amount: z.number(),
   billing_cycle: z.string(),
+  received_amount: z.number().optional(),
+  remaining_amount: z.number().optional(),
+  qr_url: z.string().optional(),
   paid_at: z.string().optional(),
 }).passthrough()
 
