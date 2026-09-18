@@ -1,8 +1,4 @@
-/**
- * @file player.types.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho player.types.ts
- */
-
+// Định nghĩa kiểu dữ liệu và hàm tiện ích cho video player của khóa học
 export const PLAYBACK_SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 
 export const QUALITIES = [
@@ -34,6 +30,9 @@ export function isDirectVideoUrl(url?: string): boolean {
   if (!url || !url.trim()) return false
   const clean = url.toLowerCase().trim()
   if (
+    clean.includes('youtube.com') ||
+    clean.includes('youtu.be') ||
+    clean.includes('vimeo.com') ||
     clean.endsWith('.jpg') ||
     clean.endsWith('.jpeg') ||
     clean.endsWith('.png') ||
