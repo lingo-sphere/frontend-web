@@ -60,7 +60,7 @@ export function CourseLandingPurchaseCard({
   }
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl overflow-hidden sticky top-20 z-20 space-y-5">
+    <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl overflow-hidden space-y-5 transition-all duration-200">
       <div
         onClick={onOpenPreview}
         className="relative aspect-video w-full overflow-hidden cursor-pointer group bg-slate-950"
