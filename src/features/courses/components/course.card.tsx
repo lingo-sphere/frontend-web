@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'motion/react'
+import { useMounted } from '@/hooks/use.mounted'
 import {
   Play,
   MoreVertical,
@@ -44,7 +45,8 @@ export function CourseCard({
   onCloseMenu,
 }: CourseCardProps) {
   const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVi = mounted ? i18n.language === 'vi' : true
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
   const { addToCart, isInCart } = useCart(isAuthenticated)

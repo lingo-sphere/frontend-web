@@ -23,7 +23,7 @@ export function CoursesCatalogTabsHeader({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary" suppressHydrationWarning>
           {activeTab === 'my-courses'
             ? isVi
               ? 'Khóa học của tôi'
@@ -32,7 +32,7 @@ export function CoursesCatalogTabsHeader({
             ? 'Khóa học yêu thích'
             : 'Liked Courses'}
         </h1>
-        <p className="mt-1 text-xs sm:text-sm text-text-secondary">
+        <p className="mt-1 text-xs sm:text-sm text-text-secondary" suppressHydrationWarning>
           {activeTab === 'my-courses'
             ? isVi
               ? 'Tiếp tục hành trình học tập và hoàn thành các bài giảng của bạn.'
@@ -47,9 +47,9 @@ export function CoursesCatalogTabsHeader({
         {loading ? (
           <span className="inline-block h-3.5 w-14 rounded-full bg-primary/20 animate-pulse" />
         ) : !isAuthenticated && (activeTab === 'my-courses' || activeTab === 'wishlist') ? (
-          <span>{isVi ? 'Yêu cầu đăng nhập' : 'Login required'}</span>
+          <span suppressHydrationWarning>{isVi ? 'Yêu cầu đăng nhập' : 'Login required'}</span>
         ) : (
-          <span>
+          <span suppressHydrationWarning>
             {count} {isVi ? 'Khóa học' : 'Courses'}
           </span>
         )}

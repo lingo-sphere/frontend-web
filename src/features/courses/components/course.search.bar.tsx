@@ -4,6 +4,7 @@
 
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'
+import { useMounted } from '@/hooks/use.mounted'
 
 interface CourseSearchBarProps {
   searchQuery: string
@@ -18,13 +19,14 @@ export function CourseSearchBar({
   selectedCategory,
   onCategoryChange,
 }: CourseSearchBarProps) {
-  const { t, i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
+  const { i18n } = useTranslation()
+  const mounted = useMounted()
+  const isVi = mounted ? i18n.language === 'vi' : true
 
   const categories = [
-    { id: 'all', label: t('courses.allCategories') },
-    { id: 'TOEIC_2_SKILLS', label: t('courses.toeic2Skills') },
-    { id: 'TOEIC_4_SKILLS', label: t('courses.toeic4Skills') },
+    { id: 'all', label: isVi ? 'Tất cả thể loại' : 'All Categories' },
+    { id: 'TOEIC_2_SKILLS', label: isVi ? 'TOEIC 2 Kỹ Năng' : 'TOEIC 2 Skills' },
+    { id: 'TOEIC_4_SKILLS', label: isVi ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 4 Skills' },
   ]
 
   return (
@@ -37,6 +39,7 @@ export function CourseSearchBar({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full rounded-xl border border-border bg-surface pl-10 pr-4 py-2.5 text-xs sm:text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+          suppressHydrationWarning
         />
       </div>
 
@@ -52,8 +55,9 @@ export function CourseSearchBar({
                   ? 'bg-primary text-white shadow-sm font-bold'
                   : 'border border-border bg-surface text-text-secondary hover:border-text-tertiary hover:text-text-primary'
               }`}
+              suppressHydrationWarning
             >
-              {cat.label}
+              <span>{cat.label}</span>
             </button>
           )
         })}

@@ -106,14 +106,17 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
   })
 
   useEffect(() => {
+    let foundActiveWithChildren: string | null = null
     for (const group of groups) {
       for (const item of group.items) {
         if (item.children && (isItemActive(item) || item.children.some((c) => isChildActive(c)))) {
-          setExpandedItem(item.id)
-          return
+          foundActiveWithChildren = item.id
+          break
         }
       }
+      if (foundActiveWithChildren) break
     }
+    setExpandedItem(foundActiveWithChildren)
   }, [currentPath, currentSearch, groups])
 
   const toggleExpand = (id: string) => {
@@ -149,7 +152,10 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                     key={item.id}
                     href={itemRoute}
                     prefetch={true}
-                    onClick={() => onNavigate(item.id)}
+                    onClick={() => {
+                      setExpandedItem(null)
+                      onNavigate(item.id)
+                    }}
                     className={`relative w-full flex items-center justify-center p-1.5 rounded-2xl transition-all cursor-pointer ${
                       active ? 'bg-primary-soft' : 'hover:bg-surface-hover'
                     }`}
@@ -177,7 +183,10 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                     key={item.id}
                     href={itemRoute}
                     prefetch={true}
-                    onClick={() => onNavigate(item.id)}
+                    onClick={() => {
+                      setExpandedItem(null)
+                      onNavigate(item.id)
+                    }}
                     className={`group relative w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs sm:text-[13px] transition-all cursor-pointer ${
                       active ? 'bg-primary-soft' : 'hover:bg-surface-hover'
                     }`}

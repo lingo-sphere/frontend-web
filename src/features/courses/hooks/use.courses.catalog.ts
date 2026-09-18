@@ -1,6 +1,7 @@
 // Custom hook quản lý danh sách khóa học, lọc theo danh mục, lịch học và wishlist
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useMounted } from '@/hooks/use.mounted'
 import { useSearchParams } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import { userService } from '@/features/user/services/user.service'
@@ -15,7 +16,8 @@ import { useAllCoursesQuery, useUserEnrollments } from '@/features/courses/hooks
 
 export function useCoursesCatalog() {
   const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVi = mounted ? i18n.language === 'vi' : true
   const searchParams = useSearchParams()
   const { items: wishlistItems, toggleWishlist: toggleItemMutation, isInWishlist } = useWishlist()
   const { isAuthenticated, user } = useAuthStore()

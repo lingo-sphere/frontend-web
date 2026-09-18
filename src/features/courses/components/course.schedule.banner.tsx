@@ -3,6 +3,7 @@
 
 import { useTranslation } from 'react-i18next'
 import { Clock, X, CalendarCheck2, Settings2, BellRing, Lock, AlertTriangle, RotateCcw } from 'lucide-react'
+import { useMounted } from '@/hooks/use.mounted'
 import type { CourseChapterLockState } from '@/features/courses/types/schedule.types'
 
 export interface UserScheduleData {
@@ -81,7 +82,8 @@ export function CourseScheduleBanner({
   onRetest,
 }: CourseScheduleBannerProps) {
   const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVi = mounted ? i18n.language === 'vi' : true
 
   if (lockState?.is_locked) {
     const lockedOrder = lockState.locked_chapter_order || 2
