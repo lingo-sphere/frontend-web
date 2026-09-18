@@ -43,9 +43,9 @@ export function CheckoutQrCard({
   const receivedAmount = order.received_amount ?? 0
   const remainingAmount = order.remaining_amount ?? (isUnderpaid ? Math.max(0, totalAmount - receivedAmount) : totalAmount)
 
-  const bankName = order.bank_info?.bank_name || 'MB Bank (Ngân hàng Quân Đội)'
-  const accountNumber = order.bank_info?.account_number || '0332271390'
-  const accountName = order.bank_info?.account_name || 'NGUYEN TAN NGHI'
+  const bankName = order.bank_info?.bank_name
+  const accountNumber = order.bank_info?.account_number
+  const accountName = order.bank_info?.account_name
   const memoCode = order.order_code
 
   return (
