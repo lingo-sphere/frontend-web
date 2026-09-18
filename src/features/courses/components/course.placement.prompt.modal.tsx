@@ -20,7 +20,6 @@ import {
 } from 'lucide-react'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
 
 interface CoursePlacementPromptModalProps {
@@ -162,7 +161,6 @@ export function CoursePlacementPromptModal({
         })
       }
 
-      storage.set(STORAGE_KEYS.PLACEMENT_SCORE, payload)
       toast.success(
         isVietnamese
           ? 'Đã lưu điểm đầu vào thành công!'

@@ -17,7 +17,6 @@ import { parseQuestionsFromExamData } from '@/features/toeic/helpers/toeic.quest
 import { calculateToeicExamResults } from '@/features/toeic/helpers/toeic.score.helper'
 import { Analytics } from '@/lib/posthog'
 import { toast } from '@/store/toast.store'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export type PracticeMode = 'FULL' | 'LISTENING' | 'READING' | 'PART'
 
@@ -171,7 +170,6 @@ export function useToeicExam(examId?: string) {
     }
 
     try {
-      storage.set(STORAGE_KEYS.PLACEMENT_SCORE, placementData)
       userService.updateProfile(placementData).catch(() => null)
       const { user, setUser } = useAuthStore.getState()
       if (user) {
@@ -248,7 +246,6 @@ export function useToeicExam(examId?: string) {
               placement_tested_at: new Date().toISOString(),
             }
             try {
-              storage.set(STORAGE_KEYS.PLACEMENT_SCORE, updatedPlacementData)
               userService.updateProfile(updatedPlacementData).catch(() => null)
               const { user, setUser } = useAuthStore.getState()
               if (user) {

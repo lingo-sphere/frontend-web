@@ -15,7 +15,6 @@ import {
 import { Button } from '@/components/button'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { useMounted } from '@/hooks/use.mounted'
 
 interface PlacementData {
@@ -29,41 +28,18 @@ interface PlacementData {
 }
 
 function resolvePlacementData(user: ReturnType<typeof useAuthStore.getState>['user']): PlacementData | null {
-  if (user) {
-    const scoreNum = Number(user.placement_test_score)
-    if (scoreNum > 0) {
-      return {
-        score: scoreNum,
-        listening: typeof user.placement_listening_score === 'number' ? user.placement_listening_score : undefined,
-        reading: typeof user.placement_reading_score === 'number' ? user.placement_reading_score : undefined,
-        speaking: typeof user.placement_speaking_score === 'number' ? user.placement_speaking_score : undefined,
-        writing: typeof user.placement_writing_score === 'number' ? user.placement_writing_score : undefined,
-        skillsType: typeof user.placement_skills_type === 'string' ? user.placement_skills_type : '2SKILLS',
-        testedAt: typeof user.placement_tested_at === 'string' ? user.placement_tested_at : undefined,
-      }
-    }
-    return null
-  }
+  if (!user) return null
 
-  const stored = storage.get<{
-    placement_test_score?: number
-    placement_listening_score?: number
-    placement_reading_score?: number
-    placement_speaking_score?: number
-    placement_writing_score?: number
-    placement_skills_type?: string
-    placement_tested_at?: string
-  }>(STORAGE_KEYS.PLACEMENT_SCORE)
-
-  if (stored?.placement_test_score && Number(stored.placement_test_score) > 0) {
+  const scoreNum = Number(user.placement_test_score)
+  if (scoreNum > 0) {
     return {
-      score: Number(stored.placement_test_score),
-      listening: stored.placement_listening_score,
-      reading: stored.placement_reading_score,
-      speaking: stored.placement_speaking_score,
-      writing: stored.placement_writing_score,
-      skillsType: stored.placement_skills_type || '2SKILLS',
-      testedAt: stored.placement_tested_at,
+      score: scoreNum,
+      listening: typeof user.placement_listening_score === 'number' ? user.placement_listening_score : undefined,
+      reading: typeof user.placement_reading_score === 'number' ? user.placement_reading_score : undefined,
+      speaking: typeof user.placement_speaking_score === 'number' ? user.placement_speaking_score : undefined,
+      writing: typeof user.placement_writing_score === 'number' ? user.placement_writing_score : undefined,
+      skillsType: typeof user.placement_skills_type === 'string' ? user.placement_skills_type : '2SKILLS',
+      testedAt: typeof user.placement_tested_at === 'string' ? user.placement_tested_at : undefined,
     }
   }
 

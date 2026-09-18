@@ -15,7 +15,6 @@ import {
 import { toast } from '@/store/toast.store'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { UserScoreData } from '@/features/user/utils/user.score.utils'
 
 interface UserScoreEditModalProps {
@@ -97,8 +96,6 @@ export function UserScoreEditModal({
           ...(updatedUser || {}),
         })
       }
-
-      storage.set(STORAGE_KEYS.PLACEMENT_SCORE, payload)
 
       toast.success('Cập nhật điểm trình độ thành công!')
       onSuccess(payload)
