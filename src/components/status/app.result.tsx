@@ -37,7 +37,7 @@ export function AppResult({
           : undefined
 
   return (
-    <div className="flex min-h-[50vh] w-full items-center justify-center p-4">
+    <div className="flex min-h-[50vh] w-full items-center justify-center p-4" suppressHydrationWarning>
       <Result
         status={status}
         title={title || defaultTitle}
