@@ -83,7 +83,7 @@ export function CoursePlacementBanner() {
   }
 
   if (placementData && placementData.score > 0) {
-    const is4Skills = placementData.skillsType === '4SKILLS' || Boolean(placementData.speaking && placementData.speaking > 0)
+    const is4Skills = placementData.skillsType === '4SKILLS'
 
     return (
       <>
@@ -95,7 +95,7 @@ export function CoursePlacementBanner() {
                 <span>Baseline</span>
               </span>
               <span className="text-xs sm:text-sm font-bold text-white">
-                Trình độ: <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 font-extrabold">{placementData.score} / 990 TOEIC</span>
+                Trình độ: <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 font-extrabold">{placementData.score} / {is4Skills ? '1390' : '990'} TOEIC</span>
               </span>
               <span className="text-slate-400 text-xs hidden md:inline">•</span>
               <div className="hidden md:flex items-center gap-2 text-xs text-slate-300">

@@ -50,7 +50,10 @@ export function UserScoreEditModal({
 
   if (!open) return null
 
-  const calculatedTotal = listeningScore + readingScore
+  const calculatedTotal =
+    skillsType === '4SKILLS'
+      ? listeningScore + readingScore + speakingScore + writingScore
+      : listeningScore + readingScore
 
   const handleSave = async () => {
     if (!isAuthenticated) {
@@ -270,7 +273,7 @@ export function UserScoreEditModal({
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Tổng điểm TOEIC dự kiến:</span>
             <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
-              {calculatedTotal} / 990
+              {calculatedTotal} / {skillsType === '4SKILLS' ? '1390' : '990'}
             </span>
           </div>
 
