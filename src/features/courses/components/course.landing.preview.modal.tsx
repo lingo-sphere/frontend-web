@@ -87,13 +87,9 @@ export function CourseLandingPreviewModal({
 
     if (course?.chapters && course.chapters.length > 0) {
       course.chapters.forEach((ch, chIdx) => {
-        ch.lessons?.forEach((l, lIdx) => {
-          const isPreview = Boolean(
-            l.is_free_preview ||
-            l.is_preview ||
-            (chIdx === 0 && lIdx === 0)
-          )
-          if (isPreview) {
+        ch.lessons?.forEach((l) => {
+          const isPreviewable = Boolean(l.is_free_preview || l.is_preview)
+          if (isPreviewable) {
             items.push({
               lesson: l,
               chapterTitle: ch.title,
@@ -104,7 +100,7 @@ export function CourseLandingPreviewModal({
       })
     }
 
-    if (items.length === 0 && lesson) {
+    if (items.length === 0 && lesson && (lesson.is_free_preview || lesson.is_preview)) {
       items.push({
         lesson,
         chapterTitle: 'Chương 1',
@@ -121,10 +117,7 @@ export function CourseLandingPreviewModal({
     activeLesson?.videoUrl ||
     activeLesson?.content?.videoUrl ||
     ''
-  const videoSrc =
-    rawVideoSrc.trim() !== ''
-      ? rawVideoSrc
-      : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+  const videoSrc = rawVideoSrc.trim()
 
   const effectivePrice = course ? getCourseEffectivePrice(course) : (coursePrice || 0)
   const originalPrice = (course?.price || 0) > effectivePrice ? (course?.price || 0) : 0
@@ -190,6 +183,7 @@ export function CourseLandingPreviewModal({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
             <div className="lg:col-span-8 space-y-4">
               <CoursePreviewVideoPlayer
+                key={activeLesson.id}
                 videoSrc={videoSrc}
                 title={activeLesson.title}
                 autoPlay
@@ -226,7 +220,7 @@ export function CourseLandingPreviewModal({
                 </span>
               </div>
 
-              <div className="space-y-2 max-h-[260px] lg:max-h-[300px] overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[360px] lg:max-h-[420px] overflow-y-auto pr-1.5">
                 {previewItems.map((item, idx) => {
                   const isActive = item.lesson.id === activeLesson.id
                   return (
@@ -340,10 +334,7 @@ export function CourseLandingPreviewModal({
 
             <button
               type="button"
-              onClick={() => {
-                onClose()
-                onBuyNow()
-              }}
+              onClick={onBuyNow}
               className="flex-1 sm:flex-initial px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-600 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
             >
               <Sparkles className="w-4 h-4" />

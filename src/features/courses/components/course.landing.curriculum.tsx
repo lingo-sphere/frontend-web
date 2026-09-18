@@ -123,9 +123,7 @@ export function CourseLandingCurriculum({
                 <div className="divide-y divide-slate-100 dark:divide-slate-800/80 bg-white dark:bg-slate-900">
                   {lessons.map((lesson, lIdx) => {
                     const isPreviewable = Boolean(
-                      lesson.is_free_preview ||
-                      lesson.is_preview ||
-                      (idx === 0 && lIdx === 0)
+                      lesson.is_free_preview || lesson.is_preview
                     )
                     const durationText = formatDurationSeconds(
                       typeof lesson.duration === 'number' ? lesson.duration : undefined

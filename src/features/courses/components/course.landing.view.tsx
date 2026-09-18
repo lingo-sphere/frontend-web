@@ -1,7 +1,7 @@
 // Trang tong quan va gioi thieu chi tiet khoa hoc cho hoc vien chua dang ky phong cach Udemy.
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Check,
@@ -89,23 +89,28 @@ export function CourseLandingView({
     'Sự kiên trì, cam kết dành tối thiểu 45-60 phút mỗi ngày để theo sát lộ trình khóa học.',
   ]
 
-  const firstPreviewLesson =
-    course.chapters?.[0]?.lessons?.[0] ||
-    ({
-      id: 'preview-default',
-      chapterId: course.chapters?.[0]?.id || 'ch-1',
-      order: 1,
-      title: `${course.title} - Bài giảng giới thiệu & định hướng lộ trình`,
-      type: 'video',
-      duration: 360,
-      status: 'available',
-      progress: 0,
-      videoUrl: course.chapters?.[0]?.lessons?.[0]?.videoUrl,
-      content: { sections: [] },
-    } as Lesson)
+  const firstPreviewLesson = useMemo(() => {
+    for (const chapter of course.chapters || []) {
+      for (const les of chapter.lessons || []) {
+        if (les.is_free_preview || les.is_preview) {
+          return les
+        }
+      }
+    }
+    return null
+  }, [course])
 
   const handleOpenGeneralPreview = () => {
-    setPreviewLesson(firstPreviewLesson)
+    if (firstPreviewLesson) {
+      setPreviewLesson(firstPreviewLesson)
+    } else {
+      toast.info(
+        isVietnamese
+          ? 'Khóa học này hiện chưa có video xem trước miễn phí.'
+          : 'This course does not have a free preview video available yet.',
+        isVietnamese ? 'Thông báo' : 'Notice'
+      )
+    }
   }
 
   const handleHeaderCartClick = () => {
@@ -119,6 +124,15 @@ export function CourseLandingView({
       return
     }
     router.push('/cart')
+  }
+
+  const handleBuyNowFromPreview = () => {
+    if (!isAuthenticated) {
+      onEnrollOrBuy()
+      return
+    }
+    setPreviewLesson(null)
+    onEnrollOrBuy()
   }
 
   return (
@@ -330,7 +344,7 @@ export function CourseLandingView({
         onClose={() => setPreviewLesson(null)}
         lesson={previewLesson}
         course={course}
-        onBuyNow={onEnrollOrBuy}
+        onBuyNow={handleBuyNowFromPreview}
         onAddToCart={onAddToCart}
         isInCart={isInCart}
         isAddingToCart={isAddingToCart}

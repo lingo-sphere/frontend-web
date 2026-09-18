@@ -330,6 +330,22 @@ export function CoursePreviewVideoPlayer({
     )
   }
 
+  if (!videoSrc || videoSrc.trim() === '') {
+    return (
+      <div className="relative aspect-video w-full bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 mb-3 shadow-inner">
+          <Play className="w-6 h-6 ml-0.5 text-indigo-400 opacity-60" />
+        </div>
+        <p className="text-sm font-bold text-slate-200 mb-1">
+          Video bài giảng chưa sẵn sàng
+        </p>
+        <p className="text-xs text-slate-400 max-w-sm">
+          Bài giảng này hiện chưa có video phát trực tuyến hoặc đang được cập nhật.
+        </p>
+      </div>
+    )
+  }
+
   const playedPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
