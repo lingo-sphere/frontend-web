@@ -82,6 +82,7 @@ export interface RawCourseInput {
   rating?: number
   rating_count?: number
   students_count?: number
+  is_bestseller?: boolean
   what_you_will_learn?: string[]
   author_name?: string
   author_avatar?: string
@@ -325,6 +326,7 @@ export function mapCourseDataToWorkspace(
       ? reviewsRes.rating_count
       : Number(courseObj.rating_count || 0),
     studentsCount: Number(courseObj.students_count || 0),
+    is_bestseller: Boolean(courseObj.is_bestseller),
     whatYouWillLearn: Array.isArray(courseObj.what_you_will_learn)
       ? (courseObj.what_you_will_learn as string[])
       : [],

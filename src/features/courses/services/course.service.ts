@@ -50,6 +50,10 @@ export const courseService = {
     return res.result
   },
 
+  async getBestsellers(params?: { category?: string }): Promise<Course[]> {
+    return api.get<Course[]>(API_CONFIG.ENDPOINTS.COURSES.BESTSELLERS, params)
+  },
+
   async getCourseById(id: string): Promise<Course> {
     return api.get<Course>(API_CONFIG.ENDPOINTS.COURSES.BY_ID(id), undefined, CourseSchema)
   },

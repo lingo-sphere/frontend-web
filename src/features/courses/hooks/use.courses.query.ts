@@ -42,6 +42,14 @@ export const courseQueries = {
       staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
     }),
+  bestsellers: (category?: string, enabled = true) =>
+    queryOptions({
+      queryKey: courseKeys.bestsellers(category),
+      queryFn: () => courseService.getBestsellers(category ? { category } : undefined),
+      enabled,
+      staleTime: 60 * 1000,
+      refetchOnWindowFocus: true,
+    }),
   enrollments: (enabled = true) =>
     queryOptions({
       queryKey: courseKeys.enrollments(),
@@ -168,5 +176,9 @@ export function useEnrollCourseMutation() {
       queryClient.invalidateQueries({ queryKey: courseKeys.enrollments() })
     },
   })
+}
+
+export function useBestsellerCoursesQuery(category?: string, enabled = true) {
+  return useQuery(courseQueries.bestsellers(category, enabled))
 }
 

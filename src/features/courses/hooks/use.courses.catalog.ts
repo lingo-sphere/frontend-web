@@ -157,6 +157,7 @@ export function useCoursesCatalog() {
         discountPrice: originalPrice > finalPrice ? originalPrice : undefined,
         targetScore: Number(raw.target_score) || 0,
         badge: is4Skills ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng',
+        is_bestseller: Boolean(raw.is_bestseller),
         progress: 0,
         hasCertificate: true,
       }

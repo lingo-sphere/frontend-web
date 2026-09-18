@@ -236,6 +236,7 @@ export interface Course {
   rating?: number
   ratingCount?: number
   studentsCount?: number
+  is_bestseller?: boolean
   badge?: string
   updatedAt?: string
   language?: string
@@ -298,6 +299,7 @@ export interface CourseCardData {
   discountPrice?: number
   targetScore?: number
   badge?: string
+  is_bestseller?: boolean
   progress?: number
   hasCertificate?: boolean
   isArchived?: boolean

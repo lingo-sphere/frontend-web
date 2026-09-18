@@ -63,6 +63,7 @@ export const CourseBaseSchema = z.object({
   rating_avg: z.number().nullable().optional().transform((v) => v ?? 5),
   rating_count: z.number().nullable().optional().transform((v) => v ?? 0),
   students_count: z.number().nullable().optional().transform((v) => v ?? 0),
+  is_bestseller: z.boolean().nullable().optional().transform((v) => Boolean(v)),
   is_published: z.boolean().nullable().optional().transform((v) => v ?? true),
   approval_status: z.string().nullable().optional().transform((v) => v ?? undefined),
   final_test_exam_id: z.string().nullable().optional().transform((v) => v ?? undefined),

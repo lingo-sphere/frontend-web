@@ -262,6 +262,12 @@ export function CourseCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 pt-2.5">
+          {course.is_bestseller && (
+            <span className="rounded bg-amber-400 text-slate-950 font-black text-[10px] px-1.5 py-0.5 shadow-xs uppercase tracking-wider">
+              {isVi ? 'Bán chạy nhất' : 'Bestseller'}
+            </span>
+          )}
+
           {course.badge && (
             <span className="rounded bg-emerald-50 text-emerald-700 font-bold text-[10px] px-1.5 py-0.5 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50">
               {course.badge}

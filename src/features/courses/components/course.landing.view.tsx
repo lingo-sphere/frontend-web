@@ -155,9 +155,11 @@ export function CourseLandingView({
                 {course.title}
               </h2>
               <div className="flex items-center gap-2 text-[11px] text-slate-300 pt-0.5 flex-wrap">
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wider">
-                  Bán chạy nhất
-                </span>
+                {course.is_bestseller ? (
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wider">
+                    Bán chạy nhất
+                  </span>
+                ) : null}
                 {course.target_score ? (
                   <span className="text-teal-300 font-bold hidden sm:inline">
                     🎯 Mục tiêu: {course.target_score}+ TOEIC
