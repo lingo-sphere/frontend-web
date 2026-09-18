@@ -106,7 +106,7 @@ export function CourseLandingView({
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
+      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white px-4 sm:px-8 xl:px-12 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -165,8 +165,8 @@ export function CourseLandingView({
         onBack={() => router.push('/courses')}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10 items-start">
           <div className="lg:col-span-8 space-y-10 order-2 lg:order-1">
             <section className="rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 bg-white dark:bg-slate-900 shadow-xs space-y-4">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">

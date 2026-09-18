@@ -21,7 +21,7 @@ export function CourseLandingHero({ course, onBack }: CourseLandingHeroProps) {
 
   return (
     <div className="w-full bg-slate-900 dark:bg-slate-950 text-slate-100 py-8 lg:py-12 border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="lg:w-7/12 space-y-4">
           <nav className="flex items-center gap-1.5 text-xs text-indigo-300 font-semibold flex-wrap">
             <button
