@@ -292,6 +292,7 @@ export default function CartPage() {
           onOpenChange={setShowPlacementPromptModal}
           onProceedPurchase={() => setShowCheckoutModal(true)}
           courseTitle={items[0]?.title}
+          courseCategory={items[0]?.category}
         />
       )}
     </>

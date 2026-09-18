@@ -1,8 +1,4 @@
-/**
- * @file cart.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
- */
-
+// Định nghĩa kiểu dữ liệu giỏ hàng cho web
 export interface CartItem {
   course_id: string
   title: string
@@ -10,6 +6,7 @@ export interface CartItem {
   instructor_name?: string
   price: number
   discount_price?: number
+  category?: string
   added_at?: string
 }
 

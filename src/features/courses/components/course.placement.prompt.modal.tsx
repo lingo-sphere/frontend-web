@@ -54,27 +54,13 @@ export function CoursePlacementPromptModal({
   const [isSavingScore, setIsSavingScore] = useState(false)
 
   const is4SkillsCourse = useMemo(() => {
-    const cat = (courseCategory || '').toUpperCase()
-    const title = (courseTitle || '').toLowerCase()
-    const skills = (courseSkills || []).map((s) => s.toUpperCase())
-
-    return (
-      cat.includes('4_SKILLS') ||
-      cat.includes('4SKILLS') ||
-      cat.includes('SPEAKING') ||
-      cat.includes('WRITING') ||
-      cat.includes('COMMUNICATION') ||
-      title.includes('4 kỹ năng') ||
-      title.includes('4 ky nang') ||
-      title.includes('nói') ||
-      title.includes('viết') ||
-      title.includes('speaking') ||
-      title.includes('writing') ||
-      title.includes('giao tiếp') ||
-      skills.includes('SPEAKING') ||
-      skills.includes('WRITING')
+    if (courseCategory === 'TOEIC_4_SKILLS') return true
+    if (courseCategory === 'TOEIC_2_SKILLS') return false
+    return Boolean(
+      courseSkills &&
+        (courseSkills.includes('SPEAKING') || courseSkills.includes('WRITING'))
     )
-  }, [courseCategory, courseTitle, courseSkills])
+  }, [courseCategory, courseSkills])
 
   const calculatedTotal = useMemo(() => {
     if (is4SkillsCourse) {
@@ -156,7 +142,8 @@ export function CoursePlacementPromptModal({
         placement_speaking_score: is4SkillsCourse ? speakingScore : undefined,
         placement_writing_score: is4SkillsCourse ? writingScore : undefined,
         placement_skills_type: skillsType,
-        target_toeic_score: courseTargetScore || (is4SkillsCourse ? 650 : 500),
+        target_toeic_score:
+          courseTargetScore && courseTargetScore > 0 ? courseTargetScore : undefined,
         current_estimated_score: calculatedTotal,
         is_score_manually_edited: true,
         placement_tested_at: new Date().toISOString(),
