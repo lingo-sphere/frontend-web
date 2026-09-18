@@ -1,8 +1,4 @@
-/**
- * @file dictionary.modal.tsx
- * @description Component giao diện React DictionaryModal với autocomplete cho học viên
- */
-
+// Component modal tra tu dien nhanh voi goi y tim kiem va lich su tra cuu.
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -10,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { Search, X, BookOpen, Clock, Trash2 } from "lucide-react";
 import { vocabularyService } from "@/features/vocabulary/services/vocabulary.service";
-import { VocabularyDetailModal } from "./vocabulary-detail.modal";
+import { VocabularyDetailModal } from "@/features/vocabulary/components/vocabulary-detail.modal";
 import type {
   LookupResultItem,
   SearchHistoryResponse,
@@ -41,7 +37,6 @@ export function DictionaryModal({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Vocabulary detail modal state
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedVocab, setSelectedVocab] = useState<{
     id: string;
@@ -52,20 +47,16 @@ export function DictionaryModal({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch search history when focus (empty query)
   const fetchSearchHistory = useCallback(async () => {
     if (!userId) return;
     try {
-      // Lấy 10 từ gần nhất (backend giữ 10, frontend hiển thị 5)
       const history = await vocabularyService.getSearchHistory(userId, 10);
-      // Chỉ hiển thị 5 từ gần nhất
       setSearchHistory((history.results || []).slice(0, 5));
     } catch (err) {
       console.error("Failed to fetch search history:", err);
     }
   }, [userId]);
 
-  // Fetch suggestions with debounce
   const fetchSuggestions = useCallback(async (q: string) => {
     if (q.trim().length < 2) {
       setSuggestions([]);
@@ -84,7 +75,6 @@ export function DictionaryModal({
     }
   }, []);
 
-  // Handle input change with debounce
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -115,7 +105,6 @@ export function DictionaryModal({
     };
   }, [query, fetchSuggestions, fetchSearchHistory]);
 
-  // Save search history when selecting a vocabulary
   const saveToHistory = useCallback(
     async (item: LookupResultItem) => {
       console.log("[saveToHistory] userId:", userId, "item:", item);
@@ -137,26 +126,20 @@ export function DictionaryModal({
     [userId]
   );
 
-  // Handle select vocabulary - mở modal chi tiết
   const handleSelect = (item: LookupResultItem) => {
-    // Lưu vào lịch sử
     saveToHistory(item);
 
-    // Lưu từ đã chọn và mở modal chi tiết
     setSelectedVocab({ id: item.id, word: item.word });
     setDetailModalOpen(true);
 
-    // Đóng search dropdown
     setSuggestions([]);
     setShowHistory(false);
   };
 
-  // Handle history select - mở modal chi tiết
   const handleHistorySelect = (item: SearchHistoryResponse["results"][0]) => {
     if (item.searchQuery) {
       setQuery(item.searchQuery);
     }
-    // Mở modal chi tiết với từ đã tra trước đó
     const vocabId = item.vocabularyId || item.clicked_item_id;
     const word = item.searchQuery || item.word;
     if (vocabId && word) {
@@ -166,7 +149,6 @@ export function DictionaryModal({
     setShowHistory(false);
   };
 
-  // Handle clear history
   const handleClearHistory = async () => {
     if (!userId) return;
     try {
@@ -177,7 +159,6 @@ export function DictionaryModal({
     }
   };
 
-  // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const items = showHistory ? searchHistory : suggestions;
 
@@ -195,7 +176,6 @@ export function DictionaryModal({
         if (selectedIndex >= 0 && !showHistory && suggestions[selectedIndex]) {
           handleSelect(suggestions[selectedIndex]);
         } else if (query.trim()) {
-          // Fallback: search with current query
           fetchSuggestions(query);
         }
         break;
@@ -208,7 +188,6 @@ export function DictionaryModal({
     }
   };
 
-  // Reset state when modal opens
   useEffect(() => {
     if (open) {
       setQuery("");
@@ -220,7 +199,6 @@ export function DictionaryModal({
     }
   }, [open, fetchSearchHistory]);
 
-  // Body scroll lock
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
@@ -228,16 +206,6 @@ export function DictionaryModal({
       document.body.style.overflow = "";
     };
   }, [open]);
-
-  // Close on outside click
-  const handleOutsideClick = (e: React.MouseEvent) => {
-    if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(e.target as Node)
-    ) {
-      onOpenChange(false);
-    }
-  };
 
   if (!open) return null;
 
@@ -249,14 +217,11 @@ export function DictionaryModal({
   const modalContent = (
     <div
       className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 p-4 pt-[15vh]"
-      onClick={handleOutsideClick}
     >
       <div
         ref={dropdownRef}
         className="w-full max-w-2xl overflow-hidden rounded-2xl bg-surface shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <BookOpen className="text-primary" size={20} />
@@ -272,7 +237,6 @@ export function DictionaryModal({
           </button>
         </div>
 
-        {/* Search Input */}
         <div className="border-b border-border px-5 py-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
@@ -309,10 +273,8 @@ export function DictionaryModal({
           </div>
         </div>
 
-        {/* Dropdown Content */}
         {showDropdown && (
           <div className="max-h-[50vh] overflow-y-auto">
-            {/* Recent Searches */}
             {showHistory && searchHistory.length > 0 && (
               <div className="border-b border-border">
                 <div className="flex items-center justify-between px-4 py-2">
@@ -350,7 +312,6 @@ export function DictionaryModal({
               </div>
             )}
 
-            {/* Suggestions */}
             {suggestions.length > 0 && (
               <div className="py-2">
                 {suggestions.map((item, idx) => (
@@ -400,7 +361,6 @@ export function DictionaryModal({
               </div>
             )}
 
-            {/* No results */}
             {!showHistory &&
               query.length >= 2 &&
               suggestions.length === 0 &&
@@ -417,7 +377,6 @@ export function DictionaryModal({
           </div>
         )}
 
-        {/* Footer hint */}
         <div className="border-t border-border px-4 py-2">
           <p className="text-[11px] text-text-tertiary">
             {isVietnamese
@@ -433,14 +392,12 @@ export function DictionaryModal({
     <>
       {modalContent}
 
-      {/* Vocabulary Detail Modal */}
       <VocabularyDetailModal
         wordId={selectedVocab?.id || ""}
         word={selectedVocab?.word || ""}
         open={detailModalOpen}
         onOpenChange={(open) => {
           setDetailModalOpen(open);
-          // Khi đóng detail modal, có thể mở lại dictionary nếu muốn
         }}
         onAction={onAction}
       />

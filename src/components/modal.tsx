@@ -1,7 +1,4 @@
-/**
- * @file modal.tsx
- * @description Component giao diện React modal cho học viên
- */
+// Component giao diện Modal nền tảng cho học viên LingoSphere.
 
 import { useEffect, type ReactNode } from 'react'
 import { X } from 'lucide-react'
@@ -54,7 +51,6 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
 
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
         aria-hidden="true"
       />
 

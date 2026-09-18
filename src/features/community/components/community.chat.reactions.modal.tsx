@@ -63,11 +63,9 @@ export function CommunityChatReactionsModal({
   return (
     <div
       className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
-      onClick={onClose}
     >
       <div
         className="relative flex h-[390px] w-[480px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-2xl border border-border dark:border-white/15 bg-surface dark:bg-[#141e1e] text-text-primary shadow-2xl animate-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border dark:border-white/10 px-5 py-3.5">
           <h3 className="text-base font-bold text-text-primary">Biểu cảm</h3>

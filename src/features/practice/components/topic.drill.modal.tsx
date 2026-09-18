@@ -83,7 +83,6 @@ export function TopicDrillModal({ open, onClose, topicTag }: TopicDrillModalProp
     >
       <div
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
-        onClick={handleClose}
         aria-hidden="true"
       />
 

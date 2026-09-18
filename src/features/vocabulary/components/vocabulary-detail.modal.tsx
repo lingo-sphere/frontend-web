@@ -1,8 +1,4 @@
-/**
- * @file vocabulary-detail.modal.tsx
- * @description Modal chi tiết từ vựng - có bookmark riêng cho từng meaning
- */
-
+// Modal chi tiet tu vung kem phat am va bookmark nghia tu cho hoc vien.
 "use client";
 
 import { useState, useEffect } from "react";
@@ -82,7 +78,6 @@ export function VocabularyDetailModal({
   const { i18n } = useTranslation();
   const isVietnamese = i18n.language === "vi";
 
-  // Auth state
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const userId = useAuthStore((state) => state.user?.user_id);
 
@@ -90,7 +85,6 @@ export function VocabularyDetailModal({
   const [isLoading, setIsLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState<"us" | "uk" | null>(null);
 
-  // Saved meanings state
   const [savedMeaningIndices, setSavedMeaningIndices] = useState<Set<number>>(
     new Set()
   );
@@ -98,7 +92,6 @@ export function VocabularyDetailModal({
     null
   );
 
-  // Fetch vocabulary detail by ID
   useEffect(() => {
     if (!open || !wordId) return;
 
@@ -110,7 +103,6 @@ export function VocabularyDetailModal({
         );
         setVocabulary(data);
 
-        // Fetch saved meaning indices - chỉ khi đã login
         if (isAuthenticated && userId) {
           try {
             const indices = await vocabularyService.getSavedMeaningIndices(
@@ -136,7 +128,6 @@ export function VocabularyDetailModal({
     fetchDetail();
   }, [open, wordId, isAuthenticated, userId]);
 
-  // Reset state when modal closes
   useEffect(() => {
     if (!open) {
       setSavedMeaningIndices(new Set());
@@ -144,7 +135,6 @@ export function VocabularyDetailModal({
     }
   }, [open]);
 
-  // Play audio
   const handlePlayAudio = (type: "us" | "uk") => {
     setIsPlaying(type);
     const audioUrl =
@@ -156,7 +146,6 @@ export function VocabularyDetailModal({
     onAction(`${isVietnamese ? "Phát âm" : "Playing"}: ${vocabulary?.word}`);
   };
 
-  // Handle save/unsave meaning
   const handleToggleSaveMeaning = async (meaningIndex: number) => {
     if (!vocabulary) return;
     if (!userId) {
@@ -180,7 +169,6 @@ export function VocabularyDetailModal({
       setSavingMeaningIndex(meaningIndex);
 
       if (isSaved) {
-        // Unsave
         await vocabularyService.unsaveVocabulary(userId, lexicalItemId, meaningIndex);
         setSavedMeaningIndices((prev) => {
           const next = new Set(prev);
@@ -193,7 +181,6 @@ export function VocabularyDetailModal({
             : `Unsaved meaning #${meaningIndex + 1} of "${vocabulary.word}"`
         );
       } else {
-        // Save
         await vocabularyService.saveVocabulary(userId, lexicalItemId, meaningIndex);
         setSavedMeaningIndices((prev) => new Set([...prev, meaningIndex]));
         onAction(
@@ -212,7 +199,6 @@ export function VocabularyDetailModal({
     }
   };
 
-  // Body scroll lock
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
@@ -226,13 +212,10 @@ export function VocabularyDetailModal({
   const modalContent = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4"
-      onClick={() => onOpenChange(false)}
     >
       <div
         className="max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-surface shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <BookOpen className="text-primary" size={20} />
@@ -248,7 +231,6 @@ export function VocabularyDetailModal({
           </button>
         </div>
 
-        {/* Content */}
         <div className="max-h-[calc(90vh-80px)] overflow-y-auto px-5 py-4">
           {isLoading ? (
             <div className="flex h-40 items-center justify-center">
@@ -256,7 +238,6 @@ export function VocabularyDetailModal({
             </div>
           ) : vocabulary ? (
             <div className="space-y-5">
-              {/* Word Header */}
               <div className="flex items-start justify-between">
                 <div>
                   <h1 className="text-2xl font-bold text-text-primary">
@@ -276,7 +257,6 @@ export function VocabularyDetailModal({
                   </div>
                 </div>
 
-                {/* Audio Buttons */}
                 <div className="flex gap-2">
                   {vocabulary.audio_url_us && (
                     <button
@@ -311,7 +291,6 @@ export function VocabularyDetailModal({
                 </div>
               </div>
 
-              {/* IPA Pronunciation */}
               {vocabulary.pronunciation && (
                 <div className="rounded-xl bg-surface-hover px-4 py-3">
                   <span className="font-mono text-xl text-primary">
@@ -320,7 +299,6 @@ export function VocabularyDetailModal({
                 </div>
               )}
 
-              {/* Meanings */}
               {vocabulary.meanings && vocabulary.meanings.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-text-tertiary">
@@ -341,7 +319,6 @@ export function VocabularyDetailModal({
                             : "border-border"
                         }`}
                       >
-                        {/* Header: POS & Level & Bookmark */}
                         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
@@ -360,7 +337,6 @@ export function VocabularyDetailModal({
                             )}
                           </div>
 
-                          {/* Bookmark Button - chỉ hiện khi đã login */}
                           {isAuthenticated ? (
                             <button
                               onClick={() => handleToggleSaveMeaning(idx)}
@@ -413,7 +389,6 @@ export function VocabularyDetailModal({
                           )}
                         </div>
 
-                        {/* Definition */}
                         <p className="text-[15px] text-text-primary">
                           {meaning.short_meaning_vi || meaning.definition_vi}
                         </p>
@@ -425,7 +400,6 @@ export function VocabularyDetailModal({
                             </p>
                           )}
 
-                        {/* Synonyms & Antonyms */}
                         {(meaning.synonyms?.length ?? 0) > 0 ||
                         (meaning.antonyms?.length ?? 0) > 0 ? (
                           <div className="mt-3 flex flex-wrap gap-4">
@@ -472,7 +446,6 @@ export function VocabularyDetailModal({
                           </div>
                         ) : null}
 
-                        {/* Examples */}
                         {meaning.examples && meaning.examples.length > 0 && (
                           <div className="mt-3 space-y-2">
                             <span className="text-[11px] font-medium text-text-tertiary">
@@ -501,7 +474,6 @@ export function VocabularyDetailModal({
                 </div>
               )}
 
-              {/* Not found */}
               {(!vocabulary.meanings || vocabulary.meanings.length === 0) && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <BookOpen className="mb-3 text-text-tertiary" size={48} />

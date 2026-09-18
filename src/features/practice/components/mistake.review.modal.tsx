@@ -90,7 +90,6 @@ export function MistakeReviewModal({ open, onClose, mistake, onSuccess }: Mistak
     >
       <div
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
-        onClick={handleResetAndClose}
         aria-hidden="true"
       />
 

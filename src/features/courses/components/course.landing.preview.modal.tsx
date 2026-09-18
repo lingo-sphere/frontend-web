@@ -134,9 +134,6 @@ export function CourseLandingPreviewModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) onClose()
-          }}
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 md:p-6 bg-black/75 backdrop-blur-sm"
         >
           <motion.div
