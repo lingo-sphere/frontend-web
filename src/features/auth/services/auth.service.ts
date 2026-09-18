@@ -17,6 +17,11 @@ export const authService = {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, payload, AuthResponseSchema)
     if (res.access_token) {
       storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      if (res.refresh_token) {
+        storage.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+        storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+      }
       if (res.user) {
         storage.set(STORAGE_KEYS.USER, res.user)
       }
@@ -28,6 +33,11 @@ export const authService = {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.SOCIAL_LOGIN, payload, AuthResponseSchema)
     if (res.access_token) {
       storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      if (res.refresh_token) {
+        storage.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+        storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+      }
       if (res.user) {
         storage.set(STORAGE_KEYS.USER, res.user)
       }
@@ -43,6 +53,11 @@ export const authService = {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_OTP, payload, AuthResponseSchema)
     if (res.access_token) {
       storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      if (res.refresh_token) {
+        storage.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+        storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+      }
       if (res.user) {
         storage.set(STORAGE_KEYS.USER, res.user)
       }
@@ -54,6 +69,11 @@ export const authService = {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.VERIFY_EMAIL_TOKEN, payload, AuthResponseSchema)
     if (res.access_token) {
       storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      if (res.refresh_token) {
+        storage.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+        storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+      }
       if (res.user) {
         storage.set(STORAGE_KEYS.USER, res.user)
       }
@@ -85,7 +105,16 @@ export const authService = {
 
   async logout(): Promise<void> {
     try {
-      await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
+      const refreshToken =
+        storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
+        storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+      await apiClient.post(
+        API_CONFIG.ENDPOINTS.AUTH.LOGOUT,
+        {},
+        {
+          headers: refreshToken ? { 'x-refresh-token': refreshToken } : undefined,
+        },
+      )
     } catch {
     } finally {
       storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
