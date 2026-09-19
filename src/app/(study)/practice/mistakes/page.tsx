@@ -64,9 +64,9 @@ export default function MistakeVaultPage() {
   }
 
   return (
-    <main className="w-full max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-slate-900 text-white shadow-xl">
-        <div className="space-y-1.5 max-w-xl">
+        <div className="space-y-1.5 max-w-3xl">
           <div className="flex items-center gap-2">
             <span className="p-2 rounded-xl bg-white/10 text-purple-200">
               <BookmarkCheck size={20} />

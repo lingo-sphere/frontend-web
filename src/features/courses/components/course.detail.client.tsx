@@ -1,7 +1,7 @@
 // Component giao diện không gian học tập trực tuyến Client cho học viên LingoSphere
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { AlertCircle, ArrowLeft, ExternalLink, FileText, FolderDown, HelpCircle } from 'lucide-react'
@@ -14,6 +14,7 @@ import { LessonPlayer } from '@/features/courses/components/lesson.player'
 import { CourseLockedPlayer } from '@/features/courses/components/course.locked.player'
 import { CourseCheckoutModal } from '@/features/courses/components/course.checkout.modal'
 import { CoursePlacementPromptModal } from '@/features/courses/components/course.placement.prompt.modal'
+import { LessonPracticeQuizModal } from '@/features/courses/components/lesson.practice.quiz.modal'
 import { UpgradeModal } from '@/features/upgrade/components/upgrade.modal'
 import { getQueryClient } from '@/config/query.config'
 import { courseKeys } from '@/features/courses/keys/course.keys'
@@ -27,6 +28,7 @@ import { CourseLandingLoadingState } from '@/features/courses/components/course.
 import { courseService } from '@/features/courses/services/course.service'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
 import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
+import type { Chapter, Lesson } from '@/features/courses/types/course'
 
 export interface CourseDetailClientProps {
   rawParam: string
@@ -97,6 +99,18 @@ export function CourseDetailClient({
 
   const [showScheduleBanner, setShowScheduleBanner] = useState(true)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [showPracticeModal, setShowPracticeModal] = useState(false)
+
+  const handleOpenPracticeQuiz = useCallback(
+    (chapter?: Chapter, lesson?: Lesson) => {
+      if (chapter && lesson) {
+        handleSelectLesson(chapter, lesson)
+      }
+      setActiveBottomTab('quiz')
+      setShowPracticeModal(true)
+    },
+    [handleSelectLesson, setActiveBottomTab]
+  )
 
   const handleBack = () => {
     if (
@@ -294,7 +308,7 @@ export function CourseDetailClient({
                   {Array.isArray(currentLesson.questions) && currentLesson.questions.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setActiveBottomTab('quiz')}
+                      onClick={() => handleOpenPracticeQuiz()}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
                         activeBottomTab === 'quiz'
                           ? 'bg-emerald-600 text-white border-emerald-600'
@@ -412,8 +426,7 @@ export function CourseDetailClient({
           onToggleLessonComplete={handleToggleLessonComplete}
           onTakeTest={handleTakeTest}
           onOpenPracticeQuiz={(chapter, lesson) => {
-            handleSelectLesson(chapter, lesson)
-            setActiveBottomTab('quiz')
+            handleOpenPracticeQuiz(chapter, lesson)
           }}
         />
       </div>
@@ -486,6 +499,14 @@ export function CourseDetailClient({
             setCourseSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
             refreshCourseProgress()
           }}
+        />
+      )}
+
+      {showPracticeModal && currentLesson && (
+        <LessonPracticeQuizModal
+          open={showPracticeModal}
+          onClose={() => setShowPracticeModal(false)}
+          lesson={currentLesson}
         />
       )}
     </div>
