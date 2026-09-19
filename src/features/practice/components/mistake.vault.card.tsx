@@ -1,4 +1,4 @@
-// Thẻ hiển thị chi tiết câu sai trong Sổ tay lỗi sai, hỗ trợ xem lại đầy đủ câu hỏi và các đáp án của đề thi cũ.
+// Thẻ hiển thị chi tiết câu sai trong Sổ tay lỗi sai, hỗ trợ ẩn/hiện đáp án đối chiếu và ôn tập lặp lại ngắt quãng.
 'use client'
 
 import { useState } from 'react'
@@ -12,6 +12,8 @@ import {
   ChevronUp,
   Sparkles,
   Flame,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { Button } from '@/components/button'
 import type { UserMistakeItem } from '@/features/practice/types/mistake'
@@ -34,6 +36,7 @@ function isMatchingAnswer(opt: string, optIndex: number, targetAnswer: string): 
 }
 
 export function MistakeVaultCard({ mistake, onReview, onDrillTopic }: MistakeVaultCardProps) {
+  const [showAnswers, setShowAnswers] = useState(false)
   const [showExplanation, setShowExplanation] = useState(false)
 
   const isDueToday = new Date(mistake.next_due_at).getTime() <= Date.now()
@@ -90,107 +93,131 @@ export function MistakeVaultCard({ mistake, onReview, onDrillTopic }: MistakeVau
         </p>
       </div>
 
-      {hasOptions ? (
-        <div className="space-y-2">
-          <div className="text-[11px] font-bold text-text-tertiary uppercase tracking-wider">
-            Các đáp án lựa chọn:
-          </div>
-          <div className="grid grid-cols-1 gap-2">
-            {mistake.options.map((opt, idx) => {
-              const letter = String.fromCharCode(65 + idx)
-              const isCorrect = isMatchingAnswer(opt, idx, mistake.correct_answer)
-              const isUserChoice = isMatchingAnswer(opt, idx, mistake.user_answer)
+      <div className="pt-0.5">
+        <button
+          type="button"
+          onClick={() => setShowAnswers(!showAnswers)}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors cursor-pointer"
+        >
+          {showAnswers ? (
+            <>
+              <EyeOff size={14} />
+              <span>Ẩn đáp án & đối chiếu</span>
+            </>
+          ) : (
+            <>
+              <Eye size={14} />
+              <span>Xem đáp án & kết quả lần trước</span>
+            </>
+          )}
+        </button>
+      </div>
 
-              let containerClass =
-                'flex items-center justify-between p-3 rounded-xl border text-xs transition-colors bg-surface border-border/80 text-text-primary'
-              let badgeClass =
-                'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-surface-hover text-[11px] font-bold text-text-secondary'
+      {showAnswers && (
+        <div className="space-y-3 animate-in fade-in duration-150">
+          {hasOptions ? (
+            <div className="space-y-2">
+              <div className="text-[11px] font-bold text-text-tertiary uppercase tracking-wider">
+                Các đáp án lựa chọn:
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {mistake.options.map((opt, idx) => {
+                  const letter = String.fromCharCode(65 + idx)
+                  const isCorrect = isMatchingAnswer(opt, idx, mistake.correct_answer)
+                  const isUserChoice = isMatchingAnswer(opt, idx, mistake.user_answer)
 
-              if (isCorrect) {
-                containerClass =
-                  'flex items-center justify-between p-3 rounded-xl border-2 border-emerald-500/60 bg-emerald-500/10 text-emerald-950 dark:text-emerald-200 font-semibold shadow-xs'
-                badgeClass =
-                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white text-[11px] font-bold'
-              } else if (isUserChoice) {
-                containerClass =
-                  'flex items-center justify-between p-3 rounded-xl border-2 border-rose-500/60 bg-rose-500/10 text-rose-950 dark:text-rose-200 font-medium'
-                badgeClass =
-                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-rose-600 text-white text-[11px] font-bold'
-              }
+                  let containerClass =
+                    'flex items-center justify-between p-3 rounded-xl border text-xs transition-colors bg-surface border-border/80 text-text-primary'
+                  let badgeClass =
+                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-surface-hover text-[11px] font-bold text-text-secondary'
 
-              return (
-                <div key={idx} className={containerClass}>
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={badgeClass}>{letter}</span>
-                    <span className="leading-relaxed">{opt}</span>
-                  </div>
+                  if (isCorrect) {
+                    containerClass =
+                      'flex items-center justify-between p-3 rounded-xl border-2 border-emerald-500/60 bg-emerald-500/10 text-emerald-950 dark:text-emerald-200 font-semibold shadow-xs'
+                    badgeClass =
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white text-[11px] font-bold'
+                  } else if (isUserChoice) {
+                    containerClass =
+                      'flex items-center justify-between p-3 rounded-xl border-2 border-rose-500/60 bg-rose-500/10 text-rose-950 dark:text-rose-200 font-medium'
+                    badgeClass =
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-rose-600 text-white text-[11px] font-bold'
+                  }
 
-                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                    {isCorrect && (
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
-                        <CheckCircle size={12} className="text-emerald-600 dark:text-emerald-400" />
-                        <span>Đáp án đúng</span>
-                      </span>
-                    )}
-                    {isUserChoice && !isCorrect && (
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/70 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">
-                        <XCircle size={12} className="text-rose-600 dark:text-rose-400" />
-                        <span>Bạn đã chọn</span>
-                      </span>
-                    )}
-                  </div>
+                  return (
+                    <div key={idx} className={containerClass}>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className={badgeClass}>{letter}</span>
+                        <span className="leading-relaxed">{opt}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        {isCorrect && (
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
+                            <CheckCircle size={12} className="text-emerald-600 dark:text-emerald-400" />
+                            <span>Đáp án đúng</span>
+                          </span>
+                        )}
+                        {isUserChoice && !isCorrect && (
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/70 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800">
+                            <XCircle size={12} className="text-rose-600 dark:text-rose-400" />
+                            <span>Bạn đã chọn</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {userOptionIndex === -1 && mistake.user_answer && (
+                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 font-medium">
+                  <XCircle size={13} className="shrink-0 text-rose-600" />
+                  <span>
+                    Lần làm trước bạn chọn: <strong>{mistake.user_answer}</strong>
+                  </span>
                 </div>
-              )
-            })}
-          </div>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-800/40 text-rose-800 dark:text-rose-200 space-y-0.5">
+                <div className="flex items-center gap-1 font-bold text-rose-700 dark:text-rose-300 text-[11px]">
+                  <XCircle size={13} className="shrink-0" />
+                  <span>Lần trước bạn chọn:</span>
+                </div>
+                <p className="pl-4 font-medium">{mistake.user_answer}</p>
+              </div>
 
-          {userOptionIndex === -1 && mistake.user_answer && (
-            <div className="flex items-center gap-1.5 p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 font-medium">
-              <XCircle size={13} className="shrink-0 text-rose-600" />
-              <span>
-                Lần làm trước bạn chọn: <strong>{mistake.user_answer}</strong>
-              </span>
+              <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-200 space-y-0.5">
+                <div className="flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 text-[11px]">
+                  <CheckCircle size={13} className="shrink-0" />
+                  <span>Đáp án chính xác:</span>
+                </div>
+                <p className="pl-4 font-medium">{mistake.correct_answer}</p>
+              </div>
             </div>
           )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <div className="p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-800/40 text-rose-800 dark:text-rose-200 space-y-0.5">
-            <div className="flex items-center gap-1 font-bold text-rose-700 dark:text-rose-300 text-[11px]">
-              <XCircle size={13} className="shrink-0" />
-              <span>Lần trước bạn chọn:</span>
-            </div>
-            <p className="pl-4 font-medium">{mistake.user_answer}</p>
-          </div>
 
-          <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-200 space-y-0.5">
-            <div className="flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300 text-[11px]">
-              <CheckCircle size={13} className="shrink-0" />
-              <span>Đáp án chính xác:</span>
-            </div>
-            <p className="pl-4 font-medium">{mistake.correct_answer}</p>
-          </div>
-        </div>
-      )}
+          {mistake.explanation && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowExplanation(!showExplanation)}
+                className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>{showExplanation ? 'Ẩn lời giải & hướng dẫn' : 'Xem giải thích chi tiết'}</span>
+                {showExplanation ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
 
-      {mistake.explanation && (
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowExplanation(!showExplanation)}
-            className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            <span>{showExplanation ? 'Ẩn lời giải & hướng dẫn' : 'Xem giải thích chi tiết'}</span>
-            {showExplanation ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-
-          {showExplanation && (
-            <div className="mt-2 p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-800/40 text-xs text-purple-950 dark:text-purple-200 leading-relaxed animate-in fade-in duration-150">
-              <div className="flex items-center gap-1 font-bold mb-1">
-                <Sparkles size={13} className="text-purple-600 dark:text-purple-400" />
-                <span>Gợi ý ghi nhớ:</span>
-              </div>
-              <p>{mistake.explanation}</p>
+              {showExplanation && (
+                <div className="mt-2 p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-800/40 text-xs text-purple-950 dark:text-purple-200 leading-relaxed animate-in fade-in duration-150">
+                  <div className="flex items-center gap-1 font-bold mb-1">
+                    <Sparkles size={13} className="text-purple-600 dark:text-purple-400" />
+                    <span>Gợi ý ghi nhớ:</span>
+                  </div>
+                  <p>{mistake.explanation}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -230,3 +257,4 @@ export function MistakeVaultCard({ mistake, onReview, onDrillTopic }: MistakeVau
     </div>
   )
 }
+
