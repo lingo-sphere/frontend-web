@@ -170,7 +170,7 @@ function CourseExamContent() {
       testType={testType}
       durationMinutes={durationMins}
       finalTestQuestions={course.final_test_questions}
-      finalTestAudioUrl={course.final_test_audio_url}
+      finalTestAudioUrl={testType === 'final-test' ? course.final_test_audio_url : undefined}
       speakingPrompt={
         testType === 'final-test'
           ? course.final_test_speaking_prompt || selectedChapter?.speaking_prompt

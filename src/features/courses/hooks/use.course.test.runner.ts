@@ -170,16 +170,23 @@ export function useCourseTestRunner({
   }, [chapter, testType, finalTestQuestions])
 
   const testAudioUrl = useMemo(() => {
+    if (testType === 'final-test') {
+      return (
+        finalTestAudioUrl ||
+        rawQuestions.find((q) => q.media_url?.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i))
+          ?.media_url ||
+        ''
+      )
+    }
     return (
-      finalTestAudioUrl ||
-      chapter?.test_audio_url ||
       chapter?.challenge_audio_url ||
+      chapter?.test_audio_url ||
       chapter?.audio_url ||
       rawQuestions.find((q) => q.media_url?.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i))
         ?.media_url ||
       ''
     )
-  }, [finalTestAudioUrl, chapter, rawQuestions])
+  }, [testType, finalTestAudioUrl, chapter, rawQuestions])
 
   const passingScore =
     testType === 'challenge'

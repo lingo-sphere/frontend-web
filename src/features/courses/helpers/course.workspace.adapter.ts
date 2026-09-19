@@ -60,8 +60,13 @@ interface RawModuleInput {
   theory_file_url?: string
   theory_file_name?: string
   challenge_questions?: Array<Record<string, unknown>>
+  test_questions?: Array<Record<string, unknown>>
+  post_mini_questions?: Array<Record<string, unknown>>
   challenge_duration_minutes?: number
   challenge_passing_score?: number
+  test_audio_url?: string
+  challenge_audio_url?: string
+  audio_url?: string
   speaking_prompt?: string
   speaking_file_url?: string
   writing_prompt?: string
@@ -241,6 +246,17 @@ export function mapCourseDataToWorkspace(
       }
     })
 
+    const chQuestions =
+      Array.isArray(mod.challenge_questions) && mod.challenge_questions.length > 0
+        ? mod.challenge_questions
+        : Array.isArray(mod.test_questions) && mod.test_questions.length > 0
+        ? mod.test_questions
+        : Array.isArray(mod.post_mini_questions) && mod.post_mini_questions.length > 0
+        ? mod.post_mini_questions
+        : []
+    const chAudio =
+      mod.challenge_audio_url || mod.test_audio_url || mod.audio_url || ''
+
     return {
       id: modId,
       courseId: String(courseId),
@@ -251,13 +267,27 @@ export function mapCourseDataToWorkspace(
       lessons: mappedLessons,
       theory_file_url: mod.theory_file_url || '',
       theory_file_name: mod.theory_file_name || '',
-      challenge_questions: mod.challenge_questions || [],
+      challenge_questions: chQuestions,
+      post_mini_questions: Array.isArray(mod.post_mini_questions) ? mod.post_mini_questions : [],
+      test_questions: Array.isArray(mod.test_questions) ? mod.test_questions : [],
       challenge_duration_minutes: mod.challenge_duration_minutes || 15,
       challenge_passing_score: mod.challenge_passing_score || 80,
+      challenge_audio_url: chAudio,
+      test_audio_url: chAudio,
+      audio_url: chAudio,
       speaking_prompt: mod.speaking_prompt,
       speaking_file_url: mod.speaking_file_url,
       writing_prompt: mod.writing_prompt,
       writing_file_url: mod.writing_file_url,
+      challengeTest: {
+        id: `challenge_${modId}`,
+        chapterId: modId,
+        title: `Bài kiểm tra thử thách - ${mod.title || `Chương ${cIdx + 1}`}`,
+        questionsCount: chQuestions.length,
+        passingScore: mod.challenge_passing_score || 80,
+        durationMinutes: mod.challenge_duration_minutes || 15,
+        status: chapterStatus === 'completed' ? 'completed' : 'available',
+      },
     }
   })
 
