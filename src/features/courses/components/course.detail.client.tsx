@@ -4,7 +4,7 @@
 import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import { AlertCircle, ArrowLeft, ExternalLink, FileText, FolderDown, HelpCircle } from 'lucide-react'
+import { AlertCircle, ArrowLeft, ExternalLink, FileText, FolderDown, HelpCircle, Lock } from 'lucide-react'
 import { Button } from '@/components/button'
 import { AppResult } from '@/components/status/app.result'
 import { CourseWorkspaceHeader } from '@/features/courses/components/course.workspace.header'
@@ -103,13 +103,30 @@ export function CourseDetailClient({
 
   const handleOpenPracticeQuiz = useCallback(
     (chapter?: Chapter, lesson?: Lesson) => {
+      const targetLesson = lesson || currentLesson
+      const targetChapter =
+        chapter || course?.chapters.find((ch) => ch.lessons.some((l) => l.id === targetLesson?.id))
+      const isLocked =
+        (targetChapter && lockedChapterIdSet.has(targetChapter.id)) ||
+        (!isEnrolled && !Boolean(targetLesson?.is_free_preview || targetLesson?.is_preview))
+
+      if (isLocked) {
+        toast.warning(
+          targetChapter && lockedChapterIdSet.has(targetChapter.id)
+            ? 'Chương này đang bị khóa! Vui lòng vượt qua bài kiểm tra của chương trước để mở khóa bài luyện tập.'
+            : 'Vui lòng đăng ký khóa học để làm bài luyện tập!',
+          'Chương đang khóa'
+        )
+        return
+      }
+
       if (chapter && lesson) {
         handleSelectLesson(chapter, lesson)
       }
       setActiveBottomTab('quiz')
       setShowPracticeModal(true)
     },
-    [handleSelectLesson, setActiveBottomTab]
+    [handleSelectLesson, setActiveBottomTab, currentLesson, course, lockedChapterIdSet, isEnrolled]
   )
 
   const handleBack = () => {
@@ -291,41 +308,106 @@ export function CourseDetailClient({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {currentLesson.theory_file_url && (
-                    <a
-                      href={currentLesson.theory_file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/30 transition-all cursor-pointer shadow-2xs"
-                      title={currentLesson.theory_file_name || (isVietnamese ? 'Xem file đề lý thuyết của bài học' : 'View lesson theory file')}
-                    >
-                      <FileText size={13} className="text-blue-600 dark:text-blue-400" />
-                      <span>{t('courses.theoryPdf')}</span>
-                      <ExternalLink size={11} className="opacity-70" />
-                    </a>
-                  )}
+                  {(() => {
+                    const currentChapter = course?.chapters.find((ch) =>
+                      ch.lessons.some((l) => l.id === currentLesson.id)
+                    )
+                    const isCurrentChapterLocked = currentChapter
+                      ? lockedChapterIdSet.has(currentChapter.id)
+                      : false
+                    const isCurrentLessonLocked =
+                      isCurrentChapterLocked ||
+                      (!isEnrolled &&
+                        !Boolean(currentLesson.is_free_preview || currentLesson.is_preview))
 
-                  {Array.isArray(currentLesson.questions) && currentLesson.questions.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => handleOpenPracticeQuiz()}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
-                        activeBottomTab === 'quiz'
-                          ? 'bg-emerald-600 text-white border-emerald-600'
-                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                      }`}
-                    >
-                      <HelpCircle
-                        size={13}
-                        className={
-                          activeBottomTab === 'quiz'
-                            ? 'text-white'
-                            : 'text-emerald-600 dark:text-emerald-400'
-                        }
-                      />
-                      <span>{t('courses.practiceQuizCount', { count: currentLesson.questions.length })}</span>
-                    </button>
-                  )}
+                    return (
+                      <>
+                        {currentLesson.theory_file_url &&
+                          (isCurrentLessonLocked ? (
+                            <span
+                              onClick={() => {
+                                toast.warning(
+                                  isCurrentChapterLocked
+                                    ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa tài liệu lý thuyết.'
+                                    : 'Vui lòng đăng ký khóa học để xem tài liệu lý thuyết!',
+                                  'Chương đang khóa'
+                                )
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-text-tertiary text-xs font-bold border border-border/50 cursor-not-allowed opacity-70 shadow-2xs"
+                              title="Tài liệu lý thuyết bị khóa"
+                            >
+                              <Lock size={13} className="text-text-tertiary" />
+                              <span>{t('courses.theoryPdf')}</span>
+                            </span>
+                          ) : (
+                            <a
+                              href={currentLesson.theory_file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/30 transition-all cursor-pointer shadow-2xs"
+                              title={
+                                currentLesson.theory_file_name ||
+                                (isVietnamese
+                                  ? 'Xem file đề lý thuyết của bài học'
+                                  : 'View lesson theory file')
+                              }
+                            >
+                              <FileText size={13} className="text-blue-600 dark:text-blue-400" />
+                              <span>{t('courses.theoryPdf')}</span>
+                              <ExternalLink size={11} className="opacity-70" />
+                            </a>
+                          ))}
+
+                        {Array.isArray(currentLesson.questions) &&
+                          currentLesson.questions.length > 0 &&
+                          (isCurrentLessonLocked ? (
+                            <span
+                              onClick={() => {
+                                toast.warning(
+                                  isCurrentChapterLocked
+                                    ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa bài luyện tập.'
+                                    : 'Vui lòng đăng ký khóa học để làm bài luyện tập!',
+                                  'Chương đang khóa'
+                                )
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-text-tertiary text-xs font-bold border border-border/50 cursor-not-allowed opacity-70 shadow-2xs"
+                              title="Bài luyện tập bị khóa"
+                            >
+                              <Lock size={13} className="text-text-tertiary" />
+                              <span>
+                                {t('courses.practiceQuizCount', {
+                                  count: currentLesson.questions.length,
+                                })}
+                              </span>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPracticeQuiz()}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
+                                activeBottomTab === 'quiz'
+                                  ? 'bg-emerald-600 text-white border-emerald-600'
+                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                              }`}
+                            >
+                              <HelpCircle
+                                size={13}
+                                className={
+                                  activeBottomTab === 'quiz'
+                                    ? 'text-white'
+                                    : 'text-emerald-600 dark:text-emerald-400'
+                                }
+                              />
+                              <span>
+                                {t('courses.practiceQuizCount', {
+                                  count: currentLesson.questions.length,
+                                })}
+                              </span>
+                            </button>
+                          ))}
+                      </>
+                    )
+                  })()}
 
                   <button
                     type="button"

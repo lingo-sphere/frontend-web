@@ -14,6 +14,7 @@ import {
   Volume2,
   CheckCircle2,
   Folder,
+  Lock,
 } from 'lucide-react'
 import type { Course, Chapter, Lesson } from '@/features/courses/types/course'
 import { toast } from '@/store/toast.store'
@@ -22,6 +23,7 @@ interface CourseSidebarDocumentsProps {
   course: Course
   currentLesson: Lesson | null
   isEnrolled: boolean
+  lockedChapterIds?: Set<string>
   onSelectLesson: (chapter: Chapter, lesson: Lesson) => void
   onOpenPracticeQuiz?: (chapter: Chapter, lesson: Lesson) => void
   onOpenCheckout?: () => void
@@ -33,6 +35,7 @@ export function CourseSidebarDocuments({
   course,
   currentLesson,
   isEnrolled,
+  lockedChapterIds,
   onSelectLesson,
   onOpenPracticeQuiz,
   onOpenCheckout,
@@ -319,143 +322,227 @@ export function CourseSidebarDocuments({
             <p>Không tìm thấy tài liệu phù hợp với bộ lọc hiện tại.</p>
           </div>
         ) : (
-          filteredChapters.map(({ chapter: ch, lessons: lesList }) => (
-            <div
-              key={ch.id}
-              className="rounded-2xl border border-border/80 bg-surface-subtle/40 p-3.5 space-y-3"
-            >
-              <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary font-black text-[10px] shrink-0">
-                    Chương {ch.order || 1}
-                  </span>
-                  <h5 className="font-bold text-xs text-text-primary truncate">
-                    {ch.title}
-                  </h5>
-                </div>
-              </div>
+          filteredChapters.map(({ chapter: ch, lessons: lesList }) => {
+            const isChapterLocked = lockedChapterIds ? lockedChapterIds.has(ch.id) : false
 
-              {ch.theory_file_url && (filterType === 'all' || filterType === 'theory') && (
-                <div className="p-2.5 rounded-xl border border-blue-500/20 bg-blue-500/5 flex items-center justify-between gap-2 text-xs">
+            return (
+              <div
+                key={ch.id}
+                className={`rounded-2xl border transition-all p-3.5 space-y-3 ${
+                  isChapterLocked
+                    ? 'border-border/60 bg-slate-100/80 dark:bg-slate-900/60'
+                    : 'border-border/80 bg-surface-subtle/40'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <FileText size={13} className="text-blue-600 shrink-0" />
-                    <span className="truncate text-[11px] font-bold text-blue-900 dark:text-blue-200">
-                      {ch.theory_file_name || `Lý thuyết tổng quan: Chương ${ch.order || 1}`}
+                    <span
+                      className={`px-2 py-0.5 rounded-md font-black text-[10px] shrink-0 ${
+                        isChapterLocked
+                          ? 'bg-slate-200/90 dark:bg-slate-800 text-text-tertiary'
+                          : 'bg-primary/10 text-primary'
+                      }`}
+                    >
+                      Chương {ch.order || 1}
                     </span>
+                    <h5
+                      className={`font-bold text-xs truncate ${
+                        isChapterLocked ? 'text-text-secondary' : 'text-text-primary'
+                      }`}
+                    >
+                      {ch.title}
+                    </h5>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  {isChapterLocked && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-extrabold flex items-center gap-1 shrink-0">
+                      <Lock size={10} />
+                      Đang khóa
+                    </span>
+                  )}
+                </div>
+
+                {ch.theory_file_url && (filterType === 'all' || filterType === 'theory') && (
+                  isChapterLocked ? (
+                    <div className="p-2.5 rounded-xl border border-border/60 bg-slate-200/40 dark:bg-slate-800/40 flex items-center justify-between gap-2 text-xs opacity-75">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Lock size={13} className="text-text-tertiary shrink-0" />
+                        <span className="truncate text-[11px] font-bold text-text-secondary">
+                          {ch.theory_file_name || `Lý thuyết tổng quan: Chương ${ch.order || 1}`}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-text-tertiary px-1.5 py-0.5 rounded bg-surface border border-border/40">
+                        Đang khóa
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 rounded-xl border border-blue-500/20 bg-blue-500/5 flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText size={13} className="text-blue-600 shrink-0" />
+                        <span className="truncate text-[11px] font-bold text-blue-900 dark:text-blue-200">
+                          {ch.theory_file_name || `Lý thuyết tổng quan: Chương ${ch.order || 1}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <a
+                          href={ch.theory_file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 text-blue-600 hover:text-blue-700"
+                          title="Mở xem"
+                        >
+                          <ExternalLink size={12} />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(ch.theory_file_url!, ch.theory_file_name)}
+                          className="p-1 text-blue-600 hover:text-blue-700"
+                          title="Tải về"
+                        >
+                          <Download size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                )}
+
+                {ch.audio_url && (filterType === 'all' || filterType === 'general') && (
+                  <div className="p-2.5 rounded-xl border border-border bg-surface flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Volume2 size={13} className="text-primary shrink-0" />
+                      <span className="truncate text-[11px] font-medium text-text-primary">
+                        Audio bài nghe Chương {ch.order || 1}
+                      </span>
+                    </div>
                     <a
-                      href={ch.theory_file_url}
+                      href={ch.audio_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1 text-blue-600 hover:text-blue-700"
-                      title="Mở xem"
+                      className="p-1 text-primary hover:text-primary-focus"
+                      title="Mở nghe"
                     >
                       <ExternalLink size={12} />
                     </a>
-                    <button
-                      type="button"
-                      onClick={() => handleDownload(ch.theory_file_url!, ch.theory_file_name)}
-                      className="p-1 text-blue-600 hover:text-blue-700"
-                      title="Tải về"
-                    >
-                      <Download size={12} />
-                    </button>
                   </div>
-                </div>
-              )}
+                )}
 
-              {ch.audio_url && (filterType === 'all' || filterType === 'general') && (
-                <div className="p-2.5 rounded-xl border border-border bg-surface flex items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Volume2 size={13} className="text-primary shrink-0" />
-                    <span className="truncate text-[11px] font-medium text-text-primary">
-                      Audio bài nghe Chương {ch.order || 1}
-                    </span>
-                  </div>
-                  <a
-                    href={ch.audio_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1 text-primary hover:text-primary-focus"
-                    title="Mở nghe"
-                  >
-                    <ExternalLink size={12} />
-                  </a>
-                </div>
-              )}
+                <div className="space-y-2 pt-1">
+                  {lesList.map((les) => {
+                    const hasTheory = Boolean(les.theory_file_url)
+                    const hasQuiz = Array.isArray(les.questions) && les.questions.length > 0
+                    const isCurrent = currentLesson?.id === les.id
 
-              <div className="space-y-2 pt-1">
-                {lesList.map((les) => {
-                  const hasTheory = Boolean(les.theory_file_url)
-                  const hasQuiz = Array.isArray(les.questions) && les.questions.length > 0
-                  const isCurrent = currentLesson?.id === les.id
-
-                  return (
-                    <div
-                      key={les.id}
-                      className={`p-2.5 rounded-xl border transition-all text-xs space-y-2 ${
-                        isCurrent
-                          ? 'border-primary/50 bg-primary/5 shadow-2xs'
-                          : 'border-border/60 bg-surface hover:border-border'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onSelectLesson(ch, les)}
-                          className="font-bold text-[11.5px] text-left text-text-primary hover:text-primary truncate flex-1 cursor-pointer"
-                        >
-                          Bài {les.order || 1}. {les.title}
-                        </button>
-                        {isCurrent && (
-                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-white shrink-0">
-                            Đang mở
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                        {hasTheory && (
-                          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 text-[10.5px] font-bold">
-                            <FileText size={11} className="text-blue-600 dark:text-blue-400" />
-                            <span className="truncate max-w-[130px]">
-                              {les.theory_file_name || 'Đề lý thuyết PDF'}
-                            </span>
-                            <a
-                              href={les.theory_file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-0.5 hover:text-blue-800"
-                              title="Xem PDF"
-                            >
-                              <ExternalLink size={10} />
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => handleDownload(les.theory_file_url!, les.theory_file_name, Boolean(les.is_free_preview))}
-                              className="p-0.5 hover:text-blue-800"
-                              title="Tải về"
-                            >
-                              <Download size={10} />
-                            </button>
-                          </div>
-                        )}
-
-                        {hasQuiz && (
+                    return (
+                      <div
+                        key={les.id}
+                        className={`p-2.5 rounded-xl border transition-all text-xs space-y-2 ${
+                          isChapterLocked
+                            ? 'border-border/40 bg-slate-100/50 dark:bg-slate-900/40 opacity-75'
+                            : isCurrent
+                              ? 'border-primary/50 bg-primary/5 shadow-2xs'
+                              : 'border-border/60 bg-surface hover:border-border'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
                           <button
                             type="button"
                             onClick={() => {
+                              if (isChapterLocked) {
+                                toast.warning('Chương này đang bị khóa! Vui lòng hoàn thành bài test chương trước để mở khóa nhé.', 'Chương đang khóa')
+                                return
+                              }
                               onSelectLesson(ch, les)
-                              onOpenPracticeQuiz?.(ch, les)
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-[10.5px] font-bold cursor-pointer transition-all"
-                            title={`Làm bài tập trắc nghiệm củng cố: ${les.questions!.length} câu`}
+                            className="font-bold text-[11.5px] text-left text-text-primary hover:text-primary truncate flex-1 cursor-pointer"
                           >
-                            <HelpCircle size={11} className="text-emerald-600 dark:text-emerald-400" />
-                            <span>Đề luyện tập ({les.questions!.length} câu)</span>
+                            Bài {les.order || 1}. {les.title}
                           </button>
-                        )}
+                          {isCurrent && (
+                            <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-white shrink-0">
+                              Đang mở
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                          {hasTheory && (
+                            isChapterLocked || !isEnrolled ? (
+                              <div
+                                onClick={() => {
+                                  toast.warning(
+                                    isChapterLocked
+                                      ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa tài liệu lý thuyết.'
+                                      : 'Vui lòng đăng ký khóa học để tải tài liệu lý thuyết!',
+                                    'Chương đang khóa'
+                                  )
+                                }}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-text-tertiary border border-border/40 text-[10.5px] font-bold cursor-not-allowed opacity-70"
+                                title="Tài liệu lý thuyết bị khóa"
+                              >
+                                <Lock size={11} className="text-text-tertiary" />
+                                <span className="truncate max-w-[130px]">
+                                  {les.theory_file_name || 'Đề lý thuyết PDF'}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 text-[10.5px] font-bold">
+                                <FileText size={11} className="text-blue-600 dark:text-blue-400" />
+                                <span className="truncate max-w-[130px]">
+                                  {les.theory_file_name || 'Đề lý thuyết PDF'}
+                                </span>
+                                <a
+                                  href={les.theory_file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-0.5 hover:text-blue-800"
+                                  title="Xem PDF"
+                                >
+                                  <ExternalLink size={10} />
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownload(les.theory_file_url!, les.theory_file_name, Boolean(les.is_free_preview))}
+                                  className="p-0.5 hover:text-blue-800"
+                                  title="Tải về"
+                                >
+                                  <Download size={10} />
+                                </button>
+                              </div>
+                            )
+                          )}
+
+                          {hasQuiz && (
+                            isChapterLocked || !isEnrolled ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  toast.warning(
+                                    isChapterLocked
+                                      ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa bài luyện tập.'
+                                      : 'Vui lòng đăng ký khóa học để làm bài luyện tập!',
+                                    'Chương đang khóa'
+                                  )
+                                }}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-text-tertiary border border-border/40 text-[10.5px] font-bold cursor-not-allowed opacity-70"
+                                title="Bài luyện tập bị khóa"
+                              >
+                                <Lock size={11} className="text-text-tertiary" />
+                                <span>Đề luyện tập ({les.questions!.length} câu)</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onSelectLesson(ch, les)
+                                  onOpenPracticeQuiz?.(ch, les)
+                                }}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-[10.5px] font-bold cursor-pointer transition-all"
+                                title={`Làm bài tập trắc nghiệm củng cố: ${les.questions!.length} câu`}
+                              >
+                                <HelpCircle size={11} className="text-emerald-600 dark:text-emerald-400" />
+                                <span>Đề luyện tập ({les.questions!.length} câu)</span>
+                              </button>
+                            )
+                          )}
 
                         {Array.isArray(les.resources) &&
                           les.resources.map((res) => (
@@ -475,7 +562,8 @@ export function CourseSidebarDocuments({
                 })}
               </div>
             </div>
-          ))
+          )
+        })
         )}
       </div>
     </div>

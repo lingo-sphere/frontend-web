@@ -134,6 +134,7 @@ export function CourseWorkspaceSidebar({
           course={course}
           currentLesson={currentLesson}
           isEnrolled={isEnrolled}
+          lockedChapterIds={lockedChapterIds}
           onSelectLesson={onSelectLesson}
           onOpenPracticeQuiz={onOpenPracticeQuiz}
         />
