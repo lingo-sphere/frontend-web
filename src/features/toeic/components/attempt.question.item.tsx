@@ -28,6 +28,7 @@ export interface AttemptAnswerDetail {
     correct_option?: string
     image_url?: string
     audio_url?: string
+    media_url?: string
   }
 }
 
@@ -129,9 +130,9 @@ export function ToeicQuestionCard({ answer }: ToeicQuestionCardProps) {
         </div>
       )}
 
-      {q?.audio_url && (
+      {(q?.audio_url || q?.media_url) && (
         <div className="pt-1">
-          <audio controls className="w-full h-8" src={q.audio_url} />
+          <audio controls className="w-full h-8" src={q.audio_url || q.media_url} />
         </div>
       )}
 
