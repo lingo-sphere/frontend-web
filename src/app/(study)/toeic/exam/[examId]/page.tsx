@@ -1,7 +1,7 @@
 /// Trang làm bài thi TOEIC trực tuyến và hiển thị kết quả đánh giá năng lực.
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import { useNavigate, useParams } from '@/lib/navigation'
@@ -45,16 +45,6 @@ export default function ToeicExamAppPage() {
 
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
-
-  useEffect(() => {
-    if (state.submitted) return
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-      e.returnValue = ''
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [state.submitted])
 
   const handleBackClick = () => {
     if (!state.submitted) {
