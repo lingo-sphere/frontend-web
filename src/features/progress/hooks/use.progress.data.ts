@@ -181,7 +181,7 @@ export function useProgressData(navigate: (path: string) => void) {
         total_lessons_count: totalLessons,
         completed_modules_count: completedModules,
         total_modules_count: totalModules,
-        status: enrollment?.status || (progressPercent >= 100 ? 'COMPLETED' : 'STUDYING'),
+        status: (progressPercent >= 100 || enrollment?.status === 'COMPLETED' || progress?.status === 'COMPLETED' || (totalLessons > 0 && completedLessons >= totalLessons)) ? 'COMPLETED' : (enrollment?.status || 'STUDYING'),
         enrolled_at: enrollment?.enrolled_at || new Date().toISOString(),
       }
     })

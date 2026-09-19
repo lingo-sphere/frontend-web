@@ -26,7 +26,7 @@ interface CourseSidebarChapterItemProps {
   onSelectLesson: (lesson: Lesson) => void
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
   onToggleResource: (lessonId: string, e: React.MouseEvent) => void
-  onTakeTest?: () => void
+  onTakeTest?: (isRetry?: boolean) => void
   onOpenPracticeQuiz?: (lesson: Lesson) => void
 }
 
@@ -55,6 +55,9 @@ export function CourseSidebarChapterItem({
 }: CourseSidebarChapterItemProps) {
   const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
   const chTotal = chapter.lessons.length
+  const isAllLessonsCompleted = chTotal > 0 && chCompleted === chTotal
+  const hasChallenge = questionsCount > 0
+  const isChapterCompleted = hasChallenge ? (isPassedChallenge && isAllLessonsCompleted) : isAllLessonsCompleted
 
   return (
     <div
@@ -93,10 +96,10 @@ export function CourseSidebarChapterItem({
                 <Lock size={10} />
                 Đang khóa
               </span>
-            ) : isPassedChallenge ? (
+            ) : isChapterCompleted ? (
               <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                 <CheckCircle2 size={10} className="text-emerald-500" />
-                Đã hoàn thành ({challengeScore}%)
+                Đã hoàn thành{challengeScore >= passingScore ? ` (${challengeScore}%)` : ''}
               </span>
             ) : hasTakenChallenge ? (
               <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
@@ -207,7 +210,7 @@ export function CourseSidebarChapterItem({
                 )
                 return
               }
-              onTakeTest?.()
+              onTakeTest?.(isPassedChallenge || hasTakenChallenge)
             }}
           />
         </div>

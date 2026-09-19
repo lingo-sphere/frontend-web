@@ -339,6 +339,7 @@ export const courseService = {
       passing_score?: number
       order_index?: number
       raw_questions?: unknown[]
+      retry?: boolean
     }
   ): Promise<{
     session_id: string

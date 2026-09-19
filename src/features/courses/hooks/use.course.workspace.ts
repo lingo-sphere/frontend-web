@@ -53,11 +53,18 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     isAuthenticated && !isEnrolledInList
   )
 
+  const { data: progressData } = useCourseProgressQuery(
+    courseId,
+    Boolean(courseId && isAuthenticated)
+  )
+
   const [overrideEnrolled, setOverrideEnrolled] = useState<boolean | null>(null)
   const isEnrolled =
     overrideEnrolled ??
     (isEnrolledInList ||
       Boolean(enrollmentStatusRes?.is_enrolled) ||
+      Boolean(progressData?.course_progress) ||
+      Boolean(progressData?.completed_lesson_ids?.length) ||
       (enrollmentStatusRes === undefined && initialIsEnrolled))
 
   useEffect(() => {
@@ -76,7 +83,6 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
 
   const { data: reviewsData } = useCourseReviewsQuery(courseId, Boolean(rawCourse))
   const { data: qnaData } = useCourseQnAQuery(courseId, Boolean(rawCourse))
-  const { data: progressData } = useCourseProgressQuery(courseId, Boolean(rawCourse && isEnrolled))
 
   const derivedCourse = useMemo(() => {
     if (!rawCourse) return null
@@ -116,11 +122,20 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       const prevPassingScore =
         prevCh.challengeTest?.passingScore || prevCh.challenge_passing_score || 80
       const prevScore = Number(prevMod?.challenge_score ?? prevMod?.post_mini_score ?? 0)
+      const prevLessons = prevCh.lessons || []
+      const prevCompleted = prevLessons.filter((l) => l.status === 'completed').length
+      const isPrevAllCompleted = prevLessons.length > 0 && prevCompleted === prevLessons.length
+      const prevQuestionsCount = Number(
+        prevCh.challengeTest?.questionsCount ||
+          prevCh.challenge_questions?.length ||
+          0
+      )
       const passedChallenge = Boolean(
         prevMod?.is_passed_by_challenge ||
           prevMod?.status === 'COMPLETED' ||
           prevMod?.status === 'SKIPPED_BY_CHALLENGE' ||
-          (Boolean(prevMod?.challenge_taken) && prevScore >= prevPassingScore)
+          (Boolean(prevMod?.challenge_taken) && prevScore >= prevPassingScore) ||
+          (prevQuestionsCount === 0 && isPrevAllCompleted)
       )
       if (!passedChallenge) {
         set.add(activeCourse.chapters[i].id)
@@ -175,9 +190,37 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
 
     setCourse((prev) => {
       if (!prev) return structured
+      const mergedChapters = structured.chapters.map((ch) => {
+        const prevCh = prev.chapters.find((pc) => pc.id === ch.id)
+        if (!prevCh) return ch
+        const mergedLessons = ch.lessons.map((l) => {
+          const prevL = prevCh.lessons.find((pl) => pl.id === l.id)
+          if (!prevL) return l
+          const isCompleted = l.status === 'completed' || prevL.status === 'completed'
+          const bestProgress = isCompleted ? 100 : Math.max(l.progress || 0, prevL.progress || 0)
+          const bestStatus: Lesson['status'] = isCompleted
+            ? 'completed'
+            : bestProgress > 0
+            ? 'in-progress'
+            : l.status
+          return {
+            ...l,
+            status: bestStatus,
+            progress: bestProgress,
+            duration: prevL.duration || l.duration,
+          }
+        })
+        const chCompleted = mergedLessons.filter((l) => l.status === 'completed').length
+        const isAllComp = mergedLessons.length > 0 && chCompleted === mergedLessons.length
+        return {
+          ...ch,
+          status: isAllComp ? 'completed' : ch.status,
+          lessons: mergedLessons,
+        }
+      })
       return {
         ...structured,
-        chapters: prev.chapters.length > 0 ? prev.chapters : structured.chapters,
+        chapters: mergedChapters,
         reviews: reviewsData ? structured.reviews : prev.reviews,
         qna: qnaData ? structured.qna : prev.qna,
       }
@@ -293,9 +336,9 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     let targetStatus: Lesson['status'] = 'completed'
     let chapterId = navigation.currentChapter?.id || ''
 
-    const nextChapters = activeCourse.chapters.map((ch) => ({
-      ...ch,
-      lessons: ch.lessons.map((l) => {
+    const nextChapters = activeCourse.chapters.map((ch) => {
+      let chStatus = ch.status
+      const lessons = ch.lessons.map((l) => {
         if (l.id === lessonId) {
           targetStatus = l.status === 'completed' ? 'available' : 'completed'
           if (!chapterId) chapterId = ch.id
@@ -306,8 +349,19 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
           }
         }
         return l
-      }),
-    }))
+      })
+      const chCompleted = lessons.filter((l) => l.status === 'completed').length
+      if (lessons.length > 0 && chCompleted === lessons.length) {
+        chStatus = 'completed'
+      } else if (chCompleted < lessons.length && chStatus === 'completed') {
+        chStatus = 'in-progress'
+      }
+      return {
+        ...ch,
+        status: chStatus,
+        lessons,
+      }
+    })
 
     setCourse({ ...activeCourse, chapters: nextChapters })
 
@@ -322,6 +376,10 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
         is_completed: isNowCompleted,
         score: isNowCompleted ? 100 : 0,
       })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'progress'] })
+        queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(String(activeCourse.id)), 'progress'] })
+      })
       .catch(() => {})
 
     if (isNowCompleted) {
@@ -334,28 +392,52 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const handleLessonProgress = (lessonId: string, progress: number) => {
     if (!activeCourse || !isEnrolled) return
     let justCompleted = false
+    let hasChanges = false
     let chapterId = navigation.currentChapter?.id || ''
     const isNowCompleted = progress >= 80 || progress >= 100
 
-    const nextChapters = activeCourse.chapters.map((ch) => ({
-      ...ch,
-      lessons: ch.lessons.map((l) => {
+    const nextChapters = activeCourse.chapters.map((ch) => {
+      let chStatus = ch.status
+      const lessons = ch.lessons.map((l) => {
         if (l.id === lessonId) {
           if (!chapterId) chapterId = ch.id
-          if (isNowCompleted && l.status !== 'completed') {
+          if (l.status === 'completed') {
+            return l
+          }
+          if (isNowCompleted) {
             justCompleted = true
+          }
+          const nextStatus: Lesson['status'] = isNowCompleted
+            ? 'completed'
+            : progress > 0
+            ? 'in-progress'
+            : l.status
+          const nextProgress = isNowCompleted ? 100 : Math.max(l.progress || 0, progress)
+          if (nextStatus !== l.status || nextProgress !== l.progress) {
+            hasChanges = true
           }
           return {
             ...l,
-            progress: isNowCompleted ? 100 : progress,
-            status: isNowCompleted ? 'completed' : progress > 0 ? 'in-progress' : l.status,
+            progress: nextProgress,
+            status: nextStatus,
           }
         }
         return l
-      }),
-    }))
+      })
+      const chCompleted = lessons.filter((l) => l.status === 'completed').length
+      if (lessons.length > 0 && chCompleted === lessons.length) {
+        chStatus = 'completed'
+      }
+      return {
+        ...ch,
+        status: chStatus,
+        lessons,
+      }
+    })
 
-    setCourse({ ...activeCourse, chapters: nextChapters })
+    if (hasChanges) {
+      setCourse({ ...activeCourse, chapters: nextChapters })
+    }
 
     if (justCompleted) {
       const curChapId = chapterId || activeCourse.chapters[0]?.id || ''
@@ -366,6 +448,10 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
           lesson_id: lessonId,
           score: 100,
           time_spent_seconds: Math.round(playerCurrentTime),
+        })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'progress'] })
+          queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(String(activeCourse.id)), 'progress'] })
         })
         .catch(() => {})
     }

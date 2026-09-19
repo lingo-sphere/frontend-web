@@ -185,8 +185,8 @@ export function mapCourseDataToWorkspace(
 
   const completedLessonIdSet = new Set<string>()
   const compLessonIds = progressDetail?.completed_lesson_ids
-  if (userIsEnrolled && Array.isArray(compLessonIds)) {
-    compLessonIds.forEach((id: string) => completedLessonIdSet.add(id))
+  if (Array.isArray(compLessonIds)) {
+    compLessonIds.forEach((id: string) => completedLessonIdSet.add(String(id)))
   }
 
   const mappedChapters: Chapter[] = modulesArr.map((mod: RawModuleInput, cIdx: number) => {
@@ -246,6 +246,9 @@ export function mapCourseDataToWorkspace(
       }
     })
 
+    const chCompleted = mappedLessons.filter((l) => l.status === 'completed').length
+    const chTotal = mappedLessons.length
+
     const chQuestions =
       Array.isArray(mod.challenge_questions) && mod.challenge_questions.length > 0
         ? mod.challenge_questions
@@ -254,6 +257,11 @@ export function mapCourseDataToWorkspace(
         : Array.isArray(mod.post_mini_questions) && mod.post_mini_questions.length > 0
         ? mod.post_mini_questions
         : []
+    const hasChallengeTest = chQuestions.length > 0
+    if (!hasChallengeTest && chTotal > 0 && chCompleted === chTotal) {
+      chapterStatus = 'completed'
+    }
+
     const chAudio =
       mod.challenge_audio_url || mod.test_audio_url || mod.audio_url || ''
 
@@ -286,7 +294,7 @@ export function mapCourseDataToWorkspace(
         questionsCount: chQuestions.length,
         passingScore: mod.challenge_passing_score || 80,
         durationMinutes: mod.challenge_duration_minutes || 15,
-        status: chapterStatus === 'completed' ? 'completed' : 'available',
+        status: (modProgress?.is_passed_by_challenge || (modProgress?.challenge_score ?? 0) >= (mod.challenge_passing_score || 80)) ? 'completed' : 'available',
       },
     }
   })

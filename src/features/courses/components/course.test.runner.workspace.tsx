@@ -1,4 +1,4 @@
-/// Giao diện không gian làm bài thi khóa học toàn màn hình.
+// Giao diện không gian làm bài thi khóa học toàn màn hình.
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -31,6 +31,7 @@ export interface CourseTestRunnerWorkspaceProps {
   chapter: Chapter | null
   testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   durationMinutes?: number
+  isRetry?: boolean
   finalTestQuestions?: CourseTestQuestion[]
   finalTestAudioUrl?: string
   speakingPrompt?: string
@@ -51,6 +52,7 @@ export function CourseTestRunnerWorkspace({
   chapter,
   testType,
   durationMinutes,
+  isRetry,
   finalTestQuestions,
   finalTestAudioUrl,
   speakingPrompt,
@@ -107,6 +109,7 @@ export function CourseTestRunnerWorkspace({
     chapter,
     testType,
     durationMinutes,
+    isRetry,
     finalTestQuestions,
     finalTestAudioUrl,
     speakingPrompt,

@@ -119,7 +119,7 @@ export default function ExamHistoryPage() {
       navigate(
         `/course/${item.courseId}/exam?type=${item.testType}${
           item.moduleId ? `&chapterId=${item.moduleId}` : ''
-        }`
+        }&retry=true`
       )
     }
   }

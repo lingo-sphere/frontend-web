@@ -1,4 +1,4 @@
-/// Quản lý trạng thái bài kiểm tra khóa học, đếm ngược thời gian, chấm điểm và AI giải thích.
+// Quản lý trạng thái bài kiểm tra khóa học, đếm ngược thời gian, chấm điểm và AI giải thích.
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -21,12 +21,28 @@ interface CourseTestDraft {
   selectedAnswers: Record<number, number>
 }
 
+const clearTestDraftStorage = (courseId: string, testType: string, chapterId?: string) => {
+  if (typeof window === 'undefined') return
+  try {
+    const targetKey = `lingo_course_test_draft_${courseId}_${testType}_${chapterId || 'final'}`
+    localStorage.removeItem(targetKey)
+    const prefix = `lingo_course_test_draft_${courseId}_${testType}`
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(prefix)) {
+        localStorage.removeItem(key)
+      }
+    }
+  } catch {}
+}
+
 interface UseCourseTestRunnerOptions {
   isOpen: boolean
   courseId: string
   chapter: Chapter | null
   testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   durationMinutes?: number
+  isRetry?: boolean
   finalTestQuestions?: CourseTestQuestion[]
   finalTestAudioUrl?: string
   speakingPrompt?: string
@@ -46,6 +62,7 @@ export function useCourseTestRunner({
   chapter,
   testType,
   durationMinutes,
+  isRetry,
   finalTestQuestions,
   finalTestAudioUrl,
   speakingPrompt,
@@ -286,18 +303,8 @@ export function useCourseTestRunner({
     })
   }
 
-  const handleRetry = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey)
-        const newDraft: CourseTestDraft = {
-          startedAt: Date.now(),
-          totalDurationSeconds: effectiveDurationMinutes * 60,
-          selectedAnswers: {},
-        }
-        localStorage.setItem(storageKey, JSON.stringify(newDraft))
-      } catch {}
-    }
+  const handleRetry = useCallback(() => {
+    clearTestDraftStorage(courseId, testType, chapter?.id)
     sessionIdRef.current = null
     if (syncTimeoutRef.current) {
       clearTimeout(syncTimeoutRef.current)
@@ -311,18 +318,47 @@ export function useCourseTestRunner({
     setShowAiDetails(false)
     setTimeLeft(effectiveDurationMinutes * 60)
     setHasAutoSubmitted(false)
-  }
+
+    courseService
+      .startCourseTestSession(courseId, chapter?.id || 'final', {
+        test_type: testType,
+        duration_minutes: effectiveDurationMinutes,
+        passing_score: passingScore,
+        order_index: Number(chapter?.order || 1),
+        raw_questions: rawQuestions,
+        retry: true,
+      })
+      .then((sessionRes) => {
+        if (sessionRes && sessionRes.session_id) {
+          sessionIdRef.current = sessionRes.session_id
+          if (sessionRes.expires_at) {
+            const serverRemaining = Math.max(
+              0,
+              Math.floor((new Date(sessionRes.expires_at).getTime() - Date.now()) / 1000)
+            )
+            if (serverRemaining > 0) {
+              setTimeLeft(serverRemaining)
+            }
+          }
+        }
+      })
+      .catch(() => {})
+  }, [
+    courseId,
+    testType,
+    chapter?.id,
+    chapter?.order,
+    effectiveDurationMinutes,
+    passingScore,
+    rawQuestions,
+  ])
 
   const handleSubmitTest = useCallback(
     async (isTimeout = false) => {
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current)
       }
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.removeItem(storageKey)
-        } catch {}
-      }
+      clearTestDraftStorage(courseId, testType, chapter?.id)
       const answersPayload = rawQuestions.map((q, idx) => {
         const chosen = selectedAnswers[idx]
         const options = q.options ?? []
@@ -605,6 +641,8 @@ export function useCourseTestRunner({
         onComplete?.(fallbackScore, fallbackScore >= passingScore)
       } finally {
         setIsSaving(false)
+        clearTestDraftStorage(courseId, testType, chapter?.id)
+        sessionIdRef.current = null
       }
     },
     [
@@ -632,6 +670,40 @@ export function useCourseTestRunner({
     hasRestoredDraftRef.current = true
 
     const totalSecs = effectiveDurationMinutes * 60
+
+    if (isRetry) {
+      clearTestDraftStorage(courseId, testType, chapter?.id)
+      setSelectedAnswers({})
+      setTimeLeft(totalSecs)
+      setHasAutoSubmitted(false)
+
+      courseService
+        .startCourseTestSession(courseId, chapter?.id || 'final', {
+          test_type: testType,
+          duration_minutes: effectiveDurationMinutes,
+          passing_score: passingScore,
+          order_index: Number(chapter?.order || 1),
+          raw_questions: rawQuestions,
+          retry: true,
+        })
+        .then((sessionRes) => {
+          if (sessionRes && sessionRes.session_id) {
+            sessionIdRef.current = sessionRes.session_id
+            if (sessionRes.expires_at) {
+              const serverRemaining = Math.max(
+                0,
+                Math.floor((new Date(sessionRes.expires_at).getTime() - Date.now()) / 1000)
+              )
+              if (serverRemaining > 0) {
+                setTimeLeft(serverRemaining)
+              }
+            }
+          }
+        })
+        .catch(() => {})
+      return
+    }
+
     let hasLocalDraft = false
     if (typeof window !== 'undefined') {
       try {
@@ -648,16 +720,14 @@ export function useCourseTestRunner({
             const elapsed = Math.floor((Date.now() - draft.startedAt) / 1000)
             const remaining = Math.max(0, draft.totalDurationSeconds - elapsed)
 
-            setSelectedAnswers(draft.selectedAnswers)
             if (remaining <= 0) {
               setTimeLeft(0)
               setHasAutoSubmitted(true)
-              try {
-                localStorage.removeItem(storageKey)
-              } catch {}
+              clearTestDraftStorage(courseId, testType, chapter?.id)
               handleSubmitTestRef.current(true)
               return
             } else {
+              setSelectedAnswers(draft.selectedAnswers)
               hasLocalDraft = true
               setTimeLeft(remaining)
               setHasAutoSubmitted(false)
@@ -668,13 +738,6 @@ export function useCourseTestRunner({
               )
             }
           }
-        } else {
-          const newDraft: CourseTestDraft = {
-            startedAt: Date.now(),
-            totalDurationSeconds: totalSecs,
-            selectedAnswers: {},
-          }
-          localStorage.setItem(storageKey, JSON.stringify(newDraft))
         }
       } catch {}
     }
@@ -741,6 +804,7 @@ export function useCourseTestRunner({
     testType,
     passingScore,
     rawQuestions,
+    isRetry,
   ])
 
   useEffect(() => {

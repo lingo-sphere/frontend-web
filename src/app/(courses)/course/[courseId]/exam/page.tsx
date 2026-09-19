@@ -34,6 +34,7 @@ function CourseExamContent() {
     | 'post-mini'
     | 'final-test'
   const chapterId = searchParams.get('chapterId') || searchParams.get('moduleId')
+  const isRetry = searchParams.get('retry') === 'true'
 
   const { data: fetchedCourse, isLoading: isCourseLoading } = useCourseDetailQuery(courseId, Boolean(courseId))
   const { data: enrollmentRes, isLoading: isEnrollmentLoading } = useCourseEnrollmentStatusQuery(courseId, Boolean(courseId))
@@ -168,6 +169,7 @@ function CourseExamContent() {
       chapter={selectedChapter}
       testType={testType}
       durationMinutes={durationMins}
+      isRetry={isRetry}
       finalTestQuestions={course.final_test_questions}
       finalTestAudioUrl={testType === 'final-test' ? course.final_test_audio_url : undefined}
       speakingPrompt={

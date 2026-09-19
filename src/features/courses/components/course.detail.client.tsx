@@ -465,7 +465,7 @@ export function CourseDetailClient({
                     (ch, idx) => Number(ch.order || idx + 1) === retestOrder
                   )
                   const targetModId = courseLockState?.retest_module_id || retestChapter?.id
-                  navigate(`/course/${course.id}/exam?type=challenge&chapterId=${targetModId || ''}`)
+                  navigate(`/course/${course.id}/exam?type=challenge&chapterId=${targetModId || ''}&retry=true`)
                 }}
               />
             </div>

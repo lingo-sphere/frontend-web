@@ -80,7 +80,7 @@ export default function ExamAttemptDetailPage() {
             <Button
               onClick={() =>
                 navigate(
-                  `/course/${courseId}/exam?type=${testType}${moduleId ? `&chapterId=${moduleId}` : ''}`
+                  `/course/${courseId}/exam?type=${testType}${moduleId ? `&chapterId=${moduleId}` : ''}&retry=true`
                 )
               }
               className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5 shadow-xs cursor-pointer"
@@ -294,7 +294,7 @@ export default function ExamAttemptDetailPage() {
                       navigate(
                         `/course/${courseId}/exam?type=${testType}${
                           moduleId ? `&chapterId=${moduleId}` : ''
-                        }`
+                        }&retry=true`
                       )
                     }
                     className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
