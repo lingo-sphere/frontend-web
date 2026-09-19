@@ -9,6 +9,7 @@ import { UtilityHeader } from '@/layouts/app.header'
 import { useApp } from '@/contexts/app.context'
 import { CommunityChatFloatingButton } from '@/features/community/components/community.chat.floating.button'
 import { AuthModal } from '@/features/auth/components/auth.modal'
+import { ScrollToTopButton } from '@/components/scroll.to.top.button'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
@@ -51,6 +52,7 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
           <CommunityChatFloatingButton />
         </div>
       )}
+      <ScrollToTopButton />
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   )
