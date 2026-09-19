@@ -520,9 +520,14 @@ export function useCourseTestRunner({
 
               const mistakePayloads = finalWrongs.map((w, idx) => {
                 const ex = explanationMap.get(w.question_number || idx + 1)
-                const rawQ = rawQuestions[(w.question_number || idx + 1) - 1]
+                const qIdx = (w.question_number || idx + 1) - 1
+                const rawQ = rawQuestions[qIdx]
+                const stableId =
+                  rawQ?.id ||
+                  rawQ?._id ||
+                  `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
                 return {
-                  question_id: rawQ?.id || rawQ?._id || `q_${Date.now()}_${idx}`,
+                  question_id: stableId,
                   question_text: w.question_text,
                   options: rawQ?.options || [],
                   user_answer: w.user_selected_answer,
@@ -531,7 +536,7 @@ export function useCourseTestRunner({
                   topic_tags: ex?.topic ? [ex.topic] : (w.category ? [w.category] : []),
                   topic_name_vi: ex?.topic || w.category || '',
                   source_context: `${testTitle} (${testType})`,
-                  source_type: 'COURSE_CHAPTER_TEST',
+                  source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
                   source_id: courseId,
                   source_title: testTitle,
                 }
@@ -541,15 +546,20 @@ export function useCourseTestRunner({
             })
             .catch(() => {
               const fallbackMistakes = finalWrongs.map((w, idx) => {
-                const rawQ = rawQuestions[(w.question_number || idx + 1) - 1]
+                const qIdx = (w.question_number || idx + 1) - 1
+                const rawQ = rawQuestions[qIdx]
+                const stableId =
+                  rawQ?.id ||
+                  rawQ?._id ||
+                  `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
                 return {
-                  question_id: rawQ?.id || rawQ?._id || `q_${Date.now()}_${idx}`,
+                  question_id: stableId,
                   question_text: w.question_text,
                   options: rawQ?.options || [],
                   user_answer: w.user_selected_answer,
                   correct_answer: w.correct_answer,
                   source_context: `${testTitle} (${testType})`,
-                  source_type: 'COURSE_CHAPTER_TEST',
+                  source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
                   source_id: courseId,
                   source_title: testTitle,
                 }
@@ -572,15 +582,20 @@ export function useCourseTestRunner({
         setShowSubmitConfirm(false)
         if (fallbackWrongs.length > 0) {
           const fallbackMistakes = fallbackWrongs.map((w, idx) => {
-            const rawQ = rawQuestions[(w.question_number || idx + 1) - 1]
+            const qIdx = (w.question_number || idx + 1) - 1
+            const rawQ = rawQuestions[qIdx]
+            const stableId =
+              rawQ?.id ||
+              rawQ?._id ||
+              `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
             return {
-              question_id: rawQ?.id || rawQ?._id || `q_${Date.now()}_${idx}`,
+              question_id: stableId,
               question_text: w.question_text,
               options: rawQ?.options || [],
               user_answer: w.user_selected_answer,
               correct_answer: w.correct_answer,
               source_context: `${testTitle} (${testType})`,
-              source_type: 'COURSE_CHAPTER_TEST',
+              source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
               source_id: courseId,
               source_title: testTitle,
             }

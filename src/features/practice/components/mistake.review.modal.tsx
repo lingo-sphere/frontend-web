@@ -25,6 +25,16 @@ interface MistakeReviewModalProps {
   onSuccess?: () => void
 }
 
+function isMatchingAnswer(opt: string, optIndex: number, targetAnswer: string): boolean {
+  if (!targetAnswer) return false
+  const trimmedTarget = targetAnswer.trim()
+  const upperTarget = trimmedTarget.toUpperCase()
+  const letter = String.fromCharCode(65 + optIndex)
+
+  if (upperTarget === letter) return true
+  return opt.trim().toLowerCase() === trimmedTarget.toLowerCase()
+}
+
 export function MistakeReviewModal({ open, onClose, mistake, onSuccess }: MistakeReviewModalProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isAnswerRevealed, setIsAnswerRevealed] = useState(false)
@@ -46,7 +56,8 @@ export function MistakeReviewModal({ open, onClose, mistake, onSuccess }: Mistak
 
   const handleSubmitReview = async () => {
     if (!selectedOption || !mistake) return
-    const isCorrect = selectedOption.trim().toLowerCase() === mistake.correct_answer.trim().toLowerCase()
+    const selectedIdx = mistake.options.findIndex((o) => o === selectedOption)
+    const isCorrect = isMatchingAnswer(selectedOption, selectedIdx, mistake.correct_answer)
 
     try {
       const res = await reviewMutation.mutateAsync({
@@ -139,7 +150,7 @@ export function MistakeReviewModal({ open, onClose, mistake, onSuccess }: Mistak
             {mistake.options.map((opt, idx) => {
               const letter = String.fromCharCode(65 + idx)
               const isSelected = selectedOption === opt
-              const isCorrectAnswer = opt.trim().toLowerCase() === mistake.correct_answer.trim().toLowerCase()
+              const isCorrectAnswer = isMatchingAnswer(opt, idx, mistake.correct_answer)
 
               let optionStyle = 'bg-surface border-border hover:border-rose-300 dark:hover:border-rose-700'
               if (isSelected && !isAnswerRevealed) {
