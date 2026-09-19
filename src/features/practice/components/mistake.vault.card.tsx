@@ -14,6 +14,8 @@ import {
   Flame,
   Eye,
   EyeOff,
+  X,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/button'
 import type { UserMistakeItem } from '@/features/practice/types/mistake'
@@ -23,6 +25,8 @@ interface MistakeVaultCardProps {
   mistake: UserMistakeItem
   onReview: (mistake: UserMistakeItem) => void
   onDrillTopic: (topicTag: string) => void
+  onDelete?: (mistake: UserMistakeItem) => void
+  isDeleting?: boolean
 }
 
 function isMatchingAnswer(opt: string, optIndex: number, targetAnswer: string): boolean {
@@ -35,7 +39,7 @@ function isMatchingAnswer(opt: string, optIndex: number, targetAnswer: string): 
   return opt.trim().toLowerCase() === trimmedTarget.toLowerCase()
 }
 
-export function MistakeVaultCard({ mistake, onReview, onDrillTopic }: MistakeVaultCardProps) {
+export function MistakeVaultCard({ mistake, onReview, onDrillTopic, onDelete, isDeleting }: MistakeVaultCardProps) {
   const [showAnswers, setShowAnswers] = useState(false)
   const [showExplanation, setShowExplanation] = useState(false)
 
@@ -80,11 +84,26 @@ export function MistakeVaultCard({ mistake, onReview, onDrillTopic }: MistakeVau
           )}
         </div>
 
-        {mistake.source_context && (
-          <span className="text-[11px] text-text-tertiary">
-            Nguồn: {mistake.source_context}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {mistake.source_context && (
+            <span className="text-[11px] text-text-tertiary">
+              Nguồn: {mistake.source_context}
+            </span>
+          )}
+
+          {mistake.status === MistakeStatus.MASTERED && onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(mistake)}
+              disabled={isDeleting}
+              title="Xóa câu hỏi này khỏi sổ tay"
+              aria-label="Xóa câu hỏi này khỏi sổ tay"
+              className="flex items-center justify-center w-7 h-7 rounded-xl text-text-tertiary hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 border border-border/80 hover:border-rose-300 dark:hover:border-rose-800 transition-all cursor-pointer disabled:opacity-50"
+            >
+              {isDeleting ? <Loader2 size={14} className="animate-spin text-rose-600" /> : <X size={15} />}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-1">
@@ -225,15 +244,37 @@ export function MistakeVaultCard({ mistake, onReview, onDrillTopic }: MistakeVau
 
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border">
         <span className="text-[11px] text-text-tertiary">
-          Lần ôn kế tiếp:{' '}
-          <strong className="text-text-secondary">
-            {isDueToday
-              ? 'Hôm nay'
-              : new Date(mistake.next_due_at).toLocaleDateString('vi-VN')}
-          </strong>
+          {mistake.status === MistakeStatus.MASTERED ? (
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+              <Award size={13} />
+              <span>Đã làm chủ kiến thức</span>
+            </span>
+          ) : (
+            <>
+              Lần ôn kế tiếp:{' '}
+              <strong className="text-text-secondary">
+                {isDueToday
+                  ? 'Hôm nay'
+                  : new Date(mistake.next_due_at).toLocaleDateString('vi-VN')}
+              </strong>
+            </>
+          )}
         </span>
 
         <div className="flex items-center gap-2">
+          {mistake.status === MistakeStatus.MASTERED && onDelete && (
+            <Button
+              onClick={() => onDelete(mistake)}
+              variant="outline"
+              size="sm"
+              disabled={isDeleting}
+              className="text-xs border-rose-300 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer h-8 gap-1"
+            >
+              {isDeleting ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
+              <span>Xóa khỏi sổ tay</span>
+            </Button>
+          )}
+
           <Button
             onClick={() => onDrillTopic(displayTopic)}
             variant="outline"
@@ -247,10 +288,15 @@ export function MistakeVaultCard({ mistake, onReview, onDrillTopic }: MistakeVau
           <Button
             onClick={() => onReview(mistake)}
             size="sm"
-            className="text-xs bg-rose-600 hover:bg-rose-700 text-white cursor-pointer h-8 gap-1"
+            variant={mistake.status === MistakeStatus.MASTERED ? 'outline' : 'default'}
+            className={
+              mistake.status === MistakeStatus.MASTERED
+                ? 'text-xs border-border text-text-secondary hover:bg-surface-hover cursor-pointer h-8 gap-1'
+                : 'text-xs bg-rose-600 hover:bg-rose-700 text-white cursor-pointer h-8 gap-1'
+            }
           >
             <RotateCcw size={13} />
-            <span>Làm lại câu này (SRS)</span>
+            <span>{mistake.status === MistakeStatus.MASTERED ? 'Ôn lại' : 'Làm lại câu này (SRS)'}</span>
           </Button>
         </div>
       </div>

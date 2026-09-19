@@ -153,6 +153,7 @@ export const API_CONFIG = {
       MISTAKES_MY: '/practice/mistakes/my',
       MISTAKES_DUE: '/practice/mistakes/srs-due',
       MISTAKE_REVIEW: (id: string) => `/practice/mistakes/${id}/review`,
+      MISTAKE_DELETE: (id: string) => `/practice/mistakes/${id}`,
       TOPIC_DRILL: '/practice/topic-drill',
     },
 

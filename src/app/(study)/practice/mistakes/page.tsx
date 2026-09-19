@@ -16,7 +16,12 @@ import {
   BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/button'
-import { useMyMistakesQuery, useDueMistakesQuery } from '@/features/practice/hooks/use.mistake.query'
+import {
+  useMyMistakesQuery,
+  useDueMistakesQuery,
+  useDeleteMistakeMutation,
+} from '@/features/practice/hooks/use.mistake.query'
+import { toast } from '@/store/toast.store'
 import { MistakeVaultCard } from '@/features/practice/components/mistake.vault.card'
 import { MistakeReviewModal } from '@/features/practice/components/mistake.review.modal'
 import { TopicDrillModal } from '@/features/practice/components/topic.drill.modal'
@@ -28,6 +33,9 @@ export default function MistakeVaultPage() {
   const [selectedTopic, setSelectedTopic] = useState<string>('ALL')
   const [activeReviewMistake, setActiveReviewMistake] = useState<UserMistakeItem | null>(null)
   const [activeDrillTopic, setActiveDrillTopic] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const deleteMutation = useDeleteMistakeMutation()
 
   const queryParams = useMemo(() => {
     return {
@@ -61,6 +69,20 @@ export default function MistakeVaultPage() {
   const handleReviewSuccess = () => {
     refetch()
     refetchDue()
+  }
+
+  const handleDeleteMistake = (mistake: UserMistakeItem) => {
+    setDeletingId(mistake._id)
+    deleteMutation.mutate(mistake._id, {
+      onSuccess: () => {
+        toast.success('Đã xóa câu hỏi khỏi sổ tay thành công!')
+        setDeletingId(null)
+      },
+      onError: () => {
+        toast.error('Không thể xóa câu hỏi. Vui lòng thử lại sau!')
+        setDeletingId(null)
+      },
+    })
   }
 
   return (
@@ -238,6 +260,8 @@ export default function MistakeVaultPage() {
                 mistake={item}
                 onReview={(m) => setActiveReviewMistake(m)}
                 onDrillTopic={(topic) => setActiveDrillTopic(topic)}
+                onDelete={handleDeleteMistake}
+                isDeleting={deletingId === item._id}
               />
             ))}
           </div>

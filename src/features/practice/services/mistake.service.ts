@@ -41,4 +41,10 @@ export const mistakeService = {
       params as Record<string, unknown>,
     )
   },
+
+  async deleteMistake(mistakeId: string): Promise<{ success: boolean; message?: string }> {
+    return api.delete<{ success: boolean; message?: string }>(
+      API_CONFIG.ENDPOINTS.PRACTICE.MISTAKE_DELETE(mistakeId),
+    )
+  },
 }

@@ -65,3 +65,16 @@ export function useRecordBatchMistakesMutation() {
     },
   })
 }
+
+export function useDeleteMistakeMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation<{ success: boolean; message?: string }, Error, string>({
+    mutationFn: (mistakeId) => mistakeService.deleteMistake(mistakeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: practiceKeys.mistakes() })
+      queryClient.invalidateQueries({ queryKey: practiceKeys.mistakesDue() })
+    },
+  })
+}
+
