@@ -153,7 +153,7 @@ export function CourseTestRunnerWorkspace({
 
   return (
     <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col antialiased">
-      <header className="sticky top-0 z-40 w-full flex items-center justify-between px-4 sm:px-8 py-3.5 border-b border-border bg-surface/95 backdrop-blur-md shrink-0 shadow-xs">
+      <header className="sticky top-0 z-40 w-full flex items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 py-3.5 border-b border-border bg-surface/95 backdrop-blur-md shrink-0 shadow-xs">
         <div className="flex items-center gap-3 sm:gap-4">
           <Button
             variant="outline"
@@ -254,7 +254,7 @@ export function CourseTestRunnerWorkspace({
         </div>
       )}
 
-      <main className="flex-1 flex flex-col lg:flex-row w-full max-w-7xl mx-auto px-4 sm:px-8 py-6 gap-6 overflow-hidden">
+      <main className="flex-1 flex flex-col lg:flex-row w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 gap-6 overflow-hidden">
         <div className="flex-1 overflow-y-auto space-y-6 pr-0 lg:pr-2">
           {activeSection === 'QUIZ' && (
             <>
@@ -321,7 +321,7 @@ export function CourseTestRunnerWorkspace({
           )}
         </div>
 
-        <div className="w-full lg:w-80 shrink-0">
+        <div className="w-full lg:w-80 xl:w-88 2xl:w-96 shrink-0">
           <TestRunnerSidebar
             questions={rawQuestions}
             selectedAnswers={selectedAnswers}

@@ -34,7 +34,7 @@ export function TestRunnerSidebar({
   const totalQuestions = questions.length || 1
 
   return (
-    <aside className="w-full lg:w-72 xl:w-80 border-t lg:border-t-0 lg:border-l border-border bg-surface/90 backdrop-blur-xs shrink-0 flex flex-col max-h-[35vh] lg:max-h-full overflow-hidden">
+    <aside className="w-full rounded-2xl border border-border bg-surface shadow-xs shrink-0 flex flex-col max-h-[35vh] lg:max-h-[calc(100vh-8.5rem)] sticky top-20 overflow-hidden">
       <div className="p-4 border-b border-border bg-surface-subtle/50 flex items-center justify-between">
         <div>
           <h3 className="text-xs font-extrabold text-text-primary uppercase tracking-wider">
