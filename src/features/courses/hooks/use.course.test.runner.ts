@@ -224,6 +224,8 @@ export function useCourseTestRunner({
 
   const hasRestoredDraftRef = useRef(false)
   const handleSubmitTestRef = useRef<(isTimeout?: boolean) => Promise<void>>(async () => {})
+  const sessionIdRef = useRef<string | null>(null)
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [timeLeft, setTimeLeft] = useState<number>(effectiveDurationMinutes * 60)
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false)
 
@@ -261,6 +263,25 @@ export function useCourseTestRunner({
           localStorage.setItem(storageKey, JSON.stringify(draft))
         } catch {}
       }
+
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+      syncTimeoutRef.current = setTimeout(() => {
+        const currentSessionId = sessionIdRef.current
+        if (currentSessionId) {
+          const answersToSync = Object.entries(next).map(([idxStr, oIdx]) => {
+            const numIdx = Number(idxStr)
+            const q = rawQuestions[numIdx]
+            return {
+              question_index: numIdx,
+              question_id: q?._id || q?.id,
+              selected_index: oIdx,
+              selected_option: q?.options?.[oIdx] ?? '',
+            }
+          })
+          courseService.syncCourseTestAnswers(currentSessionId, answersToSync).catch(() => {})
+        }
+      }, 1500)
+
       return next
     })
   }
@@ -277,6 +298,10 @@ export function useCourseTestRunner({
         localStorage.setItem(storageKey, JSON.stringify(newDraft))
       } catch {}
     }
+    sessionIdRef.current = null
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current)
+    }
     setSelectedAnswers({})
     setIsSubmitted(false)
     setScoreResult(null)
@@ -290,6 +315,9 @@ export function useCourseTestRunner({
 
   const handleSubmitTest = useCallback(
     async (isTimeout = false) => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current)
+      }
       if (typeof window !== 'undefined') {
         try {
           localStorage.removeItem(storageKey)
@@ -589,6 +617,7 @@ export function useCourseTestRunner({
     hasRestoredDraftRef.current = true
 
     const totalSecs = effectiveDurationMinutes * 60
+    let hasLocalDraft = false
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem(storageKey)
@@ -614,6 +643,7 @@ export function useCourseTestRunner({
               handleSubmitTestRef.current(true)
               return
             } else {
+              hasLocalDraft = true
               setTimeLeft(remaining)
               setHasAutoSubmitted(false)
               toast.info(
@@ -621,7 +651,6 @@ export function useCourseTestRunner({
                   ? 'Đã tự động khôi phục tiến trình bài làm trước đó của bạn.'
                   : 'Restored previous test draft.'
               )
-              return
             }
           }
         } else {
@@ -635,9 +664,69 @@ export function useCourseTestRunner({
       } catch {}
     }
 
-    setTimeLeft(totalSecs)
-    setHasAutoSubmitted(false)
-  }, [effectiveDurationMinutes, isOpen, storageKey, isVietnamese])
+    if (!hasLocalDraft) {
+      setTimeLeft(totalSecs)
+      setHasAutoSubmitted(false)
+    }
+
+    courseService
+      .startCourseTestSession(courseId, chapter?.id || 'final', {
+        test_type: testType,
+        duration_minutes: effectiveDurationMinutes,
+        passing_score: passingScore,
+        order_index: Number(chapter?.order || 1),
+        raw_questions: rawQuestions,
+      })
+      .then((sessionRes) => {
+        if (sessionRes && sessionRes.session_id) {
+          sessionIdRef.current = sessionRes.session_id
+          if (sessionRes.expires_at) {
+            const serverRemaining = Math.max(
+              0,
+              Math.floor((new Date(sessionRes.expires_at).getTime() - Date.now()) / 1000)
+            )
+            if (serverRemaining <= 0) {
+              setTimeLeft(0)
+              handleSubmitTestRef.current(true)
+              return
+            }
+            setTimeLeft(serverRemaining)
+          }
+
+          if (
+            !hasLocalDraft &&
+            Array.isArray(sessionRes.interim_answers) &&
+            sessionRes.interim_answers.length > 0
+          ) {
+            const restoredMap: Record<number, number> = {}
+            sessionRes.interim_answers.forEach((ans) => {
+              if (
+                typeof ans.question_index === 'number' &&
+                typeof ans.selected_index === 'number' &&
+                ans.selected_index >= 0
+              ) {
+                restoredMap[ans.question_index] = ans.selected_index
+              }
+            })
+            if (Object.keys(restoredMap).length > 0) {
+              setSelectedAnswers(restoredMap)
+            }
+          }
+        }
+      })
+      .catch(() => {})
+  }, [
+    effectiveDurationMinutes,
+    isOpen,
+    storageKey,
+    isVietnamese,
+    courseId,
+    chapter?.id,
+    chapter?.order,
+    testType,
+    passingScore,
+    rawQuestions,
+  ])
 
   useEffect(() => {
     if (!isOpen || isSubmitted || timeLeft <= 0) return

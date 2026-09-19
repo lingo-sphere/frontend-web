@@ -92,6 +92,8 @@ export function useToeicExam(examId?: string) {
   const initializedExamIdRef = useRef<string | null>(null)
   const isSubmittingAttemptBackendRef = useRef(false)
   const hasCompletedBackendSubmissionRef = useRef(false)
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const handleSubmitRef = useRef<() => void>(() => {})
   const storageKey = examId ? `lingo_toeic_draft_${examId}` : ''
 
   useEffect(() => {
@@ -193,6 +195,30 @@ export function useToeicExam(examId?: string) {
         .then((attemptRes) => {
           if (attemptRes && attemptRes.attempt_id) {
             attemptIdRef.current = attemptRes.attempt_id
+            if (attemptRes.expires_at) {
+              const serverRemaining = Math.max(
+                0,
+                Math.floor((new Date(attemptRes.expires_at).getTime() - Date.now()) / 1000)
+              )
+              if (serverRemaining <= 0) {
+                handleSubmitRef.current()
+                return
+              }
+              setState((prev) => ({ ...prev, timeRemaining: serverRemaining }))
+            }
+
+            if (Array.isArray(attemptRes.interim_answers) && attemptRes.interim_answers.length > 0) {
+              setState((prev) => {
+                const merged = { ...prev.answers }
+                attemptRes.interim_answers?.forEach((ans) => {
+                  if (ans.question_number && ans.selected_option && !merged[ans.question_number]) {
+                    merged[ans.question_number] = ans.selected_option
+                  }
+                })
+                return { ...prev, answers: merged }
+              })
+            }
+
             if (typeof window !== 'undefined' && storageKey) {
               try {
                 const existing = localStorage.getItem(storageKey)
@@ -425,6 +451,22 @@ export function useToeicExam(examId?: string) {
           localStorage.setItem(storageKey, JSON.stringify({ ...base, answers: nextAnswers }))
         } catch {}
       }
+
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+      syncTimeoutRef.current = setTimeout(() => {
+        const currentAttemptId = attemptIdRef.current
+        if (currentAttemptId) {
+          const formatted = allQuestions
+            .filter((q) => nextAnswers[q.questionNumber])
+            .map((q) => ({
+              question_id: q.id,
+              selected_option: nextAnswers[q.questionNumber],
+              question_number: q.questionNumber,
+            }))
+          examService.syncExamAnswers(currentAttemptId, formatted).catch(() => {})
+        }
+      }, 1500)
+
       return { ...prev, answers: nextAnswers }
     })
   }
@@ -465,14 +507,18 @@ export function useToeicExam(examId?: string) {
     })
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (typeof window !== 'undefined' && storageKey) {
       try {
         localStorage.removeItem(storageKey)
       } catch {}
     }
     setState((prev) => ({ ...prev, submitted: true, showAnswer: true }))
-  }
+  }, [storageKey])
+
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit
+  }, [handleSubmit])
 
   const handleRetry = () => {
     hasCompletedBackendSubmissionRef.current = false

@@ -330,6 +330,75 @@ export const courseService = {
     return api.post(`/progress/courses/${courseId}/final-test`, data)
   },
 
+  async startCourseTestSession(
+    courseId: string,
+    moduleId: string,
+    data: {
+      test_type: string
+      duration_minutes?: number
+      passing_score?: number
+      order_index?: number
+      raw_questions?: unknown[]
+    }
+  ): Promise<{
+    session_id: string
+    started_at: string
+    expires_at: string
+    duration_minutes: number
+    interim_answers?: Array<{
+      question_index: number
+      question_id?: string
+      selected_index?: number
+      selected_option?: string
+    }>
+    status: string
+  }> {
+    return api.post(`/progress/courses/${courseId}/modules/${moduleId || 'final'}/session/start`, data)
+  },
+
+  async syncCourseTestAnswers(
+    sessionId: string,
+    answers: Array<{
+      question_index: number
+      question_id?: string
+      selected_index?: number
+      selected_option?: string
+    }>,
+    timeSpentSeconds?: number
+  ): Promise<{
+    success: boolean
+    saved_count?: number
+    expires_at?: string
+    is_expired?: boolean
+    message?: string
+  }> {
+    return api.put(`/progress/session/${sessionId}/sync-answers`, {
+      answers,
+      time_spent_seconds: timeSpentSeconds,
+    })
+  },
+
+  async getActiveCourseTestSession(
+    courseId: string,
+    moduleId: string,
+    testType?: string
+  ): Promise<{
+    session_id: string
+    started_at: string
+    expires_at: string
+    duration_minutes: number
+    interim_answers?: Array<{
+      question_index: number
+      question_id?: string
+      selected_index?: number
+      selected_option?: string
+    }>
+    status: string
+    is_expired?: boolean
+  } | null> {
+    return api.get(`/progress/courses/${courseId}/modules/${moduleId || 'final'}/session/active${testType ? `?testType=${testType}` : ''}`)
+  },
+
   async explainTestMistakes(
     courseId: string,
     data: {
