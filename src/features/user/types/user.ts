@@ -1,15 +1,15 @@
 // Định nghĩa các kiểu dữ liệu và giao diện TypeScript cho người dùng và hồ sơ cá nhân.
 
 export interface User {
+  user_id: string
   id: string
-  user_id?: string
   email: string
   full_name: string
-  avatar_url?: string
-  bio?: string
-  phone_number?: string
-  date_of_birth?: string
-  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string
+  avatar_url?: string | null
+  bio?: string | null
+  phone_number?: string | null
+  date_of_birth?: string | null
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | string | null
   address?: string
   city?: string
   country?: string
@@ -22,8 +22,8 @@ export interface User {
   isVerified: boolean
   isActive: boolean
   is_premium?: boolean
-  subscription_expires_at?: string
-  subscription_plan?: string
+  subscription_expires_at?: string | null
+  subscription_plan?: string | null
 
   target_score?: number | null
   target_toeic_score?: number | null
@@ -37,8 +37,10 @@ export interface User {
   placement_tested_at?: string | null
   is_score_manually_edited?: boolean
 
-  createdAt: string
-  updatedAt: string
+  created_at?: string | null
+  updated_at?: string | null
+  createdAt?: string
+  updatedAt?: string
   lastLoginAt?: string
 }
 

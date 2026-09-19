@@ -80,7 +80,7 @@ export function ToeicCourseRecommendations({
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {courses.map((course) => {
               const courseUrl = buildCourseUrl(course)
-              const courseKey = course.id || (course as { _id?: string })._id || course.title
+              const courseKey = course._id
               return (
                 <div
                   key={courseKey}

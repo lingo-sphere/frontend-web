@@ -216,7 +216,7 @@ export function useSpeakingWorkspace() {
         console.error('Submit speaking attempt error:', submitErr)
       }
 
-      const attemptId = String(backendAttempt?._id || backendAttempt?.id || '')
+      const attemptId = String(backendAttempt?._id || '')
       const newSubmission: SpeakingAttempt = {
         id: attemptId,
         user_id: String(backendAttempt?.user_id || ''),

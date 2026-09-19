@@ -15,12 +15,12 @@ export function slugify(text: string): string {
 }
 
 export function buildCourseUrl(course: {
-  id?: string
   _id?: string
+  id?: string
   slug?: string
   title?: string
 }): string {
-  const id = course.id || course._id || ''
+  const id = course._id || course.id || ''
   const baseSlug = course.slug
     ? course.slug.replace(/\.html$/i, '').replace(/-c[^-]+$/i, '')
     : slugify(course.title || 'khoa-hoc')

@@ -1,36 +1,28 @@
-/**
- * @file vocabulary.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ vocabulary
- */
-
+// Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ từ vựng.
 import { z } from 'zod'
 
-// ==================== BACKEND VOCABULARY FORMAT ====================
-// Backend formatResponse trả: word, word_lowercase, pronunciation, cefr_level, lexical_type, primary_meaning
-
 export const BackendExampleSchema = z.object({
-  e: z.string().optional(),    // sentence_en
-  v: z.string().optional(),   // sentence_vi
+  e: z.string().optional(),
+  v: z.string().optional(),
 })
 
 export const BackendMeaningSchema = z.object({
-  pri: z.boolean().optional(), // is_primary
-  p: z.string().optional(),    // part_of_speech
-  d: z.string().optional(),    // definition_vi
-  sm: z.string().optional(),  // short_meaning
-  ex: z.array(BackendExampleSchema).optional(),  // examples
+  pri: z.boolean().optional(),
+  p: z.string().optional(),
+  d: z.string().optional(),
+  sm: z.string().optional(),
+  ex: z.array(BackendExampleSchema).optional(),
 })
 
-// Schema cho vocabulary search response (format từ backend)
 export const LexicalItemSchema = z.object({
   _id: z.string().optional(),
   id: z.string().optional(),
-  word: z.string().optional(),              // ✅
-  word_lowercase: z.string().optional(),    // ✅
-  pronunciation: z.string().nullable().optional(),  // ✅
-  cefr_level: z.string().optional(),        // ✅
-  lexical_type: z.string().optional(),       // ✅
-  primary_meaning: BackendMeaningSchema.nullable().optional(), // ✅
+  word: z.string().optional(),
+  word_lowercase: z.string().optional(),
+  pronunciation: z.string().nullable().optional(),
+  cefr_level: z.string().optional(),
+  lexical_type: z.string().optional(),
+  primary_meaning: BackendMeaningSchema.nullable().optional(),
 })
 
 export const LexicalItemListSchema = z.union([
@@ -61,16 +53,7 @@ export const DeckSchema = z.object({
   total_users: z.number().optional(),
 })
 
-export const DeckListSchema: z.ZodType<Deck[] | { data?: Deck[]; results?: Deck[]; decks?: Deck[] }> = z.union([
-  z.array(DeckSchema),
-  z.object({
-    data: z.array(DeckSchema).optional(),
-    results: z.array(DeckSchema).optional(),
-    decks: z.array(DeckSchema).optional(),
-    total: z.number().optional(),
-    page: z.number().optional(),
-  }).passthrough(),
-])
+export const DeckListSchema = z.array(DeckSchema)
 
 export const BackendTopicSchema = z.object({
   _id: z.string(),
@@ -89,7 +72,6 @@ export const BackendTopicSchema = z.object({
 export const BackendTopicListSchema = z.array(BackendTopicSchema)
 
 export const BackendIpaSymbolSchema = z.object({
-  // Backend trả về 'id', không phải '_id'
   id: z.string(),
   _id: z.string().optional(),
   symbol: z.string(),
@@ -140,8 +122,6 @@ export type BackendTopic = z.infer<typeof BackendTopicSchema>
 export type BackendIpaSymbol = z.infer<typeof BackendIpaSymbolSchema>
 export type BackendGrammarPoint = z.infer<typeof BackendGrammarPointSchema>
 
-// ==================== LOOKUP SCHEMAS ====================
-
 export const LookupResultItemSchema = z.object({
   id: z.string(),
   word: z.string(),
@@ -161,12 +141,10 @@ export const LookupResponseSchema = z.object({
 export type LookupResultItem = z.infer<typeof LookupResultItemSchema>
 export type LookupResponse = z.infer<typeof LookupResponseSchema>
 
-// ==================== SEARCH HISTORY SCHEMAS ====================
-
 export const SearchHistoryItemSchema = z.object({
   _id: z.string(),
   vocabularyId: z.string().optional(),
-  clicked_item_id: z.string().optional(),  // Backend field
+  clicked_item_id: z.string().optional(),
   word: z.string().optional(),
   searchQuery: z.string().optional(),
   ipa: z.string().optional(),

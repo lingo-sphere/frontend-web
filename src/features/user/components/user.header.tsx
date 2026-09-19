@@ -82,7 +82,7 @@ interface UserStatsHeaderProps {
   onEditClick: () => void
 }
 
-function formatSubscriptionRemaining(expiresAt?: string, plan?: string): { text: string; detail: string; isExpired: boolean } {
+function formatSubscriptionRemaining(expiresAt?: string | null, plan?: string | null): { text: string; detail: string; isExpired: boolean } {
   if (plan === 'LIFETIME') {
     return {
       text: 'Gói Trọn Đời (Vĩnh Viễn)',

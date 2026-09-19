@@ -43,7 +43,7 @@ export function CartRecommendedSection({
 
   const recommendedCourses = (courses as Course[])
     .filter((c) => {
-      const id = c.id || c._id
+      const id = c._id
       if (!id) return false
       if (currentCartCourseIds.includes(id)) return false
       if (isEnrolled(id)) return false
@@ -56,7 +56,7 @@ export function CartRecommendedSection({
   }
 
   const handleAddCourse = async (course: Course) => {
-    const courseId = course.id || course._id
+    const courseId = course._id
     if (!courseId) return
 
     setAddingCourseId(courseId)
@@ -96,7 +96,7 @@ export function CartRecommendedSection({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {recommendedCourses.map((c) => {
-          const courseId = c.id || c._id
+          const courseId = c._id
           const rawPrice = Number(c.price ?? 0)
           const rawDiscount = Number(c.discount_price ?? 0)
           const hasDiscount = rawDiscount > 0 && rawDiscount < rawPrice

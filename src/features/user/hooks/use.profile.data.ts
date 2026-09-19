@@ -95,8 +95,8 @@ export function useProfileData() {
       const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
       setUser((prev) => ({
         ...prev,
-        id: auth.user_id || prev.id,
-        user_id: auth.user_id || prev.user_id,
+        id: auth.user_id,
+        user_id: auth.user_id,
         email: auth.email || prev.email,
         full_name: auth.full_name || prev.full_name,
         avatar_url: auth.avatar_url || prev.avatar_url,
@@ -160,7 +160,7 @@ export function useProfileData() {
 
               return {
                 ...prev,
-                id: profileData?.id || profileData?._id || prev.id,
+                id: profileData?.user_id || prev.id,
                 user_id: profileData?.user_id || prev.user_id,
                 email: profileData?.email || prev.email,
                 full_name: profileData?.full_name || prev.full_name,
