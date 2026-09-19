@@ -15,10 +15,28 @@ import {
 export type { BackendToeicExam, ExamResult, ToeicLearningProfile }
 
 export const examService = {
-  async getExams(params?: { type?: string; year?: number; search?: string }): Promise<BackendToeicExam[]> {
+  async getExams(params?: {
+    type?: string
+    year?: number
+    search?: string
+    isPublished?: string
+    isSystemPlacement?: boolean
+  }): Promise<BackendToeicExam[]> {
+    const queryParams: Record<string, unknown> = {
+      isPublished: 'true',
+      ...params,
+    }
     return api.get<BackendToeicExam[]>(
       API_CONFIG.ENDPOINTS.EXAMS.LIST,
-      params as Record<string, unknown>,
+      queryParams,
+      BackendToeicExamListSchema
+    )
+  },
+
+  async getActivePlacementExams(): Promise<BackendToeicExam[]> {
+    return api.get<BackendToeicExam[]>(
+      API_CONFIG.ENDPOINTS.EXAMS.LIST,
+      { isSystemPlacement: true, isPublished: 'true' },
       BackendToeicExamListSchema
     )
   },

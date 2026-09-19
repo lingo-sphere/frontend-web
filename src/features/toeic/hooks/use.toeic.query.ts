@@ -16,7 +16,7 @@ export const toeicQueries = {
       queryKey: toeicKeys.exams(params),
       queryFn: () => examService.getExams(params),
       enabled,
-      staleTime: 5 * 60 * 1000,
+      staleTime: 30 * 1000,
     }),
   detail: (examId: string, enabled = true) =>
     queryOptions({
@@ -52,6 +52,17 @@ export const toeicQueries = {
       enabled: Boolean(attemptId) && enabled,
       staleTime: 5 * 60 * 1000,
     }),
+  placementExams: (enabled = true) =>
+    queryOptions({
+      queryKey: ['toeic-active-placement-exams'],
+      queryFn: () => examService.getActivePlacementExams(),
+      enabled,
+      staleTime: 30 * 1000,
+    }),
+}
+
+export function useActivePlacementExamsQuery(enabled = true) {
+  return useQuery(toeicQueries.placementExams(enabled))
 }
 
 export function useToeicExamsQuery(params?: ToeicExamQueryParams, enabled = true) {

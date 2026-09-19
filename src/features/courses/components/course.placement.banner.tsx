@@ -17,6 +17,7 @@ import { toast } from '@/store/toast.store'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
 import { useMounted } from '@/hooks/use.mounted'
+import { useActivePlacementExamsQuery } from '@/features/toeic/hooks/use.toeic.query'
 
 interface PlacementData {
   score: number
@@ -71,6 +72,23 @@ export function CoursePlacementBanner() {
   const { user } = useAuthStore()
   const [showEditScoreModal, setShowEditScoreModal] = useState(false)
   const [customPlacementData, setCustomPlacementData] = useState<PlacementData | null>(null)
+  const { data: activePlacements = [] } = useActivePlacementExamsQuery(mounted)
+
+  const has2Skills = useMemo(() => {
+    return activePlacements.some(
+      (p) =>
+        p.is_published !== false &&
+        (p.skills_enabled === 'LR' || p.placement_type === '2SKILLS')
+    )
+  }, [activePlacements])
+
+  const has4Skills = useMemo(() => {
+    return activePlacements.some(
+      (p) =>
+        p.is_published !== false &&
+        (p.skills_enabled === 'ALL' || p.placement_type === '4SKILLS')
+    )
+  }, [activePlacements])
 
   const placementData = useMemo(() => {
     if (!mounted) return null
@@ -177,6 +195,10 @@ export function CoursePlacementBanner() {
     )
   }
 
+  if (!has2Skills && !has4Skills) {
+    return null
+  }
+
   return (
     <>
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white px-4 sm:px-5 py-3 sm:py-3.5 border border-indigo-400/30 shadow-md shadow-indigo-950/20 animate-in fade-in duration-200">
@@ -201,23 +223,27 @@ export function CoursePlacementBanner() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => navigate('/toeic/exam/placement_2skills')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all hover:scale-102 cursor-pointer"
-            >
-              <Headphones size={14} />
-              <span>Test 2 Kỹ Năng</span>
-            </button>
+            {has2Skills && (
+              <button
+                type="button"
+                onClick={() => navigate('/toeic/exam/placement_2skills')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all hover:scale-102 cursor-pointer"
+              >
+                <Headphones size={14} />
+                <span>Test 2 Kỹ Năng</span>
+              </button>
+            )}
 
-            <button
-              type="button"
-              onClick={() => navigate('/toeic/exam/placement_4skills')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs transition-all hover:scale-102 cursor-pointer"
-            >
-              <Mic size={14} />
-              <span>Test 4 Kỹ Năng</span>
-            </button>
+            {has4Skills && (
+              <button
+                type="button"
+                onClick={() => navigate('/toeic/exam/placement_4skills')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs transition-all hover:scale-102 cursor-pointer"
+              >
+                <Mic size={14} />
+                <span>Test 4 Kỹ Năng</span>
+              </button>
+            )}
 
             <button
               type="button"

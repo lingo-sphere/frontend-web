@@ -24,22 +24,41 @@ export default function ToeicHubPage() {
 
   const exams: ToeicExam[] = useMemo(() => {
     if (!Array.isArray(rawExams)) return []
-    return rawExams.map((e: BackendToeicExam, idx: number) => ({
-      id: e._id,
-      title: e.title,
-      code: e.slug || `TOEIC-TEST-${idx + 1}`,
-      description: e.description || 'ETS Official TOEIC Test',
-      thumbnailUrl: '',
-      examSeries: 'ETS TOEIC',
-      releaseYear: 2024,
-      examType: 'FULL_TEST',
-      skillsEnabled: 'LR',
-      targetScore: 750,
-      difficultyLevel: 'MEDIUM',
-      totalQuestions: e.total_questions || 200,
-      totalAttempts: e.attempts_count || 1500,
-      status: 'PUBLISHED',
-    }))
+    return rawExams
+      .filter((e: BackendToeicExam) => e.is_published !== false)
+      .map((e: BackendToeicExam, idx: number) => {
+        const examType: ToeicExam['examType'] =
+          e.is_system_placement || e.exam_type === 'DIAGNOSTIC_TEST'
+            ? 'DIAGNOSTIC_TEST'
+            : e.exam_type === 'PRACTICE_TEST'
+            ? 'PRACTICE_TEST'
+            : e.exam_type === 'MOCK_TEST'
+            ? 'MOCK_TEST'
+            : 'FULL_TEST'
+
+        const skillsEnabled: ToeicExam['skillsEnabled'] =
+          e.skills_enabled === 'ALL' || e.skills_enabled === 'LRSW' ? 'LRSW' : 'LR'
+
+        const examSeries = typeof e.category === 'string' && e.category ? e.category : 'ETS TOEIC'
+        const releaseYear = typeof e.release_year === 'number' && e.release_year > 0 ? e.release_year : 2024
+
+        return {
+          id: e._id,
+          title: e.title,
+          code: e.slug || e.code || `TOEIC-TEST-${idx + 1}`,
+          description: e.description || (e.is_system_placement ? 'Đề thi đánh giá năng lực đầu vào' : 'ETS Official TOEIC Test'),
+          thumbnailUrl: '',
+          examSeries,
+          releaseYear,
+          examType,
+          skillsEnabled,
+          targetScore: 750,
+          difficultyLevel: 'MEDIUM' as const,
+          totalQuestions: e.total_questions || 200,
+          totalAttempts: e.attempts_count || 0,
+          status: 'PUBLISHED' as const,
+        }
+      })
   }, [rawExams])
 
   const filteredExams = useMemo(() => {
