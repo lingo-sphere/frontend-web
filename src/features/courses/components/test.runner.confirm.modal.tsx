@@ -1,8 +1,4 @@
-/**
- * @file test.runner.confirm.modal.tsx
- * @description Modal dialog giao diện test.runner.confirm
- */
-
+/// Modal xác nhận rời khỏi bài thi hoặc nộp bài thi.
 'use client'
 
 import { AlertTriangle, Send, Loader2 } from 'lucide-react'
@@ -10,12 +6,14 @@ import { Button } from '@/components/button'
 
 interface TestRunnerExitConfirmModalProps {
   isOpen: boolean
+  isSaving?: boolean
   onCancel: () => void
   onConfirmExit: () => void
 }
 
 export function TestRunnerExitConfirmModal({
   isOpen,
+  isSaving = false,
   onCancel,
   onConfirmExit,
 }: TestRunnerExitConfirmModalProps) {
@@ -30,18 +28,19 @@ export function TestRunnerExitConfirmModal({
           </div>
           <div>
             <h3 className="text-base font-extrabold text-text-primary">Xác nhận rời khỏi bài thi</h3>
-            <p className="text-xs text-text-secondary">Thời gian làm bài vẫn đang đếm ngược</p>
+            <p className="text-xs text-text-secondary">Lưu tiến độ và nộp bài</p>
           </div>
         </div>
 
         <p className="text-xs text-text-secondary leading-relaxed">
-          Bạn đang trong quá trình làm bài thi. Nếu bạn rời khỏi bây giờ, bài làm hiện tại sẽ không được lưu điểm và bạn sẽ phải bắt đầu lại từ đầu.
+          Hệ thống sẽ lưu lại kết quả những câu bạn đã làm. Các câu hỏi chưa làm sẽ mặc định được tính là trả lời sai. Bạn có chắc chắn muốn nộp bài và rời khỏi bài thi?
         </p>
 
         <div className="flex items-center justify-end gap-2.5 pt-2">
           <Button
             type="button"
             variant="outline"
+            disabled={isSaving}
             onClick={onCancel}
             className="rounded-xl px-4 text-xs font-bold cursor-pointer"
           >
@@ -49,10 +48,18 @@ export function TestRunnerExitConfirmModal({
           </Button>
           <Button
             type="button"
+            disabled={isSaving}
             onClick={onConfirmExit}
             className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white px-4 text-xs font-bold cursor-pointer shadow-md shadow-rose-600/20"
           >
-            Xác nhận thoát
+            {isSaving ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 size={14} className="animate-spin" />
+                Đang lưu & thoát...
+              </span>
+            ) : (
+              'Lưu kết quả & Thoát'
+            )}
           </Button>
         </div>
       </div>

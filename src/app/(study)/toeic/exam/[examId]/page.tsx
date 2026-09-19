@@ -1,6 +1,7 @@
-// Trang làm bài thi TOEIC trực tuyến và hiển thị kết quả đánh giá năng lực
+/// Trang làm bài thi TOEIC trực tuyến và hiển thị kết quả đánh giá năng lực.
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import { useNavigate, useParams } from '@/lib/navigation'
@@ -13,6 +14,7 @@ import { ToeicQuestionCard } from '@/features/toeic/components/toeic.question.ca
 import { ToeicQuestionNav } from '@/features/toeic/components/toeic.question.nav'
 import { ToeicExamHeader } from '@/features/toeic/components/toeic.exam.header'
 import { PART_TIMINGS, PART_TIPS } from '@/features/toeic/components/toeic.constants'
+import { TestRunnerExitConfirmModal } from '@/features/courses/components/test.runner.confirm.modal'
 
 export default function ToeicExamAppPage() {
   const { i18n } = useTranslation()
@@ -33,12 +35,46 @@ export default function ToeicExamAppPage() {
     goToQuestion,
     toggleFlag,
     handleSubmit,
+    handleSubmitAttemptAsync,
     handleRetry,
     handleChooseAnother,
     calculateResults,
     evaluatedAnswers,
     isSubmittingAttempt,
   } = useToeicExam(examId)
+
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
+
+  useEffect(() => {
+    if (state.submitted) return
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [state.submitted])
+
+  const handleBackClick = () => {
+    if (!state.submitted) {
+      setShowExitConfirm(true)
+    } else {
+      navigate(-1)
+    }
+  }
+
+  const handleConfirmExit = async () => {
+    if (isExiting) return
+    setIsExiting(true)
+    try {
+      await handleSubmitAttemptAsync()
+      setShowExitConfirm(false)
+      navigate('/toeic')
+    } catch {
+      setIsExiting(false)
+    }
+  }
 
   if (isLoadingExam) {
     return (
@@ -150,7 +186,7 @@ export default function ToeicExamAppPage() {
         timedMode={state.timedMode}
         timeRemaining={state.timeRemaining}
         isVietnamese={isVietnamese}
-        onBackToModeSelect={() => navigate(-1)}
+        onBackToModeSelect={handleBackClick}
         onSubmit={handleSubmit}
       />
 
@@ -184,6 +220,15 @@ export default function ToeicExamAppPage() {
           onGoToQuestion={goToQuestion}
         />
       </div>
+
+      <TestRunnerExitConfirmModal
+        isOpen={showExitConfirm}
+        isSaving={isExiting}
+        onCancel={() => {
+          if (!isExiting) setShowExitConfirm(false)
+        }}
+        onConfirmExit={handleConfirmExit}
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
-// Quản lý trạng thái bài kiểm tra khóa học, đếm ngược thời gian, chấm điểm và AI giải thích.
+/// Quản lý trạng thái bài kiểm tra khóa học, đếm ngược thời gian, chấm điểm và AI giải thích.
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Chapter } from '@/features/courses/types/course'
 import { courseService } from '@/features/courses/services/course.service'
@@ -14,6 +14,12 @@ import {
   AiExplanationsData,
   getCorrectOptionIndex,
 } from '@/features/courses/types/test.runner.types'
+
+interface CourseTestDraft {
+  startedAt: number
+  totalDurationSeconds: number
+  selectedAnswers: Record<number, number>
+}
 
 interface UseCourseTestRunnerOptions {
   isOpen: boolean
@@ -212,13 +218,14 @@ export function useCourseTestRunner({
     return testType === 'final-test' ? 60 : 15
   }, [durationMinutes, chapter, testType])
 
+  const storageKey = useMemo(() => {
+    return `lingo_course_test_draft_${courseId}_${testType}_${chapter?.id || 'final'}`
+  }, [courseId, testType, chapter?.id])
+
+  const hasRestoredDraftRef = useRef(false)
+  const handleSubmitTestRef = useRef<(isTimeout?: boolean) => Promise<void>>(async () => {})
   const [timeLeft, setTimeLeft] = useState<number>(effectiveDurationMinutes * 60)
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false)
-
-  useEffect(() => {
-    setTimeLeft(effectiveDurationMinutes * 60)
-    setHasAutoSubmitted(false)
-  }, [effectiveDurationMinutes, isOpen])
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600)
@@ -233,10 +240,43 @@ export function useCourseTestRunner({
 
   const handleSelectOption = (qIdx: number, optIdx: number) => {
     if (isSubmitted) return
-    setSelectedAnswers((prev) => ({ ...prev, [qIdx]: optIdx }))
+    setSelectedAnswers((prev) => {
+      const next = { ...prev, [qIdx]: optIdx }
+      if (typeof window !== 'undefined') {
+        try {
+          const totalSecs = effectiveDurationMinutes * 60
+          let startedAt = Date.now()
+          const existing = localStorage.getItem(storageKey)
+          if (existing) {
+            const parsed = JSON.parse(existing)
+            if (parsed && typeof parsed.startedAt === 'number') {
+              startedAt = parsed.startedAt
+            }
+          }
+          const draft: CourseTestDraft = {
+            startedAt,
+            totalDurationSeconds: totalSecs,
+            selectedAnswers: next,
+          }
+          localStorage.setItem(storageKey, JSON.stringify(draft))
+        } catch {}
+      }
+      return next
+    })
   }
 
   const handleRetry = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(storageKey)
+        const newDraft: CourseTestDraft = {
+          startedAt: Date.now(),
+          totalDurationSeconds: effectiveDurationMinutes * 60,
+          selectedAnswers: {},
+        }
+        localStorage.setItem(storageKey, JSON.stringify(newDraft))
+      } catch {}
+    }
     setSelectedAnswers({})
     setIsSubmitted(false)
     setScoreResult(null)
@@ -250,6 +290,11 @@ export function useCourseTestRunner({
 
   const handleSubmitTest = useCallback(
     async (isTimeout = false) => {
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem(storageKey)
+        } catch {}
+      }
       const answersPayload = rawQuestions.map((q, idx) => {
         const chosen = selectedAnswers[idx]
         const options = q.options ?? []
@@ -530,6 +575,69 @@ export function useCourseTestRunner({
       onComplete,
     ]
   )
+
+  useEffect(() => {
+    handleSubmitTestRef.current = handleSubmitTest
+  }, [handleSubmitTest])
+
+  useEffect(() => {
+    if (!isOpen) {
+      hasRestoredDraftRef.current = false
+      return
+    }
+    if (hasRestoredDraftRef.current) return
+    hasRestoredDraftRef.current = true
+
+    const totalSecs = effectiveDurationMinutes * 60
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(storageKey)
+        if (saved) {
+          const draft: CourseTestDraft = JSON.parse(saved)
+          if (
+            draft &&
+            typeof draft.startedAt === 'number' &&
+            typeof draft.totalDurationSeconds === 'number' &&
+            draft.selectedAnswers &&
+            typeof draft.selectedAnswers === 'object'
+          ) {
+            const elapsed = Math.floor((Date.now() - draft.startedAt) / 1000)
+            const remaining = Math.max(0, draft.totalDurationSeconds - elapsed)
+
+            setSelectedAnswers(draft.selectedAnswers)
+            if (remaining <= 0) {
+              setTimeLeft(0)
+              setHasAutoSubmitted(true)
+              try {
+                localStorage.removeItem(storageKey)
+              } catch {}
+              handleSubmitTestRef.current(true)
+              return
+            } else {
+              setTimeLeft(remaining)
+              setHasAutoSubmitted(false)
+              toast.info(
+                isVietnamese
+                  ? 'Đã tự động khôi phục tiến trình bài làm trước đó của bạn.'
+                  : 'Restored previous test draft.'
+              )
+              return
+            }
+          }
+        } else {
+          const newDraft: CourseTestDraft = {
+            startedAt: Date.now(),
+            totalDurationSeconds: totalSecs,
+            selectedAnswers: {},
+          }
+          localStorage.setItem(storageKey, JSON.stringify(newDraft))
+        }
+      } catch {}
+    }
+
+    setTimeLeft(totalSecs)
+    setHasAutoSubmitted(false)
+  }, [effectiveDurationMinutes, isOpen, storageKey, isVietnamese])
 
   useEffect(() => {
     if (!isOpen || isSubmitted || timeLeft <= 0) return

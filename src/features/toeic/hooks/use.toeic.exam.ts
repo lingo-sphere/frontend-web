@@ -1,4 +1,4 @@
-// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và gợi ý khóa học.
+/// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và gợi ý khóa học.
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -47,6 +47,15 @@ export interface ExamState {
   timedMode: boolean
 }
 
+interface ToeicExamDraft {
+  attemptId: string | null
+  startedAt: number
+  totalDurationSeconds: number
+  answers: Record<number, string>
+  flagged: number[]
+  currentQuestionIndex: number
+}
+
 export function useToeicExam(examId?: string) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -81,6 +90,9 @@ export function useToeicExam(examId?: string) {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const attemptIdRef = useRef<string | null>(null)
   const initializedExamIdRef = useRef<string | null>(null)
+  const isSubmittingAttemptBackendRef = useRef(false)
+  const hasCompletedBackendSubmissionRef = useRef(false)
+  const storageKey = examId ? `lingo_toeic_draft_${examId}` : ''
 
   useEffect(() => {
     if (!examData || initializedExamIdRef.current === examData._id) return
@@ -94,19 +106,74 @@ export function useToeicExam(examId?: string) {
         ? examData.duration_minutes * 60
         : 120 * 60
 
+    let draftRestored = false
+    let initialAnswers: Record<number, string> = {}
+    let initialFlagged: number[] = []
+    let initialQIndex = 0
+    let effectiveTime = time
+    let shouldAutoSubmit = false
+
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey)
+        if (saved) {
+          const draft: ToeicExamDraft = JSON.parse(saved)
+          if (
+            draft &&
+            typeof draft.startedAt === 'number' &&
+            typeof draft.totalDurationSeconds === 'number'
+          ) {
+            const elapsed = Math.floor((Date.now() - draft.startedAt) / 1000)
+            const remaining = Math.max(0, draft.totalDurationSeconds - elapsed)
+
+            draftRestored = true
+            initialAnswers = draft.answers || {}
+            initialFlagged = draft.flagged || []
+            initialQIndex = typeof draft.currentQuestionIndex === 'number' ? draft.currentQuestionIndex : 0
+            if (draft.attemptId) {
+              attemptIdRef.current = draft.attemptId
+            }
+
+            if (remaining <= 0) {
+              effectiveTime = 0
+              shouldAutoSubmit = true
+              toast.warning('Thời gian làm bài đã kết thúc! Hệ thống tự động thu bài.')
+            } else {
+              effectiveTime = remaining
+              toast.info('Đã tự động khôi phục tiến trình bài thi TOEIC trước đó.')
+            }
+          }
+        }
+      } catch {}
+    }
+
     setState((prev) => ({
       ...prev,
       mode: 'FULL',
       selectedParts: allParts,
-      currentQuestionIndex: 0,
-      answers: {},
-      flagged: [],
-      timeRemaining: time,
+      currentQuestionIndex: initialQIndex,
+      answers: initialAnswers,
+      flagged: initialFlagged,
+      timeRemaining: effectiveTime,
       started: true,
-      submitted: false,
-      showAnswer: false,
+      submitted: shouldAutoSubmit,
+      showAnswer: shouldAutoSubmit,
       timedMode: true,
     }))
+
+    if (!draftRestored && typeof window !== 'undefined' && storageKey) {
+      try {
+        const newDraft: ToeicExamDraft = {
+          attemptId: attemptIdRef.current,
+          startedAt: Date.now(),
+          totalDurationSeconds: time,
+          answers: {},
+          flagged: [],
+          currentQuestionIndex: 0,
+        }
+        localStorage.setItem(storageKey, JSON.stringify(newDraft))
+      } catch {}
+    }
 
     const isSystemPlacement = Boolean(
       examData.is_system_placement ||
@@ -118,7 +185,7 @@ export function useToeicExam(examId?: string) {
     )
 
     const authUser = useAuthStore.getState().user
-    if (authUser && examId) {
+    if (authUser && examId && !attemptIdRef.current) {
       examService
         .startExamAttempt(examId, {
           attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
@@ -126,18 +193,35 @@ export function useToeicExam(examId?: string) {
         .then((attemptRes) => {
           if (attemptRes && attemptRes.attempt_id) {
             attemptIdRef.current = attemptRes.attempt_id
+            if (typeof window !== 'undefined' && storageKey) {
+              try {
+                const existing = localStorage.getItem(storageKey)
+                if (existing) {
+                  const parsed = JSON.parse(existing)
+                  localStorage.setItem(
+                    storageKey,
+                    JSON.stringify({ ...parsed, attemptId: attemptRes.attempt_id })
+                  )
+                }
+              } catch {}
+            }
           }
         })
         .catch(() => {})
     }
-  }, [examData, examId])
+  }, [examData, examId, storageKey])
 
   const calculateResults = useCallback((): ExamResultMetrics => {
     return calculateToeicExamResults(allQuestions, state.answers, evaluatedAnswers)
   }, [allQuestions, state.answers, evaluatedAnswers])
 
-  useEffect(() => {
-    if (!state.submitted) return
+  const submitAttemptToBackend = useCallback(async () => {
+    if (isSubmittingAttemptBackendRef.current || hasCompletedBackendSubmissionRef.current) return
+    const { user } = useAuthStore.getState()
+    if (!user) {
+      toast.info('Kết quả làm bài đã được chấm điểm! Đăng nhập để lưu kết quả vào lịch sử thi.')
+      return
+    }
 
     const res = calculateResults()
     Analytics.examSubmitted({
@@ -171,9 +255,9 @@ export function useToeicExam(examId?: string) {
 
     try {
       userService.updateProfile(placementData).catch(() => null)
-      const { user, setUser } = useAuthStore.getState()
-      if (user) {
-        setUser({ ...user, ...placementData })
+      const { user: currentUser, setUser } = useAuthStore.getState()
+      if (currentUser) {
+        setUser({ ...currentUser, ...placementData })
       }
     } catch {}
 
@@ -196,81 +280,80 @@ export function useToeicExam(examId?: string) {
     const totalSeconds = examData?.duration_minutes ? examData.duration_minutes * 60 : 7200
     const timeSpent = Math.max(1, totalSeconds - state.timeRemaining)
 
-    const submitAttemptToBackend = async () => {
-      const { user } = useAuthStore.getState()
-      if (!user) {
-        toast.info('Kết quả làm bài đã được chấm điểm! Đăng nhập để lưu kết quả vào lịch sử thi.')
-        return
-      }
-      try {
-        setIsSubmittingAttempt(true)
-        let currentAttemptId = attemptIdRef.current
-        if (!currentAttemptId && examId) {
-          const newAttempt = await examService.startExamAttempt(examId, {
-            attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
-          })
-          if (newAttempt && newAttempt.attempt_id) {
-            currentAttemptId = newAttempt.attempt_id
-            attemptIdRef.current = currentAttemptId
-          }
+    try {
+      isSubmittingAttemptBackendRef.current = true
+      setIsSubmittingAttempt(true)
+      let currentAttemptId = attemptIdRef.current
+      if (!currentAttemptId && examId) {
+        const newAttempt = await examService.startExamAttempt(examId, {
+          attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
+        })
+        if (newAttempt && newAttempt.attempt_id) {
+          currentAttemptId = newAttempt.attempt_id
+          attemptIdRef.current = currentAttemptId
         }
-        if (currentAttemptId) {
-          const submitRes = await examService.submitExamAttempt(currentAttemptId, formattedAnswers, timeSpent)
-          if (submitRes && Array.isArray((submitRes as Record<string, unknown>).answers)) {
-            const rawAnswers = (submitRes as Record<string, unknown>).answers as Array<Record<string, unknown>>
-            const evalMap: Record<number, EvaluatedAnswerItem> = {}
-            rawAnswers.forEach((ans) => {
-              const qNum = typeof ans.question_number === 'number' ? ans.question_number : Number(ans.question_number)
-              if (qNum) {
-                evalMap[qNum] = {
-                  whisper_transcript: typeof ans.whisper_transcript === 'string' ? ans.whisper_transcript : undefined,
-                  ai_score: typeof ans.ai_score === 'number' ? ans.ai_score : undefined,
-                  ai_feedback: ans.ai_feedback as EvaluatedAnswerItem['ai_feedback'],
-                  is_correct: typeof ans.is_correct === 'boolean' ? ans.is_correct : undefined,
-                }
+      }
+      if (currentAttemptId) {
+        const submitRes = await examService.submitExamAttempt(currentAttemptId, formattedAnswers, timeSpent)
+        hasCompletedBackendSubmissionRef.current = true
+        if (submitRes && Array.isArray((submitRes as Record<string, unknown>).answers)) {
+          const rawAnswers = (submitRes as Record<string, unknown>).answers as Array<Record<string, unknown>>
+          const evalMap: Record<number, EvaluatedAnswerItem> = {}
+          rawAnswers.forEach((ans) => {
+            const qNum = typeof ans.question_number === 'number' ? ans.question_number : Number(ans.question_number)
+            if (qNum) {
+              evalMap[qNum] = {
+                whisper_transcript: typeof ans.whisper_transcript === 'string' ? ans.whisper_transcript : undefined,
+                ai_score: typeof ans.ai_score === 'number' ? ans.ai_score : undefined,
+                ai_feedback: ans.ai_feedback as EvaluatedAnswerItem['ai_feedback'],
+                is_correct: typeof ans.is_correct === 'boolean' ? ans.is_correct : undefined,
               }
-            })
-            setEvaluatedAnswers(evalMap)
-            const updatedRes = calculateToeicExamResults(allQuestions, state.answers, evalMap)
-            const is4SkillsUpdated = Boolean(
-              examId?.includes('4skills') ||
-                examData?.skills_enabled === 'ALL' ||
-                (updatedRes.speakingTotal && updatedRes.speakingTotal > 0) ||
-                (updatedRes.writingTotal && updatedRes.writingTotal > 0)
-            )
-            const updatedPlacementData = {
-              placement_test_score: updatedRes.estimatedTotal,
-              placement_listening_score: updatedRes.estimatedListening,
-              placement_reading_score: updatedRes.estimatedReading,
-              placement_speaking_score: is4SkillsUpdated ? (updatedRes.estimatedSpeaking ?? 0) : undefined,
-              placement_writing_score: is4SkillsUpdated ? (updatedRes.estimatedWriting ?? 0) : undefined,
-              placement_skills_type: is4SkillsUpdated ? '4SKILLS' : '2SKILLS',
-              target_toeic_score: Math.min(990, updatedRes.estimatedTotal + 150),
-              current_estimated_score: updatedRes.estimatedTotal,
-              is_score_manually_edited: false,
-              placement_tested_at: new Date().toISOString(),
             }
-            try {
-              userService.updateProfile(updatedPlacementData).catch(() => null)
-              const { user, setUser } = useAuthStore.getState()
-              if (user) {
-                setUser({ ...user, ...updatedPlacementData })
-              }
-            } catch {}
+          })
+          setEvaluatedAnswers(evalMap)
+          const updatedRes = calculateToeicExamResults(allQuestions, state.answers, evalMap)
+          const is4SkillsUpdated = Boolean(
+            examId?.includes('4skills') ||
+              examData?.skills_enabled === 'ALL' ||
+              (updatedRes.speakingTotal && updatedRes.speakingTotal > 0) ||
+              (updatedRes.writingTotal && updatedRes.writingTotal > 0)
+          )
+          const updatedPlacementData = {
+            placement_test_score: updatedRes.estimatedTotal,
+            placement_listening_score: updatedRes.estimatedListening,
+            placement_reading_score: updatedRes.estimatedReading,
+            placement_speaking_score: is4SkillsUpdated ? (updatedRes.estimatedSpeaking ?? 0) : undefined,
+            placement_writing_score: is4SkillsUpdated ? (updatedRes.estimatedWriting ?? 0) : undefined,
+            placement_skills_type: is4SkillsUpdated ? '4SKILLS' : '2SKILLS',
+            target_toeic_score: Math.min(990, updatedRes.estimatedTotal + 150),
+            current_estimated_score: updatedRes.estimatedTotal,
+            is_score_manually_edited: false,
+            placement_tested_at: new Date().toISOString(),
           }
-          queryClient.invalidateQueries({ queryKey: toeicKeys.history() })
-          queryClient.invalidateQueries({ queryKey: toeicKeys.courseAttempts() })
+          try {
+            userService.updateProfile(updatedPlacementData).catch(() => null)
+            const { user: updatedUser, setUser } = useAuthStore.getState()
+            if (updatedUser) {
+              setUser({ ...updatedUser, ...updatedPlacementData })
+            }
+          } catch {}
         }
-      } catch (err) {
-        console.warn('Lỗi khi nộp bài lên hệ thống:', err)
-      } finally {
-        setIsSubmittingAttempt(false)
+        queryClient.invalidateQueries({ queryKey: toeicKeys.history() })
+        queryClient.invalidateQueries({ queryKey: toeicKeys.courseAttempts() })
       }
+    } catch (err) {
+      console.warn('Lỗi khi nộp bài lên hệ thống:', err)
+    } finally {
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          localStorage.removeItem(storageKey)
+        } catch {}
+      }
+      isSubmittingAttemptBackendRef.current = false
+      setIsSubmittingAttempt(false)
     }
-    submitAttemptToBackend()
 
     setIsLoadingRecommendations(true)
-
     const weakSkills: string[] = []
     if (res.listeningTotal > 0 && res.listeningCorrect / res.listeningTotal < 0.6) weakSkills.push('LISTENING')
     if (res.readingTotal > 0 && res.readingCorrect / res.readingTotal < 0.6) weakSkills.push('READING')
@@ -295,7 +378,12 @@ export function useToeicExam(examId?: string) {
       .finally(() => {
         setIsLoadingRecommendations(false)
       })
-  }, [state.submitted, calculateResults, examId, examData, state.timedMode])
+  }, [allQuestions, calculateResults, examData, examId, queryClient, state.answers, state.timeRemaining, state.timedMode])
+
+  useEffect(() => {
+    if (!state.submitted) return
+    submitAttemptToBackend()
+  }, [state.submitted, submitAttemptToBackend])
 
   useEffect(() => {
     if (!state.started || state.submitted || !state.timedMode) return
@@ -319,33 +407,94 @@ export function useToeicExam(examId?: string) {
   const handleSelectAnswer = (optionKey: string) => {
     const currentQ = allQuestions[state.currentQuestionIndex]
     if (!currentQ || state.submitted) return
-    setState((prev) => ({
-      ...prev,
-      answers: { ...prev.answers, [currentQ.questionNumber]: optionKey },
-    }))
+    setState((prev) => {
+      const nextAnswers = { ...prev.answers, [currentQ.questionNumber]: optionKey }
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          const existing = localStorage.getItem(storageKey)
+          const base: ToeicExamDraft = existing
+            ? JSON.parse(existing)
+            : {
+                attemptId: attemptIdRef.current,
+                startedAt: Date.now(),
+                totalDurationSeconds: 120 * 60,
+                answers: {},
+                flagged: prev.flagged,
+                currentQuestionIndex: prev.currentQuestionIndex,
+              }
+          localStorage.setItem(storageKey, JSON.stringify({ ...base, answers: nextAnswers }))
+        } catch {}
+      }
+      return { ...prev, answers: nextAnswers }
+    })
   }
 
   const goToQuestion = (index: number) => {
     if (index < 0 || index >= allQuestions.length) return
-    setState((prev) => ({ ...prev, currentQuestionIndex: index }))
+    setState((prev) => {
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          const existing = localStorage.getItem(storageKey)
+          if (existing) {
+            const base = JSON.parse(existing)
+            localStorage.setItem(storageKey, JSON.stringify({ ...base, currentQuestionIndex: index }))
+          }
+        } catch {}
+      }
+      return { ...prev, currentQuestionIndex: index }
+    })
   }
 
   const toggleFlag = () => {
     const currentQ = allQuestions[state.currentQuestionIndex]
     if (!currentQ) return
-    setState((prev) => ({
-      ...prev,
-      flagged: prev.flagged.includes(currentQ.questionNumber)
+    setState((prev) => {
+      const nextFlagged = prev.flagged.includes(currentQ.questionNumber)
         ? prev.flagged.filter((q) => q !== currentQ.questionNumber)
-        : [...prev.flagged, currentQ.questionNumber],
-    }))
+        : [...prev.flagged, currentQ.questionNumber]
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          const existing = localStorage.getItem(storageKey)
+          if (existing) {
+            const base = JSON.parse(existing)
+            localStorage.setItem(storageKey, JSON.stringify({ ...base, flagged: nextFlagged }))
+          }
+        } catch {}
+      }
+      return { ...prev, flagged: nextFlagged }
+    })
   }
 
   const handleSubmit = () => {
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        localStorage.removeItem(storageKey)
+      } catch {}
+    }
     setState((prev) => ({ ...prev, submitted: true, showAnswer: true }))
   }
 
   const handleRetry = () => {
+    hasCompletedBackendSubmissionRef.current = false
+    attemptIdRef.current = null
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        localStorage.removeItem(storageKey)
+        const time =
+          typeof examData?.duration_minutes === 'number' && examData.duration_minutes > 0
+            ? examData.duration_minutes * 60
+            : 120 * 60
+        const newDraft: ToeicExamDraft = {
+          attemptId: null,
+          startedAt: Date.now(),
+          totalDurationSeconds: time,
+          answers: {},
+          flagged: [],
+          currentQuestionIndex: 0,
+        }
+        localStorage.setItem(storageKey, JSON.stringify(newDraft))
+      } catch {}
+    }
     setState((prev) => ({
       ...prev,
       answers: {},
@@ -360,6 +509,16 @@ export function useToeicExam(examId?: string) {
     navigate('/toeic')
   }
 
+  const handleSubmitAttemptAsync = useCallback(async () => {
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        localStorage.removeItem(storageKey)
+      } catch {}
+    }
+    setState((prev) => ({ ...prev, submitted: true, showAnswer: true }))
+    await submitAttemptToBackend()
+  }, [storageKey, submitAttemptToBackend])
+
   return {
     examData,
     isLoadingExam,
@@ -373,6 +532,7 @@ export function useToeicExam(examId?: string) {
     goToQuestion,
     toggleFlag,
     handleSubmit,
+    handleSubmitAttemptAsync,
     handleRetry,
     handleChooseAnother,
     calculateResults,

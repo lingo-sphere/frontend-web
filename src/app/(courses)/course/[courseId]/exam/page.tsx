@@ -1,5 +1,4 @@
-// Trang làm bài thi khóa học toàn màn hình (Course Exam Workspace)
-
+// Trang làm bài thi khóa học toàn màn hình.
 'use client'
 
 import { useCallback, useMemo, Suspense } from 'react'
@@ -7,7 +6,7 @@ import { useParams, useSearchParams, useNavigate } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import { mapCourseDataToWorkspace } from '@/features/courses/helpers/course.workspace.adapter'
 import { CourseTestRunnerWorkspace } from '@/features/courses/components/course.test.runner.workspace'
-import { CourseLoadingState } from '@/features/courses/components/course.loading.state'
+import { CourseExamLoadingState } from '@/features/courses/components/course.exam.loading.state'
 import type { Course, Chapter } from '@/features/courses/types/course'
 import type { TestAttemptItem } from '@/features/courses/types/test.runner.types'
 import { Button } from '@/components/button'
@@ -67,7 +66,7 @@ function CourseExamContent() {
   }, [navigate, course, courseId])
 
   if (isLoading) {
-    return <CourseLoadingState onBack={handleBackToCourse} />
+    return <CourseExamLoadingState onBack={handleBackToCourse} />
   }
 
   if (!course) {
@@ -207,7 +206,7 @@ function CourseExamContent() {
 
 export default function CourseExamPage() {
   return (
-    <Suspense fallback={<CourseLoadingState onBack={() => window.history.back()} />}>
+    <Suspense fallback={<CourseExamLoadingState onBack={() => window.history.back()} />}>
       <CourseExamContent />
     </Suspense>
   )

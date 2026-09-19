@@ -1,5 +1,4 @@
-// Giao diện không gian làm bài thi khóa học toàn màn hình (Course Test Runner Workspace)
-
+/// Giao diện không gian làm bài thi khóa học toàn màn hình.
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -123,9 +122,32 @@ export function CourseTestRunnerWorkspace({
 
   const navigate = useNavigate()
   const [drillTopic, setDrillTopic] = useState<string | null>(null)
+  const [isExiting, setIsExiting] = useState(false)
   const [nextCourses, setNextCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
   >([])
+
+  useEffect(() => {
+    if (isSubmitted) return
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isSubmitted])
+
+  const handleConfirmExit = async () => {
+    if (isExiting) return
+    setIsExiting(true)
+    try {
+      await handleSubmitTest(false)
+      setShowExitConfirm(false)
+      onClose()
+    } catch {
+      setIsExiting(false)
+    }
+  }
 
   useEffect(() => {
     if (testType === 'final-test' && isSubmitted && scoreResult?.isPassed) {
@@ -351,8 +373,11 @@ export function CourseTestRunnerWorkspace({
       />
       <TestRunnerExitConfirmModal
         isOpen={showExitConfirm}
-        onCancel={() => setShowExitConfirm(false)}
-        onConfirmExit={onClose}
+        isSaving={isExiting}
+        onCancel={() => {
+          if (!isExiting) setShowExitConfirm(false)
+        }}
+        onConfirmExit={handleConfirmExit}
       />
       <TestRunnerSubmitConfirmModal
         isOpen={showSubmitConfirm}
