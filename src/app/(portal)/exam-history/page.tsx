@@ -39,8 +39,8 @@ export default function ExamHistoryPage() {
 
   const { data: coursesProgress = [] } = useCoursesProgressQuery(Boolean(user))
 
-  const baselineScore = Number(user?.placement_test_score) || 240
-  const targetScore = Number(user?.target_toeic_score) || 650
+  const baselineScore = Number(user?.placement_test_score) || 0
+  const targetScore = Number(user?.target_toeic_score) || 0
   const listeningScore = Number(user?.placement_listening_score) || 0
   const readingScore = Number(user?.placement_reading_score) || 0
 
