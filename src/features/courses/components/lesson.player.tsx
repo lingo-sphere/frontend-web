@@ -54,9 +54,6 @@ export function LessonPlayer({
     volume,
     isMuted,
     playbackSpeed,
-    selectedQuality,
-    autoResolvedQuality,
-    effectiveQualityKey,
     isTheater,
     setIsTheater,
     isFullscreen,
@@ -79,7 +76,6 @@ export function LessonPlayer({
     setShowEndedScreen,
     countdownSeconds,
     isDirectVideo,
-    isHlsStream,
     effectiveVideoUrl,
     resetControlsTimeout,
     togglePlay,
@@ -88,7 +84,6 @@ export function LessonPlayer({
     seekRelative,
     seekToTime,
     handleSpeedChange,
-    handleQualityChange,
     toggleFullscreen,
     togglePip,
     handleTimeUpdate,
@@ -223,10 +218,6 @@ export function LessonPlayer({
           volume={volume}
           isMuted={isMuted}
           playbackSpeed={playbackSpeed}
-          selectedQuality={selectedQuality}
-          autoResolvedQuality={autoResolvedQuality}
-          effectiveQualityKey={effectiveQualityKey}
-          isHls={isHlsStream}
           isTheater={isTheater}
           isFullscreen={isFullscreen}
           autoPlayNext={autoPlayNext}
@@ -250,7 +241,6 @@ export function LessonPlayer({
           }}
           onToggleSettings={() => setShowSettingsMenu(!showSettingsMenu)}
           onSpeedChange={handleSpeedChange}
-          onQualityChange={handleQualityChange}
           onToggleAutoPlay={() => setAutoPlayNext(!autoPlayNext)}
           onToggleTheater={() => setIsTheater(!isTheater)}
           onToggleFullscreen={toggleFullscreen}

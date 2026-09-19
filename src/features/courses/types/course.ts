@@ -69,7 +69,6 @@ export interface Lesson {
   videoUrl?: string
   is_free_preview?: boolean
   is_preview?: boolean
-  qualities?: Record<string, string>
   resources?: LessonResource[]
   content: LessonContent
   theory_file_url?: string

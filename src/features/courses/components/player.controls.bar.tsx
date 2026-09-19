@@ -28,10 +28,6 @@ interface PlayerControlsBarProps {
   volume: number
   isMuted: boolean
   playbackSpeed: number
-  selectedQuality: string
-  autoResolvedQuality?: '1080p' | '720p' | '360p'
-  effectiveQualityKey?: string
-  isHls?: boolean
   showSettingsMenu: boolean
   isTheater: boolean
   isFullscreen: boolean
@@ -55,7 +51,6 @@ interface PlayerControlsBarProps {
   onToggleSettingsMenu?: () => void
   onToggleSettings?: () => void
   onSpeedChange: (speed: number) => void
-  onQualityChange: (qualityId: string) => void
   onTogglePip: () => void
   onToggleTheater: () => void
   onToggleFullscreen: () => void
@@ -74,10 +69,6 @@ export function PlayerControlsBar({
   volume,
   isMuted,
   playbackSpeed,
-  selectedQuality,
-  autoResolvedQuality = '1080p',
-  effectiveQualityKey = 'auto',
-  isHls = false,
   showSettingsMenu,
   isTheater,
   isFullscreen,
@@ -100,7 +91,6 @@ export function PlayerControlsBar({
   onToggleSettingsMenu,
   onToggleSettings,
   onSpeedChange,
-  onQualityChange,
   onTogglePip,
   onToggleTheater,
   onToggleFullscreen,
@@ -255,13 +245,8 @@ export function PlayerControlsBar({
           <PlayerSettingsMenu
             showSettingsMenu={showSettingsMenu}
             playbackSpeed={playbackSpeed}
-            selectedQuality={selectedQuality}
-            autoResolvedQuality={autoResolvedQuality}
-            effectiveQualityKey={effectiveQualityKey}
-            isHls={isHls}
             onToggleMenu={handleToggleSettingsMenu}
             onSpeedChange={onSpeedChange}
-            onQualityChange={onQualityChange}
           />
 
           
