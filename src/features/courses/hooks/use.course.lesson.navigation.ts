@@ -29,6 +29,20 @@ export function useCourseLessonNavigation({
     )
   }
 
+  const syncLessonToStorageAndUrl = useCallback(
+    (lessonId: string) => {
+      storage.set(STORAGE_KEYS.COURSE_LAST_WATCHED(courseId), lessonId)
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        if (url.searchParams.get('lesson') !== lessonId) {
+          url.searchParams.set('lesson', lessonId)
+          window.history.replaceState(null, '', url.toString())
+        }
+      }
+    },
+    [courseId]
+  )
+
   const handleSelectLesson = (chapter: Chapter, lesson: Lesson) => {
     const lockState = progressDetail?.course_progress?.lock_state
     const currentOrder = Number(chapter.order || 1)
@@ -53,7 +67,7 @@ export function useCourseLessonNavigation({
     }
     setCurrentChapter(chapter)
     setCurrentLesson(lesson)
-    storage.set(STORAGE_KEYS.COURSE_LAST_WATCHED(courseId), lesson.id)
+    syncLessonToStorageAndUrl(lesson.id)
   }
 
   const allFlatLessons = useMemo(() => {
@@ -91,22 +105,24 @@ export function useCourseLessonNavigation({
       }
       setCurrentChapter(nextItem.chapter)
       setCurrentLesson(nextItem.lesson)
+      syncLessonToStorageAndUrl(nextItem.lesson.id)
       if (!expandedChapters.includes(nextItem.chapter.id)) {
         setExpandedChapters((prev) => [...prev, nextItem.chapter.id])
       }
     }
-  }, [hasNextLesson, allFlatLessons, currentLessonIndex, expandedChapters, lockedChapterIdSet])
+  }, [hasNextLesson, allFlatLessons, currentLessonIndex, expandedChapters, lockedChapterIdSet, syncLessonToStorageAndUrl])
 
   const handlePrevLesson = useCallback(() => {
     if (hasPrevLesson) {
       const prevItem = allFlatLessons[currentLessonIndex - 1]
       setCurrentChapter(prevItem.chapter)
       setCurrentLesson(prevItem.lesson)
+      syncLessonToStorageAndUrl(prevItem.lesson.id)
       if (!expandedChapters.includes(prevItem.chapter.id)) {
         setExpandedChapters((prev) => [...prev, prevItem.chapter.id])
       }
     }
-  }, [hasPrevLesson, allFlatLessons, currentLessonIndex, expandedChapters])
+  }, [hasPrevLesson, allFlatLessons, currentLessonIndex, expandedChapters, syncLessonToStorageAndUrl])
 
   return {
     currentChapter,

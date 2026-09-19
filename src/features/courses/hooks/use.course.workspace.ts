@@ -18,6 +18,7 @@ import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type {
   Course,
+  Chapter,
   Lesson,
   CourseProgressDetailInfo,
   ModuleProgressInfo,
@@ -182,9 +183,57 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       }
     })
 
-    navigation.setCurrentChapter((prev) => prev || structured.chapters[0] || null)
-    navigation.setCurrentLesson((prev) => prev || structured.chapters[0]?.lessons[0] || null)
-    navigation.setExpandedChapters((prev) => (prev.length > 0 ? prev : structured.chapters.map((c) => c.id)))
+    const allFlat: Array<{ chapter: Chapter; lesson: Lesson }> = []
+    structured.chapters.forEach((ch) => {
+      ch.lessons.forEach((les) => {
+        allFlat.push({ chapter: ch, lesson: les })
+      })
+    })
+
+    let targetId: string | undefined = navigation.currentLesson?.id
+
+    if (!targetId && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      targetId = urlParams.get('lesson') || urlParams.get('lessonId') || undefined
+    }
+
+    if (!targetId && typeof window !== 'undefined') {
+      const savedId = storage.get<string>(STORAGE_KEYS.COURSE_LAST_WATCHED(courseId))
+      if (savedId) {
+        targetId = savedId
+      }
+    }
+
+    if (!targetId && progressData?.completed_lesson_ids?.length) {
+      const completedSet = new Set(progressData.completed_lesson_ids)
+      const uncompleted = allFlat.find((item) => !completedSet.has(item.lesson.id))
+      if (uncompleted) {
+        targetId = uncompleted.lesson.id
+      }
+    }
+
+    let matchedItem = targetId ? allFlat.find((item) => item.lesson.id === targetId) : null
+    if (!matchedItem && allFlat.length > 0) {
+      matchedItem = allFlat[0]
+    }
+
+    if (matchedItem) {
+      const targetChapter = matchedItem.chapter
+      const targetLesson = matchedItem.lesson
+      navigation.setCurrentChapter(targetChapter)
+      navigation.setCurrentLesson(targetLesson)
+      navigation.setExpandedChapters((prev) =>
+        prev.includes(targetChapter.id) ? prev : [...prev, targetChapter.id]
+      )
+      if (typeof window !== 'undefined') {
+        storage.set(STORAGE_KEYS.COURSE_LAST_WATCHED(courseId), targetLesson.id)
+        const url = new URL(window.location.href)
+        if (url.searchParams.get('lesson') !== targetLesson.id) {
+          url.searchParams.set('lesson', targetLesson.id)
+          window.history.replaceState(null, '', url.toString())
+        }
+      }
+    }
   }, [rawCourse, isEnrolled, progressData, reviewsData, qnaData, courseId])
 
   useEffect(() => {
