@@ -98,6 +98,15 @@ export interface AuthResponse {
   refresh_token?: string
 }
 
+export interface RegisterResponse {
+  message?: string
+  email?: string
+  expire_minutes?: number
+  user?: User
+  access_token?: string
+  refresh_token?: string
+}
+
 export interface LoginPayload {
   email?: string
   username?: string

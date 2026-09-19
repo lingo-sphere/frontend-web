@@ -102,9 +102,19 @@ export const AuthResponseSchema = z.object({
   refresh_token: z.string().optional(),
 }).passthrough()
 
+export const RegisterResponseSchema = z.object({
+  message: z.string().optional(),
+  email: z.string().optional(),
+  expire_minutes: z.number().optional(),
+  user: UserSchema.optional(),
+  access_token: z.string().optional(),
+  refresh_token: z.string().optional(),
+}).passthrough()
+
 export type User = z.infer<typeof UserSchema>
 export type GamificationProfile = z.infer<typeof GamificationProfileSchema>
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>
 export type UserSubscription = z.infer<typeof UserSubscriptionSchema>
 export type UserProfileResponse = z.infer<typeof UserProfileResponseSchema>
 export type AuthResponse = z.infer<typeof AuthResponseSchema>
+export type RegisterResponse = z.infer<typeof RegisterResponseSchema>
