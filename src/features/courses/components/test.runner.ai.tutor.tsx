@@ -24,6 +24,7 @@ interface TestRunnerAiTutorProps {
   onExplainMistakes: () => void
   onToggleAiDetails: () => void
   onDrillTopic?: (topic: string) => void
+  onPracticeTopic?: (item: WrongQuestionItem) => void
   onOpenMistakeVault?: () => void
 }
 
@@ -35,6 +36,7 @@ export function TestRunnerAiTutor({
   onExplainMistakes,
   onToggleAiDetails,
   onDrillTopic,
+  onPracticeTopic,
   onOpenMistakeVault,
 }: TestRunnerAiTutorProps) {
   if (wrongQuestionsList.length === 0) return null
@@ -152,9 +154,23 @@ export function TestRunnerAiTutor({
                           <Target size={10} className="text-purple-600 dark:text-purple-400" />
                           <span>Chủ điểm: {item.recommended_topic}</span>
                         </span>
-                        {onDrillTopic && (
+                        {(onPracticeTopic || onDrillTopic) && (
                           <Button
-                            onClick={() => onDrillTopic(item.recommended_topic)}
+                            onClick={() => {
+                              const wrongObj = wrongQuestionsList.find(
+                                (w) => w.question_number === item.question_number
+                              ) || {
+                                question_number: item.question_number,
+                                question_text: item.question_text,
+                                user_selected_answer: item.user_selected,
+                                correct_answer: item.correct_answer,
+                              }
+                              if (onPracticeTopic) {
+                                onPracticeTopic(wrongObj)
+                              } else if (onDrillTopic) {
+                                onDrillTopic(item.recommended_topic)
+                              }
+                            }}
                             size="sm"
                             className="h-6 text-[10px] px-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center gap-1 cursor-pointer"
                           >

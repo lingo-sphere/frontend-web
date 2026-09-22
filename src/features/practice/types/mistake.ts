@@ -25,6 +25,15 @@ export interface UserMistakeItem {
   srs_schedule_id?: string
   created_at: string
   updated_at: string
+  classification_snapshot?: {
+    domain?: string
+    exercise_type?: string
+    context_id?: string
+    grammar_knowledge_id?: string
+    cefr_level?: string
+    listening_exercise_id?: string
+    context_path?: string[]
+  }
 }
 
 export interface RecordMistakeItemPayload {
@@ -34,12 +43,13 @@ export interface RecordMistakeItemPayload {
   user_answer: string
   correct_answer: string
   explanation?: string
-  topic_tags?: string[]
   topic_name_vi?: string
   source_context?: string
   source_type?: string
   source_id?: string
   source_title?: string
+  // Taxonomy: Practice Context for mistake classification & remedial practice
+  context_id?: string
 }
 
 export interface BatchRecordMistakesPayload {
@@ -49,6 +59,7 @@ export interface BatchRecordMistakesPayload {
 export interface QueryMistakesParams {
   status?: MistakeStatus
   topic?: string
+  domain?: string  // 'LISTENING' | 'READING' | 'GRAMMAR' | 'SPEAKING' | 'WRITING'
   due_only?: boolean
   page?: number
   limit?: number

@@ -37,6 +37,7 @@ interface TestRunnerResultViewProps {
   onBackToLessons?: () => void
   onNavigateCourse?: (slugOrId: string) => void
   onDrillTopic?: (topic: string) => void
+  onPracticeTopic?: (item: WrongQuestionItem) => void
   onOpenMistakeVault?: () => void
 }
 
@@ -61,6 +62,7 @@ export function TestRunnerResultView({
   onBackToLessons,
   onNavigateCourse,
   onDrillTopic,
+  onPracticeTopic,
   onOpenMistakeVault,
 }: TestRunnerResultViewProps) {
   return (
@@ -96,6 +98,7 @@ export function TestRunnerResultView({
         onExplainMistakes={onExplainMistakes}
         onToggleAiDetails={onToggleAiDetails}
         onDrillTopic={onDrillTopic}
+        onPracticeTopic={onPracticeTopic}
         onOpenMistakeVault={onOpenMistakeVault}
       />
     </div>

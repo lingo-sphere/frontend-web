@@ -517,7 +517,19 @@ export function useCourseTestRunner({
           applyGradedResult(saveRes.graded_questions, saveRes.wrong_questions)
         }
 
-        setWrongQuestionsList(finalWrongs)
+        const enrichedWrongs = finalWrongs.map((w, idx) => {
+          const qIdx = (w.question_number || idx + 1) - 1
+          const rawQ = rawQuestions[qIdx]
+          return {
+            ...w,
+            domain: rawQ?.domain || rawQ?.skill_type || (rawQ?.media_url?.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ? 'LISTENING' : 'GRAMMAR'),
+            context_id: rawQ?.context_id,
+            exercise_type: rawQ?.exercise_type,
+            grammar_knowledge_id: rawQ?.grammar_knowledge_id,
+          }
+        })
+
+        setWrongQuestionsList(enrichedWrongs)
         setScoreResult({
           correctCount: finalCorrect,
           totalQuestions: finalTotal,
@@ -530,14 +542,14 @@ export function useCourseTestRunner({
         if (isTimeout) toast.warning(isVietnamese ? 'Hết thời gian làm bài! Đã tự động nộp bài.' : 'Time is up! Exam auto-submitted.')
         else toast.success(isVietnamese ? `Nộp bài thành công! Điểm: ${finalScore}%` : `Submitted successfully! Score: ${finalScore}%`)
 
-        if (finalWrongs.length > 0) {
+        if (enrichedWrongs.length > 0) {
           setIsLoadingAi(true)
           setShowAiDetails(true)
           courseService
             .explainTestMistakes(courseId, {
               test_title: testTitle,
               test_type: testType,
-              wrong_questions: finalWrongs,
+              wrong_questions: enrichedWrongs,
             })
             .then((res: { data?: AiExplanationsData } | AiExplanationsData) => {
               const data = 'data' in res && res.data ? res.data : (res as AiExplanationsData)
@@ -554,7 +566,7 @@ export function useCourseTestRunner({
                 })
               }
 
-              const mistakePayloads = finalWrongs.map((w, idx) => {
+              const mistakePayloads = enrichedWrongs.map((w, idx) => {
                 const ex = explanationMap.get(w.question_number || idx + 1)
                 const qIdx = (w.question_number || idx + 1) - 1
                 const rawQ = rawQuestions[qIdx]
@@ -569,19 +581,22 @@ export function useCourseTestRunner({
                   user_answer: w.user_selected_answer,
                   correct_answer: w.correct_answer,
                   explanation: ex?.why_wrong || w.explanation || '',
-                  topic_tags: ex?.topic ? [ex.topic] : (w.category ? [w.category] : []),
                   topic_name_vi: ex?.topic || w.category || '',
                   source_context: `${testTitle} (${testType})`,
                   source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
                   source_id: courseId,
                   source_title: testTitle,
+                  domain: w.domain,
+                  context_id: w.context_id,
+                  exercise_type: w.exercise_type,
+                  grammar_knowledge_id: w.grammar_knowledge_id,
                 }
               })
 
               mistakeService.recordBatchMistakes({ mistakes: mistakePayloads }).catch(() => {})
             })
             .catch(() => {
-              const fallbackMistakes = finalWrongs.map((w, idx) => {
+              const fallbackMistakes = enrichedWrongs.map((w, idx) => {
                 const qIdx = (w.question_number || idx + 1) - 1
                 const rawQ = rawQuestions[qIdx]
                 const stableId =
@@ -598,6 +613,10 @@ export function useCourseTestRunner({
                   source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
                   source_id: courseId,
                   source_title: testTitle,
+                  domain: w.domain,
+                  context_id: w.context_id,
+                  exercise_type: w.exercise_type,
+                  grammar_knowledge_id: w.grammar_knowledge_id,
                 }
               })
               mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})
@@ -634,6 +653,7 @@ export function useCourseTestRunner({
               source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
               source_id: courseId,
               source_title: testTitle,
+              context_id: rawQ?.context_id,
             }
           })
           mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})

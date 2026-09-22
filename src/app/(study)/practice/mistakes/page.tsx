@@ -25,12 +25,15 @@ import { toast } from '@/store/toast.store'
 import { MistakeVaultCard } from '@/features/practice/components/mistake.vault.card'
 import { MistakeReviewModal } from '@/features/practice/components/mistake.review.modal'
 import { TopicDrillModal } from '@/features/practice/components/topic.drill.modal'
+import { useNavigate } from '@/lib/navigation'
 import type { UserMistakeItem } from '@/features/practice/types/mistake'
 import { MistakeStatus } from '@/features/practice/types/mistake'
 
 export default function MistakeVaultPage() {
+  const navigate = useNavigate()
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
   const [selectedTopic, setSelectedTopic] = useState<string>('ALL')
+  const [selectedDomain, setSelectedDomain] = useState<string>('ALL')
   const [activeReviewMistake, setActiveReviewMistake] = useState<UserMistakeItem | null>(null)
   const [activeDrillTopic, setActiveDrillTopic] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -42,9 +45,10 @@ export default function MistakeVaultPage() {
       status: selectedStatus !== 'ALL' && selectedStatus !== 'DUE' ? (selectedStatus as MistakeStatus) : undefined,
       due_only: selectedStatus === 'DUE' ? true : undefined,
       topic: selectedTopic !== 'ALL' ? selectedTopic : undefined,
+      domain: selectedDomain !== 'ALL' ? selectedDomain : undefined,
       limit: 50,
     }
-  }, [selectedStatus, selectedTopic])
+  }, [selectedStatus, selectedTopic, selectedDomain])
 
   const { data, isLoading, refetch } = useMyMistakesQuery(queryParams)
   const { data: dueData, refetch: refetchDue } = useDueMistakesQuery()
@@ -211,6 +215,55 @@ export default function MistakeVaultPage() {
           </button>
         </div>
 
+        {/* Domain filter buttons */}
+        <div className="flex items-center gap-1.5 border-l border-border pl-3 ml-1">
+          <span className="text-[10px] text-text-tertiary font-medium">Kỹ năng:</span>
+          <button
+            type="button"
+            onClick={() => setSelectedDomain('ALL')}
+            className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+              selectedDomain === 'ALL'
+                ? 'bg-purple-600 text-white'
+                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+            }`}
+          >
+            Tất cả
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedDomain('LISTENING')}
+            className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+              selectedDomain === 'LISTENING'
+                ? 'bg-blue-600 text-white'
+                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+            }`}
+          >
+            Nghe
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedDomain('READING')}
+            className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+              selectedDomain === 'READING'
+                ? 'bg-green-600 text-white'
+                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+            }`}
+          >
+            Đọc
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedDomain('GRAMMAR')}
+            className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+              selectedDomain === 'GRAMMAR'
+                ? 'bg-orange-600 text-white'
+                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+            }`}
+          >
+            Ngữ pháp
+          </button>
+        </div>
+
         {topicGroups.length > 0 && (
           <div className="flex items-center gap-2">
             <Filter size={14} className="text-text-tertiary shrink-0" />
@@ -260,6 +313,38 @@ export default function MistakeVaultPage() {
                 mistake={item}
                 onReview={(m) => setActiveReviewMistake(m)}
                 onDrillTopic={(topic) => setActiveDrillTopic(topic)}
+                onPracticeTopic={(m) => {
+                  const snapshot = m.classification_snapshot
+                  const domain = (snapshot?.domain || 'LISTENING').toUpperCase()
+                  const contextId = snapshot?.context_id || ''
+                  const exerciseType = snapshot?.exercise_type || ''
+                  const rawTopic = m.topic_name_vi || m.topic_tags?.[0] || ''
+                  const topicName = rawTopic && !rawTopic.startsWith('Chương') && !rawTopic.startsWith('Chapter') ? rawTopic : ''
+
+                  if (!contextId) {
+                    toast.warning('Câu hỏi này chưa được gắn chủ đề luyện tập cụ thể.')
+                    return
+                  }
+
+                  let targetUrl = '/listening'
+                  if (domain === 'SPEAKING') {
+                    targetUrl = '/speaking'
+                  } else if (domain === 'WRITING') {
+                    targetUrl = '/writing'
+                  } else if (domain === 'GRAMMAR') {
+                    targetUrl = '/grammar'
+                  } else if (domain === 'VOCABULARY') {
+                    targetUrl = '/vocabulary'
+                  }
+
+                  const params = new URLSearchParams()
+                  if (contextId) params.set('context_id', contextId)
+                  if (exerciseType) params.set('exercise_type', exerciseType)
+                  if (topicName) params.set('topic_name', topicName)
+
+                  const queryString = params.toString()
+                  navigate(queryString ? `${targetUrl}?${queryString}` : targetUrl)
+                }}
                 onDelete={handleDeleteMistake}
                 isDeleting={deletingId === item._id}
               />

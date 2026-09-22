@@ -25,6 +25,7 @@ interface MistakeVaultCardProps {
   mistake: UserMistakeItem
   onReview: (mistake: UserMistakeItem) => void
   onDrillTopic: (topicTag: string) => void
+  onPracticeTopic?: (mistake: UserMistakeItem) => void
   onDelete?: (mistake: UserMistakeItem) => void
   isDeleting?: boolean
 }
@@ -39,7 +40,7 @@ function isMatchingAnswer(opt: string, optIndex: number, targetAnswer: string): 
   return opt.trim().toLowerCase() === trimmedTarget.toLowerCase()
 }
 
-export function MistakeVaultCard({ mistake, onReview, onDrillTopic, onDelete, isDeleting }: MistakeVaultCardProps) {
+export function MistakeVaultCard({ mistake, onReview, onDrillTopic, onPracticeTopic, onDelete, isDeleting }: MistakeVaultCardProps) {
   const [showAnswers, setShowAnswers] = useState(false)
   const [showExplanation, setShowExplanation] = useState(false)
 
@@ -276,7 +277,13 @@ export function MistakeVaultCard({ mistake, onReview, onDrillTopic, onDelete, is
           )}
 
           <Button
-            onClick={() => onDrillTopic(displayTopic)}
+            onClick={() => {
+              if (onPracticeTopic) {
+                onPracticeTopic(mistake)
+              } else {
+                onDrillTopic(displayTopic)
+              }
+            }}
             variant="outline"
             size="sm"
             className="text-xs border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/50 cursor-pointer h-8 gap-1"
