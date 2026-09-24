@@ -135,6 +135,7 @@ export const API_CONFIG = {
       SRS_DUE: '/practice/srs/due',
       SRS_REVIEW: '/practice/srs/review',
       LISTENING: '/practice/listening/exercises',
+      LISTENING_PRACTICE_ITEMS: '/practice/listening/practice-items',
       LISTENING_BY_ID: (id: string) => `/practice/listening/exercises/${id}`,
       LISTENING_DICTATION_SUBMIT: '/practice/listening/dictation/submit',
       SPEAKING: '/practice/speaking/exercises',
@@ -145,10 +146,6 @@ export const API_CONFIG = {
       WRITING_BY_ID: (id: string) => `/practice/writing/exercises/${id}`,
       WRITING_SUBMIT: '/practice/writing/submissions/submit',
       WRITING_EVALUATE: '/ai/evaluations/evaluate',
-      DAILY_PROMPT: '/practice/writing/journal/daily-prompt',
-      DAILY_JOURNAL_SUBMIT: '/practice/writing/journal/submit',
-      DAILY_JOURNAL_HISTORY: '/practice/writing/journal/history',
-      MY_PRACTICE_PROFILE: '/practice/profile/my',
       MISTAKES_RECORD_BATCH: '/practice/mistakes/record-batch',
       MISTAKES_MY: '/practice/mistakes/my',
       MISTAKES_DUE: '/practice/mistakes/srs-due',
@@ -172,6 +169,19 @@ export const API_CONFIG = {
       MARK_READ: (id: string) => `/notifications/${id}/read`,
       MARK_ALL_READ: '/notifications/my/read-all',
       PREFERENCES: '/notifications/preferences/my',
+    },
+
+    MEDIA: {
+      GET_BY_ID: (id: string) => `/media/files/${id}`,
+      STREAM: (storageKey: string) => `/media/stream/${storageKey}`,
+    },
+
+    CONTEXT: {
+      LIST: '/practice/contexts',
+      TREE: '/practice/contexts/tree',
+      SEARCH: '/practice/contexts/search',
+      LISTENING_STATS: '/practice/contexts/listening-stats',
+      BREADCRUMB: (id: string) => `/practice/contexts/${id}/breadcrumb`,
     },
 
     COMMUNITY: {

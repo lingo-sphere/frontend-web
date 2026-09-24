@@ -12,6 +12,10 @@ export interface CourseTestQuestion {
   image_url?: string
   skill_type?: string
   part_number?: number
+  domain?: string
+  exercise_type?: string
+  grammar_knowledge_id?: string
+  context_id?: string
 }
 
 export interface GradedQuestionItem {
@@ -42,6 +46,10 @@ export interface WrongQuestionItem {
   correct_answer: string
   category?: string
   explanation?: string
+  domain?: string
+  exercise_type?: string
+  context_id?: string
+  grammar_knowledge_id?: string
 }
 
 export interface AiExplanationDetail {

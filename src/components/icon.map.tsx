@@ -73,6 +73,7 @@ import {
   Settings,
   Shield,
   ShieldCheck,
+  Shuffle,
   Snowflake,
   Sparkles,
   Star,
@@ -80,9 +81,11 @@ import {
   Tag,
   Tags,
   Target,
+  Train,
   TrendingUp,
   Trophy,
   Type,
+  Utensils,
   UserCheck,
   UserCircle2,
   Users,
@@ -95,6 +98,7 @@ import {
   MessageSquare,
   Send,
   LogOut,
+  ShoppingBag,
 } from 'lucide-react'
 
 const iconMap: Record<string, LucideIcon> = {
@@ -180,6 +184,7 @@ const iconMap: Record<string, LucideIcon> = {
   settings: Settings,
   shield: Shield,
   shieldCheck: ShieldCheck,
+  shuffle: Shuffle,
   snowflake: Snowflake,
   sparkles: Sparkles,
   star: Star,
@@ -188,9 +193,11 @@ const iconMap: Record<string, LucideIcon> = {
   tags: Tags,
   target: Target,
   tool: Settings,
+  train: Train,
   trendingUp: TrendingUp,
   trophy: Trophy,
   type: Type,
+  utensils: Utensils,
   user: UserCircle2,
   userCheck: UserCheck,
   users: Users,
@@ -200,6 +207,7 @@ const iconMap: Record<string, LucideIcon> = {
   x: X,
   xCircle: XCircle,
   zapOff: ZapOff,
+  shoppingBag: ShoppingBag,
 }
 
 interface IconProps {

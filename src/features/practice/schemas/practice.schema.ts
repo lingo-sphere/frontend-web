@@ -5,6 +5,14 @@
 
 import { z } from 'zod'
 
+// Pagination schema - khai báo TRƯỚC
+export const PaginationSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+  total: z.number(),
+  totalPages: z.number(),
+})
+
 export const BackendListeningExerciseSchema = z.object({
   _id: z.string(),
   title: z.string(),
@@ -23,6 +31,54 @@ export const BackendListeningExerciseSchema = z.object({
 }).passthrough()
 
 export const BackendListeningExerciseListSchema = z.array(BackendListeningExerciseSchema)
+
+export const BackendListeningExercisePaginatedSchema = z.object({
+  items: z.array(BackendListeningExerciseSchema),
+  pagination: PaginationSchema,
+})
+
+// PracticeItem schema cho Listening
+export const BackendListeningPracticeItemSchema = z.object({
+  _id: z.string(),
+  domain: z.string().default('LISTENING'),
+  question_type: z.string().default('MULTIPLE_CHOICE'),
+  exercise_type: z.string().default('PICTURE_DESCRIPTION'),
+  question_text_en: z.string().optional(),
+  question_text_vi: z.string().optional(),
+  instruction_en: z.string().optional(),
+  instruction_vi: z.string().optional(),
+  question_data: z.object({
+    options: z.array(z.object({
+      key: z.string(),
+      text: z.string(),
+      is_correct: z.boolean(),
+    })).optional(),
+    explanation: z.string().optional(),
+    explanation_vi: z.string().optional(),
+  }).optional(),
+  listening_exercise_id: z.string().optional(),
+  media_id: z.string().optional(),
+  difficulty_level: z.string().default('MEDIUM'),
+  cefr_level: z.string().default('B1'),
+  context_id: z.string().optional(),
+  status: z.string().default('PUBLISHED'),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  // Merged fields from ListeningExercise
+  audio_media_id: z.string().optional(),
+  audio_duration: z.number().optional(),
+}).passthrough()
+
+export const BackendListeningPracticeItemListSchema = z.array(BackendListeningPracticeItemSchema)
+
+export const BackendListeningPracticeItemPaginatedSchema = z.object({
+  items: z.array(BackendListeningPracticeItemSchema),
+  pagination: PaginationSchema,
+})
+
+// Inferred types
+export type BackendListeningPracticeItem = z.infer<typeof BackendListeningPracticeItemSchema>
+export type BackendListeningPracticeItemPaginated = z.infer<typeof BackendListeningPracticeItemPaginatedSchema>
 
 export const BackendSpeakingExerciseSchema = z.object({
   _id: z.string(),
@@ -93,16 +149,8 @@ export const WritingEvaluationResponseSchema = z.object({
   improved_essay: z.string().default(''),
 }).passthrough()
 
-export const DailyJournalPromptSchema = z.object({
-  id: z.string(),
-  topic_vi: z.string(),
-  topic_en: z.string(),
-  date: z.string(),
-}).passthrough()
-
 export type BackendListeningExercise = z.infer<typeof BackendListeningExerciseSchema>
 export type BackendSpeakingExercise = z.infer<typeof BackendSpeakingExerciseSchema>
 export type BackendWritingExercise = z.infer<typeof BackendWritingExerciseSchema>
 export type SpeechAssessmentResult = z.infer<typeof SpeechAssessmentResultSchema>
 export type WritingEvaluationResponse = z.infer<typeof WritingEvaluationResponseSchema>
-export type DailyJournalPrompt = z.infer<typeof DailyJournalPromptSchema>

@@ -298,6 +298,29 @@ export function CourseTestRunnerWorkspace({
                     navigate(slugOrId.startsWith('/') ? slugOrId : `/course/${slugOrId}`)
                   }
                   onDrillTopic={(topic) => setDrillTopic(topic)}
+                  onPracticeTopic={(item) => {
+                    const domain = (item.domain || 'LISTENING').toUpperCase()
+                    const contextId = item.context_id || ''
+                    const exerciseType = item.exercise_type || ''
+
+                    let targetUrl = '/listening'
+                    if (domain === 'SPEAKING') {
+                      targetUrl = '/speaking'
+                    } else if (domain === 'WRITING') {
+                      targetUrl = '/writing'
+                    } else if (domain === 'GRAMMAR') {
+                      targetUrl = '/grammar'
+                    } else if (domain === 'VOCABULARY') {
+                      targetUrl = '/vocabulary'
+                    }
+
+                    const params = new URLSearchParams()
+                    if (contextId) params.set('context_id', contextId)
+                    if (exerciseType) params.set('exercise_type', exerciseType)
+
+                    const queryString = params.toString()
+                    navigate(queryString ? `${targetUrl}?${queryString}` : targetUrl)
+                  }}
                   onOpenMistakeVault={() => navigate('/practice/mistakes')}
                 />
               )}
