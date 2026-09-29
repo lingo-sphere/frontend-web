@@ -92,7 +92,6 @@ export default function ListeningAppPage() {
       <section className="mt-6">
         <ListeningContextNavigation
           isVietnamese={isVietnamese}
-          onSelectExercise={handleSelectExercise}
           onSelectContext={handlePracticeByContext}
           onSelectRandom={handlePracticeRandom}
         />

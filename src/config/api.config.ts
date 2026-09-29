@@ -152,6 +152,11 @@ export const API_CONFIG = {
       MISTAKE_REVIEW: (id: string) => `/practice/mistakes/${id}/review`,
       MISTAKE_DELETE: (id: string) => `/practice/mistakes/${id}`,
       TOPIC_DRILL: '/practice/topic-drill',
+      READING_PASSAGES: '/practice/reading/passages',
+      READING_PASSAGE_BY_ID: (id: string) => `/practice/reading/passages/${id}`,
+      READING_PASSAGE_QUESTIONS: (passageId: string) => `/practice/reading/passages/${passageId}/questions`,
+      READING_SUBMIT_ATTEMPT: '/practice/reading/attempts',
+      READING_ATTEMPT_HISTORY: '/practice/reading/attempts',
     },
 
     AI: {
