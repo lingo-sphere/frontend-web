@@ -61,7 +61,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const { mutate: markNotificationAsRead } =
     useMarkNotificationAsReadMutation();
   const { data: gamification } = useGamificationProfileQuery(isAuthenticated);
-  const gems = gamification?.gems ?? user?.xp ?? 0;
   const streak = gamification?.current_streak ?? user?.streak_count ?? 0;
 
   const handleMouseEnter = (
@@ -107,7 +106,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             mounted={mounted}
             isPremium={Boolean(user?.is_premium)}
             isVi={isVi}
-            gems={gems}
             streak={streak}
             onAction={onAction}
             onOpenUpgrade={() => setUpgradeOpen(true)}

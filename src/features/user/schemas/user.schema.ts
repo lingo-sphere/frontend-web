@@ -48,7 +48,6 @@ export const GamificationProfileSchema = z.object({
   current_streak: z.number().default(0),
   longest_streak: z.number().default(0),
   streak_freezes_left: z.number().optional(),
-  gems: z.number().optional(),
   league: z.string().optional(),
 }).passthrough()
 

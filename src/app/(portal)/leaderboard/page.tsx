@@ -32,9 +32,9 @@ export default function LeaderboardAppPage() {
   const [leaderboardType, setLeaderboardType] = useState<LeaderboardType>('streak')
 
   const defaultRewards: MonthlyReward[] = [
-    { rank: 1, diamonds: 500, specialBadge: 'Quán quân' },
-    { rank: 2, diamonds: 300, specialBadge: 'Á quân' },
-    { rank: 3, diamonds: 150, specialBadge: 'Top 3' },
+    { rank: 1, xp_reward: 500, specialBadge: 'Quán quân' },
+    { rank: 2, xp_reward: 300, specialBadge: 'Á quân' },
+    { rank: 3, xp_reward: 150, specialBadge: 'Top 3' },
   ]
 
   const { data: rawEntries = [], isLoading } = useLeaderboardQuery('weekly')
@@ -49,7 +49,6 @@ export default function LeaderboardAppPage() {
       totalMinutes: 60 + idx * 10,
       questionsAnswered: 20 + idx * 5,
       wordsLearned: 15 + idx * 3,
-      diamonds: 50,
       freezes: 1,
       isCurrentUser: Boolean(entry.is_current_user ?? (idx === 0)),
     }))
