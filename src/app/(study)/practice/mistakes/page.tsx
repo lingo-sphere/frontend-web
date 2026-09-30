@@ -16,6 +16,7 @@ import {
   BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/button'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import {
   useMyMistakesQuery,
   useDueMistakesQuery,
@@ -30,6 +31,7 @@ import type { UserMistakeItem } from '@/features/practice/types/mistake'
 import { MistakeStatus } from '@/features/practice/types/mistake'
 
 export default function MistakeVaultPage() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const navigate = useNavigate()
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
   const [selectedTopic, setSelectedTopic] = useState<string>('ALL')
@@ -50,8 +52,8 @@ export default function MistakeVaultPage() {
     }
   }, [selectedStatus, selectedTopic, selectedDomain])
 
-  const { data, isLoading, refetch } = useMyMistakesQuery(queryParams)
-  const { data: dueData, refetch: refetchDue } = useDueMistakesQuery()
+  const { data, isLoading, refetch } = useMyMistakesQuery(queryParams, isAuthenticated)
+  const { data: dueData, refetch: refetchDue } = useDueMistakesQuery(isAuthenticated)
 
   const mistakes = data?.items || []
   const summary = data?.summary || {

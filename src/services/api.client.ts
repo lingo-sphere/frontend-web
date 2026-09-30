@@ -80,6 +80,13 @@ apiClient.interceptors.response.use(
         return Promise.reject(new Error(errorMsg || 'Thông tin xác thực không chính xác'))
       }
 
+      const existingAccessToken = storage.get(STORAGE_KEYS.ACCESS_TOKEN) || storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
+      const existingRefreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+
+      if (!existingAccessToken && !existingRefreshToken) {
+        return Promise.reject(error)
+      }
+
       if (!originalRequest._retry) {
         if (isRefreshing) {
           return new Promise<string>((resolve, reject) => {
