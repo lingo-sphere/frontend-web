@@ -13,6 +13,7 @@ import { getRemainingSubscriptionText } from '@/layouts/app.header'
 import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface HeaderUserHoverProps {
+  isOpen: boolean
   onClose?: () => void
   onLanguageToggle?: () => void
   currentLanguage?: 'VI' | 'EN'
@@ -20,6 +21,7 @@ interface HeaderUserHoverProps {
 }
 
 export function HeaderUserHover({
+  isOpen,
   onClose,
   onLanguageToggle,
   currentLanguage = 'VI',
@@ -58,7 +60,13 @@ export function HeaderUserHover({
   }
 
   return (
-    <div className="absolute right-0 top-full pt-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+    <div
+      className={`absolute right-0 top-full pt-2 z-50 transition-all duration-200 ease-out origin-top-right ${
+        isOpen
+          ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
+          : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
+      }`}
+    >
       <div className="w-72 sm:w-80 max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl text-left divide-y divide-border scrollbar-thin">
         
         <div

@@ -121,14 +121,13 @@ export function HeaderUserSection({
         <TooltipContent>{isVi ? 'Đăng xuất' : 'Log out'}</TooltipContent>
       </Tooltip>
 
-      {isHovered && (
-        <HeaderUserHover
-          onClose={onCloseHover}
-          onLanguageToggle={onLanguageToggle}
-          currentLanguage={currentLanguage}
-          onOpenUpgrade={onOpenUpgrade}
-        />
-      )}
+      <HeaderUserHover
+        isOpen={isHovered}
+        onClose={onCloseHover}
+        onLanguageToggle={onLanguageToggle}
+        currentLanguage={currentLanguage}
+        onOpenUpgrade={onOpenUpgrade}
+      />
     </div>
   )
 }

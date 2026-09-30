@@ -21,7 +21,11 @@ interface LearningCourseItem {
   progress: number
 }
 
-export function HeaderMyLearningHover() {
+interface HeaderMyLearningHoverProps {
+  isOpen: boolean
+}
+
+export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
@@ -83,7 +87,14 @@ export function HeaderMyLearningHover() {
   }, [isAuthenticated])
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 sm:w-[340px] rounded-2xl border border-border bg-surface shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+    <div
+      className={`absolute right-0 top-full pt-2 z-50 transition-all duration-200 ease-out origin-top-right ${
+        isOpen
+          ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
+          : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
+      }`}
+    >
+      <div className="w-80 sm:w-[340px] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden text-left">
       {loading ? (
         <div className="p-8 text-center flex items-center justify-center gap-2 text-xs text-text-secondary">
           <Loader2 size={16} className="animate-spin text-primary" />
@@ -153,6 +164,7 @@ export function HeaderMyLearningHover() {
           </div>
         </>
       )}
+      </div>
     </div>
   )
 }
