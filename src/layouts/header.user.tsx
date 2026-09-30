@@ -1,8 +1,4 @@
-/**
- * @file header.user.tsx
- * @description Component hiển thị thông tin học viên, nút nâng cấp và đăng nhập/đăng xuất trên Header
- */
-
+// Component hiển thị thông tin học viên, nút nâng cấp và đăng nhập/đăng xuất trên Header.
 'use client'
 
 import { Button } from '@/components/button'
@@ -12,6 +8,7 @@ import { useNavigate } from '@/lib/navigation'
 import { HeaderUserHover } from '@/layouts/header.user.hover'
 import { getRemainingSubscriptionText } from '@/layouts/header.utils'
 import type { User } from '@/types/api.types'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface HeaderUserSectionProps {
   mounted: boolean
@@ -76,7 +73,7 @@ export function HeaderUserSection({
       >
         <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs ring-2 ring-primary/20 overflow-hidden shrink-0 shadow-xs">
           {user.avatar_url ? (
-            <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
+            <img src={resolveMediaUrl(user.avatar_url)} alt={user.full_name} className="h-full w-full object-cover" />
           ) : (
             user.full_name?.charAt(0)?.toUpperCase() || 'U'
           )}

@@ -2,7 +2,7 @@
 
 'use client'
 
-import { Sparkles, GraduationCap, ArrowRight, BookOpen, RotateCcw, Trophy, Compass } from 'lucide-react'
+import { Sparkles, GraduationCap, ArrowRight, BookOpen, RotateCcw, Trophy, Compass, Users } from 'lucide-react'
 import { Button } from '@/components/button'
 import type { Course } from '@/types/api.types'
 
@@ -79,6 +79,10 @@ export function TestRunnerNextCourses({
                     <p className="text-[10.5px] text-indigo-600 dark:text-indigo-400 mt-1 line-clamp-1">
                       💡 {c.recommendation_reason || 'Khóa học cấp độ kế tiếp phù hợp cho bạn'}
                     </p>
+                    <div className="flex items-center gap-1 mt-1 text-[10px] text-text-tertiary">
+                      <Users size={11} className="text-indigo-500 shrink-0" />
+                      <span>{Number(c.students_count || 0).toLocaleString('vi-VN')} học viên</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-border/60 pt-2">

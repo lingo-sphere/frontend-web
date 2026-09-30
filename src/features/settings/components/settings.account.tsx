@@ -1,8 +1,4 @@
-/**
- * @file settings.account.tsx
- * @description Component tab cài đặt tài khoản cá nhân và đổi mật khẩu bảo mật
- */
-
+// Component tab cài đặt tài khoản cá nhân và đổi mật khẩu bảo mật.
 'use client'
 
 import { useState } from 'react'
@@ -19,6 +15,7 @@ import { Input } from '@/components/input'
 import { authService } from '@/features/auth/services/auth.service'
 import { toast } from '@/store/toast.store'
 import type { User } from '@/types/api.types'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface SettingsAccountTabProps {
   fullName: string
@@ -108,7 +105,7 @@ export function SettingsAccountTab({
           <div className="flex items-center gap-4">
             <div className="relative h-16 w-16 rounded-full bg-slate-900 text-white font-bold text-xl flex items-center justify-center overflow-hidden ring-4 ring-primary/20 shadow-md shrink-0">
               {authUser?.avatar_url ? (
-                <img src={authUser.avatar_url} alt={authUser.full_name} className="h-full w-full object-cover" />
+                <img src={resolveMediaUrl(authUser.avatar_url)} alt={authUser.full_name} className="h-full w-full object-cover" />
               ) : (
                 <span>{initials}</span>
               )}

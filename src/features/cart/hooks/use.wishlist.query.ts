@@ -19,7 +19,7 @@ export const mapWishlistItemToCourseCard = (item: WishlistItem): CourseCardData 
   duration: '10 giờ',
   totalLessons: 0,
   chapters: 0,
-  students: 0,
+  students: item.students_count ?? 0,
   rating: 4.8,
   ratingCount: 0,
 })

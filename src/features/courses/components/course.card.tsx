@@ -13,6 +13,7 @@ import {
   Check,
   Loader2,
   Crown,
+  Users,
 } from 'lucide-react'
 import type { CourseCardData } from '@/features/courses/types/course'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -283,6 +284,13 @@ export function CourseCard({
             {course.ratingCount > 0
               ? `${formatNumber(course.ratingCount)} ${isVi ? 'đánh giá' : 'ratings'}`
               : isVi ? 'Mới' : 'New'}
+          </span>
+
+          <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary flex items-center gap-1">
+            <Users size={10} className="text-indigo-500 shrink-0" />
+            <span suppressHydrationWarning>
+              {formatNumber(course.students)} {isVi ? 'học viên' : 'students'}
+            </span>
           </span>
 
           <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">

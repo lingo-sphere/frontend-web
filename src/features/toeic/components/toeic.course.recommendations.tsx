@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Target,
   Lightbulb,
+  Users,
 } from 'lucide-react'
 import { Card } from '@/components/card'
 import { Button } from '@/components/button'
@@ -119,6 +120,11 @@ export function ToeicCourseRecommendations({
                     <div className="mt-2 flex items-start gap-1.5 rounded-lg bg-indigo-50/60 p-2 text-[11px] leading-relaxed text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
                       <Lightbulb className="w-3.5 h-3.5 shrink-0 text-indigo-500 mt-0.5" />
                       <span>{course.recommendation_reason || 'Khóa học được tối ưu cho khung điểm của bạn'}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 mt-2 text-[10px] text-text-tertiary">
+                      <Users size={11} className="text-indigo-500 shrink-0" />
+                      <span>{Number(course.students_count || 0).toLocaleString('vi-VN')} {isVietnamese ? 'học viên' : 'students'}</span>
                     </div>
                   </div>
 

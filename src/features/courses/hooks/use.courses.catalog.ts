@@ -150,7 +150,7 @@ export function useCoursesCatalog() {
         chapters:
           Number(raw.total_modules) ||
           (Array.isArray(c.chapters) ? c.chapters.length : 0),
-        students: Number(raw.students_count || raw.enrollments || 0),
+        students: Number(c.students_count ?? raw.students_count ?? 0),
         rating: Number(raw.rating || raw.rating_avg || 5.0),
         ratingCount: Number(raw.rating_count || raw.reviews_count || 0),
         price: finalPrice,

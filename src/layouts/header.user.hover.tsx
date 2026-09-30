@@ -10,6 +10,7 @@ import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
 import { Icon } from '@/components/icon.map'
 import { getRemainingSubscriptionText } from '@/layouts/app.header'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface HeaderUserHoverProps {
   onClose?: () => void
@@ -67,7 +68,7 @@ export function HeaderUserHover({
           <div className="relative shrink-0">
             <div className="h-13 w-13 rounded-full bg-slate-900 dark:bg-slate-800 text-white font-bold text-base flex items-center justify-center shadow-md overflow-hidden ring-2 ring-primary/20">
               {user.avatar_url ? (
-                <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
+                <img src={resolveMediaUrl(user.avatar_url)} alt={user.full_name} className="h-full w-full object-cover" />
               ) : (
                 <span>{initials}</span>
               )}

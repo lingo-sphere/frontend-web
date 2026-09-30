@@ -10,7 +10,7 @@ import { CourseExamLoadingState } from '@/features/courses/components/course.exa
 import type { Course, Chapter } from '@/features/courses/types/course'
 import type { TestAttemptItem } from '@/features/courses/types/test.runner.types'
 import { Button } from '@/components/button'
-import { AlertCircle, ArrowLeft } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Lock } from 'lucide-react'
 import { extractCourseId, buildCourseUrl } from '@/features/courses/lib/course.url'
 import { getQueryClient } from '@/config/query.config'
 import { progressKeys } from '@/features/progress/keys/progress.keys'
@@ -80,6 +80,34 @@ function CourseExamContent() {
           <h2 className="text-xl font-bold text-text-primary">Không thể mở bài thi</h2>
           <p className="text-sm text-text-secondary leading-relaxed">
             Dữ liệu khóa học chưa sẵn sàng để làm bài thi.
+          </p>
+          <div className="pt-2">
+            <Button
+              onClick={handleBackToCourse}
+              className="w-full bg-primary text-white font-bold rounded-xl gap-2 cursor-pointer shadow-md"
+            >
+              <ArrowLeft size={16} />
+              <span>Quay lại khóa học</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const isFree = !fetchedCourse?.price || fetchedCourse.price === 0
+  const hasAccess = isEnrolled || isFree
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-6 antialiased">
+        <div className="w-full max-w-md p-8 bg-surface rounded-3xl border border-border shadow-xl text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+            <Lock size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-text-primary">Khóa học chưa được mở khóa</h2>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Bài thi này chỉ dành cho học viên đã đăng ký hoặc mua khóa học. Vui lòng mở khóa khóa học để tham gia làm bài thi.
           </p>
           <div className="pt-2">
             <Button
