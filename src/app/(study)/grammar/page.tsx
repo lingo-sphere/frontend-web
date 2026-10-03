@@ -15,6 +15,7 @@ import type { BackendGrammarPoint } from '@/features/vocabulary/services/vocabul
 import { useGrammarPointsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 import { grammarPracticeService } from '@/features/practice/services/grammar-practice.service'
 import { GrammarWorkspace } from '@/features/practice/components/grammar.workspace'
+import { useSearchParams } from '@/lib/navigation'
 import type {
   GrammarLevelSummary,
   GrammarTopicItem,
@@ -125,12 +126,20 @@ export default function GrammarAppPage() {
   const user = useAuthStore((s) => s.user)
   const userId = user?.user_id
 
+  const searchParams = useSearchParams()
+  const urlSearch = searchParams.get('search')
+  const urlLevel = searchParams.get('level') as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | null
+
   // Mode: 'practice' (Luyện tập) | 'handbook' (Tra cứu lý thuyết)
-  const [activeTab, setActiveTab] = useState<'practice' | 'handbook'>('practice')
+  const [activeTab, setActiveTab] = useState<'practice' | 'handbook'>(
+    urlSearch ? 'handbook' : 'practice'
+  )
 
   // PRACTICE STATE
   const [levels, setLevels] = useState<GrammarLevelSummary[]>([])
-  const [selectedLevel, setSelectedLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>('A1')
+  const [selectedLevel, setSelectedLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>(
+    urlLevel || 'A1'
+  )
   const [topics, setTopics] = useState<GrammarTopicItem[]>([])
   const [isLoadingTopics, setIsLoadingTopics] = useState(false)
   const [startingSessionTopicId, setStartingSessionTopicId] = useState<string | null>(null)
@@ -139,7 +148,7 @@ export default function GrammarAppPage() {
   // HANDBOOK STATE
   const { data: grammarItems = [], isLoading: isLoadingHandbook } = useGrammarPointsQuery()
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(urlSearch || '')
   const [currentPage, setCurrentPage] = useState(1)
 
   // Load levels

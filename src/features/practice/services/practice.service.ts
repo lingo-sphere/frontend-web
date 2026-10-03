@@ -128,4 +128,23 @@ export const practiceService = {
   async submitWritingSubmission(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
     return api.post(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMIT, payload)
   },
-}
+
+  async getMyWritingSubmissions(exerciseId?: string): Promise<any> {
+    const url = exerciseId
+      ? `${API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS}?exercise_id=${exerciseId}`
+      : API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS;
+    return api.get<any>(url);
+  },
+
+  async getWritingSubmissionById(id: string): Promise<any> {
+    return api.get<any>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMISSION_BY_ID(id));
+  },
+
+  async getSubmissionComparison(id: string): Promise<any> {
+    return api.get<any>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMISSION_COMPARISON(id));
+  },
+
+  async getWritingRecommendations(userId: string, limit = 4): Promise<any> {
+    return api.get<any>(`${API_CONFIG.ENDPOINTS.PRACTICE.WRITING_RECOMMENDATIONS(userId)}?limit=${limit}`);
+  },
+};

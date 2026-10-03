@@ -121,3 +121,148 @@ export interface ReadingAttemptResult {
   status: string
   completed_at: string
 }
+
+// ============================================================================
+// Enhanced Reading Result Types (from AI + Context integration)
+// ============================================================================
+
+export interface ContextInfo {
+  id: string
+  code: string
+  name_en: string
+  name_vi?: string
+  path_string?: string
+  cefr_level?: string
+}
+
+export interface SkillBreakdownItem {
+  exercise_type: string
+  label_en: string
+  label_vi: string
+  correct: number
+  total: number
+  percent: number
+  status: 'excellent' | 'good' | 'needs_improvement'
+}
+
+export interface WrongAnswerItem {
+  question_number: number
+  question_text: string
+  exercise_type: string
+  user_answer: string
+  correct_answer: string
+  explanation?: string
+  explanation_vi?: string
+  // AI enhancement fields (populated async)
+  why_wrong?: string
+  why_correct?: string
+  recommended_topic?: string
+  study_focus?: string
+  trap_identified?: string
+}
+
+export interface AIReadingExplanation {
+  summary?: string
+  overall_advice?: string
+  explanations?: WrongAnswerItem[]
+}
+
+export interface ReadingAttemptResultEnhanced {
+  // Basic stats
+  attempt_id: string
+  score_percent: number
+  correct_count: number
+  total_questions: number
+  time_spent_seconds: number
+
+  // Passage info
+  passage_id: string
+  passage_title: string
+  passage_title_vi?: string
+  reading_type?: string
+  cefr_level?: string
+  difficulty_level?: string
+
+  // Context info
+  context?: ContextInfo
+
+  // Skill breakdown
+  skill_breakdown: SkillBreakdownItem[]
+
+  // Wrong answers
+  wrong_answers: WrongAnswerItem[]
+  wrong_count: number
+
+  // AI explanation status
+  ai_explanation_status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null
+
+  // Weakest area
+  weakest_skill?: string
+  weakest_skill_vi?: string
+
+  // Profile update status
+  profile_updated: boolean
+}
+
+// ============================================================================
+// Reading Skill Profile Types
+// ============================================================================
+
+export interface ReadingSkillProfile {
+  // Overview
+  total_attempts: number
+  total_questions: number
+  overall_accuracy: number
+  avg_score_percent: number
+  estimated_cefr: string
+
+  // Weekly trend
+  weekly_accuracy: number[]
+  weekly_trend: 'IMPROVING' | 'STABLE' | 'DECLINING'
+
+  // By passage type
+  by_passage_type: Record<string, {
+    total: number
+    correct: number
+    accuracy: number
+  }>
+
+  // By CEFR level
+  by_level: Record<string, {
+    total: number
+    correct: number
+    accuracy: number
+  }>
+
+  // By reading skill
+  by_skill: Record<string, {
+    correct: number
+    total: number
+    accuracy: number
+  }>
+
+  // By context (NEW)
+  by_context: Record<string, {
+    context_name: string
+    context_name_vi?: string
+    context_code: string
+    total_passages: number
+    total_attempts: number
+    correct: number
+    accuracy: number
+    last_practiced_at?: Date
+    trend: 'IMPROVING' | 'STABLE' | 'DECLINING'
+  }>
+
+  // Weaknesses
+  weakest_skill?: string
+  weakest_skill_vi?: string
+  weakest_contexts: Array<{
+    context_id: string
+    context_name: string
+    context_name_vi?: string
+    accuracy: number
+    total_attempts: number
+    recommended_action: string
+  }>
+}

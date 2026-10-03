@@ -88,7 +88,7 @@ export function resolveImageUrl(url?: string | null): string {
   }
 
   // Nếu là relative path, ghép với R2 URL
-  if (trimmed.startsWith('/') || trimmed.startsWith('images/') || trimmed.startsWith('media/')) {
+  if (trimmed.startsWith('/') || trimmed.startsWith('images/') || trimmed.startsWith('media/') || trimmed.startsWith('practice/')) {
     const cleanPath = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed
     return `${R2_PUBLIC_URL}/${cleanPath}`
   }

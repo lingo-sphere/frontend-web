@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2, TrendingUp } from 'lucide-react'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useNavigate } from '@/lib/navigation'
@@ -12,10 +12,13 @@ import { ProgressCoursesTab } from '@/features/progress/components/progress.cour
 import { ProgressSkillsTab } from '@/features/progress/components/progress.skills.tab'
 import { ProgressRecentTestsTab } from '@/features/progress/components/progress.recent.tests.tab'
 import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
+import { progressService } from '@/features/progress/services/progress.service'
+import type { SkillsSummary } from '@/features/progress/services/progress.service'
 
 export default function ProgressAppPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'SKILLS' | 'RECENT_TESTS' | 'GROWTH_ANALYTICS'>('OVERVIEW')
+  const [skillsSummary, setSkillsSummary] = useState<SkillsSummary | null>(null)
 
   const {
     isLoading,
@@ -27,6 +30,19 @@ export default function ProgressAppPage() {
     listeningScore,
     readingScore,
   } = useProgressData(navigate)
+
+  // Fetch skills analytics summary
+  useEffect(() => {
+    const currentUserId = (activeUser as any)?.user_id || (activeUser as any)?.id || (activeUser as any)?._id
+    if (currentUserId) {
+      const userId = currentUserId
+      progressService.getSkillsSummary(userId, '7d').then((data) => {
+        setSkillsSummary(data)
+      }).catch(() => {
+        setSkillsSummary(null)
+      })
+    }
+  }, [activeUser])
 
   const formatDate = (isoString?: string) => {
     if (!isoString) return 'Chưa có'
@@ -116,7 +132,9 @@ export default function ProgressAppPage() {
           listeningScore={listeningScore}
           readingScore={readingScore}
           vocabStats={vocabStats}
+          skillsSummary={skillsSummary}
           onNavigate={navigate}
+          userId={(activeUser as any)?.user_id || (activeUser as any)?.id || (activeUser as any)?._id || ''}
         />
       ) : activeTab === 'RECENT_TESTS' ? (
         <ProgressRecentTestsTab

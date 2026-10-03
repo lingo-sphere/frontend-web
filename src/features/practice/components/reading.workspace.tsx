@@ -5,78 +5,69 @@
 
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Icon } from '@/components/icon.map'
 import { Button } from '@/components/button'
-import { Card, CardContent } from '@/components/card'
 import { VocabQuickPopover } from './vocab.quick.popover'
+import { WritingTimer } from '@/features/practice/components/writing.timer'
 import type {
   ReadingPassage,
   ReadingQuestion,
   ReadingType,
-  TimerPresetMode,
-  ReadingAttemptResult,
+  ReadingAttemptResultEnhanced,
+  AIReadingExplanation,
+  SkillBreakdownItem,
+  WrongAnswerItem,
 } from '../types/reading'
 import { readingPracticeService } from '../services/reading-practice.service'
 
 interface ReadingWorkspaceProps {
   passage: ReadingPassage
+  timeLimitSeconds: number
   onBack: () => void
   onComplete?: () => void
 }
 
-export function ReadingWorkspace({ passage, onBack, onComplete }: ReadingWorkspaceProps) {
+export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete }: ReadingWorkspaceProps) {
   const readingType: ReadingType = passage.reading_type || 'PART_7'
   const questions: ReadingQuestion[] = passage.questions || []
 
-  // Timer & Preset States
-  const [timerPreset, setTimerPreset] = useState<TimerPresetMode>('STANDARD')
-  const [timeLeft, setTimeLeft] = useState<number>(0)
-  const [isTimerActive, setIsTimerActive] = useState<boolean>(true)
+  // Timer State
   const [elapsedTime, setElapsedTime] = useState<number>(0)
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false)
 
   // Question & Answers State
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(0)
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-  const [attemptResult, setAttemptResult] = useState<ReadingAttemptResult | null>(null)
+  const [attemptResult, setAttemptResult] = useState<ReadingAttemptResultEnhanced | null>(null)
   const [showResultModal, setShowResultModal] = useState<boolean>(false)
+
+  // AI Explanation State
+  const [aiExplanation, setAiExplanation] = useState<AIReadingExplanation | null>(null)
+  const [aiExplanationStatus, setAiExplanationStatus] = useState<'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null>(null)
+  const [isLoadingAi, setIsLoadingAi] = useState<boolean>(false)
+  const aiPollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Track elapsed time for submission
+  useEffect(() => {
+    if (showResultModal || isSubmitted) return
+    const interval = setInterval(() => {
+      setElapsedTime((prev) => prev + 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [showResultModal, isSubmitted])
 
   // Target Vocab State for interactive popover
   const currentQuestion = questions[activeQuestionIndex]
 
-  // Calculate target timer duration based on preset and question count
-  const targetSeconds = useMemo(() => {
-    const qCount = Math.max(1, questions.length)
-    if (timerPreset === 'QUICK') return qCount * 30 // 30s per question
-    if (timerPreset === 'STANDARD') return qCount * 60 // 60s per question
-    return qCount * 120 // 120s per question
-  }, [questions.length, timerPreset])
+  // Callback khi hết giờ - auto submit
+  const handleTimeUp = useCallback(() => {
+    if (isSubmitted) return
 
-  // Reset timer when preset or passage changes
-  useEffect(() => {
-    setTimeLeft(targetSeconds)
-    setElapsedTime(0)
-    setIsTimerActive(true)
-  }, [targetSeconds, passage._id])
-
-  // Timer tick effect
-  useEffect(() => {
-    if (!isTimerActive || showResultModal) return
-
-    const interval = setInterval(() => {
-      setElapsedTime((prev) => prev + 1)
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          setIsTimerActive(false)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [isTimerActive, showResultModal])
+    setIsSubmitted(true)
+    handleSubmitAttempt()
+  }, [isSubmitted])
 
   // Format time mm:ss
   const formatTime = (secs: number) => {
@@ -95,9 +86,9 @@ export function ReadingWorkspace({ passage, onBack, onComplete }: ReadingWorkspa
 
   // Submit attempt to backend
   const handleSubmitAttempt = async () => {
-    if (isSubmitting) return
+    if (isSubmitting || isSubmitted) return
     setIsSubmitting(true)
-    setIsTimerActive(false)
+    setIsSubmitted(true)
 
     try {
       const answersPayload = questions.map((q) => ({
@@ -113,12 +104,62 @@ export function ReadingWorkspace({ passage, onBack, onComplete }: ReadingWorkspa
 
       setAttemptResult(result)
       setShowResultModal(true)
+
+      // Start polling for AI explanation if there are wrong answers
+      if (result.wrong_count > 0) {
+        setAiExplanationStatus(result.ai_explanation_status || 'PENDING')
+        startPollingAIExplanation(result.attempt_id)
+      }
     } catch (err) {
       console.error('Lỗi nộp bài đọc:', err)
+      setIsSubmitted(false) // Reset on error để user thử lại
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  // Poll AI explanation
+  const startPollingAIExplanation = useCallback((attemptId: string) => {
+    if (aiPollIntervalRef.current) {
+      clearInterval(aiPollIntervalRef.current)
+    }
+
+    const poll = async () => {
+      try {
+        const response = await readingPracticeService.getAIExplanation(attemptId)
+        setAiExplanationStatus(response.status)
+
+        const expl = (response.explanation as any)?.ai_result || response.explanation
+        if (response.status === 'COMPLETED' && expl) {
+          setAiExplanation(expl as AIReadingExplanation)
+          if (aiPollIntervalRef.current) {
+            clearInterval(aiPollIntervalRef.current)
+            aiPollIntervalRef.current = null
+          }
+        } else if (response.status === 'FAILED') {
+          if (aiPollIntervalRef.current) {
+            clearInterval(aiPollIntervalRef.current)
+            aiPollIntervalRef.current = null
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi poll AI explanation:', err)
+      }
+    }
+
+    // Poll immediately and then every 5 seconds
+    poll()
+    aiPollIntervalRef.current = setInterval(poll, 5000)
+  }, [])
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (aiPollIntervalRef.current) {
+        clearInterval(aiPollIntervalRef.current)
+      }
+    }
+  }, [])
 
   // Check if all questions are answered
   const answeredCount = Object.keys(userAnswers).length
@@ -150,62 +191,22 @@ export function ReadingWorkspace({ passage, onBack, onComplete }: ReadingWorkspa
           </div>
         </div>
 
-        {/* Timer & Preset Controls */}
+        {/* Timer & Controls */}
         <div className="flex items-center gap-3">
-          {/* 3 Mốc Thời Gian Timer Presets */}
-          {(readingType === 'PART_6' || readingType === 'PART_7') && (
-            <div className="flex items-center rounded-lg bg-surface-elevated p-1 border border-border/40">
-              <button
-                type="button"
-                onClick={() => setTimerPreset('QUICK')}
-                className={`rounded px-2.5 py-1 text-[11px] font-semibold transition-all ${
-                  timerPreset === 'QUICK'
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'text-text-tertiary hover:text-text-primary'
-                }`}
-              >
-                ⚡ Quick (30s/câu)
-              </button>
-              <button
-                type="button"
-                onClick={() => setTimerPreset('STANDARD')}
-                className={`rounded px-2.5 py-1 text-[11px] font-semibold transition-all ${
-                  timerPreset === 'STANDARD'
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'text-text-tertiary hover:text-text-primary'
-                }`}
-              >
-                🎯 Standard (60s/câu)
-              </button>
-              <button
-                type="button"
-                onClick={() => setTimerPreset('INTENSIVE')}
-                className={`rounded px-2.5 py-1 text-[11px] font-semibold transition-all ${
-                  timerPreset === 'INTENSIVE'
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'text-text-tertiary hover:text-text-primary'
-                }`}
-              >
-                🔍 Intensive (120s/câu)
-              </button>
-            </div>
-          )}
-
-          {/* Clock Display */}
-          <div className="flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-mono font-bold text-primary">
-            <Icon name="clock" size={14} className={timeLeft <= 30 ? 'animate-pulse text-error' : ''} />
-            <span className={timeLeft <= 30 ? 'text-error' : ''}>{formatTime(timeLeft)}</span>
-          </div>
+          <WritingTimer
+            totalSeconds={timeLimitSeconds}
+            onTimeUp={handleTimeUp}
+          />
 
           <Button
             variant="default"
             size="sm"
             onClick={handleSubmitAttempt}
-            disabled={isSubmitting || questions.length === 0}
+            disabled={isSubmitting || questions.length === 0 || isSubmitted}
             className="gap-1.5 text-xs font-semibold"
           >
             {isSubmitting ? <Icon name="loader" className="animate-spin" size={14} /> : <Icon name="check-circle" size={14} />}
-            <span>Nộp bài ({answeredCount}/{questions.length})</span>
+            <span>{isSubmitted ? 'Đã nộp' : `Nộp bài (${answeredCount}/${questions.length})`}</span>
           </Button>
         </div>
       </div>
@@ -456,39 +457,89 @@ export function ReadingWorkspace({ passage, onBack, onComplete }: ReadingWorkspa
         </div>
       </div>
 
-      {/* RESULTS MODAL UPON SUBMISSION */}
+      {/* RESULTS MODAL UPON SUBMISSION - ENHANCED */}
       {showResultModal && attemptResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl border border-border space-y-5 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl rounded-2xl bg-surface p-6 shadow-2xl border border-border space-y-5 animate-in zoom-in-95 duration-200 my-8">
+            {/* Header */}
             <div className="text-center space-y-2">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Icon name="award" size={32} />
               </div>
               <h3 className="text-lg font-bold text-text-primary">Kết quả bài làm Reading</h3>
               <p className="text-xs text-text-tertiary">
-                Bạn đã hoàn thành bài đọc {passage.title}
+                {passage.title_vi || passage.title}
               </p>
+              {attemptResult.context && (
+                <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
+                  <Icon name="folder" size={12} />
+                  {attemptResult.context.name_vi || attemptResult.context.name_en}
+                </div>
+              )}
             </div>
 
             {/* Score Card Stats */}
             <div className="grid grid-cols-3 gap-3 rounded-xl bg-surface-elevated p-4 text-center border border-border/40">
               <div>
-                <div className="text-xl font-black text-primary">{attemptResult.score_percent}%</div>
+                <div className="text-2xl font-black text-primary">{attemptResult.score_percent}%</div>
                 <div className="text-[11px] text-text-tertiary">Điểm chính xác</div>
               </div>
               <div>
-                <div className="text-xl font-black text-success">
+                <div className="text-2xl font-black text-success">
                   {attemptResult.correct_count}/{attemptResult.total_questions}
                 </div>
-                <div className="text-[11px] text-text-tertiary">Số câu đúng</div>
+                <div className="text-[11px] text-text-tertiary">Câu đúng</div>
               </div>
               <div>
-                <div className="text-xl font-black text-text-primary">
+                <div className="text-2xl font-black text-text-primary">
                   {formatTime(attemptResult.time_spent_seconds || elapsedTime)}
                 </div>
                 <div className="text-[11px] text-text-tertiary">Thời gian</div>
               </div>
             </div>
+
+            {/* Skill Breakdown */}
+            {attemptResult.skill_breakdown && attemptResult.skill_breakdown.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                  <Icon name="bar-chart-2" size={16} className="text-primary" />
+                  Phân tích theo kỹ năng
+                </h4>
+                <div className="space-y-2">
+                  {attemptResult.skill_breakdown.map((skill) => (
+                    <SkillBreakdownBar key={skill.exercise_type} skill={skill} />
+                  ))}
+                </div>
+                {attemptResult.weakest_skill && (
+                  <div className="flex items-center gap-2 rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning-dark">
+                    <Icon name="alert-triangle" size={14} />
+                    <span>Kỹ năng cần cải thiện: <strong>{attemptResult.weakest_skill_vi || attemptResult.weakest_skill}</strong></span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Wrong Answers */}
+            {attemptResult.wrong_answers && attemptResult.wrong_answers.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                  <Icon name="alert-circle" size={16} className="text-error" />
+                  Câu sai ({attemptResult.wrong_count})
+                </h4>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {attemptResult.wrong_answers.map((wrong, idx) => (
+                    <WrongAnswerCard key={idx} wrong={wrong} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* AI Explanation Section */}
+            <AIExplanationSection
+              status={aiExplanationStatus}
+              explanation={aiExplanation}
+              isLoading={isLoadingAi}
+            />
 
             {/* Actions */}
             <div className="flex flex-col gap-2">
@@ -509,6 +560,213 @@ export function ReadingWorkspace({ passage, onBack, onComplete }: ReadingWorkspa
       )}
     </div>
   )
+}
+
+// ============================================================================
+// HELPER COMPONENTS
+// ============================================================================
+
+/**
+ * Skill Breakdown Bar Component
+ */
+function SkillBreakdownBar({ skill }: { skill: SkillBreakdownItem }) {
+  const statusColors = {
+    excellent: 'bg-success',
+    good: 'bg-primary',
+    needs_improvement: 'bg-error',
+  }
+
+  const statusIcons = {
+    excellent: '✓',
+    good: '•',
+    needs_improvement: '!',
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-28 text-xs font-medium text-text-primary truncate">
+        {skill.label_vi}
+      </div>
+      <div className="flex-1 h-2 bg-surface-elevated rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all ${statusColors[skill.status]}`}
+          style={{ width: `${skill.percent}%` }}
+        />
+      </div>
+      <div className="w-12 text-xs font-bold text-right">
+        <span className={skill.percent >= 60 ? 'text-success' : 'text-error'}>
+          {skill.percent}%
+        </span>
+      </div>
+      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${statusColors[skill.status]}`}>
+        {statusIcons[skill.status]}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Wrong Answer Card Component
+ */
+function WrongAnswerCard({ wrong }: { wrong: WrongAnswerItem }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  return (
+    <div className="rounded-xl border border-error/30 bg-error/5 p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2">
+          <div className="w-6 h-6 rounded-full bg-error/20 flex items-center justify-center text-xs font-bold text-error shrink-0">
+            {wrong.question_number}
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-text-primary">
+              {wrong.exercise_type.replace(/_/g, ' ')}
+            </div>
+            <div className="text-xs text-text-secondary line-clamp-2 mt-0.5">
+              {wrong.question_text}
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-xs text-primary hover:text-primary-hover"
+        >
+          {isExpanded ? 'Thu gọn' : 'Chi tiết'}
+        </button>
+      </div>
+
+      {isExpanded && (
+        <div className="space-y-2 pt-2 border-t border-error/20">
+          <div className="flex items-start gap-2 text-xs">
+            <div className="w-16 font-semibold text-error shrink-0">Đáp án của bạn:</div>
+            <div className="text-error">{wrong.user_answer}</div>
+          </div>
+          <div className="flex items-start gap-2 text-xs">
+            <div className="w-16 font-semibold text-success shrink-0">Đáp án đúng:</div>
+            <div className="text-success font-medium">{wrong.correct_answer}</div>
+          </div>
+          {wrong.explanation && (
+            <div className="mt-2 text-xs text-text-secondary bg-surface-elevated rounded-lg p-2">
+              <div className="font-semibold text-text-primary mb-1">Giải thích:</div>
+              {wrong.explanation_vi || wrong.explanation}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * AI Explanation Section Component
+ */
+function AIExplanationSection({
+  status,
+  explanation,
+  isLoading,
+}: {
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null
+  explanation: AIReadingExplanation | null
+  isLoading: boolean
+}) {
+  if (status === null || !explanation) return null
+
+  if (status === 'PENDING' || status === 'PROCESSING') {
+    return (
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="text-sm font-medium text-primary">
+            {status === 'PENDING' ? 'Đang chuẩn bị phân tích AI...' : 'AI đang phân tích câu sai...'}
+          </div>
+        </div>
+        <div className="text-xs text-text-tertiary">
+          Phân tích chi tiết sẽ sẵn sàng trong giây lát. Bạn có thể đóng modal và quay lại sau.
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'FAILED') {
+    return (
+      <div className="rounded-xl border border-error/30 bg-error/5 p-4">
+        <div className="flex items-center gap-2 text-sm text-error">
+          <Icon name="alert-circle" size={16} />
+          <span>Không thể tải phân tích AI. Vui lòng thử lại sau.</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (status === 'COMPLETED' && explanation) {
+    return (
+      <div className="space-y-3">
+        {/* Summary */}
+        {explanation.summary && (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Icon name="sparkles" size={16} className="text-primary" />
+              <span className="text-sm font-semibold text-primary">Tổng kết</span>
+            </div>
+            <p className="text-sm text-text-secondary">{explanation.summary}</p>
+          </div>
+        )}
+
+        {/* Overall Advice */}
+        {explanation.overall_advice && (
+          <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Icon name="lightbulb" size={16} className="text-warning-dark" />
+              <span className="text-sm font-semibold text-warning-dark">Gợi ý cải thiện</span>
+            </div>
+            <p className="text-sm text-text-secondary">{explanation.overall_advice}</p>
+          </div>
+        )}
+
+        {/* Detailed Explanations */}
+        {explanation.explanations && explanation.explanations.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold text-text-primary">Phân tích chi tiết từng câu</h4>
+            {explanation.explanations.map((exp, idx) => (
+              <div key={idx} className="rounded-lg border border-border bg-surface-elevated p-3 space-y-2">
+                <div className="text-xs font-semibold text-text-primary">
+                  Câu {exp.question_number}: {exp.recommended_topic && (
+                    <span className="text-primary ml-2">({exp.recommended_topic})</span>
+                  )}
+                </div>
+                {exp.why_wrong && (
+                  <div className="text-xs">
+                    <span className="text-error font-medium">Sai: </span>
+                    <span className="text-text-secondary">{exp.why_wrong}</span>
+                  </div>
+                )}
+                {exp.why_correct && (
+                  <div className="text-xs">
+                    <span className="text-success font-medium">Đúng: </span>
+                    <span className="text-text-secondary">{exp.why_correct}</span>
+                  </div>
+                )}
+                {exp.trap_identified && (
+                  <div className="text-xs">
+                    <span className="text-warning-dark font-medium">⚠️ Bẫy: </span>
+                    <span className="text-text-secondary">{exp.trap_identified}</span>
+                  </div>
+                )}
+                {exp.study_focus && (
+                  <div className="text-xs">
+                    <span className="text-primary font-medium">📚 Hướng dẫn: </span>
+                    <span className="text-text-secondary">{exp.study_focus}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return null
 }
 
 /**

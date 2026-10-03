@@ -4,12 +4,65 @@
  */
 
 export type WritingLevel = 'BASIC' | 'INTERMEDIATE' | 'ADVANCED'
-export type ExerciseType = 'SENTENCE_ARRANGEMENT' | 'SENTENCE_COMPLETION' | 'PARAPHRASING' | 'KEYWORD_WRITING' | 'TOPIC_WRITING' | 'DIARY'
+export type ExerciseType = 'DESCRIBE_PICTURE' | 'WRITE_EMAIL' | 'EXPRESS_OPINION' | 'SENTENCE_ARRANGEMENT' | 'SENTENCE_COMPLETION' | 'PARAPHRASING' | 'KEYWORD_WRITING' | 'TOPIC_WRITING' | 'DIARY'
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD'
 export type SubmissionStatus = 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED'
 
+// Time mode cho luyện writing
+export type TimeMode = 'fast' | 'normal' | 'slow'
+
+export interface TimeModeConfig {
+  mode: TimeMode
+  label: string
+  labelVi: string
+  description: string
+  descriptionVi: string
+  seconds: number
+}
+
+// Config thời gian theo exercise type (seconds)
+export const WRITING_TIME_CONFIGS: Record<ExerciseType, { fast: number; normal: number; slow: number }> = {
+  DESCRIBE_PICTURE: { fast: 5 * 60, normal: 8 * 60, slow: 12 * 60 },     // 5/8/12 phút
+  WRITE_EMAIL: { fast: 7 * 60, normal: 10 * 60, slow: 15 * 60 },           // 7/10/15 phút
+  EXPRESS_OPINION: { fast: 12 * 60, normal: 15 * 60, slow: 20 * 60 },       // 12/15/20 phút
+  SENTENCE_ARRANGEMENT: { fast: 5 * 60, normal: 8 * 60, slow: 10 * 60 },    // 5/8/10 phút
+  SENTENCE_COMPLETION: { fast: 5 * 60, normal: 8 * 60, slow: 10 * 60 },     // 5/8/10 phút
+  PARAPHRASING: { fast: 5 * 60, normal: 8 * 60, slow: 12 * 60 },            // 5/8/12 phút
+  KEYWORD_WRITING: { fast: 8 * 60, normal: 10 * 60, slow: 15 * 60 },       // 8/10/15 phút
+  TOPIC_WRITING: { fast: 12 * 60, normal: 15 * 60, slow: 20 * 60 },        // 12/15/20 phút
+  DIARY: { fast: 10 * 60, normal: 15 * 60, slow: 20 * 60 },                // 10/15/20 phút
+}
+
+export const TIME_MODE_OPTIONS: TimeModeConfig[] = [
+  {
+    mode: 'fast',
+    label: 'Nhanh',
+    labelVi: 'Nhanh',
+    description: 'Luyện tốc độ',
+    descriptionVi: 'Luyện tốc độ',
+    seconds: 0, // Sẽ được set theo exercise type
+  },
+  {
+    mode: 'normal',
+    label: 'Bình thường',
+    labelVi: 'Bình thường',
+    description: 'Tiêu chuẩn',
+    descriptionVi: 'Tiêu chuẩn',
+    seconds: 0,
+  },
+  {
+    mode: 'slow',
+    label: 'Chậm',
+    labelVi: 'Chậm',
+    description: 'Tập trung chất lượng',
+    descriptionVi: 'Tập trung chất lượng',
+    seconds: 0,
+  },
+]
+
 export interface WritingExercise {
   id: string
+  code?: string
   title: string
   title_vi?: string
   description?: string
@@ -24,7 +77,16 @@ export interface WritingExercise {
   prompt_vi?: string
   instructions?: string
 
+  prompt_image_id?: string
+  media_id?: string
   reference_media_id?: string
+  directions?: string[]
+  directions_vi?: string[]
+  incoming_email?: { from?: string; to?: string; subject?: string; date?: string; body?: string }
+  background_context?: string
+  background_context_vi?: string
+  guiding_questions?: string[]
+  guiding_questions_vi?: string[]
 
   target_lexical_item_ids?: string[]
   target_grammar_point_ids?: string[]
@@ -85,7 +147,50 @@ export interface WritingDraft {
   version_number: number
 }
 
+export interface ScaffoldBlock {
+  key: string
+  title: string
+  title_vi?: string
+  prompt: string
+  prompt_vi?: string
+  guiding_questions?: string[]
+  sentence_starters?: string[]
+  target_words?: string[]
+  min_words?: number
+}
+
+export interface ScaffoldTemplate {
+  template_type: string
+  title: string
+  title_vi?: string
+  instruction?: string
+  instruction_vi?: string
+  blocks: ScaffoldBlock[]
+}
+
+export interface SubmissionComparison {
+  has_comparison: boolean
+  message?: string
+  v1?: WritingSubmission
+  v2?: WritingSubmission
+  delta?: {
+    overall_score?: number
+    task_achievement_score?: number
+    grammatical_accuracy_score?: number
+    lexical_resource_score?: number
+    coherence_score?: number
+    naturalness_score?: number
+    register_score?: number
+    word_count?: number
+  }
+  summary?: string
+}
+
 export interface WritingSubmission {
+  naturalness_score?: number
+  register_score?: number
+  parent_submission_id?: string
+  scaffold_blocks?: Array<{ block_id: string; title: string; content: string }>
   id: string
   user_id: string
   exercise_id: string
@@ -146,6 +251,17 @@ export interface AIEvaluation {
     overall?: ScoreDetail
   }
 
+  criteria_scores?: {
+    task_achievement?: number
+    grammatical_accuracy?: number
+    lexical_resource?: number
+    coherence?: number
+    naturalness?: number
+    register?: number
+  }
+  scaffold_template?: ScaffoldTemplate
+  naturalness_feedback?: string
+  register_feedback?: string
   task_achievement_feedback?: string
   coherence_feedback?: string
   lexical_resource_feedback?: string
@@ -234,25 +350,138 @@ export interface ParaphraseAnalysis {
 
 export interface WritingStats {
   total_submissions: number
+  /** Average overall score on a 0-100 scale (matches backend AI evaluation scale). */
   average_score: number
   total_words_written: number
+  /** Average grammar accuracy on a 0-100 scale. */
   average_grammar_accuracy: number
+  /** Average vocabulary usage on a 0-100 scale. */
   average_vocabulary_usage: number
   average_writing_time_minutes: number
+  /** All AI sub-scores on a 0-100 scale. */
   score_breakdown: {
     task_achievement: number
     coherence: number
     vocabulary: number
     grammar: number
+    naturalness: number
+    register: number
   }
+}
+
+// ============================================================================
+// WRITING RECOMMENDATION TYPES (Option B)
+// ============================================================================
+
+/** All possible writing skill types */
+export type WritingSkillType =
+  | 'task_achievement'
+  | 'coherence'
+  | 'lexical_resource'
+  | 'grammatical_accuracy'
+  | 'naturalness'
+  | 'register'
+
+/** Reason for recommending an exercise */
+export type RecommendationReason =
+  | 'weakest_skill'
+  | 'weakest_context'
+  | 'same_skill_context'
+  | 'diversify_skill'
+  | 'diversify_context'
+  | 'skill_improvement'
+  | 'new_user'
+
+/** Reason labels for display */
+export const REASON_LABELS: Record<RecommendationReason, { vi: string; en: string }> = {
+  weakest_skill: { vi: 'Luyện điểm yếu', en: 'Practice weakest skill' },
+  weakest_context: { vi: 'Cải thiện ngữ cảnh', en: 'Improve weak context' },
+  same_skill_context: { vi: 'Rèn luyện chuyên sâu', en: 'Deep practice' },
+  diversify_skill: { vi: 'Đa dạng kỹ năng', en: 'Skill diversity' },
+  diversify_context: { vi: 'Mở rộng ngữ cảnh', en: 'New context' },
+  skill_improvement: { vi: 'Nâng cao kỹ năng', en: 'Skill improvement' },
+  new_user: { vi: 'Bắt đầu luyện tập', en: 'Get started' },
+}
+
+/** Skill labels for display */
+export const SKILL_LABELS: Record<WritingSkillType, { vi: string; en: string }> = {
+  task_achievement: { vi: 'Hoàn thành nhiệm vụ', en: 'Task Achievement' },
+  coherence: { vi: 'Mạch lạc', en: 'Coherence' },
+  lexical_resource: { vi: 'Từ vựng', en: 'Vocabulary' },
+  grammatical_accuracy: { vi: 'Ngữ pháp', en: 'Grammar' },
+  naturalness: { vi: 'Tự nhiên', en: 'Naturalness' },
+  register: { vi: 'Phong cách', en: 'Register' },
+}
+
+/** A single writing recommendation */
+export interface WritingRecommendation {
+  exercise_id: string
+  title: string
+  title_vi?: string
+  exercise_type: string
+  context_id?: string
+  context_name?: string
+  cefr_level: string
+  difficulty_level?: string
+  prompt_text?: string
+  min_words?: number
+  max_words?: number
+
+  // Recommendation metadata
+  reason: RecommendationReason
+  target_skill?: WritingSkillType
+  confidence_score: number
+  expected_score?: number
+  user_attempts: number
+  user_best_score?: number
+}
+
+/** Analysis of user's writing performance */
+export interface WritingRecommendationAnalysis {
+  sub_scores: {
+    task_achievement: number
+    coherence: number
+    lexical_resource: number
+    grammatical_accuracy: number
+    naturalness: number
+    register: number
+    overall: number
+    weakest_skill: WritingSkillType
+  }
+  context_performance: Array<{
+    context_id: string
+    context_name?: string
+    submission_count: number
+    avg_score: number
+    skills: {
+      task_achievement: number
+      coherence: number
+      lexical_resource: number
+      grammatical_accuracy: number
+      naturalness: number
+      register: number
+    }
+  }>
+  practiced_contexts: number
+  practiced_types: string[]
+  estimated_cefr?: string
+  total_submissions: number
+}
+
+/** Complete recommendation response */
+export interface WritingRecommendationResponse {
+  recommendations: WritingRecommendation[]
+  analysis: WritingRecommendationAnalysis
+  total_available: number
 }
 
 export interface WritingProgress {
   grammar: number
   vocabulary: number
   coherence: number
-  weakest_area: string
-  recommended_topics: string[]
+  weakest_area: WritingSkillType
+  weakest_context?: string
+  recommendations: WritingRecommendation[]
 }
 
 export interface ContinueWriting {

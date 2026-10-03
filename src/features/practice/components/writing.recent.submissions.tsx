@@ -95,9 +95,9 @@ export function WritingRecentSubmissions({
                 {submission.overall_score !== undefined ? (
                   <div className="flex items-center gap-2">
                     <span className="text-[16px] font-bold text-primary">
-                      {submission.overall_score.toFixed(1)}
+                      {Math.max(0, Math.min(100, submission.overall_score)).toFixed(1)}
                     </span>
-                    <span className="text-[12px] text-text-tertiary">/10</span>
+                    <span className="text-[12px] text-text-tertiary">/100</span>
                   </div>
                 ) : submission.is_correct !== undefined ? (
                   <div

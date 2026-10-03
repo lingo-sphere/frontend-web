@@ -102,21 +102,28 @@ export const BackendSpeakingExerciseListSchema = z.array(BackendSpeakingExercise
 
 export const BackendWritingExerciseSchema = z.object({
   _id: z.string(),
+  code: z.string().optional(),
   title: z.string(),
   title_vi: z.string().optional(),
   description: z.string().optional(),
   description_vi: z.string().optional(),
-  domain: z.string().default('TOEIC'),
+  domain: z.string().default('WRITING'),
   toeic_part: z.number().optional(),
-  exercise_type: z.string().default('ESSAY'),
+  exercise_type: z.string().default('DESCRIBE_PICTURE'),
   writing_level: z.string().default('INTERMEDIATE'),
-  prompt_en: z.string(),
+  prompt_en: z.string().optional(),
   prompt_vi: z.string().optional(),
+  prompt_text: z.string().optional(),
+  prompt_text_vi: z.string().optional(),
+  image_url: z.string().optional(),
+  guiding_questions: z.array(z.string()).optional(),
+  guiding_questions_vi: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).optional(),
   min_words: z.number().optional(),
   max_words: z.number().optional(),
   difficulty_level: z.string().default('MEDIUM'),
   cefr_level: z.string().default('B1'),
-  status: z.string().default('ACTIVE'),
+  status: z.string().default('PUBLISHED'),
 }).passthrough()
 
 export const BackendWritingExerciseListSchema = z.array(BackendWritingExerciseSchema)

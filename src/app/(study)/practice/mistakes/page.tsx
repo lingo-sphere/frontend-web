@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   BookmarkCheck,
   RotateCcw,
@@ -25,20 +25,30 @@ import { toast } from '@/store/toast.store'
 import { MistakeVaultCard } from '@/features/practice/components/mistake.vault.card'
 import { MistakeReviewModal } from '@/features/practice/components/mistake.review.modal'
 import { TopicDrillModal } from '@/features/practice/components/topic.drill.modal'
-import { useNavigate } from '@/lib/navigation'
+import { useNavigate, useSearchParams } from '@/lib/navigation'
 import type { UserMistakeItem } from '@/features/practice/types/mistake'
 import { MistakeStatus } from '@/features/practice/types/mistake'
 
 export default function MistakeVaultPage() {
   const navigate = useNavigate()
+  const searchParams = useSearchParams()
+  const urlTopic = searchParams.get('topic')
+  const urlDomain = searchParams.get('domain')
+
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
-  const [selectedTopic, setSelectedTopic] = useState<string>('ALL')
-  const [selectedDomain, setSelectedDomain] = useState<string>('ALL')
+  const [selectedTopic, setSelectedTopic] = useState<string>(urlTopic || 'ALL')
+  const [selectedDomain, setSelectedDomain] = useState<string>(urlDomain || 'ALL')
   const [activeReviewMistake, setActiveReviewMistake] = useState<UserMistakeItem | null>(null)
   const [activeDrillTopic, setActiveDrillTopic] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const deleteMutation = useDeleteMistakeMutation()
+
+  // Đồng bộ bộ lọc khi URL query thay đổi
+  useEffect(() => {
+    if (urlTopic) setSelectedTopic(urlTopic)
+    if (urlDomain) setSelectedDomain(urlDomain)
+  }, [urlTopic, urlDomain])
 
   const queryParams = useMemo(() => {
     return {
