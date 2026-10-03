@@ -175,6 +175,56 @@ export function useProgressGrowthAnalytics({
     )
   }, [enrolledCourseCards])
 
+  const sortedActivities = useMemo(() => {
+    return [...recentActivities].sort(
+      (a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
+    )
+  }, [recentActivities])
+
+  const peakProgression = useMemo<number[]>(() => {
+    if (sortedActivities.length === 0) {
+      return baselineScore > 0 ? [baselineScore] : []
+    }
+    const points: number[] = []
+    if (baselineScore > 0 && !sortedActivities[0].examType?.includes('PLACEMENT') && !sortedActivities[0].title.toLowerCase().includes('đầu vào')) {
+      points.push(baselineScore)
+    }
+    let currentPeak = points[0] || 0
+    sortedActivities.forEach((act) => {
+      currentPeak = Math.max(currentPeak, act.scoreValue)
+      points.push(currentPeak)
+    })
+    return points
+  }, [sortedActivities, baselineScore])
+
+  const growthProgression = useMemo<number[]>(() => {
+    if (sortedActivities.length === 0) return []
+    const points: number[] = [0]
+    sortedActivities.forEach((act) => {
+      points.push(baselineScore > 0 ? act.scoreValue - baselineScore : act.scoreValue)
+    })
+    return points
+  }, [sortedActivities, baselineScore])
+
+  const selectedCourse = useMemo(() => {
+    return enrolledCourseCards.find((c) => c.course_id === selectedCourseId)
+  }, [enrolledCourseCards, selectedCourseId])
+
+  const coursePassingBenchmark = useMemo<number>(() => {
+    if (selectedCourse?.final_test_passing_score) {
+      return selectedCourse.final_test_passing_score
+    }
+    const available = enrolledCourseCards.filter(
+      (c) => typeof c.final_test_passing_score === 'number' && c.final_test_passing_score > 0
+    )
+    if (available.length > 0) {
+      return Math.round(
+        available.reduce((sum, c) => sum + (c.final_test_passing_score ?? 70), 0) / available.length
+      )
+    }
+    return 70
+  }, [selectedCourse, enrolledCourseCards])
+
   return {
     selectedCourseId,
     setSelectedCourseId,
@@ -187,5 +237,8 @@ export function useProgressGrowthAnalytics({
     totalCompletedLessons,
     avgCourseProgress,
     hasExamData,
+    peakProgression,
+    growthProgression,
+    coursePassingBenchmark,
   }
 }

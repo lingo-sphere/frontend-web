@@ -6,6 +6,9 @@ import {
   Trophy,
   ArrowRight,
   ChevronDown,
+  Compass,
+  Target,
+  TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
@@ -150,6 +153,9 @@ export function ProgressGrowthAnalyticsTab({
     totalCompletedLessons,
     avgCourseProgress,
     hasExamData,
+    peakProgression,
+    growthProgression,
+    coursePassingBenchmark,
   } = useProgressGrowthAnalytics({
     recentActivities,
     enrolledCourseCards,
@@ -381,14 +387,18 @@ export function ProgressGrowthAnalyticsTab({
             <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-purple-500/15 text-purple-700 dark:text-purple-300">
               Khởi điểm
             </span>
-            <div className="text-xl font-black text-text-primary">{baselineScore}đ</div>
-            <p className="text-[11px] text-text-tertiary">Baseline đầu vào</p>
+            <div className="text-xl font-black text-text-primary">
+              {baselineScore > 0 ? `${baselineScore}đ` : '--'}
+            </div>
+            <p className="text-[11px] text-text-tertiary">
+              {listeningScore > 0 || readingScore > 0
+                ? `L: ${listeningScore}đ • R: ${readingScore}đ`
+                : 'Baseline đầu vào'}
+            </p>
           </div>
-          <MiniSparkline
-            data={[baselineScore, baselineScore, baselineScore + 10, baselineScore, baselineScore + 15]}
-            color="#a855f7"
-            gradientId="sparkline-baseline"
-          />
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold shrink-0">
+            <Compass size={20} />
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border/80 bg-surface p-4 shadow-xs flex items-center justify-between gap-2">
@@ -396,20 +406,22 @@ export function ProgressGrowthAnalyticsTab({
             <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/15 text-amber-700 dark:text-amber-300">
               Kỷ lục
             </span>
-            <div className="text-xl font-black text-amber-600 dark:text-amber-400">{peakScore}đ</div>
+            <div className="text-xl font-black text-amber-600 dark:text-amber-400">
+              {peakScore > 0 ? `${peakScore}đ` : '--'}
+            </div>
             <p className="text-[11px] text-text-tertiary">Điểm cao nhất</p>
           </div>
-          <MiniSparkline
-            data={[
-              baselineScore,
-              baselineScore + (peakScore - baselineScore) * 0.35,
-              baselineScore + (peakScore - baselineScore) * 0.7,
-              peakScore - 20,
-              peakScore,
-            ]}
-            color="#f59e0b"
-            gradientId="sparkline-peak"
-          />
+          {peakProgression.length >= 2 ? (
+            <MiniSparkline
+              data={peakProgression}
+              color="#f59e0b"
+              gradientId="sparkline-peak"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+              <Trophy size={20} />
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-border/80 bg-surface p-4 shadow-xs flex items-center justify-between gap-2">
@@ -422,21 +434,21 @@ export function ProgressGrowthAnalyticsTab({
                 netGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
               }`}
             >
-              {netGrowth >= 0 ? `+${netGrowth}` : netGrowth}đ
+              {hasExamData ? (netGrowth >= 0 ? `+${netGrowth}đ` : `${netGrowth}đ`) : '--'}
             </div>
             <p className="text-[11px] text-text-tertiary">So với xuất phát</p>
           </div>
-          <MiniSparkline
-            data={[
-              0,
-              Math.max(0, netGrowth * 0.25),
-              Math.max(0, netGrowth * 0.55),
-              Math.max(0, netGrowth * 0.8),
-              Math.max(5, netGrowth),
-            ]}
-            color="#10b981"
-            gradientId="sparkline-growth"
-          />
+          {growthProgression.length >= 2 ? (
+            <MiniSparkline
+              data={growthProgression}
+              color={netGrowth >= 0 ? '#10b981' : '#f43f5e'}
+              gradientId="sparkline-growth"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold shrink-0">
+              <TrendingUp size={20} />
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-border/80 bg-surface p-4 shadow-xs flex items-center justify-between gap-2">
@@ -444,14 +456,18 @@ export function ProgressGrowthAnalyticsTab({
             <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-sky-500/15 text-sky-700 dark:text-sky-300">
               Mục tiêu
             </span>
-            <div className="text-xl font-black text-sky-600 dark:text-sky-400">{targetScore}đ</div>
-            <p className="text-[11px] text-text-tertiary">Chuẩn đầu ra</p>
+            <div className="text-xl font-black text-sky-600 dark:text-sky-400">
+              {targetScore > 0 ? `${targetScore}đ` : 'Chưa đặt'}
+            </div>
+            <p className="text-[11px] text-text-tertiary">
+              {targetScore > 0
+                ? `Đạt ${Math.min(100, Math.max(0, Math.round(((peakScore || latestScore) / targetScore) * 100)))}% mục tiêu`
+                : 'Chuẩn đầu ra'}
+            </p>
           </div>
-          <MiniSparkline
-            data={[baselineScore, baselineScore + 100, baselineScore + 180, targetScore - 40, targetScore]}
-            color="#0ea5e9"
-            gradientId="sparkline-target"
-          />
+          <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold shrink-0">
+            <Target size={20} />
+          </div>
         </div>
       </div>
 
@@ -501,7 +517,7 @@ export function ProgressGrowthAnalyticsTab({
                   height={150}
                   minVal={0}
                   maxVal={100}
-                  targetValue={80}
+                  targetValue={coursePassingBenchmark}
                   targetLabel="Chuẩn đạt"
                   colorTheme="emerald"
                   valueSuffix="%"

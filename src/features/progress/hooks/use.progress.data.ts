@@ -1,8 +1,9 @@
 // Custom React hook quản lý trạng thái tải dữ liệu và tính toán chỉ số học tập trang Tiến độ bằng TanStack Query.
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useMounted } from '@/hooks/use.mounted'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { authService } from '@/features/auth/services/auth.service'
 import { progressKeys } from '@/features/progress/keys/progress.keys'
@@ -38,6 +39,7 @@ export interface UnifiedCourseCardItem {
   total_modules_count: number
   status: string
   enrolled_at: string
+  final_test_passing_score?: number
 }
 
 export interface ProgressMetrics {
@@ -80,11 +82,7 @@ export interface ProgressRecentActivity {
 export function useProgressData(navigate: (path: string) => void) {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
-  const [mounted, setMounted] = useState<boolean>(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useMounted()
 
   useEffect(() => {
     if (mounted && !authService.isAuthenticated()) {
@@ -105,13 +103,13 @@ export function useProgressData(navigate: (path: string) => void) {
 
   const activeUser = mounted ? user : null
 
-  const courseProgresses = coursesProgressQuery.data || []
-  const myEnrolledCourses = myEnrollmentsQuery.data || []
-  const allCourses = allCoursesQuery.data || []
+  const courseProgresses = useMemo(() => coursesProgressQuery.data || [], [coursesProgressQuery.data])
+  const myEnrolledCourses = useMemo(() => myEnrollmentsQuery.data || [], [myEnrollmentsQuery.data])
+  const allCourses = useMemo(() => allCoursesQuery.data || [], [allCoursesQuery.data])
   const examProfile = examProfileQuery.data || null
   const gamification = gamificationQuery.data || null
-  const testAttempts = testAttemptsQuery.data || []
-  const toeicAttempts = examHistoryQuery.data || []
+  const testAttempts = useMemo(() => testAttemptsQuery.data || [], [testAttemptsQuery.data])
+  const toeicAttempts = useMemo(() => examHistoryQuery.data || [], [examHistoryQuery.data])
   const rawVocab = vocabProgressQuery.data
 
   const vocabStats: VocabStatsSummary = useMemo(() => {
@@ -183,6 +181,7 @@ export function useProgressData(navigate: (path: string) => void) {
         total_modules_count: totalModules,
         status: (progressPercent >= 100 || enrollment?.status === 'COMPLETED' || progress?.status === 'COMPLETED' || (totalLessons > 0 && completedLessons >= totalLessons)) ? 'COMPLETED' : (enrollment?.status || 'STUDYING'),
         enrolled_at: enrollment?.enrolled_at || new Date().toISOString(),
+        final_test_passing_score: catalogCourse?.final_test_passing_score,
       }
     })
   }, [courseProgresses, myEnrolledCourses, coursesMap])
