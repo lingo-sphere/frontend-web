@@ -84,7 +84,7 @@ apiClient.interceptors.response.use(
       const existingRefreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
 
       if (!existingAccessToken && !existingRefreshToken) {
-        return Promise.reject(error)
+        return Promise.reject(new Error(errorMsg || i18n.t('auth.loginFailed')))
       }
 
       if (!originalRequest._retry) {
@@ -148,9 +148,10 @@ apiClient.interceptors.response.use(
           } else {
             throw new Error('Invalid token response structure')
           }
-        } catch (refreshErr) {
-          processQueue(refreshErr, null)
-          console.warn('Phiên đăng nhập học viên đã hết hạn. Đang đăng xuất...', refreshErr)
+        } catch {
+          const sessionExpiredError = new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+          processQueue(sessionExpiredError, null)
+          console.warn('Phiên đăng nhập học viên đã hết hạn. Đang dọn dẹp phiên và chuyển về trạng thái khách.')
 
           storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
           storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
@@ -161,14 +162,14 @@ apiClient.interceptors.response.use(
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
           }
-          return Promise.reject(refreshErr)
+          return Promise.reject(sessionExpiredError)
         } finally {
           isRefreshing = false
         }
       }
     }
 
-    let rawError = error.response?.data?.message || error.response?.data?.error || error.response?.data || error.message
+    const rawError = error.response?.data?.message || error.response?.data?.error || error.response?.data || error.message
     const rawStr = Array.isArray(rawError) ? rawError.join(', ') : String(rawError || '')
 
     let cleanMessage = rawStr
@@ -202,12 +203,10 @@ apiClient.interceptors.response.use(
 function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): T {
   if (!schema) return data as T
 
-  // Final fallback for empty data
   if (data === '' || data === null || data === undefined) {
     return [] as unknown as T
   }
 
-  // If data is an object with nested array, try unwrapping first
   if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
     const obj = data as Record<string, unknown>
     const arrayKeys = ['items', 'data', 'results', 'decks', 'vocabularies', 'lexical_items']
@@ -219,7 +218,6 @@ function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): 
       }
     }
 
-    // If data is an object but no array found, return empty array for list schemas
     const schemaStr = schema.toString().toLowerCase()
     if (schemaStr.includes('array') || schemaStr.includes('list')) {
       console.warn(`[parseWithSchema] No array found in response for ${endpoint}, returning empty array`)
@@ -227,11 +225,9 @@ function parseWithSchema<T>(data: unknown, schema?: ZodType<T>, endpoint = ''): 
     }
   }
 
-  // Try direct parse
   const parsed = schema.safeParse(data)
   if (parsed.success) return parsed.data
 
-  // All failed
   const errorDetails = parsed.error.issues
     .map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`)
     .join('; ')

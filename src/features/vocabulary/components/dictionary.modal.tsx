@@ -52,8 +52,8 @@ export function DictionaryModal({
     try {
       const history = await vocabularyService.getSearchHistory(userId, 10);
       setSearchHistory((history.results || []).slice(0, 5));
-    } catch (err) {
-      console.error("Failed to fetch search history:", err);
+    } catch {
+      setSearchHistory([]);
     }
   }, [userId]);
 
