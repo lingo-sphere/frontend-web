@@ -20,7 +20,7 @@ interface AuthModalProps {
   initialMode?: 'login' | 'register'
 }
 
-export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) {
+function AuthModalDialog({ onClose, initialMode = 'login' }: { onClose: () => void; initialMode?: 'login' | 'register' }) {
   const { t } = useTranslation()
   const {
     mode,
@@ -36,6 +36,8 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
     setPhoneNumber,
     showPassword,
     setShowPassword,
+    rememberMe,
+    setRememberMe,
     successMessage,
     otpDigits,
     otpInputRefs,
@@ -49,13 +51,10 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
     handleSubmit,
     handleGoogleSuccess,
     switchMode,
-  } = useAuthModal({ isOpen, onClose, initialMode })
-
-  if (!isOpen) return null
+  } = useAuthModal({ onClose, initialMode })
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -129,12 +128,14 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
                 fullName={fullName}
                 phoneNumber={phoneNumber}
                 showPassword={showPassword}
+                rememberMe={rememberMe}
                 onEmailChange={setEmail}
                 onPasswordChange={setPassword}
                 onFullNameChange={setFullName}
                 onPhoneNumberChange={setPhoneNumber}
                 onToggleShowPassword={() => setShowPassword(!showPassword)}
                 onForgotPasswordClick={() => switchMode('forgot_password')}
+                onRememberMeChange={setRememberMe}
               />
             )}
 
@@ -235,6 +236,13 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
           </div>
         </motion.div>
       </div>
+  )
+}
+
+export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) {
+  return (
+    <AnimatePresence>
+      {isOpen && <AuthModalDialog onClose={onClose} initialMode={initialMode} />}
     </AnimatePresence>
   )
 }

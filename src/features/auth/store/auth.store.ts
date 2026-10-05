@@ -86,7 +86,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setUser: (user) => {
     if (user) {
-      storage.set(STORAGE_KEYS.USER, user)
+      if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
+        storage.set(STORAGE_KEYS.USER, user)
+      } else {
+        storage.session.set(STORAGE_KEYS.USER, user)
+      }
     }
     set({ user, isAuthenticated: !!user })
   },
@@ -107,7 +111,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
-      storage.set(STORAGE_KEYS.USER, finalUser)
+      const isRemember = payload.rememberMe !== false && payload.remember_me !== false
+      const targetStorage = isRemember ? storage : storage.session
+      targetStorage.set(STORAGE_KEYS.USER, finalUser)
       set({
         user: finalUser,
         isAuthenticated: true,
@@ -134,7 +140,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...res.user, ...profileUser, is_premium: isPremium }
-      storage.set(STORAGE_KEYS.USER, finalUser)
+      const isRemember = payload.rememberMe !== false && payload.remember_me !== false
+      const targetStorage = isRemember ? storage : storage.session
+      targetStorage.set(STORAGE_KEYS.USER, finalUser)
       set({
         user: finalUser,
         isAuthenticated: true,
@@ -259,11 +267,17 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       } catch {}
       const finalUser = { ...user, ...profileUser, is_premium: isPremium }
-      storage.set(STORAGE_KEYS.USER, finalUser)
+      if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
+        storage.set(STORAGE_KEYS.USER, finalUser)
+      } else {
+        storage.session.set(STORAGE_KEYS.USER, finalUser)
+      }
       set({ user: finalUser, isAuthenticated: true })
     } catch {
       storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
       storage.remove(STORAGE_KEYS.USER)
+      storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.USER)
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
       }

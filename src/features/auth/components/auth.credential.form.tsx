@@ -12,12 +12,14 @@ interface AuthCredentialFormProps {
   fullName: string
   phoneNumber: string
   showPassword: boolean
+  rememberMe?: boolean
   onEmailChange: (v: string) => void
   onPasswordChange: (v: string) => void
   onFullNameChange: (v: string) => void
   onPhoneNumberChange: (v: string) => void
   onToggleShowPassword: () => void
   onForgotPasswordClick: () => void
+  onRememberMeChange?: (v: boolean) => void
 }
 
 export function AuthCredentialForm({
@@ -27,12 +29,14 @@ export function AuthCredentialForm({
   fullName,
   phoneNumber,
   showPassword,
+  rememberMe = true,
   onEmailChange,
   onPasswordChange,
   onFullNameChange,
   onPhoneNumberChange,
   onToggleShowPassword,
   onForgotPasswordClick,
+  onRememberMeChange,
 }: AuthCredentialFormProps) {
   const { t } = useTranslation()
 
@@ -117,6 +121,20 @@ export function AuthCredentialForm({
           </button>
         </div>
       </div>
+
+      {mode === 'login' && (
+        <div className="flex items-center justify-between pt-0.5">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => onRememberMeChange?.(e.target.checked)}
+              className="w-4 h-4 rounded border-surface-border text-primary focus:ring-primary/30 accent-primary cursor-pointer"
+            />
+            <span className="text-xs font-medium text-text-secondary">{t('auth.rememberMe')}</span>
+          </label>
+        </div>
+      )}
     </>
   )
 }

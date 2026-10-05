@@ -128,7 +128,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
+    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
     if (!token) return
 
     let eventSource: EventSource | null = null

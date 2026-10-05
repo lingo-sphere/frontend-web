@@ -17,7 +17,7 @@ export const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
+    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -70,6 +70,8 @@ apiClient.interceptors.response.use(
       if (isKickout) {
         storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
         storage.remove(STORAGE_KEYS.USER)
+        storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.session.remove(STORAGE_KEYS.USER)
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('lingosphere:session_terminated', { detail: { message: errorMsg } }))
         }
@@ -80,8 +82,8 @@ apiClient.interceptors.response.use(
         return Promise.reject(new Error(errorMsg || 'Thông tin xác thực không chính xác'))
       }
 
-      const existingAccessToken = storage.get(STORAGE_KEYS.ACCESS_TOKEN) || storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
-      const existingRefreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+      const existingAccessToken = storage.get(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get(STORAGE_KEYS.ACCESS_TOKEN) || storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
+      const existingRefreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.session.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
 
       if (!existingAccessToken && !existingRefreshToken) {
         return Promise.reject(new Error(errorMsg || i18n.t('auth.loginFailed')))
@@ -131,11 +133,16 @@ apiClient.interceptors.response.use(
           const newRefreshToken = tokenPayload?.refresh_token
 
           if (newAccessToken) {
-            storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+            if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
+              storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+            } else {
+              storage.session.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+            }
             storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken, { days: 1 })
             if (newRefreshToken) {
               storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken, { days: 7 })
               storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+              storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
             }
 
             if (originalRequest.headers) {
@@ -156,6 +163,9 @@ apiClient.interceptors.response.use(
           storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
           storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
           storage.remove(STORAGE_KEYS.USER)
+          storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+          storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
+          storage.session.remove(STORAGE_KEYS.USER)
           storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
           storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
           storage.cookie.remove(STORAGE_KEYS.USER)
