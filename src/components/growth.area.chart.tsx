@@ -1,14 +1,7 @@
-// Thành phần biểu đồ miền SVG trực quan hóa dữ liệu tăng trưởng năng lực theo thời gian
+// Biểu đồ miền SVG trực quan hóa đường tăng trưởng điểm số học tập hỗ trợ đơn dòng và đa dòng.
 'use client'
 
-import { useState, useId, useMemo } from 'react'
-
-interface ChartCoordinate {
-  x: number
-  y: number
-  item: GrowthChartDataPoint
-  idx: number
-}
+import { useState, useMemo, useCallback, useId } from 'react'
 
 export interface GrowthChartDataPoint {
   label: string
@@ -20,8 +13,17 @@ export interface GrowthChartDataPoint {
   details?: Array<{ label: string; value: string | number }>
 }
 
-export interface GrowthAreaChartProps {
+export interface GrowthChartSeries {
+  id: string
+  name: string
+  color: string
   data: GrowthChartDataPoint[]
+  colorTheme?: 'indigo' | 'emerald' | 'purple' | 'teal'
+}
+
+export interface GrowthAreaChartProps {
+  data?: GrowthChartDataPoint[]
+  series?: GrowthChartSeries[]
   height?: number
   minVal?: number
   maxVal?: number
@@ -29,11 +31,21 @@ export interface GrowthAreaChartProps {
   targetLabel?: string
   baselineValue?: number
   baselineLabel?: string
-  colorTheme?: 'indigo' | 'emerald' | 'purple'
+  colorTheme?: 'indigo' | 'emerald' | 'purple' | 'teal'
   valueSuffix?: string
   yAxisTicks?: number[]
   emptyMessage?: string
   strokeWidth?: number
+}
+
+interface ChartCoordinate {
+  x: number
+  y: number
+  item: GrowthChartDataPoint
+  idx: number
+  seriesId: string
+  seriesName: string
+  color: string
 }
 
 function getSmoothCurvePath(points: { x: number; y: number }[]): string {
@@ -67,6 +79,7 @@ function getAreaPath(points: { x: number; y: number }[], bottomY: number): strin
 
 export function GrowthAreaChart({
   data,
+  series,
   height = 280,
   minVal = 0,
   maxVal,
@@ -78,89 +91,11 @@ export function GrowthAreaChart({
   valueSuffix = '',
   yAxisTicks,
   emptyMessage = 'Chưa có đủ dữ liệu để vẽ biểu đồ miền',
-  strokeWidth = 1.5,
+  strokeWidth = 2,
 }: GrowthAreaChartProps) {
   const gradientId = useId()
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  const [hoveredPointId, setHoveredPointId] = useState<string | null>(null)
   const [lastActiveCoord, setLastActiveCoord] = useState<ChartCoordinate | null>(null)
-
-  const computedMax = useMemo(() => {
-    if (typeof maxVal === 'number' && maxVal > 0) return maxVal
-    if (data.length === 0) return 100
-    const highestData = Math.max(...data.map((d) => d.value), targetValue || 0, baselineValue || 0)
-    return Math.max(10, Math.ceil((highestData * 1.15) / 50) * 50)
-  }, [data, maxVal, targetValue, baselineValue])
-
-  const computedMin = useMemo(() => {
-    return Math.min(minVal, ...data.map((d) => d.value), baselineValue || 0)
-  }, [data, minVal, baselineValue])
-
-  const ticks = useMemo(() => {
-    if (yAxisTicks && yAxisTicks.length > 0) return yAxisTicks
-    const step = (computedMax - computedMin) / 4
-    return [
-      computedMin,
-      Math.round(computedMin + step),
-      Math.round(computedMin + step * 2),
-      Math.round(computedMin + step * 3),
-      computedMax,
-    ]
-  }, [yAxisTicks, computedMin, computedMax])
-
-  const paddingLeft = 55
-  const paddingRight = 105
-  const paddingTop = 26
-  const paddingBottom = 45
-  const svgWidth = 830
-  const svgHeight = height
-
-  const plotWidth = svgWidth - paddingLeft - paddingRight
-  const plotHeight = svgHeight - paddingTop - paddingBottom
-
-  const getY = (val: number) => {
-    const range = computedMax - computedMin || 1
-    const clamped = Math.max(computedMin, Math.min(computedMax, val))
-    return paddingTop + plotHeight - ((clamped - computedMin) / range) * plotHeight
-  }
-
-  const coords = useMemo(() => {
-    const range = computedMax - computedMin || 1
-    const total = data.length
-    return data.map((item, idx) => {
-      const clamped = Math.max(computedMin, Math.min(computedMax, item.value))
-      const y = paddingTop + plotHeight - ((clamped - computedMin) / range) * plotHeight
-      const x = total <= 1 ? paddingLeft + plotWidth / 2 : paddingLeft + (idx / (total - 1)) * plotWidth
-      return {
-        x,
-        y,
-        item,
-        idx,
-      }
-    })
-  }, [data, computedMin, computedMax, plotWidth, plotHeight, paddingTop, paddingLeft])
-
-  const areaPath = useMemo(() => {
-    if (coords.length === 0) return ''
-    return getAreaPath(coords, paddingTop + plotHeight)
-  }, [coords, paddingTop, plotHeight])
-
-  const curvePath = useMemo(() => {
-    if (coords.length === 0) return ''
-    return getSmoothCurvePath(coords)
-  }, [coords])
-
-  const visibleCoords = useMemo(() => {
-    const total = coords.length
-    if (total <= 6) return coords
-
-    const maxTicks = 6
-    const step = (total - 1) / (maxTicks - 1)
-    const indices = new Set<number>()
-    for (let i = 0; i < maxTicks; i++) {
-      indices.add(Math.round(i * step))
-    }
-    return coords.filter((c) => indices.has(c.idx))
-  }, [coords])
 
   const themeColors = {
     indigo: {
@@ -184,9 +119,162 @@ export function GrowthAreaChart({
       dotBorder: '#9333ea',
       dotBg: '#ffffff',
     },
+    teal: {
+      line: '#0d9488',
+      startFill: 'rgba(13, 148, 136, 0.22)',
+      endFill: 'rgba(13, 148, 136, 0.00)',
+      dotBorder: '#0f766e',
+      dotBg: '#ffffff',
+    },
   }[colorTheme]
 
-  if (data.length === 0) {
+  const activeSeriesList = useMemo<GrowthChartSeries[]>(() => {
+    if (series && series.length > 0) {
+      return series.filter((s) => s.data.length > 0)
+    }
+    if (data && data.length > 0) {
+      return [
+        {
+          id: 'default',
+          name: 'Điểm số',
+          color: themeColors.line,
+          colorTheme,
+          data,
+        },
+      ]
+    }
+    return []
+  }, [series, data, themeColors.line, colorTheme])
+
+  const allPoints = useMemo(() => {
+    return activeSeriesList.flatMap((s) => s.data)
+  }, [activeSeriesList])
+
+  const computedMax = useMemo(() => {
+    if (typeof maxVal === 'number' && maxVal > 0) return maxVal
+    if (allPoints.length === 0) return 100
+    const highest = Math.max(...allPoints.map((d) => d.value), targetValue || 0, baselineValue || 0)
+    return Math.max(10, Math.ceil((highest * 1.15) / 50) * 50)
+  }, [allPoints, maxVal, targetValue, baselineValue])
+
+  const computedMin = useMemo(() => {
+    return Math.min(minVal, ...allPoints.map((d) => d.value), baselineValue || 0)
+  }, [allPoints, minVal, baselineValue])
+
+  const ticks = useMemo(() => {
+    if (yAxisTicks && yAxisTicks.length > 0) return yAxisTicks
+    const step = (computedMax - computedMin) / 4
+    return [
+      computedMin,
+      Math.round(computedMin + step),
+      Math.round(computedMin + step * 2),
+      Math.round(computedMin + step * 3),
+      computedMax,
+    ]
+  }, [yAxisTicks, computedMin, computedMax])
+
+  const paddingLeft = 55
+  const paddingRight = 105
+  const paddingTop = 26
+  const paddingBottom = 45
+  const svgWidth = 830
+  const svgHeight = height
+
+  const plotWidth = svgWidth - paddingLeft - paddingRight
+  const plotHeight = svgHeight - paddingTop - paddingBottom
+
+  const getY = useCallback(
+    (val: number) => {
+      const range = computedMax - computedMin || 1
+      const clamped = Math.max(computedMin, Math.min(computedMax, val))
+      return paddingTop + plotHeight - ((clamped - computedMin) / range) * plotHeight
+    },
+    [computedMax, computedMin, paddingTop, plotHeight]
+  )
+
+  const timelineKeys = useMemo(() => {
+    const set = new Set<string>()
+    const list: Array<{ key: string; label: string; date?: string; sortVal: number }> = []
+
+    activeSeriesList.forEach((s) => {
+      s.data.forEach((p) => {
+        const key = p.date ? `${p.date}__${p.label}` : p.label
+        if (!set.has(key)) {
+          set.add(key)
+          let sortVal = 0
+          if (p.date) {
+            const parsed = Date.parse(p.date)
+            if (!Number.isNaN(parsed)) sortVal = parsed
+          }
+          list.push({ key, label: p.label, date: p.date, sortVal })
+        }
+      })
+    })
+
+    if (list.some((item) => item.sortVal > 0)) {
+      list.sort((a, b) => a.sortVal - b.sortVal)
+    }
+
+    return list
+  }, [activeSeriesList])
+
+  const timelineXMap = useMemo(() => {
+    const map = new Map<string, number>()
+    const total = timelineKeys.length
+    timelineKeys.forEach((item, idx) => {
+      const x = total <= 1 ? paddingLeft + plotWidth / 2 : paddingLeft + (idx / (total - 1)) * plotWidth
+      map.set(item.key, x)
+    })
+    return map
+  }, [timelineKeys, plotWidth, paddingLeft])
+
+  const seriesRenderData = useMemo(() => {
+    return activeSeriesList.map((s) => {
+      const coords: ChartCoordinate[] = s.data.map((item, idx) => {
+        const key = item.date ? `${item.date}__${item.label}` : item.label
+        const x = timelineXMap.get(key) ?? paddingLeft
+        const y = getY(item.value)
+        return {
+          x,
+          y,
+          item,
+          idx,
+          seriesId: s.id,
+          seriesName: s.name,
+          color: s.color,
+        }
+      })
+
+      const area = coords.length > 0 ? getAreaPath(coords, paddingTop + plotHeight) : ''
+      const curve = coords.length > 0 ? getSmoothCurvePath(coords) : ''
+
+      return {
+        series: s,
+        coords,
+        areaPath: area,
+        curvePath: curve,
+      }
+    })
+  }, [activeSeriesList, timelineXMap, getY, plotHeight, paddingTop])
+
+  const allCoords = useMemo(() => {
+    return seriesRenderData.flatMap((s) => s.coords)
+  }, [seriesRenderData])
+
+  const visibleTimelineTicks = useMemo(() => {
+    const total = timelineKeys.length
+    if (total <= 6) return timelineKeys
+
+    const maxTicks = 6
+    const step = (total - 1) / (maxTicks - 1)
+    const indices = new Set<number>()
+    for (let i = 0; i < maxTicks; i++) {
+      indices.add(Math.round(i * step))
+    }
+    return timelineKeys.filter((_, idx) => indices.has(idx))
+  }, [timelineKeys])
+
+  if (activeSeriesList.length === 0 || allPoints.length === 0) {
     return (
       <div
         style={{ height }}
@@ -197,7 +285,10 @@ export function GrowthAreaChart({
     )
   }
 
-  const activeCoord = hoveredIdx !== null && coords[hoveredIdx] ? coords[hoveredIdx] : null
+  const activeCoord =
+    hoveredPointId !== null
+      ? allCoords.find((c) => `${c.seriesId}_${c.idx}` === hoveredPointId) || null
+      : null
   const currentCoord = activeCoord || lastActiveCoord
 
   const isTooltipBelow = currentCoord ? currentCoord.y < svgHeight * 0.52 : false
@@ -215,7 +306,7 @@ export function GrowthAreaChart({
     : '-translate-y-full -translate-y-3'
 
   const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (coords.length === 0) return
+    if (allCoords.length === 0) return
     const rect = e.currentTarget.getBoundingClientRect()
     if (rect.width === 0) return
     const mouseSvgX = ((e.clientX - rect.left) / rect.width) * svgWidth
@@ -227,26 +318,29 @@ export function GrowthAreaChart({
       mouseSvgY < paddingTop - 15 ||
       mouseSvgY > paddingTop + plotHeight + 35
     ) {
-      setHoveredIdx(null)
+      setHoveredPointId(null)
       return
     }
 
-    let closestIdx = 0
+    let closest: ChartCoordinate = allCoords[0]
     let minDistance = Infinity
-    for (let i = 0; i < coords.length; i++) {
-      const dist = Math.abs(coords[i].x - mouseSvgX)
+    for (let i = 0; i < allCoords.length; i++) {
+      const dx = allCoords[i].x - mouseSvgX
+      const dy = allCoords[i].y - mouseSvgY
+      const dist = Math.sqrt(dx * dx + dy * dy)
       if (dist < minDistance) {
         minDistance = dist
-        closestIdx = i
+        closest = allCoords[i]
       }
     }
-    const closest = coords[closestIdx]
-    setHoveredIdx(closestIdx)
+
+    const id = `${closest.seriesId}_${closest.idx}`
+    setHoveredPointId(id)
     setLastActiveCoord(closest)
   }
 
   const handleSvgMouseLeave = () => {
-    setHoveredIdx(null)
+    setHoveredPointId(null)
   }
 
   const targetY = typeof targetValue === 'number' && targetValue > 0 ? getY(targetValue) : null
@@ -272,10 +366,12 @@ export function GrowthAreaChart({
         onMouseLeave={handleSvgMouseLeave}
       >
         <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={themeColors.startFill} />
-            <stop offset="100%" stopColor={themeColors.endFill} />
-          </linearGradient>
+          {seriesRenderData.map(({ series: s }) => (
+            <linearGradient key={s.id} id={`${gradientId}-${s.id}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={s.color} stopOpacity="0.22" />
+              <stop offset="100%" stopColor={s.color} stopOpacity="0.00" />
+            </linearGradient>
+          ))}
         </defs>
 
         {ticks.map((tickVal, i) => {
@@ -372,18 +468,31 @@ export function GrowthAreaChart({
           </g>
         )}
 
-        {areaPath && <path d={areaPath} fill={`url(#${gradientId})`} />}
+        {seriesRenderData.map(({ series: s, areaPath }) => {
+          if (!areaPath) return null
+          return (
+            <path
+              key={`area-${s.id}`}
+              d={areaPath}
+              fill={`url(#${gradientId}-${s.id})`}
+            />
+          )
+        })}
 
-        {curvePath && (
-          <path
-            d={curvePath}
-            fill="none"
-            stroke={themeColors.line}
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
+        {seriesRenderData.map(({ series: s, curvePath }) => {
+          if (!curvePath) return null
+          return (
+            <path
+              key={`curve-${s.id}`}
+              d={curvePath}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )
+        })}
 
         {currentCoord && (
           <line
@@ -391,7 +500,7 @@ export function GrowthAreaChart({
             y1={currentCoord.y}
             x2={currentCoord.x}
             y2={paddingTop + plotHeight}
-            stroke={themeColors.line}
+            stroke={currentCoord.color}
             strokeWidth="1"
             strokeDasharray="3 3"
             className={`transition-all duration-200 ease-out ${
@@ -400,69 +509,76 @@ export function GrowthAreaChart({
           />
         )}
 
-        {coords.map((c) => {
-          const isHovered = hoveredIdx === c.idx
-          return (
-            <g
-              key={c.idx}
-              className="cursor-pointer"
-              onMouseEnter={() => {
-                setHoveredIdx(c.idx)
-                setLastActiveCoord(c)
-              }}
-            >
-              <circle
-                cx={c.x}
-                cy={c.y}
-                r="18"
-                fill="transparent"
-              />
-              <circle
-                cx={c.x}
-                cy={c.y}
-                r="7.5"
-                fill={themeColors.line}
-                fillOpacity="0.2"
-                className={`transition-opacity duration-200 ease-out ${
-                  isHovered ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
-              <circle
-                cx={c.x}
-                cy={c.y}
-                r={isHovered ? '4.5' : '2.5'}
-                fill={themeColors.dotBg}
-                stroke={themeColors.dotBorder}
-                strokeWidth={isHovered ? '1.8' : '1.2'}
-                className="transition-all duration-200 ease-out"
-              />
-            </g>
-          )
-        })}
+        {seriesRenderData.map(({ series: s, coords }) => (
+          <g key={`dots-${s.id}`}>
+            {coords.map((c) => {
+              const pointId = `${s.id}_${c.idx}`
+              const isHovered = hoveredPointId === pointId
+              return (
+                <g
+                  key={pointId}
+                  className="cursor-pointer"
+                  onMouseEnter={() => {
+                    setHoveredPointId(pointId)
+                    setLastActiveCoord(c)
+                  }}
+                >
+                  <circle
+                    cx={c.x}
+                    cy={c.y}
+                    r="18"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx={c.x}
+                    cy={c.y}
+                    r="7.5"
+                    fill={s.color}
+                    fillOpacity="0.2"
+                    className={`transition-opacity duration-200 ease-out ${
+                      isHovered ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+                  <circle
+                    cx={c.x}
+                    cy={c.y}
+                    r={isHovered ? '4.5' : '2.5'}
+                    fill="#ffffff"
+                    stroke={s.color}
+                    strokeWidth={isHovered ? '1.8' : '1.2'}
+                    className="transition-all duration-200 ease-out"
+                  />
+                </g>
+              )
+            })}
+          </g>
+        ))}
 
-        {visibleCoords.map((c) => {
+        {visibleTimelineTicks.map((t, idx) => {
+          const x = timelineXMap.get(t.key) ?? paddingLeft
           let anchor: 'start' | 'middle' | 'end' = 'middle'
-          let posX = c.x
-          if (c.idx === 0) {
+          let posX = x
+          if (idx === 0) {
             anchor = 'start'
-            posX = c.x - 2
-          } else if (c.idx === coords.length - 1) {
+            posX = x - 2
+          } else if (idx === visibleTimelineTicks.length - 1) {
             anchor = 'end'
-            posX = c.x + 2
+            posX = x + 2
           }
 
-          const isHovered = hoveredIdx === c.idx
+          const isHovered = currentCoord ? Math.abs(currentCoord.x - x) < 5 : false
 
           return (
             <text
-              key={c.idx}
+              key={t.key}
               x={posX}
               y={paddingTop + plotHeight + 22}
               textAnchor={anchor}
-              className={`text-[11px] font-bold transition-colors ${isHovered ? 'fill-primary font-black' : 'fill-text-secondary'
-                }`}
+              className={`text-[11px] font-bold transition-colors ${
+                isHovered ? 'fill-primary font-black' : 'fill-text-secondary'
+              }`}
             >
-              {c.item.label}
+              {t.label}
             </text>
           )
         })}
@@ -480,8 +596,14 @@ export function GrowthAreaChart({
         >
           <div className="rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md px-3.5 py-2.5 shadow-xl text-left min-w-[170px] max-w-[260px] space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-primary/10 text-primary truncate max-w-[130px]">
-                {currentCoord.item.tag || currentCoord.item.label}
+              <span
+                className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded truncate max-w-[130px]"
+                style={{
+                  backgroundColor: `${currentCoord.color}20`,
+                  color: currentCoord.color,
+                }}
+              >
+                {currentCoord.seriesName ? currentCoord.seriesName : currentCoord.item.tag || currentCoord.item.label}
               </span>
               {currentCoord.item.date && (
                 <span className="text-[10px] font-medium text-text-tertiary shrink-0">
@@ -496,12 +618,18 @@ export function GrowthAreaChart({
 
             {currentCoord.item.tooltipSubtitle && (
               <div className="text-[11px] font-semibold text-text-secondary flex items-center gap-1.5 line-clamp-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ backgroundColor: currentCoord.color }}
+                />
                 <span className="truncate">{currentCoord.item.tooltipSubtitle}</span>
               </div>
             )}
 
-            <div className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">
+            <div
+              className="text-base font-black"
+              style={{ color: currentCoord.color }}
+            >
               {currentCoord.item.value} {valueSuffix}
             </div>
 
@@ -516,7 +644,7 @@ export function GrowthAreaChart({
               </div>
             )}
           </div>
-        </div>
+        </div> 
       )}
     </div>
   )

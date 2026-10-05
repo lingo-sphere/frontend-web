@@ -164,9 +164,11 @@ export function ProgressGrowthAnalyticsTab({
     selectedChapterCourseId,
     setSelectedChapterCourseId,
     chapterTimelinePoints,
+    chapterChartSeries,
     latestChapterScore,
     avgChapterScore,
     toeicTimelinePoints,
+    toeicChartSeries,
     peakToeicScore,
     latestToeicScore,
     netGrowthToeic,
@@ -181,6 +183,9 @@ export function ProgressGrowthAnalyticsTab({
     baselineScore,
     listeningScore,
     readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType: selectedSkillsType,
   })
 
   const totalTests = recentActivities.length
@@ -259,6 +264,7 @@ export function ProgressGrowthAnalyticsTab({
         <div className="pt-2">
           <GrowthAreaChart
             data={chapterTimelinePoints}
+            series={chapterChartSeries.length > 1 ? chapterChartSeries : undefined}
             height={200}
             minVal={0}
             maxVal={100}
@@ -273,10 +279,23 @@ export function ProgressGrowthAnalyticsTab({
 
         <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-3 text-[11px] text-text-secondary">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="flex items-center gap-1 font-semibold text-text-primary">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              Điểm thực tế bài làm (%)
-            </span>
+            {chapterChartSeries.length > 1 ? (
+              <>
+                <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  Khóa 2 Kỹ Năng
+                </span>
+                <span className="flex items-center gap-1 font-semibold text-teal-600 dark:text-teal-400">
+                  <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
+                  Khóa 4 Kỹ Năng
+                </span>
+              </>
+            ) : (
+              <span className="flex items-center gap-1 font-semibold text-text-primary">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                Điểm thực tế bài làm (%)
+              </span>
+            )}
             <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
               <span className="w-2.5 h-0.5 border-t-2 border-dashed border-emerald-500" />
               Chuẩn đạt yêu cầu (70%)
@@ -341,6 +360,7 @@ export function ProgressGrowthAnalyticsTab({
           <div className="pt-2">
             <GrowthAreaChart
               data={toeicTimelinePoints}
+              series={toeicChartSeries.length > 1 ? toeicChartSeries : undefined}
               height={200}
               minVal={0}
               maxVal={990}
@@ -357,10 +377,23 @@ export function ProgressGrowthAnalyticsTab({
 
           <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-3 text-[11px] text-text-secondary">
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="flex items-center gap-1 font-semibold text-text-primary">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
-                Điểm bài làm TOEIC
-              </span>
+              {toeicChartSeries.length > 1 ? (
+                <>
+                  <span className="flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400">
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                    2 Kỹ Năng (L & R)
+                  </span>
+                  <span className="flex items-center gap-1 font-semibold text-teal-600 dark:text-teal-400">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-600" />
+                    4 Kỹ Năng
+                  </span>
+                </>
+              ) : (
+                <span className="flex items-center gap-1 font-semibold text-text-primary">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                  Điểm bài làm TOEIC
+                </span>
+              )}
               <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
                 <span className="w-2.5 h-0.5 border-t-2 border-dashed border-amber-500" />
                 {targetScore > 0 ? `Mục tiêu (${targetScore}đ)` : 'Mục tiêu (Chưa đặt)'}
