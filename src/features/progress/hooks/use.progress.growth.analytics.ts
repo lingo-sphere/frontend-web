@@ -95,24 +95,31 @@ export function useProgressGrowthAnalytics({
 
     return sorted.map((item, idx) => {
       const courseMeta = coursesMap?.get(item.course_id)
+      const enrolledMeta = enrolledCourseCards.find((c) => c.course_id === item.course_id)
+      const courseTitle = courseMeta?.title || enrolledMeta?.title || 'Khóa học'
+      const isAllCourses = selectedChapterCourseId === 'all'
       const orderNum = item.order_index ?? (idx + 1)
       const actualScore = Math.min(100, Math.max(0, Math.round(item.score || 0)))
+
+      const detailsList = [
+        ...(isAllCourses ? [{ label: 'Khóa học', value: courseTitle }] : []),
+        { label: 'Điểm thực tế', value: `${actualScore}%` },
+        { label: 'Số câu đúng', value: `${item.correct_count ?? 0}/${item.total_questions ?? 0} câu` },
+        { label: 'Trạng thái', value: item.is_passed ? 'Đạt chuẩn' : 'Chưa đạt' },
+        { label: 'Ngày nộp', value: formatFullDate(item.submitted_at) },
+      ]
+
       return {
         label: `${formatDateLabel(item.submitted_at)} (Ch.${orderNum})`,
         value: actualScore,
         date: formatFullDate(item.submitted_at),
         tag: `Chương ${orderNum}`,
-        tooltipTitle: `Kiểm tra Chương ${orderNum}`,
-        tooltipSubtitle: courseMeta?.title || 'Khóa học',
-        details: [
-          { label: 'Điểm thực tế', value: `${actualScore}%` },
-          { label: 'Số câu đúng', value: `${item.correct_count ?? 0}/${item.total_questions ?? 0} câu` },
-          { label: 'Trạng thái', value: item.is_passed ? 'Đạt chuẩn' : 'Chưa đạt' },
-          { label: 'Ngày nộp', value: formatFullDate(item.submitted_at) },
-        ],
+        tooltipTitle: isAllCourses ? `${courseTitle} - Chương ${orderNum}` : `Kiểm tra Chương ${orderNum}`,
+        tooltipSubtitle: courseTitle,
+        details: detailsList,
       }
     })
-  }, [testAttempts, selectedChapterCourseId, coursesMap])
+  }, [testAttempts, selectedChapterCourseId, coursesMap, enrolledCourseCards])
 
   const latestChapterScore = useMemo(() => {
     if (chapterTimelinePoints.length === 0) return 0
@@ -159,7 +166,9 @@ export function useProgressGrowthAnalytics({
     const finalAttempts = testAttempts.filter((t) => t.test_type === 'final-test')
     finalAttempts.forEach((f) => {
       const courseMeta = coursesMap?.get(f.course_id)
-      const target = courseMeta?.target_score || 990
+      const enrolledMeta = enrolledCourseCards.find((c) => c.course_id === f.course_id)
+      const courseTitle = courseMeta?.title || enrolledMeta?.title || 'Khóa học'
+      const target = courseMeta?.target_score || enrolledMeta?.target_score || 990
       const toeicScore = f.score > 100 ? Math.round(f.score) : Math.round((Math.max(0, f.score) / 100) * target)
       pointsWithTimestamp.push({
         timestamp: new Date(f.submitted_at).getTime(),
@@ -169,9 +178,10 @@ export function useProgressGrowthAnalytics({
           value: toeicScore,
           date: formatFullDate(f.submitted_at),
           tag: 'Cuối khóa',
-          tooltipTitle: `Bài thi cuối khóa: ${courseMeta?.title || 'Khóa học'}`,
-          tooltipSubtitle: `Điểm quy đổi chuẩn TOEIC đầu ra (${target}+)`,
+          tooltipTitle: `Bài thi cuối khóa: ${courseTitle}`,
+          tooltipSubtitle: courseTitle,
           details: [
+            { label: 'Khóa học', value: courseTitle },
             { label: 'Điểm TOEIC quy đổi', value: `${toeicScore} / 990` },
             { label: 'Điểm bài làm', value: `${Math.round(f.score)}%` },
             { label: 'Số câu đúng', value: `${f.correct_count ?? 0}/${f.total_questions ?? 0} câu` },
@@ -209,7 +219,7 @@ export function useProgressGrowthAnalytics({
     })
 
     return resultPoints
-  }, [toeicAttempts, testAttempts, coursesMap, baselineScore, listeningScore, readingScore])
+  }, [toeicAttempts, testAttempts, coursesMap, baselineScore, listeningScore, readingScore, enrolledCourseCards])
 
   const peakToeicScore = useMemo(() => {
     if (toeicTimelinePoints.length === 0) return baselineScore > 0 ? baselineScore : 0

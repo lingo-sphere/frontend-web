@@ -130,8 +130,15 @@ export function useProgressData(navigate: (path: string) => void) {
       if (c.id) map.set(c.id, c)
       if (c._id) map.set(c._id, c)
     })
+    myEnrolledCourses.forEach((e) => {
+      const c = e.course
+      if (c) {
+        if (c.id) map.set(c.id, c)
+        if (c._id) map.set(c._id, c)
+      }
+    })
     return map
-  }, [allCourses])
+  }, [allCourses, myEnrolledCourses])
 
   const enrolledCourseCards = useMemo<UnifiedCourseCardItem[]>(() => {
     const courseProgressMap = new Map<string, UserCourseProgressItem>()
