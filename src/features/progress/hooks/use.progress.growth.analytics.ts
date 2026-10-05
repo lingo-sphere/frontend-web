@@ -120,7 +120,9 @@ export function useProgressGrowthAnalytics({
   const mapAttemptToPoint = (
     item: ChapterTestAttemptItem,
     idx: number,
-    isFilterAll: boolean
+    isFilterAll: boolean,
+    currentAttempt: number = 1,
+    totalForChapter: number = 1
   ): GrowthChartDataPoint => {
     const courseMeta = coursesMap?.get(item.course_id)
     const enrolledMeta = enrolledCourseCards.find((c) => c.course_id === item.course_id)
@@ -129,9 +131,13 @@ export function useProgressGrowthAnalytics({
     const orderNum = item.order_index ?? (idx + 1)
     const actualScore = Math.min(100, Math.max(0, Math.round(item.score || 0)))
 
+    const attemptSuffix = totalForChapter > 1 ? ` - L${currentAttempt}` : ''
+    const label = `${formatDateLabel(item.submitted_at)} (Ch.${orderNum}${attemptSuffix})`
+
     const detailsList = [
       ...(isFilterAll ? [{ label: 'Khóa học', value: courseTitle }] : []),
       { label: 'Hệ kỹ năng', value: is4K ? '4 Kỹ Năng' : '2 Kỹ Năng' },
+      ...(totalForChapter > 1 ? [{ label: 'Lần làm bài', value: `Lần ${currentAttempt}/${totalForChapter}` }] : []),
       { label: 'Điểm thực tế', value: `${actualScore}%` },
       { label: 'Số câu đúng', value: `${item.correct_count ?? 0}/${item.total_questions ?? 0} câu` },
       { label: 'Trạng thái', value: item.is_passed ? 'Đạt chuẩn' : 'Chưa đạt' },
@@ -139,14 +145,34 @@ export function useProgressGrowthAnalytics({
     ]
 
     return {
-      label: `${formatDateLabel(item.submitted_at)} (Ch.${orderNum})`,
+      label,
       value: actualScore,
       date: formatFullDate(item.submitted_at),
-      tag: `${is4K ? '4KN' : '2KN'} - Chương ${orderNum}`,
-      tooltipTitle: isFilterAll ? `${courseTitle} - Chương ${orderNum}` : `Kiểm tra Chương ${orderNum}`,
+      tag: `${is4K ? '4KN' : '2KN'} - Chương ${orderNum}${attemptSuffix}`,
+      tooltipTitle: isFilterAll
+        ? `${courseTitle} - Chương ${orderNum}${totalForChapter > 1 ? ` (Lần ${currentAttempt})` : ''}`
+        : `Kiểm tra Chương ${orderNum}${totalForChapter > 1 ? ` (Lần ${currentAttempt})` : ''}`,
       tooltipSubtitle: `${courseTitle} (${is4K ? '4 Kỹ Năng' : '2 Kỹ Năng'})`,
       details: detailsList,
     }
+  }
+
+  const mapAttemptsWithAttemptCount = (list: ChapterTestAttemptItem[], isFilterAll: boolean) => {
+    const totalCountPerChapter = new Map<number, number>()
+    list.forEach((item, idx) => {
+      const orderNum = item.order_index ?? (idx + 1)
+      totalCountPerChapter.set(orderNum, (totalCountPerChapter.get(orderNum) || 0) + 1)
+    })
+
+    const runningIndexPerChapter = new Map<number, number>()
+    return list.map((item, idx) => {
+      const orderNum = item.order_index ?? (idx + 1)
+      const currentAttempt = (runningIndexPerChapter.get(orderNum) || 0) + 1
+      runningIndexPerChapter.set(orderNum, currentAttempt)
+      const totalForThisChapter = totalCountPerChapter.get(orderNum) || 1
+
+      return mapAttemptToPoint(item, idx, isFilterAll, currentAttempt, totalForThisChapter)
+    })
   }
 
   const {
@@ -174,7 +200,7 @@ export function useProgressGrowthAnalytics({
       selectedChapterCourseId === 'all'
         ? sortedAll
         : sortedAll.filter((t) => t.course_id === selectedChapterCourseId)
-    const allPts = allFiltered.map((item, idx) => mapAttemptToPoint(item, idx, selectedChapterCourseId === 'all'))
+    const allPts = mapAttemptsWithAttemptCount(allFiltered, selectedChapterCourseId === 'all')
 
     const attempts2K = sortedAll.filter(
       (t) => !isCourse4Skills(coursesMap?.get(t.course_id) || enrolledCourseCards.find((c) => c.course_id === t.course_id))
@@ -183,9 +209,7 @@ export function useProgressGrowthAnalytics({
       selectedChapter2SkillsCourseId === 'all'
         ? attempts2K
         : attempts2K.filter((t) => t.course_id === selectedChapter2SkillsCourseId)
-    const pts2K = filtered2K.map((item, idx) =>
-      mapAttemptToPoint(item, idx, selectedChapter2SkillsCourseId === 'all')
-    )
+    const pts2K = mapAttemptsWithAttemptCount(filtered2K, selectedChapter2SkillsCourseId === 'all')
 
     const attempts4K = sortedAll.filter(
       (t) => isCourse4Skills(coursesMap?.get(t.course_id) || enrolledCourseCards.find((c) => c.course_id === t.course_id))
@@ -194,9 +218,7 @@ export function useProgressGrowthAnalytics({
       selectedChapter4SkillsCourseId === 'all'
         ? attempts4K
         : attempts4K.filter((t) => t.course_id === selectedChapter4SkillsCourseId)
-    const pts4K = filtered4K.map((item, idx) =>
-      mapAttemptToPoint(item, idx, selectedChapter4SkillsCourseId === 'all')
-    )
+    const pts4K = mapAttemptsWithAttemptCount(filtered4K, selectedChapter4SkillsCourseId === 'all')
 
     const latestAll = allPts.length > 0 ? allPts[allPts.length - 1].value : 0
     const avgAll =

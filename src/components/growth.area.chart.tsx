@@ -50,19 +50,29 @@ interface ChartCoordinate {
 
 function getSmoothCurvePath(points: { x: number; y: number }[]): string {
   if (points.length === 0) return ''
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`
+  if (points.length === 1) return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`
 
-  let d = `M ${points[0].x} ${points[0].y}`
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`
   for (let i = 0; i < points.length - 1; i++) {
     const p0 = points[Math.max(0, i - 1)]
     const p1 = points[i]
     const p2 = points[i + 1]
     const p3 = points[Math.min(points.length - 1, i + 2)]
 
-    const cp1x = p1.x + (p2.x - p0.x) / 6
-    const cp1y = p1.y + (p2.y - p0.y) / 6
-    const cp2x = p2.x - (p3.x - p1.x) / 6
-    const cp2y = p2.y - (p3.y - p1.y) / 6
+    const dx = p2.x - p1.x
+    if (dx <= 0.5) {
+      d += ` L ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
+      continue
+    }
+
+    const cp1x = p1.x + dx * 0.36
+    const cp2x = p2.x - dx * 0.36
+
+    const dy1 = (p2.y - p0.y) * 0.18
+    const dy2 = (p3.y - p1.y) * 0.18
+
+    const cp1y = p1.y + dy1
+    const cp2y = p2.y - dy2
 
     d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
   }
@@ -74,7 +84,7 @@ function getAreaPath(points: { x: number; y: number }[], bottomY: number): strin
   const curve = getSmoothCurvePath(points)
   const last = points[points.length - 1]
   const first = points[0]
-  return `${curve} L ${last.x.toFixed(1)} ${bottomY} L ${first.x.toFixed(1)} ${bottomY} Z`
+  return `${curve} L ${last.x.toFixed(1)} ${bottomY.toFixed(1)} L ${first.x.toFixed(1)} ${bottomY.toFixed(1)} Z`
 }
 
 export function GrowthAreaChart({
@@ -192,7 +202,10 @@ export function GrowthAreaChart({
     [computedMax, computedMin, paddingTop, plotHeight]
   )
 
+  const isSingleSeries = activeSeriesList.length === 1
+
   const timelineKeys = useMemo(() => {
+    if (isSingleSeries) return []
     const set = new Set<string>()
     const list: Array<{ key: string; label: string; date?: string; sortVal: number }> = []
 
@@ -216,9 +229,10 @@ export function GrowthAreaChart({
     }
 
     return list
-  }, [activeSeriesList])
+  }, [activeSeriesList, isSingleSeries])
 
   const timelineXMap = useMemo(() => {
+    if (isSingleSeries) return new Map<string, number>()
     const map = new Map<string, number>()
     const total = timelineKeys.length
     timelineKeys.forEach((item, idx) => {
@@ -226,13 +240,48 @@ export function GrowthAreaChart({
       map.set(item.key, x)
     })
     return map
-  }, [timelineKeys, plotWidth, paddingLeft])
+  }, [timelineKeys, plotWidth, paddingLeft, isSingleSeries])
 
   const seriesRenderData = useMemo(() => {
+    if (isSingleSeries && activeSeriesList.length === 1) {
+      const s = activeSeriesList[0]
+      const total = s.data.length
+      const coords: ChartCoordinate[] = s.data.map((item, idx) => {
+        const x = total <= 1 ? paddingLeft + plotWidth / 2 : paddingLeft + (idx / (total - 1)) * plotWidth
+        const y = getY(item.value)
+        return {
+          x,
+          y,
+          item,
+          idx,
+          seriesId: s.id,
+          seriesName: s.name,
+          color: s.color,
+        }
+      })
+
+      const area = coords.length > 0 ? getAreaPath(coords, paddingTop + plotHeight) : ''
+      const curve = coords.length > 0 ? getSmoothCurvePath(coords) : ''
+
+      return [
+        {
+          series: s,
+          coords,
+          areaPath: area,
+          curvePath: curve,
+        },
+      ]
+    }
+
     return activeSeriesList.map((s) => {
+      let lastX = paddingLeft - 1
       const coords: ChartCoordinate[] = s.data.map((item, idx) => {
         const key = item.date ? `${item.date}__${item.label}` : item.label
-        const x = timelineXMap.get(key) ?? paddingLeft
+        let x = timelineXMap.get(key) ?? paddingLeft
+        if (x <= lastX) {
+          x = lastX + 8
+        }
+        lastX = x
         const y = getY(item.value)
         return {
           x,
@@ -255,15 +304,49 @@ export function GrowthAreaChart({
         curvePath: curve,
       }
     })
-  }, [activeSeriesList, timelineXMap, getY, plotHeight, paddingTop])
+  }, [activeSeriesList, isSingleSeries, plotWidth, paddingLeft, getY, plotHeight, paddingTop, timelineXMap])
 
   const allCoords = useMemo(() => {
     return seriesRenderData.flatMap((s) => s.coords)
   }, [seriesRenderData])
 
   const visibleTimelineTicks = useMemo(() => {
+    if (isSingleSeries && activeSeriesList.length === 1) {
+      const s = activeSeriesList[0]
+      const total = s.data.length
+      if (total === 0) return []
+
+      const ticksList: Array<{ key: string; label: string; x: number }> = []
+      if (total <= 6) {
+        s.data.forEach((p, idx) => {
+          const x = total <= 1 ? paddingLeft + plotWidth / 2 : paddingLeft + (idx / (total - 1)) * plotWidth
+          ticksList.push({ key: `${s.id}_tick_${idx}`, label: p.label, x })
+        })
+      } else {
+        const maxTicks = 6
+        const step = (total - 1) / (maxTicks - 1)
+        const indices = new Set<number>()
+        for (let i = 0; i < maxTicks; i++) {
+          indices.add(Math.round(i * step))
+        }
+        s.data.forEach((p, idx) => {
+          if (indices.has(idx)) {
+            const x = paddingLeft + (idx / (total - 1)) * plotWidth
+            ticksList.push({ key: `${s.id}_tick_${idx}`, label: p.label, x })
+          }
+        })
+      }
+      return ticksList
+    }
+
     const total = timelineKeys.length
-    if (total <= 6) return timelineKeys
+    if (total <= 6) {
+      return timelineKeys.map((item) => ({
+        key: item.key,
+        label: item.label,
+        x: timelineXMap.get(item.key) ?? paddingLeft,
+      }))
+    }
 
     const maxTicks = 6
     const step = (total - 1) / (maxTicks - 1)
@@ -271,8 +354,14 @@ export function GrowthAreaChart({
     for (let i = 0; i < maxTicks; i++) {
       indices.add(Math.round(i * step))
     }
-    return timelineKeys.filter((_, idx) => indices.has(idx))
-  }, [timelineKeys])
+    return timelineKeys
+      .filter((_, idx) => indices.has(idx))
+      .map((item) => ({
+        key: item.key,
+        label: item.label,
+        x: timelineXMap.get(item.key) ?? paddingLeft,
+      }))
+  }, [isSingleSeries, activeSeriesList, plotWidth, paddingLeft, timelineKeys, timelineXMap])
 
   if (activeSeriesList.length === 0 || allPoints.length === 0) {
     return (
@@ -555,7 +644,7 @@ export function GrowthAreaChart({
         ))}
 
         {visibleTimelineTicks.map((t, idx) => {
-          const x = timelineXMap.get(t.key) ?? paddingLeft
+          const x = t.x
           let anchor: 'start' | 'middle' | 'end' = 'middle'
           let posX = x
           if (idx === 0) {
