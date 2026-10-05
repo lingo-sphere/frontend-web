@@ -1,4 +1,4 @@
-// Quản lý dữ liệu 2 biểu đồ phát triển: điểm kiểm tra chương học thực tế và biến thiên năng lực TOEIC đa kỹ năng.
+// Quản lý dữ liệu 4 biểu đồ phát triển học tập: kiểm tra chương 2KN, chương 4KN, biến thiên TOEIC 2KN và TOEIC 4KN.
 'use client'
 
 import { useState, useMemo } from 'react'
@@ -74,7 +74,7 @@ function formatFullDate(isoString?: string): string {
   }
 }
 
-function isCourse4Skills(course?: Course | UnifiedCourseCardItem): boolean {
+export function isCourse4Skills(course?: Course | UnifiedCourseCardItem): boolean {
   if (!course) return false
   const cat = (course as Course).category
   if (cat === 'TOEIC_4_SKILLS' || cat === 'IELTS_4_SKILLS' || cat === '4_SKILLS') return true
@@ -85,7 +85,7 @@ function isCourse4Skills(course?: Course | UnifiedCourseCardItem): boolean {
   return false
 }
 
-function isToeicAttempt4Skills(exam: ToeicExamAttemptItem): boolean {
+export function isToeicAttempt4Skills(exam: ToeicExamAttemptItem): boolean {
   const title = exam.exam_title || ''
   const type = exam.exam_type || ''
   if (/4\s*(kỹ\s*năng|skills)/i.test(title) || /speaking|writing/i.test(title)) return true
@@ -106,123 +106,179 @@ export function useProgressGrowthAnalytics({
   placementSkillsType = '2SKILLS',
 }: UseProgressGrowthAnalyticsProps) {
   const [selectedChapterCourseId, setSelectedChapterCourseId] = useState<string>('all')
+  const [selectedChapter2SkillsCourseId, setSelectedChapter2SkillsCourseId] = useState<string>('all')
+  const [selectedChapter4SkillsCourseId, setSelectedChapter4SkillsCourseId] = useState<string>('all')
 
-  const { chapterTimelinePoints, chapter2SkillsPoints, chapter4SkillsPoints } = useMemo(() => {
+  const enrolled2SkillsCards = useMemo(() => {
+    return enrolledCourseCards.filter((c) => !isCourse4Skills(coursesMap?.get(c.course_id) || c))
+  }, [enrolledCourseCards, coursesMap])
+
+  const enrolled4SkillsCards = useMemo(() => {
+    return enrolledCourseCards.filter((c) => isCourse4Skills(coursesMap?.get(c.course_id) || c))
+  }, [enrolledCourseCards, coursesMap])
+
+  const mapAttemptToPoint = (
+    item: ChapterTestAttemptItem,
+    idx: number,
+    isFilterAll: boolean
+  ): GrowthChartDataPoint => {
+    const courseMeta = coursesMap?.get(item.course_id)
+    const enrolledMeta = enrolledCourseCards.find((c) => c.course_id === item.course_id)
+    const courseTitle = courseMeta?.title || enrolledMeta?.title || 'Khóa học'
+    const is4K = isCourse4Skills(courseMeta || enrolledMeta)
+    const orderNum = item.order_index ?? (idx + 1)
+    const actualScore = Math.min(100, Math.max(0, Math.round(item.score || 0)))
+
+    const detailsList = [
+      ...(isFilterAll ? [{ label: 'Khóa học', value: courseTitle }] : []),
+      { label: 'Hệ kỹ năng', value: is4K ? '4 Kỹ Năng' : '2 Kỹ Năng' },
+      { label: 'Điểm thực tế', value: `${actualScore}%` },
+      { label: 'Số câu đúng', value: `${item.correct_count ?? 0}/${item.total_questions ?? 0} câu` },
+      { label: 'Trạng thái', value: item.is_passed ? 'Đạt chuẩn' : 'Chưa đạt' },
+      { label: 'Ngày nộp', value: formatFullDate(item.submitted_at) },
+    ]
+
+    return {
+      label: `${formatDateLabel(item.submitted_at)} (Ch.${orderNum})`,
+      value: actualScore,
+      date: formatFullDate(item.submitted_at),
+      tag: `${is4K ? '4KN' : '2KN'} - Chương ${orderNum}`,
+      tooltipTitle: isFilterAll ? `${courseTitle} - Chương ${orderNum}` : `Kiểm tra Chương ${orderNum}`,
+      tooltipSubtitle: `${courseTitle} (${is4K ? '4 Kỹ Năng' : '2 Kỹ Năng'})`,
+      details: detailsList,
+    }
+  }
+
+  const {
+    chapterTimelinePoints,
+    chapter2SkillsPoints,
+    chapter4SkillsPoints,
+    latestChapterScore,
+    avgChapterScore,
+    latestChapter2SkillsScore,
+    avgChapter2SkillsScore,
+    passRateChapter2Skills,
+    totalChapter2SkillsTests,
+    latestChapter4SkillsScore,
+    avgChapter4SkillsScore,
+    passRateChapter4Skills,
+    totalChapter4SkillsTests,
+  } = useMemo(() => {
     const chapterAttempts = testAttempts.filter((t) => t.test_type !== 'final-test')
-    const filtered =
-      selectedChapterCourseId === 'all'
-        ? chapterAttempts
-        : selectedChapterCourseId === 'group-2skills'
-          ? chapterAttempts.filter((t) => !isCourse4Skills(coursesMap?.get(t.course_id) || enrolledCourseCards.find((c) => c.course_id === t.course_id)))
-          : selectedChapterCourseId === 'group-4skills'
-            ? chapterAttempts.filter((t) => isCourse4Skills(coursesMap?.get(t.course_id) || enrolledCourseCards.find((c) => c.course_id === t.course_id)))
-            : chapterAttempts.filter((t) => t.course_id === selectedChapterCourseId)
 
-    const sorted = [...filtered].sort(
+    const sortedAll = [...chapterAttempts].sort(
       (a, b) => new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime()
     )
 
-    const mapAttemptToPoint = (item: ChapterTestAttemptItem, idx: number): GrowthChartDataPoint => {
-      const courseMeta = coursesMap?.get(item.course_id)
-      const enrolledMeta = enrolledCourseCards.find((c) => c.course_id === item.course_id)
-      const courseTitle = courseMeta?.title || enrolledMeta?.title || 'Khóa học'
-      const is4K = isCourse4Skills(courseMeta || enrolledMeta)
-      const isAllCourses = selectedChapterCourseId === 'all' || selectedChapterCourseId.startsWith('group-')
-      const orderNum = item.order_index ?? (idx + 1)
-      const actualScore = Math.min(100, Math.max(0, Math.round(item.score || 0)))
+    const allFiltered =
+      selectedChapterCourseId === 'all'
+        ? sortedAll
+        : sortedAll.filter((t) => t.course_id === selectedChapterCourseId)
+    const allPts = allFiltered.map((item, idx) => mapAttemptToPoint(item, idx, selectedChapterCourseId === 'all'))
 
-      const detailsList = [
-        ...(isAllCourses ? [{ label: 'Khóa học', value: courseTitle }] : []),
-        { label: 'Hệ kỹ năng', value: is4K ? '4 Kỹ Năng' : '2 Kỹ Năng' },
-        { label: 'Điểm thực tế', value: `${actualScore}%` },
-        { label: 'Số câu đúng', value: `${item.correct_count ?? 0}/${item.total_questions ?? 0} câu` },
-        { label: 'Trạng thái', value: item.is_passed ? 'Đạt chuẩn' : 'Chưa đạt' },
-        { label: 'Ngày nộp', value: formatFullDate(item.submitted_at) },
-      ]
+    const attempts2K = sortedAll.filter(
+      (t) => !isCourse4Skills(coursesMap?.get(t.course_id) || enrolledCourseCards.find((c) => c.course_id === t.course_id))
+    )
+    const filtered2K =
+      selectedChapter2SkillsCourseId === 'all'
+        ? attempts2K
+        : attempts2K.filter((t) => t.course_id === selectedChapter2SkillsCourseId)
+    const pts2K = filtered2K.map((item, idx) =>
+      mapAttemptToPoint(item, idx, selectedChapter2SkillsCourseId === 'all')
+    )
 
-      return {
-        label: `${formatDateLabel(item.submitted_at)} (Ch.${orderNum})`,
-        value: actualScore,
-        date: formatFullDate(item.submitted_at),
-        tag: `${is4K ? '4KN' : '2KN'} - Chương ${orderNum}`,
-        tooltipTitle: isAllCourses ? `${courseTitle} - Chương ${orderNum}` : `Kiểm tra Chương ${orderNum}`,
-        tooltipSubtitle: `${courseTitle} (${is4K ? '4 Kỹ Năng' : '2 Kỹ Năng'})`,
-        details: detailsList,
-      }
-    }
+    const attempts4K = sortedAll.filter(
+      (t) => isCourse4Skills(coursesMap?.get(t.course_id) || enrolledCourseCards.find((c) => c.course_id === t.course_id))
+    )
+    const filtered4K =
+      selectedChapter4SkillsCourseId === 'all'
+        ? attempts4K
+        : attempts4K.filter((t) => t.course_id === selectedChapter4SkillsCourseId)
+    const pts4K = filtered4K.map((item, idx) =>
+      mapAttemptToPoint(item, idx, selectedChapter4SkillsCourseId === 'all')
+    )
 
-    const allPoints = sorted.map(mapAttemptToPoint)
+    const latestAll = allPts.length > 0 ? allPts[allPts.length - 1].value : 0
+    const avgAll =
+      allPts.length > 0 ? Math.round(allPts.reduce((acc, curr) => acc + curr.value, 0) / allPts.length) : 0
 
-    const pts2K: GrowthChartDataPoint[] = []
-    const pts4K: GrowthChartDataPoint[] = []
+    const latest2K = pts2K.length > 0 ? pts2K[pts2K.length - 1].value : 0
+    const avg2K =
+      pts2K.length > 0 ? Math.round(pts2K.reduce((acc, curr) => acc + curr.value, 0) / pts2K.length) : 0
+    const passCount2K = filtered2K.filter((t) => t.is_passed || t.score >= 70).length
+    const passRate2K = pts2K.length > 0 ? Math.round((passCount2K / pts2K.length) * 100) : 0
 
-    sorted.forEach((item, idx) => {
-      const courseMeta = coursesMap?.get(item.course_id)
-      const enrolledMeta = enrolledCourseCards.find((c) => c.course_id === item.course_id)
-      const is4K = isCourse4Skills(courseMeta || enrolledMeta)
-      const point = mapAttemptToPoint(item, idx)
-      if (is4K) {
-        pts4K.push(point)
-      } else {
-        pts2K.push(point)
-      }
-    })
+    const latest4K = pts4K.length > 0 ? pts4K[pts4K.length - 1].value : 0
+    const avg4K =
+      pts4K.length > 0 ? Math.round(pts4K.reduce((acc, curr) => acc + curr.value, 0) / pts4K.length) : 0
+    const passCount4K = filtered4K.filter((t) => t.is_passed || t.score >= 70).length
+    const passRate4K = pts4K.length > 0 ? Math.round((passCount4K / pts4K.length) * 100) : 0
 
     return {
-      chapterTimelinePoints: allPoints,
+      chapterTimelinePoints: allPts,
       chapter2SkillsPoints: pts2K,
       chapter4SkillsPoints: pts4K,
+      latestChapterScore: latestAll,
+      avgChapterScore: avgAll,
+      latestChapter2SkillsScore: latest2K,
+      avgChapter2SkillsScore: avg2K,
+      passRateChapter2Skills: passRate2K,
+      totalChapter2SkillsTests: pts2K.length,
+      latestChapter4SkillsScore: latest4K,
+      avgChapter4SkillsScore: avg4K,
+      passRateChapter4Skills: passRate4K,
+      totalChapter4SkillsTests: pts4K.length,
     }
-  }, [testAttempts, selectedChapterCourseId, coursesMap, enrolledCourseCards])
+  }, [
+    testAttempts,
+    selectedChapterCourseId,
+    selectedChapter2SkillsCourseId,
+    selectedChapter4SkillsCourseId,
+    coursesMap,
+    enrolledCourseCards,
+  ])
 
   const chapterChartSeries = useMemo<GrowthChartSeries[]>(() => {
-    if (selectedChapterCourseId === 'all') {
-      const list: GrowthChartSeries[] = []
-      if (chapter2SkillsPoints.length > 0) {
-        list.push({
-          id: 'ch-2skills',
-          name: 'Khóa 2 Kỹ Năng',
-          color: '#10b981',
-          colorTheme: 'emerald',
-          data: chapter2SkillsPoints,
-        })
-      }
-      if (chapter4SkillsPoints.length > 0) {
-        list.push({
-          id: 'ch-4skills',
-          name: 'Khóa 4 Kỹ Năng',
-          color: '#0d9488',
-          colorTheme: 'teal',
-          data: chapter4SkillsPoints,
-        })
-      }
-      return list.length > 0
-        ? list
-        : [{ id: 'ch-all', name: 'Điểm chương', color: '#10b981', colorTheme: 'emerald', data: chapterTimelinePoints }]
-    }
-    return [
-      {
-        id: 'ch-selected',
-        name: selectedChapterCourseId === 'group-2skills' ? 'Khóa 2 Kỹ Năng' : selectedChapterCourseId === 'group-4skills' ? 'Khóa 4 Kỹ Năng' : 'Khóa học đã chọn',
+    const list: GrowthChartSeries[] = []
+    if (chapter2SkillsPoints.length > 0) {
+      list.push({
+        id: 'ch-2skills',
+        name: 'Khóa 2 Kỹ Năng',
         color: '#10b981',
         colorTheme: 'emerald',
-        data: chapterTimelinePoints,
-      },
-    ]
-  }, [selectedChapterCourseId, chapter2SkillsPoints, chapter4SkillsPoints, chapterTimelinePoints])
+        data: chapter2SkillsPoints,
+      })
+    }
+    if (chapter4SkillsPoints.length > 0) {
+      list.push({
+        id: 'ch-4skills',
+        name: 'Khóa 4 Kỹ Năng',
+        color: '#0d9488',
+        colorTheme: 'teal',
+        data: chapter4SkillsPoints,
+      })
+    }
+    return list.length > 0
+      ? list
+      : [{ id: 'ch-all', name: 'Điểm chương', color: '#10b981', colorTheme: 'emerald', data: chapterTimelinePoints }]
+  }, [chapter2SkillsPoints, chapter4SkillsPoints, chapterTimelinePoints])
 
-  const latestChapterScore = useMemo(() => {
-    if (chapterTimelinePoints.length === 0) return 0
-    return chapterTimelinePoints[chapterTimelinePoints.length - 1].value
-  }, [chapterTimelinePoints])
-
-  const avgChapterScore = useMemo(() => {
-    if (chapterTimelinePoints.length === 0) return 0
-    const sum = chapterTimelinePoints.reduce((acc, curr) => acc + curr.value, 0)
-    return Math.round(sum / chapterTimelinePoints.length)
-  }, [chapterTimelinePoints])
-
-  const { toeicTimelinePoints, toeic2SkillsPoints, toeic4SkillsPoints, toeicChartSeries } = useMemo(() => {
+  const {
+    toeicTimelinePoints,
+    toeic2SkillsPoints,
+    toeic4SkillsPoints,
+    toeicChartSeries,
+    baselineScore2Skills,
+    baselineScore4Skills,
+    latestToeic2SkillsScore,
+    peakToeic2SkillsScore,
+    netGrowthToeic2Skills,
+    totalToeic2SkillsTests,
+    latestToeic4SkillsScore,
+    peakToeic4SkillsScore,
+    netGrowthToeic4Skills,
+    totalToeic4SkillsTests,
+  } = useMemo(() => {
     interface PointEntry {
       timestamp: number
       isPlacement: boolean
@@ -299,44 +355,61 @@ export function useProgressGrowthAnalytics({
 
     entries.sort((a, b) => a.timestamp - b.timestamp)
 
-    const hasPlacement2K = entries.some((e) => e.isPlacement && !e.is4Skills)
-    const hasPlacement4K = entries.some((e) => e.isPlacement && e.is4Skills)
+    const entries2K = entries.filter((e) => !e.is4Skills)
+    const entries4K = entries.filter((e) => e.is4Skills)
+
+    const hasPlacement2K = entries2K.some((e) => e.isPlacement)
+    const hasPlacement4K = entries4K.some((e) => e.isPlacement)
 
     const pts2K: GrowthChartDataPoint[] = []
     const pts4K: GrowthChartDataPoint[] = []
 
-    const is4SkillsBaseline = placementSkillsType === '4SKILLS' || speakingScore > 0 || writingScore > 0
+    const baselineScore2K =
+      listeningScore > 0 || readingScore > 0
+        ? listeningScore + readingScore
+        : placementSkillsType !== '4SKILLS' && baselineScore > 0 && !(speakingScore > 0 || writingScore > 0)
+          ? baselineScore
+          : 0
 
-    if (baselineScore > 0 && !hasPlacement2K && !is4SkillsBaseline) {
-      const firstDate = entries.find((e) => !e.is4Skills)?.point.date || 'Khởi điểm'
+    const baselineScore4K =
+      speakingScore > 0 || writingScore > 0
+        ? listeningScore + readingScore + speakingScore + writingScore > 0
+          ? listeningScore + readingScore + speakingScore + writingScore
+          : baselineScore
+        : placementSkillsType === '4SKILLS' && baselineScore > 0
+          ? baselineScore
+          : 0
+
+    if (baselineScore2K > 0 && !hasPlacement2K) {
+      const firstDate = entries2K[0]?.point.date || 'Khởi điểm'
       pts2K.push({
         label: 'Baseline (2KN)',
-        value: baselineScore,
+        value: baselineScore2K,
         date: firstDate,
         tag: 'Đầu vào 2KN',
         tooltipTitle: 'Đánh giá đầu vào TOEIC (2 Kỹ Năng)',
         tooltipSubtitle: 'Điểm xuất phát Listening & Reading',
         details: [
           { label: 'Hệ kỹ năng', value: '2 Kỹ Năng' },
-          { label: 'Điểm xuất phát', value: `${baselineScore} TOEIC` },
+          { label: 'Điểm xuất phát', value: `${baselineScore2K} TOEIC` },
           ...(listeningScore > 0 ? [{ label: 'Listening', value: `${listeningScore}đ` }] : []),
           ...(readingScore > 0 ? [{ label: 'Reading', value: `${readingScore}đ` }] : []),
         ],
       })
     }
 
-    if (baselineScore > 0 && !hasPlacement4K && is4SkillsBaseline) {
-      const firstDate = entries.find((e) => e.is4Skills)?.point.date || 'Khởi điểm'
+    if (baselineScore4K > 0 && !hasPlacement4K) {
+      const firstDate = entries4K[0]?.point.date || 'Khởi điểm'
       pts4K.push({
         label: 'Baseline (4KN)',
-        value: baselineScore,
+        value: baselineScore4K,
         date: firstDate,
         tag: 'Đầu vào 4KN',
         tooltipTitle: 'Đánh giá đầu vào TOEIC (4 Kỹ Năng)',
         tooltipSubtitle: 'Điểm xuất phát Full 4 Kỹ Năng',
         details: [
           { label: 'Hệ kỹ năng', value: '4 Kỹ Năng' },
-          { label: 'Điểm xuất phát', value: `${baselineScore} TOEIC` },
+          { label: 'Điểm xuất phát', value: `${baselineScore4K} TOEIC` },
           ...(listeningScore > 0 ? [{ label: 'Listening', value: `${listeningScore}đ` }] : []),
           ...(readingScore > 0 ? [{ label: 'Reading', value: `${readingScore}đ` }] : []),
           ...(speakingScore > 0 ? [{ label: 'Speaking', value: `${speakingScore}đ` }] : []),
@@ -345,13 +418,8 @@ export function useProgressGrowthAnalytics({
       })
     }
 
-    entries.forEach((e) => {
-      if (e.is4Skills) {
-        pts4K.push(e.point)
-      } else {
-        pts2K.push(e.point)
-      }
-    })
+    entries2K.forEach((e) => pts2K.push(e.point))
+    entries4K.forEach((e) => pts4K.push(e.point))
 
     const seriesList: GrowthChartSeries[] = []
     if (pts2K.length > 0) {
@@ -367,19 +435,47 @@ export function useProgressGrowthAnalytics({
       seriesList.push({
         id: 'toeic-4skills',
         name: '4 Kỹ Năng (Full 4 Kỹ Năng)',
-        color: '#0d9488',
-        colorTheme: 'teal',
+        color: '#a855f7',
+        colorTheme: 'purple',
         data: pts4K,
       })
     }
 
     const combined = [...pts2K, ...pts4K]
 
+    const latest2K = pts2K.length > 0 ? pts2K[pts2K.length - 1].value : baselineScore2K > 0 ? baselineScore2K : 0
+    const peak2K =
+      pts2K.length > 0
+        ? Math.max(...pts2K.map((p) => p.value), baselineScore2K > 0 ? baselineScore2K : 0)
+        : baselineScore2K > 0
+          ? baselineScore2K
+          : 0
+    const netGrowth2K = latest2K > 0 && baselineScore2K > 0 ? latest2K - baselineScore2K : 0
+
+    const latest4K = pts4K.length > 0 ? pts4K[pts4K.length - 1].value : baselineScore4K > 0 ? baselineScore4K : 0
+    const peak4K =
+      pts4K.length > 0
+        ? Math.max(...pts4K.map((p) => p.value), baselineScore4K > 0 ? baselineScore4K : 0)
+        : baselineScore4K > 0
+          ? baselineScore4K
+          : 0
+    const netGrowth4K = latest4K > 0 && baselineScore4K > 0 ? latest4K - baselineScore4K : 0
+
     return {
       toeicTimelinePoints: combined,
       toeic2SkillsPoints: pts2K,
       toeic4SkillsPoints: pts4K,
       toeicChartSeries: seriesList,
+      baselineScore2Skills: baselineScore2K,
+      baselineScore4Skills: baselineScore4K,
+      latestToeic2SkillsScore: latest2K,
+      peakToeic2SkillsScore: peak2K,
+      netGrowthToeic2Skills: netGrowth2K,
+      totalToeic2SkillsTests: pts2K.length,
+      latestToeic4SkillsScore: latest4K,
+      peakToeic4SkillsScore: peak4K,
+      netGrowthToeic4Skills: netGrowth4K,
+      totalToeic4SkillsTests: pts4K.length,
     }
   }, [
     toeicAttempts,
@@ -430,16 +526,40 @@ export function useProgressGrowthAnalytics({
   return {
     selectedChapterCourseId,
     setSelectedChapterCourseId,
+    selectedChapter2SkillsCourseId,
+    setSelectedChapter2SkillsCourseId,
+    selectedChapter4SkillsCourseId,
+    setSelectedChapter4SkillsCourseId,
+    enrolled2SkillsCards,
+    enrolled4SkillsCards,
     chapterTimelinePoints,
     chapter2SkillsPoints,
     chapter4SkillsPoints,
     chapterChartSeries,
     latestChapterScore,
     avgChapterScore,
+    latestChapter2SkillsScore,
+    avgChapter2SkillsScore,
+    passRateChapter2Skills,
+    totalChapter2SkillsTests,
+    latestChapter4SkillsScore,
+    avgChapter4SkillsScore,
+    passRateChapter4Skills,
+    totalChapter4SkillsTests,
     toeicTimelinePoints,
     toeic2SkillsPoints,
     toeic4SkillsPoints,
     toeicChartSeries,
+    baselineScore2Skills,
+    baselineScore4Skills,
+    latestToeic2SkillsScore,
+    peakToeic2SkillsScore,
+    netGrowthToeic2Skills,
+    totalToeic2SkillsTests,
+    latestToeic4SkillsScore,
+    peakToeic4SkillsScore,
+    netGrowthToeic4Skills,
+    totalToeic4SkillsTests,
     peakToeicScore,
     latestToeicScore,
     netGrowthToeic,

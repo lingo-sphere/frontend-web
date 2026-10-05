@@ -10,6 +10,7 @@ interface ProgressCourseFilterDropdownProps {
   enrolledCourseCards: UnifiedCourseCardItem[]
   selectedCourseId: string
   onSelectCourse: (courseId: string) => void
+  allLabel?: string
 }
 
 function isCourse4Skills(course?: Course | UnifiedCourseCardItem): boolean {
@@ -27,6 +28,7 @@ export function ProgressCourseFilterDropdown({
   enrolledCourseCards,
   selectedCourseId,
   onSelectCourse,
+  allLabel = 'Tất cả khóa học',
 }: ProgressCourseFilterDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -56,12 +58,12 @@ export function ProgressCourseFilterDropdown({
   const selectedCourse = enrolledCourseCards.find((c) => c.course_id === selectedCourseId)
 
   const displayLabel = useMemo(() => {
-    if (selectedCourseId === 'all') return 'Tất cả khóa học'
+    if (selectedCourseId === 'all') return allLabel
     if (selectedCourseId === 'group-2skills') return 'Nhóm 2 Kỹ Năng'
     if (selectedCourseId === 'group-4skills') return 'Nhóm 4 Kỹ Năng'
     if (selectedCourse) return selectedCourse.title
-    return 'Tất cả khóa học'
-  }, [selectedCourseId, selectedCourse])
+    return allLabel
+  }, [selectedCourseId, selectedCourse, allLabel])
 
   const has2SkillsCourses = useMemo(() => {
     return enrolledCourseCards.some((c) => !isCourse4Skills(c))
@@ -112,7 +114,7 @@ export function ProgressCourseFilterDropdown({
                   <Layers size={14} />
                 </div>
                 <div className="min-w-0 text-left">
-                  <span className="font-bold block truncate">Tất cả khóa học</span>
+                  <span className="font-bold block truncate">{allLabel}</span>
                   <span className="text-[10px] text-text-tertiary block truncate">
                     Xem toàn bộ các bài kiểm tra chương đã làm
                   </span>
