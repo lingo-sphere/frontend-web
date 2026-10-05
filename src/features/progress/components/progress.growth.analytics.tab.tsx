@@ -597,144 +597,228 @@ export function ProgressGrowthAnalyticsTab({
           </div>
         </div>
 
-        <div className="lg:col-span-4 rounded-2xl border border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/60 pb-3 gap-2">
-            <div>
-              <h3 className="text-base font-black text-text-primary tracking-tight">Cân bằng kỹ năng</h3>
-              <p className="text-xs text-text-tertiary">Phân bố điểm số & mục tiêu</p>
-            </div>
-            <div className="flex items-center gap-1 p-0.5 bg-surface-subtle/80 rounded-xl border border-border/60 shrink-0">
-              <button
-                type="button"
-                onClick={() => setSelectedSkillsType('2SKILLS')}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                  selectedSkillsType === '2SKILLS'
-                    ? 'bg-teal-600 text-white shadow-xs'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                2 Kỹ Năng
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedSkillsType('4SKILLS')}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                  selectedSkillsType === '4SKILLS'
-                    ? 'bg-teal-600 text-white shadow-xs'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                4 Kỹ Năng
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-subtle/60 border border-border/60 text-center">
-            <div>
-              <span className="text-[10px] font-bold text-text-tertiary block">Baseline</span>
-              <span className="text-sm font-black text-text-primary">
-                {selectedSkillsType === '4SKILLS'
-                  ? (baselineScore > 0 || speakingScore > 0 || writingScore > 0)
-                    ? `${baselineScore + speakingScore + writingScore}đ`
-                    : '--'
-                  : baselineScore > 0
-                    ? `${baselineScore}đ`
-                    : '--'}
-              </span>
-            </div>
-            <div className="border-x border-border/60">
-              <span className="text-[10px] font-bold text-text-tertiary block">Kỷ lục</span>
-              <span className="text-sm font-black text-amber-600 dark:text-amber-400">
-                {peakToeicScore > 0 ? `${peakToeicScore}đ` : '--'}
-              </span>
-            </div>
-            <div>
-              <span className="text-[10px] font-bold text-text-tertiary block">Mục tiêu</span>
-              <span className="text-sm font-black text-primary">
-                {targetScore > 0 ? `${targetScore}đ` : 'Chưa đặt'}
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-3 flex-1">
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-bold text-text-primary">1. Listening (Nghe hiểu)</span>
-                <span className="font-black text-indigo-600 dark:text-indigo-400">{listeningScore || 0} / 495đ</span>
+        <div className="lg:col-span-4 space-y-5 flex flex-col">
+          <div className="rounded-2xl border border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/60 pb-3 gap-2">
+              <div>
+                <h3 className="text-base font-black text-text-primary tracking-tight">Cân bằng kỹ năng</h3>
+                <p className="text-xs text-text-tertiary">Phân bố điểm số & mục tiêu</p>
               </div>
-              <p className="text-[11px] text-text-tertiary mb-1.5">Kỹ năng nghe Audio, hội thoại, độc thoại</p>
-              <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-sky-400 to-indigo-600 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, Math.max(5, ((listeningScore || 0) / 495) * 100))}%` }}
-                />
+              <div className="flex items-center gap-1 p-0.5 bg-surface-subtle/80 rounded-xl border border-border/60 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSkillsType('2SKILLS')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                    selectedSkillsType === '2SKILLS'
+                      ? 'bg-teal-600 text-white shadow-xs'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  2 Kỹ Năng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSkillsType('4SKILLS')}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                    selectedSkillsType === '4SKILLS'
+                      ? 'bg-teal-600 text-white shadow-xs'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  4 Kỹ Năng
+                </button>
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-bold text-text-primary">2. Reading (Đọc hiểu)</span>
-                <span className="font-black text-rose-600 dark:text-rose-400">{readingScore || 0} / 495đ</span>
-              </div>
-              <p className="text-[11px] text-text-tertiary mb-1.5">Ngữ pháp, từ vựng & đọc hiểu đoạn văn</p>
-              <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-pink-500 to-rose-600 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, Math.max(5, ((readingScore || 0) / 495) * 100))}%` }}
-                />
-              </div>
-            </div>
-
-            {selectedSkillsType === '4SKILLS' && (
-              <>
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-bold text-text-primary">3. Speaking (Nói)</span>
-                    <span className="font-black text-teal-600 dark:text-teal-400">
-                      {speakingScore > 0 ? `${speakingScore} / 200đ` : 'Chưa đánh giá'}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-text-tertiary mb-1.5">Phát âm, trọng âm, ngữ điệu & miêu tả</p>
-                  <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-400 to-teal-600 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.max(5, ((speakingScore || 0) / 200) * 100))}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-bold text-text-primary">4. Writing (Viết)</span>
-                    <span className="font-black text-amber-600 dark:text-amber-400">
-                      {writingScore > 0 ? `${writingScore} / 200đ` : 'Chưa đánh giá'}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-text-tertiary mb-1.5">Viết câu miêu tả tranh, phản hồi email & luận</p>
-                  <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-amber-400 to-orange-600 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.max(5, ((writingScore || 0) / 200) * 100))}%` }}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div>
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-bold text-text-primary">
-                  {selectedSkillsType === '4SKILLS' ? '5. Khóa học bài giảng' : '3. Khóa học bài giảng'}
+            <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-subtle/60 border border-border/60 text-center">
+              <div>
+                <span className="text-[10px] font-bold text-text-tertiary block">Baseline</span>
+                <span className="text-sm font-black text-text-primary">
+                  {selectedSkillsType === '4SKILLS'
+                    ? (baselineScore > 0 || speakingScore > 0 || writingScore > 0)
+                      ? `${baselineScore + speakingScore + writingScore}đ`
+                      : '--'
+                    : baselineScore > 0
+                      ? `${baselineScore}đ`
+                      : '--'}
                 </span>
-                <span className="font-black text-teal-600 dark:text-teal-400">{avgCourseProgress}%</span>
               </div>
-              <p className="text-[11px] text-text-tertiary mb-1.5">{totalCompletedLessons} bài học hoàn thành qua các chương</p>
-              <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-teal-400 to-emerald-600 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, Math.max(5, avgCourseProgress))}%` }}
-                />
+              <div className="border-x border-border/60">
+                <span className="text-[10px] font-bold text-text-tertiary block">Kỷ lục</span>
+                <span className="text-sm font-black text-amber-600 dark:text-amber-400">
+                  {peakToeicScore > 0 ? `${peakToeicScore}đ` : '--'}
+                </span>
               </div>
+              <div>
+                <span className="text-[10px] font-bold text-text-tertiary block">Mục tiêu</span>
+                <span className="text-sm font-black text-primary">
+                  {targetScore > 0 ? `${targetScore}đ` : 'Chưa đặt'}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3 flex-1">
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="font-bold text-text-primary">1. Listening (Nghe hiểu)</span>
+                  <span className="font-black text-indigo-600 dark:text-indigo-400">{listeningScore || 0} / 495đ</span>
+                </div>
+                <p className="text-[11px] text-text-tertiary mb-1.5">Kỹ năng nghe Audio, hội thoại, độc thoại</p>
+                <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-sky-400 to-indigo-600 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(5, ((listeningScore || 0) / 495) * 100))}%` }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="font-bold text-text-primary">2. Reading (Đọc hiểu)</span>
+                  <span className="font-black text-rose-600 dark:text-rose-400">{readingScore || 0} / 495đ</span>
+                </div>
+                <p className="text-[11px] text-text-tertiary mb-1.5">Ngữ pháp, từ vựng & đọc hiểu đoạn văn</p>
+                <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-pink-500 to-rose-600 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(5, ((readingScore || 0) / 495) * 100))}%` }}
+                  />
+                </div>
+              </div>
+
+              {selectedSkillsType === '4SKILLS' && (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-bold text-text-primary">3. Speaking (Nói)</span>
+                      <span className="font-black text-teal-600 dark:text-teal-400">
+                        {speakingScore > 0 ? `${speakingScore} / 200đ` : 'Chưa đánh giá'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-text-tertiary mb-1.5">Phát âm, trọng âm, ngữ điệu & miêu tả</p>
+                    <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-400 to-teal-600 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, Math.max(5, ((speakingScore || 0) / 200) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-bold text-text-primary">4. Writing (Viết)</span>
+                      <span className="font-black text-amber-600 dark:text-amber-400">
+                        {writingScore > 0 ? `${writingScore} / 200đ` : 'Chưa đánh giá'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-text-tertiary mb-1.5">Viết câu miêu tả tranh, phản hồi email & luận</p>
+                    <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-400 to-orange-600 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, Math.max(5, ((writingScore || 0) / 200) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="font-bold text-text-primary">
+                    {selectedSkillsType === '4SKILLS' ? '5. Khóa học bài giảng' : '3. Khóa học bài giảng'}
+                  </span>
+                  <span className="font-black text-teal-600 dark:text-teal-400">{avgCourseProgress}%</span>
+                </div>
+                <p className="text-[11px] text-text-tertiary mb-1.5">{totalCompletedLessons} bài học hoàn thành qua các chương</p>
+                <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-teal-400 to-emerald-600 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(5, avgCourseProgress))}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between space-y-3.5 flex-1">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <div>
+                <h3 className="text-base font-black text-text-primary tracking-tight">Tỷ lệ đạt chuẩn bài thi</h3>
+                <p className="text-xs text-text-tertiary">Tổng hợp bài kiểm tra & bài thi gần nhất</p>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-bold shrink-0">
+                {passedTests}/{totalTests} bài đạt
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-4 p-3 rounded-xl bg-surface-subtle/60 border border-border/60">
+              <RadialDonutGauge percentage={passRate} size={84} strokeWidth={9} />
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-text-tertiary font-medium">Tỷ lệ đạt</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400">{passRate}%</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-text-tertiary font-medium">Số bài đạt</span>
+                  <span className="font-bold text-text-primary">{passedTests} bài</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-text-tertiary font-medium">Cần cải thiện</span>
+                  <span className="font-bold text-rose-600 dark:text-rose-400">
+                    {Math.max(0, totalTests - passedTests)} bài
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 flex-1">
+              <span className="text-[11px] font-bold text-text-tertiary uppercase tracking-wider block">
+                Lượt làm gần nhất
+              </span>
+              {recentTopActivities.length === 0 ? (
+                <p className="text-xs text-text-tertiary italic p-3 text-center rounded-xl bg-surface-subtle/30">
+                  Chưa có bài kiểm tra nào hoàn thành.
+                </p>
+              ) : (
+                recentTopActivities.map((act) => (
+                  <div
+                    key={act.id}
+                    onClick={() => handleNavigateActivity(act)}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-surface-subtle/50 hover:bg-surface-subtle border border-border/40 hover:border-border transition-all cursor-pointer text-xs group"
+                  >
+                    <div className="min-w-0 flex-1 pr-2">
+                      <span className="font-bold text-text-primary truncate block group-hover:text-primary transition-colors text-[11px]">
+                        {act.title}
+                      </span>
+                      <span className="text-[10px] text-text-tertiary truncate block">
+                        {new Date(act.submittedAt).toLocaleDateString('vi-VN')} • {act.subtitle}
+                      </span>
+                    </div>
+                    <span
+                      className={`font-black text-[11px] px-2 py-0.5 rounded-md shrink-0 ${
+                        act.isPassed
+                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                      }`}
+                    >
+                      {act.scoreText}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[11px]">
+              <span className="text-text-tertiary font-medium">Bấm vào bài để xem lại chi tiết</span>
+              <Button
+                onClick={() => onNavigate('/exam-history')}
+                variant="ghost"
+                size="sm"
+                className="rounded-xl text-xs font-bold gap-1 cursor-pointer h-7 px-2 text-primary hover:text-primary"
+              >
+                <span>Tất cả</span>
+                <ArrowRight size={11} />
+              </Button>
             </div>
           </div>
         </div>
@@ -828,52 +912,6 @@ export function ProgressGrowthAnalyticsTab({
           </div>
           <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold shrink-0">
             <Target size={20} />
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-border/80 bg-surface p-5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between border-b border-border/60 pb-3">
-          <div>
-            <h3 className="text-base font-black text-text-primary tracking-tight">Tỷ lệ đạt chuẩn bài thi</h3>
-            <p className="text-xs text-text-tertiary">Tổng hợp kết quả các bài kiểm tra và bài thi gần nhất</p>
-          </div>
-          <Badge variant="outline" className="text-[10px] font-bold">
-            {passedTests}/{totalTests} bài đạt
-          </Badge>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-6">
-          <RadialDonutGauge percentage={passRate} size={95} strokeWidth={10} />
-
-          <div className="flex-1 space-y-2 w-full min-w-0">
-            {recentTopActivities.length === 0 ? (
-              <p className="text-xs text-text-tertiary italic">Chưa có bài kiểm tra nào hoàn thành.</p>
-            ) : (
-              recentTopActivities.map((act) => (
-                <div
-                  key={act.id}
-                  onClick={() => handleNavigateActivity(act)}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-surface-subtle/50 hover:bg-surface-subtle border border-border/40 transition-colors cursor-pointer text-xs"
-                >
-                  <div className="min-w-0 flex-1 pr-2">
-                    <span className="font-bold text-text-primary truncate block">{act.title}</span>
-                    <span className="text-[10px] text-text-tertiary">
-                      {new Date(act.submittedAt).toLocaleDateString('vi-VN')} • {act.subtitle}
-                    </span>
-                  </div>
-                  <span
-                    className={`font-black text-xs px-2 py-0.5 rounded-md shrink-0 ${
-                      act.isPassed
-                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
-                    }`}
-                  >
-                    {act.scoreText}
-                  </span>
-                </div>
-              ))
-            )}
           </div>
         </div>
       </div>
