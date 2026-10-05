@@ -323,6 +323,11 @@ export function useProgressData(navigate: (path: string) => void) {
       examProfile?.profile?.best_reading_score ??
       0
   )
+  const speakingScore = Number(activeUser?.placement_speaking_score ?? 0)
+  const writingScore = Number(activeUser?.placement_writing_score ?? 0)
+  const placementSkillsType: '2SKILLS' | '4SKILLS' =
+    (activeUser?.placement_skills_type as '2SKILLS' | '4SKILLS') ||
+    (speakingScore > 0 || writingScore > 0 ? '4SKILLS' : '2SKILLS')
 
   const reload = () => {
     queryClient.invalidateQueries({ queryKey: progressKeys.all })
@@ -342,6 +347,9 @@ export function useProgressData(navigate: (path: string) => void) {
     vocabStats,
     listeningScore,
     readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType,
     testAttempts,
     toeicAttempts,
     coursesMap,

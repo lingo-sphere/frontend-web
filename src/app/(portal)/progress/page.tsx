@@ -26,6 +26,9 @@ export default function ProgressAppPage() {
     vocabStats,
     listeningScore,
     readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType,
     testAttempts,
     toeicAttempts,
     coursesMap,
@@ -118,6 +121,9 @@ export default function ProgressAppPage() {
         <ProgressSkillsTab
           listeningScore={listeningScore}
           readingScore={readingScore}
+          speakingScore={speakingScore}
+          writingScore={writingScore}
+          selectedSkillsType={placementSkillsType}
           vocabStats={vocabStats}
           onNavigate={navigate}
         />
@@ -137,6 +143,9 @@ export default function ProgressAppPage() {
           baselineScore={Number(activeUser?.placement_test_score) || 0}
           listeningScore={listeningScore}
           readingScore={readingScore}
+          speakingScore={speakingScore}
+          writingScore={writingScore}
+          initialSkillsType={placementSkillsType}
           onNavigate={navigate}
         />
       )}

@@ -20,6 +20,7 @@ import {
   type ToeicExamAttemptItem,
 } from '@/features/progress/hooks/use.progress.growth.analytics'
 import type { Course } from '@/types/api.types'
+import { useState } from 'react'
 
 interface ProgressGrowthAnalyticsTabProps {
   recentActivities: ProgressRecentActivity[]
@@ -31,6 +32,9 @@ interface ProgressGrowthAnalyticsTabProps {
   baselineScore?: number
   listeningScore?: number
   readingScore?: number
+  speakingScore?: number
+  writingScore?: number
+  initialSkillsType?: '2SKILLS' | '4SKILLS'
   onNavigate: (path: string) => void
 }
 
@@ -148,8 +152,14 @@ export function ProgressGrowthAnalyticsTab({
   baselineScore = 0,
   listeningScore = 0,
   readingScore = 0,
+  speakingScore = 0,
+  writingScore = 0,
+  initialSkillsType = '2SKILLS',
   onNavigate,
 }: ProgressGrowthAnalyticsTabProps) {
+  const [selectedSkillsType, setSelectedSkillsType] = useState<'2SKILLS' | '4SKILLS'>(
+    initialSkillsType || (speakingScore > 0 || writingScore > 0 ? '4SKILLS' : '2SKILLS')
+  )
   const {
     selectedChapterCourseId,
     setSelectedChapterCourseId,
@@ -373,21 +383,48 @@ export function ProgressGrowthAnalyticsTab({
         </div>
 
         <div className="lg:col-span-4 rounded-2xl border border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between border-b border-border/60 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/60 pb-3 gap-2">
             <div>
               <h3 className="text-base font-black text-text-primary tracking-tight">Cân bằng kỹ năng</h3>
               <p className="text-xs text-text-tertiary">Phân bố điểm số & mục tiêu</p>
             </div>
-            <Badge variant="outline" className="text-[10px] font-bold">
-              TOEIC 2 Skills
-            </Badge>
+            <div className="flex items-center gap-1 p-0.5 bg-surface-subtle/80 rounded-xl border border-border/60 shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedSkillsType('2SKILLS')}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                  selectedSkillsType === '2SKILLS'
+                    ? 'bg-teal-600 text-white shadow-xs'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                2 Kỹ Năng
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedSkillsType('4SKILLS')}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                  selectedSkillsType === '4SKILLS'
+                    ? 'bg-teal-600 text-white shadow-xs'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                4 Kỹ Năng
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-subtle/60 border border-border/60 text-center">
             <div>
               <span className="text-[10px] font-bold text-text-tertiary block">Baseline</span>
               <span className="text-sm font-black text-text-primary">
-                {baselineScore > 0 ? `${baselineScore}đ` : '--'}
+                {selectedSkillsType === '4SKILLS'
+                  ? (baselineScore > 0 || speakingScore > 0 || writingScore > 0)
+                    ? `${baselineScore + speakingScore + writingScore}đ`
+                    : '--'
+                  : baselineScore > 0
+                    ? `${baselineScore}đ`
+                    : '--'}
               </span>
             </div>
             <div className="border-x border-border/60">
@@ -404,7 +441,7 @@ export function ProgressGrowthAnalyticsTab({
             </div>
           </div>
 
-          <div className="space-y-3.5 flex-1">
+          <div className="space-y-3 flex-1">
             <div>
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="font-bold text-text-primary">1. Listening (Nghe hiểu)</span>
@@ -433,9 +470,47 @@ export function ProgressGrowthAnalyticsTab({
               </div>
             </div>
 
+            {selectedSkillsType === '4SKILLS' && (
+              <>
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-bold text-text-primary">3. Speaking (Nói)</span>
+                    <span className="font-black text-teal-600 dark:text-teal-400">
+                      {speakingScore > 0 ? `${speakingScore} / 200đ` : 'Chưa đánh giá'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-text-tertiary mb-1.5">Phát âm, trọng âm, ngữ điệu & miêu tả</p>
+                  <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-400 to-teal-600 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(5, ((speakingScore || 0) / 200) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-bold text-text-primary">4. Writing (Viết)</span>
+                    <span className="font-black text-amber-600 dark:text-amber-400">
+                      {writingScore > 0 ? `${writingScore} / 200đ` : 'Chưa đánh giá'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-text-tertiary mb-1.5">Viết câu miêu tả tranh, phản hồi email & luận</p>
+                  <div className="w-full bg-surface-subtle h-2 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-400 to-orange-600 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(5, ((writingScore || 0) / 200) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div>
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="font-bold text-text-primary">3. Khóa học bài giảng</span>
+                <span className="font-bold text-text-primary">
+                  {selectedSkillsType === '4SKILLS' ? '5. Khóa học bài giảng' : '3. Khóa học bài giảng'}
+                </span>
                 <span className="font-black text-teal-600 dark:text-teal-400">{avgCourseProgress}%</span>
               </div>
               <p className="text-[11px] text-text-tertiary mb-1.5">{totalCompletedLessons} bài học hoàn thành qua các chương</p>
@@ -460,9 +535,11 @@ export function ProgressGrowthAnalyticsTab({
               {baselineScore > 0 ? `${baselineScore}đ` : '--'}
             </div>
             <p className="text-[11px] text-text-tertiary">
-              {listeningScore > 0 || readingScore > 0
-                ? `L: ${listeningScore}đ • R: ${readingScore}đ`
-                : 'Baseline đầu vào'}
+              {selectedSkillsType === '4SKILLS' && (speakingScore > 0 || writingScore > 0)
+                ? `L: ${listeningScore}đ • R: ${readingScore}đ • S: ${speakingScore}đ • W: ${writingScore}đ`
+                : listeningScore > 0 || readingScore > 0
+                  ? `L: ${listeningScore}đ • R: ${readingScore}đ`
+                  : 'Baseline đầu vào'}
             </p>
           </div>
           <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold shrink-0">
