@@ -20,6 +20,10 @@ import {
   TestRunnerSubmitConfirmModal,
 } from '@/features/courses/components/test.runner.confirm.modal'
 import { TopicDrillModal } from '@/features/practice/components/topic.drill.modal'
+import { UserScoreUpgradeModal } from '@/features/user/components/user.score.upgrade.modal'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { userService } from '@/features/user/services/user.service'
+import { toast } from '@/store/toast.store'
 import { useCourseTestRunner } from '@/features/courses/hooks/use.course.test.runner'
 import type { CourseTestQuestion, TestAttemptItem } from '@/features/courses/types/test.runner.types'
 
@@ -42,6 +46,7 @@ export interface CourseTestRunnerWorkspaceProps {
   skills?: string[]
   highestScore?: number
   previousAttempts?: TestAttemptItem[]
+  courseTargetScore?: number
   onClose: () => void
   onComplete?: (score: number, isPassed: boolean, resultData?: unknown) => void
 }
@@ -63,6 +68,7 @@ export function CourseTestRunnerWorkspace({
   skills,
   highestScore = 0,
   previousAttempts = [],
+  courseTargetScore,
   onClose,
   onComplete,
 }: CourseTestRunnerWorkspaceProps) {
@@ -129,6 +135,53 @@ export function CourseTestRunnerWorkspace({
   const [nextCourses, setNextCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
   >([])
+  const [hasDismissedUpgrade, setHasDismissedUpgrade] = useState(false)
+
+  const user = useAuthStore((s) => s.user)
+
+  const currentListening = Number(user?.placement_listening_score || 0)
+  const currentReading = Number(user?.placement_reading_score || 0)
+  const currentSpeaking = Number(user?.placement_speaking_score || 0)
+  const currentWriting = Number(user?.placement_writing_score || 0)
+  const currentTotal = Number(
+    user?.placement_test_score ??
+    (user?.placement_skills_type === '4SKILLS'
+      ? currentListening + currentReading + currentSpeaking + currentWriting
+      : currentListening + currentReading)
+  )
+
+  const effectiveCourseTarget = courseTargetScore || 990
+  const finalPercentage = scoreResult?.score || 0
+  const convertedToeicScore =
+    finalPercentage > 100
+      ? Math.round(finalPercentage)
+      : Math.round((Math.max(0, finalPercentage) / 100) * effectiveCourseTarget)
+
+  const isFinalTestEligible =
+    !hasDismissedUpgrade &&
+    Boolean(user) &&
+    testType === 'final-test' &&
+    isSubmitted &&
+    convertedToeicScore > currentTotal &&
+    convertedToeicScore > 0
+
+  const handleConfirmFinalUpgrade = async () => {
+    const payload = {
+      placement_test_score: convertedToeicScore,
+      current_estimated_score: convertedToeicScore,
+      is_score_manually_edited: false,
+      placement_tested_at: new Date().toISOString(),
+      ...(user?.target_toeic_score && user.target_toeic_score <= convertedToeicScore
+        ? { target_toeic_score: Math.min(990, Math.ceil((convertedToeicScore + 50) / 10) * 10) }
+        : {}),
+    }
+    const updatedUser = await userService.updateProfile(payload)
+    const { user: currentUser, setUser } = useAuthStore.getState()
+    if (currentUser) {
+      setUser({ ...currentUser, ...payload, ...(updatedUser || {}) })
+    }
+    toast.success(`Đã cập nhật điểm tốt nghiệp khóa học (${convertedToeicScore}đ) vào hồ sơ của bạn!`)
+  }
 
   const handleConfirmExit = async () => {
     if (isExiting) return
@@ -143,26 +196,25 @@ export function CourseTestRunnerWorkspace({
   }
 
   useEffect(() => {
-    if (testType === 'final-test' && isSubmitted && scoreResult?.isPassed) {
-      let isMounted = true
-      courseService
-        .getRecommendedCourses({
-          current_course_id: courseId,
-          category,
-        })
-        .then((res) => {
-          if (isMounted && res?.recommendations) {
-            setNextCourses(res.recommendations)
-          }
-        })
-        .catch(() => {
-          if (isMounted) setNextCourses([])
-        })
-      return () => {
-        isMounted = false
-      }
-    } else {
-      setNextCourses([])
+    if (testType !== 'final-test' || !isSubmitted || !scoreResult?.isPassed) {
+      return
+    }
+    let isMounted = true
+    courseService
+      .getRecommendedCourses({
+        current_course_id: courseId,
+        category,
+      })
+      .then((res) => {
+        if (isMounted && res?.recommendations) {
+          setNextCourses(res.recommendations)
+        }
+      })
+      .catch(() => {
+        if (isMounted) setNextCourses([])
+      })
+    return () => {
+      isMounted = false
     }
   }, [testType, isSubmitted, scoreResult?.isPassed, courseId, category])
 
@@ -413,6 +465,29 @@ export function CourseTestRunnerWorkspace({
           open={Boolean(drillTopic)}
           onClose={() => setDrillTopic(null)}
           topicTag={drillTopic}
+        />
+      )}
+      {isFinalTestEligible && (
+        <UserScoreUpgradeModal
+          open={isFinalTestEligible}
+          onClose={() => setHasDismissedUpgrade(true)}
+          examTitle={`Bài thi cuối khóa: ${courseTitle || 'Khóa học'}`}
+          currentScores={{
+            total: currentTotal,
+            listening: currentListening,
+            reading: currentReading,
+            speaking: currentSpeaking,
+            writing: currentWriting,
+            skillsType: user?.placement_skills_type === '4SKILLS' ? '4SKILLS' : '2SKILLS',
+          }}
+          newScores={{
+            total: convertedToeicScore,
+            listening: is4Skills ? undefined : Math.round(convertedToeicScore / 2),
+            reading: is4Skills ? undefined : Math.round(convertedToeicScore / 2),
+            skillsType: is4Skills ? '4SKILLS' : '2SKILLS',
+          }}
+          currentTargetScore={Number(user?.target_toeic_score) || undefined}
+          onConfirm={handleConfirmFinalUpgrade}
         />
       )}
     </div>

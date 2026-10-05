@@ -3,7 +3,6 @@
 
 import { useCallback, useMemo, Suspense } from 'react'
 import { useParams, useSearchParams, useNavigate } from '@/lib/navigation'
-import { courseService } from '@/features/courses/services/course.service'
 import { mapCourseDataToWorkspace } from '@/features/courses/helpers/course.workspace.adapter'
 import { CourseTestRunnerWorkspace } from '@/features/courses/components/course.test.runner.workspace'
 import { CourseExamLoadingState } from '@/features/courses/components/course.exam.loading.state'
@@ -194,6 +193,7 @@ function CourseExamContent() {
     <CourseTestRunnerWorkspace
       courseId={courseId}
       courseTitle={course.title}
+      courseTargetScore={course.target_score || fetchedCourse?.target_score}
       chapter={selectedChapter}
       testType={testType}
       durationMinutes={durationMins}
