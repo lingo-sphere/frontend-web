@@ -1,24 +1,32 @@
-// Component biểu đồ miền phân tích quá trình phát triển năng lực toàn diện của học viên theo phong cách bảng điều khiển hiện đại.
+// Component hiển thị 2 biểu đồ phát triển: điểm kiểm tra chương học thực tế và biến thiên năng lực TOEIC.
 'use client'
 
-import { useState, useMemo } from 'react'
 import {
   Trophy,
   ArrowRight,
-  ChevronDown,
   Compass,
   Target,
   TrendingUp,
+  BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
 import { GrowthAreaChart } from '@/components/growth.area.chart'
+import { ProgressCourseFilterDropdown } from '@/features/progress/components/progress.course.filter.dropdown'
 import type { ProgressRecentActivity, UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
-import { useProgressGrowthAnalytics } from '@/features/progress/hooks/use.progress.growth.analytics'
+import {
+  useProgressGrowthAnalytics,
+  type ChapterTestAttemptItem,
+  type ToeicExamAttemptItem,
+} from '@/features/progress/hooks/use.progress.growth.analytics'
+import type { Course } from '@/types/api.types'
 
 interface ProgressGrowthAnalyticsTabProps {
   recentActivities: ProgressRecentActivity[]
   enrolledCourseCards: UnifiedCourseCardItem[]
+  testAttempts?: ChapterTestAttemptItem[]
+  toeicAttempts?: ToeicExamAttemptItem[]
+  coursesMap?: Map<string, Course>
   targetScore?: number
   baselineScore?: number
   listeningScore?: number
@@ -133,48 +141,37 @@ function RadialDonutGauge({
 export function ProgressGrowthAnalyticsTab({
   recentActivities,
   enrolledCourseCards,
+  testAttempts = [],
+  toeicAttempts = [],
+  coursesMap,
   targetScore = 0,
   baselineScore = 0,
   listeningScore = 0,
   readingScore = 0,
   onNavigate,
 }: ProgressGrowthAnalyticsTabProps) {
-  const [chartFilter, setChartFilter] = useState<'ALL' | 'TOEIC' | 'COURSE'>('ALL')
-
   const {
-    selectedCourseId,
-    setSelectedCourseId,
-    isLoadingCourseChart,
-    examTimelinePoints,
-    courseTimelinePoints,
-    peakScore,
-    latestScore,
-    netGrowth,
+    selectedChapterCourseId,
+    setSelectedChapterCourseId,
+    chapterTimelinePoints,
+    latestChapterScore,
+    avgChapterScore,
+    toeicTimelinePoints,
+    peakToeicScore,
+    latestToeicScore,
+    netGrowthToeic,
+    toeicProgression,
     totalCompletedLessons,
     avgCourseProgress,
-    hasExamData,
-    peakProgression,
-    growthProgression,
-    coursePassingBenchmark,
   } = useProgressGrowthAnalytics({
-    recentActivities,
     enrolledCourseCards,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
     baselineScore,
+    listeningScore,
+    readingScore,
   })
-
-  const filteredExamPoints = useMemo(() => {
-    if (chartFilter === 'TOEIC') {
-      return examTimelinePoints.filter(
-        (p) => p.tag === 'Placement' || (p.tooltipTitle && p.tooltipTitle.toLowerCase().includes('toeic'))
-      )
-    }
-    if (chartFilter === 'COURSE') {
-      return examTimelinePoints.filter(
-        (p) => p.tag !== 'Placement' && !(p.tooltipTitle && p.tooltipTitle.toLowerCase().includes('toeic'))
-      )
-    }
-    return examTimelinePoints
-  }, [examTimelinePoints, chartFilter])
 
   const totalTests = recentActivities.length
   const passedTests = recentActivities.filter((a) => a.isPassed).length
@@ -200,34 +197,106 @@ export function ProgressGrowthAnalyticsTab({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-border/80 bg-surface p-5 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
+          <div>
+            <h3 className="text-base font-black text-text-primary tracking-tight flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              Điểm kiểm tra các chương học
+            </h3>
+            <p className="text-xs text-text-tertiary">Theo dõi điểm số thực tế (%) qua các bài kiểm tra từng chương trong khóa học</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {enrolledCourseCards.length > 0 && (
+              <ProgressCourseFilterDropdown
+                enrolledCourseCards={enrolledCourseCards}
+                selectedCourseId={selectedChapterCourseId}
+                onSelectCourse={setSelectedChapterCourseId}
+              />
+            )}
+            <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold border-none text-[11px] px-2.5 py-1">
+              {chapterTimelinePoints.length} bài kiểm tra chương
+            </Badge>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div className="p-3 rounded-xl bg-surface-subtle/60 border border-border/60">
+            <span className="text-[10px] font-bold text-text-tertiary block">Điểm bài gần nhất</span>
+            <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+              {latestChapterScore > 0 ? `${latestChapterScore}%` : '--'}
+            </div>
+          </div>
+          <div className="p-3 rounded-xl bg-surface-subtle/60 border border-border/60">
+            <span className="text-[10px] font-bold text-text-tertiary block">Điểm trung bình các chương</span>
+            <div className="text-xl font-black text-text-primary">
+              {avgChapterScore > 0 ? `${avgChapterScore}%` : '--'}
+            </div>
+          </div>
+          <div className="p-3 rounded-xl bg-surface-subtle/60 border border-border/60">
+            <span className="text-[10px] font-bold text-text-tertiary block">Chuẩn đạt yêu cầu</span>
+            <div className="text-xl font-black text-text-secondary">70%</div>
+          </div>
+          <div className="p-3 rounded-xl bg-surface-subtle/60 border border-border/60">
+            <span className="text-[10px] font-bold text-text-tertiary block">Đánh giá chung</span>
+            <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1">
+              {avgChapterScore >= 70 ? 'Đạt chuẩn chương' : chapterTimelinePoints.length > 0 ? 'Cần ôn luyện thêm' : 'Chưa có bài làm'}
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2">
+          <GrowthAreaChart
+            data={chapterTimelinePoints}
+            height={200}
+            minVal={0}
+            maxVal={100}
+            targetValue={70}
+            targetLabel="Chuẩn đạt"
+            colorTheme="emerald"
+            valueSuffix="%"
+            yAxisTicks={[0, 20, 40, 60, 80, 100]}
+            emptyMessage="Chưa có bài kiểm tra chương nào. Hãy hoàn thành các bài kiểm tra chương trong khóa học để theo dõi điểm số thực tế."
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-3 text-[11px] text-text-secondary">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="flex items-center gap-1 font-semibold text-text-primary">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              Điểm thực tế bài làm (%)
+            </span>
+            <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="w-2.5 h-0.5 border-t-2 border-dashed border-emerald-500" />
+              Chuẩn đạt yêu cầu (70%)
+            </span>
+          </div>
+          <Button
+            onClick={() => onNavigate('/courses')}
+            variant="outline"
+            size="sm"
+            className="rounded-xl text-xs font-bold gap-1 cursor-pointer h-7 px-2.5"
+          >
+            <BookOpen size={12} />
+            <span>Khóa học</span>
+          </Button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-8 rounded-2xl border border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
             <div>
               <h3 className="text-base font-black text-text-primary tracking-tight flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
-                Biến thiên năng lực bài thi
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse" />
+                Biến thiên năng lực điểm TOEIC
               </h3>
-              <p className="text-xs text-text-tertiary">Theo dõi điểm số TOEIC theo dòng thời gian làm bài</p>
+              <p className="text-xs text-text-tertiary">Theo dõi điểm TOEIC qua bài thi đầu vào, các lần luyện đề TOEIC và bài thi cuối khóa</p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <select
-                  value={chartFilter}
-                  onChange={(e) => setChartFilter(e.target.value as 'ALL' | 'TOEIC' | 'COURSE')}
-                  className="rounded-xl border border-border bg-surface-subtle/60 px-3 py-1 text-xs font-bold text-text-primary focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer pr-7 appearance-none"
-                >
-                  <option value="ALL">Tất cả bài test</option>
-                  <option value="TOEIC">Đề thi TOEIC</option>
-                  <option value="COURSE">Kiểm tra khóa học</option>
-                </select>
-                <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
-              </div>
-              <Badge className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-bold border-none text-[11px] px-2.5 py-1">
-                {recentActivities.length} bài thi
-              </Badge>
-            </div>
+            <Badge className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-bold border-none text-[11px] px-2.5 py-1">
+              {toeicTimelinePoints.length} mốc điểm TOEIC
+            </Badge>
           </div>
 
           <div className="flex items-center gap-3 pt-3">
@@ -237,17 +306,17 @@ export function ProgressGrowthAnalyticsTab({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl sm:text-3xl font-black text-text-primary tracking-tight">
-                  {latestScore > 0 ? `${latestScore}đ` : '--'}
+                  {latestToeicScore > 0 ? `${latestToeicScore}đ` : '--'}
                 </span>
-                {hasExamData ? (
+                {toeicTimelinePoints.length > 0 ? (
                   <span
                     className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                      netGrowth >= 0
+                      netGrowthToeic >= 0
                         ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                         : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
                     }`}
                   >
-                    {netGrowth >= 0 ? `+${netGrowth}đ` : `${netGrowth}đ`}
+                    {netGrowthToeic >= 0 ? `+${netGrowthToeic}đ` : `${netGrowthToeic}đ`}
                   </span>
                 ) : (
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-surface-subtle text-text-tertiary">
@@ -255,13 +324,13 @@ export function ProgressGrowthAnalyticsTab({
                   </span>
                 )}
               </div>
-              <span className="text-[11px] text-text-tertiary font-medium">Điểm số bài kiểm tra gần nhất</span>
+              <span className="text-[11px] text-text-tertiary font-medium">Điểm số bài thi TOEIC gần nhất</span>
             </div>
           </div>
 
           <div className="pt-2">
             <GrowthAreaChart
-              data={filteredExamPoints}
+              data={toeicTimelinePoints}
               height={200}
               minVal={0}
               maxVal={990}
@@ -272,7 +341,7 @@ export function ProgressGrowthAnalyticsTab({
               colorTheme="indigo"
               valueSuffix="đ"
               yAxisTicks={[0, 250, 450, 650, 850, 990]}
-              emptyMessage="Chưa có bài thi nào được ghi nhận. Hãy luyện đề hoặc làm bài kiểm tra đầu vào để theo dõi biến thiên năng lực."
+              emptyMessage="Chưa có bài thi TOEIC nào. Hãy luyện đề hoặc làm bài kiểm tra đầu vào để theo dõi điểm số."
             />
           </div>
 
@@ -280,7 +349,7 @@ export function ProgressGrowthAnalyticsTab({
             <div className="flex items-center gap-3 flex-wrap">
               <span className="flex items-center gap-1 font-semibold text-text-primary">
                 <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
-                Điểm bài làm
+                Điểm bài làm TOEIC
               </span>
               <span className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
                 <span className="w-2.5 h-0.5 border-t-2 border-dashed border-amber-500" />
@@ -297,7 +366,7 @@ export function ProgressGrowthAnalyticsTab({
               size="sm"
               className="rounded-xl text-xs font-bold gap-1 cursor-pointer h-7 px-2.5"
             >
-              <span>Luyện đề</span>
+              <span>Luyện đề TOEIC</span>
               <ArrowRight size={11} />
             </Button>
           </div>
@@ -324,7 +393,7 @@ export function ProgressGrowthAnalyticsTab({
             <div className="border-x border-border/60">
               <span className="text-[10px] font-bold text-text-tertiary block">Kỷ lục</span>
               <span className="text-sm font-black text-amber-600 dark:text-amber-400">
-                {peakScore > 0 ? `${peakScore}đ` : '--'}
+                {peakToeicScore > 0 ? `${peakToeicScore}đ` : '--'}
               </span>
             </div>
             <div>
@@ -404,16 +473,16 @@ export function ProgressGrowthAnalyticsTab({
         <div className="rounded-2xl border border-border/80 bg-surface p-4 shadow-xs flex items-center justify-between gap-2">
           <div className="space-y-1">
             <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/15 text-amber-700 dark:text-amber-300">
-              Kỷ lục
+              Kỷ lục TOEIC
             </span>
             <div className="text-xl font-black text-amber-600 dark:text-amber-400">
-              {peakScore > 0 ? `${peakScore}đ` : '--'}
+              {peakToeicScore > 0 ? `${peakToeicScore}đ` : '--'}
             </div>
-            <p className="text-[11px] text-text-tertiary">Điểm cao nhất</p>
+            <p className="text-[11px] text-text-tertiary">Điểm TOEIC cao nhất</p>
           </div>
-          {peakProgression.length >= 2 ? (
+          {toeicProgression.length >= 2 ? (
             <MiniSparkline
-              data={peakProgression}
+              data={toeicProgression}
               color="#f59e0b"
               gradientId="sparkline-peak"
             />
@@ -427,21 +496,21 @@ export function ProgressGrowthAnalyticsTab({
         <div className="rounded-2xl border border-border/80 bg-surface p-4 shadow-xs flex items-center justify-between gap-2">
           <div className="space-y-1">
             <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-              Tăng trưởng
+              Tăng trưởng TOEIC
             </span>
             <div
               className={`text-xl font-black ${
-                netGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                netGrowthToeic >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
               }`}
             >
-              {hasExamData ? (netGrowth >= 0 ? `+${netGrowth}đ` : `${netGrowth}đ`) : '--'}
+              {toeicTimelinePoints.length > 0 ? (netGrowthToeic >= 0 ? `+${netGrowthToeic}đ` : `${netGrowthToeic}đ`) : '--'}
             </div>
             <p className="text-[11px] text-text-tertiary">So với xuất phát</p>
           </div>
-          {growthProgression.length >= 2 ? (
+          {toeicProgression.length >= 2 ? (
             <MiniSparkline
-              data={growthProgression}
-              color={netGrowth >= 0 ? '#10b981' : '#f43f5e'}
+              data={toeicProgression}
+              color={netGrowthToeic >= 0 ? '#10b981' : '#f43f5e'}
               gradientId="sparkline-growth"
             />
           ) : (
@@ -454,14 +523,14 @@ export function ProgressGrowthAnalyticsTab({
         <div className="rounded-2xl border border-border/80 bg-surface p-4 shadow-xs flex items-center justify-between gap-2">
           <div className="space-y-1">
             <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-black bg-sky-500/15 text-sky-700 dark:text-sky-300">
-              Mục tiêu
+              Mục tiêu TOEIC
             </span>
             <div className="text-xl font-black text-sky-600 dark:text-sky-400">
               {targetScore > 0 ? `${targetScore}đ` : 'Chưa đặt'}
             </div>
             <p className="text-[11px] text-text-tertiary">
               {targetScore > 0
-                ? `Đạt ${Math.min(100, Math.max(0, Math.round(((peakScore || latestScore) / targetScore) * 100)))}% mục tiêu`
+                ? `Đạt ${Math.min(100, Math.max(0, Math.round(((peakToeicScore || latestToeicScore) / targetScore) * 100)))}% mục tiêu`
                 : 'Chuẩn đầu ra'}
             </p>
           </div>
@@ -471,117 +540,48 @@ export function ProgressGrowthAnalyticsTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-7 rounded-2xl border border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
-            <div>
-              <h3 className="text-base font-black text-text-primary tracking-tight flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                Tiến độ tích lũy khóa học
-              </h3>
-              <p className="text-xs text-text-tertiary">Sự hoàn thành các bài học & chặng kiểm tra theo khóa</p>
-            </div>
-            {enrolledCourseCards.length > 0 && (
-              <div className="relative">
-                <select
-                  value={selectedCourseId}
-                  onChange={(e) => setSelectedCourseId(e.target.value)}
-                  className="rounded-xl border border-border bg-surface-subtle/60 px-3 py-1 text-xs font-bold text-text-primary focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer pr-7 appearance-none"
-                >
-                  <option value="all">Tất cả khóa học</option>
-                  {enrolledCourseCards.map((c) => (
-                    <option key={c.course_id} value={c.course_id}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
-              </div>
-            )}
+      <div className="rounded-2xl border border-border/80 bg-surface p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+          <div>
+            <h3 className="text-base font-black text-text-primary tracking-tight">Tỷ lệ đạt chuẩn bài thi</h3>
+            <p className="text-xs text-text-tertiary">Tổng hợp kết quả các bài kiểm tra và bài thi gần nhất</p>
           </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-3">
-            <div className="space-y-0.5 shrink-0">
-              <span className="text-[10px] font-bold text-text-tertiary uppercase">Tiến độ trung bình</span>
-              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{avgCourseProgress}%</div>
-              <span className="text-[11px] text-text-tertiary font-semibold">{totalCompletedLessons} bài hoàn thành</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              {isLoadingCourseChart ? (
-                <div className="h-[150px] flex items-center justify-center text-xs text-text-tertiary">
-                  Đang tải đồ thị khóa học...
-                </div>
-              ) : (
-                <GrowthAreaChart
-                  data={courseTimelinePoints}
-                  height={150}
-                  minVal={0}
-                  maxVal={100}
-                  targetValue={coursePassingBenchmark}
-                  targetLabel="Chuẩn đạt"
-                  colorTheme="emerald"
-                  valueSuffix="%"
-                  yAxisTicks={[0, 25, 50, 75, 100]}
-                  emptyMessage="Chưa có tiến độ khóa học."
-                />
-              )}
-            </div>
-          </div>
+          <Badge variant="outline" className="text-[10px] font-bold">
+            {passedTests}/{totalTests} bài đạt
+          </Badge>
         </div>
 
-        <div className="lg:col-span-5 rounded-2xl border border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between space-y-3">
-          <div className="flex items-center justify-between border-b border-border/60 pb-3">
-            <div>
-              <h3 className="text-base font-black text-text-primary tracking-tight">Tỷ lệ đạt chuẩn</h3>
-              <p className="text-xs text-text-tertiary">Kết quả các bài test gần nhất</p>
-            </div>
-            <Badge variant="outline" className="text-[10px] font-bold">
-              {passedTests}/{totalTests} bài đạt
-            </Badge>
-          </div>
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <RadialDonutGauge percentage={passRate} size={95} strokeWidth={10} />
 
-          <div className="flex items-center gap-4">
-            <RadialDonutGauge percentage={passRate} size={95} strokeWidth={10} />
-
-            <div className="flex-1 space-y-2 min-w-0">
-              {recentTopActivities.length === 0 ? (
-                <p className="text-xs text-text-tertiary italic">Chưa có bài kiểm tra nào hoàn thành.</p>
-              ) : (
-                recentTopActivities.map((act) => (
-                  <div
-                    key={act.id}
-                    onClick={() => handleNavigateActivity(act)}
-                    className="flex items-center justify-between p-2 rounded-xl bg-surface-subtle/50 hover:bg-surface-subtle border border-border/40 transition-colors cursor-pointer text-xs"
-                  >
-                    <div className="min-w-0 flex-1 pr-2">
-                      <span className="font-bold text-text-primary truncate block">{act.title}</span>
-                      <span className="text-[10px] text-text-tertiary">
-                        {new Date(act.submittedAt).toLocaleDateString('vi-VN')}
-                      </span>
-                    </div>
-                    <span
-                      className={`font-black text-xs px-2 py-0.5 rounded-md shrink-0 ${
-                        act.isPassed
-                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                          : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
-                      }`}
-                    >
-                      {act.scoreText}
+          <div className="flex-1 space-y-2 w-full min-w-0">
+            {recentTopActivities.length === 0 ? (
+              <p className="text-xs text-text-tertiary italic">Chưa có bài kiểm tra nào hoàn thành.</p>
+            ) : (
+              recentTopActivities.map((act) => (
+                <div
+                  key={act.id}
+                  onClick={() => handleNavigateActivity(act)}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-surface-subtle/50 hover:bg-surface-subtle border border-border/40 transition-colors cursor-pointer text-xs"
+                >
+                  <div className="min-w-0 flex-1 pr-2">
+                    <span className="font-bold text-text-primary truncate block">{act.title}</span>
+                    <span className="text-[10px] text-text-tertiary">
+                      {new Date(act.submittedAt).toLocaleDateString('vi-VN')} • {act.subtitle}
                     </span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="pt-1 flex items-center justify-end gap-2 border-t border-border/60">
-            <Button
-              onClick={() => onNavigate('/courses')}
-              size="sm"
-              className="bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold h-7 px-3 cursor-pointer"
-            >
-              Khóa học
-            </Button>
+                  <span
+                    className={`font-black text-xs px-2 py-0.5 rounded-md shrink-0 ${
+                      act.isPassed
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                    }`}
+                  >
+                    {act.scoreText}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -113,19 +113,21 @@ export function GrowthAreaChart({
     return paddingTop + plotHeight - ((clamped - computedMin) / range) * plotHeight
   }
 
-  const getX = (idx: number, total: number) => {
-    if (total <= 1) return paddingLeft + plotWidth / 2
-    return paddingLeft + (idx / (total - 1)) * plotWidth
-  }
-
   const coords = useMemo(() => {
-    return data.map((item, idx) => ({
-      x: getX(idx, data.length),
-      y: getY(item.value),
-      item,
-      idx,
-    }))
-  }, [data, computedMin, computedMax, plotWidth, plotHeight])
+    const range = computedMax - computedMin || 1
+    const total = data.length
+    return data.map((item, idx) => {
+      const clamped = Math.max(computedMin, Math.min(computedMax, item.value))
+      const y = paddingTop + plotHeight - ((clamped - computedMin) / range) * plotHeight
+      const x = total <= 1 ? paddingLeft + plotWidth / 2 : paddingLeft + (idx / (total - 1)) * plotWidth
+      return {
+        x,
+        y,
+        item,
+        idx,
+      }
+    })
+  }, [data, computedMin, computedMax, plotWidth, plotHeight, paddingTop, paddingLeft])
 
   const areaPath = useMemo(() => {
     if (coords.length === 0) return ''
@@ -135,6 +137,19 @@ export function GrowthAreaChart({
   const curvePath = useMemo(() => {
     if (coords.length === 0) return ''
     return getSmoothCurvePath(coords)
+  }, [coords])
+
+  const visibleCoords = useMemo(() => {
+    const total = coords.length
+    if (total <= 6) return coords
+
+    const maxTicks = 6
+    const step = (total - 1) / (maxTicks - 1)
+    const indices = new Set<number>()
+    for (let i = 0; i < maxTicks; i++) {
+      indices.add(Math.round(i * step))
+    }
+    return coords.filter((c) => indices.has(c.idx))
   }, [coords])
 
   const themeColors = {
@@ -230,19 +245,21 @@ export function GrowthAreaChart({
               className="opacity-70"
             />
             <rect
-              x={svgWidth - paddingRight - 85}
+              x={svgWidth - paddingRight - 105}
               y={getY(baselineValue) - 10}
-              width="80"
-              height="18"
-              rx="4"
-              fill="#94a3b8"
-              fillOpacity="0.15"
+              width="105"
+              height="20"
+              rx="6"
+              fill="#ffffff"
+              stroke="#94a3b8"
+              strokeWidth="1"
+              className="dark:fill-slate-900"
             />
             <text
-              x={svgWidth - paddingRight - 45}
-              y={getY(baselineValue) + 3}
+              x={svgWidth - paddingRight - 52}
+              y={getY(baselineValue) + 4}
               textAnchor="middle"
-              className="fill-slate-500 dark:fill-slate-300 text-[10px] font-bold"
+              className="fill-slate-600 dark:fill-slate-300 text-[10px] font-bold"
             >
               {baselineLabel || 'Baseline'} ({baselineValue}{valueSuffix})
             </text>
@@ -263,16 +280,18 @@ export function GrowthAreaChart({
             />
             <rect
               x={paddingLeft + 6}
-              y={getY(targetValue) - 11}
-              width="100"
-              height="18"
+              y={getY(targetValue) - 10}
+              width="130"
+              height="20"
               rx="6"
-              fill="#f59e0b"
-              fillOpacity="0.2"
+              fill="#ffffff"
+              stroke="#f59e0b"
+              strokeWidth="1"
+              className="dark:fill-slate-900"
             />
             <text
-              x={paddingLeft + 56}
-              y={getY(targetValue) + 2}
+              x={paddingLeft + 71}
+              y={getY(targetValue) + 4}
               textAnchor="middle"
               className="fill-amber-600 dark:fill-amber-400 text-[10px] font-black"
             >
@@ -294,6 +313,19 @@ export function GrowthAreaChart({
           />
         )}
 
+        {activeCoord && (
+          <line
+            x1={activeCoord.x}
+            y1={activeCoord.y}
+            x2={activeCoord.x}
+            y2={paddingTop + plotHeight}
+            stroke={themeColors.line}
+            strokeWidth="1.5"
+            strokeDasharray="3 3"
+            className="opacity-60"
+          />
+        )}
+
         {coords.map((c) => {
           const isHovered = hoveredIdx === c.idx
           return (
@@ -312,10 +344,10 @@ export function GrowthAreaChart({
               <circle
                 cx={c.x}
                 cy={c.y}
-                r={isHovered ? '7' : '5'}
+                r={isHovered ? '7' : '4'}
                 fill={themeColors.dotBg}
                 stroke={themeColors.dotBorder}
-                strokeWidth={isHovered ? '3.5' : '2.5'}
+                strokeWidth={isHovered ? '3.5' : '2'}
                 className="transition-all duration-200"
               />
               {isHovered && (
@@ -332,19 +364,33 @@ export function GrowthAreaChart({
           )
         })}
 
-        {coords.map((c) => (
-          <text
-            key={c.idx}
-            x={c.x}
-            y={paddingTop + plotHeight + 22}
-            textAnchor="middle"
-            className={`text-[11px] font-bold transition-colors ${
-              hoveredIdx === c.idx ? 'fill-primary font-black' : 'fill-text-secondary'
-            }`}
-          >
-            {c.item.label}
-          </text>
-        ))}
+        {visibleCoords.map((c) => {
+          let anchor: 'start' | 'middle' | 'end' = 'middle'
+          let posX = c.x
+          if (c.idx === 0) {
+            anchor = 'start'
+            posX = c.x - 2
+          } else if (c.idx === coords.length - 1) {
+            anchor = 'end'
+            posX = c.x + 2
+          }
+
+          const isHovered = hoveredIdx === c.idx
+
+          return (
+            <text
+              key={c.idx}
+              x={posX}
+              y={paddingTop + plotHeight + 22}
+              textAnchor={anchor}
+              className={`text-[11px] font-bold transition-colors ${
+                isHovered ? 'fill-primary font-black' : 'fill-text-secondary'
+              }`}
+            >
+              {c.item.label}
+            </text>
+          )
+        })}
       </svg>
 
       {activeCoord && (

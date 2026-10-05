@@ -26,6 +26,9 @@ export default function ProgressAppPage() {
     vocabStats,
     listeningScore,
     readingScore,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
   } = useProgressData(navigate)
 
   const formatDate = (isoString?: string) => {
@@ -127,6 +130,9 @@ export default function ProgressAppPage() {
         <ProgressGrowthAnalyticsTab
           recentActivities={recentActivities}
           enrolledCourseCards={enrolledCourseCards}
+          testAttempts={testAttempts}
+          toeicAttempts={toeicAttempts}
+          coursesMap={coursesMap}
           targetScore={metrics.targetScore}
           baselineScore={Number(activeUser?.placement_test_score) || 0}
           listeningScore={listeningScore}

@@ -335,6 +335,9 @@ export function useProgressData(navigate: (path: string) => void) {
     vocabStats,
     listeningScore,
     readingScore,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
     reload,
   }
 }
