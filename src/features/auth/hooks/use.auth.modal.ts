@@ -15,8 +15,8 @@ interface UseAuthModalOptions {
 
 export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOptions) {
   const [mode, setMode] = useState<AuthMode>(initialMode)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('nguyennamtinh9999@gmail.com')
+  const [password, setPassword] = useState('12345678')
   const [newPassword, setNewPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
