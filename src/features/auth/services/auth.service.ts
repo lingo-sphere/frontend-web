@@ -151,6 +151,33 @@ export const authService = {
     return api.get<User>(API_CONFIG.ENDPOINTS.AUTH.ME, undefined, UserSchema)
   },
 
+  clearAuthStorage(): void {
+    storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+    storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+    storage.remove(STORAGE_KEYS.USER)
+    storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
+    storage.remove(STORAGE_KEYS.PROFILE_STATS)
+    storage.remove(STORAGE_KEYS.USER_NOTES)
+    storage.remove(STORAGE_KEYS.WISHLIST)
+    storage.remove(STORAGE_KEYS.PENDING_ORDER)
+    storage.remove(STORAGE_KEYS.IS_PRIVILEGED)
+    storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+    storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
+    storage.session.remove(STORAGE_KEYS.USER)
+    storage.session.remove(STORAGE_KEYS.PLACEMENT_SCORE)
+    storage.session.remove(STORAGE_KEYS.PROFILE_STATS)
+    storage.session.remove(STORAGE_KEYS.USER_NOTES)
+    storage.session.remove(STORAGE_KEYS.WISHLIST)
+    storage.session.remove(STORAGE_KEYS.PENDING_ORDER)
+    storage.session.remove(STORAGE_KEYS.IS_PRIVILEGED)
+    storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
+    storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+    storage.cookie.remove(STORAGE_KEYS.USER)
+    storage.cookie.remove(STORAGE_KEYS.IS_PRIVILEGED)
+    storage.cookie.remove('refresh_token')
+    storage.cookie.remove('access_token')
+  },
+
   async logout(): Promise<void> {
     try {
       const refreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
@@ -162,25 +189,8 @@ export const authService = {
         },
       )
     } catch {
-      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
-      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
-      storage.remove(STORAGE_KEYS.USER)
-      storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
-      storage.remove(STORAGE_KEYS.PROFILE_STATS)
-      storage.remove(STORAGE_KEYS.USER_NOTES)
-      storage.remove(STORAGE_KEYS.WISHLIST)
-      storage.remove(STORAGE_KEYS.PENDING_ORDER)
-      storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
-      storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
-      storage.session.remove(STORAGE_KEYS.USER)
-      storage.session.remove(STORAGE_KEYS.PLACEMENT_SCORE)
-      storage.session.remove(STORAGE_KEYS.PROFILE_STATS)
-      storage.session.remove(STORAGE_KEYS.USER_NOTES)
-      storage.session.remove(STORAGE_KEYS.WISHLIST)
-      storage.session.remove(STORAGE_KEYS.PENDING_ORDER)
-      storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
-      storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
-      storage.cookie.remove(STORAGE_KEYS.USER)
+    } finally {
+      this.clearAuthStorage()
     }
   },
 

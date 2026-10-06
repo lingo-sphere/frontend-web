@@ -1,21 +1,29 @@
-// Component hiển thị trạng thái trống cho danh mục khóa học.
+// Component hiển thị trạng thái trống và giao diện yêu cầu đăng nhập cho danh mục khóa học.
 
-import { BookOpen, GraduationCap, LogIn, Sparkles, Heart, Zap, Target, ArrowRight, BookmarkCheck, Bell, ShieldCheck } from 'lucide-react'
-import type { CourseTabType, CourseCardData } from '@/features/courses/types/course'
-import { CourseCard } from '@/features/courses/components/course.card'
+import {
+  BookOpen,
+  GraduationCap,
+  LogIn,
+  Sparkles,
+  Heart,
+  Zap,
+  Target,
+  ArrowRight,
+  BookmarkCheck,
+  Bell,
+  ShieldCheck,
+  Compass,
+  CheckCircle2,
+  Award,
+  PlayCircle,
+} from 'lucide-react'
+import type { CourseTabType } from '@/features/courses/types/course'
 
 interface CoursesEmptyStateProps {
   activeTab: CourseTabType
   isAuthenticated: boolean
   isVi: boolean
   onNavigateCourses: () => void
-  featuredCourses?: CourseCardData[]
-  isInWishlist?: (courseId: string) => boolean
-  activeMenuId?: string | null
-  onToggleMenu?: (courseId: string, e: React.MouseEvent) => void
-  onToggleWishlist?: (courseId: string, e: React.MouseEvent) => void
-  onCourseClick?: (course: CourseCardData) => void
-  onCloseMenu?: () => void
 }
 
 export function CoursesEmptyState({
@@ -23,17 +31,10 @@ export function CoursesEmptyState({
   isAuthenticated,
   isVi,
   onNavigateCourses,
-  featuredCourses = [],
-  isInWishlist,
-  activeMenuId,
-  onToggleMenu,
-  onToggleWishlist,
-  onCourseClick,
-  onCloseMenu,
 }: CoursesEmptyStateProps) {
   if (activeTab === 'my-courses' && !isAuthenticated) {
     return (
-      <div className="w-full space-y-8">
+      <div className="w-full space-y-6">
         <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface via-surface to-surface-subtle/60 p-6 sm:p-8 lg:p-10 shadow-xl shadow-primary/5 transition-all w-full">
           <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-32 -right-32 w-64 h-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
@@ -120,47 +121,56 @@ export function CoursesEmptyState({
           </div>
         </div>
 
-        {featuredCourses.length > 0 && (
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <h3 className="text-base sm:text-lg font-bold text-text-primary">
-                  {isVi ? 'Khóa học đề xuất cho bạn' : 'Recommended Courses for You'}
-                </h3>
-              </div>
-              <button
-                onClick={onNavigateCourses}
-                className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 cursor-pointer"
-              >
-                <span>{isVi ? 'Xem tất cả' : 'View all'}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+          <div className="p-5 rounded-2xl border border-border/70 bg-surface/50 space-y-2 hover:border-primary/30 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <BookOpen className="w-4 h-4" />
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
-              {featuredCourses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  isFavorite={isInWishlist?.(course.id) ?? false}
-                  isMenuOpen={activeMenuId === course.id}
-                  onToggleMenu={onToggleMenu ?? (() => {})}
-                  onToggleWishlist={onToggleWishlist ?? (() => {})}
-                  onClick={() => onCourseClick?.(course)}
-                  onCloseMenu={onCloseMenu ?? (() => {})}
-                />
-              ))}
-            </div>
+            <h4 className="text-sm font-bold text-text-primary">
+              {isVi ? '1. Chọn lộ trình phù hợp' : '1. Choose a Path'}
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              {isVi
+                ? 'Các khóa học đa dạng từ ngữ pháp căn bản đến bứt phá 850+ TOEIC cùng chuyên gia.'
+                : 'Diverse course catalogs from grammar foundations to 850+ TOEIC mastery.'}
+            </p>
           </div>
-        )}
+
+          <div className="p-5 rounded-2xl border border-border/70 bg-surface/50 space-y-2 hover:border-primary/30 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <PlayCircle className="w-4 h-4" />
+            </div>
+            <h4 className="text-sm font-bold text-text-primary">
+              {isVi ? '2. Học tập tương tác' : '2. Interactive Learning'}
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              {isVi
+                ? 'Học qua bài giảng video chất lượng cao, flashcard thông minh và luyện phản xạ tức thì.'
+                : 'Study via high-definition video lectures, smart flashcards, and quick reflex exercises.'}
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl border border-border/70 bg-surface/50 space-y-2 hover:border-primary/30 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <Award className="w-4 h-4" />
+            </div>
+            <h4 className="text-sm font-bold text-text-primary">
+              {isVi ? '3. Đánh giá & Cấp chứng chỉ' : '3. Certification'}
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              {isVi
+                ? 'Theo dõi biểu đồ tiến độ, làm bài kiểm tra định kỳ và nhận chứng nhận hoàn thành khóa.'
+                : 'Track learning analytics, take periodic assessments, and earn course completion certificates.'}
+            </p>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (activeTab === 'wishlist' && !isAuthenticated) {
     return (
-      <div className="w-full space-y-8">
+      <div className="w-full space-y-6">
         <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface via-surface to-surface-subtle/60 p-6 sm:p-8 lg:p-10 shadow-xl shadow-rose-500/5 transition-all w-full">
           <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-rose-500/10 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-32 -right-32 w-64 h-64 rounded-full bg-pink-500/10 blur-3xl pointer-events-none" />
@@ -247,40 +257,77 @@ export function CoursesEmptyState({
           </div>
         </div>
 
-        {featuredCourses.length > 0 && (
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-rose-500" />
-                <h3 className="text-base sm:text-lg font-bold text-text-primary">
-                  {isVi ? 'Khóa học đề xuất cho bạn' : 'Recommended Courses for You'}
-                </h3>
-              </div>
-              <button
-                onClick={onNavigateCourses}
-                className="text-xs font-semibold text-rose-500 hover:underline inline-flex items-center gap-1 cursor-pointer"
-              >
-                <span>{isVi ? 'Xem tất cả' : 'View all'}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+          <div className="p-5 rounded-2xl border border-border/70 bg-surface/50 space-y-2 hover:border-rose-500/30 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+              <Compass className="w-4 h-4" />
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
-              {featuredCourses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  isFavorite={isInWishlist?.(course.id) ?? false}
-                  isMenuOpen={activeMenuId === course.id}
-                  onToggleMenu={onToggleMenu ?? (() => {})}
-                  onToggleWishlist={onToggleWishlist ?? (() => {})}
-                  onClick={() => onCourseClick?.(course)}
-                  onCloseMenu={onCloseMenu ?? (() => {})}
-                />
-              ))}
-            </div>
+            <h4 className="text-sm font-bold text-text-primary">
+              {isVi ? '1. Khám phá khóa học' : '1. Discover Courses'}
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              {isVi
+                ? 'Tìm kiếm khóa học TOEIC phù hợp với trình độ mục tiêu và phong cách học của bạn.'
+                : 'Browse TOEIC courses tailored to your target score and preferred study method.'}
+            </p>
           </div>
-        )}
+
+          <div className="p-5 rounded-2xl border border-border/70 bg-surface/50 space-y-2 hover:border-rose-500/30 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+            </div>
+            <h4 className="text-sm font-bold text-text-primary">
+              {isVi ? '2. Lưu lại nhanh chóng' : '2. Save Easily'}
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              {isVi
+                ? 'Nhấn biểu tượng trái tim trên thẻ khóa học để lưu lại vào danh sách yêu thích cá nhân.'
+                : 'Click the heart icon on any course card to bookmark it in your personal wishlist.'}
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl border border-border/70 bg-surface/50 space-y-2 hover:border-rose-500/30 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <h4 className="text-sm font-bold text-text-primary">
+              {isVi ? '3. Sẵn sàng bắt đầu' : '3. Start Learning'}
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">
+              {isVi
+                ? 'Đăng ký ngay khi bạn sắp xếp được thời gian để mở khóa toàn bộ bài giảng chất lượng cao.'
+                : 'Enroll whenever you are ready to unlock all premium lessons and study materials.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (activeTab === 'wishlist' && isAuthenticated) {
+    return (
+      <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-surface to-surface-subtle/50 p-8 sm:p-12 text-center max-w-xl mx-auto shadow-sm space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto shadow-inner">
+          <Heart size={32} />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-text-primary">
+            {isVi ? 'Chưa có khóa học trong danh sách yêu thích' : 'No favorite courses yet'}
+          </h3>
+          <p className="mt-1 text-xs sm:text-sm text-text-secondary max-w-md mx-auto">
+            {isVi
+              ? 'Hãy khám phá các khóa học TOEIC & Tiếng Anh, nhấn vào biểu tượng trái tim để lưu lại những khóa học bạn quan tâm.'
+              : 'Explore TOEIC & English courses and click the heart icon to save courses you are interested in.'}
+          </p>
+        </div>
+        <button
+          onClick={onNavigateCourses}
+          className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-bold transition-all cursor-pointer shadow-sm shadow-primary/20 inline-flex items-center gap-2"
+          type="button"
+        >
+          <Sparkles size={16} />
+          <span>{isVi ? 'Khám phá tất cả khóa học' : 'Explore All Courses'}</span>
+        </button>
       </div>
     )
   }
@@ -327,4 +374,3 @@ export function CoursesEmptyState({
     </div>
   )
 }
-

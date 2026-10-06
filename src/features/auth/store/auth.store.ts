@@ -271,6 +271,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await authService.logout()
     } catch {
     } finally {
+      authService.clearAuthStorage()
       if (typeof window !== 'undefined') {
         getQueryClient().clear()
       }
