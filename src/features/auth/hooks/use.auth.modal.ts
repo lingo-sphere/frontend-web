@@ -138,17 +138,22 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
     } catch {}
   }
 
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-    if (!credentialResponse.credential) return
+  const handleGoogleToken = async (token: string) => {
+    if (!token) return
     try {
       clearError()
       await socialLogin({
         provider: 'GOOGLE',
-        token: credentialResponse.credential,
+        token,
         rememberMe,
       })
       onClose()
     } catch {}
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) return
+    await handleGoogleToken(credentialResponse.credential)
   }
 
   const switchMode = (newMode: AuthMode) => {
@@ -186,6 +191,7 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
     handleResendOtp,
     handleSubmit,
     handleGoogleSuccess,
+    handleGoogleToken,
     switchMode,
   }
 }

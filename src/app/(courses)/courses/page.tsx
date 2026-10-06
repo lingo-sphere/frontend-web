@@ -30,6 +30,7 @@ export default function CoursesCatalogPage() {
   const {
     isVi,
     activeTab,
+    courses,
     loading,
     searchQuery,
     setSearchQuery,
@@ -103,6 +104,13 @@ export default function CoursesCatalogPage() {
             isAuthenticated={isAuthenticated}
             isVi={isVi}
             onNavigateCourses={() => navigate('/courses')}
+            featuredCourses={courses.slice(0, 4)}
+            isInWishlist={isInWishlist}
+            activeMenuId={activeMenuId}
+            onToggleMenu={toggleMenu}
+            onToggleWishlist={toggleWishlist}
+            onCourseClick={(course) => navigate(buildCourseUrl(course))}
+            onCloseMenu={() => setActiveMenuId(null)}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">

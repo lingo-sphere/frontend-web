@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ShoppingBag, ArrowLeft, Trash2 } from 'lucide-react'
+import { ShoppingBag, ArrowLeft, Trash2, BookmarkCheck, Tag, ShieldCheck } from 'lucide-react'
+import { Button } from '@/components/button'
 import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { CourseCheckoutModal, type CheckoutCourseItem } from '@/features/courses/components/course.checkout.modal'
@@ -32,11 +33,6 @@ export default function CartPage() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (!isAuthenticated && mounted) {
-      navigate('/courses')
-    }
-  }, [isAuthenticated, mounted, navigate])
 
   const items = cart?.items || []
 
@@ -137,6 +133,109 @@ export default function CartPage() {
           </div>
           <div className="xl:col-span-4 h-96 bg-surface rounded-2xl border border-border" />
         </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated && mounted) {
+    return (
+      <div className="min-h-screen bg-background text-text-primary px-4 sm:px-6 lg:px-8 xl:px-10 py-6 sm:py-8 w-full max-w-[1536px] mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate('/courses')}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-text-secondary hover:text-primary bg-surface hover:bg-surface-hover px-3.5 py-1.5 rounded-full border border-border transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={14} />
+            <span suppressHydrationWarning>{isVi ? 'Tiếp tục xem khóa học' : 'Continue shopping'}</span>
+          </button>
+        </div>
+
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-surface via-surface to-surface-subtle/50 p-6 sm:p-8 lg:p-10 shadow-xl shadow-primary/5 transition-all w-full">
+          <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 -right-32 w-64 h-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+            <div className="lg:col-span-7 space-y-4 text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
+                <ShoppingBag className="w-4 h-4" />
+                <span>{isVi ? 'Giỏ hàng của bạn' : 'Your Shopping Cart'}</span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-text-primary">
+                {isVi ? 'Đăng nhập để xem giỏ hàng của bạn' : 'Log in to view your shopping cart'}
+              </h2>
+
+              <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-xl">
+                {isVi
+                  ? 'Lưu lại các khóa học bạn quan tâm, đồng bộ giỏ hàng trên mọi thiết bị và áp dụng mã khuyến mãi học viên.'
+                  : 'Log in to save your selected courses, sync your cart across devices, and apply exclusive promo codes.'}
+              </p>
+
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <Button
+                  onClick={() => window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))}
+                  className="px-6 py-3 rounded-xl font-bold bg-primary hover:bg-primary-hover text-white shadow-md shadow-primary/25 cursor-pointer text-xs sm:text-sm"
+                >
+                  {isVi ? 'Đăng nhập ngay' : 'Log In Now'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/courses')}
+                  className="px-5 py-3 rounded-xl font-semibold border-border hover:bg-surface-subtle cursor-pointer text-xs sm:text-sm"
+                >
+                  {isVi ? 'Khám phá khóa học' : 'Explore Courses'}
+                </Button>
+              </div>
+
+              <div className="pt-1 flex items-center gap-4 text-[11px] text-text-tertiary">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                  {isVi ? 'Bảo mật thanh toán SSL' : 'Secure SSL payment'}
+                </span>
+                <span>•</span>
+                <span>{isVi ? 'Đồng bộ giỏ hàng tức thì' : 'Real-time cart sync'}</span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 grid grid-cols-1 gap-3">
+              <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-surface-subtle/80 border border-border/70 hover:border-primary/40 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                  <BookmarkCheck className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-text-primary">{isVi ? 'Lưu giỏ hàng' : 'Save Cart'}</p>
+                  <p className="text-xs text-text-tertiary">{isVi ? 'Đồng bộ khóa học trên mọi thiết bị' : 'Sync across all devices'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-surface-subtle/80 border border-border/70 hover:border-primary/40 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-text-primary">{isVi ? 'Mã ưu đãi độc quyền' : 'Exclusive Promo Codes'}</p>
+                  <p className="text-xs text-text-tertiary">{isVi ? 'Giảm đến 50% học phí thành viên' : 'Up to 50% tuition discount'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-surface-subtle/80 border border-border/70 hover:border-primary/40 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-text-primary">{isVi ? 'Bảo mật SSL 256-bit' : '256-bit SSL Security'}</p>
+                  <p className="text-xs text-text-tertiary">{isVi ? 'Thanh toán và mã hóa an toàn' : 'Safe and encrypted checkout'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <CartRecommendedSection
+          currentCartCourseIds={[]}
+          isVi={isVi}
+          onNavigate={navigate}
+        />
       </div>
     )
   }

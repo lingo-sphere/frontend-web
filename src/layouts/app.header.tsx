@@ -206,15 +206,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                   ? "border-primary/40 bg-primary/10 text-primary shadow-xs"
                   : "border-border hover:bg-surface-subtle text-text-primary"
               }`}
-              onClick={() => {
-                if (!isAuthenticated) {
-                  window.dispatchEvent(
-                    new CustomEvent("lingosphere:open-auth-modal")
-                  );
-                } else {
-                  navigate("/cart");
-                }
-              }}
+              onClick={() => navigate("/cart")}
               size="icon"
               variant="outline"
             >
@@ -262,11 +254,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             onCloseHover={() => setHoveredHeaderMenu(null)}
             onLanguageToggle={toggleLanguage}
             currentLanguage={languageLabel as "VI" | "EN"}
-            onOpenAuth={() =>
-              window.dispatchEvent(
-                new CustomEvent("lingosphere:open-auth-modal")
-              )
-            }
+            onOpenAuth={() => navigate('/login')}
             onOpenUpgrade={() => setUpgradeOpen(true)}
             onLogout={() => logout()}
           />
