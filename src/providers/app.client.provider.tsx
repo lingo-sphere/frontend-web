@@ -117,7 +117,12 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
           path.startsWith('/notes') ||
           path.startsWith('/journal') ||
           path.startsWith('/progress') ||
-          path.startsWith('/exam-history')
+          path.startsWith('/exam-history') ||
+          path.startsWith('/toeic/exam') ||
+          path.includes('/exam') ||
+          path.startsWith('/practice/mistakes') ||
+          path.startsWith('/speaking') ||
+          path.startsWith('/writing')
         if (isProtected) {
           window.location.href = '/'
         }

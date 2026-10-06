@@ -7,6 +7,8 @@ import { useApp } from '@/contexts/app.context'
 import { practiceService, type BackendWritingExercise } from '@/features/practice/services/practice.service'
 import { useWritingExercisesQuery } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { toast } from '@/store/toast.store'
 import type {
   WritingExercise,
   WritingSubmission,
@@ -235,6 +237,12 @@ export function useWritingWorkspace() {
 
   const handleStartWriting = useCallback(
     (exercise: WritingExercise) => {
+      const { isAuthenticated } = useAuthStore.getState()
+      if (!isAuthenticated) {
+        toast.warning('Vui lòng đăng nhập để bắt đầu bài luyện viết!')
+        window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+        return
+      }
       setSelectedExercise(exercise)
       setDraftContent('')
       setDraftVersion(1)
@@ -255,6 +263,11 @@ export function useWritingWorkspace() {
   const handleSubmitWriting = useCallback(
     async (content: string, wordCount: number, writingTimeSeconds: number) => {
       if (!selectedExercise) return
+      const authUser = useAuthStore.getState().user
+      if (!authUser) {
+        toast.error('Vui lòng đăng nhập để nộp bài và nhận đánh giá AI!')
+        return
+      }
 
       let evalResult = {
         grammar_score: 0,
@@ -290,7 +303,7 @@ export function useWritingWorkspace() {
 
       const newSubmission: WritingSubmission = {
         id: `ws-${Date.now()}`,
-        user_id: 'current_user',
+        user_id: authUser.user_id,
         exercise_id: selectedExercise.id,
         content,
         word_count: wordCount,

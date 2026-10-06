@@ -1,7 +1,7 @@
 // Trang hiển thị lịch sử làm bài kiểm tra và biểu đồ miền phát triển năng lực của học viên
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { BookOpen, Loader2, ListFilter, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
@@ -14,11 +14,19 @@ import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progr
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCoursesProgressQuery } from '@/features/progress/hooks/use.progress.query'
 import type { ProgressRecentActivity, UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
+import { toast } from '@/store/toast.store'
 
 export default function ExamHistoryPage() {
   const navigate = useNavigate()
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore()
   const [viewMode, setViewMode] = useState<'LIST' | 'CHART'>('LIST')
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để xem lịch sử thi!')
+      navigate('/login?returnUrl=/exam-history')
+    }
+  }, [isAuthLoading, isAuthenticated, navigate])
 
   const {
     isLoading,
@@ -130,6 +138,14 @@ export default function ExamHistoryPage() {
     toeic: unifiedList.filter((i) => i.sourceType === 'TOEIC' && i.testType !== 'PLACEMENT').length,
     chapterTest: courseAttempts.filter((c) => c.test_type === 'challenge' || c.test_type === 'post-mini').length,
     finalTest: courseAttempts.filter((c) => c.test_type === 'final-test').length,
+  }
+
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-text-primary">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (

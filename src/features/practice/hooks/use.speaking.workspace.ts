@@ -5,6 +5,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { practiceService, type BackendSpeakingExercise } from '@/features/practice/services/practice.service'
 import { useSpeakingExercisesQuery } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { toast } from '@/store/toast.store'
 import type {
   SpeakingExercise,
   SpeakingAttempt,
@@ -145,6 +147,12 @@ export function useSpeakingWorkspace() {
   const handleGoHistory = useCallback(() => setView('history'), [])
 
   const handleSelectExercise = useCallback((exercise: SpeakingExercise) => {
+    const { isAuthenticated } = useAuthStore.getState()
+    if (!isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để bắt đầu bài luyện nói!')
+      window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      return
+    }
     setSelectedExercise(exercise)
     setView('workspace')
     setRecordingState({
@@ -173,6 +181,11 @@ export function useSpeakingWorkspace() {
   const handleSubmitRecording = useCallback(
     async (transcription: string, duration: number, audioBlob?: Blob) => {
       if (!selectedExercise) return
+      const authUser = useAuthStore.getState().user
+      if (!authUser) {
+        toast.error('Vui lòng đăng nhập để gửi bài thu âm và nhận đánh giá AI!')
+        return
+      }
       setIsSubmitting(true)
 
       let finalTranscript = transcription

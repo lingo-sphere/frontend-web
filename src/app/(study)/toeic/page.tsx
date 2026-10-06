@@ -12,11 +12,23 @@ import { useToeicExamsQuery } from '@/features/toeic/hooks/use.toeic.query'
 import type { ToeicExam, ToeicExamFilters } from '@/features/toeic/types/toeic'
 import { ExamCard } from '@/features/toeic/components/toeic.exam.card'
 import { ToeicFilterBar } from '@/features/toeic/components/toeic.filter.bar'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { toast } from '@/store/toast.store'
 
 export default function ToeicHubPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const isVietnamese = i18n.language === 'vi'
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  const handleExamClick = (examId: string) => {
+    if (!isAuthenticated) {
+      toast.info(isVietnamese ? 'Vui lòng đăng nhập để bắt đầu làm bài thi' : 'Please log in to start the exam')
+      navigate(`/login?returnUrl=/toeic/exam/${examId}`)
+      return
+    }
+    navigate(`/toeic/exam/${examId}`)
+  }
 
   const { data: rawExams = [], isLoading } = useToeicExamsQuery()
   const [searchQuery, setSearchQuery] = useState('')
@@ -153,7 +165,7 @@ export default function ToeicHubPage() {
               <ExamCard
                 key={exam.id}
                 exam={exam}
-                onClick={() => navigate(`/toeic/exam/${exam.id}`)}
+                onClick={() => handleExamClick(exam.id)}
                 isVietnamese={isVietnamese}
               />
             ))}

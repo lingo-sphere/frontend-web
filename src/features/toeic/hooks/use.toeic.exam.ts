@@ -244,7 +244,7 @@ export function useToeicExam(examId?: string) {
     if (isSubmittingAttemptBackendRef.current || hasCompletedBackendSubmissionRef.current) return
     const { user } = useAuthStore.getState()
     if (!user) {
-      toast.info('Kết quả làm bài đã được chấm điểm! Đăng nhập để lưu kết quả vào lịch sử thi.')
+      toast.error('Vui lòng đăng nhập để nộp bài thi và lưu kết quả vào hệ thống!')
       return
     }
 

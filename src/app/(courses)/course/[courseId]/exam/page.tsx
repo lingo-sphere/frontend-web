@@ -1,7 +1,7 @@
 // Trang làm bài thi khóa học toàn màn hình.
 'use client'
 
-import { useCallback, useMemo, Suspense } from 'react'
+import { useCallback, useMemo, Suspense, useEffect } from 'react'
 import { useParams, useSearchParams, useNavigate } from '@/lib/navigation'
 import { mapCourseDataToWorkspace } from '@/features/courses/helpers/course.workspace.adapter'
 import { CourseTestRunnerWorkspace } from '@/features/courses/components/course.test.runner.workspace'
@@ -19,6 +19,8 @@ import {
   useCourseEnrollmentStatusQuery,
   useCourseProgressQuery,
 } from '@/features/courses/hooks/use.courses.query'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { toast } from '@/store/toast.store'
 
 function CourseExamContent() {
   const params = useParams<{ courseId: string }>()
@@ -35,11 +37,21 @@ function CourseExamContent() {
   const chapterId = searchParams.get('chapterId') || searchParams.get('moduleId')
   const isRetry = searchParams.get('retry') === 'true'
 
-  const { data: fetchedCourse, isLoading: isCourseLoading } = useCourseDetailQuery(courseId, Boolean(courseId))
-  const { data: enrollmentRes, isLoading: isEnrollmentLoading } = useCourseEnrollmentStatusQuery(courseId, Boolean(courseId))
-  const { data: progressRes } = useCourseProgressQuery(courseId, Boolean(courseId))
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isAuthLoading = useAuthStore((s) => s.isLoading)
 
-  const isLoading = isCourseLoading || isEnrollmentLoading
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để tham gia làm bài thi khóa học')
+      navigate(`/login?returnUrl=/course/${rawParam}/exam`)
+    }
+  }, [isAuthLoading, isAuthenticated, rawParam, navigate])
+
+  const { data: fetchedCourse, isLoading: isCourseLoading } = useCourseDetailQuery(courseId, Boolean(courseId))
+  const { data: enrollmentRes, isLoading: isEnrollmentLoading } = useCourseEnrollmentStatusQuery(courseId, Boolean(courseId && isAuthenticated))
+  const { data: progressRes } = useCourseProgressQuery(courseId, Boolean(courseId && isAuthenticated))
+
+  const isLoading = isAuthLoading || isCourseLoading || isEnrollmentLoading
   const isEnrolled = Boolean(enrollmentRes?.is_enrolled)
 
   const course: Course | null = useMemo(() => {
@@ -94,8 +106,7 @@ function CourseExamContent() {
     )
   }
 
-  const isFree = !fetchedCourse?.price || fetchedCourse.price === 0
-  const hasAccess = isEnrolled || isFree
+  const hasAccess = isAuthenticated && isEnrolled
 
   if (!hasAccess) {
     return (

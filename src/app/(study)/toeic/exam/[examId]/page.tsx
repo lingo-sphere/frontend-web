@@ -1,7 +1,7 @@
 // Trang làm bài thi TOEIC trực tuyến và hiển thị kết quả đánh giá năng lực.
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { RotateCcw, Sparkles } from 'lucide-react'
@@ -50,6 +50,15 @@ export default function ToeicExamAppPage() {
   const [hasDismissedUpgrade, setHasDismissedUpgrade] = useState(false)
 
   const user = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isAuthLoading = useAuthStore((s) => s.isLoading)
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      toast.warning(isVietnamese ? 'Vui lòng đăng nhập để bắt đầu bài thi TOEIC' : 'Please log in to take the TOEIC exam')
+      navigate(`/login?returnUrl=/toeic/exam/${examId || ''}`)
+    }
+  }, [isAuthLoading, isAuthenticated, examId, navigate, isVietnamese])
 
   const is4SkillsExam = Boolean(
     examId?.includes('4skills') ||
@@ -118,6 +127,14 @@ export default function ToeicExamAppPage() {
     } catch {
       setIsExiting(false)
     }
+  }
+
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-text-primary">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   if (isLoadingExam) {

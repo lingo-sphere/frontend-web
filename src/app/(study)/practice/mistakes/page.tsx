@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   BookmarkCheck,
   RotateCcw,
@@ -32,7 +32,15 @@ import { MistakeStatus } from '@/features/practice/types/mistake'
 
 export default function MistakeVaultPage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isAuthLoading = useAuthStore((s) => s.isLoading)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để xem sổ tay câu sai!')
+      navigate('/login?returnUrl=/practice/mistakes')
+    }
+  }, [isAuthLoading, isAuthenticated, navigate])
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
   const [selectedTopic, setSelectedTopic] = useState<string>('ALL')
   const [selectedDomain, setSelectedDomain] = useState<string>('ALL')
@@ -89,6 +97,14 @@ export default function MistakeVaultPage() {
         setDeletingId(null)
       },
     })
+  }
+
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-text-primary">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (
