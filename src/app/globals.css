@@ -1,3 +1,4 @@
+/* Cấu hình stylesheet toàn cục Tailwind CSS và quy tắc giao diện của LingoSphere. */
 @import 'tailwindcss';
 @import '../styles/tokens.css';
 @import 'tw-animate-css';
@@ -13,11 +14,14 @@
   --color-surface: var(--surface);
   --color-surface-subtle: var(--surface-subtle);
   --color-surface-hover: var(--surface-hover);
+  --color-surface-elevated: var(--surface-elevated);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
   --color-text-disabled: var(--text-disabled);
+  --color-text-muted: var(--text-muted);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
@@ -30,6 +34,7 @@
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-error: var(--error);
+  --color-error-soft: var(--error-soft);
   --color-ai: var(--ai);
   --color-ai-soft: var(--ai-soft);
   --color-streak: var(--streak);
@@ -48,6 +53,7 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
@@ -236,12 +242,12 @@
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb,
 .dark ::-webkit-scrollbar-thumb {
-  background-color: #333333;
+  background-color: var(--surface-subtle);
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: #444444;
+  background-color: var(--surface-hover);
 }
 
 @media (max-width: 767px) {

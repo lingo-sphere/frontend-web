@@ -109,10 +109,10 @@ export function LandingWorkbench({ t }: LandingWorkbenchProps) {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="group flex cursor-help items-center gap-6"
             >
-              <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-[#48c9b0] font-bold text-sm">
+              <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-emerald-400 font-bold text-sm">
                 01
               </div>
-              <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-[#2f7f78]/40" />
+              <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-emerald-500/40" />
               <span className="text-[11px] uppercase tracking-[0.2em] opacity-60 font-semibold group-hover:opacity-100 transition-opacity">
                 {t.method.step1}
               </span>
@@ -125,10 +125,10 @@ export function LandingWorkbench({ t }: LandingWorkbenchProps) {
               transition={{ duration: 0.6, delay: 0.35 }}
               className="group flex cursor-help items-center gap-6"
             >
-              <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-[#48c9b0] font-bold text-sm">
+              <div className="glass-card flex h-12 w-12 items-center justify-center rounded-2xl transition-colors group-hover:text-emerald-400 font-bold text-sm">
                 02
               </div>
-              <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-[#2f7f78]/40" />
+              <div className="h-px flex-1 bg-white/10 transition-all group-hover:bg-emerald-500/40" />
               <span className="text-[11px] uppercase tracking-[0.2em] opacity-60 font-semibold group-hover:opacity-100 transition-opacity">
                 {t.method.step2}
               </span>

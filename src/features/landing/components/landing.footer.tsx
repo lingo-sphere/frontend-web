@@ -26,8 +26,8 @@ export function LandingFooter({ t }: LandingFooterProps) {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-5 lg:col-span-5"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#48c9b0]/30 bg-[#2f7f78]/15 px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest text-[#48c9b0] backdrop-blur-md">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#48c9b0] shadow-[0_0_8px_#48c9b0]" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-400 backdrop-blur-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
             {t.footer.tag}
           </div>
           <h2 className="heading-glow text-3xl sm:text-4xl font-bold tracking-tight text-white">
@@ -38,7 +38,7 @@ export function LandingFooter({ t }: LandingFooterProps) {
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <Link href="/home">
-              <button className="rounded-xl bg-[#2f7f78] px-7 py-3.5 text-[11px] font-black uppercase tracking-widest text-white hover:bg-[#236b65] transition-all cursor-pointer shadow-lg shadow-[#2f7f78]/30 hover:scale-105 active:scale-95">
+              <button className="rounded-xl bg-emerald-500 px-7 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-950 hover:bg-emerald-400 transition-all cursor-pointer shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95">
                 {t.footer.btnEnter}
               </button>
             </Link>

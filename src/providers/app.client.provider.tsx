@@ -181,7 +181,15 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   }
 
   return (
-    <ConfigProvider locale={currentLanguage === 'vi' ? viVN : enUS}>
+    <ConfigProvider
+      locale={currentLanguage === 'vi' ? viVN : enUS}
+      theme={{
+        token: {
+          colorPrimary: '#10b981',
+          borderRadius: 12,
+        },
+      }}
+    >
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <AppProvider>
           <TooltipProvider>
