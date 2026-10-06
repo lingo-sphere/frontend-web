@@ -30,11 +30,28 @@ interface AppClientProviderProps {
 export function AppClientProvider({ children }: AppClientProviderProps) {
   const { i18n, t } = useTranslation()
   const currentLanguage = ((i18n.language || 'vi').toLowerCase().startsWith('en') ? 'en' : 'vi') as 'vi' | 'en'
+  const user = useAuthStore((s) => s.user)
   const checkAuth = useAuthStore((s) => s.checkAuth)
   const setUser = useAuthStore((s) => s.setUser)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [kickoutMessage, setKickoutMessage] = useState<string | null>(null)
   const lastVerifiedAt = useRef<number>(0)
+  const isAdmin = user?.role === 'ADMIN'
+
+  useEffect(() => {
+    if (isAdmin) {
+      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.USER)
+      storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.USER)
+      storage.cookie.remove(STORAGE_KEYS.IS_PRIVILEGED)
+      setUser(null)
+      const adminUrl = API_CONFIG.ADMIN_WEB_URL
+      if (adminUrl && typeof window !== 'undefined') {
+        window.location.replace(adminUrl)
+      }
+    }
+  }, [isAdmin, setUser])
 
   useEffect(() => {
     initClientLanguage()
@@ -154,6 +171,14 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       eventSource?.close()
     }
   }, [isAuthenticated, setUser])
+
+  if (isAdmin) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-background text-text-primary">
+        <p className="text-sm font-medium">Tài khoản Quản trị viên (ADMIN) không được phép truy cập Client Web. Đang chuyển hướng sang Admin Web...</p>
+      </div>
+    )
+  }
 
   return (
     <ConfigProvider locale={currentLanguage === 'vi' ? viVN : enUS}>

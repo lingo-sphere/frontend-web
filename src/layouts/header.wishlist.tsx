@@ -25,7 +25,7 @@ export function HeaderWishlistHover({ isOpen }: HeaderWishlistHoverProps) {
   const { addToCart, isInCart } = useCart(isAuthenticated)
   const { isEnrolled } = useUserEnrollments(isAuthenticated)
   const isPremiumUser = Boolean(user?.is_premium)
-  const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
+  const isPrivilegedUser = user?.role === 'INSTRUCTOR'
 
   const handleAddToCart = async (e: React.MouseEvent, courseId: string) => {
     e.stopPropagation()

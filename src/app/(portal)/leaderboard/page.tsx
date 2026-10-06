@@ -43,14 +43,14 @@ export default function LeaderboardAppPage() {
     if (!Array.isArray(rawEntries)) return []
     return rawEntries.map((entry: LeaderboardEntry, idx: number) => ({
       rank: idx + 1,
-      name: entry.full_name || `Học viên #${idx + 1}`,
+      name: entry.full_name || '',
       avatarColor: avatarColors[idx % avatarColors.length],
-      streakDays: entry.current_streak ?? entry.streak_days ?? 1,
-      totalMinutes: 60 + idx * 10,
-      questionsAnswered: 20 + idx * 5,
-      wordsLearned: 15 + idx * 3,
-      freezes: 1,
-      isCurrentUser: Boolean(entry.is_current_user ?? (idx === 0)),
+      streakDays: entry.current_streak ?? entry.streak_days ?? 0,
+      totalMinutes: 0,
+      questionsAnswered: 0,
+      wordsLearned: 0,
+      freezes: 0,
+      isCurrentUser: Boolean(entry.is_current_user),
     }))
   }, [rawEntries])
 

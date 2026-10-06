@@ -13,6 +13,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { useAllCoursesQuery, useUserEnrollments } from '@/features/courses/hooks/use.courses.query'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 export function useCoursesCatalog() {
   const { i18n } = useTranslation()
@@ -141,7 +142,7 @@ export function useCoursesCatalog() {
           raw.author_name || raw.instructor_name || 'Đội ngũ Giảng viên LingoSphere'
         ),
         thumbnail:
-          c.thumbnail_url ||
+          resolveMediaUrl(c.thumbnail_url) ||
           'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop',
         category: c.category || 'TOEIC_2_SKILLS',
         description: c.description || '',
@@ -183,7 +184,6 @@ export function useCoursesCatalog() {
           isEnrolled(c.id) ||
           (c.slug ? isEnrolled(c.slug) : false) ||
           Boolean(user?.is_premium) ||
-          user?.role === 'ADMIN' ||
           user?.role === 'INSTRUCTOR'
         return matchesSearch && hasAccess
       }

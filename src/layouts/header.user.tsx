@@ -78,7 +78,7 @@ export function HeaderUserSection({
         <div className="hidden sm:block">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-bold text-text-primary leading-tight line-clamp-1">
-              {user.full_name || 'Học viên'}
+              {user.full_name}
             </span>
             {user.is_premium && (
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[9px] font-extrabold text-white shadow-xs">

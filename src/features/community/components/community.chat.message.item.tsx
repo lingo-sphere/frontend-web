@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import type { ChatMessage } from '@/features/community/types/community.types'
 import { formatRelativeTime } from '@/lib/format'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 const QUICK_EMOJIS = ['👍', '❤️', '😆', '😲', '😭', '😡']
 
@@ -96,7 +97,7 @@ export function CommunityChatMessageItem({
               <Shield className="h-3 w-3 text-amber-500 fill-amber-500" />
             </span>
           )}
-          {msg.sender_badge === 'PRO' && msg.sender_role !== 'ADMIN' && (
+          {msg.sender_badge === 'PRO' && (
             <span title="Thành viên PRO">
               <Star className="h-3 w-3 text-emerald-500 fill-emerald-500" />
             </span>
@@ -221,7 +222,7 @@ export function CommunityChatMessageItem({
                       className="overflow-hidden rounded-xl border border-border dark:border-white/15 shadow-2xs inline-block bg-surface-subtle dark:bg-black/40"
                     >
                       <Image
-                        src={url}
+                        src={resolveMediaUrl(url)}
                         alt="attachment"
                         style={{
                           maxHeight: 135,

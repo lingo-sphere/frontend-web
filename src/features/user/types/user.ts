@@ -2,7 +2,6 @@
 
 export interface User {
   user_id: string
-  id: string
   email: string
   full_name: string
   avatar_url?: string | null
@@ -25,7 +24,6 @@ export interface User {
   subscription_expires_at?: string | null
   subscription_plan?: string | null
 
-  target_score?: number | null
   target_toeic_score?: number | null
   current_estimated_score?: number | null
   placement_test_score?: number | null
@@ -39,8 +37,6 @@ export interface User {
 
   created_at?: string | null
   updated_at?: string | null
-  createdAt?: string
-  updatedAt?: string
   lastLoginAt?: string
 }
 

@@ -4,6 +4,7 @@
 
 import { Sparkles, GraduationCap, ArrowRight, BookOpen, RotateCcw, Trophy, Compass, Users } from 'lucide-react'
 import { Button } from '@/components/button'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import type { Course } from '@/types/api.types'
 
 interface TestRunnerNextCoursesProps {
@@ -60,7 +61,7 @@ export function TestRunnerNextCourses({
                 <div className="flex gap-3">
                   <div className="w-20 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 relative">
                     {c.thumbnail_url ? (
-                      <img src={c.thumbnail_url} alt={c.title} className="w-full h-full object-cover" />
+                      <img src={resolveMediaUrl(c.thumbnail_url)} alt={c.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-indigo-500/20 text-indigo-600">
                         <GraduationCap size={20} />

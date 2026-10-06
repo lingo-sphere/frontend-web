@@ -54,7 +54,7 @@ export const GamificationProfileSchema = z.object({
 export const LeaderboardEntrySchema = z.object({
   rank: z.number().default(0),
   user_id: z.string().default(''),
-  full_name: z.string().default('Học viên'),
+  full_name: z.string().default(''),
   user_name: z.string().optional(),
   avatar_url: z.string().optional(),
   user_avatar: z.string().optional(),

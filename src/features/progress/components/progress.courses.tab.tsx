@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
 import { Progress } from '@/components/progress'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import type { UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
 
 interface ProgressCoursesTabProps {
@@ -101,7 +102,7 @@ export function ProgressCoursesTab({
                 </div>
                 {c.thumbnail_url && (
                   <img
-                    src={c.thumbnail_url}
+                    src={resolveMediaUrl(c.thumbnail_url)}
                     alt={c.title}
                     className="w-14 h-14 rounded-xl object-cover border border-border shrink-0"
                   />

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 import { formatCurrency } from '@/lib/format'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface HeaderCartHoverProps {
   isOpen: boolean
@@ -60,7 +61,7 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
                 >
                   <img
                     src={
-                      item.thumbnail_url ||
+                      resolveMediaUrl(item.thumbnail_url) ||
                       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
                     }
                     alt={item.title}

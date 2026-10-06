@@ -3,6 +3,7 @@
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+  ADMIN_WEB_URL: process.env.NEXT_PUBLIC_ADMIN_WEB_URL,
   APP_NAME: 'LingoSphere',
   DEFAULT_LANG: 'vi',
   TIMEOUT: 120000,

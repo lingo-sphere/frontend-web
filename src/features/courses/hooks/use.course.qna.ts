@@ -43,11 +43,10 @@ export function useCourseQnA({
       return
     }
     try {
-      const userPayload = user as unknown as Record<string, unknown>
       const authorName = isAnonymous
         ? (isVietnamese ? 'Học viên ẩn danh' : 'Anonymous learner')
-        : user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || (isVietnamese ? 'Học viên' : 'Learner')
-      const authorAvatar = isAnonymous ? '' : user.avatar_url || (userPayload?.avatar as string) || ''
+        : user.full_name || user.email
+      const authorAvatar = isAnonymous ? '' : user.avatar_url || ''
 
       const res = (await courseService.createCourseQnA(String(course.id), {
         lesson_id: currentLesson.id,
@@ -115,9 +114,8 @@ export function useCourseQnA({
       return
     }
     try {
-      const userPayload = user as unknown as Record<string, unknown>
-      const authorName = user.full_name || (userPayload?.name as string) || user.email?.split('@')[0] || (isVietnamese ? 'Học viên' : 'Learner')
-      const authorAvatar = user.avatar_url || (userPayload?.avatar as string) || ''
+      const authorName = user.full_name || user.email
+      const authorAvatar = user.avatar_url || ''
 
       await courseService.addQnAAnswer(qnaId, {
         body: answerText,

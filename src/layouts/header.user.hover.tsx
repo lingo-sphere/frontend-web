@@ -91,7 +91,7 @@ export function HeaderUserHover({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <h3 className="text-sm font-bold text-text-primary truncate group-hover:text-primary transition-colors">
-                {user.full_name || (isVi ? 'Học viên' : 'Learner')}
+                {user.full_name}
               </h3>
               {isPremium && (
                 <span className="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[9px] font-extrabold text-white">

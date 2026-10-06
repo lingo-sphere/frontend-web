@@ -385,9 +385,13 @@ export function useCourseTestRunner({
             user_selected_answer:
               chosen !== undefined
                 ? options[chosen] ?? String.fromCharCode(65 + chosen)
-                : (isVietnamese ? 'Chưa làm' : 'Unanswered'),
-            correct_answer: typeof correctIdx === 'number' && correctIdx >= 0 && options[correctIdx] ? options[correctIdx] : (isVietnamese ? 'Chưa cập nhật' : 'Not updated'),
-            category: chapter?.title ?? (isVietnamese ? 'Kiến thức chung' : 'General Knowledge'),
+                : '',
+            correct_answer: String(
+              typeof correctIdx === 'number' && correctIdx >= 0 && options[correctIdx]
+                ? options[correctIdx]
+                : (q.correct_answer || '')
+            ),
+            category: chapter?.title || '',
           })
         }
       })

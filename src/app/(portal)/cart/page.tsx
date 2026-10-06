@@ -14,6 +14,7 @@ import { CartItemCard } from '@/features/cart/components/cart.item.card'
 import { CartTrustBanner } from '@/features/cart/components/cart.trust.banner'
 import { CartOrderSummary } from '@/features/cart/components/cart.order.summary'
 import { CartRecommendedSection } from '@/features/cart/components/cart.recommended.section'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 export default function CartPage() {
   const { i18n } = useTranslation()
@@ -113,7 +114,7 @@ export default function CartPage() {
       id: it.course_id,
       title: it.title,
       price: effectivePrice,
-      thumbnail: (it as unknown as { thumbnail?: string })?.thumbnail || it.thumbnail_url,
+      thumbnail: resolveMediaUrl((it as unknown as { thumbnail?: string })?.thumbnail || it.thumbnail_url),
     }
   })
 

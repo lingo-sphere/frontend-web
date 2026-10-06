@@ -15,6 +15,7 @@ import { Card } from '@/components/card'
 import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import type { Course } from '@/types/api.types'
 
 export interface RecommendedCourseItem extends Course {
@@ -92,7 +93,7 @@ export function ToeicCourseRecommendations({
                     <div className="relative mb-3 aspect-video w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
                       {course.thumbnail_url ? (
                         <img
-                          src={course.thumbnail_url}
+                          src={resolveMediaUrl(course.thumbnail_url)}
                           alt={course.title}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />

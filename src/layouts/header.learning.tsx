@@ -12,6 +12,7 @@ import { useNavigate } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import type { Course } from '@/types/api.types'
 
 interface LearningCourseItem {
@@ -63,7 +64,7 @@ export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
                 id: en.course_id,
                 title: matchedCourse?.title || 'Khóa học tiếng Anh',
                 thumbnail:
-                  matchedCourse?.thumbnail_url ||
+                  resolveMediaUrl(matchedCourse?.thumbnail_url) ||
                   'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600',
                 progress: en.progress_percent || 0,
               }

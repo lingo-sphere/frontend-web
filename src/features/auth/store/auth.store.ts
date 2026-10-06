@@ -4,6 +4,7 @@ import { authService } from '@/features/auth/services/auth.service'
 import { userService } from '@/features/user/services/user.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { getQueryClient } from '@/config/query.config'
+import { API_CONFIG } from '@/config/api.config'
 import type { User, LoginPayload, RegisterPayload, SocialLoginPayload } from '@/types/api.types'
 
 interface AuthState {
@@ -78,13 +79,29 @@ function create<T>(
   return useStore
 }
 
+const getInitialStoredUser = () => {
+  const stored = authService.getStoredUser()
+  if (stored?.role === 'ADMIN') {
+    return null
+  }
+  return stored
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: authService.getStoredUser(),
-  isAuthenticated: authService.isAuthenticated(),
+  user: getInitialStoredUser(),
+  isAuthenticated: Boolean(getInitialStoredUser()) && authService.isAuthenticated(),
   isLoading: false,
   error: null,
 
   setUser: (user) => {
+    if (user?.role === 'ADMIN') {
+      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.USER)
+      storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.session.remove(STORAGE_KEYS.USER)
+      set({ user: null, isAuthenticated: false })
+      return
+    }
     if (user) {
       if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
         storage.set(STORAGE_KEYS.USER, user)
@@ -101,6 +118,20 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await authService.login(payload)
+      if (res.user?.role === 'ADMIN') {
+        await authService.logout().catch(() => {})
+        storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.remove(STORAGE_KEYS.USER)
+        storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.session.remove(STORAGE_KEYS.USER)
+        set({ user: null, isAuthenticated: false, isLoading: false })
+        const adminUrl = API_CONFIG.ADMIN_WEB_URL
+        if (adminUrl && typeof window !== 'undefined') {
+          window.location.replace(adminUrl)
+          return
+        }
+        throw new Error('Tài khoản Quản trị viên (ADMIN) không được phép truy cập Client Web. Vui lòng sử dụng hệ thống Admin Web.')
+      }
       let isPremium = Boolean(res.user?.is_premium)
       let profileUser: Partial<User> = {}
       try {
@@ -130,6 +161,20 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null })
     try {
       const res = await authService.socialLogin(payload)
+      if (res.user?.role === 'ADMIN') {
+        await authService.logout().catch(() => {})
+        storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.remove(STORAGE_KEYS.USER)
+        storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.session.remove(STORAGE_KEYS.USER)
+        set({ user: null, isAuthenticated: false, isLoading: false })
+        const adminUrl = API_CONFIG.ADMIN_WEB_URL
+        if (adminUrl && typeof window !== 'undefined') {
+          window.location.replace(adminUrl)
+          return
+        }
+        throw new Error('Tài khoản Quản trị viên (ADMIN) không được phép truy cập Client Web. Vui lòng sử dụng hệ thống Admin Web.')
+      }
       let isPremium = Boolean(res.user?.is_premium)
       let profileUser: Partial<User> = {}
       try {
@@ -257,6 +302,19 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       const user = await authService.getCurrentUser()
+      if (user?.role === 'ADMIN') {
+        await authService.logout().catch(() => {})
+        storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.remove(STORAGE_KEYS.USER)
+        storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.session.remove(STORAGE_KEYS.USER)
+        set({ user: null, isAuthenticated: false })
+        const adminUrl = API_CONFIG.ADMIN_WEB_URL
+        if (adminUrl && typeof window !== 'undefined') {
+          window.location.replace(adminUrl)
+        }
+        return
+      }
       let isPremium = Boolean(user?.is_premium)
       let profileUser: Partial<User> = {}
       try {

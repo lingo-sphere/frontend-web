@@ -130,19 +130,19 @@ export function CommunityChatReactionsModal({
                           {user.user_avatar ? (
                             <NextImage
                               src={user.user_avatar}
-                              alt={user.user_name || 'Học viên'}
+                              alt={user.user_name || ''}
                               width={36}
                               height={36}
                               className="h-full w-full object-cover"
                               unoptimized
                             />
                           ) : (
-                            <span>{(user.user_name || 'H').charAt(0).toUpperCase()}</span>
+                            <span>{(user.user_name || '').charAt(0).toUpperCase()}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <span className="truncate text-xs font-semibold text-text-primary">
-                            {user.user_name || 'Học viên'}
+                            {user.user_name}
                           </span>
                           {isMe && (
                             <span className="shrink-0 rounded bg-primary/10 dark:bg-teal-400/15 px-1 py-0.2 text-[9px] font-medium text-primary dark:text-teal-300">

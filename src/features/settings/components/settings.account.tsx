@@ -113,7 +113,7 @@ export function SettingsAccountTab({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-text-primary">
-                  {authUser?.full_name || 'Học viên'}
+                  {authUser?.full_name}
                 </h2>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
                   <CheckCircle2 size={11} />
@@ -124,7 +124,7 @@ export function SettingsAccountTab({
               <p className="text-[11px] font-medium text-text-secondary mt-1">
                 {isVi ? 'Vai trò: ' : 'Role: '}
                 <span className="font-bold text-primary uppercase text-[10px] bg-primary/10 px-2 py-0.5 rounded-md">
-                  {authUser?.role || 'Học viên'}
+                  {authUser?.role}
                 </span>
               </p>
             </div>

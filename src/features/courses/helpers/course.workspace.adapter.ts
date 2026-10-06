@@ -11,6 +11,7 @@ import type {
   LessonResource,
   LessonContent,
 } from '@/features/courses/types/course'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface RawOptionInput {
   text?: string
@@ -219,18 +220,19 @@ export function mapCourseDataToWorkspace(
         type: (l.lesson_type === 'audio' || l.lesson_type === 'reading' || l.lesson_type === 'mixed' ? l.lesson_type : 'video') as Lesson['type'],
         status: isCompleted ? 'completed' : (l.status as Lesson['status']) || 'available',
         progress: isCompleted ? 100 : l.progress || 0,
-        videoUrl: l.video_url || '',
+        videoUrl: l.video_url ? resolveMediaUrl(l.video_url) : '',
         is_free_preview: Boolean(l.is_free_preview),
         is_preview: Boolean(l.is_free_preview),
         resources: Array.isArray(l.resources) ? l.resources : [],
         content: typeof l.content === 'object' && l.content !== null ? l.content : { sections: [] },
-        theory_file_url: l.theory_file_url || '',
+        theory_file_url: l.theory_file_url ? resolveMediaUrl(l.theory_file_url) : '',
         theory_file_name: l.theory_file_name || '',
         questions: (Array.isArray(l.questions) ? l.questions : Array.isArray(l.practice_questions) ? l.practice_questions : []).map((q: RawQuestionInput, qIdx: number) => {
           let opts: string[] = []
           if (Array.isArray(q.options)) {
             opts = q.options.map((o: string | RawOptionInput) => (typeof o === 'string' ? o : String(o?.text || o?.key || '')))
           }
+          const audioPath = q.audio_url || q.media_url || ''
           return {
             _id: String(q._id || q.id || `lq_${lesId}_${qIdx}`),
             id: String(q._id || q.id || `lq_${lesId}_${qIdx}`),
@@ -238,9 +240,9 @@ export function mapCourseDataToWorkspace(
             options: opts,
             correct_answer: String(q.correct_answer || q.correct_option || 'A'),
             explanation: q.explanation || '',
-            media_url: q.audio_url || q.media_url || '',
-            audio_url: q.audio_url || q.media_url || '',
-            image_url: q.image_url || '',
+            media_url: audioPath ? resolveMediaUrl(audioPath) : '',
+            audio_url: audioPath ? resolveMediaUrl(audioPath) : '',
+            image_url: q.image_url ? resolveMediaUrl(q.image_url) : '',
           }
         }),
       }
@@ -273,20 +275,35 @@ export function mapCourseDataToWorkspace(
       description: mod.description || '',
       status: chapterStatus,
       lessons: mappedLessons,
-      theory_file_url: mod.theory_file_url || '',
+      theory_file_url: mod.theory_file_url ? resolveMediaUrl(mod.theory_file_url) : '',
       theory_file_name: mod.theory_file_name || '',
-      challenge_questions: chQuestions,
+      challenge_questions: chQuestions.map((q, qIdx) => {
+        const audioPath =
+          typeof q.audio_url === 'string'
+            ? q.audio_url
+            : typeof q.media_url === 'string'
+              ? q.media_url
+              : ''
+        const imagePath = typeof q.image_url === 'string' ? q.image_url : ''
+        return {
+          ...q,
+          id: String(q._id || q.id || `cq_${modId}_${qIdx}`),
+          audio_url: audioPath ? resolveMediaUrl(audioPath) : '',
+          media_url: audioPath ? resolveMediaUrl(audioPath) : '',
+          image_url: imagePath ? resolveMediaUrl(imagePath) : '',
+        }
+      }),
       post_mini_questions: Array.isArray(mod.post_mini_questions) ? mod.post_mini_questions : [],
       test_questions: Array.isArray(mod.test_questions) ? mod.test_questions : [],
       challenge_duration_minutes: mod.challenge_duration_minutes || 15,
       challenge_passing_score: mod.challenge_passing_score || 80,
-      challenge_audio_url: chAudio,
-      test_audio_url: chAudio,
-      audio_url: chAudio,
+      challenge_audio_url: chAudio ? resolveMediaUrl(chAudio) : '',
+      test_audio_url: chAudio ? resolveMediaUrl(chAudio) : '',
+      audio_url: chAudio ? resolveMediaUrl(chAudio) : '',
       speaking_prompt: mod.speaking_prompt,
-      speaking_file_url: mod.speaking_file_url,
+      speaking_file_url: mod.speaking_file_url ? resolveMediaUrl(mod.speaking_file_url) : '',
       writing_prompt: mod.writing_prompt,
-      writing_file_url: mod.writing_file_url,
+      writing_file_url: mod.writing_file_url ? resolveMediaUrl(mod.writing_file_url) : '',
       challengeTest: {
         id: `challenge_${modId}`,
         chapterId: modId,
@@ -355,7 +372,7 @@ export function mapCourseDataToWorkspace(
     duration: formatExactDuration(totalDurationSec),
     totalChapters: mappedChapters.length,
     totalLessons: totalLes,
-    document_url: courseObj.document_url || '',
+    document_url: courseObj.document_url ? resolveMediaUrl(courseObj.document_url) : '',
     document_name: courseObj.document_name || '',
     rating: typeof reviewsRes?.rating === 'number' && typeof reviewsRes.rating_count === 'number' && reviewsRes.rating_count > 0
       ? reviewsRes.rating
@@ -394,30 +411,31 @@ export function mapCourseDataToWorkspace(
           if (Array.isArray(q.options)) {
             opts = q.options.map((o) => (typeof o === 'string' ? o : String(o?.text || o?.key || '')))
           }
+          const audioPath = q.audio_url || q.media_url || ''
           return {
             id: String(q._id || q.id || `fq_${qIdx}`),
             question_text: String(q.question_text || q.prompt || `Câu hỏi ${qIdx + 1}`),
             options: opts,
             correct_answer: String(q.correct_answer || q.correct_option || 'A'),
             explanation: q.explanation || '',
-            media_url: q.audio_url || q.media_url || '',
-            audio_url: q.audio_url || q.media_url || '',
-            image_url: q.image_url || '',
+            media_url: audioPath ? resolveMediaUrl(audioPath) : '',
+            audio_url: audioPath ? resolveMediaUrl(audioPath) : '',
+            image_url: q.image_url ? resolveMediaUrl(q.image_url) : '',
           }
         })
       : [],
     final_test_duration_minutes: Number(courseObj.final_test_duration_minutes || 60),
-    final_test_audio_url: String(courseObj.final_test_audio_url || ''),
+    final_test_audio_url: courseObj.final_test_audio_url ? resolveMediaUrl(courseObj.final_test_audio_url) : '',
     final_test_speaking_prompt: String(courseObj.final_test_speaking_prompt || ''),
-    final_test_speaking_file_url: String(courseObj.final_test_speaking_file_url || ''),
+    final_test_speaking_file_url: courseObj.final_test_speaking_file_url ? resolveMediaUrl(courseObj.final_test_speaking_file_url) : '',
     final_test_writing_prompt: String(courseObj.final_test_writing_prompt || ''),
-    final_test_writing_file_url: String(courseObj.final_test_writing_file_url || ''),
+    final_test_writing_file_url: courseObj.final_test_writing_file_url ? resolveMediaUrl(courseObj.final_test_writing_file_url) : '',
     category: String(courseObj.category || ''),
     skills: Array.isArray(courseObj.skills) ? (courseObj.skills as string[]) : [],
     target_score: typeof courseObj.target_score === 'number' ? courseObj.target_score : undefined,
     price: Number(courseObj.price || 0),
     discount_price: typeof courseObj.discount_price === 'number' ? courseObj.discount_price : undefined,
-    thumbnail: courseObj.thumbnail_url || courseObj.thumbnail || '',
+    thumbnail: resolveMediaUrl(courseObj.thumbnail_url || courseObj.thumbnail || ''),
     finalTest: { status: userIsEnrolled ? 'available' : 'locked' },
   }
 }

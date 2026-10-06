@@ -134,7 +134,7 @@ export function useUserEnrollments(enabled = true) {
   useEffect(() => {
     if (typeof document === 'undefined') return
     const authUser = storage.get<User>(STORAGE_KEYS.USER)
-    if (authUser?.is_premium || authUser?.role === 'ADMIN' || authUser?.role === 'INSTRUCTOR') {
+    if (authUser?.is_premium || authUser?.role === 'INSTRUCTOR') {
       storage.cookie.set(STORAGE_KEYS.IS_PRIVILEGED, 'true', { days: 30, path: '/' })
     }
     enrolledCourseIds.forEach((id) => {
@@ -147,7 +147,7 @@ export function useUserEnrollments(enabled = true) {
     (courseIdOrSlug: string) => {
       if (!courseIdOrSlug) return false
       const authUser = storage.get<User>(STORAGE_KEYS.USER)
-      if (authUser?.is_premium || authUser?.role === 'ADMIN' || authUser?.role === 'INSTRUCTOR') {
+      if (authUser?.is_premium || authUser?.role === 'INSTRUCTOR') {
         return true
       }
       return enrolledCourseIds.includes(String(courseIdOrSlug))

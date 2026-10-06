@@ -170,7 +170,7 @@ export function SpeakingHome({
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[14px] font-medium text-text-primary">
-                        {exercise?.title || (isVietnamese ? 'Bài tập không xác định' : 'Unknown Exercise')}
+                        {exercise?.title}
                       </p>
                       <p className="text-[12px] text-text-secondary">
                         {exercise?.title_vi}

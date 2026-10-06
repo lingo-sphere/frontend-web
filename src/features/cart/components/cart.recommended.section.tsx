@@ -8,6 +8,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { formatCurrency } from '@/lib/format'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import { toast } from '@/store/toast.store'
 import type { Course } from '@/types/api.types'
 
@@ -117,7 +118,7 @@ export function CartRecommendedSection({
                 >
                   <img
                     src={
-                      c.thumbnail_url ||
+                      resolveMediaUrl(c.thumbnail_url) ||
                       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600'
                     }
                     alt={c.title}

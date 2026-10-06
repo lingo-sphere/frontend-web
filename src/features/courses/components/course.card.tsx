@@ -23,6 +23,7 @@ import { toast } from '@/store/toast.store'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
@@ -54,7 +55,7 @@ export function CourseCard({
   const { isEnrolled: checkEnrolled } = useUserEnrollments(isAuthenticated)
   const isEnrolled = checkEnrolled(course.id) || (course.slug ? checkEnrolled(course.slug) : false)
   const isPremiumUser = Boolean(user?.is_premium)
-  const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
+  const isPrivilegedUser = user?.role === 'INSTRUCTOR'
   const isAlreadyEnrolled = isEnrolled || isPremiumUser || isPrivilegedUser
   const [isAdding, setIsAdding] = useState(false)
   const isAlreadyInCart = isInCart(course.id)
@@ -166,7 +167,7 @@ export function CourseCard({
       <div>
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black/5">
           <img
-            src={course.thumbnail}
+            src={resolveMediaUrl(course.thumbnail)}
             alt={course.title}
             className="h-full w-full object-cover rounded-xl"
           />
