@@ -13,13 +13,12 @@ export function formatNumber(val?: number): string {
 }
 
 const defaultUserState: User = {
-  id: 'current_user',
   user_id: '',
   email: '',
-  full_name: 'Học viên',
+  full_name: '',
   avatar_url: '',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   role: 'student',
   isVerified: true,
   isActive: true,
@@ -95,7 +94,6 @@ export function useProfileData() {
       const cachedStats = storage.get<{ totalXP?: number; currentStreak?: number; longestStreak?: number }>(STORAGE_KEYS.PROFILE_STATS)
       setUser((prev) => ({
         ...prev,
-        id: auth.user_id,
         user_id: auth.user_id,
         email: auth.email || prev.email,
         full_name: auth.full_name || prev.full_name,
@@ -114,7 +112,7 @@ export function useProfileData() {
       const sWrt = Number(rawAuth?.placement_writing_score || 0)
       const hasScores = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
       const isManual = Boolean(rawAuth?.is_score_manually_edited)
-      const rawTarget = rawAuth?.target_toeic_score ?? rawAuth?.target_score
+      const rawTarget = rawAuth?.target_toeic_score
       const resolvedTarget = (hasScores || isManual) && rawTarget ? Number(rawTarget) : 0
 
       setUserScores({
@@ -160,7 +158,6 @@ export function useProfileData() {
 
               return {
                 ...prev,
-                id: profileData?.user_id || prev.id,
                 user_id: profileData?.user_id || prev.user_id,
                 email: profileData?.email || prev.email,
                 full_name: profileData?.full_name || prev.full_name,
@@ -185,7 +182,7 @@ export function useProfileData() {
               const sWrt = profileData?.placement_writing_score ?? 0
               const sHas = Boolean(sTotal > 0 || sList > 0 || sRead > 0)
               const isManual = Boolean(profileData?.is_score_manually_edited)
-              const rawTarget = profileData?.target_toeic_score ?? profileData?.target_score
+              const rawTarget = profileData?.target_toeic_score
               const resolvedTarget = (sHas || isManual) && rawTarget ? Number(rawTarget) : 0
 
               setUserScores((prev) => ({

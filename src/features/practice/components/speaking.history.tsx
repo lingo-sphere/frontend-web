@@ -104,7 +104,7 @@ export function SpeakingHistory({
                   <div className="mb-3 flex items-start justify-between">
                     <div>
                       <h3 className="text-[15px] font-semibold text-text-primary">
-                        {exercise?.title || (isVietnamese ? 'Bài tập không xác định' : 'Unknown Exercise')}
+                        {exercise?.title}
                       </h3>
                       <p className="text-[12px] text-text-secondary">
                         {exercise?.title_vi}

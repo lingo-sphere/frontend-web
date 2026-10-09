@@ -104,10 +104,9 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
   }, [isOpen])
 
   const isRoomLocked = room ? !room.is_chat_enabled : false
-  const isPrivileged = eligibility?.role === 'ADMIN' || eligibility?.role === 'MODERATOR'
+  const isPrivileged = eligibility?.role === 'MODERATOR'
   const canPin =
-    eligibility?.role === 'ADMIN' ||
-    (eligibility?.role === 'MODERATOR' && Boolean(eligibility?.member?.moderator_permissions?.can_pin_messages))
+    eligibility?.role === 'MODERATOR' && Boolean(eligibility?.member?.moderator_permissions?.can_pin_messages)
 
   const activePinnedMsg = pinnedMessages.length > 0 ? pinnedMessages[pinnedMessages.length - 1] : undefined
 

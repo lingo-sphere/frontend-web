@@ -222,7 +222,7 @@ export function CourseLandingView({
                 </div>
               )}
               <span className="hidden sm:inline text-xs font-semibold text-slate-200">
-                {userName || 'Học viên'}
+                {userName}
               </span>
             </div>
           ) : (

@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { useAllCoursesQuery } from '@/features/courses/hooks/use.courses.query'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import type { Course } from '@/types/api.types'
 
 interface CourseItem {
@@ -64,7 +65,7 @@ export function RecommendedCoursesSection({
         title: c.title,
         slug: c.slug,
         description: c.description,
-        thumbnail: c.thumbnail_url || '',
+        thumbnail: resolveMediaUrl(c.thumbnail_url),
         target_score: courseTarget,
         min_score: courseTarget ? Math.max(0, courseTarget - 150) : 0,
         max_score: courseTarget || 0,

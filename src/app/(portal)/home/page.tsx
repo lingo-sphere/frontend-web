@@ -34,8 +34,8 @@ export default function HomeAppPage() {
     const mappedEntries = Array.isArray(lbData)
       ? lbData.map((u: LeaderboardEntry, idx: number) => ({
           rank: idx + 1,
-          name: u.full_name || `Học viên #${idx + 1}`,
-          streakDays: u.current_streak ?? u.streak_days ?? 1,
+          name: u.full_name || '',
+          streakDays: u.current_streak ?? u.streak_days ?? 0,
         }))
       : []
 
@@ -49,8 +49,8 @@ export default function HomeAppPage() {
   const topics: Topic[] = useMemo(() => {
     if (!Array.isArray(topData)) return []
     return topData.map((t: BackendTopic) => ({
-      id: t._id || `topic-${t.code || ''}`,
-      label: t.name_vi || t.name_en || 'Chủ đề',
+      id: String(t._id || t.code || ''),
+      label: t.name_vi || t.name_en || '',
       emoji: '📚',
       words: t.lexical_count || 0,
     }))

@@ -97,10 +97,6 @@ export function InsightRail({ onAction }: InsightRailProps) {
             </div>
             <div className="mt-4 flex items-center gap-3 text-[11px] text-text-secondary">
               <div className="flex items-center gap-1">
-                <span>💎</span>
-                <span className="font-semibold text-text-primary">1,250</span>
-              </div>
-              <div className="flex items-center gap-1">
                 <span>🧊</span>
                 <span className="font-semibold text-text-primary">{isVietnamese ? '1 Freeze' : '1 Freeze'}</span>
               </div>

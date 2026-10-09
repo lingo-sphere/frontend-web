@@ -8,6 +8,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { practiceService, type BackendWritingExercise } from '@/features/practice/services/practice.service'
 import { useWritingExercisesQuery, useWritingExerciseByIdQuery, useWritingRecommendationsQuery } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
+import { toast } from '@/store/toast.store'
 import type {
   WritingExercise,
   WritingSubmission,
@@ -433,6 +434,11 @@ export function useWritingWorkspace() {
   const handleSubmitWriting = useCallback(
     async (content: string, wordCount: number, writingTimeSeconds: number) => {
       if (!selectedExercise) return
+      const authUser = useAuthStore.getState().user
+      if (!authUser) {
+        toast.error('Vui lòng đăng nhập để nộp bài và nhận đánh giá AI!')
+        return
+      }
 
       const newDraft: WritingDraft = {
         content,

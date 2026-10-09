@@ -5,6 +5,7 @@ import { Trash2, CheckCircle2, Heart, Sparkles, User } from 'lucide-react'
 import type { CartItem } from '@/features/cart/types/cart'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { formatCurrency } from '@/lib/format'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import { useWishlist } from '@/features/cart/hooks/use.wishlist.query'
 import { toast } from '@/store/toast.store'
 
@@ -58,7 +59,7 @@ export function CartItemCard({ item, isVi, onRemove, onNavigate }: CartItemCardP
         >
           <img
             src={
-              item.thumbnail_url ||
+              resolveMediaUrl(item.thumbnail_url) ||
               'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600'
             }
             alt={item.title}

@@ -1,13 +1,12 @@
-/// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và gợi ý khóa học.
+// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và gợi ý khóa học.
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
-import { examService, type BackendToeicExam } from '@/features/toeic/services/exam.service'
+import { examService } from '@/features/toeic/services/exam.service'
 import { useToeicExamDetailQuery } from '@/features/toeic/hooks/use.toeic.query'
 import { toeicKeys } from '@/features/toeic/keys/toeic.keys'
-import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useNavigate } from '@/lib/navigation'
 import type { Course } from '@/types/api.types'
@@ -245,7 +244,7 @@ export function useToeicExam(examId?: string) {
     if (isSubmittingAttemptBackendRef.current || hasCompletedBackendSubmissionRef.current) return
     const { user } = useAuthStore.getState()
     if (!user) {
-      toast.info('Kết quả làm bài đã được chấm điểm! Đăng nhập để lưu kết quả vào lịch sử thi.')
+      toast.error('Vui lòng đăng nhập để nộp bài thi và lưu kết quả vào hệ thống!')
       return
     }
 
@@ -259,33 +258,7 @@ export function useToeicExam(examId?: string) {
       mode: state.timedMode ? 'timed' : 'practice',
     })
 
-    const is4Skills = Boolean(
-      examId?.includes('4skills') ||
-        examData?.skills_enabled === 'ALL' ||
-        (res.speakingTotal && res.speakingTotal > 0) ||
-        (res.writingTotal && res.writingTotal > 0)
-    )
 
-    const placementData = {
-      placement_test_score: res.estimatedTotal,
-      placement_listening_score: res.estimatedListening,
-      placement_reading_score: res.estimatedReading,
-      placement_speaking_score: is4Skills ? (res.estimatedSpeaking ?? 0) : undefined,
-      placement_writing_score: is4Skills ? (res.estimatedWriting ?? 0) : undefined,
-      placement_skills_type: is4Skills ? '4SKILLS' : '2SKILLS',
-      target_toeic_score: Math.min(990, res.estimatedTotal + 150),
-      current_estimated_score: res.estimatedTotal,
-      is_score_manually_edited: false,
-      placement_tested_at: new Date().toISOString(),
-    }
-
-    try {
-      userService.updateProfile(placementData).catch(() => null)
-      const { user: currentUser, setUser } = useAuthStore.getState()
-      if (currentUser) {
-        setUser({ ...currentUser, ...placementData })
-      }
-    } catch {}
 
     const isSystemPlacement = Boolean(
       examData?.is_system_placement ||
@@ -337,32 +310,7 @@ export function useToeicExam(examId?: string) {
             }
           })
           setEvaluatedAnswers(evalMap)
-          const updatedRes = calculateToeicExamResults(allQuestions, state.answers, evalMap)
-          const is4SkillsUpdated = Boolean(
-            examId?.includes('4skills') ||
-              examData?.skills_enabled === 'ALL' ||
-              (updatedRes.speakingTotal && updatedRes.speakingTotal > 0) ||
-              (updatedRes.writingTotal && updatedRes.writingTotal > 0)
-          )
-          const updatedPlacementData = {
-            placement_test_score: updatedRes.estimatedTotal,
-            placement_listening_score: updatedRes.estimatedListening,
-            placement_reading_score: updatedRes.estimatedReading,
-            placement_speaking_score: is4SkillsUpdated ? (updatedRes.estimatedSpeaking ?? 0) : undefined,
-            placement_writing_score: is4SkillsUpdated ? (updatedRes.estimatedWriting ?? 0) : undefined,
-            placement_skills_type: is4SkillsUpdated ? '4SKILLS' : '2SKILLS',
-            target_toeic_score: Math.min(990, updatedRes.estimatedTotal + 150),
-            current_estimated_score: updatedRes.estimatedTotal,
-            is_score_manually_edited: false,
-            placement_tested_at: new Date().toISOString(),
-          }
-          try {
-            userService.updateProfile(updatedPlacementData).catch(() => null)
-            const { user: updatedUser, setUser } = useAuthStore.getState()
-            if (updatedUser) {
-              setUser({ ...updatedUser, ...updatedPlacementData })
-            }
-          } catch {}
+
         }
         queryClient.invalidateQueries({ queryKey: toeicKeys.history() })
         queryClient.invalidateQueries({ queryKey: toeicKeys.courseAttempts() })
@@ -404,11 +352,14 @@ export function useToeicExam(examId?: string) {
       .finally(() => {
         setIsLoadingRecommendations(false)
       })
-  }, [allQuestions, calculateResults, examData, examId, queryClient, state.answers, state.timeRemaining, state.timedMode])
+  }, [allQuestions, calculateResults, examData, examId, queryClient, state.answers, state.timeRemaining, state.timedMode, storageKey])
 
   useEffect(() => {
     if (!state.submitted) return
-    submitAttemptToBackend()
+    const timer = setTimeout(() => {
+      submitAttemptToBackend()
+    }, 0)
+    return () => clearTimeout(timer)
   }, [state.submitted, submitAttemptToBackend])
 
   useEffect(() => {

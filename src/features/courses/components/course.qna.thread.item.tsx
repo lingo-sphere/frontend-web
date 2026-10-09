@@ -1,7 +1,4 @@
-/**
- * @file course.qna.thread.item.tsx
- * @description Card hiển thị một câu hỏi thảo luận, danh sách các câu trả lời và khung phản hồi của Giảng viên
- */
+// Card hiển thị một câu hỏi thảo luận và phản hồi của Giảng viên.
 
 import {
   BookOpen,
@@ -20,7 +17,7 @@ import type { QnAItem } from '@/features/courses/types/course'
 interface CourseQnAThreadItemProps {
   item: QnAItem
   currentUserId?: string
-  isTeacherOrAdmin: boolean
+  isTeacher: boolean
   replyingQnaId: string | null
   replyText: string
   isSubmitting: boolean
@@ -34,7 +31,7 @@ interface CourseQnAThreadItemProps {
 export function CourseQnAThreadItem({
   item,
   currentUserId,
-  isTeacherOrAdmin,
+  isTeacher,
   replyingQnaId,
   replyText,
   isSubmitting,
@@ -156,7 +153,7 @@ export function CourseQnAThreadItem({
       )}
 
       <div className="pl-0 sm:pl-13 pt-1">
-        {isTeacherOrAdmin ? (
+        {isTeacher ? (
           replyingQnaId === item.id ? (
             <div className="space-y-3 p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.03] animate-in fade-in duration-200">
               <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">

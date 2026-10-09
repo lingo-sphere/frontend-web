@@ -600,8 +600,8 @@ export function Lanyard({
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-[340px] text-center z-30 pointer-events-none px-4">
         {isUnlockedState ? (
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#2f7f78] border border-[#5eead4] px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_35px_rgba(94,234,212,0.95)] animate-pulse">
-            <CheckCircle2 className="w-4 h-4 text-[#5eead4]" />
+          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600 border border-emerald-400 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_35px_rgba(52,211,153,0.95)] animate-pulse">
+            <CheckCircle2 className="w-4 h-4 text-emerald-300" />
             {texts.granted}
           </div>
         ) : (
@@ -609,11 +609,11 @@ export function Lanyard({
             <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/20 backdrop-blur-md">
               <div
                 ref={progressBarRef}
-                className="h-full w-0 bg-gradient-to-r from-[#2f7f78] via-[#48c9b0] to-[#5eead4] rounded-full shadow-[0_0_15px_#5eead4]"
+                className="h-full w-0 bg-gradient-to-r from-emerald-600 via-emerald-400 to-teal-300 rounded-full shadow-[0_0_15px_#34d399]"
               />
             </div>
 
-            <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#5eead4] drop-shadow-[0_0_12px_rgba(94,234,212,0.8)]">
+            <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300 drop-shadow-[0_0_12px_rgba(52,211,153,0.8)]">
               <ArrowDown
                 className={`w-4 h-4 ${isHovered ? "animate-bounce" : ""}`}
               />

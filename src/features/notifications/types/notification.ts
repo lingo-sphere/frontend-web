@@ -39,7 +39,6 @@ export type NotificationType =
   | 'LEVEL_UP'
   | 'XP_MILESTONE'
   | 'ACHIEVEMENT_UNLOCKED'
-  | 'GEM_EARNED'
   | 'SRS_DUE'
   | 'SRS_DUE_COUNT'
   | 'NEW_CARDS_AVAILABLE'

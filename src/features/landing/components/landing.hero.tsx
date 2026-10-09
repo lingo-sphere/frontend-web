@@ -100,12 +100,12 @@ export function LandingHero({
             <SpecularButton
               size="lg"
               radius={20}
-              tint="#2f7f78"
+              tint="#10b981"
               tintOpacity={0.35}
               blur={16}
               textColor="#ffffff"
               lineColor="#5eead4"
-              baseColor="#2f7f78"
+              baseColor="#10b981"
               intensity={1.3}
               shineSize={12}
               shineFade={45}

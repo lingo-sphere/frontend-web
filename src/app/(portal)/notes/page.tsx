@@ -14,14 +14,25 @@ import { NoteCard } from '@/features/notes/components/note.card'
 import { NoteModal } from '@/features/notes/components/note.modal'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { useNavigate } from '@/lib/navigation'
+import { toast } from '@/store/toast.store'
 
 const ITEMS_PER_PAGE = 9
 
 export default function NotesAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const navigate = useNavigate()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const isAuthLoading = useAuthStore((state) => state.isLoading)
   const user = useAuthStore((state) => state.user)
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      toast.warning(isVietnamese ? 'Vui lòng đăng nhập để xem sổ tay ghi chú!' : 'Please log in to view notes!')
+      navigate('/login?returnUrl=/notes')
+    }
+  }, [isAuthLoading, isAuthenticated, navigate, isVietnamese])
 
   const [notes, setNotes] = useState<UserNote[]>([])
   const [selectedType, setSelectedType] = useState<NoteTargetType | 'ALL'>('ALL')
@@ -129,6 +140,14 @@ export default function NotesAppPage() {
   const handleOpenEdit = (note: UserNote) => {
     setEditingNote(note)
     setIsModalOpen(true)
+  }
+
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-text-primary">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (

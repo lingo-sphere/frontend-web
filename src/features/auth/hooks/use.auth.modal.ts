@@ -1,8 +1,4 @@
-/**
- * @file use.auth.modal.ts
- * @description Hook quản lý trạng thái form xác thực, các chế độ đăng nhập/đăng ký/OTP và đếm ngược
- */
-
+// Hook quản lý trạng thái form xác thực, chế độ đăng nhập/đăng ký/OTP và đếm ngược
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -12,19 +8,20 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 export type AuthMode = 'login' | 'register' | 'verify_email_otp' | 'forgot_password' | 'reset_password'
 
 interface UseAuthModalOptions {
-  isOpen: boolean
+  isOpen?: boolean
   onClose: () => void
   initialMode?: 'login' | 'register'
 }
 
-export function useAuthModal({ isOpen, onClose, initialMode = 'login' }: UseAuthModalOptions) {
+export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOptions) {
   const [mode, setMode] = useState<AuthMode>(initialMode)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('nguyennamtinh9999@gmail.com')
+  const [password, setPassword] = useState('12345678')
   const [newPassword, setNewPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', ''])
@@ -47,19 +44,14 @@ export function useAuthModal({ isOpen, onClose, initialMode = 'login' }: UseAuth
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   useEffect(() => {
-    if (isAuthenticated && isOpen) {
+    if (isAuthenticated) {
       onClose()
     }
-  }, [isAuthenticated, isOpen, onClose])
+  }, [isAuthenticated, onClose])
 
   useEffect(() => {
-    if (isOpen) {
-      setMode(initialMode)
-      clearError()
-      setSuccessMessage(null)
-      setOtpDigits(['', '', '', '', '', ''])
-    }
-  }, [isOpen, initialMode, clearError])
+    clearError()
+  }, [clearError])
 
   useEffect(() => {
     if (resendCooldown <= 0) return
@@ -119,7 +111,7 @@ export function useAuthModal({ isOpen, onClose, initialMode = 'login' }: UseAuth
 
     try {
       if (mode === 'login') {
-        await login({ email, password })
+        await login({ email, password, rememberMe })
         onClose()
       } else if (mode === 'register') {
         await register({ email, password, full_name: fullName, phone_number: phoneNumber })
@@ -146,16 +138,22 @@ export function useAuthModal({ isOpen, onClose, initialMode = 'login' }: UseAuth
     } catch {}
   }
 
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-    if (!credentialResponse.credential) return
+  const handleGoogleToken = async (token: string) => {
+    if (!token) return
     try {
       clearError()
       await socialLogin({
         provider: 'GOOGLE',
-        token: credentialResponse.credential,
+        token,
+        rememberMe,
       })
       onClose()
     } catch {}
+  }
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) return
+    await handleGoogleToken(credentialResponse.credential)
   }
 
   const switchMode = (newMode: AuthMode) => {
@@ -179,6 +177,8 @@ export function useAuthModal({ isOpen, onClose, initialMode = 'login' }: UseAuth
     setPhoneNumber,
     showPassword,
     setShowPassword,
+    rememberMe,
+    setRememberMe,
     successMessage,
     otpDigits,
     otpInputRefs,
@@ -191,6 +191,7 @@ export function useAuthModal({ isOpen, onClose, initialMode = 'login' }: UseAuth
     handleResendOtp,
     handleSubmit,
     handleGoogleSuccess,
+    handleGoogleToken,
     switchMode,
   }
 }

@@ -1,6 +1,6 @@
 // Ánh xạ tên icon chuỗi sang các biểu tượng Lucide icon cho toàn bộ ứng dụng.
 
-import type { LucideIcon } from 'lucide-react'
+import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   AlertCircle,
@@ -100,7 +100,7 @@ import {
   Send,
   LogOut,
   ShoppingBag,
-} from 'lucide-react'
+} from "lucide-react";
 
 const iconMap: Record<string, LucideIcon> = {
   activity: Activity,
@@ -210,17 +210,29 @@ const iconMap: Record<string, LucideIcon> = {
   xCircle: XCircle,
   zapOff: ZapOff,
   shoppingBag: ShoppingBag,
-}
+};
 
 interface IconProps {
-  name: string
-  size?: number
-  className?: string
-  strokeWidth?: number
+  name: string;
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
 }
 
-export function Icon({ name, size = 18, className, strokeWidth = 1.8 }: IconProps) {
-  const IconComponent = iconMap[name]
-  if (!IconComponent) return null
-  return <IconComponent aria-hidden="true" className={className} size={size} strokeWidth={strokeWidth} />
+export function Icon({
+  name,
+  size = 18,
+  className,
+  strokeWidth = 1.8,
+}: IconProps) {
+  const IconComponent = iconMap[name];
+  if (!IconComponent) return null;
+  return (
+    <IconComponent
+      aria-hidden="true"
+      className={className}
+      size={size}
+      strokeWidth={strokeWidth}
+    />
+  );
 }

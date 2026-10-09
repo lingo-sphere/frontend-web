@@ -17,15 +17,32 @@ export type { AuthResponse, RegisterResponse, User }
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, payload, AuthResponseSchema)
+    const isRemember = payload.rememberMe !== false && payload.remember_me !== false
+    const primaryStorage = isRemember ? storage : storage.session
+    const secondaryStorage = isRemember ? storage.session : storage
+
     if (res.access_token) {
-      storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
-      storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      secondaryStorage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      secondaryStorage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+      secondaryStorage.remove(STORAGE_KEYS.USER)
+
+      primaryStorage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      if (isRemember) {
+        storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      } else {
+        storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      }
       if (res.refresh_token) {
-        storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+        if (isRemember) {
+          storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+        } else {
+          storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+        }
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+        storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
       }
       if (res.user) {
-        storage.set(STORAGE_KEYS.USER, res.user)
+        primaryStorage.set(STORAGE_KEYS.USER, res.user)
       }
     }
     return res
@@ -33,15 +50,32 @@ export const authService = {
 
   async socialLogin(payload: SocialLoginPayload): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.SOCIAL_LOGIN, payload, AuthResponseSchema)
+    const isRemember = payload.rememberMe !== false && payload.remember_me !== false
+    const primaryStorage = isRemember ? storage : storage.session
+    const secondaryStorage = isRemember ? storage.session : storage
+
     if (res.access_token) {
-      storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
-      storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      secondaryStorage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      secondaryStorage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+      secondaryStorage.remove(STORAGE_KEYS.USER)
+
+      primaryStorage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      if (isRemember) {
+        storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      } else {
+        storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+      }
       if (res.refresh_token) {
-        storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+        if (isRemember) {
+          storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+        } else {
+          storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+        }
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+        storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
       }
       if (res.user) {
-        storage.set(STORAGE_KEYS.USER, res.user)
+        primaryStorage.set(STORAGE_KEYS.USER, res.user)
       }
     }
     return res
@@ -117,6 +151,33 @@ export const authService = {
     return api.get<User>(API_CONFIG.ENDPOINTS.AUTH.ME, undefined, UserSchema)
   },
 
+  clearAuthStorage(): void {
+    storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+    storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+    storage.remove(STORAGE_KEYS.USER)
+    storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
+    storage.remove(STORAGE_KEYS.PROFILE_STATS)
+    storage.remove(STORAGE_KEYS.USER_NOTES)
+    storage.remove(STORAGE_KEYS.WISHLIST)
+    storage.remove(STORAGE_KEYS.PENDING_ORDER)
+    storage.remove(STORAGE_KEYS.IS_PRIVILEGED)
+    storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+    storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
+    storage.session.remove(STORAGE_KEYS.USER)
+    storage.session.remove(STORAGE_KEYS.PLACEMENT_SCORE)
+    storage.session.remove(STORAGE_KEYS.PROFILE_STATS)
+    storage.session.remove(STORAGE_KEYS.USER_NOTES)
+    storage.session.remove(STORAGE_KEYS.WISHLIST)
+    storage.session.remove(STORAGE_KEYS.PENDING_ORDER)
+    storage.session.remove(STORAGE_KEYS.IS_PRIVILEGED)
+    storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
+    storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+    storage.cookie.remove(STORAGE_KEYS.USER)
+    storage.cookie.remove(STORAGE_KEYS.IS_PRIVILEGED)
+    storage.cookie.remove('refresh_token')
+    storage.cookie.remove('access_token')
+  },
+
   async logout(): Promise<void> {
     try {
       const refreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
@@ -129,22 +190,12 @@ export const authService = {
       )
     } catch {
     } finally {
-      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
-      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
-      storage.remove(STORAGE_KEYS.USER)
-      storage.remove(STORAGE_KEYS.PLACEMENT_SCORE)
-      storage.remove(STORAGE_KEYS.PROFILE_STATS)
-      storage.remove(STORAGE_KEYS.USER_NOTES)
-      storage.remove(STORAGE_KEYS.WISHLIST)
-      storage.remove(STORAGE_KEYS.PENDING_ORDER)
-      storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
-      storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
-      storage.cookie.remove(STORAGE_KEYS.USER)
+      this.clearAuthStorage()
     }
   },
 
   isAuthenticated(): boolean {
-    return !!storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
+    return !!storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || !!storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
   },
 
   getRefreshToken(): string | null {
@@ -152,7 +203,7 @@ export const authService = {
   },
 
   getStoredUser(): User | null {
-    return storage.get<User>(STORAGE_KEYS.USER)
+    return storage.get<User>(STORAGE_KEYS.USER) || storage.session.get<User>(STORAGE_KEYS.USER)
   },
 }
 

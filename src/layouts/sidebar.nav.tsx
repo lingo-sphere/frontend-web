@@ -168,7 +168,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                         active
-                          ? 'bg-primary text-white shadow-sm shadow-primary/30'
+                          ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
                           : 'bg-surface-subtle text-text-secondary hover:text-text-primary'
                       }`}
                     >
@@ -200,7 +200,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                       <div
                         className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                           active
-                            ? 'bg-primary text-white shadow-sm shadow-primary/25'
+                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25'
                             : 'bg-surface-subtle text-text-secondary group-hover:bg-surface-hover group-hover:text-text-primary'
                         }`}
                       >
@@ -246,7 +246,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                       <div
                         className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                           active
-                            ? 'bg-primary text-white shadow-sm shadow-primary/25'
+                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25'
                             : 'bg-surface-subtle text-text-secondary group-hover:bg-surface-hover group-hover:text-text-primary'
                         }`}
                       >

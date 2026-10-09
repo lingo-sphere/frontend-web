@@ -120,7 +120,7 @@ export function SpecularButton({
   blur = 12,
   textColor = '#ffffff',
   lineColor = '#5eead4',
-  baseColor = '#2f7f78',
+  baseColor = '#10b981',
   intensity = 1.2,
   shineSize = 12,
   shineFade = 45,

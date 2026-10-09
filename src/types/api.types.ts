@@ -417,7 +417,6 @@ export interface GamificationProfile {
   current_streak: number
   longest_streak: number
   streak_freezes_left?: number
-  gems?: number
   league?: string
 }
 

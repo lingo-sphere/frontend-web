@@ -1,17 +1,12 @@
-/**
- * @file header.user.tsx
- * @description Component hiển thị thông tin học viên, nút nâng cấp và đăng nhập/đăng xuất trên Header
- */
-
+// Component hiển thị thông tin học viên, hỗ trợ hover mở menu quản lý tài khoản trên Header.
 'use client'
 
 import { Button } from '@/components/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/tooltip'
 import { Icon } from '@/components/icon.map'
-import { useNavigate } from '@/lib/navigation'
 import { HeaderUserHover } from '@/layouts/header.user.hover'
 import { getRemainingSubscriptionText } from '@/layouts/header.utils'
 import type { User } from '@/types/api.types'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface HeaderUserSectionProps {
   mounted: boolean
@@ -26,7 +21,7 @@ interface HeaderUserSectionProps {
   currentLanguage: 'VI' | 'EN'
   onOpenAuth: () => void
   onOpenUpgrade: () => void
-  onLogout: () => void
+  onLogout?: () => void
 }
 
 export function HeaderUserSection({
@@ -42,10 +37,7 @@ export function HeaderUserSection({
   currentLanguage,
   onOpenAuth,
   onOpenUpgrade,
-  onLogout,
 }: HeaderUserSectionProps) {
-  const navigate = useNavigate()
-
   if (!mounted) {
     return (
       <div className="h-9 w-20 rounded-xl bg-surface-subtle animate-pulse" />
@@ -66,17 +58,14 @@ export function HeaderUserSection({
 
   return (
     <div
-      className="relative flex items-center gap-2 border-l border-border pl-3"
+      className="relative flex items-center gap-1.5 border-l border-border pl-3 cursor-default"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <button
-        onClick={() => navigate('/profile')}
-        className="flex items-center gap-2 rounded-xl p-1 hover:bg-surface-subtle transition-colors text-left cursor-pointer group"
-      >
+      <div className="flex items-center gap-2 rounded-xl p-1 text-left select-none">
         <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs ring-2 ring-primary/20 overflow-hidden shrink-0 shadow-xs">
           {user.avatar_url ? (
-            <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
+            <img src={resolveMediaUrl(user.avatar_url)} alt={user.full_name} className="h-full w-full object-cover" />
           ) : (
             user.full_name?.charAt(0)?.toUpperCase() || 'U'
           )}
@@ -88,8 +77,8 @@ export function HeaderUserSection({
         </div>
         <div className="hidden sm:block">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-text-primary leading-tight line-clamp-1 group-hover:text-primary transition-colors">
-              {user.full_name || 'Học viên'}
+            <span className="text-xs font-bold text-text-primary leading-tight line-clamp-1">
+              {user.full_name}
             </span>
             {user.is_premium && (
               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[9px] font-extrabold text-white shadow-xs">
@@ -108,30 +97,22 @@ export function HeaderUserSection({
             )}
           </div>
         </div>
-      </button>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-text-tertiary hover:text-error rounded-lg cursor-pointer"
-            onClick={onLogout}
-          >
-            <Icon name="logOut" size={16} />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{isVi ? 'Đăng xuất' : 'Log out'}</TooltipContent>
-      </Tooltip>
-
-      {isHovered && (
-        <HeaderUserHover
-          onClose={onCloseHover}
-          onLanguageToggle={onLanguageToggle}
-          currentLanguage={currentLanguage}
-          onOpenUpgrade={onOpenUpgrade}
+        <Icon
+          name="chevronDown"
+          size={14}
+          className={`text-text-tertiary transition-transform duration-200 hidden sm:block ${
+            isHovered ? 'rotate-180 text-primary' : ''
+          }`}
         />
-      )}
+      </div>
+
+      <HeaderUserHover
+        isOpen={isHovered}
+        onClose={onCloseHover}
+        onLanguageToggle={onLanguageToggle}
+        currentLanguage={currentLanguage}
+        onOpenUpgrade={onOpenUpgrade}
+      />
     </div>
   )
 }

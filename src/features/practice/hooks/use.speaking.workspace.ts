@@ -9,6 +9,7 @@ import {
   useSpeakingAttemptsQuery,
 } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import type {
   SpeakingExercise,
@@ -130,10 +131,10 @@ export function useSpeakingWorkspace() {
     // Average score: fallback to userSpeakingProfile.overall_proficiency_score if historyAttempts is empty
     const avgScore = total > 0
       ? (historyAttempts.length > 0
-          ? Math.round(
-              (historyAttempts.reduce((sum, a) => sum + (a.overall_score || 0), 0) / historyAttempts.length) * 10
-            ) / 10
-          : (userSpeakingProfile?.overall_proficiency_score || 0))
+        ? Math.round(
+          (historyAttempts.reduce((sum, a) => sum + (a.overall_score || 0), 0) / historyAttempts.length) * 10
+        ) / 10
+        : (userSpeakingProfile?.overall_proficiency_score || 0))
       : 0
 
     // Practice minutes
@@ -151,38 +152,38 @@ export function useSpeakingWorkspace() {
     const avgPron = radar?.pronunciation !== undefined
       ? radar.pronunciation
       : (historyAttempts.length > 0
-          ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.pronunciation_score || 0), 0) / historyAttempts.length) * 10) / 10
-          : 0)
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.pronunciation_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : 0)
 
     const avgFluency = radar?.fluency !== undefined
       ? radar.fluency
       : (historyAttempts.length > 0
-          ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.fluency_score || 0), 0) / historyAttempts.length) * 10) / 10
-          : 0)
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.fluency_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : 0)
 
     const avgGrammar = radar?.grammar !== undefined
       ? radar.grammar
       : (historyAttempts.length > 0
-          ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.grammar_score || 0), 0) / historyAttempts.length) * 10) / 10
-          : avgScore)
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.grammar_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : avgScore)
 
     const avgVocab = radar?.vocabulary !== undefined
       ? radar.vocabulary
       : (historyAttempts.length > 0
-          ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.vocabulary_score || 0), 0) / historyAttempts.length) * 10) / 10
-          : avgScore)
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.vocabulary_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : avgScore)
 
     const avgCoherence = radar?.task_achievement !== undefined
       ? radar.task_achievement
       : (historyAttempts.length > 0
-          ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.coherence_score || 0), 0) / historyAttempts.length) * 10) / 10
-          : avgScore)
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.coherence_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : avgScore)
 
     const avgContent = radar?.naturalness !== undefined
       ? radar.naturalness
       : (historyAttempts.length > 0
-          ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.content_score || 0), 0) / historyAttempts.length) * 10) / 10
-          : avgScore)
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.content_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : avgScore)
 
     return {
       total_attempts: total,
@@ -241,6 +242,12 @@ export function useSpeakingWorkspace() {
   const handleGoHistory = useCallback(() => setView('history'), [])
 
   const handleSelectExercise = useCallback((exercise: SpeakingExercise) => {
+    const { isAuthenticated } = useAuthStore.getState()
+    if (!isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để bắt đầu bài luyện nói!')
+      window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      return
+    }
     setSelectedExercise(exercise)
     setView('workspace')
     setRecordingState({
@@ -275,6 +282,11 @@ export function useSpeakingWorkspace() {
       dialogueTurnsResults?: DialogueTurnAttemptResult[]
     ) => {
       if (!selectedExercise) return
+      const authUser = useAuthStore.getState().user
+      if (!authUser) {
+        toast.error('Vui lòng đăng nhập để gửi bài thu âm và nhận đánh giá AI!')
+        return
+      }
       setIsSubmitting(true)
 
       let audioBase64: string | undefined = undefined

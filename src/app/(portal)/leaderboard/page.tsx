@@ -32,9 +32,9 @@ export default function LeaderboardAppPage() {
   const [leaderboardType, setLeaderboardType] = useState<LeaderboardType>('streak')
 
   const defaultRewards: MonthlyReward[] = [
-    { rank: 1, diamonds: 500, specialBadge: 'Quán quân' },
-    { rank: 2, diamonds: 300, specialBadge: 'Á quân' },
-    { rank: 3, diamonds: 150, specialBadge: 'Top 3' },
+    { rank: 1, xp_reward: 500, specialBadge: 'Quán quân' },
+    { rank: 2, xp_reward: 300, specialBadge: 'Á quân' },
+    { rank: 3, xp_reward: 150, specialBadge: 'Top 3' },
   ]
 
   const { data: rawEntries = [], isLoading } = useLeaderboardQuery('weekly')
@@ -43,15 +43,14 @@ export default function LeaderboardAppPage() {
     if (!Array.isArray(rawEntries)) return []
     return rawEntries.map((entry: LeaderboardEntry, idx: number) => ({
       rank: idx + 1,
-      name: entry.full_name || `Học viên #${idx + 1}`,
+      name: entry.full_name || '',
       avatarColor: avatarColors[idx % avatarColors.length],
-      streakDays: entry.current_streak ?? entry.streak_days ?? 1,
-      totalMinutes: 60 + idx * 10,
-      questionsAnswered: 20 + idx * 5,
-      wordsLearned: 15 + idx * 3,
-      diamonds: 50,
-      freezes: 1,
-      isCurrentUser: Boolean(entry.is_current_user ?? (idx === 0)),
+      streakDays: entry.current_streak ?? entry.streak_days ?? 0,
+      totalMinutes: 0,
+      questionsAnswered: 0,
+      wordsLearned: 0,
+      freezes: 0,
+      isCurrentUser: Boolean(entry.is_current_user),
     }))
   }, [rawEntries])
 

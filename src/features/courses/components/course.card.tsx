@@ -13,6 +13,7 @@ import {
   Check,
   Loader2,
   Crown,
+  Users,
 } from 'lucide-react'
 import type { CourseCardData } from '@/features/courses/types/course'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -22,6 +23,7 @@ import { toast } from '@/store/toast.store'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
@@ -53,7 +55,7 @@ export function CourseCard({
   const { isEnrolled: checkEnrolled } = useUserEnrollments(isAuthenticated)
   const isEnrolled = checkEnrolled(course.id) || (course.slug ? checkEnrolled(course.slug) : false)
   const isPremiumUser = Boolean(user?.is_premium)
-  const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
+  const isPrivilegedUser = user?.role === 'INSTRUCTOR'
   const isAlreadyEnrolled = isEnrolled || isPremiumUser || isPrivilegedUser
   const [isAdding, setIsAdding] = useState(false)
   const isAlreadyInCart = isInCart(course.id)
@@ -165,7 +167,7 @@ export function CourseCard({
       <div>
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black/5">
           <img
-            src={course.thumbnail}
+            src={resolveMediaUrl(course.thumbnail)}
             alt={course.title}
             className="h-full w-full object-cover rounded-xl"
           />
@@ -283,6 +285,13 @@ export function CourseCard({
             {course.ratingCount > 0
               ? `${formatNumber(course.ratingCount)} ${isVi ? 'đánh giá' : 'ratings'}`
               : isVi ? 'Mới' : 'New'}
+          </span>
+
+          <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary flex items-center gap-1">
+            <Users size={10} className="text-indigo-500 shrink-0" />
+            <span suppressHydrationWarning>
+              {formatNumber(course.students)} {isVi ? 'học viên' : 'students'}
+            </span>
           </span>
 
           <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">

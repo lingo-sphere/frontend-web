@@ -110,7 +110,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
             style={{ scale: centerScale }}
             className="relative z-10 flex flex-col items-center justify-center h-72 w-72 sm:h-88 sm:w-88 rounded-full border border-[#48c9b0]/50 bg-black/75 backdrop-blur-3xl shadow-[0_0_80px_rgba(72,201,176,0.45),inset_0_0_40px_rgba(72,201,176,0.25)] text-center p-8"
           >
-            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-gradient-to-tr from-[#2f7f78] to-[#5eead4] flex items-center justify-center shadow-[0_0_40px_rgba(94,234,212,0.7)] mb-5 animate-pulse">
+            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-300 flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.7)] mb-5 animate-pulse">
               <Brain className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
             </div>
             <h4 className="text-xl sm:text-2xl font-black text-white tracking-wider">
@@ -181,7 +181,7 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
                   <div
                     key={i}
                     style={{ height: `${h}%` }}
-                    className="w-1.5 rounded-full bg-gradient-to-t from-[#2f7f78] to-[#5eead4]"
+                    className="w-1.5 rounded-full bg-gradient-to-t from-emerald-500 to-teal-300"
                   />
                 ))}
               </div>

@@ -1,8 +1,4 @@
-/**
- * @file course.qna.tab.tsx
- * @description Giao diện diễn đàn Hỏi & Đáp (Q&A) khóa học phong cách thảo luận hiện đại, hỗ trợ ẩn danh và mô hình phản hồi 2 cấp phẳng từ Giảng viên
- */
-
+// Giao diện diễn đàn Hỏi & Đáp khóa học.
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
@@ -50,7 +46,7 @@ export function CourseQnATab({
   const formRef = useRef<HTMLFormElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
 
-  const isTeacherOrAdmin = currentUserRole === 'INSTRUCTOR' || currentUserRole === 'ADMIN'
+  const isTeacher = currentUserRole === 'INSTRUCTOR'
 
   useEffect(() => {
     setQna(qnaList)
@@ -245,7 +241,7 @@ export function CourseQnATab({
               key={item.id}
               item={item}
               currentUserId={currentUserId}
-              isTeacherOrAdmin={isTeacherOrAdmin}
+              isTeacher={isTeacher}
               replyingQnaId={replyingQnaId}
               replyText={replyText}
               isSubmitting={isSubmitting}

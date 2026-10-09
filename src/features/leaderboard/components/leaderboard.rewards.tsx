@@ -1,6 +1,6 @@
 // Component giao diện hiển thị danh sách phần thưởng hàng tháng trên bảng xếp hạng.
 import { useTranslation } from 'react-i18next'
-import { Diamond } from 'lucide-react'
+import { Zap } from 'lucide-react'
 import { useMounted } from '@/hooks/use.mounted'
 import type { MonthlyReward } from '@/features/dashboard/types/dashboard'
 
@@ -34,10 +34,10 @@ export function LeaderboardRewards({ rewards }: LeaderboardRewardsProps) {
             >
               <div className={`mb-2 text-[24px] font-bold ${colors.text}`}>#{reward.rank}</div>
               <div className="mb-2 flex items-center gap-1">
-                <Diamond className={`h-5 w-5 ${colors.text}`} />
-                <span className={`text-[20px] font-bold ${colors.text}`}>{reward.diamonds}</span>
+                <Zap className={`h-5 w-5 ${colors.text}`} />
+                <span className={`text-[20px] font-bold ${colors.text}`}>+{reward.xp_reward}</span>
               </div>
-              <p className="text-[11px] text-text-tertiary">{isVietnamese ? 'Kim cương' : 'Diamonds'}</p>
+              <p className="text-[11px] text-text-tertiary">XP</p>
               {reward.specialBadge && (
                 <span className="mt-2 rounded-full bg-warning/20 px-2 py-1 text-[10px] font-semibold text-warning">
                   {reward.specialBadge}

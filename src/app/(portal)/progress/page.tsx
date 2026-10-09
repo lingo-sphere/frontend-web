@@ -29,6 +29,12 @@ export default function ProgressAppPage() {
     vocabStats,
     listeningScore,
     readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
   } = useProgressData(navigate)
 
   // Fetch skills analytics summary
@@ -131,6 +137,9 @@ export default function ProgressAppPage() {
         <ProgressSkillsTab
           listeningScore={listeningScore}
           readingScore={readingScore}
+          speakingScore={speakingScore}
+          writingScore={writingScore}
+          selectedSkillsType={placementSkillsType}
           vocabStats={vocabStats}
           skillsSummary={skillsSummary}
           onNavigate={navigate}
@@ -145,10 +154,16 @@ export default function ProgressAppPage() {
         <ProgressGrowthAnalyticsTab
           recentActivities={recentActivities}
           enrolledCourseCards={enrolledCourseCards}
+          testAttempts={testAttempts}
+          toeicAttempts={toeicAttempts}
+          coursesMap={coursesMap}
           targetScore={metrics.targetScore}
           baselineScore={Number(activeUser?.placement_test_score) || 0}
           listeningScore={listeningScore}
           readingScore={readingScore}
+          speakingScore={speakingScore}
+          writingScore={writingScore}
+          initialSkillsType={placementSkillsType}
           onNavigate={navigate}
         />
       )}

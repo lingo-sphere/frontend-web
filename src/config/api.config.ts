@@ -1,10 +1,11 @@
-// Handles API endpoints configuration for frontend-web.
+// Cấu hình các endpoint API và hằng số cho frontend-web
 
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-  SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-  APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+  ADMIN_WEB_URL: process.env.NEXT_PUBLIC_ADMIN_WEB_URL,
+  APP_NAME: 'LingoSphere',
+  DEFAULT_LANG: 'vi',
   TIMEOUT: 120000,
   STORAGE_KEYS: {
     ACCESS_TOKEN: 'lingosphere_user_access_token',

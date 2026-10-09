@@ -61,11 +61,10 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const { mutate: markNotificationAsRead } =
     useMarkNotificationAsReadMutation();
   const { data: gamification } = useGamificationProfileQuery(isAuthenticated);
-  const gems = gamification?.gems ?? user?.xp ?? 0;
   const streak = gamification?.current_streak ?? user?.streak_count ?? 0;
 
   const handleMouseEnter = (
-    menu: "learning" | "wishlist" | "cart" | "user"
+    menu: "learning" | "wishlist" | "cart" | "notifications" | "user"
   ) => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
@@ -107,7 +106,6 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             mounted={mounted}
             isPremium={Boolean(user?.is_premium)}
             isVi={isVi}
-            gems={gems}
             streak={streak}
             onAction={onAction}
             onOpenUpgrade={() => setUpgradeOpen(true)}
@@ -157,13 +155,17 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           >
             <button
               onClick={() => navigate("/courses?tab=my-courses")}
-              className="h-9 px-3 text-[13px] font-semibold text-text-secondary hover:text-text-primary transition-colors rounded-xl flex items-center gap-1 cursor-pointer"
+              className={`h-9 px-3 text-[13px] font-semibold transition-all rounded-xl flex items-center gap-1 cursor-pointer ${
+                hoveredHeaderMenu === "learning"
+                  ? "text-primary bg-primary/10"
+                  : "text-text-secondary hover:text-text-primary hover:bg-surface-subtle"
+              }`}
             >
               <span suppressHydrationWarning>
                 {isVi ? "Khóa học của tôi" : "My learning"}
               </span>
             </button>
-            {hoveredHeaderMenu === "learning" && <HeaderMyLearningHover />}
+            <HeaderMyLearningHover isOpen={hoveredHeaderMenu === "learning"} />
           </div>
 
           <div
@@ -173,7 +175,11 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           >
             <Button
               aria-label={isVi ? "Danh sách yêu thích" : "Wishlist"}
-              className="relative h-9 w-9 rounded-xl border-border cursor-pointer"
+              className={`relative h-9 w-9 rounded-xl border transition-all cursor-pointer ${
+                hoveredHeaderMenu === "wishlist"
+                  ? "border-red-500/40 bg-red-500/10 text-red-500 shadow-xs"
+                  : "border-border hover:bg-surface-subtle text-text-primary"
+              }`}
               onClick={() => navigate("/courses?tab=wishlist")}
               size="icon"
               variant="outline"
@@ -185,7 +191,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                 </span>
               )}
             </Button>
-            {hoveredHeaderMenu === "wishlist" && <HeaderWishlistHover />}
+            <HeaderWishlistHover isOpen={hoveredHeaderMenu === "wishlist"} />
           </div>
 
           <div
@@ -195,16 +201,12 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           >
             <Button
               aria-label={isVi ? "Giỏ hàng" : "Shopping Cart"}
-              className="relative h-9 w-9 rounded-xl border-border cursor-pointer"
-              onClick={() => {
-                if (!isAuthenticated) {
-                  window.dispatchEvent(
-                    new CustomEvent("lingosphere:open-auth-modal")
-                  );
-                } else {
-                  navigate("/cart");
-                }
-              }}
+              className={`relative h-9 w-9 rounded-xl border transition-all cursor-pointer ${
+                hoveredHeaderMenu === "cart"
+                  ? "border-primary/40 bg-primary/10 text-primary shadow-xs"
+                  : "border-border hover:bg-surface-subtle text-text-primary"
+              }`}
+              onClick={() => navigate("/cart")}
               size="icon"
               variant="outline"
             >
@@ -215,15 +217,27 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
                 </span>
               )}
             </Button>
-            {hoveredHeaderMenu === "cart" && <HeaderCartHover />}
+            <HeaderCartHover isOpen={hoveredHeaderMenu === "cart"} />
           </div>
 
           <HeaderNotificationDropdown
             notifications={notifications}
             unreadCount={unreadCount}
-            isOpen={notificationOpen}
-            onToggle={() => setNotificationOpen(!notificationOpen)}
-            onClose={() => setNotificationOpen(false)}
+            isOpen={hoveredHeaderMenu === "notifications" || notificationOpen}
+            onMouseEnter={() => handleMouseEnter("notifications")}
+            onMouseLeave={handleMouseLeave}
+            onToggle={() => {
+              if (notificationOpen) {
+                setNotificationOpen(false);
+                setHoveredHeaderMenu(null);
+              } else {
+                setNotificationOpen(true);
+              }
+            }}
+            onClose={() => {
+              setNotificationOpen(false);
+              setHoveredHeaderMenu(null);
+            }}
             onMarkAsRead={handleMarkAsRead}
             onAction={onAction}
             isVi={isVi}
@@ -240,11 +254,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             onCloseHover={() => setHoveredHeaderMenu(null)}
             onLanguageToggle={toggleLanguage}
             currentLanguage={languageLabel as "VI" | "EN"}
-            onOpenAuth={() =>
-              window.dispatchEvent(
-                new CustomEvent("lingosphere:open-auth-modal")
-              )
-            }
+            onOpenAuth={() => navigate('/login')}
             onOpenUpgrade={() => setUpgradeOpen(true)}
             onLogout={() => logout()}
           />

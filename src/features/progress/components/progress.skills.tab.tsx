@@ -226,6 +226,8 @@ export function formatDimensionName(key?: string): string {
 export function ProgressSkillsTab({
   listeningScore,
   readingScore,
+  speakingScore = 0,
+  writingScore = 0,
   vocabStats,
   skillsSummary,
   onNavigate,
@@ -279,12 +281,19 @@ export function ProgressSkillsTab({
   const grammarStats = skillsSummary?.skills?.grammar;
   const writingStats = skillsSummary?.skills?.writing;
   const speakingStats = skillsSummary?.skills?.speaking;
-  const rawPronStats = skillsSummary?.skills?.pronunciation || (dashboardData?.skills as any)?.pronunciation;
-  const pronunciationStats = rawPronStats ? {
-    ...rawPronStats,
-    accuracy: rawPronStats.accuracy !== undefined ? rawPronStats.accuracy : (rawPronStats.accuracy_rate ?? 0),
-    total_attempts: rawPronStats.total_attempts || 0,
-  } : undefined;
+  const rawPronStats =
+    skillsSummary?.skills?.pronunciation ||
+    (dashboardData?.skills as any)?.pronunciation;
+  const pronunciationStats = rawPronStats
+    ? {
+        ...rawPronStats,
+        accuracy:
+          rawPronStats.accuracy !== undefined
+            ? rawPronStats.accuracy
+            : rawPronStats.accuracy_rate ?? 0,
+        total_attempts: rawPronStats.total_attempts || 0,
+      }
+    : undefined;
 
   return (
     <div className="space-y-4">
@@ -1196,49 +1205,58 @@ function OverviewTab({
               Chi tiết theo kỹ năng:
             </span>
             <div className="flex flex-wrap gap-2">
-              {(selectedDayData.skill_breakdown.reading?.exercises || 0) > 0 && (
+              {(selectedDayData.skill_breakdown.reading?.exercises || 0) >
+                0 && (
                 <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
                   📖 Đọc: {selectedDayData.skill_breakdown.reading?.exercises}{" "}
                   bài
                 </span>
               )}
-              {(selectedDayData.skill_breakdown.listening?.exercises || 0) > 0 && (
+              {(selectedDayData.skill_breakdown.listening?.exercises || 0) >
+                0 && (
                 <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium">
-                  🎧 Nghe: {selectedDayData.skill_breakdown.listening?.exercises}{" "}
-                  bài
+                  🎧 Nghe:{" "}
+                  {selectedDayData.skill_breakdown.listening?.exercises} bài
                 </span>
               )}
-              {(selectedDayData.skill_breakdown.grammar?.questions || 0) > 0 && (
+              {(selectedDayData.skill_breakdown.grammar?.questions || 0) >
+                0 && (
                 <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
                   📚 Ngữ pháp:{" "}
                   {selectedDayData.skill_breakdown.grammar?.questions} câu
                 </span>
               )}
-              {(selectedDayData.skill_breakdown.vocabulary?.questions || 0) > 0 && (
+              {(selectedDayData.skill_breakdown.vocabulary?.questions || 0) >
+                0 && (
                 <span className="px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
                   📝 Từ vựng:{" "}
                   {selectedDayData.skill_breakdown.vocabulary?.questions} câu
                 </span>
               )}
-              {(selectedDayData.skill_breakdown.writing?.exercises || 0) > 0 && (
+              {(selectedDayData.skill_breakdown.writing?.exercises || 0) >
+                0 && (
                 <span className="px-2 py-1 rounded-full bg-pink-100 text-pink-700 text-xs font-medium">
                   ✍️ Viết: {selectedDayData.skill_breakdown.writing?.exercises}{" "}
                   bài
                 </span>
               )}
-              {(selectedDayData.skill_breakdown.speaking?.exercises || 0) > 0 && (
+              {(selectedDayData.skill_breakdown.speaking?.exercises || 0) >
+                0 && (
                 <span className="px-2 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-medium">
                   🎤 Nói: {selectedDayData.skill_breakdown.speaking?.exercises}{" "}
                   bài
                 </span>
               )}
               {selectedDayData.skill_breakdown.pronunciation &&
-                ((selectedDayData.skill_breakdown.pronunciation.questions || 0) > 0 ||
-                  (selectedDayData.skill_breakdown.pronunciation.exercises || 0) > 0) && (
+                ((selectedDayData.skill_breakdown.pronunciation.questions ||
+                  0) > 0 ||
+                  (selectedDayData.skill_breakdown.pronunciation.exercises ||
+                    0) > 0) && (
                   <span className="px-2 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-medium">
                     🗣️ Ngữ âm:{" "}
                     {selectedDayData.skill_breakdown.pronunciation.questions ||
-                      selectedDayData.skill_breakdown.pronunciation.exercises}{" "}
+                      selectedDayData.skill_breakdown.pronunciation
+                        .exercises}{" "}
                     lượt
                   </span>
                 )}
@@ -1740,18 +1758,36 @@ function OverviewTab({
                           </span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                             {(() => {
-                              const overallScore = activeSkill.avg_overall_score ?? activeSkill.overall_score ?? 0;
+                              const overallScore =
+                                activeSkill.avg_overall_score ??
+                                activeSkill.overall_score ??
+                                0;
                               const sub = activeSkill.sub_scores || {};
-                              const getRubricScore = (val: number | undefined, offset: number) => {
-                                if (val !== undefined && val !== null && val > 0) return val;
-                                if (overallScore > 0) return Math.min(100, Math.max(0, overallScore + offset));
+                              const getRubricScore = (
+                                val: number | undefined,
+                                offset: number
+                              ) => {
+                                if (
+                                  val !== undefined &&
+                                  val !== null &&
+                                  val > 0
+                                )
+                                  return val;
+                                if (overallScore > 0)
+                                  return Math.min(
+                                    100,
+                                    Math.max(0, overallScore + offset)
+                                  );
                                 return 0;
                               };
 
                               return [
                                 {
                                   label: "Đáp ứng đề (Task Achievement)",
-                                  score: getRubricScore(sub.task_achievement, -4),
+                                  score: getRubricScore(
+                                    sub.task_achievement,
+                                    -4
+                                  ),
                                 },
                                 {
                                   label: "Mạch lạc & Liên kết (Coherence)",
@@ -1759,11 +1795,17 @@ function OverviewTab({
                                 },
                                 {
                                   label: "Vốn từ vựng (Lexical Resource)",
-                                  score: getRubricScore(sub.lexical_resource || sub.vocabulary, 0),
+                                  score: getRubricScore(
+                                    sub.lexical_resource || sub.vocabulary,
+                                    0
+                                  ),
                                 },
                                 {
                                   label: "Chuẩn ngữ pháp (Grammar Accuracy)",
-                                  score: getRubricScore(sub.grammatical_accuracy || sub.grammar, 4),
+                                  score: getRubricScore(
+                                    sub.grammatical_accuracy || sub.grammar,
+                                    4
+                                  ),
                                 },
                                 {
                                   label: "Tính tự nhiên (Naturalness)",
@@ -1967,128 +2009,166 @@ function OverviewTab({
                     )}
 
                     {/* VOCABULARY DEEP BREAKDOWN (COMPACT DAILY SNAPSHOT) */}
-                    {activeSkill.skill === "vocabulary" && (() => {
-                      const attempted = activeSkill.questions_attempted || 0;
-                      const recalled = activeSkill.questions_correct || 0;
-                      const forgotten = Math.max(0, attempted - recalled);
-                      const accuracy = activeSkill.accuracy ?? (attempted > 0 ? Math.round((recalled / attempted) * 100) : 100);
-                      const minutes = Math.round((activeSkill.time_spent_seconds || 0) / 60);
+                    {activeSkill.skill === "vocabulary" &&
+                      (() => {
+                        const attempted = activeSkill.questions_attempted || 0;
+                        const recalled = activeSkill.questions_correct || 0;
+                        const forgotten = Math.max(0, attempted - recalled);
+                        const accuracy =
+                          activeSkill.accuracy ??
+                          (attempted > 0
+                            ? Math.round((recalled / attempted) * 100)
+                            : 100);
+                        const minutes = Math.round(
+                          (activeSkill.time_spent_seconds || 0) / 60
+                        );
 
-                      return (
-                        <div className="space-y-3.5">
-                          {/* 3 THẺ CHỈ SỐ TRÍ NHỚ TRONG NGÀY */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                            {/* THẺ 1: TỔNG LƯỢT ÔN */}
-                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                              <span className="text-[10px] text-text-tertiary block font-medium">
-                                Lượt ôn luyện trong ngày
-                              </span>
-                              <span className="text-lg font-black text-text-primary mt-0.5 block">
-                                {attempted} từ
-                              </span>
-                              <span className="text-[10px] text-text-tertiary block">
-                                {minutes > 0 ? `${minutes} phút học` : "Chớp nhoáng"}
-                              </span>
+                        return (
+                          <div className="space-y-3.5">
+                            {/* 3 THẺ CHỈ SỐ TRÍ NHỚ TRONG NGÀY */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                              {/* THẺ 1: TỔNG LƯỢT ÔN */}
+                              <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                                <span className="text-[10px] text-text-tertiary block font-medium">
+                                  Lượt ôn luyện trong ngày
+                                </span>
+                                <span className="text-lg font-black text-text-primary mt-0.5 block">
+                                  {attempted} từ
+                                </span>
+                                <span className="text-[10px] text-text-tertiary block">
+                                  {minutes > 0
+                                    ? `${minutes} phút học`
+                                    : "Chớp nhoáng"}
+                                </span>
+                              </div>
+
+                              {/* THẺ 2: RECALL THÀNH CÔNG */}
+                              <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                                <span className="text-[10px] text-text-tertiary block font-medium">
+                                  Giữ vững phong độ (Recall)
+                                </span>
+                                <span className="text-lg font-black text-emerald-600 mt-0.5 block">
+                                  {accuracy}%
+                                </span>
+                                <span className="text-[10px] text-emerald-600/80 font-bold block">
+                                  {recalled} / {attempted} từ nhớ đúng
+                                </span>
+                              </div>
+
+                              {/* THẺ 3: TỪ BỊ QUÊN / LAPSE */}
+                              <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                                <span className="text-[10px] text-text-tertiary block font-medium">
+                                  Bị trượt chân (Lapses)
+                                </span>
+                                <span
+                                  className={`text-lg font-black mt-0.5 block ${
+                                    forgotten > 0
+                                      ? "text-rose-600"
+                                      : "text-emerald-600"
+                                  }`}
+                                >
+                                  {forgotten} từ
+                                </span>
+                                <span
+                                  className={`text-[10px] font-bold block ${
+                                    forgotten > 0
+                                      ? "text-rose-600/80"
+                                      : "text-emerald-600/80"
+                                  }`}
+                                >
+                                  {forgotten > 0
+                                    ? "Đã gửi vào Trạm cứu hộ"
+                                    : "Không quên từ nào 👏"}
+                                </span>
+                              </div>
                             </div>
 
-                            {/* THẺ 2: RECALL THÀNH CÔNG */}
-                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                              <span className="text-[10px] text-text-tertiary block font-medium">
-                                Giữ vững phong độ (Recall)
-                              </span>
-                              <span className="text-lg font-black text-emerald-600 mt-0.5 block">
-                                {accuracy}%
-                              </span>
-                              <span className="text-[10px] text-emerald-600/80 font-bold block">
-                                {recalled} / {attempted} từ nhớ đúng
-                              </span>
-                            </div>
-
-                            {/* THẺ 3: TỪ BỊ QUÊN / LAPSE */}
-                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                              <span className="text-[10px] text-text-tertiary block font-medium">
-                                Bị trượt chân (Lapses)
-                              </span>
-                              <span className={`text-lg font-black mt-0.5 block ${forgotten > 0 ? "text-rose-600" : "text-emerald-600"}`}>
-                                {forgotten} từ
-                              </span>
-                              <span className={`text-[10px] font-bold block ${forgotten > 0 ? "text-rose-600/80" : "text-emerald-600/80"}`}>
-                                {forgotten > 0 ? "Đã gửi vào Trạm cứu hộ" : "Không quên từ nào 👏"}
+                            {/* DÒNG NHẬN ĐỊNH NGẮN GỌN TỪ SRS INTELLIGENCE */}
+                            <div className="p-2.5 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-2.5 text-xs text-text-secondary">
+                              <Sparkles
+                                size={15}
+                                className="text-primary shrink-0"
+                              />
+                              <span>
+                                {forgotten > 0
+                                  ? `Hôm nay bạn giữ vững ${accuracy}% trí nhớ. ${forgotten} từ bị quên đã được lưu vào Trạm cứu hộ để chuẩn bị ôn lại.`
+                                  : `Xuất sắc! Toàn bộ ${attempted} từ vựng ôn tập hôm nay đều được bạn ghi nhớ chính xác.`}
                               </span>
                             </div>
                           </div>
-
-                          {/* DÒNG NHẬN ĐỊNH NGẮN GỌN TỪ SRS INTELLIGENCE */}
-                          <div className="p-2.5 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-2.5 text-xs text-text-secondary">
-                            <Sparkles size={15} className="text-primary shrink-0" />
-                            <span>
-                              {forgotten > 0
-                                ? `Hôm nay bạn giữ vững ${accuracy}% trí nhớ. ${forgotten} từ bị quên đã được lưu vào Trạm cứu hộ để chuẩn bị ôn lại.`
-                                : `Xuất sắc! Toàn bộ ${attempted} từ vựng ôn tập hôm nay đều được bạn ghi nhớ chính xác.`}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })()}
+                        );
+                      })()}
 
                     {/* PRONUNCIATION DEEP BREAKDOWN */}
-                    {activeSkill.skill === "pronunciation" && (() => {
-                      const attempted = activeSkill.questions_attempted || 0;
-                      const correct = activeSkill.questions_correct || 0;
-                      const accuracy = activeSkill.accuracy ?? (attempted > 0 ? Math.round((correct / attempted) * 100) : 0);
-                      const minutes = Math.round((activeSkill.time_spent_seconds || 0) / 60);
+                    {activeSkill.skill === "pronunciation" &&
+                      (() => {
+                        const attempted = activeSkill.questions_attempted || 0;
+                        const correct = activeSkill.questions_correct || 0;
+                        const accuracy =
+                          activeSkill.accuracy ??
+                          (attempted > 0
+                            ? Math.round((correct / attempted) * 100)
+                            : 0);
+                        const minutes = Math.round(
+                          (activeSkill.time_spent_seconds || 0) / 60
+                        );
 
-                      return (
-                        <div className="space-y-3.5">
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                              <span className="text-[10px] text-text-tertiary block font-medium">
-                                Lượt phân biệt âm IPA
-                              </span>
-                              <span className="text-lg font-black text-text-primary mt-0.5 block">
-                                {attempted} lượt
-                              </span>
-                              <span className="text-[10px] text-text-tertiary block">
-                                {minutes > 0 ? `${minutes} phút luyện` : "Nhanh chóng"}
-                              </span>
+                        return (
+                          <div className="space-y-3.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                              <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                                <span className="text-[10px] text-text-tertiary block font-medium">
+                                  Lượt phân biệt âm IPA
+                                </span>
+                                <span className="text-lg font-black text-text-primary mt-0.5 block">
+                                  {attempted} lượt
+                                </span>
+                                <span className="text-[10px] text-text-tertiary block">
+                                  {minutes > 0
+                                    ? `${minutes} phút luyện`
+                                    : "Nhanh chóng"}
+                                </span>
+                              </div>
+
+                              <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                                <span className="text-[10px] text-text-tertiary block font-medium">
+                                  Độ chuẩn xác nhận diện
+                                </span>
+                                <span className="text-lg font-black text-emerald-600 mt-0.5 block">
+                                  {accuracy}%
+                                </span>
+                                <span className="text-[10px] text-emerald-600/80 font-bold block">
+                                  {correct} / {attempted} câu chính xác
+                                </span>
+                              </div>
+
+                              <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                                <span className="text-[10px] text-text-tertiary block font-medium">
+                                  Âm luyện tập
+                                </span>
+                                <span className="text-lg font-black text-teal-600 mt-0.5 block">
+                                  {activeSkill.phonemes_practiced || "--"} âm
+                                </span>
+                                <span className="text-[10px] text-text-secondary block">
+                                  Thuộc bảng IPA 44 âm
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                              <span className="text-[10px] text-text-tertiary block font-medium">
-                                Độ chuẩn xác nhận diện
-                              </span>
-                              <span className="text-lg font-black text-emerald-600 mt-0.5 block">
-                                {accuracy}%
-                              </span>
-                              <span className="text-[10px] text-emerald-600/80 font-bold block">
-                                {correct} / {attempted} câu chính xác
-                              </span>
-                            </div>
-
-                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                              <span className="text-[10px] text-text-tertiary block font-medium">
-                                Âm luyện tập
-                              </span>
-                              <span className="text-lg font-black text-teal-600 mt-0.5 block">
-                                {activeSkill.phonemes_practiced || "--"} âm
-                              </span>
-                              <span className="text-[10px] text-text-secondary block">
-                                Thuộc bảng IPA 44 âm
+                            <div className="p-2.5 rounded-xl bg-teal-500/5 border border-teal-500/20 flex items-center gap-2.5 text-xs text-text-secondary">
+                              <Sparkles
+                                size={15}
+                                className="text-teal-600 shrink-0"
+                              />
+                              <span>
+                                {accuracy >= 80
+                                  ? `Tuyệt vời! Khả năng phân biệt âm thanh IPA đạt ${accuracy}% trong ngày.`
+                                  : `Đã hoàn thành ${attempted} lượt phân biệt âm vị. Tiếp tục củng cố các cặp âm dễ nhầm lẫn!`}
                               </span>
                             </div>
                           </div>
-
-                          <div className="p-2.5 rounded-xl bg-teal-500/5 border border-teal-500/20 flex items-center gap-2.5 text-xs text-text-secondary">
-                            <Sparkles size={15} className="text-teal-600 shrink-0" />
-                            <span>
-                              {accuracy >= 80
-                                ? `Tuyệt vời! Khả năng phân biệt âm thanh IPA đạt ${accuracy}% trong ngày.`
-                                : `Đã hoàn thành ${attempted} lượt phân biệt âm vị. Tiếp tục củng cố các cặp âm dễ nhầm lẫn!`}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })()}
+                        );
+                      })()}
 
                     {/* Footer CTAs */}
                     <div className="pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
@@ -3361,7 +3441,11 @@ function OverviewTab({
                           : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/30"
                       }`}
                     >
-                      {item.is_passed ? "Xem lại" : item.skill === "pronunciation" ? "Luyện âm này" : "Ôn câu này"}
+                      {item.is_passed
+                        ? "Xem lại"
+                        : item.skill === "pronunciation"
+                        ? "Luyện âm này"
+                        : "Ôn câu này"}
                     </Button>
                   </div>
                 </div>
@@ -3530,7 +3614,10 @@ function ReadingDetailTab({
   ];
 
   // Sub-skills breakdown
-  const dimensionsMap: Record<string, { accuracy: number; correct: number; total: number }> = {};
+  const dimensionsMap: Record<
+    string,
+    { accuracy: number; correct: number; total: number }
+  > = {};
   if (fullAnalysis?.stats?.by_dimension) {
     Object.assign(dimensionsMap, fullAnalysis.stats.by_dimension);
   }
@@ -3538,7 +3625,9 @@ function ReadingDetailTab({
     Object.assign(dimensionsMap, stats.by_dimension);
   }
   if (readingSkills?.by_sub_skill) {
-    for (const [k, v] of Object.entries(readingSkills.by_sub_skill as Record<string, any>)) {
+    for (const [k, v] of Object.entries(
+      readingSkills.by_sub_skill as Record<string, any>
+    )) {
       const cleanKey = k.toLowerCase();
       if (!dimensionsMap[cleanKey]) {
         dimensionsMap[cleanKey] = {
@@ -3557,9 +3646,9 @@ function ReadingDetailTab({
 
   // Recent reading history from dashboard
   const recentHistory = dashboardData?.growth_analytics?.activity_overview
-    ? (dashboardData.growth_analytics.activity_overview as any)?.recent_history?.filter(
-        (h: any) => h.skill === "reading"
-      ) || []
+    ? (
+        dashboardData.growth_analytics.activity_overview as any
+      )?.recent_history?.filter((h: any) => h.skill === "reading") || []
     : dashboardData?.recent_history?.filter((h) => h.skill === "reading") || [];
 
   return (
@@ -3576,7 +3665,8 @@ function ReadingDetailTab({
                 Kỹ năng Đọc hiểu (Reading Comprehension)
               </h3>
               <p className="text-xs text-text-tertiary">
-                Hồ sơ phân tích 6 năng lực khảo thí, tốc độ đọc WPM & 4 phân hệ bài tập
+                Hồ sơ phân tích 6 năng lực khảo thí, tốc độ đọc WPM & 4 phân hệ
+                bài tập
               </p>
             </div>
           </div>
@@ -3618,7 +3708,9 @@ function ReadingDetailTab({
               {readingWpm > 0 ? `${readingWpm} WPM` : "--"}
             </span>
             <span className="text-[10px] text-text-tertiary block">
-              {avgTimePerQuestion > 0 ? `~${avgTimePerQuestion}s / câu` : "Chuẩn 45s/câu"}
+              {avgTimePerQuestion > 0
+                ? `~${avgTimePerQuestion}s / câu`
+                : "Chuẩn 45s/câu"}
             </span>
           </div>
 
@@ -3661,7 +3753,8 @@ function ReadingDetailTab({
                 Hiệu suất theo 4 Phân hệ Dạng bài Đọc
               </h4>
               <p className="text-[11px] text-text-tertiary">
-                Đánh giá theo chuẩn TOEIC Part 6, Part 7, Real-World Data Cards & Info Matching
+                Đánh giá theo chuẩn TOEIC Part 6, Part 7, Real-World Data Cards
+                & Info Matching
               </p>
             </div>
           </div>
@@ -3669,9 +3762,17 @@ function ReadingDetailTab({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           {passageTypesList.map((pt) => {
-            const safeTotal = Math.max(pt.stats.total || 0, pt.stats.correct || 0);
+            const safeTotal = Math.max(
+              pt.stats.total || 0,
+              pt.stats.correct || 0
+            );
             const hasData = safeTotal > 0;
-            const acc = hasData ? Math.min(100, Math.round(((pt.stats.correct || 0) / safeTotal) * 100)) : 0;
+            const acc = hasData
+              ? Math.min(
+                  100,
+                  Math.round(((pt.stats.correct || 0) / safeTotal) * 100)
+                )
+              : 0;
             return (
               <div
                 key={pt.key}
@@ -3750,7 +3851,9 @@ function ReadingDetailTab({
               </p>
             </div>
           </div>
-          {loading && <Loader2 size={14} className="animate-spin text-primary" />}
+          {loading && (
+            <Loader2 size={14} className="animate-spin text-primary" />
+          )}
         </div>
 
         {validDimensions.length > 0 ? (
@@ -3800,7 +3903,8 @@ function ReadingDetailTab({
               Chưa có đủ dữ liệu bóc tách câu hỏi đọc hiểu.
             </p>
             <p className="text-[11px] text-text-tertiary">
-              Hãy hoàn thành thêm các bài đọc Part 6 & Part 7 để hệ thống phân tích chi tiết từng kỹ năng phụ.
+              Hãy hoàn thành thêm các bài đọc Part 6 & Part 7 để hệ thống phân
+              tích chi tiết từng kỹ năng phụ.
             </p>
             <Button
               size="sm"
@@ -3823,7 +3927,8 @@ function ReadingDetailTab({
               Nhịp độ & Tốc độ Đọc hiểu (Reading Pace & Efficiency)
             </h4>
             <p className="text-[10px] text-text-tertiary">
-              Theo dõi tốc độ xử lý thông tin từ vựng và thời gian giải quyết câu hỏi
+              Theo dõi tốc độ xử lý thông tin từ vựng và thời gian giải quyết
+              câu hỏi
             </p>
           </div>
         </div>
@@ -3835,7 +3940,9 @@ function ReadingDetailTab({
             </span>
             <span className="text-xl font-black text-emerald-600 block">
               {readingWpm > 0 ? `${readingWpm}` : "--"}{" "}
-              <span className="text-xs font-semibold text-text-tertiary">WPM</span>
+              <span className="text-xs font-semibold text-text-tertiary">
+                WPM
+              </span>
             </span>
             <span className="text-[10px] text-text-tertiary block">
               {readingWpm >= 180
@@ -3852,7 +3959,9 @@ function ReadingDetailTab({
             </span>
             <span className="text-xl font-black text-blue-600 block">
               {avgTimePerQuestion > 0 ? `${avgTimePerQuestion}` : "--"}{" "}
-              <span className="text-xs font-semibold text-text-tertiary">giây</span>
+              <span className="text-xs font-semibold text-text-tertiary">
+                giây
+              </span>
             </span>
             <span className="text-[10px] text-text-tertiary block">
               Chuẩn phòng thi Part 7: 45 - 60s / câu
@@ -3865,7 +3974,9 @@ function ReadingDetailTab({
             </span>
             <span className="text-xl font-black text-purple-600 block">
               {totalReadingMinutes > 0 ? `${totalReadingMinutes}` : "--"}{" "}
-              <span className="text-xs font-semibold text-text-tertiary">phút</span>
+              <span className="text-xs font-semibold text-text-tertiary">
+                phút
+              </span>
             </span>
             <span className="text-[10px] text-text-tertiary block">
               Thời gian thực tế tiếp xúc ngữ liệu
@@ -3899,11 +4010,12 @@ function ReadingDetailTab({
                       Độ chính xác: {w.accuracy.toFixed(0)}%
                     </span>
                   </div>
-                  {w.recommended_actions && w.recommended_actions.length > 0 && (
-                    <p className="text-[11px] text-text-secondary">
-                      💡 {w.recommended_actions[0]}
-                    </p>
-                  )}
+                  {w.recommended_actions &&
+                    w.recommended_actions.length > 0 && (
+                      <p className="text-[11px] text-text-secondary">
+                        💡 {w.recommended_actions[0]}
+                      </p>
+                    )}
                 </div>
                 <Button
                   size="sm"
@@ -3951,7 +4063,10 @@ function ReadingDetailTab({
                     {item.title}
                   </p>
                   <p className="text-[10px] text-text-tertiary">
-                    {item.created_at ? new Date(item.created_at).toLocaleDateString("vi-VN") : "Gần đây"} • Thời gian: {item.time_spent_formatted || "1m 30s"}
+                    {item.created_at
+                      ? new Date(item.created_at).toLocaleDateString("vi-VN")
+                      : "Gần đây"}{" "}
+                    • Thời gian: {item.time_spent_formatted || "1m 30s"}
                   </p>
                 </div>
 

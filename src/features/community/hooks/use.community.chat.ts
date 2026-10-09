@@ -127,7 +127,7 @@ export function useCommunityChat() {
       return;
     }
 
-    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN);
+    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN);
     if (!token) return;
 
     const socketUrl = API_CONFIG.BASE_URL ? new URL(API_CONFIG.BASE_URL).origin : 'http://localhost:8080';

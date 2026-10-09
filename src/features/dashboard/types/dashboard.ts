@@ -90,14 +90,13 @@ export interface MonthlyLeaderboardUser {
   totalMinutes: number
   questionsAnswered: number
   wordsLearned: number
-  diamonds: number
   freezes: number
   isCurrentUser?: boolean
 }
 
 export interface MonthlyReward {
   rank: number
-  diamonds: number
+  xp_reward: number
   specialBadge?: string
 }
 

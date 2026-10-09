@@ -216,7 +216,7 @@ export default function RootLandingPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.6 }}
               onClick={scrollToTop}
-              className="fixed bottom-6 right-6 z-50 flex h-11 w-11 items-center justify-center rounded-none border border-[#48c9b0]/60 bg-black/85 text-[#48c9b0] shadow-[0_0_20px_rgba(72,201,176,0.35)] backdrop-blur-md transition-all hover:scale-110 hover:bg-[#2f7f78] hover:text-white hover:border-[#5eead4] hover:shadow-[0_0_25px_rgba(94,234,212,0.6)] cursor-pointer active:scale-95"
+              className="fixed bottom-6 right-6 z-50 flex h-11 w-11 items-center justify-center rounded-none border border-emerald-400/60 bg-black/85 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.35)] backdrop-blur-md transition-all hover:scale-110 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-300 hover:shadow-[0_0_25px_rgba(52,211,153,0.6)] cursor-pointer active:scale-95"
               aria-label="Cuộn lên đầu trang"
             >
               <ChevronUp className="h-5 w-5" />

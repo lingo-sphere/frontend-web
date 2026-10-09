@@ -5,14 +5,16 @@
 import Link from 'next/link'
 import { Calendar, RotateCcw, ArrowRight, BookmarkCheck } from 'lucide-react'
 import { Button } from '@/components/button'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useDueMistakesQuery } from '@/features/practice/hooks/use.mistake.query'
 
 export function MistakeDueBanner() {
-  const { data, isLoading } = useDueMistakesQuery()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const { data, isLoading } = useDueMistakesQuery(isAuthenticated)
 
   const dueCount = data?.total_due ?? (data?.items ? data.items.length : 0)
 
-  if (isLoading || dueCount === 0) {
+  if (!isAuthenticated || isLoading || dueCount === 0) {
     return null
   }
 

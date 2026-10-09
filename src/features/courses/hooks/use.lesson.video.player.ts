@@ -5,6 +5,7 @@ import type { Lesson } from '@/features/courses/types/course'
 import { isDirectVideoUrl } from '@/features/courses/types/player.types'
 import { API_CONFIG } from '@/config/api.config'
 import { courseService } from '@/features/courses/services/course.service'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface UseLessonVideoPlayerProps {
   lesson: Lesson
@@ -72,22 +73,14 @@ export function useLessonVideoPlayer({
 
   const effectiveVideoUrl = useMemo(() => {
     if (!baseVideoSource) return ''
-    let source = baseVideoSource
-    const apiBase = (API_CONFIG.BASE_URL ?? '').replace(
-      /\/+$/,
-      ''
-    )
     if (
-      source.includes('pub-') ||
-      source.includes('r2.cloudflarestorage.com') ||
-      source.includes('.r2.dev')
+      baseVideoSource.includes('youtube.com') ||
+      baseVideoSource.includes('youtu.be') ||
+      baseVideoSource.includes('vimeo.com')
     ) {
-      try {
-        const parsed = new URL(source)
-        source = `${apiBase}/media/stream${parsed.pathname}`
-      } catch {}
+      return baseVideoSource
     }
-    return source
+    return resolveMediaUrl(baseVideoSource)
   }, [baseVideoSource])
 
   useEffect(() => {

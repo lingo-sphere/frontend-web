@@ -2,8 +2,9 @@
 
 'use client'
 
-import { Sparkles, GraduationCap, ArrowRight, BookOpen, RotateCcw, Trophy, Compass } from 'lucide-react'
+import { Sparkles, GraduationCap, ArrowRight, BookOpen, RotateCcw, Trophy, Compass, Users } from 'lucide-react'
 import { Button } from '@/components/button'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import type { Course } from '@/types/api.types'
 
 interface TestRunnerNextCoursesProps {
@@ -60,7 +61,7 @@ export function TestRunnerNextCourses({
                 <div className="flex gap-3">
                   <div className="w-20 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 relative">
                     {c.thumbnail_url ? (
-                      <img src={c.thumbnail_url} alt={c.title} className="w-full h-full object-cover" />
+                      <img src={resolveMediaUrl(c.thumbnail_url)} alt={c.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-indigo-500/20 text-indigo-600">
                         <GraduationCap size={20} />
@@ -79,6 +80,10 @@ export function TestRunnerNextCourses({
                     <p className="text-[10.5px] text-indigo-600 dark:text-indigo-400 mt-1 line-clamp-1">
                       💡 {c.recommendation_reason || 'Khóa học cấp độ kế tiếp phù hợp cho bạn'}
                     </p>
+                    <div className="flex items-center gap-1 mt-1 text-[10px] text-text-tertiary">
+                      <Users size={11} className="text-indigo-500 shrink-0" />
+                      <span>{Number(c.students_count || 0).toLocaleString('vi-VN')} học viên</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-border/60 pt-2">

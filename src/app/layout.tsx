@@ -20,7 +20,7 @@ const newsreader = Newsreader({
 })
 
 export const viewport: Viewport = {
-  themeColor: '#2F7F78',
+  themeColor: '#10b981',
   width: 'device-width',
   initialScale: 1,
 }

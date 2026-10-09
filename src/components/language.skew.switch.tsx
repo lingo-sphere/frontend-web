@@ -38,13 +38,13 @@ export function LanguageSkewSwitch({
       </div>
 
       
-      <div className="z-0 h-10 w-24 -skew-x-12 rounded-lg border border-[#48c9b0]/50 bg-black/65 shadow-[0_0_15px_rgba(72,201,176,0.25)] backdrop-blur-md duration-500 ease-out peer-checked:skew-x-12 peer-checked:bg-[#2f7f78]/80 peer-checked:border-[#5eead4] peer-checked:shadow-[0_0_22px_rgba(94,234,212,0.7)]" />
+      <div className="z-0 h-10 w-24 -skew-x-12 rounded-lg border border-emerald-400/50 bg-black/65 shadow-[0_0_15px_rgba(16,185,129,0.25)] backdrop-blur-md duration-500 ease-out peer-checked:skew-x-12 peer-checked:bg-emerald-600/80 peer-checked:border-emerald-400 peer-checked:shadow-[0_0_22px_rgba(52,211,153,0.7)]" />
 
       
       <div className="absolute left-[0.35rem] z-[1] flex h-10 w-24 -skew-x-12 items-center justify-center text-xs font-black tracking-wider text-white duration-500 ease-out peer-checked:-left-[6.5rem]">
-        <span className="skew-x-12 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(72,201,176,0.9)]">
+        <span className="skew-x-12 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(16,185,129,0.9)]">
           <span className="text-sm">🇻🇳</span>
-          <span className="font-mono text-[#48c9b0] font-black">VI</span>
+          <span className="font-mono text-emerald-400 font-black">VI</span>
         </span>
       </div>
     </label>
