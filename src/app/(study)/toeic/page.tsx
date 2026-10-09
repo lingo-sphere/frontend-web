@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import { Trophy, Headphones, BookOpen } from 'lucide-react'
+import { Trophy, Headphones, BookOpen, Sparkles, ArrowRight, Layers } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import type { BackendToeicExam } from '@/features/toeic/services/exam.service'
@@ -133,6 +133,41 @@ export default function ToeicHubPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* TOEIC Vocabulary Decks Highlight Banner */}
+        <div className="mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 sm:p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-primary">
+                  <Sparkles className="h-3 w-3" />
+                  {isVietnamese ? 'KHO TỪ VỰNG ETS 2024–2026' : 'ETS 2024–2026 VOCABULARY'}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                  <Layers className="h-3 w-3" />
+                  {isVietnamese ? '250 Units • 5.000 Thẻ' : '250 Units • 5,000 Cards'}
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-text-primary sm:text-xl">
+                {isVietnamese
+                  ? 'Luyện 5.000 từ vựng TOEIC trọng tâm theo Band & Part thi'
+                  : 'Master 5,000 Core TOEIC Words by Target Band & Exam Part'}
+              </h3>
+              <p className="max-w-2xl text-xs sm:text-sm text-text-secondary">
+                {isVietnamese
+                  ? 'Phân bổ theo lộ trình 350-500, 500-650, 650-800, 800-990. Mỗi Unit chuẩn 20 từ với Flashcards lật thẻ, phát âm US/UK chuẩn và ôn tập thông minh SRS.'
+                  : 'Structured into Band 350-500, 500-650, 650-800, 800-990. 20 words per unit with interactive flashcards, authentic audio & Spaced Repetition.'}
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/public-decks')}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+            >
+              {isVietnamese ? 'Học từ vựng TOEIC ngay' : 'Explore TOEIC Decks'}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <ToeicFilterBar

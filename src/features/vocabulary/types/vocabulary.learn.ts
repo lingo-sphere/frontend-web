@@ -103,6 +103,7 @@ export interface UserCardProgress {
   longest_streak: number
   last_reviewed_at?: string
   next_review_at?: string
+  due_at?: string
   is_due: boolean
   learning_started_at?: string
   reviewing_started_at?: string
@@ -161,9 +162,7 @@ export type SessionMode =
   | 'TYPE_WORD'
   | 'IMAGE_WORD'
   | 'LISTEN_TYPE'
-  | 'PRONUNCIATION'
   | 'CONTEXT'
-  | 'SPEAKING'
   | 'DICTATION'
 
 export type ReviewType = 'DUE' | 'WEAK' | 'NEW' | 'MASTERED' | 'CUSTOM' | 'SMART'
@@ -248,7 +247,6 @@ export type ExerciseMode =
   | 'type-word'
   | 'image-word'
   | 'listen-type'
-  | 'pronunciation'
   | 'context'
 
 export type ReviewFilter = 'due' | 'weak' | 'new' | 'mastered'
@@ -280,7 +278,6 @@ export interface LearningResult {
     meaning: number
     spelling: number
     listening: number
-    pronunciation: number
     context: number
   }
   weakWords: VocabularyItem[]

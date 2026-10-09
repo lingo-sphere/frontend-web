@@ -10,6 +10,9 @@ import type { SpeakingExercise, RecordingState, SpeakingExerciseType } from '@/f
 import { toast } from '@/store/toast.store'
 import { SpeakingPromptCard } from '@/features/practice/components/speaking.prompt.card'
 import { SpeakingRecorderPanel } from '@/features/practice/components/speaking.recorder.panel'
+import { SpeakingDialogueWorkspace } from '@/features/practice/components/speaking.dialogue.workspace'
+import { PracticeExitConfirmModal } from '@/features/practice/components/practice.exit-confirm.modal'
+import type { DialogueTurnAttemptResult } from '@/features/practice/types/speaking'
 
 interface SpeakingWorkspaceProps {
   exercise: SpeakingExercise
@@ -17,8 +20,15 @@ interface SpeakingWorkspaceProps {
   onUpdateRecording: (
     state: RecordingState | ((prev: RecordingState) => RecordingState)
   ) => void
-  onSubmit: (transcription: string, duration: number, audioBlob?: Blob) => void
+  onSubmit: (
+    transcription: string,
+    duration: number,
+    audioBlob?: Blob,
+    difficultyChosen?: 'EASY' | 'MEDIUM' | 'HARD',
+    dialogueTurnsResults?: DialogueTurnAttemptResult[]
+  ) => void
   onBack: () => void
+  isSubmitting?: boolean
 }
 
 interface ISpeechRecognitionResult {
@@ -48,7 +58,13 @@ interface SpeechRecognitionConstructor {
 }
 
 const needsPreparation = (type: SpeakingExerciseType): boolean => {
-  return type === 'TOPIC' || type === 'RESPOND_SITUATION'
+  return (
+    type === 'DESCRIBE_PICTURE' ||
+    type === 'ANSWER_QUESTION' ||
+    type === 'OPINION_RESPONSE' ||
+    type === 'TOPIC' ||
+    type === 'RESPOND_SITUATION'
+  )
 }
 
 export function SpeakingWorkspace({
@@ -57,9 +73,25 @@ export function SpeakingWorkspace({
   onUpdateRecording,
   onSubmit,
   onBack,
+  isSubmitting = false,
 }: SpeakingWorkspaceProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+
+  if (exercise.exercise_type === 'SHORT_DIALOGUE' && exercise.dialogue_scenario) {
+    return (
+      <SpeakingDialogueWorkspace
+        exercise={exercise}
+        isVietnamese={isVietnamese}
+        onBack={onBack}
+        onSubmit={onSubmit}
+        isSubmitting={isSubmitting}
+      />
+    )
+  }
+
+  const [selectedTier, setSelectedTier] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM')
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   const [transcription, setTranscription] = useState('')
   const speechRecognitionRef = useRef<ISpeechRecognitionInstance | null>(null)
@@ -217,14 +249,52 @@ export function SpeakingWorkspace({
     }
   }, [speakingTimeLeft, phase, stopRecording])
 
+  const getTierTimes = useCallback((tier: 'EASY' | 'MEDIUM' | 'HARD') => {
+    const t = exercise.tiered_time_limits
+    if (tier === 'EASY') {
+      return {
+        prep: t?.easy?.preparation_time_seconds || 60,
+        speak: t?.easy?.response_time_seconds || 45,
+      }
+    }
+    if (tier === 'HARD') {
+      return {
+        prep: t?.hard?.preparation_time_seconds || 20,
+        speak: t?.hard?.response_time_seconds || 30,
+      }
+    }
+    return {
+      prep: t?.medium?.preparation_time_seconds || exercise.preparation_time_seconds || 45,
+      speak: t?.medium?.response_time_seconds || exercise.response_time_seconds || 45,
+    }
+  }, [exercise])
+
+  const handleSelectTier = (tier: 'EASY' | 'MEDIUM' | 'HARD') => {
+    setSelectedTier(tier)
+    const { prep, speak } = getTierTimes(tier)
+    onUpdateRecording((prev: RecordingState) => ({
+      ...prev,
+      preparationTimeLeft: prep,
+      speakingTimeLeft: speak,
+    }))
+  }
+
   const handleStartPractice = () => {
     if (needsPreparation(exercise.exercise_type)) {
+      const { prep, speak } = getTierTimes(selectedTier)
       onUpdateRecording((prev: RecordingState) => ({
         ...prev,
         phase: 'preparing',
-        preparationTimeLeft: exercise.preparation_time_seconds || 30,
+        preparationTimeLeft: prep,
+        speakingTimeLeft: speak,
       }))
     } else {
+      startRecording()
+    }
+  }
+
+  const handleSkipPreparation = () => {
+    if (phase === 'preparing') {
       startRecording()
     }
   }
@@ -247,7 +317,7 @@ export function SpeakingWorkspace({
 
   const handleSubmit = () => {
     const userTranscription = transcription.trim()
-    onSubmit(userTranscription, duration, audioBlobRef.current || undefined)
+    onSubmit(userTranscription, duration, audioBlobRef.current || undefined, selectedTier)
   }
 
   const handleReset = () => {
@@ -255,16 +325,42 @@ export function SpeakingWorkspace({
       audioRef.current.pause()
       audioRef.current = null
     }
+    const { prep, speak } = getTierTimes(selectedTier)
     onUpdateRecording({
       phase: 'idle',
-      preparationTimeLeft: exercise.preparation_time_seconds || 30,
-      speakingTimeLeft: exercise.response_time_seconds || 60,
+      preparationTimeLeft: prep,
+      speakingTimeLeft: speak,
       duration: 0,
       audioUrl: null,
       isPlaying: false,
       playbackPosition: 0,
     })
     setTranscription('')
+  }
+
+  const handleBackClick = () => {
+    // Nếu người dùng đang thu âm, đang chuẩn bị, hoặc đã có ghi âm/văn bản
+    if (phase !== 'idle' || transcription.trim() || audioUrl) {
+      setShowExitConfirm(true)
+    } else {
+      onBack()
+    }
+  }
+
+  const handleConfirmExit = () => {
+    if (phase === 'recording') {
+      stopRecording()
+    }
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    setShowExitConfirm(false)
+    onBack()
+  }
+
+  const handleResume = () => {
+    setShowExitConfirm(false)
   }
 
   const formatTime = (seconds: number) => {
@@ -274,10 +370,14 @@ export function SpeakingWorkspace({
   }
 
   const typeLabels: Record<SpeakingExerciseType, string> = {
+    READ_ALOUD: isVietnamese ? 'Đọc to' : 'Read Aloud',
+    DESCRIBE_PICTURE: isVietnamese ? 'Mô tả tranh' : 'Describe Picture',
+    SHORT_DIALOGUE: isVietnamese ? 'Hội thoại ngắn' : 'Short Dialogue',
+    ANSWER_QUESTION: isVietnamese ? 'Trả lời câu hỏi' : 'Answer Question',
+    OPINION_RESPONSE: isVietnamese ? 'Trình bày quan điểm' : 'Express Opinion',
     TOPIC: isVietnamese ? 'Chủ đề' : 'Topic',
     RESPOND_SITUATION: isVietnamese ? 'Phản hồi' : 'Respond',
     PRONUNCIATION: isVietnamese ? 'Phát âm' : 'Pronunciation',
-    READ_ALOUD: isVietnamese ? 'Đọc to' : 'Read Aloud',
     SHADOWING: isVietnamese ? 'Bắt chước' : 'Shadowing',
   }
 
@@ -286,7 +386,7 @@ export function SpeakingWorkspace({
       <div className="mb-6 flex items-center gap-4">
         <button
           type="button"
-          onClick={onBack}
+          onClick={handleBackClick}
           className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary cursor-pointer"
         >
           <ArrowLeft size={18} />
@@ -314,6 +414,9 @@ export function SpeakingWorkspace({
         isPlaying={isPlaying}
         isVietnamese={isVietnamese}
         needsPreparation={needsPreparation(exercise.exercise_type)}
+        selectedTier={selectedTier}
+        onSelectTier={handleSelectTier}
+        onSkipPreparation={handleSkipPreparation}
         audioRef={audioRef}
         formatTime={formatTime}
         onStartPractice={handleStartPractice}
@@ -321,6 +424,27 @@ export function SpeakingWorkspace({
         onPlayPause={handlePlayPause}
         onReset={handleReset}
         onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* Modal xác nhận thoát bài tập Speaking */}
+      <PracticeExitConfirmModal
+        isOpen={showExitConfirm}
+        onClose={handleResume}
+        onConfirmExit={handleConfirmExit}
+        title={isVietnamese ? 'Dừng bài luyện nói?' : 'Exit Speaking Practice?'}
+        description={
+          isVietnamese
+            ? 'Bạn đang trong quá trình thực hiện bài nói. Nếu thoát bây giờ, bản ghi âm và tiến trình của bài này sẽ không được lưu.'
+            : 'You are currently practicing speaking. If you exit now, your recording and progress will not be saved.'
+        }
+        savedNotice={
+          isVietnamese
+            ? 'Hãy hoàn thành bài nói và nhấn Nộp bài để AI chấm điểm và cập nhật tiến trình của bạn.'
+            : 'Complete your recording and submit to get AI feedback and update your profile.'
+        }
+        confirmText={isVietnamese ? 'Thoát bài tập' : 'Exit Practice'}
+        cancelText={isVietnamese ? 'Tiếp tục luyện' : 'Resume Practice'}
       />
     </main>
   )

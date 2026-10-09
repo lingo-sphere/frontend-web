@@ -1,3 +1,5 @@
+'use client'
+
 // Quản lý danh sách từ vựng trong sổ từ.
 
 import { useState, useEffect, useMemo, useRef } from 'react'

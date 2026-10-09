@@ -11,7 +11,7 @@ export type { UserCourseProgressItem }
 // ============================================================================
 
 export type TimePeriod = '7d' | '30d' | '90d' | 'all'
-export type SkillType = 'grammar' | 'reading' | 'listening' | 'speaking' | 'writing'
+export type SkillType = 'grammar' | 'reading' | 'listening' | 'speaking' | 'writing' | 'pronunciation'
 export type EvidenceLevel = 'LOW' | 'MEDIUM' | 'HIGH'
 export type TrendDirection = 'IMPROVING' | 'STABLE' | 'DECLINING'
 
@@ -294,6 +294,7 @@ export interface RollingPerformance {
     writing: SkillRecentStat
     speaking: SkillRecentStat
     vocabulary: SkillRecentStat
+    pronunciation?: SkillRecentStat
   }
 }
 
@@ -313,6 +314,7 @@ export interface TimeGrowth {
     writing: number
     speaking: number
     vocabulary: number
+    pronunciation?: number
   }
   daily_breakdown_7d: Array<{
     date: string
@@ -344,6 +346,7 @@ export interface TimeGrowth {
       avg_time_per_question?: number
       avg_word_count?: number
       recording_duration_seconds?: number
+      phonemes_practiced?: number
       sub_scores?: Record<string, number>
       sub_skills?: Record<string, { label: string; accuracy: number }>
       listening_details?: {
@@ -352,12 +355,13 @@ export interface TimeGrowth {
       }
     }>
     skill_breakdown?: {
-      grammar: { exercises: number; questions: number }
-      vocabulary: { exercises: number; questions: number }
-      reading: { exercises: number; questions: number }
-      listening: { exercises: number; questions: number }
-      writing: { exercises: number; questions: number }
-      speaking: { exercises: number; questions: number }
+      grammar?: { exercises: number; questions: number }
+      vocabulary?: { exercises: number; questions: number }
+      reading?: { exercises: number; questions: number }
+      listening?: { exercises: number; questions: number }
+      writing?: { exercises: number; questions: number }
+      speaking?: { exercises: number; questions: number }
+      pronunciation?: { exercises: number; questions: number }
     }
   }>
 }
@@ -400,6 +404,13 @@ export interface AdvancedInsights {
       avg_replays: number
       avg_time_seconds: number
       total_completed: number
+    }
+    reading?: {
+      avg_reading_speed_wpm: number
+      avg_time_per_question_seconds: number
+      total_passages_completed: number
+      total_questions_attempted: number
+      total_reading_time_seconds?: number
     }
   }
 }

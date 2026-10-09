@@ -16,7 +16,8 @@ import {
   LogIn,
 } from "lucide-react";
 import { vocabularyService } from "@/features/vocabulary/services/vocabulary.service";
-import { playAudio } from "@/utils/media.utils";
+import { resolveAudioUrl } from "@/utils/media.utils";
+import { speakWord } from "@/features/practice/lib/audio.utils";
 import { API_CONFIG } from "@/config/api.config";
 import { api } from "@/services/api.client";
 import { useAuthStore } from "@/features/auth/store/auth.store";
@@ -136,14 +137,86 @@ export function VocabularyDetailModal({
   }, [open]);
 
   const handlePlayAudio = (type: "us" | "uk") => {
+    if (!vocabulary) return;
     setIsPlaying(type);
-    const audioUrl =
-      type === "us" ? vocabulary?.audio_url_us : vocabulary?.audio_url_uk;
-    if (audioUrl) {
-      playAudio(audioUrl);
+    const wordText = vocabulary.word || "";
+    const rawAudioUrl =
+      type === "us" ? vocabulary.audio_url_us : vocabulary.audio_url_uk;
+
+    const fallbackAndAutoGenerate = () => {
+      // 1. Phát âm thanh ngay lập tức bằng Web Speech API dự phòng (không bị trễ)
+      if (wordText) {
+        speakWord(wordText, 0.9, type === "uk" ? "en-GB" : "en-US");
+      }
+
+      // 2. Gọi backend Edge TTS sinh file MP3 và upload bù lên Cloudflare R2
+      if (wordText) {
+        const cefrLevel = vocabulary.cefr_level || "B1";
+        const lexicalItemId = vocabulary._id || vocabulary.id;
+
+        vocabularyService
+          .autoGenerateAudio({
+            lexical_item_id: lexicalItemId,
+            word: wordText,
+            accent: type,
+            cefr_level: cefrLevel,
+          })
+          .then((res) => {
+            if (res.success) {
+              setVocabulary((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  audio_url_us: res.audio_url_us || prev.audio_url_us,
+                  audio_url_uk: res.audio_url_uk || prev.audio_url_uk,
+                };
+              });
+
+              const targetUrl = type === "us" ? res.audio_url_us : res.audio_url_uk;
+              if (targetUrl) {
+                setIsPlaying(type);
+                const genAudio = new Audio(resolveAudioUrl(targetUrl));
+                genAudio.onended = () => setIsPlaying(null);
+                genAudio.play().catch(() => {});
+              }
+            }
+          })
+          .catch(() => {});
+      }
+    };
+
+    if (rawAudioUrl) {
+      const resolved = resolveAudioUrl(rawAudioUrl);
+      if (resolved) {
+        const audio = new Audio(resolved);
+        let hasFailed = false;
+        audio.onended = () => setIsPlaying(null);
+        audio.onerror = () => {
+          if (!hasFailed) {
+            hasFailed = true;
+            fallbackAndAutoGenerate();
+          }
+        };
+        audio.play().catch(() => {
+          if (!hasFailed) {
+            hasFailed = true;
+            fallbackAndAutoGenerate();
+          }
+        });
+      } else {
+        fallbackAndAutoGenerate();
+      }
+    } else {
+      fallbackAndAutoGenerate();
     }
-    setTimeout(() => setIsPlaying(null), 1000);
-    onAction(`${isVietnamese ? "Phát âm" : "Playing"}: ${vocabulary?.word}`);
+
+    setTimeout(() => {
+      setIsPlaying((curr) => (curr === type ? null : curr));
+    }, 1200);
+
+    onAction(
+      `${isVietnamese ? "Phát âm" : "Playing"}: ${vocabulary.word} (${type === "us" ? "en-US" : "en-UK"})`
+    );
   };
 
   const handleToggleSaveMeaning = async (meaningIndex: number) => {
@@ -257,37 +330,48 @@ export function VocabularyDetailModal({
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  {vocabulary.audio_url_us && (
-                    <button
-                      onClick={() => handlePlayAudio("us")}
-                      className={`flex h-11 w-11 items-center justify-center rounded-full transition-all ${
-                        isPlaying === "us"
-                          ? "bg-primary text-white scale-95"
-                          : "bg-primary/10 text-primary hover:bg-primary/20 hover:scale-105"
-                      }`}
-                      title={
-                        isVietnamese ? "Phát âm US" : "Play US Pronunciation"
-                      }
-                    >
-                      <Volume1 size={20} />
-                    </button>
-                  )}
-                  {vocabulary.audio_url_uk && (
-                    <button
-                      onClick={() => handlePlayAudio("uk")}
-                      className={`flex h-11 w-11 items-center justify-center rounded-full transition-all ${
-                        isPlaying === "uk"
-                          ? "bg-emerald-500 text-white scale-95"
-                          : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 hover:scale-105"
-                      }`}
-                      title={
-                        isVietnamese ? "Phát âm UK" : "Play UK Pronunciation"
-                      }
-                    >
-                      <Volume2 size={20} />
-                    </button>
-                  )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handlePlayAudio("us")}
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition active:scale-95 cursor-pointer ${
+                      isPlaying === "us"
+                        ? "border-primary bg-primary text-white shadow-xs"
+                        : "border-border bg-surface-subtle text-text-primary hover:bg-surface-hover hover:border-text-tertiary"
+                    }`}
+                    title={
+                      isVietnamese
+                        ? "Phát âm tiếng Anh - Mỹ (en-US)"
+                        : "Play en-US pronunciation"
+                    }
+                  >
+                    <Volume2
+                      size={15}
+                      className={isPlaying === "us" ? "animate-pulse" : ""}
+                    />
+                    <span>en-US</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handlePlayAudio("uk")}
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition active:scale-95 cursor-pointer ${
+                      isPlaying === "uk"
+                        ? "border-primary bg-primary text-white shadow-xs"
+                        : "border-border bg-surface-subtle text-text-primary hover:bg-surface-hover hover:border-text-tertiary"
+                    }`}
+                    title={
+                      isVietnamese
+                        ? "Phát âm tiếng Anh - Anh (en-UK)"
+                        : "Play en-UK pronunciation"
+                    }
+                  >
+                    <Volume2
+                      size={15}
+                      className={isPlaying === "uk" ? "animate-pulse" : ""}
+                    />
+                    <span>en-UK</span>
+                  </button>
                 </div>
               </div>
 

@@ -110,6 +110,7 @@ export const API_CONFIG = {
       SUBMIT_REVIEW: (sessionId: string) => `/vocabulary/reviews/${sessionId}/submit`,
       MY_PROGRESS: '/vocabulary/progress/my',
       SETTINGS: '/vocabulary/settings',
+      DAILY_PROGRESS: '/vocabulary/daily-progress',
       SAVED: '/vocabulary/saved',
       LOOKUP_WORD: '/vocabulary/lookup',
       SEARCH_HISTORY: '/vocabulary/search-history',
@@ -141,7 +142,17 @@ export const API_CONFIG = {
       SPEAKING: '/practice/speaking/exercises',
       SPEAKING_BY_ID: (id: string) => `/practice/speaking/exercises/${id}`,
       SPEAKING_SUBMIT: '/practice/speaking/attempts/submit',
+      SPEAKING_SUBMIT_AUDIO: '/practice/speaking/attempts/submit-audio',
+      SPEAKING_ANALYSIS: (attemptId: string) => `/practice/speaking/attempts/${attemptId}/analysis`,
+      SPEAKING_MY_ATTEMPTS: '/practice/speaking/attempts/my',
+      SPEAKING_PROFILE_MY: '/practice/speaking/profile/my',
+      SPEAKING_PROFILE: (userId: string) => `/practice/speaking/profile/${userId}`,
       SPEAKING_EVALUATE: '/ai/evaluations/evaluate',
+      PRONUNCIATION_MASTERY: (userId: string) => `/practice/pronunciation/phoneme-mastery/${userId}`,
+      PRONUNCIATION_RECOMMENDATIONS: (userId: string) => `/practice/pronunciation/recommendations/${userId}`,
+      PRONUNCIATION_ANALYTICS: (userId: string) => `/practice/pronunciation/analytics/${userId}`,
+      PRONUNCIATION_SESSION: (userId: string) => `/practice/pronunciation/session/${userId}`,
+      PRONUNCIATION_SUBMIT: (userId: string) => `/practice/pronunciation/attempts/${userId}`,
       WRITING: '/practice/writing/exercises',
       WRITING_BY_ID: (id: string) => `/practice/writing/exercises/${id}`,
       WRITING_SUBMIT: '/practice/writing/submissions/submit',
@@ -183,6 +194,7 @@ export const API_CONFIG = {
     MEDIA: {
       GET_BY_ID: (id: string) => `/media/files/${id}`,
       STREAM: (storageKey: string) => `/media/stream/${storageKey}`,
+      PRACTICE_AUDIO_GENERATE: '/media/practice/audio/generate',
     },
 
     CONTEXT: {

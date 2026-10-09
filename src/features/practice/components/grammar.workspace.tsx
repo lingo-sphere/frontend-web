@@ -11,6 +11,7 @@ import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
 import { useNavigate } from '@/lib/navigation'
 import { VocabQuickPopover } from './vocab.quick.popover'
+import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
 import { grammarPracticeService } from '../services/grammar-practice.service'
 import type {
   GrammarSession,
@@ -43,6 +44,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
   // Timer
   const [seconds, setSeconds] = useState(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   // Submitting session state
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -51,15 +53,37 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
   const currentQuestion: GrammarQuestionItem | undefined = session.questions[currentIndex]
   const totalQuestions = session.total_questions
 
-  // Start timer
+  // Start timer - tự động ngưng khi mở modal xác nhận thoát hoặc khi đã có kết quả
   useEffect(() => {
+    if (showExitConfirm || sessionResult) {
+      if (timerRef.current) clearInterval(timerRef.current)
+      return
+    }
+
     timerRef.current = setInterval(() => {
       setSeconds((prev) => prev + 1)
     }, 1000)
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [])
+  }, [showExitConfirm, sessionResult])
+
+  const handleInitiateExit = () => {
+    if (sessionResult) {
+      onClose()
+      return
+    }
+    setShowExitConfirm(true)
+  }
+
+  const handleResume = () => {
+    setShowExitConfirm(false)
+  }
+
+  const handleConfirmExit = () => {
+    setShowExitConfirm(false)
+    onClose()
+  }
 
   // Sync state on index change
   useEffect(() => {
@@ -300,8 +324,8 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
 
             <button
               type="button"
-              onClick={onClose}
-              className="rounded-lg p-1 text-text-tertiary transition-colors hover:bg-surface-elevated hover:text-text-primary"
+              onClick={handleInitiateExit}
+              className="rounded-lg p-1 text-text-tertiary transition-colors hover:bg-surface-elevated hover:text-text-primary cursor-pointer"
             >
               <Icon name="x" size={18} />
             </button>
@@ -527,6 +551,16 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
           </div>
         </CardContent>
       </Card>
+
+      {/* Hộp thoại xác nhận tạm dừng & thoát phiên */}
+      <PracticeExitConfirmModal
+        isOpen={showExitConfirm}
+        onClose={handleResume}
+        onConfirmExit={handleConfirmExit}
+        title="Tạm dừng bài luyện ngữ pháp?"
+        description="Đồng hồ đếm thời gian đang được tạm ngưng. Bạn có chắc muốn dừng bài luyện tập ngữ pháp này?"
+        savedNotice="Phiên làm bài hiện tại sẽ dừng lại, bạn có thể quay lại luyện tập bất kỳ lúc nào."
+      />
     </div>
   )
 }

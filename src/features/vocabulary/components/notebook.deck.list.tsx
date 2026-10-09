@@ -1,3 +1,5 @@
+'use client'
+
 // Component danh sach bo the tu vung (Decks) va modal tao bo the moi cho hoc vien.
 
 import { useState } from 'react'

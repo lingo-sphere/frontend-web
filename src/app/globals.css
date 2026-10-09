@@ -11,6 +11,7 @@
   --color-background: var(--background);
   --color-foreground: var(--text-primary);
   --color-surface: var(--surface);
+  --color-surface-card: var(--surface);
   --color-surface-subtle: var(--surface-subtle);
   --color-surface-hover: var(--surface-hover);
   --color-border: var(--border);

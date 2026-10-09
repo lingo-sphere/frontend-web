@@ -56,3 +56,23 @@ export function useWritingRecommendationsQuery(userId: string | null, limit = 4,
     staleTime: 2 * 60 * 1000, // 2 minutes - recommendations can change
   })
 }
+
+import type { SpeakingAttempt, UserSpeakingProfile } from '@/features/practice/types/speaking'
+
+export function useSpeakingAttemptsQuery(limit = 20, enabled = true) {
+  return useQuery<SpeakingAttempt[]>({
+    queryKey: ['speaking', 'attempts', 'my', limit],
+    queryFn: () => practiceService.getMySpeakingAttempts(limit),
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useSpeakingProfileQuery(enabled = true) {
+  return useQuery<UserSpeakingProfile>({
+    queryKey: ['speaking', 'profile', 'my'],
+    queryFn: () => practiceService.getMySpeakingProfile(),
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}

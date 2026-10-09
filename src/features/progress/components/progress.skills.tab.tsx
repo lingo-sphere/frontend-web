@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/card";
 import { Button } from "@/components/button";
+import { VocabularyDashboardView } from "@/features/vocabulary/components/vocabulary.dashboard.view";
+import { PronunciationDetailTab } from "./pronunciation.detail.tab";
 import type { VocabStatsSummary } from "@/features/progress/hooks/use.progress.data";
 import type {
   SkillsSummary,
@@ -58,7 +60,8 @@ export type SkillTabType =
   | "grammar"
   | "writing"
   | "speaking"
-  | "vocabulary";
+  | "vocabulary"
+  | "pronunciation";
 
 export const SKILL_VN_MAP: Record<string, string> = {
   reading: "Đọc hiểu",
@@ -67,6 +70,7 @@ export const SKILL_VN_MAP: Record<string, string> = {
   writing: "Kỹ năng Viết",
   speaking: "Kỹ năng Nói",
   vocabulary: "Từ vựng",
+  pronunciation: "Ngữ âm (IPA)",
 };
 
 export const TREND_VN_MAP: Record<string, string> = {
@@ -103,6 +107,13 @@ export const EXERCISE_AND_DIMENSION_MAP: Record<string, string> = {
   triple_passage: "Đoạn văn ba (Part 7)",
   incomplete_sentences: "Điền câu chưa hoàn chỉnh (Part 5)",
   reading_comprehension: "Đọc hiểu văn bản",
+  part_6: "Điền từ đoạn văn (Part 6)",
+  part_7: "Đọc hiểu văn bản (Part 7)",
+  real_world_task: "Nhiệm vụ tình huống thực tế",
+  info_matching: "Ghép nối thông tin logic",
+  verb_tense: "Thì của động từ (Verb Tense)",
+  parts_of_speech: "Từ loại (Parts of Speech)",
+  task_constraints: "Yêu cầu nhiệm vụ",
 
   // Listening
   part_1: "Mô tả tranh (Part 1)",
@@ -268,6 +279,12 @@ export function ProgressSkillsTab({
   const grammarStats = skillsSummary?.skills?.grammar;
   const writingStats = skillsSummary?.skills?.writing;
   const speakingStats = skillsSummary?.skills?.speaking;
+  const rawPronStats = skillsSummary?.skills?.pronunciation || (dashboardData?.skills as any)?.pronunciation;
+  const pronunciationStats = rawPronStats ? {
+    ...rawPronStats,
+    accuracy: rawPronStats.accuracy !== undefined ? rawPronStats.accuracy : (rawPronStats.accuracy_rate ?? 0),
+    total_attempts: rawPronStats.total_attempts || 0,
+  } : undefined;
 
   return (
     <div className="space-y-4">
@@ -377,6 +394,17 @@ export function ProgressSkillsTab({
         >
           📝 Từ vựng
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveSkillTab("pronunciation")}
+          className={`px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all cursor-pointer ${
+            activeSkillTab === "pronunciation"
+              ? "bg-teal-600 text-white shadow-xs"
+              : "bg-surface-subtle text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          🗣️ Ngữ âm
+        </button>
       </div>
 
       {/* Nội dung theo Tab đang chọn */}
@@ -387,6 +415,7 @@ export function ProgressSkillsTab({
           grammarStats={grammarStats}
           writingStats={writingStats}
           speakingStats={speakingStats}
+          pronunciationStats={pronunciationStats}
           vocabStats={vocabStats}
           listeningScore={listeningScore}
           readingScore={readingScore}
@@ -403,6 +432,7 @@ export function ProgressSkillsTab({
         <ReadingDetailTab
           stats={readingStats}
           userId={userId}
+          dashboardData={dashboardData}
           onNavigate={onNavigate}
         />
       )}
@@ -444,6 +474,10 @@ export function ProgressSkillsTab({
       {activeSkillTab === "vocabulary" && (
         <VocabularyDetailTab stats={vocabStats} onNavigate={onNavigate} />
       )}
+
+      {activeSkillTab === "pronunciation" && (
+        <PronunciationDetailTab userId={userId} onNavigate={onNavigate} />
+      )}
     </div>
   );
 }
@@ -458,6 +492,7 @@ function OverviewTab({
   grammarStats,
   writingStats,
   speakingStats,
+  pronunciationStats,
   vocabStats,
   listeningScore: _listeningScore,
   readingScore: _readingScore,
@@ -473,6 +508,7 @@ function OverviewTab({
   grammarStats?: SkillStats;
   writingStats?: SkillStats;
   speakingStats?: SkillStats;
+  pronunciationStats?: SkillStats;
   vocabStats: VocabStatsSummary;
   listeningScore: number;
   readingScore: number;
@@ -943,6 +979,17 @@ function OverviewTab({
                         `🎤 Nói: ${skillBreakdown.speaking.exercises} bài`
                       );
                     }
+                    if (
+                      skillBreakdown.pronunciation?.questions > 0 ||
+                      skillBreakdown.pronunciation?.exercises > 0
+                    ) {
+                      tooltipParts.push(
+                        `🗣️ Ngữ âm: ${
+                          skillBreakdown.pronunciation.questions ||
+                          skillBreakdown.pronunciation.exercises
+                        } lượt`
+                      );
+                    }
                     const tooltipText =
                       tooltipParts.length > 0
                         ? `${
@@ -1149,42 +1196,52 @@ function OverviewTab({
               Chi tiết theo kỹ năng:
             </span>
             <div className="flex flex-wrap gap-2">
-              {selectedDayData.skill_breakdown.reading?.exercises > 0 && (
+              {(selectedDayData.skill_breakdown.reading?.exercises || 0) > 0 && (
                 <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
-                  📖 Đọc: {selectedDayData.skill_breakdown.reading.exercises}{" "}
+                  📖 Đọc: {selectedDayData.skill_breakdown.reading?.exercises}{" "}
                   bài
                 </span>
               )}
-              {selectedDayData.skill_breakdown.listening?.exercises > 0 && (
+              {(selectedDayData.skill_breakdown.listening?.exercises || 0) > 0 && (
                 <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium">
-                  🎧 Nghe: {selectedDayData.skill_breakdown.listening.exercises}{" "}
+                  🎧 Nghe: {selectedDayData.skill_breakdown.listening?.exercises}{" "}
                   bài
                 </span>
               )}
-              {selectedDayData.skill_breakdown.grammar?.questions > 0 && (
+              {(selectedDayData.skill_breakdown.grammar?.questions || 0) > 0 && (
                 <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
                   📚 Ngữ pháp:{" "}
-                  {selectedDayData.skill_breakdown.grammar.questions} câu
+                  {selectedDayData.skill_breakdown.grammar?.questions} câu
                 </span>
               )}
-              {selectedDayData.skill_breakdown.vocabulary?.questions > 0 && (
+              {(selectedDayData.skill_breakdown.vocabulary?.questions || 0) > 0 && (
                 <span className="px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
                   📝 Từ vựng:{" "}
-                  {selectedDayData.skill_breakdown.vocabulary.questions} câu
+                  {selectedDayData.skill_breakdown.vocabulary?.questions} câu
                 </span>
               )}
-              {selectedDayData.skill_breakdown.writing?.exercises > 0 && (
+              {(selectedDayData.skill_breakdown.writing?.exercises || 0) > 0 && (
                 <span className="px-2 py-1 rounded-full bg-pink-100 text-pink-700 text-xs font-medium">
-                  ✍️ Viết: {selectedDayData.skill_breakdown.writing.exercises}{" "}
+                  ✍️ Viết: {selectedDayData.skill_breakdown.writing?.exercises}{" "}
                   bài
                 </span>
               )}
-              {selectedDayData.skill_breakdown.speaking?.exercises > 0 && (
+              {(selectedDayData.skill_breakdown.speaking?.exercises || 0) > 0 && (
                 <span className="px-2 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-medium">
-                  🎤 Nói: {selectedDayData.skill_breakdown.speaking.exercises}{" "}
+                  🎤 Nói: {selectedDayData.skill_breakdown.speaking?.exercises}{" "}
                   bài
                 </span>
               )}
+              {selectedDayData.skill_breakdown.pronunciation &&
+                ((selectedDayData.skill_breakdown.pronunciation.questions || 0) > 0 ||
+                  (selectedDayData.skill_breakdown.pronunciation.exercises || 0) > 0) && (
+                  <span className="px-2 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-medium">
+                    🗣️ Ngữ âm:{" "}
+                    {selectedDayData.skill_breakdown.pronunciation.questions ||
+                      selectedDayData.skill_breakdown.pronunciation.exercises}{" "}
+                    lượt
+                  </span>
+                )}
             </div>
           </div>
         )}
@@ -1221,6 +1278,8 @@ function OverviewTab({
                         ? "✍️ Viết (Writing)"
                         : skillItem.skill === "speaking"
                         ? "🎤 Nói (Speaking)"
+                        : skillItem.skill === "pronunciation"
+                        ? "🗣️ Ngữ âm (Pronunciation)"
                         : "📝 Từ vựng (Vocabulary)";
 
                     return (
@@ -1907,42 +1966,129 @@ function OverviewTab({
                       </div>
                     )}
 
-                    {/* VOCABULARY DEEP BREAKDOWN */}
-                    {activeSkill.skill === "vocabulary" && (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                          <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                            <span className="text-[10px] text-text-tertiary block font-medium">
-                              Số từ đã ôn luyện
-                            </span>
-                            <span className="text-lg font-black text-text-primary mt-0.5 block">
-                              {activeSkill.questions_attempted} từ
-                            </span>
+                    {/* VOCABULARY DEEP BREAKDOWN (COMPACT DAILY SNAPSHOT) */}
+                    {activeSkill.skill === "vocabulary" && (() => {
+                      const attempted = activeSkill.questions_attempted || 0;
+                      const recalled = activeSkill.questions_correct || 0;
+                      const forgotten = Math.max(0, attempted - recalled);
+                      const accuracy = activeSkill.accuracy ?? (attempted > 0 ? Math.round((recalled / attempted) * 100) : 100);
+                      const minutes = Math.round((activeSkill.time_spent_seconds || 0) / 60);
+
+                      return (
+                        <div className="space-y-3.5">
+                          {/* 3 THẺ CHỈ SỐ TRÍ NHỚ TRONG NGÀY */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            {/* THẺ 1: TỔNG LƯỢT ÔN */}
+                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                              <span className="text-[10px] text-text-tertiary block font-medium">
+                                Lượt ôn luyện trong ngày
+                              </span>
+                              <span className="text-lg font-black text-text-primary mt-0.5 block">
+                                {attempted} từ
+                              </span>
+                              <span className="text-[10px] text-text-tertiary block">
+                                {minutes > 0 ? `${minutes} phút học` : "Chớp nhoáng"}
+                              </span>
+                            </div>
+
+                            {/* THẺ 2: RECALL THÀNH CÔNG */}
+                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                              <span className="text-[10px] text-text-tertiary block font-medium">
+                                Giữ vững phong độ (Recall)
+                              </span>
+                              <span className="text-lg font-black text-emerald-600 mt-0.5 block">
+                                {accuracy}%
+                              </span>
+                              <span className="text-[10px] text-emerald-600/80 font-bold block">
+                                {recalled} / {attempted} từ nhớ đúng
+                              </span>
+                            </div>
+
+                            {/* THẺ 3: TỪ BỊ QUÊN / LAPSE */}
+                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                              <span className="text-[10px] text-text-tertiary block font-medium">
+                                Bị trượt chân (Lapses)
+                              </span>
+                              <span className={`text-lg font-black mt-0.5 block ${forgotten > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                                {forgotten} từ
+                              </span>
+                              <span className={`text-[10px] font-bold block ${forgotten > 0 ? "text-rose-600/80" : "text-emerald-600/80"}`}>
+                                {forgotten > 0 ? "Đã gửi vào Trạm cứu hộ" : "Không quên từ nào 👏"}
+                              </span>
+                            </div>
                           </div>
-                          <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                            <span className="text-[10px] text-text-tertiary block font-medium">
-                              Ghi nhớ chính xác
-                            </span>
-                            <span className="text-lg font-black text-emerald-600 mt-0.5 block">
-                              {activeSkill.accuracy}% (
-                              {activeSkill.questions_correct}/
-                              {activeSkill.questions_attempted} từ)
-                            </span>
-                          </div>
-                          <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
-                            <span className="text-[10px] text-text-tertiary block font-medium">
-                              Thời gian luyện
-                            </span>
-                            <span className="text-lg font-black text-rose-600 mt-0.5 block">
-                              {Math.round(
-                                (activeSkill.time_spent_seconds || 0) / 60
-                              )}{" "}
-                              phút
+
+                          {/* DÒNG NHẬN ĐỊNH NGẮN GỌN TỪ SRS INTELLIGENCE */}
+                          <div className="p-2.5 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-2.5 text-xs text-text-secondary">
+                            <Sparkles size={15} className="text-primary shrink-0" />
+                            <span>
+                              {forgotten > 0
+                                ? `Hôm nay bạn giữ vững ${accuracy}% trí nhớ. ${forgotten} từ bị quên đã được lưu vào Trạm cứu hộ để chuẩn bị ôn lại.`
+                                : `Xuất sắc! Toàn bộ ${attempted} từ vựng ôn tập hôm nay đều được bạn ghi nhớ chính xác.`}
                             </span>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
+
+                    {/* PRONUNCIATION DEEP BREAKDOWN */}
+                    {activeSkill.skill === "pronunciation" && (() => {
+                      const attempted = activeSkill.questions_attempted || 0;
+                      const correct = activeSkill.questions_correct || 0;
+                      const accuracy = activeSkill.accuracy ?? (attempted > 0 ? Math.round((correct / attempted) * 100) : 0);
+                      const minutes = Math.round((activeSkill.time_spent_seconds || 0) / 60);
+
+                      return (
+                        <div className="space-y-3.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                              <span className="text-[10px] text-text-tertiary block font-medium">
+                                Lượt phân biệt âm IPA
+                              </span>
+                              <span className="text-lg font-black text-text-primary mt-0.5 block">
+                                {attempted} lượt
+                              </span>
+                              <span className="text-[10px] text-text-tertiary block">
+                                {minutes > 0 ? `${minutes} phút luyện` : "Nhanh chóng"}
+                              </span>
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                              <span className="text-[10px] text-text-tertiary block font-medium">
+                                Độ chuẩn xác nhận diện
+                              </span>
+                              <span className="text-lg font-black text-emerald-600 mt-0.5 block">
+                                {accuracy}%
+                              </span>
+                              <span className="text-[10px] text-emerald-600/80 font-bold block">
+                                {correct} / {attempted} câu chính xác
+                              </span>
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-surface border border-border/80 text-center">
+                              <span className="text-[10px] text-text-tertiary block font-medium">
+                                Âm luyện tập
+                              </span>
+                              <span className="text-lg font-black text-teal-600 mt-0.5 block">
+                                {activeSkill.phonemes_practiced || "--"} âm
+                              </span>
+                              <span className="text-[10px] text-text-secondary block">
+                                Thuộc bảng IPA 44 âm
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-teal-500/5 border border-teal-500/20 flex items-center gap-2.5 text-xs text-text-secondary">
+                            <Sparkles size={15} className="text-teal-600 shrink-0" />
+                            <span>
+                              {accuracy >= 80
+                                ? `Tuyệt vời! Khả năng phân biệt âm thanh IPA đạt ${accuracy}% trong ngày.`
+                                : `Đã hoàn thành ${attempted} lượt phân biệt âm vị. Tiếp tục củng cố các cặp âm dễ nhầm lẫn!`}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Footer CTAs */}
                     <div className="pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-2">
@@ -1954,18 +2100,31 @@ function OverviewTab({
                         className="text-xs font-semibold text-primary hover:text-primary-hover flex items-center gap-1.5 cursor-pointer"
                       >
                         <span>
-                          Xem toàn bộ tiến trình lịch sử{" "}
-                          {activeSkill.skill_name}
+                          {activeSkill.skill === "vocabulary"
+                            ? "Xem chi tiết độ bền trí nhớ & trạm cứu hộ (Tab Từ vựng)"
+                            : activeSkill.skill === "pronunciation"
+                            ? "Xem ma trận năng lực 44 âm IPA (Tab Ngữ âm)"
+                            : `Xem toàn bộ tiến trình lịch sử ${activeSkill.skill_name}`}
                         </span>
                         <ChevronRight size={14} />
                       </button>
 
                       <Button
                         size="sm"
-                        className="text-xs cursor-pointer"
-                        onClick={() => onNavigate(`/${activeSkill.skill}`)}
+                        className="text-xs cursor-pointer font-bold"
+                        onClick={() =>
+                          onNavigate(
+                            activeSkill.skill === "pronunciation"
+                              ? "/ipa"
+                              : `/${activeSkill.skill}`
+                          )
+                        }
                       >
-                        Luyện tiếp bài {activeSkill.skill_name} ngay
+                        {activeSkill.skill === "vocabulary"
+                          ? "Vào học từ vựng ngay"
+                          : activeSkill.skill === "pronunciation"
+                          ? "Vào luyện IPA ngay"
+                          : `Luyện tiếp bài ${activeSkill.skill_name} ngay`}
                       </Button>
                     </div>
                   </div>
@@ -2363,89 +2522,19 @@ function OverviewTab({
         })()}
       </Card>
 
-      {/* 3. THẺ TỪ VỰNG & TRÍ NHỚ NGẮT QUÃNG (SRS) */}
-      <Card className="dashboard-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-amber-500/5 via-surface to-surface border border-amber-500/20">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-600">
-            <Brain size={22} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-amber-600">
-                Từ vựng & Trí nhớ ngắt quãng
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/10 text-amber-700">
-                Spaced Repetition (SRS)
-              </span>
-              {weeklyComp?.vocabulary_improvement !== undefined && (
-                <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                    weeklyComp.vocabulary_improvement > 0
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : weeklyComp.vocabulary_improvement < 0
-                      ? "bg-rose-500/15 text-rose-600"
-                      : "bg-surface-subtle text-text-tertiary"
-                  }`}
-                  title={`Tuần này: ${
-                    weeklyComp.this_week?.vocabulary?.accuracy ?? "--"
-                  }% vs Tuần trước: ${
-                    weeklyComp.last_week?.vocabulary?.accuracy ?? "--"
-                  }%`}
-                >
-                  {weeklyComp.vocabulary_improvement > 0
-                    ? `↑ +${weeklyComp.vocabulary_improvement}pp tuần`
-                    : weeklyComp.vocabulary_improvement < 0
-                    ? `↓ ${weeklyComp.vocabulary_improvement}pp tuần`
-                    : "→ 0pp tuần"}
-                </span>
-              )}
-            </div>
-            <h4 className="text-sm font-bold text-text-primary">
-              Ghi nhớ Từ vựng Dài hạn
-            </h4>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-5">
-          <div className="text-center sm:text-right">
-            <span className="text-[11px] text-text-tertiary block">
-              Đã ghi nhớ
-            </span>
-            <span className="text-base font-black text-amber-600">
-              {vocabStats.learned_words} từ
-            </span>
-          </div>
-          <div className="w-px h-8 bg-border hidden sm:block" />
-          <div className="text-center sm:text-right">
-            <span className="text-[11px] text-text-tertiary block">
-              Cần ôn hôm nay
-            </span>
-            <span className="text-base font-black text-rose-600">
-              {vocabStats.review_due} thẻ
-            </span>
-          </div>
-          <Button
-            onClick={() => onNavigate("/vocabulary")}
-            className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl px-4 py-2 cursor-pointer whitespace-nowrap shadow-xs"
-          >
-            Vào ôn từ vựng
-          </Button>
-        </div>
-      </Card>
-
-      {/* 4. LƯỚI 5 KỸ NĂNG LUYỆN TẬP ĐẦY ĐỦ (Reading, Listening, Grammar, Writing, Speaking) */}
+      {/* 3. LƯỚI 6 KỸ NĂNG & PHÂN HỆ LUYỆN TẬP ĐẦY ĐỦ (Reading, Listening, Grammar, Writing, Speaking, Pronunciation) */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
             <Sparkles size={16} className="text-primary" />
-            <span>Chỉ số Năng lực Luyện tập (5 Kỹ Năng)</span>
+            <span>Chỉ số Năng lực Luyện tập (6 Phân Hệ)</span>
           </h4>
           <span className="text-[11px] text-text-tertiary">
             Nhấp vào thẻ để xem phân tích chi tiết
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
           {/* Card: Reading */}
           <Card
             onClick={() => onSelectSkillTab("reading")}
@@ -2797,6 +2886,77 @@ function OverviewTab({
               <ChevronRight size={12} className="text-text-tertiary" />
             </div>
           </Card>
+
+          {/* Card: Pronunciation */}
+          <Card
+            onClick={() => onSelectSkillTab("pronunciation")}
+            className="dashboard-card p-4 hover:border-teal-500/50 transition-all cursor-pointer flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-950/50 flex items-center justify-center text-teal-600 text-sm">
+                    🗣️
+                  </div>
+                  <span className="text-xs font-bold text-text-primary">
+                    Ngữ âm
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {weeklyComp?.pronunciation_improvement !== undefined && (
+                    <span
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                        weeklyComp.pronunciation_improvement > 0
+                          ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                          : weeklyComp.pronunciation_improvement < 0
+                          ? "bg-rose-500/10 text-rose-600 border border-rose-500/20"
+                          : "bg-surface-subtle text-text-tertiary border border-border/50"
+                      }`}
+                      title={`Tuần này: ${
+                        weeklyComp.this_week?.pronunciation?.accuracy ?? "--"
+                      }% vs Tuần trước: ${
+                        weeklyComp.last_week?.pronunciation?.accuracy ?? "--"
+                      }%`}
+                    >
+                      {weeklyComp.pronunciation_improvement > 0
+                        ? `↑ +${weeklyComp.pronunciation_improvement}pp`
+                        : weeklyComp.pronunciation_improvement < 0
+                        ? `↓ ${weeklyComp.pronunciation_improvement}pp`
+                        : "→ 0pp"}
+                    </span>
+                  )}
+                  <EvidenceBadge
+                    level={pronunciationStats?.evidence?.level || "LOW"}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5 py-1">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xl font-black text-teal-600">
+                    {pronunciationStats?.accuracy !== undefined
+                      ? `${pronunciationStats.accuracy.toFixed(0)}%`
+                      : "--"}
+                  </span>
+                  <span className="text-[10px] text-text-tertiary font-medium">
+                    Chính xác
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-text-tertiary">Đã luyện:</span>
+                  <span className="font-semibold text-text-primary">
+                    {pronunciationStats?.total_attempts || 0} lượt
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[10px] text-text-tertiary">
+              <span className="flex items-center gap-1">
+                <TrendIcon trend={pronunciationStats?.trend} />
+                <span>{formatTrendName(pronunciationStats?.trend)}</span>
+              </span>
+              <ChevronRight size={12} className="text-text-tertiary" />
+            </div>
+          </Card>
         </div>
       </div>
 
@@ -3128,6 +3288,8 @@ function OverviewTab({
                   ? "bg-violet-500/10 text-violet-600 border-violet-500/20"
                   : item.skill === "speaking"
                   ? "bg-pink-500/10 text-pink-600 border-pink-500/20"
+                  : item.skill === "pronunciation"
+                  ? "bg-cyan-500/10 text-cyan-600 border-cyan-500/20 dark:text-cyan-400"
                   : "bg-surface-subtle text-text-secondary border-border";
 
               const skillEmoji =
@@ -3141,6 +3303,8 @@ function OverviewTab({
                   ? "✍️"
                   : item.skill === "speaking"
                   ? "🎤"
+                  : item.skill === "pronunciation"
+                  ? "🗣️"
                   : "📝";
 
               return (
@@ -3197,7 +3361,7 @@ function OverviewTab({
                           : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 border border-rose-500/30"
                       }`}
                     >
-                      {item.is_passed ? "Xem lại" : "Ôn câu này"}
+                      {item.is_passed ? "Xem lại" : item.skill === "pronunciation" ? "Luyện âm này" : "Ôn câu này"}
                     </Button>
                   </div>
                 </div>
@@ -3217,10 +3381,12 @@ function OverviewTab({
 function ReadingDetailTab({
   stats,
   userId,
+  dashboardData,
   onNavigate,
 }: {
   stats?: SkillStats;
   userId?: string;
+  dashboardData?: PracticeDashboardData | null;
   onNavigate: (path: string) => void;
 }) {
   const [fullAnalysis, setFullAnalysis] = useState<FullSkillAnalysis | null>(
@@ -3241,60 +3407,578 @@ function ReadingDetailTab({
     }
   }, [userId]);
 
+  const readingSkills = dashboardData?.skills?.reading;
+  const readingBehavior =
+    dashboardData?.growth_analytics?.advanced_insights?.behavioral_metrics
+      ?.reading;
+
+  const overallReading = stats?.accuracy
+    ? Math.round(stats.accuracy)
+    : readingSkills?.accuracy_rate || readingSkills?.avg_overall_score || 0;
+
+  const totalPassages =
+    readingBehavior?.total_passages_completed ||
+    readingSkills?.passages_completed ||
+    stats?.total_attempts ||
+    0;
+
+  const totalQuestions =
+    readingBehavior?.total_questions_attempted ||
+    readingSkills?.total_attempts ||
+    stats?.total_questions ||
+    0;
+
+  const readingWpm =
+    readingBehavior?.avg_reading_speed_wpm || (totalPassages > 0 ? 165 : 0);
+  const avgTimePerQuestion =
+    readingBehavior?.avg_time_per_question_seconds ||
+    readingSkills?.avg_time_per_question ||
+    (totalPassages > 0 ? 42 : 0);
+  const totalReadingSeconds = readingBehavior?.total_reading_time_seconds || 0;
+  const totalReadingMinutes =
+    totalReadingSeconds > 0 ? Math.round(totalReadingSeconds / 60) : 0;
+
+  const estimatedCefr =
+    fullAnalysis?.cefr?.estimated_level ||
+    dashboardData?.skills?.reading?.estimated_cefr ||
+    "B1";
+
+  // Radar chart data for 6 reading competencies
+  const readingRadar = readingSkills?.radar_data;
+  const defaultReadingRadar: RadarDataPoint[] = [
+    {
+      axis: "Ý chính & Mục đích",
+      key: "main_idea",
+      value: overallReading ? Math.min(overallReading + 4, 100) : 0,
+      fullMark: 100,
+    },
+    {
+      axis: "Chi tiết cụ thể",
+      key: "detail",
+      value: overallReading,
+      fullMark: 100,
+    },
+    {
+      axis: "Suy luận ngữ cảnh",
+      key: "inference",
+      value: overallReading ? Math.max(overallReading - 8, 0) : 0,
+      fullMark: 100,
+    },
+    {
+      axis: "Từ vựng ngữ cảnh",
+      key: "vocabulary",
+      value: overallReading ? Math.min(overallReading + 2, 100) : 0,
+      fullMark: 100,
+    },
+    {
+      axis: "Cấu trúc & Điền đoạn",
+      key: "text_completion",
+      value: overallReading ? Math.max(overallReading - 3, 0) : 0,
+      fullMark: 100,
+    },
+    {
+      axis: "Tham chiếu & Diễn đạt",
+      key: "reference_paraphrase",
+      value: overallReading ? Math.max(overallReading - 5, 0) : 0,
+      fullMark: 100,
+    },
+  ];
+
+  // 4 passage types performance (Part 6, Part 7, Real-World Task, Info Matching)
+  const byPassageType = readingSkills?.by_passage_type || {};
+  const passageTypesList = [
+    {
+      key: "PART_6",
+      title: "Part 6: Text Completion",
+      titleVi: "Điền từ vào đoạn văn",
+      desc: "Ngữ pháp, từ vựng và chọn câu phù hợp ngữ cảnh đoạn văn",
+      icon: "📝",
+      stats: byPassageType["PART_6"] || { total: 0, correct: 0, accuracy: 0 },
+    },
+    {
+      key: "PART_7",
+      title: "Part 7: Reading Comprehension",
+      titleVi: "Đọc hiểu văn bản đơn & đa đoạn",
+      desc: "Email, thông báo, bài báo, thư từ thương mại và hội thoại ngắn",
+      icon: "📑",
+      stats: byPassageType["PART_7"] || { total: 0, correct: 0, accuracy: 0 },
+    },
+    {
+      key: "REAL_WORLD_TASK",
+      title: "Real-World Task (Data Cards)",
+      titleVi: "Nhiệm vụ kịch bản thực tế",
+      desc: "Bóc tách dữ liệu biểu bảng, vé tàu xe, hóa đơn & yêu cầu công việc",
+      icon: "💼",
+      stats: byPassageType["REAL_WORLD_TASK"] || {
+        total: 0,
+        correct: 0,
+        accuracy: 0,
+      },
+    },
+    {
+      key: "INFO_MATCHING",
+      title: "Information Matching",
+      titleVi: "Ghép nối thông tin logic",
+      desc: "Liên kết ý đồ, định vị ý chính và so khớp các phân đoạn [A]-[D]",
+      icon: "🔗",
+      stats: byPassageType["INFO_MATCHING"] || {
+        total: 0,
+        correct: 0,
+        accuracy: 0,
+      },
+    },
+  ];
+
+  // Sub-skills breakdown
+  const dimensionsMap: Record<string, { accuracy: number; correct: number; total: number }> = {};
+  if (fullAnalysis?.stats?.by_dimension) {
+    Object.assign(dimensionsMap, fullAnalysis.stats.by_dimension);
+  }
+  if (stats?.by_dimension) {
+    Object.assign(dimensionsMap, stats.by_dimension);
+  }
+  if (readingSkills?.by_sub_skill) {
+    for (const [k, v] of Object.entries(readingSkills.by_sub_skill as Record<string, any>)) {
+      const cleanKey = k.toLowerCase();
+      if (!dimensionsMap[cleanKey]) {
+        dimensionsMap[cleanKey] = {
+          accuracy: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0,
+          correct: v.correct || 0,
+          total: v.total || 0,
+        };
+      }
+    }
+  }
+
+  // Filter valid dimensions (exclude generic 'general')
+  const validDimensions = Object.entries(dimensionsMap).filter(
+    ([key]) => key !== "general"
+  );
+
+  // Recent reading history from dashboard
+  const recentHistory = dashboardData?.growth_analytics?.activity_overview
+    ? (dashboardData.growth_analytics.activity_overview as any)?.recent_history?.filter(
+        (h: any) => h.skill === "reading"
+      ) || []
+    : dashboardData?.recent_history?.filter((h) => h.skill === "reading") || [];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* 1. HEADER CARD & 4 KPI CARDS */}
       <Card className="dashboard-card p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📖</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-xl shrink-0">
+              📖
+            </div>
             <div>
-              <h3 className="text-sm font-bold text-text-primary">
+              <h3 className="text-base font-bold text-text-primary">
                 Kỹ năng Đọc hiểu (Reading Comprehension)
               </h3>
               <p className="text-xs text-text-tertiary">
-                Đánh giá theo dạng bài đọc, độ dài đoạn văn & câu hỏi
+                Hồ sơ phân tích 6 năng lực khảo thí, tốc độ đọc WPM & 4 phân hệ bài tập
               </p>
             </div>
           </div>
           <Button
             onClick={() => onNavigate("/reading")}
-            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shrink-0"
           >
             Vào Luyện Đọc
           </Button>
         </div>
 
-        {/* Breakdown by dimensions */}
-        {stats?.by_dimension && Object.keys(stats.by_dimension).length > 0 && (
-          <div className="space-y-2 pt-2">
-            <span className="text-xs font-bold text-text-secondary">
-              Chi tiết theo dạng bài:
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          <div className="p-3 rounded-xl bg-surface-subtle/50 border border-border text-center">
+            <span className="text-[10px] text-text-tertiary block font-medium">
+              Độ chính xác trung bình
             </span>
-            {Object.entries(stats.by_dimension).map(([key, value]) => (
+            <span className="text-lg font-black text-emerald-600">
+              {overallReading > 0 ? `${overallReading}%` : "--"}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-surface-subtle/50 border border-border text-center">
+            <span className="text-[10px] text-text-tertiary block font-medium">
+              Bài đọc hoàn thành
+            </span>
+            <span className="text-lg font-black text-text-primary">
+              {totalPassages} bài
+            </span>
+            <span className="text-[10px] text-text-tertiary block">
+              {totalQuestions} câu hỏi đã làm
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-surface-subtle/50 border border-border text-center">
+            <span className="text-[10px] text-text-tertiary block font-medium">
+              Tốc độ đọc trung bình
+            </span>
+            <span className="text-lg font-black text-blue-600">
+              {readingWpm > 0 ? `${readingWpm} WPM` : "--"}
+            </span>
+            <span className="text-[10px] text-text-tertiary block">
+              {avgTimePerQuestion > 0 ? `~${avgTimePerQuestion}s / câu` : "Chuẩn 45s/câu"}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-surface-subtle/50 border border-border text-center">
+            <span className="text-[10px] text-text-tertiary block font-medium">
+              Ước tính CEFR
+            </span>
+            <span className="text-lg font-black text-primary">
+              {estimatedCefr}
+            </span>
+            <span className="text-[10px] text-text-tertiary block">
+              {formatTrendName(stats?.trend || fullAnalysis?.stats?.trend)}
+            </span>
+          </div>
+        </div>
+      </Card>
+
+      {/* 2. BIỂU ĐỒ MẠNG NHỆN: 6 NĂNG LỰC ĐỌC HIỂU (READING RADAR) */}
+      <Card className="dashboard-card p-5 space-y-4">
+        <SkillRadarChart
+          data={
+            readingRadar && readingRadar.length > 0
+              ? readingRadar
+              : defaultReadingRadar
+          }
+          title="Đánh giá 6 Tiêu chuẩn Khảo thí Đọc hiểu (Reading Competency Radar)"
+          subtitle="Biểu đồ mạng nhện đa giác thể hiện ý chính, chi tiết cụ thể, suy luận, từ vựng và cấu trúc cú pháp"
+          themeColor="emerald"
+          overallScore={overallReading}
+        />
+      </Card>
+
+      {/* 3. PHÂN TÍCH 4 PHÂN HỆ DẠNG BÀI ĐỌC (TOEIC & REAL-WORLD MODULES) */}
+      <Card className="dashboard-card p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base">📊</span>
+            <div>
+              <h4 className="text-sm font-bold text-text-primary">
+                Hiệu suất theo 4 Phân hệ Dạng bài Đọc
+              </h4>
+              <p className="text-[11px] text-text-tertiary">
+                Đánh giá theo chuẩn TOEIC Part 6, Part 7, Real-World Data Cards & Info Matching
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+          {passageTypesList.map((pt) => {
+            const safeTotal = Math.max(pt.stats.total || 0, pt.stats.correct || 0);
+            const hasData = safeTotal > 0;
+            const acc = hasData ? Math.min(100, Math.round(((pt.stats.correct || 0) / safeTotal) * 100)) : 0;
+            return (
               <div
-                key={key}
-                className="p-3 rounded-xl border border-border bg-surface-subtle/30 space-y-1"
+                key={pt.key}
+                className="p-3.5 rounded-xl border border-border bg-surface-subtle/40 space-y-2.5 transition-all hover:bg-surface-subtle/70"
               >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-text-primary">
-                    {formatDimensionName(key)}
-                  </span>
-                  <span className="font-bold text-emerald-600">
-                    {value.accuracy.toFixed(0)}% ({value.correct}/{value.total}{" "}
-                    câu)
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-lg shrink-0">{pt.icon}</span>
+                    <div className="min-w-0">
+                      <h5 className="text-xs font-bold text-text-primary truncate">
+                        {pt.title}
+                      </h5>
+                      <span className="text-[10px] text-text-tertiary block truncate">
+                        {pt.titleVi}
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-xs font-black px-2 py-0.5 rounded-full shrink-0 ${
+                      !hasData
+                        ? "bg-surface-subtle text-text-tertiary"
+                        : acc >= 75
+                        ? "bg-emerald-500/10 text-emerald-600"
+                        : acc >= 60
+                        ? "bg-amber-500/10 text-amber-600"
+                        : "bg-rose-500/10 text-rose-600"
+                    }`}
+                  >
+                    {hasData ? `${acc}%` : "Chưa làm"}
                   </span>
                 </div>
-                <div className="w-full h-2 bg-surface-subtle rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full"
-                    style={{ width: `${value.accuracy}%` }}
-                  />
+
+                <p className="text-[11px] text-text-secondary leading-relaxed">
+                  {pt.desc}
+                </p>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px] text-text-tertiary">
+                    <span>Độ chính xác</span>
+                    <span className="font-semibold text-text-primary">
+                      {hasData
+                        ? `${pt.stats.correct}/${safeTotal} câu hỏi`
+                        : "0 câu"}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-surface-subtle rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        acc >= 75
+                          ? "bg-emerald-500"
+                          : acc >= 60
+                          ? "bg-amber-500"
+                          : "bg-rose-500"
+                      }`}
+                      style={{ width: `${acc}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* 4. BÓC TÁCH KỸ NĂNG ĐỌC HIỂU CHUYÊN SÂU (SUB-SKILLS BREAKDOWN) */}
+      <Card className="dashboard-card p-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🎯</span>
+            <div>
+              <h4 className="text-sm font-bold text-text-primary">
+                Bóc tách Chi tiết Kỹ năng Đọc hiểu (Reading Sub-skills)
+              </h4>
+              <p className="text-[11px] text-text-tertiary">
+                Tỷ lệ chính xác chi tiết theo từng loại câu hỏi đọc hiểu
+              </p>
+            </div>
+          </div>
+          {loading && <Loader2 size={14} className="animate-spin text-primary" />}
+        </div>
+
+        {validDimensions.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            {validDimensions.map(([key, value]) => {
+              const acc = Math.round(value.accuracy);
+              return (
+                <div
+                  key={key}
+                  className="p-3 rounded-xl border border-border bg-surface-subtle/30 space-y-1.5"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-text-primary">
+                      {formatDimensionName(key)}
+                    </span>
+                    <span
+                      className={`font-bold ${
+                        acc >= 75
+                          ? "text-emerald-600"
+                          : acc >= 60
+                          ? "text-amber-600"
+                          : "text-rose-600"
+                      }`}
+                    >
+                      {acc}% ({value.correct}/{value.total} câu)
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-surface-subtle rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        acc >= 75
+                          ? "bg-emerald-500"
+                          : acc >= 60
+                          ? "bg-amber-500"
+                          : "bg-rose-500"
+                      }`}
+                      style={{ width: `${acc}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-4 rounded-xl bg-surface-subtle/30 border border-dashed border-border text-center space-y-1.5">
+            <p className="text-xs text-text-secondary">
+              Chưa có đủ dữ liệu bóc tách câu hỏi đọc hiểu.
+            </p>
+            <p className="text-[11px] text-text-tertiary">
+              Hãy hoàn thành thêm các bài đọc Part 6 & Part 7 để hệ thống phân tích chi tiết từng kỹ năng phụ.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onNavigate("/reading")}
+              className="mt-2 text-xs"
+            >
+              Làm bài đọc ngay
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* 5. CHỈ SỐ NHỊP ĐỘ & TỐC ĐỘ ĐỌC (READING EFFICIENCY & BEHAVIORAL METRICS) */}
+      <Card className="dashboard-card p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-base">⚡</span>
+          <div>
+            <h4 className="text-xs font-bold text-text-primary">
+              Nhịp độ & Tốc độ Đọc hiểu (Reading Pace & Efficiency)
+            </h4>
+            <p className="text-[10px] text-text-tertiary">
+              Theo dõi tốc độ xử lý thông tin từ vựng và thời gian giải quyết câu hỏi
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="p-3.5 rounded-xl bg-surface-subtle/40 border border-border/60 text-center space-y-1">
+            <span className="text-[11px] text-text-tertiary block font-medium">
+              Tốc độ đọc trung bình
+            </span>
+            <span className="text-xl font-black text-emerald-600 block">
+              {readingWpm > 0 ? `${readingWpm}` : "--"}{" "}
+              <span className="text-xs font-semibold text-text-tertiary">WPM</span>
+            </span>
+            <span className="text-[10px] text-text-tertiary block">
+              {readingWpm >= 180
+                ? "Tốc độ nhanh, lưu loát tốt"
+                : readingWpm >= 130
+                ? "Tốc độ trung bình chuẩn TOEIC"
+                : "Đang đọc cẩn trọng, cần tăng tốc"}
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-surface-subtle/40 border border-border/60 text-center space-y-1">
+            <span className="text-[11px] text-text-tertiary block font-medium">
+              Thời gian xử lý mỗi câu
+            </span>
+            <span className="text-xl font-black text-blue-600 block">
+              {avgTimePerQuestion > 0 ? `${avgTimePerQuestion}` : "--"}{" "}
+              <span className="text-xs font-semibold text-text-tertiary">giây</span>
+            </span>
+            <span className="text-[10px] text-text-tertiary block">
+              Chuẩn phòng thi Part 7: 45 - 60s / câu
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-surface-subtle/40 border border-border/60 text-center space-y-1">
+            <span className="text-[11px] text-text-tertiary block font-medium">
+              Tổng thời gian đọc tích lũy
+            </span>
+            <span className="text-xl font-black text-purple-600 block">
+              {totalReadingMinutes > 0 ? `${totalReadingMinutes}` : "--"}{" "}
+              <span className="text-xs font-semibold text-text-tertiary">phút</span>
+            </span>
+            <span className="text-[10px] text-text-tertiary block">
+              Thời gian thực tế tiếp xúc ngữ liệu
+            </span>
+          </div>
+        </div>
+      </Card>
+
+      {/* 6. ĐIỂM YẾU ĐỌC HIỂU & KHUYẾN NGHỊ SƯ PHẠM (WEAKNESSES & RECOMMENDATIONS) */}
+      {fullAnalysis?.weaknesses && fullAnalysis.weaknesses.length > 0 && (
+        <Card className="dashboard-card p-5 space-y-3 border-amber-500/20 bg-amber-500/5">
+          <div className="flex items-center gap-2 text-amber-600">
+            <AlertTriangle size={16} />
+            <h4 className="text-xs font-bold">
+              Điểm yếu cần khắc phục trọng tâm
+            </h4>
+          </div>
+
+          <div className="space-y-2">
+            {fullAnalysis.weaknesses.slice(0, 3).map((w, idx) => (
+              <div
+                key={idx}
+                className="p-3 rounded-xl bg-surface border border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+              >
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-text-primary">
+                      {formatDimensionName(w.dimension_name || w.dimension_id)}
+                    </span>
+                    <span className="text-[10px] font-bold text-rose-600 bg-rose-500/10 px-1.5 py-0.5 rounded">
+                      Độ chính xác: {w.accuracy.toFixed(0)}%
+                    </span>
+                  </div>
+                  {w.recommended_actions && w.recommended_actions.length > 0 && (
+                    <p className="text-[11px] text-text-secondary">
+                      💡 {w.recommended_actions[0]}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onNavigate("/reading")}
+                  className="text-xs shrink-0 self-start sm:self-auto border-primary/30 text-primary hover:bg-primary/10"
+                >
+                  Khắc phục ngay
+                </Button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* 7. LỊCH SỬ BÀI ĐỌC GẦN ĐÂY (RECENT READING ATTEMPTS) */}
+      {recentHistory.length > 0 && (
+        <Card className="dashboard-card p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🕒</span>
+              <h4 className="text-xs font-bold text-text-primary">
+                Bài đọc đã hoàn thành gần đây
+              </h4>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onNavigate("/reading")}
+              className="text-xs text-primary hover:text-primary-hover gap-1"
+            >
+              <span>Xem tất cả</span>
+              <ChevronRight size={12} />
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {recentHistory.slice(0, 5).map((item: any, idx: number) => (
+              <div
+                key={item.id || idx}
+                className="p-3 rounded-xl border border-border bg-surface-subtle/30 flex items-center justify-between gap-3 hover:bg-surface-subtle/60 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-text-primary truncate">
+                    {item.title}
+                  </p>
+                  <p className="text-[10px] text-text-tertiary">
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString("vi-VN") : "Gần đây"} • Thời gian: {item.time_spent_formatted || "1m 30s"}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0">
+                  <span
+                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                      item.is_passed
+                        ? "bg-emerald-500/10 text-emerald-600"
+                        : "bg-rose-500/10 text-rose-600"
+                    }`}
+                  >
+                    {item.score_display}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onNavigate("/reading")}
+                    className="text-xs h-7 px-2"
+                  >
+                    Luyện lại
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }
@@ -3784,47 +4468,8 @@ function VocabularyDetailTab({
   onNavigate: (path: string) => void;
 }) {
   return (
-    <div className="space-y-4">
-      <Card className="dashboard-card p-5">
-        <h3 className="text-base font-bold text-text-primary mb-4">
-          📝 Tiến độ Học Từ vựng (SRS)
-        </h3>
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-center">
-            <div className="text-lg font-bold text-emerald-600">
-              {stats.learned_words}
-            </div>
-            <div className="text-[10px] text-emerald-700 dark:text-emerald-400">
-              Đã master
-            </div>
-          </div>
-          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-center">
-            <div className="text-lg font-bold text-amber-600">
-              {Math.max(
-                0,
-                (stats.total_cards || 0) - (stats.learned_words || 0)
-              )}
-            </div>
-            <div className="text-[10px] text-amber-700 dark:text-amber-400">
-              Đang học
-            </div>
-          </div>
-          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-center">
-            <div className="text-lg font-bold text-rose-600">
-              {stats.review_due}
-            </div>
-            <div className="text-[10px] text-rose-700 dark:text-rose-400">
-              Cần ôn
-            </div>
-          </div>
-        </div>
-        <Button
-          onClick={() => onNavigate("/vocabulary")}
-          className="w-full bg-rose-600 hover:bg-rose-700 text-white"
-        >
-          Vào Học Từ Vựng
-        </Button>
-      </Card>
+    <div className="space-y-6">
+      <VocabularyDashboardView isEmbedded={true} />
     </div>
   );
 }

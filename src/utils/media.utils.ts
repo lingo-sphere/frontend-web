@@ -35,15 +35,28 @@ export function resolveAudioUrl(url?: string | null): string {
   const trimmed = url.trim()
   if (!trimmed) return ''
 
-  // Nếu đã là full URL (bắt đầu bằng http)
+  // Nếu là full URL (bắt đầu bằng http)
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    // Nếu là public domain r2.dev bị 401, chuyển sang stream endpoint qua API Gateway
+    if (trimmed.includes('.r2.dev/')) {
+      const pathAfterR2 = trimmed.split('.r2.dev/')[1]
+      if (pathAfterR2) {
+        return `${getMediaBaseUrl()}/media/stream/${pathAfterR2}`
+      }
+    }
     return trimmed
   }
 
-  // Nếu là relative path, ghép với R2 URL
-  if (trimmed.startsWith('/') || trimmed.startsWith('audio/') || trimmed.startsWith('media/')) {
+  // Nếu là relative path, sử dụng stream endpoint qua API Gateway để không bị 401
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('audio/') ||
+    trimmed.startsWith('media/') ||
+    trimmed.startsWith('vocabulary/') ||
+    trimmed.startsWith('ipa/')
+  ) {
     const cleanPath = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed
-    return `${R2_PUBLIC_URL}/${cleanPath}`
+    return `${getMediaBaseUrl()}/media/stream/${cleanPath}`
   }
 
   return trimmed

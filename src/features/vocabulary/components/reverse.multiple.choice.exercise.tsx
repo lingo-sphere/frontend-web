@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @file reverse.multiple.choice.exercise.tsx
  * @description Component giao diện React ReverseMultipleChoiceExercise cho học viên

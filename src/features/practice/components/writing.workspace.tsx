@@ -7,6 +7,7 @@ import type { WritingExercise } from '@/features/practice/types/writing'
 import { resolveMediaUrlAsync } from '@/utils/media.utils'
 import { toast } from '@/store/toast.store'
 import { WritingTimer } from '@/features/practice/components/writing.timer'
+import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
 
 interface WritingWorkspaceProps {
   exercise: WritingExercise
@@ -35,6 +36,7 @@ export function WritingWorkspace({
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [imageUrl, setImageUrl] = useState<string>('')
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -108,11 +110,32 @@ export function WritingWorkspace({
     }
   }, [content])
 
+  const handleInitiateExit = () => {
+    if (isSubmitted) {
+      onBack()
+      return
+    }
+    // Tự động lưu nháp để không mất bài
+    if (content && content !== initialContent) {
+      handleSaveDraft()
+    }
+    setShowExitConfirm(true)
+  }
+
+  const handleResume = () => {
+    setShowExitConfirm(false)
+  }
+
+  const handleConfirmExit = () => {
+    setShowExitConfirm(false)
+    onBack()
+  }
+
   return (
     <main className="flex h-[calc(100vh-4rem)] flex-col">
       <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
+          <button onClick={handleInitiateExit} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary cursor-pointer">
             <ArrowLeft size={18} />
             {isVietnamese ? 'Quay lại' : 'Back'}
           </button>
@@ -128,6 +151,7 @@ export function WritingWorkspace({
           <WritingTimer
             totalSeconds={timeLimitSeconds}
             onTimeUp={handleTimeUp}
+            isPaused={showExitConfirm}
           />
           <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || !content || isSubmitted}>
             <Save size={16} className="mr-2" />
@@ -293,6 +317,24 @@ export function WritingWorkspace({
           </div>
         </div>
       </div>
+
+      {/* Hộp thoại xác nhận tạm dừng & thoát phiên */}
+      <PracticeExitConfirmModal
+        isOpen={showExitConfirm}
+        onClose={handleResume}
+        onConfirmExit={handleConfirmExit}
+        title={isVietnamese ? 'Tạm dừng bài viết?' : 'Pause Writing Session?'}
+        description={
+          isVietnamese
+            ? 'Đồng hồ đếm thời gian đang được tạm ngưng. Bạn có chắc muốn dừng bài viết này?'
+            : 'Writing timer is paused. Are you sure you want to exit?'
+        }
+        savedNotice={
+          isVietnamese
+            ? 'Bản nháp bài viết của bạn đã được tự động lưu lại vào hệ thống.'
+            : 'Your writing draft has been automatically saved.'
+        }
+      />
     </main>
   )
 }

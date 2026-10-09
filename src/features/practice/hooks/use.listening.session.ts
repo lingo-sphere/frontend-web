@@ -58,6 +58,25 @@ export function useListeningSession(options: UseListeningSessionOptions = {}) {
     }
   }, [])
 
+  const pauseTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+  }, [])
+
+  const resumeTimer = useCallback(() => {
+    if (timerRef.current || !session) return
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          return session.time_per_question_seconds || 20
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }, [session])
+
   const startTimerForSession = useCallback((targetSession?: ListeningSession | null) => {
     const activeSession = targetSession || session
     if (!activeSession) return
@@ -303,6 +322,8 @@ export function useListeningSession(options: UseListeningSessionOptions = {}) {
     goToQuestion,
     getResult,
     setShowResult,
+    pauseTimer,
+    resumeTimer,
 
     // Helpers
     isCorrectAnswer: (key: string) => {

@@ -9,4 +9,5 @@ export const vocabularyKeys = {
   ipaSymbols: (symbolType?: string) => [...vocabularyKeys.all, 'ipa-symbols', symbolType ?? 'all'] as const,
   grammarPoints: (params?: { grammarType?: string; cefrLevel?: string }) =>
     [...vocabularyKeys.all, 'grammar-points', params ?? {}] as const,
+  dashboardOverview: () => [...vocabularyKeys.all, 'dashboard-overview'] as const,
 }

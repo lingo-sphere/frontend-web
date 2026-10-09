@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @file context.exercise.tsx
  * @description Component giao diện React ContextExercise cho học viên

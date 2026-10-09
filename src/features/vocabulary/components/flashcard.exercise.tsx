@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @file flashcard.exercise.tsx
  * @description Component giao diện React FlashcardExercise cho học viên
@@ -79,11 +81,19 @@ export function FlashcardExercise({
             <span className="mb-2 text-[14px] font-medium text-text-secondary">
               {isVietnamese ? 'Nghĩa tiếng Việt' : 'Vietnamese meaning'}
             </span>
-            <h2 className="text-[28px] font-bold text-primary sm:text-[32px]">{word.meaningVi}</h2>
-            <div className="mt-6 max-w-full text-center">
-              <p className="text-[14px] italic leading-relaxed text-text-primary">{word.example}</p>
-              <p className="mt-2 text-[13px] text-text-secondary">{word.exampleMeaningVi}</p>
-            </div>
+            <h2 className="text-[26px] font-bold text-primary sm:text-[30px] text-center">
+              {word.meaningVi || (word as any).meanings?.[0]?.definitionVi || (isVietnamese ? 'Chưa có bản dịch' : 'No translation available')}
+            </h2>
+            {(word.example || (word as any).meanings?.[0]?.examples?.[0]?.sentence) && (
+              <div className="mt-6 max-w-full text-center">
+                <p className="text-[14px] italic leading-relaxed text-text-primary">
+                  {word.example || (word as any).meanings?.[0]?.examples?.[0]?.sentence}
+                </p>
+                <p className="mt-2 text-[13px] text-text-secondary">
+                  {word.exampleMeaningVi || (word as any).meanings?.[0]?.examples?.[0]?.translationVi}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

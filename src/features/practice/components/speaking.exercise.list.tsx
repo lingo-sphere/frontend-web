@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Search, Clock, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
+import { Pagination } from '@/components/pagination'
 import type { SpeakingExercise, SpeakingExerciseType, DifficultyLevel } from '@/features/practice/types/speaking'
 
 interface SpeakingExerciseListProps {
@@ -14,11 +15,15 @@ interface SpeakingExerciseListProps {
 }
 
 const typeColors: Record<SpeakingExerciseType, string> = {
+  READ_ALOUD: 'bg-emerald-100 text-emerald-700',
+  DESCRIBE_PICTURE: 'bg-cyan-100 text-cyan-700',
+  SHORT_DIALOGUE: 'bg-indigo-100 text-indigo-700',
+  ANSWER_QUESTION: 'bg-amber-100 text-amber-700',
+  OPINION_RESPONSE: 'bg-rose-100 text-rose-700',
   TOPIC: 'bg-blue-100 text-blue-700',
   RESPOND_SITUATION: 'bg-purple-100 text-purple-700',
-  PRONUNCIATION: 'bg-amber-100 text-amber-700',
-  READ_ALOUD: 'bg-emerald-100 text-emerald-700',
-  SHADOWING: 'bg-rose-100 text-rose-700',
+  PRONUNCIATION: 'bg-teal-100 text-teal-700',
+  SHADOWING: 'bg-pink-100 text-pink-700',
 }
 
 export function SpeakingExerciseList({
@@ -33,11 +38,19 @@ export function SpeakingExerciseList({
   const [typeFilter, setTypeFilter] = useState<SpeakingExerciseType | 'all'>('all')
   const [levelFilter, setLevelFilter] = useState<DifficultyLevel | 'all'>('all')
 
+  // Pagination
+  const PAGE_SIZE = 9
+  const [currentPage, setCurrentPage] = useState(1)
+
   const typeLabels: Record<string, string> = {
+    READ_ALOUD: isVietnamese ? 'Đọc to' : 'Read Aloud',
+    DESCRIBE_PICTURE: isVietnamese ? 'Mô tả tranh' : 'Describe Picture',
+    SHORT_DIALOGUE: isVietnamese ? 'Hội thoại ngắn' : 'Short Dialogue',
+    ANSWER_QUESTION: isVietnamese ? 'Trả lời câu hỏi' : 'Answer Question',
+    OPINION_RESPONSE: isVietnamese ? 'Trình bày quan điểm' : 'Express Opinion',
     TOPIC: isVietnamese ? 'Chủ đề' : 'Topic',
     RESPOND_SITUATION: isVietnamese ? 'Phản hồi' : 'Respond',
     PRONUNCIATION: isVietnamese ? 'Phát âm' : 'Pronunciation',
-    READ_ALOUD: isVietnamese ? 'Đọc to' : 'Read Aloud',
     SHADOWING: isVietnamese ? 'Bắt chước' : 'Shadowing',
   }
 
@@ -59,17 +72,58 @@ export function SpeakingExerciseList({
 
   const groupedExercises = useMemo(() => {
     const groups: Record<SpeakingExerciseType, SpeakingExercise[]> = {
+      READ_ALOUD: [],
+      DESCRIBE_PICTURE: [],
+      SHORT_DIALOGUE: [],
+      ANSWER_QUESTION: [],
+      OPINION_RESPONSE: [],
       TOPIC: [],
       RESPOND_SITUATION: [],
       PRONUNCIATION: [],
-      READ_ALOUD: [],
       SHADOWING: [],
     }
     filteredExercises.forEach((ex) => {
-      groups[ex.exercise_type].push(ex)
+      if (groups[ex.exercise_type]) {
+        groups[ex.exercise_type].push(ex)
+      }
     })
     return groups
   }, [filteredExercises])
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredExercises.length / PAGE_SIZE)
+
+  const paginatedExercises = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return filteredExercises.slice(start, start + PAGE_SIZE)
+  }, [filteredExercises, currentPage])
+
+  // Grouped exercises for paginated data
+  const paginatedGroupedExercises = useMemo(() => {
+    const groups: Record<SpeakingExerciseType, SpeakingExercise[]> = {
+      READ_ALOUD: [],
+      DESCRIBE_PICTURE: [],
+      SHORT_DIALOGUE: [],
+      ANSWER_QUESTION: [],
+      OPINION_RESPONSE: [],
+      TOPIC: [],
+      RESPOND_SITUATION: [],
+      PRONUNCIATION: [],
+      SHADOWING: [],
+    }
+    paginatedExercises.forEach((ex) => {
+      if (groups[ex.exercise_type]) {
+        groups[ex.exercise_type].push(ex)
+      }
+    })
+    return groups
+  }, [paginatedExercises])
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (value: any) => void, value: any) => {
+    setter(value)
+    setCurrentPage(1)
+  }
 
 
   const levelLabels: Record<string, string> = {
@@ -119,14 +173,14 @@ export function SpeakingExerciseList({
               <FilterChip
                 label={isVietnamese ? 'Tất cả' : 'All'}
                 active={typeFilter === 'all'}
-                onClick={() => setTypeFilter('all')}
+                onClick={() => handleFilterChange(setTypeFilter, 'all')}
               />
               {Object.entries(typeLabels).map(([type, label]) => (
                 <FilterChip
                   key={type}
                   label={label}
                   active={typeFilter === type}
-                  onClick={() => setTypeFilter(type as SpeakingExerciseType)}
+                  onClick={() => handleFilterChange(setTypeFilter, type as SpeakingExerciseType)}
                 />
               ))}
             </div>
@@ -136,7 +190,7 @@ export function SpeakingExerciseList({
             <span className="text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Độ khó:' : 'Level:'}</span>
             <div className="flex rounded-lg border border-border bg-surface p-1">
               <button
-                onClick={() => setLevelFilter('all')}
+                onClick={() => handleFilterChange(setLevelFilter, 'all')}
                 className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
                   levelFilter === 'all'
                     ? 'bg-primary text-white'
@@ -148,7 +202,7 @@ export function SpeakingExerciseList({
               {(['EASY', 'MEDIUM', 'HARD'] as DifficultyLevel[]).map((level) => (
                 <button
                   key={level}
-                  onClick={() => setLevelFilter(level)}
+                  onClick={() => handleFilterChange(setLevelFilter, level)}
                   className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
                     levelFilter === level
                       ? 'bg-primary text-white'
@@ -163,9 +217,17 @@ export function SpeakingExerciseList({
         </div>
       </div>
 
-      <p className="mb-4 text-[13px] text-text-secondary">
-        {isVietnamese ? 'Tìm thấy' : 'Found'} {filteredExercises.length} {isVietnamese ? 'bài tập' : 'exercises'}
-      </p>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-[13px] text-text-secondary">
+          {isVietnamese ? 'Tìm thấy' : 'Found'} {filteredExercises.length} {isVietnamese ? 'bài tập' : 'exercises'}
+          {filteredExercises.length > PAGE_SIZE && (
+            <span className="ml-2">
+              ({isVietnamese ? 'Hiển thị' : 'Showing'} {(currentPage - 1) * PAGE_SIZE + 1}-
+              {Math.min(currentPage * PAGE_SIZE, filteredExercises.length)})
+            </span>
+          )}
+        </p>
+      </div>
 
       {filteredExercises.length === 0 ? (
         <div className="py-12 text-center">
@@ -174,37 +236,51 @@ export function SpeakingExerciseList({
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {(Object.keys(typeLabels) as SpeakingExerciseType[]).map((type) => {
-            const typeExercises = groupedExercises[type]
-            if (typeExercises.length === 0) return null
-            if (typeFilter !== 'all' && typeFilter !== type) return null
+        <>
+          <div className="space-y-6">
+            {(Object.keys(typeLabels) as SpeakingExerciseType[]).map((type) => {
+              const typeExercises = paginatedGroupedExercises[type]
+              if (typeExercises.length === 0) return null
+              if (typeFilter !== 'all' && typeFilter !== type) return null
 
-            return (
-              <section key={type}>
-                <h2 className="mb-3 flex items-center gap-2 text-[16px] font-semibold text-text-primary">
-                  <span className={`rounded-full px-3 py-1 text-[12px] font-medium ${typeColors[type]}`}>
-                    {typeLabels[type]}
-                  </span>
-                  <span className="text-[13px] font-normal text-text-tertiary">
-                    {typeExercises.length} {isVietnamese ? 'bài tập' : 'exercises'}
-                  </span>
-                </h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {typeExercises.map((exercise) => (
-                    <ExerciseCard
-                      key={exercise.id}
-                      exercise={exercise}
-                      onClick={() => onSelectExercise(exercise)}
-                      typeLabels={typeLabels}
-                      isVietnamese={isVietnamese}
-                    />
-                  ))}
-                </div>
-              </section>
-            )
-          })}
-        </div>
+              return (
+                <section key={type}>
+                  <h2 className="mb-3 flex items-center gap-2 text-[16px] font-semibold text-text-primary">
+                    <span className={`rounded-full px-3 py-1 text-[12px] font-medium ${typeColors[type]}`}>
+                      {typeLabels[type]}
+                    </span>
+                    <span className="text-[13px] font-normal text-text-tertiary">
+                      {typeExercises.length} {isVietnamese ? 'bài tập' : 'exercises'}
+                    </span>
+                  </h2>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {typeExercises.map((exercise) => (
+                      <ExerciseCard
+                        key={exercise.id}
+                        exercise={exercise}
+                        onClick={() => onSelectExercise(exercise)}
+                        typeLabels={typeLabels}
+                        isVietnamese={isVietnamese}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-8">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={PAGE_SIZE}
+                totalItems={filteredExercises.length}
+              />
+            </div>
+          )}
+        </>
       )}
     </main>
   )
@@ -245,11 +321,15 @@ function ExerciseCard({
   isVietnamese: boolean
 }) {
   const typeColors: Record<SpeakingExerciseType, string> = {
+    READ_ALOUD: 'bg-emerald-100 text-emerald-700',
+    DESCRIBE_PICTURE: 'bg-cyan-100 text-cyan-700',
+    SHORT_DIALOGUE: 'bg-indigo-100 text-indigo-700',
+    ANSWER_QUESTION: 'bg-amber-100 text-amber-700',
+    OPINION_RESPONSE: 'bg-rose-100 text-rose-700',
     TOPIC: 'bg-blue-100 text-blue-700',
     RESPOND_SITUATION: 'bg-purple-100 text-purple-700',
-    PRONUNCIATION: 'bg-amber-100 text-amber-700',
-    READ_ALOUD: 'bg-emerald-100 text-emerald-700',
-    SHADOWING: 'bg-rose-100 text-rose-700',
+    PRONUNCIATION: 'bg-teal-100 text-teal-700',
+    SHADOWING: 'bg-pink-100 text-pink-700',
   }
 
   const levelColors: Record<string, string> = {

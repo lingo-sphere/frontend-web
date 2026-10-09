@@ -9,6 +9,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Volume2, CheckCircle2, XCircle, Send, Target } from 'lucide-react'
 import { Button } from '@/components/button'
+import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
 import { useListeningSession } from '../hooks/use.listening.session'
 import { useContextById } from '../hooks/use.context'
 import { TimePresetSelector } from './listening.session.time-preset-selector'
@@ -69,6 +70,8 @@ export function ListeningSessionWorkspace({
     goPrev,
     goToQuestion,
     setShowResult,
+    pauseTimer,
+    resumeTimer,
   } = useListeningSession({
     onComplete,
   })
@@ -79,6 +82,7 @@ export function ListeningSessionWorkspace({
   const [imageUrl, setImageUrl] = useState<string>('')
   const [audioUrl, setAudioUrl] = useState<string>('')
   const [isPlaying, setIsPlaying] = useState(false)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   // Audio ref to manage active playback
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -99,6 +103,30 @@ export function ListeningSessionWorkspace({
     }
     setIsPlaying(false)
   }, [])
+
+  const handleInitiateExit = () => {
+    if (showSetup || showResult || isCompleted) {
+      onBack()
+      return
+    }
+    if (audioRef.current) {
+      audioRef.current.pause()
+      setIsPlaying(false)
+    }
+    pauseTimer()
+    setShowExitConfirm(true)
+  }
+
+  const handleResume = () => {
+    resumeTimer()
+    setShowExitConfirm(false)
+  }
+
+  const handleConfirmExit = () => {
+    setShowExitConfirm(false)
+    stopAudio()
+    onBack()
+  }
 
   // Resolve media URLs & stop old audio when question changes
   useEffect(() => {
@@ -450,7 +478,7 @@ export function ListeningSessionWorkspace({
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={onBack}>
+            <Button variant="ghost" size="sm" onClick={handleInitiateExit} className="cursor-pointer">
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
@@ -605,6 +633,24 @@ export function ListeningSessionWorkspace({
           )}
         </div>
       </div>
+
+      {/* Hộp thoại xác nhận tạm dừng & thoát phiên */}
+      <PracticeExitConfirmModal
+        isOpen={showExitConfirm}
+        onClose={handleResume}
+        onConfirmExit={handleConfirmExit}
+        title={isVietnamese ? 'Tạm dừng bài luyện nghe?' : 'Pause Listening Session?'}
+        description={
+          isVietnamese
+            ? 'Đồng hồ đếm ngược thời gian đang được tạm ngưng. Bạn có chắc muốn dừng bài nghe này?'
+            : 'Listening timer is paused. Are you sure you want to exit?'
+        }
+        savedNotice={
+          isVietnamese
+            ? 'Bạn có thể chọn tiếp tục để làm bài, hoặc thoát ra và chọn chủ đề khác.'
+            : 'You can resume anytime or exit to choose another topic.'
+        }
+      />
     </main>
   )
 }

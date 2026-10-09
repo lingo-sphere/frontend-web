@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @file listen.type.exercise.tsx
  * @description Component giao diện React ListenTypeExercise cho học viên
