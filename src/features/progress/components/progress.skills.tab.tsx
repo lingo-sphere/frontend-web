@@ -226,8 +226,6 @@ export function formatDimensionName(key?: string): string {
 export function ProgressSkillsTab({
   listeningScore,
   readingScore,
-  speakingScore = 0,
-  writingScore = 0,
   vocabStats,
   skillsSummary,
   onNavigate,
