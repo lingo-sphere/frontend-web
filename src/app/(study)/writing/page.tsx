@@ -8,6 +8,44 @@ import { WritingWorkspace } from '@/features/practice/components/writing.workspa
 import { WritingResult } from '@/features/practice/components/writing.result'
 import { WritingHistory } from '@/features/practice/components/writing.history'
 import { useWritingWorkspace } from '@/features/practice/hooks/use.writing.workspace'
+import { useTranslation } from 'react-i18next'
+import { Loader2, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/button'
+
+function LoadingState() {
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+
+  return (
+    <div className="flex h-[60vh] w-full items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-[14px] text-text-secondary">
+          {isVietnamese ? 'Đang tải...' : 'Loading...'}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+
+  return (
+    <div className="flex h-[60vh] w-full items-center justify-center">
+      <div className="flex flex-col items-center gap-4 text-center">
+        <AlertCircle className="h-10 w-10 text-red-500" />
+        <p className="text-[14px] text-text-secondary">{message}</p>
+        {onRetry && (
+          <Button onClick={onRetry} className="bg-primary hover:bg-primary-hover">
+            {isVietnamese ? 'Thử lại' : 'Retry'}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function WritingAppPage() {
   const {
@@ -18,11 +56,13 @@ export default function WritingAppPage() {
     historySubmissions,
     draftContent,
     draftVersion,
+    timeSeconds,
     stats,
     progress,
+    isLoading,
+    error,
     handleGoHome,
     handleGoExercises,
-    handleGoHistory,
     handleSelectExercise,
     handleStartWriting,
     handleSaveDraft,
@@ -31,6 +71,16 @@ export default function WritingAppPage() {
     handlePracticeAgain,
     handleNextExercise,
   } = useWritingWorkspace()
+
+  // Show loading state while initializing
+  if (isLoading) {
+    return <LoadingState />
+  }
+
+  // Show error state if there's an error
+  if (error) {
+    return <ErrorState message={error} onRetry={handleGoHome} />
+  }
 
   switch (currentView) {
     case 'exercises':
@@ -43,22 +93,29 @@ export default function WritingAppPage() {
       )
 
     case 'detail':
-      if (!selectedExercise) return null
+      // Nếu selectedExercise null (direct URL access), hiển thị loading hoặc redirect
+      if (!selectedExercise) {
+        return <LoadingState />
+      }
       return (
         <WritingExerciseDetail
           exercise={selectedExercise}
-          onStart={() => handleStartWriting(selectedExercise)}
+          onStart={(timeSecs) => handleStartWriting(selectedExercise, timeSecs)}
           onBack={handleGoExercises}
         />
       )
 
     case 'workspace':
-      if (!selectedExercise) return null
+      // Nếu selectedExercise null (direct URL access), hiển thị loading hoặc redirect
+      if (!selectedExercise) {
+        return <LoadingState />
+      }
       return (
         <WritingWorkspace
           exercise={selectedExercise}
           initialContent={draftContent}
           versionNumber={draftVersion}
+          timeLimitSeconds={timeSeconds}
           onSaveDraft={handleSaveDraft}
           onSubmit={handleSubmitWriting}
           onBack={handleGoExercises}
@@ -66,7 +123,9 @@ export default function WritingAppPage() {
       )
 
     case 'result':
-      if (!currentSubmission || !selectedExercise) return null
+      if (!currentSubmission || !selectedExercise) {
+        return <LoadingState />
+      }
       return (
         <WritingResult
           submission={currentSubmission}
@@ -74,7 +133,7 @@ export default function WritingAppPage() {
           onBack={handleGoExercises}
           onTryAgain={handlePracticeAgain}
           onNextExercise={handleNextExercise}
-          onViewHistory={handleGoHistory}
+          onViewHistory={() => {}}
         />
       )
 
@@ -100,7 +159,11 @@ export default function WritingAppPage() {
           onStartNew={handleGoExercises}
           onContinue={() => {}}
           onViewSubmission={handleViewSubmission}
-          onViewHistory={handleGoHistory}
+          onViewHistory={() => {}}
+          onSelectExercise={(exerciseId) => {
+            const ex = exerciseList.find((e) => e.id === exerciseId)
+            if (ex) handleSelectExercise(ex)
+          }}
         />
       )
   }

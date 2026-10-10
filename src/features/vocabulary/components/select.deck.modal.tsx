@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @file select.deck.modal.tsx
  * @description Component giao diện React SelectDeckModal cho học viên

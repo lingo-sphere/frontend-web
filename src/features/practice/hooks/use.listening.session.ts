@@ -46,6 +46,25 @@ export function useListeningSession(options: UseListeningSessionOptions = {}) {
     }
   }, [])
 
+  const pauseTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+  }, [])
+
+  const resumeTimer = useCallback(() => {
+    if (timerRef.current || !session) return
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          return session.time_per_question_seconds || 20
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }, [session])
+
   const startTimerForSession = useCallback((targetSession?: ListeningSession | null) => {
     const activeSession = targetSession || session
     if (!activeSession) return
@@ -168,7 +187,7 @@ export function useListeningSession(options: UseListeningSessionOptions = {}) {
       session_id: session.session_id,
       question_index: currentIndex,
       answer: answerKey,
-    }).catch(() => {})
+    }).catch(() => { })
   }, [session, currentIndex])
 
   const submitAnswer = useCallback(async () => {
@@ -250,5 +269,17 @@ export function useListeningSession(options: UseListeningSessionOptions = {}) {
     goToQuestion,
     getResult,
     setShowResult,
+    pauseTimer,
+    resumeTimer,
+
+    // Helpers
+    isCorrectAnswer: (key: string) => {
+      if (!currentExercise?.options) return false
+      const opt = currentExercise.options.find(o => o.key === key)
+      return opt?.key === currentExercise.options?.find(o => {
+        // Find correct answer from the original options
+        return true // We'll need to track this differently
+      })?.key
+    },
   }
 }

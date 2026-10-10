@@ -53,17 +53,19 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
     setExpandedSubmission(expandedSubmission === submissionId ? null : submissionId)
   }
 
+  // Backend AI evaluation returns scores on a 0-100 scale; thresholds follow
+  // the same proportions as the legacy 0-10 view (>=8/10 -> good, >=6/10 -> ok).
   const getScoreColor = (score?: number) => {
     if (!score) return 'text-text-secondary'
-    if (score >= 8) return 'text-emerald-600'
-    if (score >= 6) return 'text-amber-600'
+    if (score >= 80) return 'text-emerald-600'
+    if (score >= 60) return 'text-amber-600'
     return 'text-red-600'
   }
 
   const getScoreBg = (score?: number) => {
     if (!score) return 'bg-surface-subtle'
-    if (score >= 8) return 'bg-emerald-100'
-    if (score >= 6) return 'bg-amber-100'
+    if (score >= 80) return 'bg-emerald-100'
+    if (score >= 60) return 'bg-amber-100'
     return 'bg-red-100'
   }
 
@@ -300,10 +302,12 @@ interface ScoreItemProps {
 }
 
 function ScoreItem({ label, score }: ScoreItemProps) {
+  // Backend AI evaluation returns scores on a 0-100 scale; thresholds follow
+  // the same proportions as the legacy 0-10 view (>=8/10 -> good, >=6/10 -> ok).
   const getScoreColor = (s?: number) => {
     if (s === undefined) return 'text-text-secondary'
-    if (s >= 8) return 'text-emerald-600'
-    if (s >= 6) return 'text-amber-600'
+    if (s >= 80) return 'text-emerald-600'
+    if (s >= 60) return 'text-amber-600'
     return 'text-red-600'
   }
 

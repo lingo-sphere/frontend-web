@@ -49,8 +49,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'listening', labelVi: 'Luyện Nghe', labelEn: 'Listening', icon: 'headphones', path: '/listening' },
       { id: 'speaking', labelVi: 'Luyện Nói', labelEn: 'Speaking', icon: 'mic', path: '/speaking' },
+      { id: 'reading', labelVi: 'Luyện Đọc', labelEn: 'Reading', icon: 'book', path: '/reading' },
       { id: 'writing', labelVi: 'Luyện Viết', labelEn: 'Writing', icon: 'pencil', path: '/writing' },
-      { id: 'journal', labelVi: 'Nhật Ký', labelEn: 'Daily Journal', icon: 'fileText', path: '/journal' },
       { id: 'grammar', labelVi: 'Ngữ pháp', labelEn: 'Grammar', icon: 'bookCheck', path: '/grammar' },
       { id: 'ipa', labelVi: 'Bảng phiên âm IPA', labelEn: 'IPA Chart', icon: 'volume2', path: '/ipa' },
     ],

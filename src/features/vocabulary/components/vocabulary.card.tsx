@@ -1,6 +1,9 @@
+'use client'
+
 // Thẻ hiển thị từ vựng đã lưu trong sổ từ.
 import { useTranslation } from 'react-i18next'
 import { Volume2, Plus, Trash2, Folder } from 'lucide-react'
+import { speakWord } from '@/features/practice/lib/audio.utils'
 import type { SavedVocabulary, UserDeck, Meaning } from '@/features/vocabulary/types/vocabulary.learn'
 
 interface VocabularyCardProps {
@@ -75,20 +78,28 @@ export function VocabularyCard({
       <div className="mt-3 flex items-center gap-2">
         {word.pronunciation_uk && (
           <button
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-[12px] font-medium text-text-secondary hover:border-primary hover:text-primary"
-            onClick={() => onAction(`Phát âm UK: ${word.word} ${word.pronunciation_uk}`)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-subtle px-2.5 py-1 text-[11px] font-semibold text-text-primary hover:bg-surface-hover hover:border-text-tertiary transition cursor-pointer"
+            onClick={() => {
+              speakWord(word.word, 0.9, "en-GB");
+              onAction(`Phát âm en-UK: ${word.word} ${word.pronunciation_uk}`);
+            }}
+            title="Phát âm tiếng Anh - Anh (en-UK)"
           >
-            <Volume2 size={14} />
-            UK
+            <Volume2 size={13} />
+            <span>en-UK</span>
           </button>
         )}
         {word.pronunciation_us && (
           <button
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-[12px] font-medium text-text-secondary hover:border-primary hover:text-primary"
-            onClick={() => onAction(`Phát âm US: ${word.word} ${word.pronunciation_us}`)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-subtle px-2.5 py-1 text-[11px] font-semibold text-text-primary hover:bg-surface-hover hover:border-text-tertiary transition cursor-pointer"
+            onClick={() => {
+              speakWord(word.word, 0.9, "en-US");
+              onAction(`Phát âm en-US: ${word.word} ${word.pronunciation_us}`);
+            }}
+            title="Phát âm tiếng Anh - Mỹ (en-US)"
           >
-            <Volume2 size={14} />
-            US
+            <Volume2 size={13} />
+            <span>en-US</span>
           </button>
         )}
       </div>

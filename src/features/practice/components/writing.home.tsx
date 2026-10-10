@@ -27,6 +27,7 @@ interface WritingHomeProps {
   exercises: WritingExercise[]
   onStartNew: () => void
   onContinue: (submissionId: string) => void
+  onSelectExercise: (exerciseId: string) => void
   onViewSubmission: (submission: WritingSubmission) => void
   onViewHistory: () => void
 }
@@ -39,6 +40,7 @@ export function WritingHome({
   exercises,
   onStartNew,
   onContinue,
+  onSelectExercise,
   onViewSubmission,
   onViewHistory,
 }: WritingHomeProps) {
@@ -88,6 +90,7 @@ export function WritingHome({
         stats={stats}
         progress={progress}
         isVietnamese={isVietnamese}
+        onSelectExercise={onSelectExercise}
       />
 
       {recentSubmissions.length > 0 && (

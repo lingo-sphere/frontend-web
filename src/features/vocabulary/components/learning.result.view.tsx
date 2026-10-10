@@ -1,8 +1,12 @@
+'use client'
+
 // Component hiển thị kết quả học từ vựng và thống kê tỷ lệ chính xác
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, RotateCcw, Home, Award, TrendingUp, BookOpen } from 'lucide-react'
+import { ChevronRight, RotateCcw, Home, Award, TrendingUp, BookOpen, Volume2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
+import { useNavigate } from '@/lib/navigation'
+import { speakWord } from '@/features/practice/lib/audio.utils'
 import type { LearningResult, VocabularyItem } from '@/features/vocabulary/types/vocabulary.learn'
 
 interface LearningResultViewProps {
@@ -10,13 +14,24 @@ interface LearningResultViewProps {
   onRetry: () => void
   onBackToHome: () => void
   onAction: (message: string) => void
+  onReviewWeakWords?: () => void
 }
 
-export function LearningResultView({ result, onRetry, onBackToHome, onAction }: LearningResultViewProps) {
+export function LearningResultView({
+  result,
+  onRetry,
+  onBackToHome,
+  onAction,
+  onReviewWeakWords,
+}: LearningResultViewProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const navigate = useNavigate()
 
   const { totalWords, correctAnswers, accuracy, skillBreakdown, weakWords } = result
+  const safeTotalWords = Math.max(0, totalWords || 0)
+  const safeCorrectAnswers = Math.min(safeTotalWords, Math.max(0, correctAnswers || 0))
+  const safeAccuracy = Math.min(100, Math.max(0, accuracy || 0))
 
   const getAccuracyColor = (acc: number) => {
     if (acc >= 90) return 'text-success'
@@ -37,8 +52,15 @@ export function LearningResultView({ result, onRetry, onBackToHome, onAction }: 
     meaning: isVietnamese ? 'Nghĩa' : 'Meaning',
     spelling: isVietnamese ? 'Chính tả' : 'Spelling',
     listening: isVietnamese ? 'Nghe' : 'Listening',
-    pronunciation: isVietnamese ? 'Phát âm' : 'Pronunciation',
     context: isVietnamese ? 'Ngữ cảnh' : 'Context',
+  }
+
+  const handleReviewWeakWords = () => {
+    if (onReviewWeakWords) {
+      onReviewWeakWords()
+    } else {
+      navigate('/vocabulary/learn/wrong-words')
+    }
   }
 
   return (
@@ -46,16 +68,16 @@ export function LearningResultView({ result, onRetry, onBackToHome, onAction }: 
       <div className="mb-8 text-center">
         <div className="mb-4 flex justify-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            {accuracy >= 80 ? (
+            {safeAccuracy >= 80 ? (
               <Award size={36} className="text-primary" />
-            ) : accuracy >= 50 ? (
+            ) : safeAccuracy >= 50 ? (
               <TrendingUp size={36} className="text-primary" />
             ) : (
               <BookOpen size={36} className="text-primary" />
             )}
           </div>
         </div>
-        <h1 className="text-[28px] font-bold text-text-primary">{getAccuracyMessage(accuracy)}</h1>
+        <h1 className="text-[28px] font-bold text-text-primary">{getAccuracyMessage(safeAccuracy)}</h1>
         <p className="mt-2 text-[14px] text-text-secondary">
           {isVietnamese ? 'Bạn đã hoàn thành phiên học từ vựng.' : 'You completed your vocabulary session.'}
         </p>
@@ -64,19 +86,19 @@ export function LearningResultView({ result, onRetry, onBackToHome, onAction }: 
       <div className="mb-6 grid grid-cols-3 gap-4">
         <Card className="dashboard-card">
           <CardContent className="p-4 text-center">
-            <p className="text-[32px] font-bold text-text-primary">{totalWords}</p>
+            <p className="text-[32px] font-bold text-text-primary">{safeTotalWords}</p>
             <p className="text-[12px] text-text-secondary">{isVietnamese ? 'Từ đã luyện' : 'Words practiced'}</p>
           </CardContent>
         </Card>
         <Card className="dashboard-card">
           <CardContent className="p-4 text-center">
-            <p className="text-[32px] font-bold text-success">{correctAnswers}</p>
+            <p className="text-[32px] font-bold text-success">{safeCorrectAnswers}</p>
             <p className="text-[12px] text-text-secondary">{isVietnamese ? 'Đúng' : 'Correct'}</p>
           </CardContent>
         </Card>
         <Card className="dashboard-card">
           <CardContent className="p-4 text-center">
-            <p className={`text-[32px] font-bold ${getAccuracyColor(accuracy)}`}>{accuracy}%</p>
+            <p className={`text-[32px] font-bold ${getAccuracyColor(safeAccuracy)}`}>{safeAccuracy}%</p>
             <p className="text-[12px] text-text-secondary">{isVietnamese ? 'Độ chính xác' : 'Accuracy'}</p>
           </CardContent>
         </Card>
@@ -91,7 +113,6 @@ export function LearningResultView({ result, onRetry, onBackToHome, onAction }: 
             <SkillBar label={skillLabels.meaning} value={skillBreakdown.meaning} />
             <SkillBar label={skillLabels.spelling} value={skillBreakdown.spelling} />
             <SkillBar label={skillLabels.listening} value={skillBreakdown.listening} />
-            <SkillBar label={skillLabels.pronunciation} value={skillBreakdown.pronunciation} />
             <SkillBar label={skillLabels.context} value={skillBreakdown.context} />
           </div>
         </CardContent>
@@ -105,10 +126,17 @@ export function LearningResultView({ result, onRetry, onBackToHome, onAction }: 
             </h3>
             <div className="flex flex-wrap gap-2">
               {weakWords.map((word: VocabularyItem) => (
-                <button key={word.id}
-                  className="rounded-full bg-error/10 px-3 py-1.5 text-[13px] font-medium text-error transition-colors hover:bg-error/20"
-                  onClick={() => onAction(`${isVietnamese ? 'Ôn tập:' : 'Reviewing:'} ${word.word}`)}>
-                  {word.word}
+                <button
+                  key={word.id}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-error/10 px-3 py-1.5 text-[13px] font-medium text-error transition-colors hover:bg-error/20"
+                  onClick={() => {
+                    if (word.word) speakWord(word.word)
+                    onAction(`${isVietnamese ? 'Từ yếu:' : 'Weak word:'} ${word.word}${word.meaningVi ? ` - ${word.meaningVi}` : ''}`)
+                  }}
+                  title={isVietnamese ? 'Nhấn để nghe phát âm' : 'Click to hear pronunciation'}
+                >
+                  <Volume2 size={13} className="opacity-70" />
+                  <span>{word.word}</span>
                 </button>
               ))}
             </div>
@@ -118,8 +146,10 @@ export function LearningResultView({ result, onRetry, onBackToHome, onAction }: 
 
       <div className="flex flex-col gap-3 sm:flex-row">
         {weakWords.length > 0 && (
-          <Button className="flex-1 gap-2 bg-error hover:bg-error-hover"
-            onClick={() => onAction(isVietnamese ? 'Bắt đầu ôn tập từ yếu' : 'Starting weak words review')}>
+          <Button
+            className="flex-1 gap-2 bg-error font-semibold text-white hover:bg-error-hover"
+            onClick={handleReviewWeakWords}
+          >
             {isVietnamese ? 'Ôn từ yếu' : 'Review Weak Words'}
             <ChevronRight size={18} />
           </Button>

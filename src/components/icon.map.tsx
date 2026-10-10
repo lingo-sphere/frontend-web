@@ -1,6 +1,6 @@
 // Ánh xạ tên icon chuỗi sang các biểu tượng Lucide icon cho toàn bộ ứng dụng.
 
-import type { LucideIcon } from 'lucide-react'
+import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   AlertCircle,
@@ -15,6 +15,7 @@ import {
   BookOpen,
   BookOpenCheck,
   BookmarkCheck,
+  Brain,
   BriefcaseBusiness,
   CalendarDays,
   Camera,
@@ -28,6 +29,7 @@ import {
   Clock3,
   CreditCard,
   Crown,
+  Diamond,
   Download,
   Eye,
   EyeOff,
@@ -98,7 +100,7 @@ import {
   Send,
   LogOut,
   ShoppingBag,
-} from 'lucide-react'
+} from "lucide-react";
 
 const iconMap: Record<string, LucideIcon> = {
   activity: Activity,
@@ -114,6 +116,7 @@ const iconMap: Record<string, LucideIcon> = {
   book: BookOpen,
   bookCheck: BookOpenCheck,
   bookmarkCheck: BookmarkCheck,
+  brain: Brain,
   briefcase: BriefcaseBusiness,
   calendar: CalendarDays,
   camera: Camera,
@@ -130,6 +133,7 @@ const iconMap: Record<string, LucideIcon> = {
   clock: Clock3,
   creditCard: CreditCard,
   crown: Crown,
+  diamond: Diamond,
   download: Download,
   edit: Pencil,
   externalLink: ExternalLink,
@@ -137,6 +141,7 @@ const iconMap: Record<string, LucideIcon> = {
   eyeOff: EyeOff,
   fileText: FileText,
   flame: Flame,
+  gem: Diamond,
   gift: Gift,
   graduation: GraduationCap,
   grid: LayoutGrid,
@@ -205,17 +210,29 @@ const iconMap: Record<string, LucideIcon> = {
   xCircle: XCircle,
   zapOff: ZapOff,
   shoppingBag: ShoppingBag,
-}
+};
 
 interface IconProps {
-  name: string
-  size?: number
-  className?: string
-  strokeWidth?: number
+  name: string;
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
 }
 
-export function Icon({ name, size = 18, className, strokeWidth = 1.8 }: IconProps) {
-  const IconComponent = iconMap[name]
-  if (!IconComponent) return null
-  return <IconComponent aria-hidden="true" className={className} size={size} strokeWidth={strokeWidth} />
+export function Icon({
+  name,
+  size = 18,
+  className,
+  strokeWidth = 1.8,
+}: IconProps) {
+  const IconComponent = iconMap[name];
+  if (!IconComponent) return null;
+  return (
+    <IconComponent
+      aria-hidden="true"
+      className={className}
+      size={size}
+      strokeWidth={strokeWidth}
+    />
+  );
 }

@@ -12,6 +12,9 @@ export interface UserMistakeItem {
   question_id: string
   question_text: string
   options: string[]
+  question_type?: 'MULTIPLE_CHOICE' | 'FILL_BLANK' | 'ORDERING' | string
+  ordering_items?: string[]
+  question_data?: Record<string, any>
   user_answer: string
   correct_answer: string
   explanation?: string
@@ -28,6 +31,7 @@ export interface UserMistakeItem {
   classification_snapshot?: {
     domain?: string
     exercise_type?: string
+    question_type?: string
     context_id?: string
     grammar_knowledge_id?: string
     cefr_level?: string

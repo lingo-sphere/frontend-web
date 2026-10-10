@@ -3,6 +3,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from '@/lib/navigation'
 import { Search, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
@@ -15,6 +16,7 @@ import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query
 const ITEMS_PER_PAGE = 6
 
 export default function TopicsAppPage() {
+  const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const { showAction } = useApp()
@@ -66,7 +68,10 @@ export default function TopicsAppPage() {
               {featuredTopics.map((topic) => (
                 <button
                   key={topic._id}
-                  onClick={() => showAction(`${isVietnamese ? 'Đã mở' : 'Opened'} "${topic.name_vi || topic.name_en}"`)}
+                  onClick={() => {
+                    navigate(`/vocabulary?topic=${topic._id}`)
+                    showAction(`${isVietnamese ? 'Xem các bộ thẻ thuộc chủ đề' : 'Viewing decks for topic'} "${topic.name_vi || topic.name_en}"`)
+                  }}
                   className="rounded-full bg-warning-soft px-4 py-2 text-[13px] font-medium text-warning transition-all hover:scale-105 hover:bg-warning/20"
                 >
                   {topic.name_vi || topic.name_en}
@@ -110,7 +115,10 @@ export default function TopicsAppPage() {
                   className={`dashboard-card cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg ${
                     topic.is_featured ? 'ring-2 ring-warning/30' : ''
                   }`}
-                  onClick={() => showAction(`${isVietnamese ? 'Đã mở' : 'Opened'} "${topic.name_vi || topic.name_en}"`)}
+                  onClick={() => {
+                    navigate(`/vocabulary?topic=${topic._id}`)
+                    showAction(`${isVietnamese ? 'Xem các bộ thẻ thuộc chủ đề' : 'Viewing decks for topic'} "${topic.name_vi || topic.name_en}"`)
+                  }}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">

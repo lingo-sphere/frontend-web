@@ -106,7 +106,7 @@ export function playAudio(url?: string | null): void {
   if (!resolvedUrl) return
 
   const audio = new Audio(resolvedUrl)
-  audio.play().catch(() => {})
+  audio.play().catch(() => { })
 }
 
 export async function resolveMediaUrlAsync(mediaId: string): Promise<string> {

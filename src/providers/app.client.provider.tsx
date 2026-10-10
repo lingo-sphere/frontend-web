@@ -115,7 +115,6 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
           path.startsWith('/cart') ||
           path.startsWith('/ai-learning') ||
           path.startsWith('/notes') ||
-          path.startsWith('/journal') ||
           path.startsWith('/progress') ||
           path.startsWith('/exam-history') ||
           path.startsWith('/toeic/exam') ||

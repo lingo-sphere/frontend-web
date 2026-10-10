@@ -1,14 +1,17 @@
 // Component giao diện React WritingExerciseDetail cho học viên
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Clock, BookOpen, Lightbulb } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
-import type { WritingExercise } from '@/features/practice/types/writing'
+import type { WritingExercise, TimeMode } from '@/features/practice/types/writing'
+import { resolveMediaUrlAsync } from '@/utils/media.utils'
+import { WritingTimeModeSelector } from '@/features/practice/components/writing.time-mode-selector'
 
 interface WritingExerciseDetailProps {
   exercise: WritingExercise
   onBack: () => void
-  onStart: () => void
+  onStart: (timeSeconds: number) => void
 }
 
 export function WritingExerciseDetail({
@@ -18,6 +21,29 @@ export function WritingExerciseDetail({
 }: WritingExerciseDetailProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const [imageUrl, setImageUrl] = useState<string>('')
+  const [showTimeSelector, setShowTimeSelector] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    const mediaId = exercise.prompt_image_id || exercise.media_id
+    if (!mediaId) {
+      setImageUrl('')
+      return
+    }
+
+    resolveMediaUrlAsync(mediaId)
+      .then((url) => {
+        if (isMounted) setImageUrl(url)
+      })
+      .catch((err) => {
+        console.error('[WritingExerciseDetail] Error resolving media:', err)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [exercise.prompt_image_id, exercise.media_id])
 
   const levelColors = {
     BASIC: 'bg-emerald-100 text-emerald-700',
@@ -40,29 +66,56 @@ export function WritingExerciseDetail({
 
       <div className="mb-6">
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="text-[24px] font-bold text-text-primary">{exercise.title}</h1>
             {exercise.title_vi && <p className="mt-1 text-[14px] text-text-secondary">{exercise.title_vi}</p>}
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full px-3 py-1 text-[12px] font-medium ${levelColors[exercise.writing_level]}`}>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className={`whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-medium ${levelColors[exercise.writing_level]}`}>
               {levelLabels[exercise.writing_level]} · {exercise.cefr_level}
             </span>
           </div>
         </div>
       </div>
 
-      <Card className="mb-6 dashboard-card">
-        <CardContent className="p-4">
-          <p className="text-[14px] text-text-primary">{exercise.description_vi || exercise.description}</p>
-        </CardContent>
-      </Card>
+      {imageUrl && (
+        <Card className="mb-6 overflow-hidden dashboard-card">
+          <CardContent className="p-0">
+            <img
+              src={imageUrl}
+              alt={exercise.title}
+              className="w-full max-h-[420px] object-cover"
+              loading="lazy"
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {exercise.description && exercise.description.trim() && exercise.description !== exercise.instructions && (
+        <Card className="mb-6 dashboard-card">
+          <CardContent className="p-4">
+            <p className="text-[14px] text-text-primary">{exercise.description_vi || exercise.description}</p>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="mb-6 dashboard-card">
         <CardContent className="p-6">
           <h2 className="mb-4 text-[16px] font-semibold text-text-primary">
             {isVietnamese ? 'Yêu cầu bài tập' : 'Exercise requirements'}
           </h2>
+
+          {/* Time Mode Selector */}
+          {showTimeSelector ? (
+            <WritingTimeModeSelector
+              exerciseType={exercise.exercise_type}
+              onSelect={(_mode, seconds) => {
+                setShowTimeSelector(false)
+                onStart(seconds)
+              }}
+              onCancel={() => setShowTimeSelector(false)}
+            />
+          ) : null}
 
           {exercise.prompt_en && (
             <div className="mb-6">
@@ -73,6 +126,27 @@ export function WritingExerciseDetail({
                 <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-primary">{exercise.prompt_en}</p>
                 {exercise.prompt_vi && <p className="mt-2 text-[14px] italic text-text-secondary">{exercise.prompt_vi}</p>}
               </div>
+            </div>
+          )}
+
+          {exercise.guiding_questions && exercise.guiding_questions.length > 0 && (
+            <div className="mb-6 rounded-xl border border-primary/25 bg-primary/5 p-4">
+              <p className="mb-2 text-[13px] font-semibold text-primary flex items-center gap-1.5">
+                <span>💡</span>
+                {isVietnamese ? '3 Câu hỏi gợi ý cho bức ảnh' : '3 Guiding Questions for the Picture'}
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-[14px] text-text-primary">
+                {exercise.guiding_questions.map((q, idx) => (
+                  <li key={idx} className="leading-relaxed">
+                    <span className="font-medium">{q}</span>
+                    {exercise.guiding_questions_vi?.[idx] && (
+                      <p className="text-[12px] text-text-secondary italic ml-5 mt-0.5">
+                        {exercise.guiding_questions_vi[idx]}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ol>
             </div>
           )}
 
@@ -117,15 +191,15 @@ export function WritingExerciseDetail({
             </ul>
           </div>
 
-          {exercise.keywords && exercise.keywords.length > 0 && (
+          {exercise.keywords && exercise.keywords.filter(k => k && k.trim()).length > 0 && (
             <div className="mb-6">
               <p className="mb-3 text-[12px] font-medium uppercase text-text-tertiary">
                 <BookOpen className="mr-1 inline h-4 w-4" />
                 {isVietnamese ? 'Từ khóa cần có' : 'Required keywords'}
               </p>
               <div className="flex flex-wrap gap-2">
-                {exercise.keywords.map((keyword, index) => (
-                  <span key={index} className="inline-flex items-center rounded-full bg-surface-subtle px-3 py-1 text-[13px] text-secondary">
+                {exercise.keywords.filter(k => k && k.trim()).map((keyword, index) => (
+                  <span key={index} className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[13px] font-medium text-primary">
                     {keyword}
                   </span>
                 ))}
@@ -161,10 +235,16 @@ export function WritingExerciseDetail({
           <ArrowLeft size={16} className="mr-2" />
           {isVietnamese ? 'Quay lại' : 'Back'}
         </Button>
-        <Button className="bg-primary hover:bg-primary-hover" onClick={onStart}>
-          {isVietnamese ? 'Bắt đầu viết' : 'Start writing'}
-          <ArrowLeft size={16} className="ml-2 rotate-180" />
-        </Button>
+        {showTimeSelector ? (
+          <Button variant="outline" onClick={() => setShowTimeSelector(false)}>
+            {isVietnamese ? 'Hủy chọn' : 'Cancel'}
+          </Button>
+        ) : (
+          <Button className="bg-primary hover:bg-primary-hover" onClick={() => setShowTimeSelector(true)}>
+            {isVietnamese ? 'Chọn thời gian & Bắt đầu' : 'Select Time & Start'}
+            <ArrowLeft size={16} className="ml-2 rotate-180" />
+          </Button>
+        )}
       </div>
     </main>
   )

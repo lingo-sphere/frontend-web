@@ -1,8 +1,8 @@
 // Trang giao diện Sổ tay câu sai (Mistake Vault) và ôn tập lặp lại ngắt quãng (Spaced Repetition SRS).
 
-'use client'
+"use client";
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from "react";
 import {
   BookmarkCheck,
   RotateCcw,
@@ -14,98 +14,96 @@ import {
   Loader2,
   CheckCircle2,
   BookOpen,
-} from 'lucide-react'
-import { Button } from '@/components/button'
-import { useAuthStore } from '@/features/auth/store/auth.store'
+} from "lucide-react";
+import { Button } from "@/components/button";
 import {
   useMyMistakesQuery,
   useDueMistakesQuery,
   useDeleteMistakeMutation,
-} from '@/features/practice/hooks/use.mistake.query'
-import { toast } from '@/store/toast.store'
-import { MistakeVaultCard } from '@/features/practice/components/mistake.vault.card'
-import { MistakeReviewModal } from '@/features/practice/components/mistake.review.modal'
-import { TopicDrillModal } from '@/features/practice/components/topic.drill.modal'
-import { useNavigate } from '@/lib/navigation'
-import type { UserMistakeItem } from '@/features/practice/types/mistake'
-import { MistakeStatus } from '@/features/practice/types/mistake'
+} from "@/features/practice/hooks/use.mistake.query";
+import { toast } from "@/store/toast.store";
+import { MistakeVaultCard } from "@/features/practice/components/mistake.vault.card";
+import { MistakeReviewModal } from "@/features/practice/components/mistake.review.modal";
+import { TopicDrillModal } from "@/features/practice/components/topic.drill.modal";
+import { useNavigate, useSearchParams } from "@/lib/navigation";
+import type { UserMistakeItem } from "@/features/practice/types/mistake";
+import { MistakeStatus } from "@/features/practice/types/mistake";
 
 export default function MistakeVaultPage() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const isAuthLoading = useAuthStore((s) => s.isLoading)
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const urlTopic = searchParams.get("topic");
+  const urlDomain = searchParams.get("domain");
 
+  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [selectedTopic, setSelectedTopic] = useState<string>(urlTopic || "ALL");
+  const [selectedDomain, setSelectedDomain] = useState<string>(
+    urlDomain || "ALL"
+  );
+  const [activeReviewMistake, setActiveReviewMistake] =
+    useState<UserMistakeItem | null>(null);
+  const [activeDrillTopic, setActiveDrillTopic] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const deleteMutation = useDeleteMistakeMutation();
+
+  // Đồng bộ bộ lọc khi URL query thay đổi
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      toast.warning('Vui lòng đăng nhập để xem sổ tay câu sai!')
-      navigate('/login?returnUrl=/practice/mistakes')
-    }
-  }, [isAuthLoading, isAuthenticated, navigate])
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
-  const [selectedTopic, setSelectedTopic] = useState<string>('ALL')
-  const [selectedDomain, setSelectedDomain] = useState<string>('ALL')
-  const [activeReviewMistake, setActiveReviewMistake] = useState<UserMistakeItem | null>(null)
-  const [activeDrillTopic, setActiveDrillTopic] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-
-  const deleteMutation = useDeleteMistakeMutation()
+    if (urlTopic) setSelectedTopic(urlTopic);
+    if (urlDomain) setSelectedDomain(urlDomain);
+  }, [urlTopic, urlDomain]);
 
   const queryParams = useMemo(() => {
     return {
-      status: selectedStatus !== 'ALL' && selectedStatus !== 'DUE' ? (selectedStatus as MistakeStatus) : undefined,
-      due_only: selectedStatus === 'DUE' ? true : undefined,
-      topic: selectedTopic !== 'ALL' ? selectedTopic : undefined,
-      domain: selectedDomain !== 'ALL' ? selectedDomain : undefined,
+      status:
+        selectedStatus !== "ALL" && selectedStatus !== "DUE"
+          ? (selectedStatus as MistakeStatus)
+          : undefined,
+      due_only: selectedStatus === "DUE" ? true : undefined,
+      topic: selectedTopic !== "ALL" ? selectedTopic : undefined,
+      domain: selectedDomain !== "ALL" ? selectedDomain : undefined,
       limit: 50,
-    }
-  }, [selectedStatus, selectedTopic, selectedDomain])
+    };
+  }, [selectedStatus, selectedTopic, selectedDomain]);
 
-  const { data, isLoading, refetch } = useMyMistakesQuery(queryParams, isAuthenticated)
-  const { data: dueData, refetch: refetchDue } = useDueMistakesQuery(isAuthenticated)
+  const { data, isLoading, refetch } = useMyMistakesQuery(queryParams);
+  const { data: dueData, refetch: refetchDue } = useDueMistakesQuery();
 
-  const mistakes = data?.items || []
+  const mistakes = data?.items || [];
   const summary = data?.summary || {
     total_all: 0,
     total_due_today: 0,
     total_need_practice: 0,
     total_practicing: 0,
     total_mastered: 0,
-  }
-  const topicGroups = data?.topic_groups || []
+  };
+  const topicGroups = data?.topic_groups || [];
 
   const handleStartDueReview = () => {
-    const dueItems = dueData?.items || []
+    const dueItems = dueData?.items || [];
     if (dueItems.length > 0) {
-      setActiveReviewMistake(dueItems[0])
+      setActiveReviewMistake(dueItems[0]);
     }
-  }
+  };
 
   const handleReviewSuccess = () => {
-    refetch()
-    refetchDue()
-  }
+    refetch();
+    refetchDue();
+  };
 
   const handleDeleteMistake = (mistake: UserMistakeItem) => {
-    setDeletingId(mistake._id)
+    setDeletingId(mistake._id);
     deleteMutation.mutate(mistake._id, {
       onSuccess: () => {
-        toast.success('Đã xóa câu hỏi khỏi sổ tay thành công!')
-        setDeletingId(null)
+        toast.success("Đã xóa câu hỏi khỏi sổ tay thành công!");
+        setDeletingId(null);
       },
       onError: () => {
-        toast.error('Không thể xóa câu hỏi. Vui lòng thử lại sau!')
-        setDeletingId(null)
+        toast.error("Không thể xóa câu hỏi. Vui lòng thử lại sau!");
+        setDeletingId(null);
       },
-    })
-  }
-
-  if (isAuthLoading || !isAuthenticated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-text-primary">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
-  }
+    });
+  };
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
@@ -123,7 +121,9 @@ export default function MistakeVaultPage() {
             Sổ tay lỗi sai & Khắc phục kiến thức
           </h1>
           <p className="text-xs sm:text-sm text-purple-200/90 leading-relaxed">
-            Mỗi câu bạn từng làm sai được lên lịch nhắc lại ngắt quãng vào ngày 1, ngày 3, ngày 7. Khi trả lời đúng 3 lần liên tiếp, câu hỏi sẽ được đánh dấu đã làm chủ vĩnh viễn.
+            Mỗi câu bạn từng làm sai được lên lịch nhắc lại ngắt quãng vào ngày
+            1, ngày 3, ngày 7. Khi trả lời đúng 3 lần liên tiếp, câu hỏi sẽ được
+            đánh dấu đã làm chủ vĩnh viễn.
           </p>
         </div>
 
@@ -131,7 +131,9 @@ export default function MistakeVaultPage() {
           <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
             <div className="px-3.5 py-1.5 rounded-2xl bg-rose-500/20 border border-rose-400/40 text-rose-200 text-xs font-bold flex items-center gap-1.5">
               <Calendar size={14} className="text-rose-400" />
-              <span>Hôm nay có {summary.total_due_today} câu đến hạn ôn tập!</span>
+              <span>
+                Hôm nay có {summary.total_due_today} câu đến hạn ôn tập!
+              </span>
             </div>
             <Button
               onClick={handleStartDueReview}
@@ -151,7 +153,9 @@ export default function MistakeVaultPage() {
             <BookOpen size={14} className="text-purple-600" />
             <span>Tổng câu đã ghi nhận</span>
           </div>
-          <div className="text-2xl font-black text-text-primary">{summary.total_all}</div>
+          <div className="text-2xl font-black text-text-primary">
+            {summary.total_all}
+          </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-surface border border-border space-y-1">
@@ -189,22 +193,22 @@ export default function MistakeVaultPage() {
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setSelectedStatus('ALL')}
+            onClick={() => setSelectedStatus("ALL")}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedStatus === 'ALL'
-                ? 'bg-purple-600 text-white shadow-xs'
-                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+              selectedStatus === "ALL"
+                ? "bg-purple-600 text-white shadow-xs"
+                : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
             Tất cả ({summary.total_all})
           </button>
           <button
             type="button"
-            onClick={() => setSelectedStatus('DUE')}
+            onClick={() => setSelectedStatus("DUE")}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedStatus === 'DUE'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+              selectedStatus === "DUE"
+                ? "bg-rose-600 text-white shadow-xs"
+                : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
             Đến hạn ôn ({summary.total_due_today})
@@ -214,8 +218,8 @@ export default function MistakeVaultPage() {
             onClick={() => setSelectedStatus(MistakeStatus.PRACTICING)}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               selectedStatus === MistakeStatus.PRACTICING
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+                ? "bg-amber-600 text-white shadow-xs"
+                : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
             Đang rèn luyện
@@ -225,8 +229,8 @@ export default function MistakeVaultPage() {
             onClick={() => setSelectedStatus(MistakeStatus.MASTERED)}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               selectedStatus === MistakeStatus.MASTERED
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
             Đã làm chủ ({summary.total_mastered})
@@ -235,47 +239,49 @@ export default function MistakeVaultPage() {
 
         {/* Domain filter buttons */}
         <div className="flex items-center gap-1.5 border-l border-border pl-3 ml-1">
-          <span className="text-[10px] text-text-tertiary font-medium">Kỹ năng:</span>
+          <span className="text-[10px] text-text-tertiary font-medium">
+            Kỹ năng:
+          </span>
           <button
             type="button"
-            onClick={() => setSelectedDomain('ALL')}
+            onClick={() => setSelectedDomain("ALL")}
             className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-              selectedDomain === 'ALL'
-                ? 'bg-purple-600 text-white'
-                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+              selectedDomain === "ALL"
+                ? "bg-purple-600 text-white"
+                : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
             Tất cả
           </button>
           <button
             type="button"
-            onClick={() => setSelectedDomain('LISTENING')}
+            onClick={() => setSelectedDomain("LISTENING")}
             className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-              selectedDomain === 'LISTENING'
-                ? 'bg-blue-600 text-white'
-                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+              selectedDomain === "LISTENING"
+                ? "bg-blue-600 text-white"
+                : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
             Nghe
           </button>
           <button
             type="button"
-            onClick={() => setSelectedDomain('READING')}
+            onClick={() => setSelectedDomain("READING")}
             className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-              selectedDomain === 'READING'
-                ? 'bg-green-600 text-white'
-                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+              selectedDomain === "READING"
+                ? "bg-green-600 text-white"
+                : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
             Đọc
           </button>
           <button
             type="button"
-            onClick={() => setSelectedDomain('GRAMMAR')}
+            onClick={() => setSelectedDomain("GRAMMAR")}
             className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-              selectedDomain === 'GRAMMAR'
-                ? 'bg-orange-600 text-white'
-                : 'bg-surface-secondary text-text-secondary hover:bg-surface-hover'
+              selectedDomain === "GRAMMAR"
+                ? "bg-orange-600 text-white"
+                : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
             }`}
           >
             Ngữ pháp
@@ -290,7 +296,9 @@ export default function MistakeVaultPage() {
               onChange={(e) => setSelectedTopic(e.target.value)}
               className="bg-surface-secondary border border-border text-xs rounded-xl px-2.5 py-1.5 text-text-primary focus:outline-none focus:ring-1 focus:ring-purple-600 cursor-pointer"
             >
-              <option value="ALL">Tất cả chủ điểm ({topicGroups.length})</option>
+              <option value="ALL">
+                Tất cả chủ điểm ({topicGroups.length})
+              </option>
               {topicGroups.map((g) => (
                 <option key={g.topic} value={g.topic}>
                   {g.topic} ({g.count})
@@ -305,7 +313,9 @@ export default function MistakeVaultPage() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-3">
             <Loader2 size={32} className="animate-spin text-purple-600" />
-            <p className="text-xs text-text-secondary">Đang tải danh sách câu hỏi trong sổ tay...</p>
+            <p className="text-xs text-text-secondary">
+              Đang tải danh sách câu hỏi trong sổ tay...
+            </p>
           </div>
         ) : mistakes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center space-y-3 p-8 rounded-3xl bg-surface border border-border">
@@ -313,14 +323,14 @@ export default function MistakeVaultPage() {
               <CheckCircle2 size={32} />
             </div>
             <h3 className="text-base font-bold text-text-primary">
-              {selectedStatus === 'DUE'
-                ? 'Tuyệt vời! Bạn đã hoàn thành toàn bộ câu ôn tập của hôm nay!'
-                : 'Sổ tay lỗi sai hiện đang trống'}
+              {selectedStatus === "DUE"
+                ? "Tuyệt vời! Bạn đã hoàn thành toàn bộ câu ôn tập của hôm nay!"
+                : "Sổ tay lỗi sai hiện đang trống"}
             </h3>
             <p className="text-xs text-text-secondary max-w-md">
-              {selectedStatus === 'DUE'
-                ? 'Hãy quay lại vào ngày mai để tiếp tục chu kỳ ghi nhớ ngắt quãng nhé.'
-                : 'Khi bạn làm bài kiểm tra hoặc bài tập trắc nghiệm trong khóa học, bất kỳ câu nào bạn làm chưa đúng sẽ tự động được thu thập tại đây kèm theo giải thích AI.'}
+              {selectedStatus === "DUE"
+                ? "Hãy quay lại vào ngày mai để tiếp tục chu kỳ ghi nhớ ngắt quãng nhé."
+                : "Khi bạn làm bài kiểm tra hoặc bài tập trắc nghiệm trong khóa học, bất kỳ câu nào bạn làm chưa đúng sẽ tự động được thu thập tại đây kèm theo giải thích AI."}
             </p>
           </div>
         ) : (
@@ -332,36 +342,47 @@ export default function MistakeVaultPage() {
                 onReview={(m) => setActiveReviewMistake(m)}
                 onDrillTopic={(topic) => setActiveDrillTopic(topic)}
                 onPracticeTopic={(m) => {
-                  const snapshot = m.classification_snapshot
-                  const domain = (snapshot?.domain || 'LISTENING').toUpperCase()
-                  const contextId = snapshot?.context_id || ''
-                  const exerciseType = snapshot?.exercise_type || ''
-                  const rawTopic = m.topic_name_vi || m.topic_tags?.[0] || ''
-                  const topicName = rawTopic && !rawTopic.startsWith('Chương') && !rawTopic.startsWith('Chapter') ? rawTopic : ''
+                  const snapshot = m.classification_snapshot;
+                  const domain = (
+                    snapshot?.domain || "LISTENING"
+                  ).toUpperCase();
+                  const contextId = snapshot?.context_id || "";
+                  const exerciseType = snapshot?.exercise_type || "";
+                  const rawTopic = m.topic_name_vi || m.topic_tags?.[0] || "";
+                  const topicName =
+                    rawTopic &&
+                    !rawTopic.startsWith("Chương") &&
+                    !rawTopic.startsWith("Chapter")
+                      ? rawTopic
+                      : "";
 
                   if (!contextId) {
-                    toast.warning('Câu hỏi này chưa được gắn chủ đề luyện tập cụ thể.')
-                    return
+                    toast.warning(
+                      "Câu hỏi này chưa được gắn chủ đề luyện tập cụ thể."
+                    );
+                    return;
                   }
 
-                  let targetUrl = '/listening'
-                  if (domain === 'SPEAKING') {
-                    targetUrl = '/speaking'
-                  } else if (domain === 'WRITING') {
-                    targetUrl = '/writing'
-                  } else if (domain === 'GRAMMAR') {
-                    targetUrl = '/grammar'
-                  } else if (domain === 'VOCABULARY') {
-                    targetUrl = '/vocabulary'
+                  let targetUrl = "/listening";
+                  if (domain === "SPEAKING") {
+                    targetUrl = "/speaking";
+                  } else if (domain === "WRITING") {
+                    targetUrl = "/writing";
+                  } else if (domain === "GRAMMAR") {
+                    targetUrl = "/grammar";
+                  } else if (domain === "VOCABULARY") {
+                    targetUrl = "/vocabulary";
                   }
 
-                  const params = new URLSearchParams()
-                  if (contextId) params.set('context_id', contextId)
-                  if (exerciseType) params.set('exercise_type', exerciseType)
-                  if (topicName) params.set('topic_name', topicName)
+                  const params = new URLSearchParams();
+                  if (contextId) params.set("context_id", contextId);
+                  if (exerciseType) params.set("exercise_type", exerciseType);
+                  if (topicName) params.set("topic_name", topicName);
 
-                  const queryString = params.toString()
-                  navigate(queryString ? `${targetUrl}?${queryString}` : targetUrl)
+                  const queryString = params.toString();
+                  navigate(
+                    queryString ? `${targetUrl}?${queryString}` : targetUrl
+                  );
                 }}
                 onDelete={handleDeleteMistake}
                 isDeleting={deletingId === item._id}
@@ -388,5 +409,5 @@ export default function MistakeVaultPage() {
         />
       )}
     </main>
-  )
+  );
 }

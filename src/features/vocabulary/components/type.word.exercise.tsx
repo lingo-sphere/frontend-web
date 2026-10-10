@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * @file type.word.exercise.tsx
  * @description Component giao diện React TypeWordExercise cho học viên

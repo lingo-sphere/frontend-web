@@ -1,9 +1,13 @@
 // Hook quản lý trạng thái bài tập luyện nói, quy trình thu âm và chấm điểm phát âm AI.
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { practiceService, type BackendSpeakingExercise } from '@/features/practice/services/practice.service'
-import { useSpeakingExercisesQuery } from '@/features/practice/hooks/use.practice.query'
+import {
+  useSpeakingExercisesQuery,
+  useSpeakingProfileQuery,
+  useSpeakingAttemptsQuery,
+} from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
@@ -15,13 +19,24 @@ import type {
   SpeakingProgress,
   SpeakingExerciseType,
   DifficultyLevel,
+  DialogueTurnAttemptResult,
 } from '@/features/practice/types/speaking'
 import type { SpeechAssessmentResult } from '@/types/api.types'
 
 export type SpeakingView = 'home' | 'list' | 'workspace' | 'result' | 'history'
 
 function toSpeakingExerciseType(val?: string): SpeakingExerciseType {
-  const valid: SpeakingExerciseType[] = ['TOPIC', 'RESPOND_SITUATION', 'PRONUNCIATION', 'READ_ALOUD', 'SHADOWING']
+  const valid: SpeakingExerciseType[] = [
+    'READ_ALOUD',
+    'DESCRIBE_PICTURE',
+    'SHORT_DIALOGUE',
+    'ANSWER_QUESTION',
+    'OPINION_RESPONSE',
+    'TOPIC',
+    'RESPOND_SITUATION',
+    'PRONUNCIATION',
+    'SHADOWING',
+  ]
   if (val && (valid as string[]).includes(val)) {
     return val as SpeakingExerciseType
   }
@@ -36,13 +51,26 @@ function toDifficultyLevel(val?: string): DifficultyLevel {
   return 'MEDIUM'
 }
 
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const result = reader.result as string
+      const base64 = result.includes(',') ? result.split(',')[1] : result
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
 export function useSpeakingWorkspace() {
   const queryClient = useQueryClient()
   const [view, setView] = useState<SpeakingView>('home')
   const [selectedExercise, setSelectedExercise] = useState<SpeakingExercise | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<SpeakingAttempt | null>(null)
   const [historyAttempts, setHistoryAttempts] = useState<SpeakingAttempt[]>([])
-  const [, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [recordingState, setRecordingState] = useState<RecordingState>({
     phase: 'idle',
     preparationTimeLeft: 0,
@@ -54,6 +82,14 @@ export function useSpeakingWorkspace() {
   })
 
   const { data: rawSpeakingExercises = [] } = useSpeakingExercisesQuery()
+  const { data: userSpeakingProfile } = useSpeakingProfileQuery()
+  const { data: remoteAttempts = [] } = useSpeakingAttemptsQuery(50)
+
+  useEffect(() => {
+    if (remoteAttempts.length > 0) {
+      setHistoryAttempts(remoteAttempts)
+    }
+  }, [remoteAttempts])
 
   const exerciseList: SpeakingExercise[] = useMemo(() => {
     return rawSpeakingExercises.map((item: BackendSpeakingExercise) => ({
@@ -68,8 +104,18 @@ export function useSpeakingWorkspace() {
       preparation_time_seconds: item.preparation_time_seconds || 45,
       response_time_seconds: item.response_time_seconds || 45,
       prompt_text_en: item.prompt_text_en || item.title,
-      prompt_text_vi: item.prompt_text_vi || item.title_vi,
-      difficulty_level: toDifficultyLevel(item.difficulty_level),
+      prompt_text_vi: (item.prompt_text_vi || item.title_vi) ?? undefined,
+      context_path: (item as any).context_path || [],
+      prompt_media_id: (item as any).prompt_media_id,
+      reference_media_id: (item as any).reference_media_id,
+      source_text: (item as any).source_text,
+      source_text_vi: (item as any).source_text_vi,
+      dialogue_scenario: (item as any).dialogue_scenario || null,
+      tiered_time_limits: (item as any).tiered_time_limits || null,
+      expected_keywords: (item as any).expected_keywords || [],
+      expected_structure: (item as any).expected_structure || [],
+      target_phonetics_knowledge_ids: (item as any).target_phonetics_knowledge_ids || [],
+      difficulty_level: toDifficultyLevel(item.difficulty_level || 'MEDIUM'),
       cefr_level: item.cefr_level || 'B1',
       total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
       avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
@@ -80,50 +126,99 @@ export function useSpeakingWorkspace() {
   }, [rawSpeakingExercises])
 
   const stats: SpeakingStats = useMemo(() => {
-    const total = historyAttempts.length
-    const avgScore =
-      total > 0
+    const total = Math.max(userSpeakingProfile?.total_attempts || 0, historyAttempts.length)
+
+    // Average score: fallback to userSpeakingProfile.overall_proficiency_score if historyAttempts is empty
+    const avgScore = total > 0
+      ? (historyAttempts.length > 0
         ? Math.round(
-            (historyAttempts.reduce((sum, a) => sum + (a.overall_score || 0), 0) / total) * 10
-          ) / 10
-        : 0
-    const avgPron =
-      total > 0
-        ? Math.round(
-            (historyAttempts.reduce((sum, a) => sum + (a.pronunciation_score || 0), 0) / total) *
-              10
-          ) / 10
-        : 0
-    const avgFluency =
-      total > 0
-        ? Math.round(
-            (historyAttempts.reduce((sum, a) => sum + (a.fluency_score || 0), 0) / total) * 10
-          ) / 10
-        : 0
+          (historyAttempts.reduce((sum, a) => sum + (a.overall_score || 0), 0) / historyAttempts.length) * 10
+        ) / 10
+        : (userSpeakingProfile?.overall_proficiency_score || 0))
+      : 0
+
+    // Practice minutes
+    const totalDurationSeconds = Math.max(
+      userSpeakingProfile?.total_speaking_duration_seconds || 0,
+      historyAttempts.reduce((sum, a) => sum + (a.recording_duration_seconds || (a as any).speaking_time_seconds || 0), 0)
+    )
+    const practiceMinutes = Math.max(
+      Math.round(totalDurationSeconds / 60),
+      totalDurationSeconds > 0 ? 1 : 0
+    )
+
+    // Rubric scores
+    const radar = userSpeakingProfile?.radar_scores
+    const avgPron = radar?.pronunciation !== undefined
+      ? radar.pronunciation
+      : (historyAttempts.length > 0
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.pronunciation_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : 0)
+
+    const avgFluency = radar?.fluency !== undefined
+      ? radar.fluency
+      : (historyAttempts.length > 0
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.fluency_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : 0)
+
+    const avgGrammar = radar?.grammar !== undefined
+      ? radar.grammar
+      : (historyAttempts.length > 0
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.grammar_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : avgScore)
+
+    const avgVocab = radar?.vocabulary !== undefined
+      ? radar.vocabulary
+      : (historyAttempts.length > 0
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.vocabulary_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : avgScore)
+
+    const avgCoherence = radar?.task_achievement !== undefined
+      ? radar.task_achievement
+      : (historyAttempts.length > 0
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.coherence_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : avgScore)
+
+    const avgContent = radar?.naturalness !== undefined
+      ? radar.naturalness
+      : (historyAttempts.length > 0
+        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.content_score || 0), 0) / historyAttempts.length) * 10) / 10
+        : avgScore)
 
     return {
       total_attempts: total,
       average_score: avgScore,
       average_pronunciation: avgPron,
       average_fluency: avgFluency,
-      average_grammar: avgScore,
-      average_vocabulary: avgScore,
-      average_coherence: avgScore,
-      average_content: avgScore,
-      total_practice_minutes: Math.round(
-        historyAttempts.reduce((sum, a) => sum + (a.speaking_time_seconds || 0), 0) / 60
-      ),
+      average_grammar: avgGrammar,
+      average_vocabulary: avgVocab,
+      average_coherence: avgCoherence,
+      average_content: avgContent,
+      total_practice_minutes: practiceMinutes,
       best_streak: total > 0 ? 1 : 0,
     }
-  }, [historyAttempts])
+  }, [userSpeakingProfile, historyAttempts])
 
   const progress: SpeakingProgress = useMemo(() => {
+    const scores = [
+      { name: 'Pronunciation', val: stats.average_pronunciation },
+      { name: 'Fluency', val: stats.average_fluency },
+      { name: 'Grammar', val: stats.average_grammar },
+      { name: 'Vocabulary', val: stats.average_vocabulary },
+    ].filter((s) => s.val > 0)
+
+    let weakestArea = 'Pronunciation'
+    if (scores.length > 0) {
+      scores.sort((a, b) => a.val - b.val)
+      weakestArea = scores[0].name
+    }
+
     return {
-      pronunciation: stats.average_pronunciation ? Math.round(stats.average_pronunciation * 10) : 0,
-      fluency: stats.average_fluency ? Math.round(stats.average_fluency * 10) : 0,
-      grammar: stats.average_grammar ? Math.round(stats.average_grammar * 10) : 0,
-      vocabulary: stats.average_vocabulary ? Math.round(stats.average_vocabulary * 10) : 0,
-      weakest_area: stats.average_pronunciation < stats.average_fluency ? 'Pronunciation' : 'Fluency',
+      pronunciation: Math.round(Math.min(100, Math.max(0, stats.average_pronunciation))),
+      fluency: Math.round(Math.min(100, Math.max(0, stats.average_fluency))),
+      grammar: Math.round(Math.min(100, Math.max(0, stats.average_grammar))),
+      vocabulary: Math.round(Math.min(100, Math.max(0, stats.average_vocabulary))),
+      weakest_area: stats.total_attempts > 0 ? weakestArea : 'None',
       recommended_exercises: exerciseList.slice(0, 3).map((e) => e.id),
     }
   }, [stats, exerciseList])
@@ -179,7 +274,13 @@ export function useSpeakingWorkspace() {
   )
 
   const handleSubmitRecording = useCallback(
-    async (transcription: string, duration: number, audioBlob?: Blob) => {
+    async (
+      transcription: string,
+      duration: number,
+      audioBlob?: Blob,
+      difficultyChosen?: DifficultyLevel,
+      dialogueTurnsResults?: DialogueTurnAttemptResult[]
+    ) => {
       if (!selectedExercise) return
       const authUser = useAuthStore.getState().user
       if (!authUser) {
@@ -188,97 +289,144 @@ export function useSpeakingWorkspace() {
       }
       setIsSubmitting(true)
 
-      let finalTranscript = transcription
-      let pronunciationScore = 0
-      let fluencyScore = 0
-      let overallScore = 0
-      let feedback = ''
-
+      let audioBase64: string | undefined = undefined
       if (audioBlob) {
         try {
-          const assessment: SpeechAssessmentResult = await practiceService.evaluateSpeakingAudio(
-            audioBlob,
-            selectedExercise.id,
-            selectedExercise.topic
-          )
-          if (assessment) {
-            finalTranscript = assessment.transcribed_text || finalTranscript
-            pronunciationScore = assessment.pronunciation_score ?? 0
-            fluencyScore = assessment.fluency_score ?? 0
-            overallScore = assessment.overall_score ?? 0
-            feedback = assessment.feedback_vi || ''
-          }
-        } catch (err) {
-          console.error('API Speech Evaluation error:', err)
+          audioBase64 = await blobToBase64(audioBlob)
+        } catch (e) {
+          console.warn('Failed to convert audioBlob to base64:', e)
         }
       }
 
-      let backendAttempt: Record<string, unknown> | null = null
+      let backendResponse: any = null
       try {
-        backendAttempt = await practiceService.submitSpeakingAttempt({
+        backendResponse = await practiceService.submitSpeakingAttempt({
           exercise_id: selectedExercise.id,
-          recording_media_id: `rec_${selectedExercise.id}_${Date.now()}`,
-          recording_duration_seconds: duration,
-          transcription: finalTranscript,
-          pronunciation_score: pronunciationScore,
-          fluency_score: fluencyScore,
-          overall_score: overallScore,
+          audio_data: audioBase64,
+          transcription: transcription,
+          speaking_time_seconds: duration,
+          preparation_time_seconds: selectedExercise.preparation_time_seconds,
+          difficulty_chosen: difficultyChosen || selectedExercise.difficulty_level || 'MEDIUM',
+          dialogue_turns_results: dialogueTurnsResults || [],
         })
         queryClient.invalidateQueries({ queryKey: practiceKeys.speaking() })
-      } catch (submitErr) {
+        queryClient.invalidateQueries({ queryKey: ['speaking', 'profile', 'my'] })
+        queryClient.invalidateQueries({ queryKey: ['speaking', 'attempts', 'my'] })
+        queryClient.invalidateQueries({ queryKey: ['practice-dashboard'] })
+        queryClient.invalidateQueries({ queryKey: ['practice-calendar'] })
+        queryClient.invalidateQueries({ queryKey: ['practice-analytics'] })
+      } catch (submitErr: any) {
         console.error('Submit speaking attempt error:', submitErr)
+        toast.error(submitErr?.message || 'Nộp bài luyện nói thất bại, vui lòng thử lại!')
+        setIsSubmitting(false)
+        return
       }
 
-      const attemptId = String(backendAttempt?._id || '')
+      if (!backendResponse || (!backendResponse.attempt && !backendResponse._id)) {
+        toast.error('Không nhận được kết quả chấm điểm từ AI, vui lòng thử lại!')
+        setIsSubmitting(false)
+        return
+      }
+
+      const attempt = backendResponse?.attempt || backendResponse || {}
+      const analysis = backendResponse?.analysis || {}
+      const attemptId = String(attempt._id || '')
+
+      const pronunciationScore = attempt.pronunciation_score ?? 0
+      const fluencyScore = attempt.fluency_score ?? 0
+      const grammarScore = attempt.grammar_score ?? 0
+      const vocabularyScore = attempt.vocabulary_score ?? 0
+      const coherenceScore = attempt.coherence_score ?? 0
+      const contentScore = attempt.content_score ?? 0
+      const overallScore = attempt.overall_score ?? 0
+      const finalTranscript = attempt.transcription || transcription
+
+      const phonemeIssues = (analysis.pronunciation_analysis?.phoneme_errors || []).map(
+        (p: any) => `Âm /${p.phoneme_expected}/ bị phát âm thành /${p.phoneme_actual}/ trong từ "${p.word}"`
+      )
+      const mispronouncedSuggestions = (analysis.pronunciation_analysis?.mispronounced_words || []).map(
+        (w: any) => `Luyện tập từ: "${w.word}" (/ ${w.phoneme_expected || ''} /)`
+      )
+
+      const fluencyIssues = [
+        analysis.fluency_analysis?.words_per_minute ? `Tốc độ nói: ${analysis.fluency_analysis.words_per_minute} WPM` : '',
+        analysis.fluency_analysis?.total_pauses_count ? `Số lần ngắt nghỉ: ${analysis.fluency_analysis.total_pauses_count}` : '',
+      ].filter(Boolean)
+
+      const grammarIssues = (analysis.grammar_analysis?.error_breakdown || []).map(
+        (g: any) => `[${g.error_category}] "${g.original_phrase}" ➔ "${g.corrected_phrase}" (${g.rule_violated_vi})`
+      )
+
+      const vocabIssues = analysis.vocabulary_analysis?.cefr_distribution
+        ? [`Phân bổ từ vựng: ${analysis.vocabulary_analysis.cefr_distribution.A1_A2_percent || 0}% A1-A2, ${analysis.vocabulary_analysis.cefr_distribution.B1_B2_percent || 0}% B1-B2`]
+        : []
+      const vocabSuggestions = (analysis.vocabulary_analysis?.target_keywords_used || []).map(
+        (k: string) => `Từ khóa đã vận dụng: "${k}"`
+      )
+
+      const coherenceIssues = (analysis.naturalness_analysis?.awkward_expressions || []).map(
+        (a: any) => `Cụm diễn đạt: "${a.awkward_phrase}" ➔ Nên dùng: "${a.natural_alternative}"`
+      )
+      const coherenceSuggestions = analysis.naturalness_analysis?.vietnamese_transfer_tendencies || []
+
+      const contentIssues = (analysis.task_achievement_analysis?.missing_ideas || []).map((m: string) => `Ý còn thiếu: ${m}`)
+      const contentSuggestions = (analysis.task_achievement_analysis?.covered_ideas || []).map((c: string) => `Ý đã đạt: ${c}`)
+
+      const feedback = analysis.pedagogical_feedback?.summary_vi || attempt.ai_evaluation?.overall_feedback || 'Đã hoàn thành bài nói và phân tích AI'
+      const improvementTips = analysis.pedagogical_feedback?.next_actionable_drills || []
+
       const newSubmission: SpeakingAttempt = {
         id: attemptId,
-        user_id: String(backendAttempt?.user_id || ''),
+        user_id: String(attempt.user_id || ''),
         exercise_id: selectedExercise.id,
-        attempt_number: 1,
-        is_best_attempt: true,
+        attempt_number: attempt.attempt_number || 1,
+        is_best_attempt: typeof attempt.is_best_attempt === 'boolean' ? attempt.is_best_attempt : true,
         recording_duration_seconds: duration,
         speaking_time_seconds: duration,
+        audio_url: attempt.audio_url || recordingState.audioUrl || (audioBlob ? URL.createObjectURL(audioBlob) : undefined),
         transcription: finalTranscript,
+        difficulty_chosen: difficultyChosen || selectedExercise.difficulty_level || 'MEDIUM',
+        dialogue_turns_results: attempt.dialogue_turns_results || dialogueTurnsResults,
         overall_score: overallScore,
         pronunciation_score: pronunciationScore,
         fluency_score: fluencyScore,
-        grammar_score: overallScore,
-        vocabulary_score: overallScore,
-        coherence_score: overallScore,
-        content_score: overallScore,
+        grammar_score: grammarScore,
+        vocabulary_score: vocabularyScore,
+        coherence_score: coherenceScore,
+        content_score: contentScore,
         ai_evaluation: {
           overall_feedback: feedback,
           pronunciation_analysis: {
             score: pronunciationScore,
-            issues: [],
-            suggestions: [],
+            issues: phonemeIssues,
+            suggestions: mispronouncedSuggestions,
           },
           fluency_analysis: {
             score: fluencyScore,
-            issues: [],
-            suggestions: [],
+            issues: fluencyIssues,
+            suggestions: analysis.pedagogical_feedback?.priority_improvements_vi || [],
           },
           grammar_analysis: {
-            score: overallScore,
-            issues: [],
+            score: grammarScore,
+            issues: grammarIssues,
             suggestions: [],
           },
           vocabulary_analysis: {
-            score: overallScore,
-            issues: [],
-            suggestions: [],
+            score: vocabularyScore,
+            issues: vocabIssues,
+            suggestions: vocabSuggestions,
           },
           coherence_analysis: {
-            score: overallScore,
-            issues: [],
-            suggestions: [],
+            score: coherenceScore,
+            issues: coherenceIssues,
+            suggestions: coherenceSuggestions,
           },
           content_analysis: {
-            score: overallScore,
-            issues: [],
-            suggestions: [],
+            score: contentScore,
+            issues: contentIssues,
+            suggestions: contentSuggestions,
           },
-          improvement_tips: [],
+          improvement_tips: improvementTips,
         },
         domain: 'SPEAKING',
         status: 'COMPLETED',
@@ -292,7 +440,7 @@ export function useSpeakingWorkspace() {
       setRecordingState((prev) => ({ ...prev, phase: 'reviewing' }))
       setView('result')
     },
-    [selectedExercise]
+    [selectedExercise, queryClient]
   )
 
   const handlePracticeAgain = useCallback(() => {
@@ -328,6 +476,7 @@ export function useSpeakingWorkspace() {
     setRecordingState,
     stats,
     progress,
+    userSpeakingProfile,
     handleGoHome,
     handleGoList,
     handleGoHistory,
@@ -337,5 +486,6 @@ export function useSpeakingWorkspace() {
     handleSubmitRecording,
     handlePracticeAgain,
     handleNextExercise,
+    isSubmitting,
   }
 }

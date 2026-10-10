@@ -98,6 +98,26 @@ export const practiceService = {
     return api.post(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_SUBMIT, payload)
   },
 
+  async submitSpeakingAudioFile(formData: FormData): Promise<any> {
+    return api.post(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_SUBMIT_AUDIO, formData)
+  },
+
+  async getSpeakingAnalysis(attemptId: string): Promise<any> {
+    return api.get(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_ANALYSIS(attemptId))
+  },
+
+  async getMySpeakingAttempts(limit = 20): Promise<any[]> {
+    return api.get<any[]>(`${API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_MY_ATTEMPTS}?limit=${limit}`)
+  },
+
+  async getMySpeakingProfile(): Promise<any> {
+    return api.get(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_PROFILE_MY)
+  },
+
+  async getSpeakingProfile(userId: string): Promise<any> {
+    return api.get(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_PROFILE(userId))
+  },
+
   async getWritingExercises(): Promise<BackendWritingExercise[]> {
     return api.get<BackendWritingExercise[]>(
       API_CONFIG.ENDPOINTS.PRACTICE.WRITING,
@@ -128,4 +148,30 @@ export const practiceService = {
   async submitWritingSubmission(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
     return api.post(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMIT, payload)
   },
-}
+
+  async getMyWritingSubmissions(exerciseId?: string): Promise<any> {
+    const url = exerciseId
+      ? `${API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS}?exercise_id=${exerciseId}`
+      : API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS;
+    return api.get<any>(url);
+  },
+
+  async getWritingSubmissionById(id: string): Promise<any> {
+    return api.get<any>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMISSION_BY_ID(id));
+  },
+
+  async getSubmissionComparison(id: string): Promise<any> {
+    return api.get<any>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMISSION_COMPARISON(id));
+  },
+
+  async getWritingRecommendations(userId: string, limit = 4): Promise<any> {
+    return api.get<any>(`${API_CONFIG.ENDPOINTS.PRACTICE.WRITING_RECOMMENDATIONS(userId)}?limit=${limit}`);
+  },
+
+  async getOrGeneratePracticeAudio(text: string): Promise<{ url: string; duration_seconds?: number }> {
+    return api.post<{ url: string; duration_seconds?: number }>(
+      API_CONFIG.ENDPOINTS.MEDIA.PRACTICE_AUDIO_GENERATE,
+      { text }
+    );
+  },
+};

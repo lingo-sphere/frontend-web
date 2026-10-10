@@ -1,15 +1,19 @@
 // Component giao diện React WritingWorkspace cho học viên
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Clock, Save, Send, AlertCircle, Lightbulb } from 'lucide-react'
+import { ArrowLeft, Save, Send, AlertCircle, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/button'
 import type { WritingExercise } from '@/features/practice/types/writing'
+import { resolveMediaUrlAsync } from '@/utils/media.utils'
 import { toast } from '@/store/toast.store'
+import { WritingTimer } from '@/features/practice/components/writing.timer'
+import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
 
 interface WritingWorkspaceProps {
   exercise: WritingExercise
   initialContent?: string
   versionNumber?: number
+  timeLimitSeconds?: number
   onBack: () => void
   onSaveDraft: (content: string, wordCount: number) => void
   onSubmit: (content: string, wordCount: number, writingTimeSeconds: number) => void
@@ -19,6 +23,7 @@ export function WritingWorkspace({
   exercise,
   initialContent = '',
   versionNumber = 1,
+  timeLimitSeconds = 10 * 60,
   onBack,
   onSaveDraft,
   onSubmit,
@@ -27,27 +32,51 @@ export function WritingWorkspace({
   const isVietnamese = i18n.language === 'vi'
 
   const [content, setContent] = useState(initialContent)
-  const [startTime] = useState(Date.now())
-  const [elapsedTime, setElapsedTime] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [imageUrl, setImageUrl] = useState<string>('')
+  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - startTime) / 1000))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [startTime])
+    let isMounted = true
+    const mediaId = exercise.prompt_image_id || exercise.media_id
+    if (!mediaId) {
+      setImageUrl('')
+      return
+    }
+
+    resolveMediaUrlAsync(mediaId)
+      .then((url) => {
+        if (isMounted) setImageUrl(url)
+      })
+      .catch((err) => {
+        console.error('[WritingWorkspace] Error resolving media:', err)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [exercise.prompt_image_id, exercise.media_id])
+
+  // Callback khi hết giờ - auto submit
+  const handleTimeUp = useCallback(() => {
+    if (isSubmitted) return
+
+    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0
+
+    toast.warning(
+      isVietnamese ? 'Đã hết giờ! Bài viết đã được nộp tự động.' : 'Time is up! Your writing has been auto-submitted.',
+      isVietnamese ? 'Hết giờ' : 'Time Up'
+    )
+
+    setIsSubmitted(true)
+    onSubmit(content, wordCount, timeLimitSeconds)
+  }, [content, timeLimitSeconds, onSubmit, isSubmitted, isVietnamese])
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0
   const maxWords = exercise.max_words || Infinity
   const isWordCountValid = wordCount <= maxWords
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
 
   const handleSaveDraft = useCallback(() => {
     setIsSaving(true)
@@ -59,6 +88,8 @@ export function WritingWorkspace({
   }, [content, wordCount, onSaveDraft])
 
   const handleSubmit = () => {
+    if (isSubmitted) return
+
     if (wordCount > maxWords) {
       toast.warning(
         isVietnamese
@@ -68,8 +99,8 @@ export function WritingWorkspace({
       )
       return
     }
-    const writingTimeSeconds = Math.floor((Date.now() - startTime) / 1000)
-    onSubmit(content, wordCount, writingTimeSeconds)
+    setIsSubmitted(true)
+    onSubmit(content, wordCount, timeLimitSeconds)
   }
 
   useEffect(() => {
@@ -79,11 +110,32 @@ export function WritingWorkspace({
     }
   }, [content])
 
+  const handleInitiateExit = () => {
+    if (isSubmitted) {
+      onBack()
+      return
+    }
+    // Tự động lưu nháp để không mất bài
+    if (content && content !== initialContent) {
+      handleSaveDraft()
+    }
+    setShowExitConfirm(true)
+  }
+
+  const handleResume = () => {
+    setShowExitConfirm(false)
+  }
+
+  const handleConfirmExit = () => {
+    setShowExitConfirm(false)
+    onBack()
+  }
+
   return (
     <main className="flex h-[calc(100vh-4rem)] flex-col">
       <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
+          <button onClick={handleInitiateExit} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary cursor-pointer">
             <ArrowLeft size={18} />
             {isVietnamese ? 'Quay lại' : 'Back'}
           </button>
@@ -96,17 +148,18 @@ export function WritingWorkspace({
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-[14px] text-text-secondary">
-            <Clock size={16} />
-            <span className="font-mono">{formatTime(elapsedTime)}</span>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || !content}>
+          <WritingTimer
+            totalSeconds={timeLimitSeconds}
+            onTimeUp={handleTimeUp}
+            isPaused={showExitConfirm}
+          />
+          <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || !content || isSubmitted}>
             <Save size={16} className="mr-2" />
             {isSaving ? (isVietnamese ? 'Đang lưu...' : 'Saving...') : (isVietnamese ? 'Lưu nháp' : 'Save draft')}
           </Button>
-          <Button size="sm" className="bg-primary hover:bg-primary-hover" onClick={handleSubmit} disabled={!isWordCountValid}>
+          <Button size="sm" className="bg-primary hover:bg-primary-hover" onClick={handleSubmit} disabled={!isWordCountValid || isSubmitted}>
             <Send size={16} className="mr-2" />
-            {isVietnamese ? 'Nộp bài' : 'Submit'}
+            {isSubmitted ? (isVietnamese ? 'Đã nộp' : 'Submitted') : (isVietnamese ? 'Nộp bài' : 'Submit')}
           </Button>
         </div>
       </header>
@@ -114,6 +167,17 @@ export function WritingWorkspace({
       <div className="flex flex-1 overflow-hidden">
         <div className="w-1/2 overflow-y-auto border-r border-border bg-surface p-6">
           <div className="space-y-6">
+            {imageUrl && (
+              <section className="overflow-hidden rounded-xl border border-border shadow-xs bg-surface-subtle">
+                <img
+                  src={imageUrl}
+                  alt={exercise.title}
+                  className="w-full max-h-[340px] object-cover rounded-xl"
+                  loading="lazy"
+                />
+              </section>
+            )}
+
             <section>
               <h2 className="mb-3 text-[14px] font-semibold uppercase text-text-tertiary">
                 {isVietnamese ? 'Yêu cầu' : 'Requirements'}
@@ -121,13 +185,37 @@ export function WritingWorkspace({
               <p className="text-[15px] text-text-primary">{exercise.instructions || exercise.description}</p>
             </section>
 
+            {exercise.guiding_questions && exercise.guiding_questions.length > 0 && (
+              <section className="rounded-xl border border-primary/25 bg-primary/5 p-4">
+                <h2 className="mb-2 text-[14px] font-semibold text-primary flex items-center gap-2">
+                  <span>💡</span>
+                  {isVietnamese ? '3 Câu hỏi gợi ý cho bức ảnh' : '3 Guiding Questions for the Picture'}
+                </h2>
+                <ol className="list-decimal list-inside space-y-2 text-[14px] text-text-primary">
+                  {exercise.guiding_questions.map((q, idx) => (
+                    <li key={idx} className="leading-relaxed">
+                      <span className="font-medium">{q}</span>
+                      {exercise.guiding_questions_vi?.[idx] && (
+                        <p className="text-[12px] text-text-secondary italic ml-5 mt-0.5">
+                          {exercise.guiding_questions_vi[idx]}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
+
             {exercise.prompt_en && (
               <section>
                 <h2 className="mb-3 text-[14px] font-semibold uppercase text-text-tertiary">
-                  {isVietnamese ? 'Câu gốc' : 'Original sentence'}
+                  {isVietnamese ? 'Đề bài' : 'Prompt'}
                 </h2>
                 <div className="rounded-lg bg-surface-subtle p-4">
                   <p className="whitespace-pre-wrap text-[15px] leading-relaxed italic text-text-primary">"{exercise.prompt_en}"</p>
+                  {exercise.prompt_vi && (
+                    <p className="mt-1 text-[13px] text-text-secondary italic">"{exercise.prompt_vi}"</p>
+                  )}
                 </div>
               </section>
             )}
@@ -158,14 +246,14 @@ export function WritingWorkspace({
               </ul>
             </section>
 
-            {exercise.keywords && exercise.keywords.length > 0 && (
+            {exercise.keywords && exercise.keywords.filter(k => k && k.trim()).length > 0 && (
               <section>
                 <h2 className="mb-3 text-[14px] font-semibold uppercase text-text-tertiary">
                   {isVietnamese ? 'Từ khóa cần có' : 'Required keywords'}
                 </h2>
                 <div className="flex flex-wrap gap-2">
-                  {exercise.keywords.map((keyword, index) => (
-                    <span key={index} className="inline-flex items-center rounded-full bg-surface-subtle px-3 py-1 text-[13px] text-text-secondary">{keyword}</span>
+                  {exercise.keywords.filter(k => k && k.trim()).map((keyword, index) => (
+                    <span key={index} className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[13px] font-medium text-primary">{keyword}</span>
                   ))}
                 </div>
               </section>
@@ -219,17 +307,6 @@ export function WritingWorkspace({
                   </span>
                 )}
               </div>
-
-              <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || !content}>
-                  <Save size={16} className="mr-2" />
-                  {isSaving ? (isVietnamese ? 'Đang lưu...' : 'Saving...') : (isVietnamese ? 'Lưu nháp' : 'Save draft')}
-                </Button>
-                <Button size="sm" className="bg-primary hover:bg-primary-hover" onClick={handleSubmit} disabled={!isWordCountValid}>
-                  <Send size={16} className="mr-2" />
-                  {isVietnamese ? 'Nộp bài' : 'Submit'}
-                </Button>
-              </div>
             </div>
 
             {lastSaved && (
@@ -240,6 +317,24 @@ export function WritingWorkspace({
           </div>
         </div>
       </div>
+
+      {/* Hộp thoại xác nhận tạm dừng & thoát phiên */}
+      <PracticeExitConfirmModal
+        isOpen={showExitConfirm}
+        onClose={handleResume}
+        onConfirmExit={handleConfirmExit}
+        title={isVietnamese ? 'Tạm dừng bài viết?' : 'Pause Writing Session?'}
+        description={
+          isVietnamese
+            ? 'Đồng hồ đếm thời gian đang được tạm ngưng. Bạn có chắc muốn dừng bài viết này?'
+            : 'Writing timer is paused. Are you sure you want to exit?'
+        }
+        savedNotice={
+          isVietnamese
+            ? 'Bản nháp bài viết của bạn đã được tự động lưu lại vào hệ thống.'
+            : 'Your writing draft has been automatically saved.'
+        }
+      />
     </main>
   )
 }

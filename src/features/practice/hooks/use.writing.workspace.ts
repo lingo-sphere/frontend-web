@@ -1,13 +1,13 @@
 // Hook quản lý trạng thái bài tập luyện viết, lưu bản nháp và gửi chấm điểm bài luận AI.
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
-import { practiceService, type BackendWritingExercise } from '@/features/practice/services/practice.service'
-import { useWritingExercisesQuery } from '@/features/practice/hooks/use.practice.query'
-import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { practiceService, type BackendWritingExercise } from '@/features/practice/services/practice.service'
+import { useWritingExercisesQuery, useWritingExerciseByIdQuery, useWritingRecommendationsQuery } from '@/features/practice/hooks/use.practice.query'
+import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import { toast } from '@/store/toast.store'
 import type {
   WritingExercise,
@@ -18,15 +18,19 @@ import type {
   WritingLevel,
   DifficultyLevel,
   ExerciseType,
+  WritingSkillType,
+  WritingRecommendation,
 } from '@/features/practice/types/writing'
 
 export type WritingView = 'home' | 'exercises' | 'detail' | 'workspace' | 'result' | 'history'
 
-function toWritingLevel(val?: string): WritingLevel {
+function toWritingLevel(val?: string, difficulty?: string, cefr?: string): WritingLevel {
   const valid: WritingLevel[] = ['BASIC', 'INTERMEDIATE', 'ADVANCED']
   if (val && (valid as string[]).includes(val)) {
     return val as WritingLevel
   }
+  if (difficulty === 'EASY' || cefr === 'A2') return 'BASIC'
+  if (difficulty === 'HARD' || cefr === 'B2' || cefr === 'C1') return 'ADVANCED'
   return 'INTERMEDIATE'
 }
 
@@ -40,6 +44,9 @@ function toDifficultyLevel(val?: string): DifficultyLevel {
 
 function toExerciseType(val?: string): ExerciseType {
   const valid: ExerciseType[] = [
+    'DESCRIBE_PICTURE',
+    'WRITE_EMAIL',
+    'EXPRESS_OPINION',
     'SENTENCE_ARRANGEMENT',
     'SENTENCE_COMPLETION',
     'PARAPHRASING',
@@ -50,7 +57,85 @@ function toExerciseType(val?: string): ExerciseType {
   if (val && (valid as string[]).includes(val)) {
     return val as ExerciseType
   }
-  return 'TOPIC_WRITING'
+  return 'DESCRIBE_PICTURE'
+}
+
+function mapBackendToWritingExercise(item: any): WritingExercise {
+  return {
+    id: item._id,
+    code: item.code,
+    title: item.title,
+    title_vi: item.title_vi || item.title,
+    description: item.description || '',
+    description_vi: item.description_vi || item.description || '',
+    domain: 'WRITING',
+    exercise_type: toExerciseType(item.exercise_type),
+    writing_level: toWritingLevel(item.writing_level, item.difficulty_level, item.cefr_level),
+    toeic_part: item.toeic_part || 1,
+    prompt_en: item.prompt_en || item.prompt_text || item.title,
+    prompt_vi: item.prompt_vi || item.prompt_text_vi || item.title_vi,
+    instructions: item.instruction_vi || item.instruction_en || item.instructions || item.description,
+    prompt_image_id: item.prompt_image_id || item.image_media_id || item.media_id,
+    media_id: item.media_id || item.prompt_image_id,
+    reference_media_id: item.reference_media_id,
+    directions: item.directions || [],
+    directions_vi: item.directions_vi || [],
+    incoming_email: item.incoming_email,
+    background_context: item.background_context,
+    background_context_vi: item.background_context_vi,
+    guiding_questions: item.guiding_questions || [],
+    guiding_questions_vi: item.guiding_questions_vi || [],
+    keywords: item.keywords || [],
+    min_words: item.min_words || 45,
+    max_words: item.max_words || 85,
+    difficulty_level: toDifficultyLevel(item.difficulty_level),
+    cefr_level: item.cefr_level || 'B1',
+    total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
+    avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
+    status: 'PUBLISHED',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+}
+
+function mapBackendToSubmission(sub: any): WritingSubmission {
+  const aiEval = sub.ai_evaluation || {}
+  return {
+    id: sub._id || sub.id,
+    user_id: sub.user_id,
+    exercise_id: typeof sub.exercise_id === 'object' ? sub.exercise_id?._id : sub.exercise_id,
+    content: sub.content || '',
+    word_count: sub.word_count || 0,
+    version_number: sub.version_number || 1,
+    drafts: [],
+    is_draft: sub.is_draft || false,
+    overall_score: sub.overall_score ?? 0,
+    task_achievement_score: sub.task_achievement_score ?? sub.overall_score ?? 0,
+    coherence_score: sub.coherence_score ?? 0,
+    lexical_resource_score: sub.lexical_resource_score ?? 0,
+    grammatical_accuracy_score: sub.grammatical_accuracy_score ?? 0,
+    naturalness_score: sub.naturalness_score ?? 0,
+    register_score: sub.register_score ?? 0,
+    parent_submission_id: sub.parent_submission_id,
+    scaffold_blocks: sub.scaffold_blocks || [],
+    writing_time_seconds: sub.writing_time_seconds || 0,
+    domain: 'WRITING',
+    status: sub.status || 'COMPLETED',
+    submitted_at: sub.submitted_at || sub.created_at,
+    created_at: sub.created_at,
+    ai_evaluation: {
+      ...aiEval,
+      overall_feedback: aiEval.detailed_feedback || aiEval.overall_feedback || '',
+      errors: (aiEval.grammar_errors || []).map((err: any) => ({
+        type: err.type || 'GRAMMAR',
+        original: err.original || '',
+        correction: err.corrected || err.correction || '',
+        explanation: err.explanation || '',
+      })),
+      suggested_version: aiEval.improved_version || aiEval.suggested_version || sub.content,
+      improvement_tips: aiEval.weaknesses || aiEval.improvement_tips || [],
+    },
+  }
 }
 
 export function useWritingWorkspace() {
@@ -61,85 +146,165 @@ export function useWritingWorkspace() {
   const rawPath = params?.slug || params?.['*']
   const path = Array.isArray(rawPath) ? rawPath.join('/') : rawPath || ''
 
-  const [currentView, setCurrentView] = useState<WritingView>(() => {
+  // Parse view từ URL
+  const initialView = useMemo((): WritingView => {
     if (path.startsWith('exercises')) return 'exercises'
     if (path.startsWith('exercise/')) return 'detail'
     if (path.startsWith('workspace/')) return 'workspace'
     if (path.startsWith('result/')) return 'result'
     if (path.startsWith('history')) return 'history'
     return 'home'
-  })
+  }, [path])
 
+  const [currentView, setCurrentView] = useState<WritingView>(initialView)
   const [selectedExercise, setSelectedExercise] = useState<WritingExercise | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<WritingSubmission | null>(null)
   const [historySubmissions, setHistorySubmissions] = useState<WritingSubmission[]>([])
-  const [draftContent, setDraftContent] = useState<string>('')
-  const [draftVersion, setDraftVersion] = useState<number>(1)
+  const [isInitialized, setIsInitialized] = useState(false)
+  const [initError, setInitError] = useState<string | null>(null)
 
-  const { data: rawWritingExercises = [] } = useWritingExercisesQuery()
+  // Extract exercise ID từ URL (CHỈ cho exercise/ và workspace/, KHÔNG cho result/)
+  const exerciseIdFromUrl = useMemo((): string | null => {
+    if (!path) return null
+    // Chỉ match exercise/ và workspace/, KHÔNG match result/
+    const match = path.match(/^(?:exercise|workspace)\/([^\/]+)/)
+    return match?.[1] || null
+  }, [path])
 
+  // Extract submission ID từ URL (cho result view)
+  const submissionIdFromUrl = useMemo((): string | null => {
+    if (!path) return null
+    const match = path.match(/^result\/([^\/]+)/)
+    return match?.[1] || null
+  }, [path])
+
+  // Fetch exercise list
+  const { data: rawWritingExercises = [], isLoading: isLoadingExercises } = useWritingExercisesQuery()
+
+  // Exercise list mapped
   const exerciseList: WritingExercise[] = useMemo(() => {
-    return rawWritingExercises.map((item: BackendWritingExercise) => ({
-      id: item._id,
-      title: item.title,
-      title_vi: item.title_vi || item.title,
-      description: item.description || '',
-      description_vi: item.description_vi || item.description || '',
-      domain: 'WRITING',
-      exercise_type: toExerciseType(item.exercise_type),
-      writing_level: toWritingLevel(item.writing_level),
-      toeic_part: item.toeic_part || 1,
-      prompt_en: item.prompt_en || item.title,
-      prompt_vi: item.prompt_vi || item.title_vi,
-      min_words: item.min_words || 150,
-      max_words: item.max_words || 300,
-      difficulty_level: toDifficultyLevel(item.difficulty_level),
-      cefr_level: item.cefr_level || 'B2',
-      total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
-      avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
-      status: 'PUBLISHED',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }))
+    return rawWritingExercises.map(mapBackendToWritingExercise)
   }, [rawWritingExercises])
 
+  // Fetch single exercise by ID từ URL (khi direct access)
+  const { data: fetchedExerciseById, isLoading: isLoadingExerciseById, error: exerciseError } = useWritingExerciseByIdQuery(exerciseIdFromUrl)
+
+  // Initialize: load exercise/submission từ URL params
+  useEffect(() => {
+    if (!isInitialized) return
+
+    // Case 1: Direct access với exercise ID
+    if (exerciseIdFromUrl && !selectedExercise) {
+      // Thử tìm trong exerciseList trước
+      const found = exerciseList.find((ex) => ex.id === exerciseIdFromUrl)
+      if (found) {
+        setSelectedExercise(found)
+        return
+      }
+      // Nếu không có trong list, sẽ dùng fetchedExerciseById từ query
+    }
+
+    // Case 2: Direct access với submission ID (result view)
+    if (currentView === 'result' && submissionIdFromUrl && !currentSubmission) {
+      // Fetch submission từ API
+      practiceService.getWritingSubmissionById(submissionIdFromUrl)
+        .then((res: any) => {
+          const sub = mapBackendToSubmission(res)
+          setCurrentSubmission(sub)
+          // Tìm exercise tương ứng
+          const ex = exerciseList.find((e) => e.id === sub.exercise_id)
+          if (ex) setSelectedExercise(ex)
+        })
+        .catch((err) => {
+          console.error('[useWritingWorkspace] Error fetching submission:', err)
+          setInitError('Không thể tải kết quả bài làm')
+        })
+    }
+  }, [isInitialized, exerciseIdFromUrl, submissionIdFromUrl, currentView, selectedExercise, currentSubmission, exerciseList])
+
+  // Set selectedExercise khi fetchedExerciseById available
+  useEffect(() => {
+    if (fetchedExerciseById && !selectedExercise) {
+      const mapped = mapBackendToWritingExercise(fetchedExerciseById)
+      setSelectedExercise(mapped)
+    }
+  }, [fetchedExerciseById, selectedExercise])
+
+  // Set error nếu fetch failed
+  useEffect(() => {
+    if (exerciseError && exerciseIdFromUrl) {
+      setInitError('Không thể tải bài tập. Vui lòng thử lại.')
+    }
+  }, [exerciseError, exerciseIdFromUrl])
+
+  // Load submissions history
+  useEffect(() => {
+    practiceService.getMyWritingSubmissions()
+      .then((res: any) => {
+        const items = res?.items || res?.data?.items || (Array.isArray(res) ? res : [])
+        if (Array.isArray(items) && items.length > 0) {
+          const mapped = items.map(mapBackendToSubmission)
+          setHistorySubmissions(mapped)
+        }
+      })
+      .catch((err: unknown) => {
+        console.warn('[useWritingWorkspace] Could not load submissions history:', err)
+      })
+  }, [])
+
+  // Mark as initialized sau khi exercise list loaded
+  useEffect(() => {
+    if (!isLoadingExercises && !isInitialized) {
+      setIsInitialized(true)
+    }
+  }, [isLoadingExercises, isInitialized])
+
+  // Draft state
+  const [draftContent, setDraftContent] = useState<string>('')
+  const [draftVersion, setDraftVersion] = useState<number>(1)
+  const [timeSeconds, setTimeSeconds] = useState<number>(10 * 60) // Default 10 phút
+
+  // Sync selectedExercise khi exerciseList load xong
+  useEffect(() => {
+    if (isInitialized && exerciseIdFromUrl && !selectedExercise && exerciseList.length > 0) {
+      const found = exerciseList.find((ex) => ex.id === exerciseIdFromUrl)
+      if (found) {
+        setSelectedExercise(found)
+      }
+    }
+  }, [isInitialized, exerciseIdFromUrl, selectedExercise, exerciseList])
+
+  // Stats calculation
+  // NOTE: Backend AI evaluation returns all sub-scores on a 0-100 scale
+  // (see backend/apps/ai-service/src/services/ai-evaluation.service.ts prompt:
+  // "TIÊU CHÍ CHẤM ĐIỂM (Thang 0 - 100)"). We average them as-is, clamp to
+  // [0, 100] to defend against bad/outlier data, and round to 1 decimal place.
   const stats: WritingStats = useMemo(() => {
     const total = historySubmissions.length
-    const avgScore =
-      total > 0
-        ? Math.round(
-            (historySubmissions.reduce((sum, s) => sum + (s.overall_score || 0), 0) / total) * 10
-          ) / 10
-        : 0
-    const avgGrammar =
-      total > 0
-        ? Math.round(
-            (historySubmissions.reduce(
-              (sum, s) => sum + (s.grammatical_accuracy_score || s.overall_score || 0),
-              0
-            ) /
-              total) *
-              10
-          )
-        : 0
-    const avgVocab =
-      total > 0
-        ? Math.round(
-            (historySubmissions.reduce(
-              (sum, s) => sum + (s.lexical_resource_score || s.overall_score || 0),
-              0
-            ) /
-              total) *
-              10
-          )
-        : 0
+
+    const average = (selector: (s: WritingSubmission) => number) => {
+      if (total === 0) return 0
+      const sum = historySubmissions.reduce((acc, s) => acc + selector(s), 0)
+      const raw = sum / total
+      const clamped = Math.max(0, Math.min(100, raw))
+      return Math.round(clamped * 10) / 10
+    }
+
+    const avgScore = average((s) => s.overall_score ?? 0)
+    const avgGrammar = average((s) => s.grammatical_accuracy_score ?? s.overall_score ?? 0)
+    const avgVocab = average((s) => s.lexical_resource_score ?? s.overall_score ?? 0)
+    const avgTask = average((s) => s.task_achievement_score ?? s.overall_score ?? 0)
+    const avgCoherence = average((s) => s.coherence_score ?? 0)
+    const avgNaturalness = average((s) => s.naturalness_score ?? 0)
+    const avgRegister = average((s) => s.register_score ?? 0)
+
     const avgTime =
       total > 0
         ? Math.round(
-            historySubmissions.reduce((sum, s) => sum + (s.writing_time_seconds || 0), 0) /
-              total /
-              60
-          )
+          historySubmissions.reduce((sum, s) => sum + (s.writing_time_seconds || 0), 0) /
+          total /
+          60
+        )
         : 0
 
     return {
@@ -150,73 +315,78 @@ export function useWritingWorkspace() {
       average_vocabulary_usage: avgVocab,
       average_writing_time_minutes: avgTime,
       score_breakdown: {
-        task_achievement:
-          total > 0
-            ? Math.round(
-                (historySubmissions.reduce(
-                  (sum, s) => sum + (s.task_achievement_score || s.overall_score || 0),
-                  0
-                ) /
-                  total) *
-                  10
-              ) / 10
-            : 0,
-        coherence:
-          total > 0
-            ? Math.round(
-                (historySubmissions.reduce((sum, s) => sum + (s.coherence_score || 0), 0) / total) *
-                  10
-              ) / 10
-            : 0,
-        vocabulary:
-          total > 0
-            ? Math.round(
-                (historySubmissions.reduce(
-                  (sum, s) => sum + (s.lexical_resource_score || s.overall_score || 0),
-                  0
-                ) /
-                  total) *
-                  10
-              ) / 10
-            : 0,
-        grammar:
-          total > 0
-            ? Math.round(
-                (historySubmissions.reduce(
-                  (sum, s) => sum + (s.grammatical_accuracy_score || s.overall_score || 0),
-                  0
-                ) /
-                  total) *
-                  10
-              ) / 10
-            : 0,
+        task_achievement: avgTask,
+        coherence: avgCoherence,
+        vocabulary: avgVocab,
+        grammar: avgGrammar,
+        naturalness: avgNaturalness,
+        register: avgRegister,
       },
     }
   }, [historySubmissions])
 
-  const progress: WritingProgress = useMemo(() => {
-    return {
-      grammar: stats.average_grammar_accuracy,
-      vocabulary: stats.average_vocabulary_usage,
-      coherence:
-        historySubmissions.length > 0
-          ? Math.round(
-              (historySubmissions.reduce((sum, s) => sum + (s.coherence_score || 0), 0) /
-                historySubmissions.length) *
-                10
-            )
-          : 0,
-      weakest_area: 'Coherence',
-      recommended_topics: exerciseList.slice(0, 3).map((e) => e.title),
-    }
-  }, [stats, historySubmissions, exerciseList])
+  // Get user ID from auth store
+  const userId = useAuthStore((state) => state.user?.user_id)
 
+  // Fetch recommendations from API
+  const { data: recommendationData } = useWritingRecommendationsQuery(userId || null, 4)
+
+  // Derive recommendations from API response
+  const recommendations: WritingRecommendation[] = useMemo(() => {
+    return recommendationData?.recommendations || []
+  }, [recommendationData])
+
+  // Determine weakest skill from stats
+  const weakestSkill: WritingSkillType = useMemo(() => {
+    const skills: { skill: WritingSkillType; score: number }[] = [
+      { skill: 'grammatical_accuracy', score: stats.score_breakdown.grammar },
+      { skill: 'lexical_resource', score: stats.score_breakdown.vocabulary },
+      { skill: 'coherence', score: stats.score_breakdown.coherence },
+      { skill: 'task_achievement', score: stats.score_breakdown.task_achievement },
+      { skill: 'naturalness', score: stats.score_breakdown.naturalness },
+      { skill: 'register', score: stats.score_breakdown.register },
+    ]
+    // Sort by score ascending (lowest = weakest)
+    skills.sort((a, b) => a.score - b.score)
+    return skills[0].skill
+  }, [stats])
+
+  // Map skill type to display name
+  const SKILL_DISPLAY: Record<WritingSkillType, string> = {
+    task_achievement: 'Hoàn thành nhiệm vụ',
+    coherence: 'Mạch lạc & Liên kết',
+    lexical_resource: 'Từ vựng',
+    grammatical_accuracy: 'Ngữ pháp',
+    naturalness: 'Tự nhiên',
+    register: 'Phong cách',
+  }
+
+  const progress: WritingProgress = useMemo(() => {
+    // These values are displayed as CSS `width: N%` so they must be in [0, 100].
+    // Backend already returns sub-scores on a 0-100 scale, so we only clamp.
+    const clampPct = (n: number) => Math.max(0, Math.min(100, n))
+    return {
+      grammar: clampPct(stats.score_breakdown.grammar),
+      vocabulary: clampPct(stats.score_breakdown.vocabulary),
+      coherence: clampPct(stats.score_breakdown.coherence),
+      weakest_area: weakestSkill,
+      weakest_context: recommendationData?.analysis?.context_performance?.[0]?.context_id,
+      recommendations,
+    }
+  }, [stats, weakestSkill, recommendations, recommendationData])
+
+  // Navigation handlers
   const handleGoHome = useCallback(() => {
+    setSelectedExercise(null)
+    setCurrentSubmission(null)
     setCurrentView('home')
     navigate('/writing')
   }, [navigate])
 
   const handleGoExercises = useCallback(() => {
+    setSelectedExercise(null)
+    setCurrentSubmission(null)
+    setDraftContent('')
     setCurrentView('exercises')
     navigate('/writing/exercises')
   }, [navigate])
@@ -229,6 +399,7 @@ export function useWritingWorkspace() {
   const handleSelectExercise = useCallback(
     (exercise: WritingExercise) => {
       setSelectedExercise(exercise)
+      setCurrentSubmission(null)
       setCurrentView('detail')
       navigate(`/writing/exercise/${exercise.id}`)
     },
@@ -236,20 +407,20 @@ export function useWritingWorkspace() {
   )
 
   const handleStartWriting = useCallback(
-    (exercise: WritingExercise) => {
-      const { isAuthenticated } = useAuthStore.getState()
-      if (!isAuthenticated) {
-        toast.warning('Vui lòng đăng nhập để bắt đầu bài luyện viết!')
-        window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
-        return
+    (exercise: WritingExercise, timeSecondsParam?: number) => {
+      // Đảm bảo exercise được set
+      if (!selectedExercise || selectedExercise.id !== exercise.id) {
+        setSelectedExercise(exercise)
       }
-      setSelectedExercise(exercise)
       setDraftContent('')
       setDraftVersion(1)
+      if (timeSecondsParam) {
+        setTimeSeconds(timeSecondsParam)
+      }
       setCurrentView('workspace')
       navigate(`/writing/workspace/${exercise.id}`)
     },
-    [navigate]
+    [navigate, selectedExercise]
   )
 
   const handleSaveDraft = useCallback(
@@ -269,31 +440,6 @@ export function useWritingWorkspace() {
         return
       }
 
-      let evalResult = {
-        grammar_score: 0,
-        vocabulary_score: 0,
-        coherence_score: 0,
-        overall_score: 0,
-        feedback_vi: '',
-        improved_essay: content,
-      }
-
-      try {
-        const liveEval = await practiceService.evaluateWritingEssay(content, selectedExercise.title)
-        if (liveEval) {
-          evalResult = {
-            grammar_score: liveEval.grammar_score ?? 0,
-            vocabulary_score: liveEval.vocabulary_score ?? 0,
-            coherence_score: liveEval.coherence_score ?? 0,
-            overall_score: liveEval.overall_score ?? 0,
-            feedback_vi: liveEval.feedback_vi || '',
-            improved_essay: liveEval.improved_essay || content,
-          }
-        }
-      } catch (err) {
-        console.error('AI Writing eval failed:', err)
-      }
-
       const newDraft: WritingDraft = {
         content,
         word_count: wordCount,
@@ -301,40 +447,30 @@ export function useWritingWorkspace() {
         version_number: draftVersion,
       }
 
-      const newSubmission: WritingSubmission = {
-        id: `ws-${Date.now()}`,
-        user_id: authUser.user_id,
-        exercise_id: selectedExercise.id,
-        content,
-        word_count: wordCount,
-        version_number: draftVersion,
-        drafts: [newDraft],
-        is_draft: false,
-        overall_score: evalResult.overall_score,
-        task_achievement_score: evalResult.overall_score,
-        coherence_score: evalResult.coherence_score,
-        lexical_resource_score: evalResult.vocabulary_score,
-        grammatical_accuracy_score: evalResult.grammar_score,
-        writing_time_seconds: writingTimeSeconds,
-        domain: 'WRITING',
-        status: 'COMPLETED',
-        submitted_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        ai_evaluation: {
-          overall_feedback: evalResult.feedback_vi,
-          errors: [],
-          suggested_version: evalResult.improved_essay,
-          improvement_tips: [],
-        },
-      }
+      try {
+        const payload = {
+          exercise_id: selectedExercise.id,
+          user_content: content,
+          time_spent_seconds: writingTimeSeconds,
+        }
 
-      setCurrentSubmission(newSubmission)
-      setHistorySubmissions((prev) => [newSubmission, ...prev])
-      queryClient.invalidateQueries({ queryKey: practiceKeys.writing() })
-      setCurrentView('result')
-      navigate(`/writing/result/${newSubmission.id}`)
+        const backendRes: any = await practiceService.submitWritingSubmission(payload)
+        const subData = backendRes?.data || backendRes
+        const aiEval = subData?.ai_evaluation || {}
+
+        const newSubmission: WritingSubmission = mapBackendToSubmission(subData)
+
+        setCurrentSubmission(newSubmission)
+        setHistorySubmissions((prev) => [newSubmission, ...prev.filter((p) => p.id !== newSubmission.id)])
+        queryClient.invalidateQueries({ queryKey: practiceKeys.writing() })
+        setCurrentView('result')
+        navigate(`/writing/result/${newSubmission.id}`)
+      } catch (submitErr) {
+        console.error('[useWritingWorkspace] Submit error:', submitErr)
+        showAction('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!')
+      }
     },
-    [selectedExercise, draftVersion, navigate, queryClient]
+    [selectedExercise, draftVersion, navigate, queryClient, showAction]
   )
 
   const handleViewSubmission = useCallback(
@@ -370,6 +506,7 @@ export function useWritingWorkspace() {
   }, [selectedExercise, exerciseList, navigate])
 
   return {
+    // State
     currentView,
     exerciseList,
     selectedExercise,
@@ -377,8 +514,14 @@ export function useWritingWorkspace() {
     historySubmissions,
     draftContent,
     draftVersion,
+    timeSeconds,
     stats,
     progress,
+    // Loading states
+    isLoading: !isInitialized || isLoadingExercises || (!!exerciseIdFromUrl && isLoadingExerciseById),
+    isLoadingExercise: isLoadingExerciseById,
+    error: initError || (exerciseError ? 'Không thể tải bài tập' : null),
+    // Handlers
     handleGoHome,
     handleGoExercises,
     handleGoHistory,
