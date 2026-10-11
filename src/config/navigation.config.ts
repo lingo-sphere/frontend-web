@@ -60,7 +60,6 @@ export const NAV_GROUPS: NavGroup[] = [
     titleVi: 'AI & Tiện ích',
     titleEn: 'AI & Tools',
     items: [
-      { id: 'ai-learning', labelVi: 'Gia sư AI', labelEn: 'AI Tutor', icon: 'sparkles', path: '/ai-learning' },
       { id: 'translate', labelVi: 'Dịch Thuật AI', labelEn: 'AI Translation', icon: 'volume2', path: '/translate' },
       { id: 'leaderboard', labelVi: 'Bảng xếp hạng', labelEn: 'Leaderboard', icon: 'trophy', path: '/leaderboard' },
       { id: 'notes', labelVi: 'Sổ tay ghi chú', labelEn: 'Notebook', icon: 'notes', path: '/notes' },

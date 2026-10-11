@@ -33,7 +33,6 @@ const routeMap: Record<string, string> = {
   writing: '/writing',
   grammar: '/grammar',
   ipa: '/ipa',
-  'ai-learning': '/ai-learning',
   translate: '/translate',
   leaderboard: '/leaderboard',
   notes: '/notes',

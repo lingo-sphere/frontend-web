@@ -112,7 +112,7 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
 
   return (
     <div
-      className={`fixed bottom-24 right-6 z-50 flex h-[580px] max-h-[calc(100vh-120px)] w-[380px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-[28px] border-2 border-border/80 dark:border-teal-400/50 bg-surface/98 dark:bg-[#131e1e]/98 text-text-primary shadow-2xl shadow-slate-900/15 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(85,175,165,0.25)] ring-1 ring-black/5 dark:ring-white/15 backdrop-blur-xl transition-all duration-200 ease-out origin-bottom-right ${
+      className={`fixed bottom-6 right-4 sm:right-[88px] z-50 flex h-[580px] max-h-[calc(100vh-48px)] w-[380px] max-w-[calc(100vw-32px)] sm:max-w-[calc(100vw-110px)] flex-col overflow-hidden rounded-[28px] border-2 border-border/80 dark:border-teal-400/50 bg-surface/98 dark:bg-[#131e1e]/98 text-text-primary shadow-2xl shadow-slate-900/15 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(85,175,165,0.25)] ring-1 ring-black/5 dark:ring-white/15 backdrop-blur-xl transition-all duration-200 ease-out origin-bottom-right ${
         isOpen
           ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
           : 'opacity-0 scale-95 translate-y-2 pointer-events-none'

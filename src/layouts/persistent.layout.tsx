@@ -8,6 +8,7 @@ import { Sidebar } from '@/layouts/app.sidebar'
 import { UtilityHeader } from '@/layouts/app.header'
 import { useApp } from '@/contexts/app.context'
 import { CommunityChatFloatingButton } from '@/features/community/components/community.chat.floating.button'
+import { AiTutorFloatingButton } from '@/features/ai-learning/components/ai.tutor.floating.button'
 import { ScrollToTopButton } from '@/components/scroll.to.top.button'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
@@ -50,6 +51,7 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
             {children}
           </div>
           <CommunityChatFloatingButton />
+          <AiTutorFloatingButton />
         </div>
       )}
       <ScrollToTopButton />
