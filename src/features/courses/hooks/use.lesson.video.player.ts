@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import type { Lesson } from '@/features/courses/types/course'
 import { isDirectVideoUrl } from '@/features/courses/types/player.types'
-import { API_CONFIG } from '@/config/api.config'
 import { courseService } from '@/features/courses/services/course.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
 
@@ -184,6 +183,34 @@ export function useLessonVideoPlayer({
     },
     [duration, resetControlsTimeout]
   )
+
+  useEffect(() => {
+    const handleSeekEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ time: number }>
+      if (typeof customEvent.detail?.time === 'number') {
+        seekToTime(customEvent.detail.time)
+      }
+    }
+    window.addEventListener('lingosphere:seek-video', handleSeekEvent)
+    return () => {
+      window.removeEventListener('lingosphere:seek-video', handleSeekEvent)
+    }
+  }, [seekToTime])
+
+  const initialSeekDoneRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const urlParams = new URLSearchParams(window.location.search)
+    const tParam = urlParams.get('t')
+    if (tParam && duration > 0 && initialSeekDoneRef.current !== `${lesson.id}-${tParam}`) {
+      const targetTime = Number(tParam)
+      if (!isNaN(targetTime) && targetTime >= 0) {
+        initialSeekDoneRef.current = `${lesson.id}-${tParam}`
+        seekToTime(targetTime)
+      }
+    }
+  }, [duration, lesson.id, seekToTime])
 
   const handleSpeedChange = useCallback(
     (speed: number) => {

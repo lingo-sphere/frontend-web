@@ -32,22 +32,22 @@ export function AiTutorFloatingButton() {
     <>
       <AiTutorWidget isOpen={isOpen} onClose={() => setIsOpen(false)} />
 
-      <div className="fixed bottom-[84px] right-[26px] z-50">
+      <div className="fixed bottom-[88px] right-6 z-50">
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               onClick={handleToggle}
               aria-label="Mở Gia sư AI LingoSphere"
-              className="group relative flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 via-primary to-teal-400 text-white shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 border-2 border-white/25 dark:border-teal-400/50 dark:shadow-[0_8px_30px_rgba(85,175,165,0.4)] cursor-pointer"
+              className="group relative flex h-13 w-13 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 via-primary to-teal-400 text-white shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 border-2 border-white/25 dark:border-teal-400/50 dark:shadow-[0_8px_30px_rgba(85,175,165,0.4)] cursor-pointer"
             >
               {isOpen && (
-                <span className="absolute -top-1 -left-1 flex h-4.5 w-4.5 items-center justify-center rounded-full border border-border bg-surface text-[9px] font-bold text-rose-500 shadow-sm transition-all">
-                  <X className="h-2.5 w-2.5 stroke-[2.5]" />
+                <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-surface text-[10px] font-bold text-rose-500 shadow-sm transition-all">
+                  <X className="h-3 w-3 stroke-[2.5]" />
                 </span>
               )}
 
-              <Sparkles className="h-5 w-5 stroke-[1.8] transition-transform group-hover:rotate-12" />
+              <Sparkles className="h-6 w-6 stroke-[1.8] transition-transform group-hover:rotate-12" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="left" sideOffset={10}>

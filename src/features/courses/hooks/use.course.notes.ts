@@ -1,7 +1,10 @@
 // Custom hook quản lý ghi chú bài học cá nhân trong khóa học.
 import { type Dispatch, type SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQueryClient } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
+import { courseKeys } from '@/features/courses/keys/course.keys'
+import { MY_NOTES_QUERY_KEY } from '@/features/notes/hooks/use.my.notes'
 import { toast } from '@/store/toast.store'
 import type { Course, Lesson, NoteItem } from '@/features/courses/types/course'
 import type { User } from '@/types/api.types'
@@ -28,6 +31,7 @@ export function useCourseNotes({
 }: UseCourseNotesParams) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const queryClient = useQueryClient()
 
   const handleAddNoteAtTimestamp = async (timestamp: number, noteContent?: string) => {
     if (!course || !currentLesson) return
@@ -68,6 +72,11 @@ export function useCourseNotes({
       }
       setCourse((prev) => (prev ? { ...prev, notes: [newNote, ...(prev.notes || [])] } : null))
       setActiveBottomTab('notes')
+      queryClient.invalidateQueries({ queryKey: courseKeys.notes(String(course.id)) })
+      if (course.slug) {
+        queryClient.invalidateQueries({ queryKey: courseKeys.notes(course.slug) })
+      }
+      queryClient.invalidateQueries({ queryKey: MY_NOTES_QUERY_KEY })
       toast.success(
         isVietnamese ? `Đã lưu ghi chú tại mốc ${formatted}!` : `Saved note at ${formatted}!`,
         isVietnamese ? 'Ghi chú bài học' : 'Lesson note'
@@ -91,6 +100,13 @@ export function useCourseNotes({
       setCourse((prev) =>
         prev ? { ...prev, notes: (prev.notes || []).filter((n) => n.id !== noteId) } : null
       )
+      if (course) {
+        queryClient.invalidateQueries({ queryKey: courseKeys.notes(String(course.id)) })
+        if (course.slug) {
+          queryClient.invalidateQueries({ queryKey: courseKeys.notes(course.slug) })
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: MY_NOTES_QUERY_KEY })
       toast.success(
         t('notes.deleteSuccess'),
         isVietnamese ? 'Xóa ghi chú' : 'Delete note'

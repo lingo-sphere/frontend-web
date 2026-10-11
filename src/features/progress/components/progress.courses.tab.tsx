@@ -6,6 +6,7 @@ import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
 import { Progress } from '@/components/progress'
 import { resolveMediaUrl } from '@/utils/media.utils'
+import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import type { UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
 
 interface ProgressCoursesTabProps {
@@ -139,7 +140,15 @@ export function ProgressCoursesTab({
                 <span>{isVietnamese ? 'Tham gia:' : 'Enrolled:'} {formatDate(c.enrolled_at)}</span>
               </span>
               <Button
-                onClick={() => onNavigate(`/course/${c.course_id}`)}
+                onClick={() =>
+                  onNavigate(
+                    buildCourseUrl({
+                      id: c.course_id,
+                      _id: c.course_id,
+                      title: c.title,
+                    })
+                  )
+                }
                 size="sm"
                 className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5 cursor-pointer"
               >

@@ -77,6 +77,7 @@ interface RawModuleInput {
 export interface RawCourseInput {
   _id?: string
   id?: string
+  slug?: string
   title?: string
   level?: string
   description?: string
@@ -367,6 +368,7 @@ export function mapCourseDataToWorkspace(
 
   return {
     id: String(courseObj._id || courseObj.id || courseId),
+    slug: courseObj.slug ? String(courseObj.slug) : courseId,
     title: String(courseObj.title || 'Khóa học LingoSphere'),
     description: String(courseObj.description || ''),
     duration: formatExactDuration(totalDurationSec),

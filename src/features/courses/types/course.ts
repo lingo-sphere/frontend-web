@@ -225,6 +225,7 @@ export interface CourseAnnouncement {
 export interface Course {
   id: string
   _id?: string
+  slug?: string
   title: string
   description: string
   duration: string

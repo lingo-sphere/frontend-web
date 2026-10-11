@@ -86,6 +86,14 @@ export const courseQueries = {
       enabled: Boolean(courseId) && enabled,
       staleTime: 1 * 60 * 1000,
     }),
+  notes: (courseId: string, enabled = true) =>
+    queryOptions({
+      queryKey: courseKeys.notes(courseId),
+      queryFn: () => courseService.getCourseNotes(courseId),
+      enabled: Boolean(courseId) && enabled,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
+    }),
 }
 
 export function useAllCoursesQuery(params?: CourseQueryParams, enabled = true) {
@@ -106,6 +114,10 @@ export function useCourseReviewsQuery(courseId: string, enabled = true) {
 
 export function useCourseQnAQuery(courseId: string, enabled = true) {
   return useQuery(courseQueries.qna(courseId, enabled))
+}
+
+export function useCourseNotesDataQuery(courseId: string, enabled = true) {
+  return useQuery(courseQueries.notes(courseId, enabled))
 }
 
 export function useCourseProgressQuery(courseId: string, enabled = true) {

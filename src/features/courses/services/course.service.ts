@@ -40,6 +40,20 @@ export interface WritingSubmissionResponse {
   status: string
 }
 
+export interface UserCourseNoteItem {
+  _id: string
+  course_id: string
+  course_title: string
+  course_slug: string
+  course_thumbnail?: string
+  lesson_id: string
+  lesson_title: string
+  timestamp: number
+  formatted_time: string
+  content: string
+  created_at: string
+}
+
 export const courseService = {
 
   async getAllCourses(params?: { category?: string; level?: string; search?: string; limit?: number; is_published?: boolean }): Promise<Course[]> {
@@ -495,6 +509,10 @@ export const courseService = {
   > {
     const qs = lessonId ? `?lesson_id=${lessonId}` : ''
     return api.get(`/courses/${courseId}/notes${qs}`)
+  },
+
+  async getMyCourseNotes(): Promise<UserCourseNoteItem[]> {
+    return api.get('/courses/my/notes')
   },
 
   async createCourseNote(

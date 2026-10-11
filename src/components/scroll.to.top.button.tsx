@@ -75,7 +75,7 @@ export function ScrollToTopButton() {
 
   const positionClasses = isStandalone
     ? 'bottom-6 right-6'
-    : 'bottom-[148px] right-[27px]'
+    : 'bottom-[152px] right-[27px]'
 
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })

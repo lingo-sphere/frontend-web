@@ -10,6 +10,7 @@ import {
   useCourseEnrollmentStatusQuery,
   useCourseReviewsQuery,
   useCourseQnAQuery,
+  useCourseNotesDataQuery,
   useCourseProgressQuery,
   useUserEnrollments,
 } from '@/features/courses/hooks/use.courses.query'
@@ -83,6 +84,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
 
   const { data: reviewsData } = useCourseReviewsQuery(courseId, Boolean(rawCourse))
   const { data: qnaData } = useCourseQnAQuery(courseId, Boolean(rawCourse))
+  const { data: notesData } = useCourseNotesDataQuery(courseId, Boolean(rawCourse && isEnrolled))
 
   const derivedCourse = useMemo(() => {
     if (!rawCourse) return null
@@ -92,10 +94,10 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       isEnrolled,
       progressData || null,
       reviewsData || null,
-      [],
+      notesData || null,
       qnaData || []
     )
-  }, [courseId, rawCourse, isEnrolled, progressData, reviewsData, qnaData])
+  }, [courseId, rawCourse, isEnrolled, progressData, reviewsData, notesData, qnaData])
 
   const [course, setCourse] = useState<Course | null>(null)
   const activeCourse = course || derivedCourse
@@ -184,46 +186,49 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       isEnrolled,
       progressData || null,
       reviewsData || null,
-      [],
+      notesData || null,
       qnaData || []
     )
 
-    setCourse((prev) => {
-      if (!prev) return structured
-      const mergedChapters = structured.chapters.map((ch) => {
-        const prevCh = prev.chapters.find((pc) => pc.id === ch.id)
-        if (!prevCh) return ch
-        const mergedLessons = ch.lessons.map((l) => {
-          const prevL = prevCh.lessons.find((pl) => pl.id === l.id)
-          if (!prevL) return l
-          const isCompleted = l.status === 'completed' || prevL.status === 'completed'
-          const bestProgress = isCompleted ? 100 : Math.max(l.progress || 0, prevL.progress || 0)
-          const bestStatus: Lesson['status'] = isCompleted
-            ? 'completed'
-            : bestProgress > 0
-            ? 'in-progress'
-            : l.status
+    queueMicrotask(() => {
+      setCourse((prev) => {
+        if (!prev) return structured
+        const mergedChapters = structured.chapters.map((ch) => {
+          const prevCh = prev.chapters.find((pc) => pc.id === ch.id)
+          if (!prevCh) return ch
+          const mergedLessons = ch.lessons.map((l) => {
+            const prevL = prevCh.lessons.find((pl) => pl.id === l.id)
+            if (!prevL) return l
+            const isCompleted = l.status === 'completed' || prevL.status === 'completed'
+            const bestProgress = isCompleted ? 100 : Math.max(l.progress || 0, prevL.progress || 0)
+            const bestStatus: Lesson['status'] = isCompleted
+              ? 'completed'
+              : bestProgress > 0
+              ? 'in-progress'
+              : l.status
+            return {
+              ...l,
+              status: bestStatus,
+              progress: bestProgress,
+              duration: prevL.duration || l.duration,
+            }
+          })
+          const chCompleted = mergedLessons.filter((l) => l.status === 'completed').length
+          const isAllComp = mergedLessons.length > 0 && chCompleted === mergedLessons.length
           return {
-            ...l,
-            status: bestStatus,
-            progress: bestProgress,
-            duration: prevL.duration || l.duration,
+            ...ch,
+            status: isAllComp ? 'completed' : ch.status,
+            lessons: mergedLessons,
           }
         })
-        const chCompleted = mergedLessons.filter((l) => l.status === 'completed').length
-        const isAllComp = mergedLessons.length > 0 && chCompleted === mergedLessons.length
         return {
-          ...ch,
-          status: isAllComp ? 'completed' : ch.status,
-          lessons: mergedLessons,
+          ...structured,
+          chapters: mergedChapters,
+          reviews: reviewsData ? structured.reviews : prev.reviews,
+          qna: qnaData ? structured.qna : prev.qna,
+          notes: notesData ? structured.notes : prev.notes,
         }
       })
-      return {
-        ...structured,
-        chapters: mergedChapters,
-        reviews: reviewsData ? structured.reviews : prev.reviews,
-        qna: qnaData ? structured.qna : prev.qna,
-      }
     })
 
     const allFlat: Array<{ chapter: Chapter; lesson: Lesson }> = []
@@ -277,17 +282,19 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
         }
       }
     }
-  }, [rawCourse, isEnrolled, progressData, reviewsData, qnaData, courseId])
+  }, [rawCourse, isEnrolled, progressData, reviewsData, qnaData, notesData, courseId])
 
   useEffect(() => {
     if (progressData) {
-      setProgressDetail(progressData)
-      if (progressData.course_progress?.schedule) {
-        setCourseSchedule(progressData.course_progress.schedule)
-      }
-      if (progressData.course_progress?.lock_state) {
-        setCourseLockState(progressData.course_progress.lock_state)
-      }
+      queueMicrotask(() => {
+        setProgressDetail(progressData)
+        if (progressData.course_progress?.schedule) {
+          setCourseSchedule(progressData.course_progress.schedule)
+        }
+        if (progressData.course_progress?.lock_state) {
+          setCourseLockState(progressData.course_progress.lock_state)
+        }
+      })
     }
   }, [progressData])
 

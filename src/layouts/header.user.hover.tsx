@@ -176,6 +176,12 @@ export function HeaderUserHover({
             <span>{isVi ? 'Tiến độ học tập' : 'Learning progress'}</span>
           </button>
           <button
+            onClick={() => handleItemClick('/notes')}
+            className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-subtle hover:text-text-primary transition-colors cursor-pointer"
+          >
+            <span>{isVi ? 'Sổ tay ghi chú' : 'Lesson notes'}</span>
+          </button>
+          <button
             onClick={() => handleItemClick('/exam-history')}
             className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-subtle hover:text-text-primary transition-colors cursor-pointer"
           >
