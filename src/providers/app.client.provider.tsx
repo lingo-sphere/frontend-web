@@ -14,6 +14,7 @@ import { initClientLanguage } from '@/i18n/i18n.config'
 import { TooltipProvider } from '@/components/tooltip'
 import { AppProvider } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { authService } from '@/features/auth/services/auth.service'
 import { API_CONFIG } from '@/config/api.config'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { Modal } from '@/components/modal'
@@ -67,6 +68,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       checkAuth()
       return
     }
+    authService.clearAuthStorage()
     setUser(null)
     setKickoutMessage(
       message || t('common.sessionTerminatedDesc')
@@ -106,10 +108,12 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
     }
 
     const handleUnauthorized = () => {
+      authService.clearAuthStorage()
       setUser(null)
       if (typeof window !== 'undefined') {
         const path = window.location.pathname
         const isProtected =
+          path.startsWith('/home') ||
           path.startsWith('/profile') ||
           path.startsWith('/settings') ||
           path.startsWith('/cart') ||
@@ -123,7 +127,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
           path.startsWith('/speaking') ||
           path.startsWith('/writing')
         if (isProtected) {
-          window.location.href = '/'
+          window.location.href = '/login'
         }
       }
     }
@@ -202,16 +206,23 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
             <Modal
               open={Boolean(kickoutMessage)}
-              onClose={() => setKickoutMessage(null)}
+              onClose={() => {
+                authService.clearAuthStorage()
+                setKickoutMessage(null)
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/login'
+                }
+              }}
               title={t('common.sessionTerminatedTitle')}
               size="sm"
               footer={
                 <Button
                   className="w-full bg-primary font-semibold text-white shadow-md hover:bg-primary/90 cursor-pointer"
                   onClick={() => {
+                    authService.clearAuthStorage()
                     setKickoutMessage(null)
                     if (typeof window !== 'undefined') {
-                      window.location.href = '/'
+                      window.location.href = '/login'
                     }
                   }}
                 >

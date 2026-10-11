@@ -69,9 +69,14 @@ apiClient.interceptors.response.use(
 
       if (isKickout) {
         storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.remove(STORAGE_KEYS.USER)
         storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.session.remove(STORAGE_KEYS.USER)
+        storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
+        storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+        storage.cookie.remove(STORAGE_KEYS.IS_PRIVILEGED)
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('lingosphere:session_terminated', { detail: { message: errorMsg } }))
         }
