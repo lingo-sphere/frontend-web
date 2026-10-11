@@ -67,7 +67,7 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
     }
 
     if (isOutOfQuota) {
-      setErrorBanner('Bạn đã sử dụng hết 5 câu hỏi miễn phí của Gia sư AI. Vui lòng nâng cấp gói Premium để tiếp tục học tập không giới hạn!')
+      setErrorBanner('Bạn đã sử dụng hết 5 câu hỏi miễn phí trong ngày của Gia sư AI. Vui lòng quay lại vào ngày mai hoặc nâng cấp VIP để tiếp tục học tập không giới hạn!')
       return
     }
 
@@ -197,7 +197,7 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
           <div className="flex items-center justify-between w-full gap-2">
             <div className="flex items-center gap-1 text-[11px] font-semibold text-text-secondary">
               <Zap className={`h-3 w-3 ${chatRemaining > 1 ? 'text-primary' : 'text-destructive'}`} />
-              <span>Gói Miễn phí: Còn {Math.max(0, chatRemaining)}/5 câu</span>
+              <span>Gói Miễn phí: Còn {Math.max(0, chatRemaining)}/5 câu hôm nay</span>
             </div>
             <Link href="/settings" onClick={onClose} className="text-[10px] font-bold text-amber-600 hover:underline">
               Nâng cấp VIP
@@ -322,7 +322,7 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
           onChange={(e) => setInput(e.target.value)}
           placeholder={
             isOutOfQuota
-              ? 'Hết câu hỏi miễn phí. Nâng cấp VIP để tiếp tục...'
+              ? 'Hết 5 câu hỏi hôm nay. Nâng cấp VIP hoặc quay lại vào ngày mai...'
               : 'Hỏi Gia sư AI về từ vựng, ngữ pháp...'
           }
           disabled={isLoading || isOutOfQuota}
