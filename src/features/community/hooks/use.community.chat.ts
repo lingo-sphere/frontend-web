@@ -130,7 +130,12 @@ export function useCommunityChat() {
     const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN);
     if (!token) return;
 
-    const socketUrl = API_CONFIG.BASE_URL ? new URL(API_CONFIG.BASE_URL).origin : 'http://localhost:8080';
+    if (!API_CONFIG.BASE_URL) {
+      console.error('API_CONFIG.BASE_URL không được cấu hình cho socket chat.');
+      return;
+    }
+
+    const socketUrl = new URL(API_CONFIG.BASE_URL).origin;
     const socket = io(socketUrl, {
       path: '/socket.io',
       auth: { token },

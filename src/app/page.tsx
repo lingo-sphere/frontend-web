@@ -1,13 +1,7 @@
-/**
- * @file page.tsx
- * @description Trang chủ chính (Landing Page) của LingoSphere
- */
-
+// Trang chủ chính (Landing Page) của LingoSphere.
 'use client'
 
 import { useEffect, useRef, useState, useMemo } from "react"
-import { motion, AnimatePresence } from "motion/react"
-import { ChevronUp } from "lucide-react"
 import { LingoShowcase } from "@/features/landing/components/lingo.showcase"
 import { LingoPerformance } from "@/features/landing/components/lingo.performance"
 import { ClickSpark } from "@/components/click.spark"
@@ -28,7 +22,6 @@ export default function RootLandingPage() {
   const videoBRef = useRef<HTMLVideoElement | null>(null)
   const [activeVideo, setActiveVideo] = useState<"A" | "B">("A")
   const isTransitioningRef = useRef<boolean>(false)
-  const [showScrollTop, setShowScrollTop] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isHeaderHidden, setIsHeaderHidden] = useState(false)
   const lastScrollYRef = useRef(0)
@@ -133,7 +126,6 @@ export default function RootLandingPage() {
       const scrollY = window.scrollY
       const deltaY = scrollY - lastScrollYRef.current
 
-      setShowScrollTop(scrollY > 250)
       setIsScrolled(scrollY > 20)
 
       if (scrollY <= 60) {
@@ -168,6 +160,7 @@ export default function RootLandingPage() {
     }
 
     window.addEventListener("scroll", onScroll, { passive: true })
+    update()
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
@@ -208,21 +201,6 @@ export default function RootLandingPage() {
         <LandingLanyardSection t={t} lang={lang} />
 
         <LandingFooter t={t} />
-
-        <AnimatePresence>
-          {showScrollTop && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.6 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6 }}
-              onClick={scrollToTop}
-              className="fixed bottom-6 right-6 z-50 flex h-11 w-11 items-center justify-center rounded-none border border-emerald-400/60 bg-black/85 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.35)] backdrop-blur-md transition-all hover:scale-110 hover:bg-emerald-500 hover:text-slate-950 hover:border-emerald-300 hover:shadow-[0_0_25px_rgba(52,211,153,0.6)] cursor-pointer active:scale-95"
-              aria-label="Cuộn lên đầu trang"
-            >
-              <ChevronUp className="h-5 w-5" />
-            </motion.button>
-          )}
-        </AnimatePresence>
       </ClickSpark>
     </main>
   )

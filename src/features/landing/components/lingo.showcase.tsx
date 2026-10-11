@@ -3,7 +3,7 @@
 
 import { useRef, useEffect, useState } from "react"
 import Link from "next/link"
-import { motion, useScroll, useTransform } from "motion/react"
+import { motion, useMotionValue, useTransform } from "motion/react"
 import { Sparkles, Brain, ArrowRight, CheckCircle2, Cpu } from "lucide-react"
 import { landingLocales, type LandingLang } from "@/features/landing/components/landing.locales"
 
@@ -57,10 +57,28 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
     }
   }, [activeVideo])
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  })
+  const scrollYProgress = useMotionValue(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const el = sectionRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const windowHeight = window.innerHeight
+      const totalDist = windowHeight + rect.height
+      const currentPos = windowHeight - rect.top
+      scrollYProgress.set(Math.min(Math.max(currentPos / totalDist, 0), 1))
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    window.addEventListener("resize", handleScroll, { passive: true })
+    handleScroll()
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("resize", handleScroll)
+    }
+  }, [scrollYProgress])
 
   const maskScale = useTransform(scrollYProgress, [0.15, 0.52], [3.8, 1])
   const videoScale = useTransform(scrollYProgress, [0.15, 0.52], [1.12, 1.02])

@@ -47,6 +47,9 @@ import type { RadarDataPoint } from "./skill-radar-chart";
 export interface ProgressSkillsTabProps {
   listeningScore: number;
   readingScore: number;
+  speakingScore?: number;
+  writingScore?: number;
+  selectedSkillsType?: string;
   vocabStats: VocabStatsSummary;
   skillsSummary?: SkillsSummary | null;
   onNavigate: (path: string) => void;

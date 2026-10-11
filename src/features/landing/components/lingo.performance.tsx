@@ -2,8 +2,8 @@
 
 'use client'
 
-import { useRef } from "react"
-import { motion, useScroll, useTransform } from "motion/react"
+import { useRef, useEffect } from "react"
+import { motion, useMotionValue, useTransform } from "motion/react"
 import {
   Brain,
   Mic,
@@ -25,10 +25,28 @@ export function LingoPerformance({ lang = "vi" }: LingoPerformanceProps) {
   const sectionRef = useRef<HTMLDivElement | null>(null)
   const t = landingLocales[lang]?.performance || landingLocales.vi.performance
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  })
+  const scrollYProgress = useMotionValue(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const el = sectionRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const windowHeight = window.innerHeight
+      const totalDist = windowHeight + rect.height
+      const currentPos = windowHeight - rect.top
+      scrollYProgress.set(Math.min(Math.max(currentPos / totalDist, 0), 1))
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    window.addEventListener("resize", handleScroll, { passive: true })
+    handleScroll()
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("resize", handleScroll)
+    }
+  }, [scrollYProgress])
 
   const p1X = useTransform(scrollYProgress, [0.15, 0.52], [-40, -520])
   const p1Y = useTransform(scrollYProgress, [0.15, 0.52], [40, -230])
