@@ -215,7 +215,7 @@ export default function SettingsAppPage() {
 
   return (
     <>
-      <main className="w-full min-h-screen bg-background text-text-primary px-4 py-6 sm:px-6 sm:py-8 lg:px-10 max-w-7xl mx-auto">
+      <main className="w-full min-h-screen bg-background text-text-primary px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-primary mb-1 uppercase tracking-wider">
