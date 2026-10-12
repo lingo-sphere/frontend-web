@@ -10,6 +10,7 @@ import { useExamHistory, UnifiedTestAttempt } from '@/features/toeic/hooks/use.e
 import { ExamHistoryKpi } from '@/features/toeic/components/exam.history.kpi'
 import { ExamHistoryFilters } from '@/features/toeic/components/exam.history.filters'
 import { ExamHistoryTable } from '@/features/toeic/components/exam.history.table'
+import { Pagination } from '@/components/pagination'
 import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCoursesProgressQuery } from '@/features/progress/hooks/use.progress.query'
@@ -36,6 +37,11 @@ export default function ExamHistoryPage() {
     setSearchQuery,
     stats,
     filteredList,
+    paginatedList,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    totalPages,
     unifiedList,
     courseAttempts,
     courseTitleMap,
@@ -250,16 +256,26 @@ export default function ExamHistoryPage() {
               <p className="text-sm font-semibold">Đang tổng hợp lịch sử làm bài...</p>
             </div>
           ) : (
-            <ExamHistoryTable
-              filteredList={filteredList}
-              activeTab={activeTab}
-              onNavigateDetail={handleNavigateDetail}
-              onRetake={handleRetake}
-              onNavigateToeic={() => navigate('/toeic')}
-              onNavigatePlacement={() => navigate('/toeic/exam/placement_2skills')}
-              formatDate={formatDate}
-              formatDuration={formatDuration}
-            />
+            <div className="space-y-4">
+              <ExamHistoryTable
+                filteredList={paginatedList}
+                activeTab={activeTab}
+                onNavigateDetail={handleNavigateDetail}
+                onRetake={handleRetake}
+                onNavigateToeic={() => navigate('/toeic')}
+                onNavigatePlacement={() => navigate('/toeic/exam/placement_2skills')}
+                formatDate={formatDate}
+                formatDuration={formatDuration}
+              />
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={pageSize}
+                totalItems={filteredList.length}
+                className="pt-2"
+              />
+            </div>
           )}
         </>
       )}

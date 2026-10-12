@@ -72,6 +72,18 @@ export function useExamHistory() {
   const [mounted, setMounted] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState<ExamHistoryTab>('ALL')
   const [searchQuery, setSearchQuery] = useState<string>('')
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const pageSize = 10
+
+  const handleTabChange = useCallback((tab: ExamHistoryTab) => {
+    setActiveTab(tab)
+    setCurrentPage(1)
+  }, [])
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query)
+    setCurrentPage(1)
+  }, [])
 
   useEffect(() => {
     setMounted(true)
@@ -240,6 +252,13 @@ export function useExamHistory() {
     queryClient.invalidateQueries({ queryKey: toeicKeys.all })
   }, [queryClient])
 
+  const totalItems = filteredList.length
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+  const paginatedList = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize
+    return filteredList.slice(startIndex, startIndex + pageSize)
+  }, [filteredList, currentPage, pageSize])
+
   const isLoading =
     (toeicHistoryQuery.isLoading && toeicAttempts.length === 0) ||
     (courseAttemptsQuery.isLoading && courseAttempts.length === 0)
@@ -247,9 +266,15 @@ export function useExamHistory() {
   return {
     isLoading,
     activeTab,
-    setActiveTab,
+    setActiveTab: handleTabChange,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+    paginatedList,
     stats,
     filteredList,
     unifiedList,
