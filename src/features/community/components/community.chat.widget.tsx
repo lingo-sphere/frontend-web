@@ -88,14 +88,24 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
       if (lastMsg && lastMsg._id !== lastMessageIdRef.current) {
         lastMessageIdRef.current = lastMsg._id
         const isNearBottom =
-          scrollRef.current.scrollHeight - scrollRef.current.scrollTop - scrollRef.current.clientHeight < 160
+          scrollRef.current.scrollHeight - scrollRef.current.scrollTop - scrollRef.current.clientHeight < 240
         const isMe = user?.user_id === lastMsg.sender_id
         if (isNearBottom || isMe) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
         }
       }
     }
   }, [messages, user?.user_id])
+
+  useEffect(() => {
+    if (typingUsers.length > 0 && scrollRef.current) {
+      const isNearBottom =
+        scrollRef.current.scrollHeight - scrollRef.current.scrollTop - scrollRef.current.clientHeight < 240
+      if (isNearBottom) {
+        scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+      }
+    }
+  }, [typingUsers])
 
   useEffect(() => {
     if (isOpen && scrollRef.current && initialScrollDoneRef.current) {
@@ -190,14 +200,15 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
           ))
         )}
 
-        {typingUsers.length > 0 && (
-          <div className="text-[11px] italic text-text-tertiary flex items-center gap-1.5 pt-1">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
-            <span>{typingUsers.join(', ')} đang soạn tin...</span>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-1 shrink-0" />
       </div>
+
+      {typingUsers.length > 0 && (
+        <div className="flex items-center gap-2 px-4 py-1.5 text-[11px] italic text-text-tertiary bg-surface/90 dark:bg-[#131e1e]/90 border-t border-border/40 shrink-0 transition-all duration-150">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+          <span className="truncate">{typingUsers.join(', ')} đang soạn tin...</span>
+        </div>
+      )}
 
       <CommunityChatInputBar
         isAuthenticated={isAuthenticated}
