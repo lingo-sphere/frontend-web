@@ -47,6 +47,12 @@ export function CommunityChatFloatingButton() {
             </span>
           )}
 
+          {!isOpen && chatState.unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-md animate-pulse">
+              {chatState.unreadCount > 99 ? '99+' : chatState.unreadCount}
+            </span>
+          )}
+
           <MessageSquare className="h-6 w-6 stroke-[1.8] transition-transform group-hover:rotate-6" />
         </button>
       </div>

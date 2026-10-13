@@ -6,6 +6,8 @@ import { io, Socket } from 'socket.io-client';
 import { API_CONFIG } from '@/config/api.config';
 import { storage, STORAGE_KEYS } from '@/lib/storage';
 import { useAuthStore } from '@/features/auth/store/auth.store';
+import { authService } from '@/features/auth/services/auth.service';
+import { refreshAuthToken } from '@/services/api.client';
 import { communityService } from '@/features/community/services/community.service';
 import type {
   ChatMessage,
@@ -21,10 +23,18 @@ export function useCommunityChat() {
   const [isOpen, setIsOpenState] = useState<boolean>(() => {
     return Boolean(storage.session.get<boolean>(STORAGE_KEYS.COMMUNITY_CHAT_OPEN, false));
   });
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  const isOpenRef = useRef<boolean>(isOpen);
+  isOpenRef.current = isOpen;
 
   const setIsOpen = useCallback((open: boolean) => {
     setIsOpenState(open);
+    isOpenRef.current = open;
     storage.session.set(STORAGE_KEYS.COMMUNITY_CHAT_OPEN, open);
+    if (open) {
+      setUnreadCount(0);
+    }
   }, []);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -74,19 +84,16 @@ export function useCommunityChat() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isAuthenticated) return;
+    if (messages.length > 0 && !isOpen) return;
 
     let isMounted = true;
     setIsLoading(true);
 
     const loadData = async () => {
       try {
-        if (isAuthenticated) {
-          const elig = await communityService.getEligibility().catch(() => ({ is_eligible: true } as EligibilityResponse));
-          if (isMounted) setEligibility(elig);
-        } else {
-          if (isMounted) setEligibility({ is_eligible: false, status: 'UNAUTHORIZED' });
-        }
+        const elig = await communityService.getEligibility().catch(() => ({ is_eligible: true } as EligibilityResponse));
+        if (isMounted) setEligibility(elig);
 
         const [roomData, pinsData, msgData] = await Promise.all([
           communityService.getRoom().catch(() => null),
@@ -118,7 +125,7 @@ export function useCommunityChat() {
   }, [isOpen, isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated || !isOpen) {
+    if (!isAuthenticated) {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
@@ -127,13 +134,10 @@ export function useCommunityChat() {
       return;
     }
 
-    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN);
+    const token = authService.getAccessToken();
     if (!token) return;
 
-    if (!API_CONFIG.BASE_URL) {
-      console.error('API_CONFIG.BASE_URL không được cấu hình cho socket chat.');
-      return;
-    }
+    if (!API_CONFIG.BASE_URL) return;
 
     const socketUrl = new URL(API_CONFIG.BASE_URL).origin;
     const socket = io(socketUrl, {
@@ -141,7 +145,9 @@ export function useCommunityChat() {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
 
     socketRef.current = socket;
@@ -151,8 +157,35 @@ export function useCommunityChat() {
       setErrorBanner(null);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
       setIsConnected(false);
+      if (reason === 'io server disconnect') {
+        refreshAuthToken().then((newToken) => {
+          if (newToken) {
+            socket.auth = { token: newToken };
+            socket.connect();
+          }
+        }).catch(() => null);
+      }
+    });
+
+    socket.on('connect_error', () => {
+      setIsConnected(false);
+    });
+
+    socket.on('auth:error', async () => {
+      setIsConnected(false);
+      try {
+        const newToken = await refreshAuthToken();
+        if (newToken) {
+          socket.auth = { token: newToken };
+          socket.connect();
+        } else {
+          setErrorBanner('Phiên đăng nhập chat đã hết hạn');
+        }
+      } catch {
+        setErrorBanner('Phiên đăng nhập chat đã hết hạn');
+      }
     });
 
     socket.on('auth:forbidden', (data: EligibilityResponse) => {
@@ -169,6 +202,9 @@ export function useCommunityChat() {
         if (prev.some((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
+      if (!isOpenRef.current && user?.user_id !== msg.sender_id) {
+        setUnreadCount((c) => c + 1);
+      }
     });
 
     socket.on('message:deleted', (data: { message_id: string; deleted_by: string }) => {
@@ -278,18 +314,34 @@ export function useCommunityChat() {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [isAuthenticated, isOpen, user?.user_id]);
+  }, [isAuthenticated, user?.user_id]);
 
   const sendMessage = useCallback((content: string, attachments?: string[]) => {
     const hasContent = Boolean(content && content.trim());
     const hasAttachments = Boolean(attachments && attachments.length > 0);
-    if (!socketRef.current || (!hasContent && !hasAttachments)) return;
+    if (!hasContent && !hasAttachments) return;
 
-    socketRef.current.emit('send_message', {
-      content: (content || '').trim(),
-      attachments: attachments || [],
-      reply_to_message_id: replyTo?._id,
-    });
+    if (!socketRef.current?.connected) {
+      const freshToken = authService.getAccessToken();
+      if (socketRef.current && freshToken) {
+        socketRef.current.auth = { token: freshToken };
+        socketRef.current.connect();
+      }
+      refreshAuthToken().then((newToken) => {
+        if (newToken && socketRef.current) {
+          socketRef.current.auth = { token: newToken };
+          socketRef.current.connect();
+        }
+      }).catch(() => null);
+    }
+
+    if (socketRef.current) {
+      socketRef.current.emit('send_message', {
+        content: (content || '').trim(),
+        attachments: attachments || [],
+        reply_to_message_id: replyTo?._id,
+      });
+    }
 
     setReplyTo(null);
   }, [replyTo]);
@@ -366,6 +418,7 @@ export function useCommunityChat() {
   return {
     isOpen,
     setIsOpen,
+    unreadCount,
     messages,
     pinnedMessages,
     room,

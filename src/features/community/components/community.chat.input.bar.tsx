@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Image as ImageIcon, Loader2, Send, X } from 'lucide-react'
 import { toast } from '@/store/toast.store'
 import type { EligibilityResponse, ChatMessage } from '@/features/community/types/community.types'
-import { resolveMediaUrl } from '@/utils/media.utils'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/utils/media.utils'
 
 export interface CommunityChatInputBarProps {
   isAuthenticated: boolean
@@ -131,6 +131,7 @@ export function CommunityChatInputBar({
               <div className="overflow-hidden rounded-lg border border-border dark:border-white/20 shadow-2xs bg-surface-subtle dark:bg-black/30">
                 <Image
                   src={resolveMediaUrl(attachedImage)}
+                  fallback={IMAGE_FALLBACK_PLACEHOLDER}
                   alt="preview"
                   style={{
                     maxHeight: 70,

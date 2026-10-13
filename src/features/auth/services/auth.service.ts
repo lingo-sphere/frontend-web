@@ -195,11 +195,23 @@ export const authService = {
   },
 
   isAuthenticated(): boolean {
-    return !!storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || !!storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
+    return (
+      !!storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) ||
+      !!storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN) ||
+      !!storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
+    )
+  },
+
+  getAccessToken(): string | null {
+    return (
+      storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) ||
+      storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN) ||
+      storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
+    )
   },
 
   getRefreshToken(): string | null {
-    return storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
+    return storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.get(STORAGE_KEYS.REFRESH_TOKEN)
   },
 
   getStoredUser(): User | null {
