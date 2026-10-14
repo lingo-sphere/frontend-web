@@ -21,6 +21,7 @@ import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { prefetchCourseDetail, useUserEnrollments } from '@/features/courses/hooks/use.courses.query'
 import { toast } from '@/store/toast.store'
 import { useQueryClient } from '@tanstack/react-query'
+import Link from 'next/link'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { resolveMediaUrl } from '@/utils/media.utils'
@@ -166,17 +167,24 @@ export function CourseCard({
     >
       <div>
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black/5">
-          <img
-            src={resolveMediaUrl(course.thumbnail)}
-            alt={course.title}
-            className="h-full w-full object-cover rounded-xl"
-          />
+          <Link
+            href={buildCourseUrl(course)}
+            onClick={(e) => e.stopPropagation()}
+            className="relative h-full w-full block overflow-hidden rounded-xl"
+          >
+            <img
+              src={resolveMediaUrl(course.thumbnail)}
+              alt={course.title}
+              loading="lazy"
+              className="h-full w-full object-cover rounded-xl"
+            />
 
-          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#2d2f31] shadow-xl">
-              <Play size={18} className="ml-1 fill-[#2d2f31]" />
+            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#2d2f31] shadow-xl">
+                <Play size={18} className="ml-1 fill-[#2d2f31]" />
+              </div>
             </div>
-          </div>
+          </Link>
 
           {isPremiumUser && (
             <div className="absolute left-2.5 top-2.5 z-10 flex items-center gap-1 rounded-md bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-md">
@@ -253,7 +261,13 @@ export function CourseCard({
 
         <div className="mt-3 space-y-1">
           <h3 className="line-clamp-2 text-sm sm:text-[15px] font-bold text-text-primary group-hover:text-primary transition-colors leading-snug">
-            {course.title}
+            <Link
+              href={buildCourseUrl(course)}
+              onClick={(e) => e.stopPropagation()}
+              className="hover:underline"
+            >
+              {course.title}
+            </Link>
           </h3>
           <p className="text-xs text-text-secondary line-clamp-1 leading-relaxed">
             {course.description || ''}

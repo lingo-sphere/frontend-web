@@ -1,8 +1,5 @@
-/**
- * @file toeic.exam.card.tsx
- * @description Component giao diện React ToeicExamCard cho học viên
- */
-
+// Thẻ hiển thị thông tin bài thi TOEIC mô phỏng có liên kết chuẩn SEO
+import Link from 'next/link'
 import { Trophy, Clock, Users, FileText } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import type { ToeicExam } from '@/features/toeic/types/toeic'
@@ -82,7 +79,9 @@ export function ExamCard({ exam, onClick, isVietnamese }: ExamCardProps) {
             )}
             <div>
               <h3 className="text-[15px] font-semibold text-text-primary line-clamp-1">
-                {exam.title}
+                <Link href={`/toeic/exam/${exam.id}`} onClick={(e) => e.stopPropagation()} className="hover:underline">
+                  {exam.title}
+                </Link>
               </h3>
               <p className="text-[11px] text-text-tertiary">
                 {exam.examSeries} {exam.releaseYear}

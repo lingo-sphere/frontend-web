@@ -3,6 +3,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import Link from 'next/link'
 import { useNavigate } from '@/lib/navigation'
 import { Search, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
@@ -124,7 +125,9 @@ export default function TopicsAppPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className="text-[16px] font-semibold text-text-primary">
-                          {topic.name_vi || topic.name_en}
+                          <Link href={`/vocabulary?topic=${topic._id}`} className="hover:underline">
+                            {topic.name_vi || topic.name_en}
+                          </Link>
                         </h4>
                         <p className="text-[12px] text-text-secondary">
                           {topic.name_en}

@@ -1,19 +1,25 @@
-/**
- * @file robots.ts
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến robots.ts
- */
-
+// Cấu hình quy tắc thu thập dữ liệu robots.txt cho công cụ tìm kiếm
 import type { MetadataRoute } from 'next'
+import { SITE_CONFIG } from '@/config/site.config'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://lingosphere.edu.vn'
-
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/settings', '/profile', '/verify-email', '/api/'],
+      disallow: [
+        '/cart',
+        '/settings',
+        '/profile',
+        '/progress',
+        '/notes',
+        '/notifications',
+        '/exam-history',
+        '/verify-email',
+        '/forbidden',
+        '/api/',
+      ],
     },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${SITE_CONFIG.url}/sitemap.xml`,
   }
 }

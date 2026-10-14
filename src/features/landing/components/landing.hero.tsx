@@ -47,7 +47,7 @@ export function LandingHero({
           autoPlay
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           onTimeUpdate={activeVideo === "A" ? onVideoTimeUpdate : undefined}
           className={`hero-mask absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700 ease-in-out ${
             activeVideo === "A" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
@@ -58,7 +58,7 @@ export function LandingHero({
           src="/video-banner.mp4"
           muted
           playsInline
-          preload="auto"
+          preload="none"
           onTimeUpdate={activeVideo === "B" ? onVideoTimeUpdate : undefined}
           className={`hero-mask absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-700 ease-in-out ${
             activeVideo === "B" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"

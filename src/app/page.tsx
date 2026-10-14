@@ -14,6 +14,25 @@ import { LandingIslands } from "@/features/landing/components/landing.islands"
 import { LandingManifesto } from "@/features/landing/components/landing.manifesto"
 import { LandingLanyardSection } from "@/features/landing/components/landing.lanyard.section"
 import { LandingFooter } from "@/features/landing/components/landing.footer"
+import { JsonLd } from "@/components/seo/json-ld"
+import { SITE_CONFIG } from "@/config/site.config"
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'EducationalOrganization',
+  name: SITE_CONFIG.name,
+  url: SITE_CONFIG.url,
+  logo: `${SITE_CONFIG.url}/og-image.png`,
+  description: SITE_CONFIG.description,
+  sameAs: ['https://www.facebook.com/lingosphere'],
+}
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_CONFIG.name,
+  url: SITE_CONFIG.url,
+}
 
 export default function RootLandingPage() {
   const { lang, toggleLang, t } = useLandingLocale()
@@ -169,6 +188,8 @@ export default function RootLandingPage() {
 
   return (
     <main className="relative overflow-x-hidden bg-[oklch(20%_0.08_280)] text-white antialiased">
+      <JsonLd data={organizationSchema} />
+      <JsonLd data={websiteSchema} />
       <ClickSpark sparkColor="#5eead4" sparkSize={14} sparkRadius={26} sparkCount={8} duration={450}>
         <div className="noise pointer-events-none fixed inset-0 z-[9999]" />
 
