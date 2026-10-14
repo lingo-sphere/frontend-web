@@ -6,7 +6,6 @@ import { STORAGE_KEYS } from '@/lib/storage'
 import { CourseDetailClient } from '@/features/courses/components/course.detail.client'
 import { SITE_CONFIG } from '@/config/site.config'
 import { JsonLd } from '@/components/seo/json-ld'
-import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface CourseDetailPageProps {
   params: Promise<{ courseId: string }>
@@ -66,7 +65,16 @@ export async function generateMetadata({ params }: CourseDetailPageProps): Promi
     `Khóa học ${course.title} tại LingoSphere với lộ trình tinh gọn, video bài giảng chuẩn ETS và gia sư AI đồng hành.`
   const canonicalUrl = `${SITE_CONFIG.url}/course/${rawParam}`
   const rawImage = course.thumbnail_url || course.thumbnail
-  const imageUrl = rawImage ? resolveMediaUrl(rawImage) : `${SITE_CONFIG.url}/og-image.png`
+  let imageUrl = `${SITE_CONFIG.url}/og-image.png`
+  if (rawImage) {
+    if (rawImage.startsWith('http://') || rawImage.startsWith('https://')) {
+      imageUrl = rawImage
+    } else {
+      const cleanKey = rawImage.replace(/^\/+/, '').replace(/^(api\/)?media\/stream\//i, '')
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.io.vn'
+      imageUrl = `${apiBase}/media/stream/${cleanKey}`
+    }
+  }
 
   return {
     title,

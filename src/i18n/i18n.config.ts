@@ -1,6 +1,7 @@
 // Cấu hình quốc tế hóa i18next (Tiếng Việt và Tiếng Anh) cho frontend-web
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
+import React from 'react'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import vi from '@/i18n/vi.json'
 import en from '@/i18n/en.json'
@@ -11,17 +12,18 @@ const resources = {
 }
 
 if (!i18n.isInitialized) {
-  i18n
-    .use(initReactI18next)
-    .init({
-      resources,
-      lng: 'vi',
-      fallbackLng: 'vi',
-      supportedLngs: ['vi', 'en'],
-      interpolation: {
-        escapeValue: false,
-      },
-    })
+  if (typeof React.createContext === 'function') {
+    i18n.use(initReactI18next)
+  }
+  i18n.init({
+    resources,
+    lng: 'vi',
+    fallbackLng: 'vi',
+    supportedLngs: ['vi', 'en'],
+    interpolation: {
+      escapeValue: false,
+    },
+  })
 }
 
 export default i18n
