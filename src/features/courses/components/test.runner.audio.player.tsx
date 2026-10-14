@@ -1,7 +1,4 @@
-/**
- * @file test.runner.audio.player.tsx
- * @description Trình phát âm thanh bài thi nghe với thanh tiến trình và điều chỉnh tốc độ
- */
+// Trình phát âm thanh bài thi nghe với thanh tiến trình và điều chỉnh tốc độ.
 
 'use client'
 

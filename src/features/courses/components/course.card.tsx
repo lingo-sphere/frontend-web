@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'motion/react'
+import { useMounted } from '@/hooks/use.mounted'
 import {
   Play,
   MoreVertical,
@@ -12,6 +13,7 @@ import {
   Check,
   Loader2,
   Crown,
+  Users,
 } from 'lucide-react'
 import type { CourseCardData } from '@/features/courses/types/course'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -21,6 +23,7 @@ import { toast } from '@/store/toast.store'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
@@ -44,14 +47,15 @@ export function CourseCard({
   onCloseMenu,
 }: CourseCardProps) {
   const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVi = mounted ? i18n.language === 'vi' : true
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuthStore()
   const { addToCart, isInCart } = useCart(isAuthenticated)
   const { isEnrolled: checkEnrolled } = useUserEnrollments(isAuthenticated)
   const isEnrolled = checkEnrolled(course.id) || (course.slug ? checkEnrolled(course.slug) : false)
   const isPremiumUser = Boolean(user?.is_premium)
-  const isPrivilegedUser = user?.role === 'ADMIN' || user?.role === 'INSTRUCTOR'
+  const isPrivilegedUser = user?.role === 'INSTRUCTOR'
   const isAlreadyEnrolled = isEnrolled || isPremiumUser || isPrivilegedUser
   const [isAdding, setIsAdding] = useState(false)
   const isAlreadyInCart = isInCart(course.id)
@@ -163,7 +167,7 @@ export function CourseCard({
       <div>
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black/5">
           <img
-            src={course.thumbnail}
+            src={resolveMediaUrl(course.thumbnail)}
             alt={course.title}
             className="h-full w-full object-cover rounded-xl"
           />
@@ -260,6 +264,12 @@ export function CourseCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 pt-2.5">
+          {course.is_bestseller && (
+            <span className="rounded bg-amber-400 text-slate-950 font-black text-[10px] px-1.5 py-0.5 shadow-xs uppercase tracking-wider">
+              {isVi ? 'Bán chạy nhất' : 'Bestseller'}
+            </span>
+          )}
+
           {course.badge && (
             <span className="rounded bg-emerald-50 text-emerald-700 font-bold text-[10px] px-1.5 py-0.5 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50">
               {course.badge}
@@ -277,6 +287,13 @@ export function CourseCard({
               : isVi ? 'Mới' : 'New'}
           </span>
 
+          <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary flex items-center gap-1">
+            <Users size={10} className="text-indigo-500 shrink-0" />
+            <span suppressHydrationWarning>
+              {formatNumber(course.students)} {isVi ? 'học viên' : 'students'}
+            </span>
+          </span>
+
           <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">
             {course.duration}
           </span>
@@ -285,9 +302,11 @@ export function CourseCard({
             {course.totalLessons} {isVi ? 'bài giảng' : 'lectures'}
           </span>
 
-          <span className="rounded border border-border/80 bg-surface-subtle/50 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">
-            {course.level || 'All Levels'}
-          </span>
+          {course.targetScore ? (
+            <span className="rounded border border-teal-500/30 bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-600 dark:text-teal-400">
+              {course.targetScore}+ TOEIC
+            </span>
+          ) : null}
         </div>
       </div>
 

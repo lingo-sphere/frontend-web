@@ -1,31 +1,21 @@
-// Custom hook quản lý truy vấn các bài tập luyện nghe, nói, viết và nhật ký bằng TanStack Query.
+// Custom hook quản lý truy vấn các bài tập luyện nghe, nói, viết bằng TanStack Query.
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import {
   practiceService,
-  type BackendListeningExercise,
+  type BackendListeningPracticeItemPaginated,
   type BackendSpeakingExercise,
   type BackendWritingExercise,
-  type DailyJournalPrompt,
 } from '@/features/practice/services/practice.service'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
 
-export function useDailyJournalPromptQuery(enabled = true) {
-  return useQuery<DailyJournalPrompt>({
-    queryKey: practiceKeys.dailyJournalPrompt(),
-    queryFn: () => practiceService.getDailyJournalPrompt(),
+export function useListeningPracticeItemsQuery(params?: { difficulty?: string; contextId?: string; cefrLevel?: string; page?: number; limit?: number }, enabled = true) {
+  return useQuery<BackendListeningPracticeItemPaginated>({
+    queryKey: practiceKeys.listeningPracticeItems(params),
+    queryFn: () => practiceService.getListeningPracticeItems(params),
     enabled,
-    staleTime: 60 * 60 * 1000,
-  })
-}
-
-export function useListeningExercisesQuery(params?: { part?: number; level?: string }, enabled = true) {
-  return useQuery<BackendListeningExercise[]>({
-    queryKey: practiceKeys.listening(params),
-    queryFn: () => practiceService.getListeningExercises(params),
-    enabled,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -44,5 +34,45 @@ export function useWritingExercisesQuery(enabled = true) {
     queryFn: () => practiceService.getWritingExercises(),
     enabled,
     staleTime: 10 * 60 * 1000,
+  })
+}
+
+export function useWritingExerciseByIdQuery(id: string | null, enabled = true) {
+  return useQuery<BackendWritingExercise>({
+    queryKey: practiceKeys.writingDetail(id || ''),
+    queryFn: () => practiceService.getWritingExerciseById(id!),
+    enabled: enabled && !!id,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+import type { WritingRecommendationResponse } from '@/features/practice/types/writing'
+
+export function useWritingRecommendationsQuery(userId: string | null, limit = 4, enabled = true) {
+  return useQuery<WritingRecommendationResponse>({
+    queryKey: ['writing', 'recommendations', userId, limit],
+    queryFn: () => practiceService.getWritingRecommendations(userId!, limit),
+    enabled: enabled && !!userId,
+    staleTime: 2 * 60 * 1000, // 2 minutes - recommendations can change
+  })
+}
+
+import type { SpeakingAttempt, UserSpeakingProfile } from '@/features/practice/types/speaking'
+
+export function useSpeakingAttemptsQuery(limit = 20, enabled = true) {
+  return useQuery<SpeakingAttempt[]>({
+    queryKey: ['speaking', 'attempts', 'my', limit],
+    queryFn: () => practiceService.getMySpeakingAttempts(limit),
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useSpeakingProfileQuery(enabled = true) {
+  return useQuery<UserSpeakingProfile>({
+    queryKey: ['speaking', 'profile', 'my'],
+    queryFn: () => practiceService.getMySpeakingProfile(),
+    enabled,
+    staleTime: 60 * 1000,
   })
 }

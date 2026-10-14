@@ -1,7 +1,4 @@
-/**
- * @file course.sidebar.chapter.item.tsx
- * @description Thành phần hiển thị accordion từng chương học trong thanh danh sách bài học
- */
+// Thành phần hiển thị accordion từng chương học trong thanh danh sách bài học.
 
 import { CheckCircle2, ChevronDown, ChevronUp, Lock, RotateCcw } from 'lucide-react'
 import type { Chapter, Lesson } from '@/features/courses/types/course'
@@ -29,7 +26,7 @@ interface CourseSidebarChapterItemProps {
   onSelectLesson: (lesson: Lesson) => void
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
   onToggleResource: (lessonId: string, e: React.MouseEvent) => void
-  onTakeTest?: () => void
+  onTakeTest?: (isRetry?: boolean) => void
   onOpenPracticeQuiz?: (lesson: Lesson) => void
 }
 
@@ -58,17 +55,34 @@ export function CourseSidebarChapterItem({
 }: CourseSidebarChapterItemProps) {
   const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
   const chTotal = chapter.lessons.length
+  const isAllLessonsCompleted = chTotal > 0 && chCompleted === chTotal
+  const hasChallenge = questionsCount > 0
+  const isChapterCompleted = hasChallenge ? (isPassedChallenge && isAllLessonsCompleted) : isAllLessonsCompleted
 
   return (
-    <div className="bg-surface">
+    <div
+      className={`transition-all border-b border-border/70 ${
+        isChapterLocked || isLockedByReminder ? 'bg-slate-100/80 dark:bg-slate-900/60' : 'bg-surface'
+      }`}
+    >
       <button
         type="button"
         onClick={onToggleChapter}
-        className="flex w-full items-center justify-between p-4 text-left hover:bg-surface-subtle/70 transition-colors group cursor-pointer"
+        className={`flex w-full items-center justify-between p-4 text-left transition-colors group cursor-pointer ${
+          isChapterLocked || isLockedByReminder
+            ? 'bg-slate-100/90 dark:bg-slate-900/70 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 border-l-4 border-l-amber-500/70'
+            : 'hover:bg-surface-subtle/70'
+        }`}
       >
         <div className="space-y-1.5 flex-1 pr-3 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-black uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+            <span
+              className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                isChapterLocked || isLockedByReminder
+                  ? 'bg-slate-200/90 dark:bg-slate-800 text-text-tertiary'
+                  : 'text-primary bg-primary/10'
+              }`}
+            >
               Chương {chapter.order || chIdx + 1}
             </span>
 
@@ -78,14 +92,14 @@ export function CourseSidebarChapterItem({
                 Khóa do vắng ({violationCount || 5}/5)
               </span>
             ) : isChapterLocked ? (
-              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
                 <Lock size={10} />
                 Đang khóa
               </span>
-            ) : isPassedChallenge ? (
+            ) : isChapterCompleted ? (
               <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                 <CheckCircle2 size={10} className="text-emerald-500" />
-                Đã hoàn thành ({challengeScore}%)
+                Đã hoàn thành{challengeScore >= passingScore ? ` (${challengeScore}%)` : ''}
               </span>
             ) : hasTakenChallenge ? (
               <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1">
@@ -99,7 +113,13 @@ export function CourseSidebarChapterItem({
             )}
           </div>
 
-          <div className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors leading-snug line-clamp-1">
+          <div
+            className={`text-xs font-bold leading-snug line-clamp-1 transition-colors ${
+              isChapterLocked || isLockedByReminder
+                ? 'text-text-secondary'
+                : 'text-text-primary group-hover:text-primary'
+            }`}
+          >
             {chapter.title}
           </div>
 
@@ -114,7 +134,11 @@ export function CourseSidebarChapterItem({
       </button>
 
       {isExpanded && (
-        <div className="border-t border-border/60 bg-surface-subtle/30">
+        <div
+          className={`border-t border-border/60 ${
+            isChapterLocked || isLockedByReminder ? 'bg-slate-100/50 dark:bg-slate-900/40' : 'bg-surface-subtle/30'
+          }`}
+        >
           <div className="divide-y divide-border/40">
             {chapter.lessons.map((lesson) => (
               <CourseSidebarLessonRow
@@ -186,7 +210,7 @@ export function CourseSidebarChapterItem({
                 )
                 return
               }
-              onTakeTest?.()
+              onTakeTest?.(isPassedChallenge || hasTakenChallenge)
             }}
           />
         </div>

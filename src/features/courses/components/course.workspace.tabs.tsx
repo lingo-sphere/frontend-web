@@ -167,7 +167,11 @@ export function CourseWorkspaceTabs({
           currentTime={playerCurrentTime}
           isEnrolled={isEnrolled}
           isAuthenticated={isAuthenticated}
-          onSeekTo={() => {}}
+          onSeekTo={(time) => {
+            window.dispatchEvent(
+              new CustomEvent('lingosphere:seek-video', { detail: { time } })
+            )
+          }}
           onAddNote={(content, timestamp) => onAddNote(timestamp, content)}
           onDeleteNote={onDeleteNote}
         />

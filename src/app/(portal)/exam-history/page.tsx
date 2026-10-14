@@ -1,7 +1,7 @@
 // Trang hiển thị lịch sử làm bài kiểm tra và biểu đồ miền phát triển năng lực của học viên
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { BookOpen, Loader2, ListFilter, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
@@ -10,15 +10,24 @@ import { useExamHistory, UnifiedTestAttempt } from '@/features/toeic/hooks/use.e
 import { ExamHistoryKpi } from '@/features/toeic/components/exam.history.kpi'
 import { ExamHistoryFilters } from '@/features/toeic/components/exam.history.filters'
 import { ExamHistoryTable } from '@/features/toeic/components/exam.history.table'
+import { Pagination } from '@/components/pagination'
 import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCoursesProgressQuery } from '@/features/progress/hooks/use.progress.query'
 import type { ProgressRecentActivity, UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
+import { toast } from '@/store/toast.store'
 
 export default function ExamHistoryPage() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore()
   const [viewMode, setViewMode] = useState<'LIST' | 'CHART'>('LIST')
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để xem lịch sử thi!')
+      navigate('/login?returnUrl=/exam-history')
+    }
+  }, [isAuthLoading, isAuthenticated, navigate])
 
   const {
     isLoading,
@@ -28,6 +37,11 @@ export default function ExamHistoryPage() {
     setSearchQuery,
     stats,
     filteredList,
+    paginatedList,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    totalPages,
     unifiedList,
     courseAttempts,
     courseTitleMap,
@@ -37,10 +51,10 @@ export default function ExamHistoryPage() {
     formatDuration,
   } = useExamHistory()
 
-  const { data: coursesProgress = [] } = useCoursesProgressQuery()
+  const { data: coursesProgress = [] } = useCoursesProgressQuery(Boolean(user))
 
-  const baselineScore = Number(user?.placement_test_score) || 240
-  const targetScore = Number(user?.target_toeic_score) || 650
+  const baselineScore = Number(user?.placement_test_score) || 0
+  const targetScore = Number(user?.target_toeic_score) || 0
   const listeningScore = Number(user?.placement_listening_score) || 0
   const readingScore = Number(user?.placement_reading_score) || 0
 
@@ -80,7 +94,7 @@ export default function ExamHistoryPage() {
       return {
         course_id: cp.course_id,
         title: courseTitle,
-        level: matched?.level || 'Mọi cấp độ',
+        target_score: matched?.target_score,
         category: matched?.category || 'TOEIC',
         progress_percentage: cp.progress_percentage || 0,
         completed_lessons_count: cp.completed_lessons_count || 0,
@@ -119,7 +133,7 @@ export default function ExamHistoryPage() {
       navigate(
         `/course/${item.courseId}/exam?type=${item.testType}${
           item.moduleId ? `&chapterId=${item.moduleId}` : ''
-        }`
+        }&retry=true`
       )
     }
   }
@@ -130,6 +144,14 @@ export default function ExamHistoryPage() {
     toeic: unifiedList.filter((i) => i.sourceType === 'TOEIC' && i.testType !== 'PLACEMENT').length,
     chapterTest: courseAttempts.filter((c) => c.test_type === 'challenge' || c.test_type === 'post-mini').length,
     finalTest: courseAttempts.filter((c) => c.test_type === 'final-test').length,
+  }
+
+  if (isAuthLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-text-primary">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (
@@ -160,6 +182,26 @@ export default function ExamHistoryPage() {
       </div>
 
       <ExamHistoryKpi stats={stats} />
+
+      {!isAuthenticated && (
+        <div className="rounded-2xl border border-dashed border-border bg-surface/50 p-8 text-center flex flex-col items-center justify-center gap-3">
+          <BookOpen size={40} className="text-text-tertiary" />
+          <h3 className="text-base font-bold text-text-primary">Đăng nhập để theo dõi lịch sử làm bài thi</h3>
+          <p className="text-xs text-text-secondary max-w-md">
+            Lưu lại toàn bộ kết quả thi thử, điểm Listening/Reading, và biểu đồ phát triển năng lực chuẩn xác nhất.
+          </p>
+          <Button
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+              }
+            }}
+            className="mt-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer"
+          >
+            Đăng nhập ngay
+          </Button>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 border-b border-border pb-3">
         <button
@@ -214,16 +256,26 @@ export default function ExamHistoryPage() {
               <p className="text-sm font-semibold">Đang tổng hợp lịch sử làm bài...</p>
             </div>
           ) : (
-            <ExamHistoryTable
-              filteredList={filteredList}
-              activeTab={activeTab}
-              onNavigateDetail={handleNavigateDetail}
-              onRetake={handleRetake}
-              onNavigateToeic={() => navigate('/toeic')}
-              onNavigatePlacement={() => navigate('/toeic/exam/placement_2skills')}
-              formatDate={formatDate}
-              formatDuration={formatDuration}
-            />
+            <div className="space-y-4">
+              <ExamHistoryTable
+                filteredList={paginatedList}
+                activeTab={activeTab}
+                onNavigateDetail={handleNavigateDetail}
+                onRetake={handleRetake}
+                onNavigateToeic={() => navigate('/toeic')}
+                onNavigatePlacement={() => navigate('/toeic/exam/placement_2skills')}
+                formatDate={formatDate}
+                formatDuration={formatDuration}
+              />
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={pageSize}
+                totalItems={filteredList.length}
+                className="pt-2"
+              />
+            </div>
           )}
         </>
       )}

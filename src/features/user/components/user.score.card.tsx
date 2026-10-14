@@ -19,6 +19,7 @@ import { UserSkillScoreGrid } from '@/features/user/components/user.skill.score.
 import { getUserScoreLevelInfo, type UserScoreData } from '@/features/user/utils/user.score.utils'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { useActivePlacementExamsQuery } from '@/features/toeic/hooks/use.toeic.query'
 
 interface UserScoreCardProps {
   userScores: UserScoreData
@@ -28,6 +29,14 @@ interface UserScoreCardProps {
 export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProps) {
   const router = useRouter()
   const [showEditModal, setShowEditModal] = useState<boolean>(false)
+  const { data: activePlacements = [] } = useActivePlacementExamsQuery()
+
+  const has2Skills = activePlacements.some(
+    (p) => p.is_published !== false && (p.skills_enabled === 'LR' || p.placement_type === '2SKILLS')
+  )
+  const has4Skills = activePlacements.some(
+    (p) => p.is_published !== false && (p.skills_enabled === 'ALL' || p.placement_type === '4SKILLS')
+  )
   const [selectedSkillsType, setSelectedSkillsType] = useState<'2SKILLS' | '4SKILLS'>(
     userScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS'
   )
@@ -232,33 +241,39 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
             selectedSkillsType={selectedSkillsType}
           />
 
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-200/80 dark:border-indigo-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span>Bạn muốn đo lường lại năng lực thực tế?</span>
+          {(has2Skills || has4Skills) && (
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-200/80 dark:border-indigo-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <span>Bạn muốn đo lường lại năng lực thực tế?</span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Làm bài test chính thức của hệ thống để cập nhật kết quả kiểm chứng mới nhất.
+                </p>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Làm bài test chính thức của hệ thống để cập nhật kết quả kiểm chứng mới nhất.
-              </p>
+              <div className="flex items-center gap-2">
+                {has2Skills && (
+                  <button
+                    type="button"
+                    onClick={() => router.push('/toeic/exam/placement_2skills')}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer whitespace-nowrap"
+                  >
+                    Test 2 Kỹ Năng
+                  </button>
+                )}
+                {has4Skills && (
+                  <button
+                    type="button"
+                    onClick={() => router.push('/toeic/exam/placement_4skills')}
+                    className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer whitespace-nowrap"
+                  >
+                    Test 4 Kỹ Năng
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => router.push('/toeic/exam/exam_placement_2skills_lr')}
-                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer whitespace-nowrap"
-              >
-                Test 2 Kỹ Năng
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/toeic/exam/exam_placement_4skills_full')}
-                className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer whitespace-nowrap"
-              >
-                Test 4 Kỹ Năng
-              </button>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

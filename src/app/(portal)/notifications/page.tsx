@@ -17,6 +17,7 @@ import {
 } from '@/features/notifications/hooks/use.notifications.query'
 import { getCategoryColor, getCategoryLabel } from '@/features/notifications/types/notification'
 import type { Notification, NotificationCategory } from '@/features/notifications/types/notification'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 
 const categoryTabs: { key: 'ALL' | NotificationCategory; label: { vi: string; en: string } }[] = [
   { key: 'ALL', label: { vi: 'Tất cả', en: 'All' } },
@@ -42,10 +43,11 @@ export default function NotificationsAppPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const isVietnamese = i18n.language === 'vi'
+  const { isAuthenticated } = useAuthStore()
   const [activeTab, setActiveTab] = useState<'ALL' | NotificationCategory>('ALL')
   const [showRead, setShowRead] = useState(true)
 
-  const { data: notifications = [], isLoading } = useMyNotifications()
+  const { data: notifications = [], isLoading } = useMyNotifications(undefined, isAuthenticated)
   const { mutate: markAsReadMutate } = useMarkNotificationAsReadMutation()
   const { mutate: markAllAsReadMutate } = useMarkAllNotificationsAsReadMutation()
 
@@ -143,7 +145,30 @@ export default function NotificationsAppPage() {
           </label>
         </div>
 
-        {isLoading ? (
+        {!isAuthenticated ? (
+          <EmptyState
+            icon={Bell}
+            title={isVietnamese ? 'Đăng nhập để xem thông báo' : 'Log in to view notifications'}
+            description={
+              isVietnamese
+                ? 'Đăng nhập vào tài khoản để nhận thông báo về khóa học, bài thi và cập nhật hệ thống.'
+                : 'Log in to receive updates on courses, exams, and system announcements.'
+            }
+            action={
+              <Button
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+                  }
+                }}
+                className="bg-primary hover:bg-primary-hover text-white text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer"
+              >
+                {isVietnamese ? 'Đăng nhập ngay' : 'Log In Now'}
+              </Button>
+            }
+            className="py-16"
+          />
+        ) : isLoading ? (
           <div className="flex h-40 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
@@ -171,11 +196,11 @@ export default function NotificationsAppPage() {
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold uppercase text-primary">
-                            {getCategoryLabel(notification.notification_category)}
+                            {getCategoryLabel(notification.notification_category, isVietnamese)}
                           </span>
                           {notification.is_pinned && (
                             <span className="rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-bold text-warning">
-                              PINNED
+                              {isVietnamese ? 'ĐÃ GHIM' : 'PINNED'}
                             </span>
                           )}
                           <span
@@ -183,7 +208,17 @@ export default function NotificationsAppPage() {
                               priorityColors[notification.priority] || priorityColors.NORMAL
                             }`}
                           >
-                            {notification.priority}
+                            {isVietnamese
+                              ? notification.priority === 'CRITICAL'
+                                ? 'KHẨN CẤP'
+                                : notification.priority === 'URGENT'
+                                ? 'GẤP'
+                                : notification.priority === 'HIGH'
+                                ? 'CAO'
+                                : notification.priority === 'NORMAL'
+                                ? 'BÌNH THƯỜNG'
+                                : 'THẤP'
+                              : notification.priority}
                           </span>
                         </div>
                         <span className="text-xs text-text-tertiary">

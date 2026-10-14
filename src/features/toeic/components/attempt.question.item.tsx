@@ -2,6 +2,7 @@
 import { CheckCircle, XCircle, AlertCircle, Mic, Bot, Sparkles, Lightbulb, Volume2, PenTool } from 'lucide-react'
 import { Card } from '@/components/card'
 import { Badge } from '@/components/badge'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 export interface AttemptAnswerDetail {
   question_number: number
@@ -28,6 +29,7 @@ export interface AttemptAnswerDetail {
     correct_option?: string
     image_url?: string
     audio_url?: string
+    media_url?: string
   }
 }
 
@@ -122,16 +124,16 @@ export function ToeicQuestionCard({ answer }: ToeicQuestionCardProps) {
       {q?.image_url && (
         <div className="max-w-md rounded-xl overflow-hidden border border-border">
           <img
-            src={q.image_url}
+            src={resolveMediaUrl(q.image_url)}
             alt={`Câu ${answer.question_number}`}
             className="w-full h-auto object-cover"
           />
         </div>
       )}
 
-      {q?.audio_url && (
+      {(q?.audio_url || q?.media_url) && (
         <div className="pt-1">
-          <audio controls className="w-full h-8" src={q.audio_url} />
+          <audio controls className="w-full h-8" src={resolveMediaUrl(q.audio_url || q.media_url)} />
         </div>
       )}
 
@@ -420,7 +422,7 @@ export function CourseQuestionCard({
       {question.image_url && (
         <div className="max-w-md rounded-xl overflow-hidden border border-border">
           <img
-            src={question.image_url}
+            src={resolveMediaUrl(question.image_url)}
             alt={`Câu ${question.question_number}`}
             className="w-full h-auto object-cover"
           />
@@ -429,7 +431,7 @@ export function CourseQuestionCard({
 
       {question.media_url && (
         <div className="pt-1">
-          <audio controls className="w-full h-8" src={question.media_url} />
+          <audio controls className="w-full h-8" src={resolveMediaUrl(question.media_url)} />
         </div>
       )}
 

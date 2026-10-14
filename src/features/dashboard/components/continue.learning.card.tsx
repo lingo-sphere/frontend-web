@@ -1,8 +1,4 @@
-/**
- * @file continue.learning.card.tsx
- * @description Component giao diện React ContinueLearningCard cho học viên
- */
-
+// Thẻ tiếp tục học tập trong bảng điều khiển học viên.
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Play } from 'lucide-react'
 
@@ -15,7 +11,8 @@ interface ContinueLearningCardProps {
 }
 
 export function ContinueLearningCard({ onAction }: ContinueLearningCardProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
 
   return (
     <Card className="dashboard-card p-0">
@@ -29,19 +26,19 @@ export function ContinueLearningCard({ onAction }: ContinueLearningCardProps) {
             <h3 className="mt-5 text-[22px] font-bold text-text-primary">TOEIC Foundation</h3>
             <p className="mt-1 text-[13px] text-text-secondary">Unit 04 · Daily Communication</p>
           </div>
-          <span className="shrink-0 rounded-xl bg-warning-soft px-3 py-2 text-[12px] font-bold text-warning">72% complete</span>
+          <span className="shrink-0 rounded-xl bg-warning-soft px-3 py-2 text-[12px] font-bold text-warning">{t('dashboard.percentCompleted', { percent: 72 })}</span>
         </div>
       </CardHeader>
       <CardContent className="gap-0 p-5 sm:p-6">
         <div className="mt-5 flex justify-between text-[12px] text-text-tertiary">
-          <span>18 / 25 lessons</span>
+          <span>{t('dashboard.lessonsCompleted', { completed: 18, total: 25 })}</span>
           <span>72%</span>
         </div>
         <Progress aria-label="TOEIC Foundation progress" className="mt-1.5 h-2 bg-primary-soft [&_[data-slot=progress-indicator]]:rounded-full" value={72} />
       </CardContent>
       <CardFooter className="flex flex-col items-stretch gap-3 border-t border-border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6 sm:pt-4">
         <span className="text-[12px] text-text-tertiary">Unit 04 · Daily Communication</span>
-        <Button className="dashboard-button w-full bg-primary px-4 text-primary-foreground hover:bg-primary-hover sm:w-auto" onClick={() => onAction('Đã mở Unit 04 · Daily Communication.')}>
+        <Button className="dashboard-button w-full bg-primary px-4 text-primary-foreground hover:bg-primary-hover sm:w-auto" onClick={() => onAction(isVietnamese ? 'Đã mở Unit 04 · Daily Communication.' : 'Opened Unit 04 · Daily Communication.')}>
           {t('dashboard.continueLearning')} <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </CardFooter>

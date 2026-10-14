@@ -12,6 +12,7 @@ import { useNavigate } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
+import { resolveMediaUrl } from '@/utils/media.utils'
 import type { Course } from '@/types/api.types'
 
 interface LearningCourseItem {
@@ -21,7 +22,11 @@ interface LearningCourseItem {
   progress: number
 }
 
-export function HeaderMyLearningHover() {
+interface HeaderMyLearningHoverProps {
+  isOpen: boolean
+}
+
+export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
@@ -59,7 +64,7 @@ export function HeaderMyLearningHover() {
                 id: en.course_id,
                 title: matchedCourse?.title || 'Khóa học tiếng Anh',
                 thumbnail:
-                  matchedCourse?.thumbnail_url ||
+                  resolveMediaUrl(matchedCourse?.thumbnail_url) ||
                   'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600',
                 progress: en.progress_percent || 0,
               }
@@ -83,7 +88,14 @@ export function HeaderMyLearningHover() {
   }, [isAuthenticated])
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 sm:w-[340px] rounded-2xl border border-border bg-surface shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+    <div
+      className={`absolute right-0 top-full pt-2 z-50 transition-all duration-200 ease-out origin-top-right ${
+        isOpen
+          ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
+          : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
+      }`}
+    >
+      <div className="w-80 sm:w-[340px] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden text-left">
       {loading ? (
         <div className="p-8 text-center flex items-center justify-center gap-2 text-xs text-text-secondary">
           <Loader2 size={16} className="animate-spin text-primary" />
@@ -153,6 +165,7 @@ export function HeaderMyLearningHover() {
           </div>
         </>
       )}
+      </div>
     </div>
   )
 }

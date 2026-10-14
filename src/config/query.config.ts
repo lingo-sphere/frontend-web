@@ -7,7 +7,11 @@ function makeQueryClient() {
       queries: {
         staleTime: 60 * 1000,
         gcTime: 10 * 60 * 1000,
-        retry: 1,
+        retry: (failureCount, error: unknown) => {
+          const status = (error as { response?: { status?: number }; status?: number })?.response?.status || (error as { status?: number })?.status
+          if (status === 401 || status === 403) return false
+          return failureCount < 1
+        },
         refetchOnWindowFocus: true,
       },
     },

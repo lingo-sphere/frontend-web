@@ -15,7 +15,6 @@ import {
 import { toast } from '@/store/toast.store'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type { UserScoreData } from '@/features/user/utils/user.score.utils'
 
 interface UserScoreEditModalProps {
@@ -31,6 +30,7 @@ export function UserScoreEditModal({
   currentScores,
   onSuccess,
 }: UserScoreEditModalProps) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const [skillsType, setSkillsType] = useState<'2SKILLS' | '4SKILLS'>(
     currentScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS'
   )
@@ -38,21 +38,95 @@ export function UserScoreEditModal({
   const [readingScore, setReadingScore] = useState<number>(currentScores.readingScore ?? 0)
   const [speakingScore, setSpeakingScore] = useState<number>(currentScores.speakingScore ?? 0)
   const [writingScore, setWritingScore] = useState<number>(currentScores.writingScore ?? 0)
+  const initialTotal =
+    (currentScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS') === '4SKILLS'
+      ? (currentScores.listeningScore ?? 0) +
+        (currentScores.readingScore ?? 0) +
+        (currentScores.speakingScore ?? 0) +
+        (currentScores.writingScore ?? 0)
+      : (currentScores.listeningScore ?? 0) + (currentScores.readingScore ?? 0)
+
   const [targetScore, setTargetScore] = useState<number>(() => {
-    if (typeof currentScores.targetScore === 'number' && currentScores.targetScore > 0) {
-      return currentScores.targetScore
-    }
     const storedUser = useAuthStore.getState().user
-    const existingTarget = Number(storedUser?.target_toeic_score)
-    return existingTarget > 0 ? existingTarget : 450
+    const existing =
+      typeof currentScores.targetScore === 'number' && currentScores.targetScore > 0
+        ? currentScores.targetScore
+        : Number(storedUser?.target_toeic_score) || 0
+
+    const maxLimit = (currentScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS') === '4SKILLS' ? 1390 : 990
+    if (existing > initialTotal && existing <= maxLimit) return existing
+    return Math.min(
+      maxLimit,
+      Math.max(450, initialTotal > 0 ? Math.ceil((initialTotal + 50) / 10) * 10 : 450)
+    )
   })
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
   if (!open) return null
 
-  const calculatedTotal = listeningScore + readingScore
+  const maxPossibleScore = skillsType === '4SKILLS' ? 1390 : 990
+  const calculatedTotal =
+    skillsType === '4SKILLS'
+      ? listeningScore + readingScore + speakingScore + writingScore
+      : listeningScore + readingScore
+
+  const isTargetInvalid = calculatedTotal < maxPossibleScore && targetScore <= calculatedTotal
+
+  const handleListeningChange = (val: number) => {
+    const clamped = Math.min(495, Math.max(0, val))
+    setListeningScore(clamped)
+    const newTotal = skillsType === '4SKILLS' ? clamped + readingScore + speakingScore + writingScore : clamped + readingScore
+    if (targetScore <= newTotal && newTotal < maxPossibleScore) {
+      setTargetScore(Math.min(maxPossibleScore, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    }
+  }
+
+  const handleReadingChange = (val: number) => {
+    const clamped = Math.min(495, Math.max(0, val))
+    setReadingScore(clamped)
+    const newTotal = skillsType === '4SKILLS' ? listeningScore + clamped + speakingScore + writingScore : listeningScore + clamped
+    if (targetScore <= newTotal && newTotal < maxPossibleScore) {
+      setTargetScore(Math.min(maxPossibleScore, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    }
+  }
+
+  const handleSpeakingChange = (val: number) => {
+    const clamped = Math.min(200, Math.max(0, val))
+    setSpeakingScore(clamped)
+    const newTotal = listeningScore + readingScore + clamped + writingScore
+    if (targetScore <= newTotal && newTotal < maxPossibleScore) {
+      setTargetScore(Math.min(maxPossibleScore, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    }
+  }
+
+  const handleWritingChange = (val: number) => {
+    const clamped = Math.min(200, Math.max(0, val))
+    setWritingScore(clamped)
+    const newTotal = listeningScore + readingScore + speakingScore + clamped
+    if (targetScore <= newTotal && newTotal < maxPossibleScore) {
+      setTargetScore(Math.min(maxPossibleScore, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    }
+  }
+
+  const handleSkillsTypeChange = (newType: '2SKILLS' | '4SKILLS') => {
+    setSkillsType(newType)
+    const newMax = newType === '4SKILLS' ? 1390 : 990
+    const newTotal = newType === '4SKILLS'
+      ? listeningScore + readingScore + speakingScore + writingScore
+      : listeningScore + readingScore
+    if (targetScore <= newTotal && newTotal < newMax) {
+      setTargetScore(Math.min(newMax, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    } else if (targetScore > newMax) {
+      setTargetScore(newMax)
+    }
+  }
 
   const handleSave = async () => {
+    if (!isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để cập nhật điểm trình độ của bạn.')
+      return
+    }
+
     if (listeningScore < 0 || listeningScore > 495) {
       toast.error('Điểm Nghe (Listening) phải từ 0 đến 495.')
       return
@@ -71,6 +145,14 @@ export function UserScoreEditModal({
         return
       }
     }
+    if (calculatedTotal < maxPossibleScore && targetScore <= calculatedTotal) {
+      toast.error(`Điểm mục tiêu (${targetScore}đ) phải lớn hơn tổng điểm hiện tại (${calculatedTotal}đ).`)
+      return
+    }
+    if (targetScore > maxPossibleScore) {
+      toast.error(`Điểm mục tiêu không được vượt quá tối đa ${maxPossibleScore}đ.`)
+      return
+    }
 
     setIsSaving(true)
     try {
@@ -88,7 +170,6 @@ export function UserScoreEditModal({
       }
 
       const updatedUser = await userService.updateProfile(payload)
-
       const { user, setUser } = useAuthStore.getState()
       if (user) {
         setUser({
@@ -97,9 +178,6 @@ export function UserScoreEditModal({
           ...(updatedUser || {}),
         })
       }
-
-      storage.set(STORAGE_KEYS.PLACEMENT_SCORE, payload)
-
       toast.success('Cập nhật điểm trình độ thành công!')
       onSuccess(payload)
       onOpenChange(false)
@@ -113,14 +191,10 @@ export function UserScoreEditModal({
 
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onOpenChange(false)
-      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/25 dark:bg-black/35 backdrop-blur-[2px] animate-in fade-in duration-150"
     >
       <div
         className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl ring-1 ring-black/5 dark:ring-white/10 p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 relative"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3.5">
           <div className="flex items-center gap-3">
@@ -146,6 +220,16 @@ export function UserScoreEditModal({
         </div>
 
         
+        {!isAuthenticated && (
+          <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11.5px] text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold">Yêu cầu đăng nhập: </span>
+              <span>Bạn cần đăng nhập tài khoản LingoSphere để lưu và cập nhật điểm trình độ vào hệ thống.</span>
+            </div>
+          </div>
+        )}
+
         <div className="p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
@@ -165,7 +249,7 @@ export function UserScoreEditModal({
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => setSkillsType('2SKILLS')}
+                onClick={() => handleSkillsTypeChange('2SKILLS')}
                 className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   skillsType === '2SKILLS'
                     ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500/20'
@@ -177,7 +261,7 @@ export function UserScoreEditModal({
               </button>
               <button
                 type="button"
-                onClick={() => setSkillsType('4SKILLS')}
+                onClick={() => handleSkillsTypeChange('4SKILLS')}
                 className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   skillsType === '4SKILLS'
                     ? 'bg-teal-50 dark:bg-teal-950/60 border-teal-500 text-teal-700 dark:text-teal-300 ring-1 ring-teal-500/20'
@@ -201,7 +285,7 @@ export function UserScoreEditModal({
                 min={0}
                 max={495}
                 value={listeningScore}
-                onChange={(e) => setListeningScore(Math.min(495, Math.max(0, Number(e.target.value))))}
+                onChange={(e) => handleListeningChange(Number(e.target.value))}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
@@ -216,7 +300,7 @@ export function UserScoreEditModal({
                 min={0}
                 max={495}
                 value={readingScore}
-                onChange={(e) => setReadingScore(Math.min(495, Math.max(0, Number(e.target.value))))}
+                onChange={(e) => handleReadingChange(Number(e.target.value))}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
@@ -234,7 +318,7 @@ export function UserScoreEditModal({
                   min={0}
                   max={200}
                   value={speakingScore}
-                  onChange={(e) => setSpeakingScore(Math.min(200, Math.max(0, Number(e.target.value))))}
+                  onChange={(e) => handleSpeakingChange(Number(e.target.value))}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 />
               </div>
@@ -249,7 +333,7 @@ export function UserScoreEditModal({
                   min={0}
                   max={200}
                   value={writingScore}
-                  onChange={(e) => setWritingScore(Math.min(200, Math.max(0, Number(e.target.value))))}
+                  onChange={(e) => handleWritingChange(Number(e.target.value))}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 />
               </div>
@@ -259,27 +343,44 @@ export function UserScoreEditModal({
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Tổng điểm TOEIC dự kiến:</span>
             <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
-              {calculatedTotal} / 990
+              {calculatedTotal} / {maxPossibleScore}
             </span>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Mục tiêu TOEIC mong muốn đạt được:
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                Mục tiêu TOEIC mong muốn đạt được:
+              </label>
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                Tối đa: {maxPossibleScore}đ
+              </span>
+            </div>
             <input
               type="number"
-              min={0}
-              max={990}
+              min={Math.min(maxPossibleScore, calculatedTotal + 5)}
+              max={maxPossibleScore}
               step={5}
               value={targetScore}
-              onChange={(e) => setTargetScore(Math.min(990, Math.max(0, Number(e.target.value))))}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              onChange={(e) => setTargetScore(Math.min(maxPossibleScore, Math.max(0, Number(e.target.value))))}
+              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all ${
+                isTargetInvalid
+                  ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-500/20 text-rose-600 dark:text-rose-400'
+                  : 'border-slate-200 dark:border-slate-700 focus:ring-indigo-500/20'
+              }`}
             />
+            {isTargetInvalid ? (
+              <p className="text-[11px] font-bold text-rose-500 mt-1">
+                * Điểm mục tiêu phải lớn hơn tổng điểm hiện tại ({calculatedTotal}đ). Gợi ý: {Math.min(maxPossibleScore, Math.max(calculatedTotal + 10, Math.ceil((calculatedTotal + 50) / 10) * 10))}đ
+              </p>
+            ) : (
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                Mục tiêu cần cao hơn tổng điểm hiện tại ({calculatedTotal}đ) để hệ thống xây dựng lộ trình cải thiện.
+              </p>
+            )}
           </div>
         </div>
 
-        
         <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
@@ -288,14 +389,26 @@ export function UserScoreEditModal({
           >
             Hủy bỏ
           </button>
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={handleSave}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold hover:shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
-          >
-            {isSaving ? 'Đang lưu...' : 'Xác nhận cập nhật điểm'}
-          </button>
+          {!isAuthenticated ? (
+            <button
+              type="button"
+              onClick={() => {
+                toast.warning('Vui lòng đăng nhập để cập nhật điểm trình độ của bạn.')
+              }}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold hover:shadow-md transition-all cursor-pointer flex items-center gap-2"
+            >
+              Đăng nhập để cập nhật điểm
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isSaving || isTargetInvalid}
+              onClick={handleSave}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold hover:shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isSaving ? 'Đang lưu...' : 'Xác nhận cập nhật điểm'}
+            </button>
+          )}
         </div>
       </div>
     </div>

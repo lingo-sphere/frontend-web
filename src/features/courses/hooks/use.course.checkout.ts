@@ -111,6 +111,20 @@ export function useCourseCheckout({
         handlePaymentSuccess()
         return true
       }
+      if (res.status === 'UNDERPAID') {
+        setOrder((prev) => {
+          if (!prev) return prev
+          const updated = {
+            ...prev,
+            status: 'UNDERPAID' as const,
+            received_amount: res.received_amount ?? prev.received_amount,
+            remaining_amount: res.remaining_amount ?? prev.remaining_amount,
+            qr_url: res.qr_url || prev.qr_url,
+          }
+          orderRef.current = updated
+          return updated
+        })
+      }
     } catch {}
     return false
   }, [handlePaymentSuccess])
@@ -217,6 +231,25 @@ export function useCourseCheckout({
         res?.status || (res as unknown as { data?: { status?: string } })?.data?.status
       if (status === 'PAID') {
         handlePaymentSuccess()
+      } else if (status === 'UNDERPAID') {
+        setOrder((prev) => {
+          if (!prev) return prev
+          const updated = {
+            ...prev,
+            status: 'UNDERPAID' as const,
+            received_amount: res.received_amount ?? prev.received_amount,
+            remaining_amount: res.remaining_amount ?? prev.remaining_amount,
+            qr_url: res.qr_url || prev.qr_url,
+          }
+          orderRef.current = updated
+          return updated
+        })
+        toast.warning(
+          isVi
+            ? `Hệ thống đã nhận được ₫${(res.received_amount || 0).toLocaleString('vi-VN')} (còn thiếu ₫${(res.remaining_amount || 0).toLocaleString('vi-VN')}). Vui lòng quét mã QR mới bên dưới để chuyển nốt ₫${(res.remaining_amount || 0).toLocaleString('vi-VN')} để kích hoạt ngay!`
+            : `Received ₫${(res.received_amount || 0).toLocaleString('vi-VN')} (missing ₫${(res.remaining_amount || 0).toLocaleString('vi-VN')}). Please scan the updated QR code below to pay the remaining balance!`,
+          isVi ? 'Thanh toán thiếu tiền' : 'Underpaid'
+        )
       } else {
         toast.warning(
           isVi

@@ -56,9 +56,9 @@ export function LandingHeader({
         className="flex items-center gap-3 group cursor-pointer bg-transparent border-none p-0 outline-none"
         aria-label="Cuộn lên đầu trang"
       >
-        <div className="h-2.5 w-2.5 rounded-full bg-[#2f7f78] shadow-[0_0_12px_#48c9b0] group-hover:scale-125 transition-transform" />
+        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_12px_#34d399] group-hover:scale-125 transition-transform" />
         <div className="text-xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
-          LINGO <span className="font-light text-white/80 group-hover:text-[#48c9b0] transition-colors">SPHERE</span>
+          LINGO <span className="font-light text-white/80 group-hover:text-emerald-400 transition-colors">SPHERE</span>
         </div>
       </motion.button>
 
@@ -70,7 +70,7 @@ export function LandingHeader({
             initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 + idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="relative transition-all hover:text-[#48c9b0] hover:scale-105"
+            className="relative transition-all hover:text-emerald-400 hover:scale-105"
           >
             {item.label}
           </motion.a>
@@ -94,7 +94,7 @@ export function LandingHeader({
         >
           <Link
             href="/home"
-            className="inline-flex items-center justify-center rounded-full border border-white/30 bg-[#2f7f78]/30 backdrop-blur-md px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-[0_4px_20px_rgba(47,127,120,0.4)] hover:scale-105 hover:bg-[#2f7f78] hover:text-white hover:border-[#2f7f78] transition-all cursor-pointer active:scale-95"
+            className="inline-flex items-center justify-center rounded-full border border-white/30 bg-emerald-500/25 backdrop-blur-md px-6 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-[0_4px_20px_rgba(16,185,129,0.4)] hover:scale-105 hover:bg-emerald-400 hover:text-slate-950 hover:border-emerald-400 transition-all cursor-pointer active:scale-95"
           >
             {t.nav.enterStudio}
           </Link>

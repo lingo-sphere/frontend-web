@@ -80,7 +80,7 @@ export default function ExamAttemptDetailPage() {
             <Button
               onClick={() =>
                 navigate(
-                  `/course/${courseId}/exam?type=${testType}${moduleId ? `&chapterId=${moduleId}` : ''}`
+                  `/course/${courseId}/exam?type=${testType}${moduleId ? `&chapterId=${moduleId}` : ''}&retry=true`
                 )
               }
               className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5 shadow-xs cursor-pointer"
@@ -294,7 +294,7 @@ export default function ExamAttemptDetailPage() {
                       navigate(
                         `/course/${courseId}/exam?type=${testType}${
                           moduleId ? `&chapterId=${moduleId}` : ''
-                        }`
+                        }&retry=true`
                       )
                     }
                     className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
@@ -324,16 +324,16 @@ export default function ExamAttemptDetailPage() {
               </h4>
               <p className="text-xs text-text-secondary leading-relaxed">
                 Điểm xuất phát của bạn được ghi nhận là{' '}
-                <strong className="text-primary">{scoreDisplay}</strong>. Hệ thống đã xây dựng lộ
-                trình luyện thi TOEIC cá nhân hóa tương ứng với kết quả này.
+                <strong className="text-primary">{scoreDisplay}</strong>. Hệ thống gợi ý các khóa học
+                luyện thi TOEIC phù hợp tương ứng với kết quả này.
               </p>
             </div>
             <div className="pt-2 flex items-center justify-center gap-2.5">
               <Button
-                onClick={() => navigate('/roadmap')}
+                onClick={() => navigate('/courses')}
                 className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl"
               >
-                Xem lộ trình học tập
+                Khám phá khóa học phù hợp
               </Button>
               <Button
                 onClick={() => navigate('/toeic/exam/placement_2skills')}

@@ -76,7 +76,7 @@ export function AppProvider({ children }: AppProviderProps) {
     } else {
       document.documentElement.classList.remove('dark')
     }
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#F1F8F7' : '#121A1A')
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f8fafc' : '#020617')
   }, [theme])
 
   const showAction = useCallback((message: string) => {

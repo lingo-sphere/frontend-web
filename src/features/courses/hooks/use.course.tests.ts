@@ -45,7 +45,8 @@ export function useCourseTests({
 
   const handleTakeTest = (
     chapter: Chapter | null,
-    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
+    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test',
+    isRetry?: boolean
   ) => {
     if (!isEnrolled) {
       toast.warning(
@@ -55,10 +56,34 @@ export function useCourseTests({
       return
     }
 
+    let retryFlag = isRetry
+    if (retryFlag === undefined) {
+      if (testType === 'final-test') {
+        const hasAttempts =
+          Array.isArray(progressDetail?.course_progress?.final_test_attempts) &&
+          progressDetail.course_progress.final_test_attempts.length > 0
+        const hasScore =
+          progressDetail?.course_progress?.final_test_score !== undefined &&
+          progressDetail.course_progress.final_test_score !== null
+        retryFlag = hasAttempts || hasScore
+      } else if (chapter?.id) {
+        const mod = progressDetail?.modules_progress?.find(
+          (m) =>
+            m.module_id === chapter.id ||
+            String(m.module_id) === String(chapter.id) ||
+            Number(m.order_index) === Number(chapter.order)
+        )
+        const hasAttempts = Array.isArray(mod?.attempts) && mod.attempts.length > 0
+        const hasScore = mod?.challenge_score !== undefined && mod.challenge_score !== null
+        retryFlag = hasAttempts || hasScore
+      }
+    }
+
     const targetCourseId = courseId || chapter?.courseId || chapter?.course_id
     if (targetCourseId) {
       const chapterParam = chapter?.id ? `&chapterId=${chapter.id}` : ''
-      navigate(`/course/${targetCourseId}/exam?type=${testType}${chapterParam}`)
+      const retryParam = retryFlag ? '&retry=true' : ''
+      navigate(`/course/${targetCourseId}/exam?type=${testType}${chapterParam}${retryParam}`)
       return
     }
 

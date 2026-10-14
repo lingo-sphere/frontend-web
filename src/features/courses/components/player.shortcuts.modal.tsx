@@ -1,8 +1,4 @@
-/**
- * @file player.shortcuts.modal.tsx
- * @description Modal dialog giao diện player.shortcuts
- */
-
+// Modal huong dan phim tat dieu khien video bai hoc.
 'use client'
 
 import { Keyboard, X } from 'lucide-react'
@@ -13,10 +9,11 @@ interface PlayerShortcutsModalProps {
 }
 
 const SHORTCUT_ITEMS = [
-  { key: 'Space / K', desc: 'Phát / Tạm dừng' },
-  { key: 'Mũi tên Trái / J', desc: 'Lùi 5 giây' },
-  { key: 'Mũi tên Phải / L', desc: 'Tiến 5 giây' },
-  { key: 'Mũi tên Lên / Xuống', desc: 'Tăng / Giảm âm lượng' },
+  { key: 'Space / K', desc: 'Phát / Tạm dừng video' },
+  { key: '← / J', desc: 'Tua lùi 10 giây' },
+  { key: '→ / L', desc: 'Tua tiến 10 giây' },
+  { key: '↑', desc: 'Tăng âm lượng 10%' },
+  { key: '↓', desc: 'Giảm âm lượng 10%' },
   { key: 'M', desc: 'Tắt / Bật tiếng' },
   { key: 'F', desc: 'Toàn màn hình' },
   { key: 'T', desc: 'Chế độ rạp chiếu' },
@@ -30,11 +27,9 @@ export function PlayerShortcutsModal({ isOpen, onClose }: PlayerShortcutsModalPr
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
-      onClick={onClose}
     >
       <div
         className="relative w-full max-w-md overflow-hidden rounded-2xl bg-[#0f0f0f] border border-white/10 p-5 shadow-2xl text-white space-y-4"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <h4 className="text-sm font-bold text-white flex items-center gap-2">

@@ -7,37 +7,48 @@ import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import {
   BackendListeningExerciseSchema,
-  BackendListeningExerciseListSchema,
+  BackendListeningExercisePaginatedSchema,
+  BackendListeningPracticeItemPaginatedSchema,
   BackendSpeakingExerciseSchema,
   BackendSpeakingExerciseListSchema,
   BackendWritingExerciseSchema,
   BackendWritingExerciseListSchema,
   SpeechAssessmentResultSchema,
   WritingEvaluationResponseSchema,
-  DailyJournalPromptSchema,
   type BackendListeningExercise,
+  type BackendListeningPracticeItem,
+  type BackendListeningPracticeItemPaginated,
   type BackendSpeakingExercise,
   type BackendWritingExercise,
   type SpeechAssessmentResult,
   type WritingEvaluationResponse,
-  type DailyJournalPrompt,
 } from '@/features/practice/schemas/practice.schema'
 
 export type {
   BackendListeningExercise,
+  BackendListeningPracticeItem,
+  BackendListeningPracticeItemPaginated,
   BackendSpeakingExercise,
   BackendWritingExercise,
   SpeechAssessmentResult,
   WritingEvaluationResponse,
-  DailyJournalPrompt,
 }
 
 export const practiceService = {
-  async getListeningExercises(params?: { part?: number; level?: string }): Promise<BackendListeningExercise[]> {
-    return api.get<BackendListeningExercise[]>(
+  async getListeningExercises(params?: { part?: number; level?: string; page?: number; limit?: number }): Promise<BackendListeningExercise[]> {
+    const response = await api.get<{ items: BackendListeningExercise[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(
       API_CONFIG.ENDPOINTS.PRACTICE.LISTENING,
       params as Record<string, unknown>,
-      BackendListeningExerciseListSchema
+      BackendListeningExercisePaginatedSchema
+    )
+    return response?.items || []
+  },
+
+  async getListeningPracticeItems(params?: { difficulty?: string; contextId?: string; cefrLevel?: string; page?: number; limit?: number }): Promise<BackendListeningPracticeItemPaginated> {
+    return api.get<BackendListeningPracticeItemPaginated>(
+      API_CONFIG.ENDPOINTS.PRACTICE.LISTENING_PRACTICE_ITEMS,
+      params as Record<string, unknown>,
+      BackendListeningPracticeItemPaginatedSchema
     )
   },
 
@@ -87,6 +98,26 @@ export const practiceService = {
     return api.post(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_SUBMIT, payload)
   },
 
+  async submitSpeakingAudioFile(formData: FormData): Promise<any> {
+    return api.post(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_SUBMIT_AUDIO, formData)
+  },
+
+  async getSpeakingAnalysis(attemptId: string): Promise<any> {
+    return api.get(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_ANALYSIS(attemptId))
+  },
+
+  async getMySpeakingAttempts(limit = 20): Promise<any[]> {
+    return api.get<any[]>(`${API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_MY_ATTEMPTS}?limit=${limit}`)
+  },
+
+  async getMySpeakingProfile(): Promise<any> {
+    return api.get(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_PROFILE_MY)
+  },
+
+  async getSpeakingProfile(userId: string): Promise<any> {
+    return api.get(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_PROFILE(userId))
+  },
+
   async getWritingExercises(): Promise<BackendWritingExercise[]> {
     return api.get<BackendWritingExercise[]>(
       API_CONFIG.ENDPOINTS.PRACTICE.WRITING,
@@ -118,19 +149,29 @@ export const practiceService = {
     return api.post(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMIT, payload)
   },
 
-  async getDailyJournalPrompt(): Promise<DailyJournalPrompt> {
-    return api.get<DailyJournalPrompt>(API_CONFIG.ENDPOINTS.PRACTICE.DAILY_PROMPT, undefined, DailyJournalPromptSchema)
+  async getMyWritingSubmissions(exerciseId?: string): Promise<any> {
+    const url = exerciseId
+      ? `${API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS}?exercise_id=${exerciseId}`
+      : API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS;
+    return api.get<any>(url);
   },
 
-  async submitDailyJournal(payload: { entry_text: string; prompt_id?: string; mood?: string }): Promise<Record<string, unknown>> {
-    return api.post(API_CONFIG.ENDPOINTS.PRACTICE.DAILY_JOURNAL_SUBMIT, payload)
+  async getWritingSubmissionById(id: string): Promise<any> {
+    return api.get<any>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMISSION_BY_ID(id));
   },
 
-  async getDailyJournalHistory(params?: { limit?: number }): Promise<Array<Record<string, unknown>>> {
-    return api.get<Array<Record<string, unknown>>>(API_CONFIG.ENDPOINTS.PRACTICE.DAILY_JOURNAL_HISTORY, params)
+  async getSubmissionComparison(id: string): Promise<any> {
+    return api.get<any>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMISSION_COMPARISON(id));
   },
 
-  async getUserPracticeProfile(): Promise<Record<string, unknown>> {
-    return api.get<Record<string, unknown>>(API_CONFIG.ENDPOINTS.PRACTICE.MY_PRACTICE_PROFILE)
+  async getWritingRecommendations(userId: string, limit = 4): Promise<any> {
+    return api.get<any>(`${API_CONFIG.ENDPOINTS.PRACTICE.WRITING_RECOMMENDATIONS(userId)}?limit=${limit}`);
   },
-}
+
+  async getOrGeneratePracticeAudio(text: string): Promise<{ url: string; duration_seconds?: number }> {
+    return api.post<{ url: string; duration_seconds?: number }>(
+      API_CONFIG.ENDPOINTS.MEDIA.PRACTICE_AUDIO_GENERATE,
+      { text }
+    );
+  },
+};

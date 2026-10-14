@@ -43,19 +43,21 @@ export function CourseSidebarFinalExamCard({
     (finalTestScore !== undefined && finalTestScore !== null && finalTestScore > 0) ||
     (Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0)
 
-  const isUnlocked = allChaptersPassed || hasCompletedTest
+  const isUnlocked = isEnrolled && (allChaptersPassed || hasCompletedTest)
 
   return (
     <div className="pt-2">
       <div
-        onClick={onTakeTest}
-        className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 group ${
-          !isUnlocked
-            ? 'border-amber-500/25 bg-amber-500/5 opacity-80'
-            : hasCompletedTest
-              ? 'border-emerald-500/50 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/70 shadow-xs'
-              : 'border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/60 shadow-xs'
-        }`}
+        onClick={isEnrolled ? onTakeTest : undefined}
+        className={`p-3.5 rounded-2xl border transition-all ${
+          !isEnrolled
+            ? 'border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/20 opacity-70 cursor-not-allowed'
+            : !isUnlocked
+              ? 'border-amber-500/25 bg-amber-500/5 opacity-80 cursor-pointer'
+              : hasCompletedTest
+                ? 'border-emerald-500/50 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/70 shadow-xs cursor-pointer'
+                : 'border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-surface hover:border-emerald-500/60 shadow-xs cursor-pointer'
+        } flex items-center justify-between gap-3 group`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div
@@ -117,11 +119,13 @@ export function CourseSidebarFinalExamCard({
               )}
             </div>
             <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
-              {!isUnlocked
-                ? 'Khóa • Cần vượt qua bài test thử thách của tất cả các chương để mở khóa'
-                : hasCompletedTest
-                  ? `👑 Kỷ lục cao nhất: ${displayScore}%${Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0 ? ` • ${finalTestAttempts.length} lần thi` : ''} • Bấm để xem lịch sử & thi lại`
-                  : `${finalTestQuestionsCount} câu • Đánh giá năng lực toàn khóa để cấp chứng chỉ`}
+              {!isEnrolled
+                ? 'Khóa • Cần mua hoặc đăng ký khóa học để mở khóa bài thi tốt nghiệp'
+                : !isUnlocked
+                  ? 'Khóa • Cần vượt qua bài test thử thách của tất cả các chương để mở khóa'
+                  : hasCompletedTest
+                    ? `👑 Kỷ lục cao nhất: ${displayScore}%${Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0 ? ` • ${finalTestAttempts.length} lần thi` : ''} • Bấm để xem lịch sử & thi lại`
+                    : `${finalTestQuestionsCount} câu • Đánh giá năng lực toàn khóa để cấp chứng chỉ`}
             </p>
           </div>
         </div>

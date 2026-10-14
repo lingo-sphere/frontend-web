@@ -1,11 +1,9 @@
-/**
- * @file user.header.tsx
- * @description Component giao diện React UserStatsHeader cho học viên
- */
+// Component giao diện React UserStatsHeader cho học viên.
 
 import { Icon } from '@/components/icon.map'
 import { Button } from '@/components/button'
 import type { User } from '@/features/user/types/user'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface UserAvatarProps {
   src?: string | null
@@ -42,7 +40,7 @@ export function UserAvatar({
     <div className="relative group">
       {src ? (
         <img
-          src={src}
+          src={resolveMediaUrl(src)}
           alt="Avatar"
           className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-surface-subtle`}
         />
@@ -82,7 +80,7 @@ interface UserStatsHeaderProps {
   onEditClick: () => void
 }
 
-function formatSubscriptionRemaining(expiresAt?: string, plan?: string): { text: string; detail: string; isExpired: boolean } {
+function formatSubscriptionRemaining(expiresAt?: string | null, plan?: string | null): { text: string; detail: string; isExpired: boolean } {
   if (plan === 'LIFETIME') {
     return {
       text: 'Gói Trọn Đời (Vĩnh Viễn)',

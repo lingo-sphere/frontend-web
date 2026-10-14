@@ -89,21 +89,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
-      url: `${baseUrl}/ai-learning`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
       url: `${baseUrl}/translate`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/journal`,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
       priority: 0.6,
     },
   ]

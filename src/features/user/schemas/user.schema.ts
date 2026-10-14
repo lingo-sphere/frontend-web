@@ -48,14 +48,13 @@ export const GamificationProfileSchema = z.object({
   current_streak: z.number().default(0),
   longest_streak: z.number().default(0),
   streak_freezes_left: z.number().optional(),
-  gems: z.number().optional(),
   league: z.string().optional(),
 }).passthrough()
 
 export const LeaderboardEntrySchema = z.object({
   rank: z.number().default(0),
   user_id: z.string().default(''),
-  full_name: z.string().default('Học viên'),
+  full_name: z.string().default(''),
   user_name: z.string().optional(),
   avatar_url: z.string().optional(),
   user_avatar: z.string().optional(),
@@ -102,9 +101,19 @@ export const AuthResponseSchema = z.object({
   refresh_token: z.string().optional(),
 }).passthrough()
 
+export const RegisterResponseSchema = z.object({
+  message: z.string().optional(),
+  email: z.string().optional(),
+  expire_minutes: z.number().optional(),
+  user: UserSchema.optional(),
+  access_token: z.string().optional(),
+  refresh_token: z.string().optional(),
+}).passthrough()
+
 export type User = z.infer<typeof UserSchema>
 export type GamificationProfile = z.infer<typeof GamificationProfileSchema>
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>
 export type UserSubscription = z.infer<typeof UserSubscriptionSchema>
 export type UserProfileResponse = z.infer<typeof UserProfileResponseSchema>
 export type AuthResponse = z.infer<typeof AuthResponseSchema>
+export type RegisterResponse = z.infer<typeof RegisterResponseSchema>

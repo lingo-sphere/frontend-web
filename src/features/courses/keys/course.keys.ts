@@ -5,5 +5,7 @@ export const courseKeys = {
   list: (params?: Record<string, unknown>) => [...courseKeys.lists(), params ?? {}] as const,
   details: () => [...courseKeys.all, 'detail'] as const,
   detail: (id: string) => [...courseKeys.details(), id] as const,
+  notes: (id: string) => [...courseKeys.detail(id), 'notes'] as const,
+  bestsellers: (category?: string) => [...courseKeys.all, 'bestsellers', category ?? 'all'] as const,
   enrollments: () => [...courseKeys.all, 'enrollments'] as const,
 }

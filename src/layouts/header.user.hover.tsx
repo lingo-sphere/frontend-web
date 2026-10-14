@@ -10,8 +10,10 @@ import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
 import { Icon } from '@/components/icon.map'
 import { getRemainingSubscriptionText } from '@/layouts/app.header'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface HeaderUserHoverProps {
+  isOpen: boolean
   onClose?: () => void
   onLanguageToggle?: () => void
   currentLanguage?: 'VI' | 'EN'
@@ -19,6 +21,7 @@ interface HeaderUserHoverProps {
 }
 
 export function HeaderUserHover({
+  isOpen,
   onClose,
   onLanguageToggle,
   currentLanguage = 'VI',
@@ -57,7 +60,13 @@ export function HeaderUserHover({
   }
 
   return (
-    <div className="absolute right-0 top-full pt-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+    <div
+      className={`absolute right-0 top-full pt-2 z-50 transition-all duration-200 ease-out origin-top-right ${
+        isOpen
+          ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
+          : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
+      }`}
+    >
       <div className="w-72 sm:w-80 max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl text-left divide-y divide-border scrollbar-thin">
         
         <div
@@ -67,7 +76,7 @@ export function HeaderUserHover({
           <div className="relative shrink-0">
             <div className="h-13 w-13 rounded-full bg-slate-900 dark:bg-slate-800 text-white font-bold text-base flex items-center justify-center shadow-md overflow-hidden ring-2 ring-primary/20">
               {user.avatar_url ? (
-                <img src={user.avatar_url} alt={user.full_name} className="h-full w-full object-cover" />
+                <img src={resolveMediaUrl(user.avatar_url)} alt={user.full_name} className="h-full w-full object-cover" />
               ) : (
                 <span>{initials}</span>
               )}
@@ -82,7 +91,7 @@ export function HeaderUserHover({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <h3 className="text-sm font-bold text-text-primary truncate group-hover:text-primary transition-colors">
-                {user.full_name || (isVi ? 'Học viên' : 'Learner')}
+                {user.full_name}
               </h3>
               {isPremium && (
                 <span className="shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[9px] font-extrabold text-white">
@@ -165,6 +174,12 @@ export function HeaderUserHover({
             className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-subtle hover:text-text-primary transition-colors cursor-pointer"
           >
             <span>{isVi ? 'Tiến độ học tập' : 'Learning progress'}</span>
+          </button>
+          <button
+            onClick={() => handleItemClick('/notes')}
+            className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-subtle hover:text-text-primary transition-colors cursor-pointer"
+          >
+            <span>{isVi ? 'Sổ tay ghi chú' : 'Lesson notes'}</span>
           </button>
           <button
             onClick={() => handleItemClick('/exam-history')}

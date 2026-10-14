@@ -12,6 +12,8 @@ import {
   Key,
   File,
   BookOpen,
+  Image,
+  Mail,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
@@ -29,7 +31,7 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
 
   const [searchQuery, setSearchQuery] = useState('')
   const [levelFilter, setLevelFilter] = useState<WritingLevel | 'all'>('all')
-  const [typeFilter, setTypeFilter] = useState<ExerciseType | 'all'>('all')
+  const [typeFilter, setTypeFilter] = useState<string | 'all'>('all')
 
   const filteredExercises = useMemo(() => {
     return exercises.filter((ex) => {
@@ -74,14 +76,19 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
     ADVANCED: isVietnamese ? 'Nâng cao' : 'Advanced',
   }
 
-  const typeLabels: Record<ExerciseType, { en: string; vi: string }> = {
-    SENTENCE_COMPLETION: { en: 'Sentence Completion', vi: 'Hoàn thành câu' },
-    SENTENCE_ARRANGEMENT: { en: 'Sentence Arrangement', vi: 'Sắp xếp câu' },
-    PARAPHRASING: { en: 'Paraphrasing', vi: 'Viết lại câu' },
-    KEYWORD_WRITING: { en: 'Keyword Writing', vi: 'Viết theo từ khóa' },
-    TOPIC_WRITING: { en: 'Topic Writing', vi: 'Viết theo chủ đề' },
-    DIARY: { en: 'Diary', vi: 'Nhật ký' },
-  }
+  const typeLabels: Record<string, { en: string; vi: string }> = {
+    DESCRIBE_PICTURE: { en: 'Part 1: Write a Sentence Based on a Picture', vi: 'Part 1: Viết câu mô tả hình ảnh' },
+    WRITE_EMAIL: { en: 'Part 2: Respond to a Written Request (Email)', vi: 'Part 2: Phản hồi email' },
+    EXPRESS_OPINION: { en: 'Part 3: Write an Opinion Essay', vi: 'Part 3: Viết bài luận' },
+  };
+
+  const availableTypes = useMemo(() => {
+    const types = new Set<string>();
+    exercises.forEach((ex) => {
+      if (ex.exercise_type) types.add(ex.exercise_type);
+    });
+    return Array.from(types);
+  }, [exercises]);
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
@@ -119,23 +126,32 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
                 className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${levelFilter === 'all' ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}>
                 {isVietnamese ? 'Tất cả' : 'All'}
               </button>
-              {(['BASIC', 'INTERMEDIATE', 'ADVANCED'] as WritingLevel[]).map((level) => (
-                <button key={level} onClick={() => setLevelFilter(level)}
-                  className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${levelFilter === level ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}>
-                  {levelLabels[level]}
-                </button>
-              ))}
+              {(['BASIC', 'INTERMEDIATE', 'ADVANCED'] as WritingLevel[]).map((level) => {
+                const count = exercises.filter((e) => e.writing_level === level).length;
+                return (
+                  <button key={level} onClick={() => setLevelFilter(level)}
+                    className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors cursor-pointer ${levelFilter === level ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}>
+                    {levelLabels[level]} ({count})
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Loại:' : 'Type:'}</span>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as ExerciseType | 'all')}
-              className="h-9 rounded-lg border border-border bg-surface px-3 text-[12px] text-text-primary focus:border-primary focus:outline-none">
-              <option value="all">{isVietnamese ? 'Tất cả' : 'All'}</option>
-              {Object.entries(typeLabels).map(([key, label]) => (
-                <option key={key} value={key}>{isVietnamese ? label.vi : label.en}</option>
-              ))}
+            <span className="text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Dạng bài:' : 'Type:'}</span>
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)}
+              className="h-9 rounded-lg border border-border bg-surface px-3 text-[12px] text-text-primary focus:border-primary focus:outline-none cursor-pointer">
+              <option value="all">{isVietnamese ? 'Tất cả dạng bài' : 'All Types'} ({exercises.length})</option>
+              {availableTypes.map((key) => {
+                const label = typeLabels[key];
+                const count = exercises.filter((e) => e.exercise_type === key).length;
+                return (
+                  <option key={key} value={key}>
+                    {label ? (isVietnamese ? label.vi : label.en) : key} ({count})
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
@@ -186,7 +202,7 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
 interface ExerciseCardProps {
   exercise: WritingExercise
   onClick: () => void
-  typeLabels: Record<ExerciseType, { en: string; vi: string }>
+  typeLabels: Record<string, { en: string; vi: string }>
   isVietnamese: boolean
   levelLabels: Record<string, string>
 }
@@ -198,14 +214,11 @@ function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese, levelLabels
     ADVANCED: 'bg-red-100 text-red-700',
   }
 
-  const getExerciseIcon = (type: ExerciseType) => {
+  const getExerciseIcon = (type: string) => {
     switch (type) {
-      case 'SENTENCE_COMPLETION': return FileText
-      case 'SENTENCE_ARRANGEMENT': return SpellCheck
-      case 'PARAPHRASING': return PenTool
-      case 'KEYWORD_WRITING': return Key
-      case 'TOPIC_WRITING': return File
-      case 'DIARY': return BookOpen
+      case 'DESCRIBE_PICTURE': return Image
+      case 'WRITE_EMAIL': return Mail
+      case 'EXPRESS_OPINION': return PenTool
       default: return FileText
     }
   }
@@ -235,12 +248,12 @@ function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese, levelLabels
 
         <div className="mb-3 flex flex-wrap gap-2">
           {exercise.exercise_type && (
-            <span className="inline-flex items-center rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] text-text-secondary">
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
               {typeLabels[exercise.exercise_type]?.[isVietnamese ? 'vi' : 'en'] || exercise.exercise_type}
             </span>
           )}
           {exercise.topic_name && (
-            <span className="inline-flex items-center rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] text-text-secondary">
+            <span className="inline-flex items-center rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-primary">
               {exercise.topic_name}
             </span>
           )}

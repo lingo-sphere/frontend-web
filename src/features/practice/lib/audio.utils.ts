@@ -14,12 +14,43 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled
 }
 
-export function speakWord(word: string, rate: number = 0.9) {
+export function speakWord(word: string, rate: number = 0.9, lang: string = 'en-US') {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(word)
-    utterance.lang = 'en-US'
     utterance.rate = rate
+
+    try {
+      const voices = window.speechSynthesis.getVoices()
+      if (voices && voices.length > 0) {
+        const langLower = lang.toLowerCase().replace('_', '-')
+        // Tìm giọng khớp với lang yêu cầu (VD: en-GB hoặc en-US)
+        const matchedVoice = voices.find((v) =>
+          v.lang.toLowerCase().replace('_', '-').startsWith(langLower)
+        )
+        if (matchedVoice) {
+          utterance.voice = matchedVoice
+          utterance.lang = matchedVoice.lang
+        } else {
+          // Fallback: nếu thiết bị không có giọng en-GB, dùng bất kỳ giọng English nào có sẵn
+          const anyEnVoice = voices.find((v) =>
+            v.lang.toLowerCase().replace('_', '-').startsWith('en')
+          )
+          if (anyEnVoice) {
+            utterance.voice = anyEnVoice
+            utterance.lang = anyEnVoice.lang
+          } else {
+            utterance.lang = 'en-US'
+          }
+        }
+      } else {
+        // Nếu trình duyệt chưa tải xong voice list hoặc không có en-GB, dùng en-US làm chuẩn
+        utterance.lang = lang.startsWith('en') ? 'en-US' : lang
+      }
+    } catch {
+      utterance.lang = 'en-US'
+    }
+
     window.speechSynthesis.speak(utterance)
   }
 }

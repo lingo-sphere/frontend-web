@@ -15,12 +15,11 @@ export const mapWishlistItemToCourseCard = (item: WishlistItem): CourseCardData 
   price: item.price,
   discountPrice: item.discount_price,
   category: item.category || 'TOEIC_2_SKILLS',
-  level: item.level || 'BEGINNER',
   description: '',
   duration: '10 giờ',
   totalLessons: 0,
   chapters: 0,
-  students: 0,
+  students: item.students_count ?? 0,
   rating: 4.8,
   ratingCount: 0,
 })

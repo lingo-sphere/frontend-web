@@ -1,9 +1,6 @@
-/**
- * @file icon.map.tsx
- * @description Component giao diện React icon-map cho học viên
- */
+// Ánh xạ tên icon chuỗi sang các biểu tượng Lucide icon cho toàn bộ ứng dụng.
 
-import type { LucideIcon } from 'lucide-react'
+import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   AlertCircle,
@@ -17,6 +14,8 @@ import {
   BellOff,
   BookOpen,
   BookOpenCheck,
+  BookmarkCheck,
+  Brain,
   BriefcaseBusiness,
   CalendarDays,
   Camera,
@@ -75,6 +74,7 @@ import {
   Settings,
   Shield,
   ShieldCheck,
+  Shuffle,
   Snowflake,
   Sparkles,
   Star,
@@ -82,9 +82,11 @@ import {
   Tag,
   Tags,
   Target,
+  Train,
   TrendingUp,
   Trophy,
   Type,
+  Utensils,
   UserCheck,
   UserCircle2,
   Users,
@@ -97,7 +99,8 @@ import {
   MessageSquare,
   Send,
   LogOut,
-} from 'lucide-react'
+  ShoppingBag,
+} from "lucide-react";
 
 const iconMap: Record<string, LucideIcon> = {
   activity: Activity,
@@ -112,6 +115,8 @@ const iconMap: Record<string, LucideIcon> = {
   bellOff: BellOff,
   book: BookOpen,
   bookCheck: BookOpenCheck,
+  bookmarkCheck: BookmarkCheck,
+  brain: Brain,
   briefcase: BriefcaseBusiness,
   calendar: CalendarDays,
   camera: Camera,
@@ -181,6 +186,7 @@ const iconMap: Record<string, LucideIcon> = {
   settings: Settings,
   shield: Shield,
   shieldCheck: ShieldCheck,
+  shuffle: Shuffle,
   snowflake: Snowflake,
   sparkles: Sparkles,
   star: Star,
@@ -189,9 +195,11 @@ const iconMap: Record<string, LucideIcon> = {
   tags: Tags,
   target: Target,
   tool: Settings,
+  train: Train,
   trendingUp: TrendingUp,
   trophy: Trophy,
   type: Type,
+  utensils: Utensils,
   user: UserCircle2,
   userCheck: UserCheck,
   users: Users,
@@ -201,17 +209,30 @@ const iconMap: Record<string, LucideIcon> = {
   x: X,
   xCircle: XCircle,
   zapOff: ZapOff,
-}
+  shoppingBag: ShoppingBag,
+};
 
 interface IconProps {
-  name: string
-  size?: number
-  className?: string
-  strokeWidth?: number
+  name: string;
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
 }
 
-export function Icon({ name, size = 18, className, strokeWidth = 1.8 }: IconProps) {
-  const IconComponent = iconMap[name]
-  if (!IconComponent) return null
-  return <IconComponent aria-hidden="true" className={className} size={size} strokeWidth={strokeWidth} />
+export function Icon({
+  name,
+  size = 18,
+  className,
+  strokeWidth = 1.8,
+}: IconProps) {
+  const IconComponent = iconMap[name];
+  if (!IconComponent) return null;
+  return (
+    <IconComponent
+      aria-hidden="true"
+      className={className}
+      size={size}
+      strokeWidth={strokeWidth}
+    />
+  );
 }

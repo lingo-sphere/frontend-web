@@ -1,7 +1,4 @@
-/**
- * @file wishlist.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
- */
+// Định nghĩa kiểu dữ liệu Wishlist cho giao diện Web.
 
 export interface WishlistItem {
   course_id: string
@@ -12,6 +9,7 @@ export interface WishlistItem {
   discount_price?: number
   category?: string
   level?: string
+  students_count?: number
   added_at?: string
 }
 

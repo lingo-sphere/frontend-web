@@ -15,10 +15,28 @@ import {
 export type { BackendToeicExam, ExamResult, ToeicLearningProfile }
 
 export const examService = {
-  async getExams(params?: { type?: string; year?: number; search?: string }): Promise<BackendToeicExam[]> {
+  async getExams(params?: {
+    type?: string
+    year?: number
+    search?: string
+    isPublished?: string
+    isSystemPlacement?: boolean
+  }): Promise<BackendToeicExam[]> {
+    const queryParams: Record<string, unknown> = {
+      isPublished: 'true',
+      ...params,
+    }
     return api.get<BackendToeicExam[]>(
       API_CONFIG.ENDPOINTS.EXAMS.LIST,
-      params as Record<string, unknown>,
+      queryParams,
+      BackendToeicExamListSchema
+    )
+  },
+
+  async getActivePlacementExams(): Promise<BackendToeicExam[]> {
+    return api.get<BackendToeicExam[]>(
+      API_CONFIG.ENDPOINTS.EXAMS.LIST,
+      { isSystemPlacement: true, isPublished: 'true' },
       BackendToeicExamListSchema
     )
   },
@@ -35,8 +53,53 @@ export const examService = {
     return api.get<Array<Record<string, unknown>>>(API_CONFIG.ENDPOINTS.EXAMS.PARTS)
   },
 
-  async startExamAttempt(examId: string, options?: Record<string, unknown>): Promise<{ attempt_id: string }> {
-    return api.post<{ attempt_id: string }>(API_CONFIG.ENDPOINTS.EXAMS.START(examId), options)
+  async startExamAttempt(
+    examId: string,
+    options?: Record<string, unknown>
+  ): Promise<{
+    attempt_id: string
+    started_at?: string
+    expires_at?: string
+    interim_answers?: Array<{
+      question_id: string
+      selected_option?: string
+      question_number?: number
+    }>
+  }> {
+    return api.post(API_CONFIG.ENDPOINTS.EXAMS.START(examId), options)
+  },
+
+  async syncExamAnswers(
+    attemptId: string,
+    answers: Array<{ question_id: string; selected_option?: string; question_number?: number }>,
+    timeSpentSeconds?: number
+  ): Promise<{
+    success: boolean
+    saved_count?: number
+    expires_at?: string
+    is_expired?: boolean
+    message?: string
+  }> {
+    return api.put(`/exams/attempts/${attemptId}/sync-answers`, {
+      answers,
+      time_spent_seconds: timeSpentSeconds,
+    })
+  },
+
+  async getActiveExamAttempt(examId: string): Promise<{
+    attempt_id: string
+    started_at?: string
+    expires_at?: string
+    total_time_seconds?: number
+    interim_answers?: Array<{
+      question_id: string
+      selected_option?: string
+      question_number?: number
+    }>
+    status: string
+    is_expired?: boolean
+  } | null> {
+    return api.get(`/exams/${examId}/active`)
   },
 
   async submitExamAttempt(

@@ -20,6 +20,7 @@ export default function SpeakingAppPage() {
     setRecordingState,
     stats,
     progress,
+    userSpeakingProfile,
     handleGoHome,
     handleGoList,
     handleGoHistory,
@@ -29,6 +30,7 @@ export default function SpeakingAppPage() {
     handleSubmitRecording,
     handlePracticeAgain,
     handleNextExercise,
+    isSubmitting,
   } = useSpeakingWorkspace()
 
   switch (view) {
@@ -50,6 +52,7 @@ export default function SpeakingAppPage() {
           onUpdateRecording={setRecordingState}
           onSubmit={handleSubmitRecording}
           onBack={handleGoList}
+          isSubmitting={isSubmitting}
         />
       )
 
@@ -81,6 +84,7 @@ export default function SpeakingAppPage() {
         <SpeakingHome
           stats={stats}
           progress={progress}
+          userSpeakingProfile={userSpeakingProfile}
           recentAttempts={historyAttempts.slice(0, 5)}
           exercises={exerciseList}
           onStartPractice={handleStartPractice}

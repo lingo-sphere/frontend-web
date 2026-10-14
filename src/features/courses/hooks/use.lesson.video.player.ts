@@ -1,11 +1,10 @@
-// Custom hook quản lý phát video bài giảng, HLS streaming và chuyển chất lượng mượt mà.
+// Custom hook quản lý phát video bài giảng và điều khiển trình phát media.
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
-import Hls from 'hls.js'
 import type { Lesson } from '@/features/courses/types/course'
 import { isDirectVideoUrl } from '@/features/courses/types/player.types'
-import { API_CONFIG } from '@/config/api.config'
 import { courseService } from '@/features/courses/services/course.service'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface UseLessonVideoPlayerProps {
   lesson: Lesson
@@ -29,7 +28,6 @@ export function useLessonVideoPlayer({
 }: UseLessonVideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
-  const hlsRef = useRef<Hls | null>(null)
   const progressBarRef = useRef<HTMLDivElement | null>(null)
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -42,8 +40,6 @@ export function useLessonVideoPlayer({
   const [volume, setVolume] = useState(1)
   const [isMuted, setIsMuted] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
-  const [selectedQuality, setSelectedQuality] = useState<string>('auto')
-  const [autoResolvedQuality, setAutoResolvedQuality] = useState<'1080p' | '720p' | '360p'>('1080p')
   const [isTheater, setIsTheater] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isPipActive, setIsPipActive] = useState(false)
@@ -68,15 +64,7 @@ export function useLessonVideoPlayer({
     return (lesson?.videoUrl || lesson?.content?.videoUrl || '').trim()
   }, [lesson])
 
-  const isHlsStream = useMemo(() => {
-    return Boolean(
-      baseVideoSource &&
-        (baseVideoSource.includes('.m3u8') || baseVideoSource.includes('manifest'))
-    )
-  }, [baseVideoSource])
 
-  const effectiveQualityKey =
-    selectedQuality === 'auto' ? autoResolvedQuality : selectedQuality
   const isDirectVideo = useMemo(
     () => isDirectVideoUrl(baseVideoSource),
     [baseVideoSource]
@@ -84,106 +72,21 @@ export function useLessonVideoPlayer({
 
   const effectiveVideoUrl = useMemo(() => {
     if (!baseVideoSource) return ''
-    let source = baseVideoSource
-    const apiBase = (API_CONFIG.BASE_URL ?? '').replace(
-      /\/+$/,
-      ''
-    )
     if (
-      source.includes('pub-') ||
-      source.includes('r2.cloudflarestorage.com') ||
-      source.includes('.r2.dev')
+      baseVideoSource.includes('youtube.com') ||
+      baseVideoSource.includes('youtu.be') ||
+      baseVideoSource.includes('vimeo.com')
     ) {
-      try {
-        const parsed = new URL(source)
-        source = `${apiBase}/media/stream${parsed.pathname}`
-      } catch {}
+      return baseVideoSource
     }
-    if (isHlsStream) return source
-
-    const qualities = lesson?.qualities
-    if (qualities && qualities[selectedQuality]) {
-      return qualities[selectedQuality]
-    }
-    if (qualities && selectedQuality === 'auto' && qualities['auto']) {
-      return qualities['auto']
-    }
-    if (source.includes('/1080p/')) {
-      if (effectiveQualityKey === '720p')
-        return source.replace('/1080p/', '/720p/')
-      if (effectiveQualityKey === '360p')
-        return source.replace('/1080p/', '/360p/')
-    }
-    return source
-  }, [baseVideoSource, effectiveQualityKey, isHlsStream, lesson, selectedQuality])
-
-  const selectedQualityRef = useRef(selectedQuality)
-  useEffect(() => {
-    selectedQualityRef.current = selectedQuality
-  }, [selectedQuality])
+    return resolveMediaUrl(baseVideoSource)
+  }, [baseVideoSource])
 
   useEffect(() => {
     const video = videoRef.current
     if (!video || !effectiveVideoUrl) return
-
-    if (isHlsStream) {
-      if (Hls.isSupported()) {
-        if (hlsRef.current) hlsRef.current.destroy()
-        const hls = new Hls({
-          capLevelToPlayerSize: false,
-          autoStartLoad: true,
-          startLevel: -1,
-          backBufferLength: 30,
-          maxBufferLength: 30,
-          maxMaxBufferLength: 60,
-          enableWorker: true,
-          lowLatencyMode: false,
-        })
-        hlsRef.current = hls
-        hls.loadSource(effectiveVideoUrl)
-        hls.attachMedia(video)
-
-        hls.on(Hls.Events.MANIFEST_PARSED, (_event, data) => {
-          setIsBuffering(false)
-          const targetQuality = selectedQualityRef.current
-          if (targetQuality !== 'auto' && data.levels && data.levels.length > 0) {
-            const targetH = parseInt(targetQuality.replace('p', ''), 10)
-            let bestIdx = -1
-            let minDiff = Infinity
-            data.levels.forEach((l, idx) => {
-              const diff = Math.abs(l.height - targetH)
-              if (diff < minDiff) {
-                minDiff = diff
-                bestIdx = idx
-              }
-            })
-            if (bestIdx !== -1) {
-              hls.nextLevel = bestIdx
-            }
-          }
-        })
-
-        hls.on(Hls.Events.LEVEL_SWITCHED, (_event, data) => {
-          const currentLvl = hls.levels[data.level]
-          if (currentLvl) {
-            const resolved = currentLvl.height >= 1000 ? '1080p' : currentLvl.height >= 700 ? '720p' : '360p'
-            setAutoResolvedQuality(resolved)
-          }
-        })
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = effectiveVideoUrl
-      }
-    } else {
-      video.src = effectiveVideoUrl
-    }
-
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy()
-        hlsRef.current = null
-      }
-    }
-  }, [effectiveVideoUrl, isHlsStream])
+    video.src = effectiveVideoUrl
+  }, [effectiveVideoUrl])
 
   const triggerFeedback = useCallback(
     (
@@ -281,6 +184,34 @@ export function useLessonVideoPlayer({
     [duration, resetControlsTimeout]
   )
 
+  useEffect(() => {
+    const handleSeekEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ time: number }>
+      if (typeof customEvent.detail?.time === 'number') {
+        seekToTime(customEvent.detail.time)
+      }
+    }
+    window.addEventListener('lingosphere:seek-video', handleSeekEvent)
+    return () => {
+      window.removeEventListener('lingosphere:seek-video', handleSeekEvent)
+    }
+  }, [seekToTime])
+
+  const initialSeekDoneRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const urlParams = new URLSearchParams(window.location.search)
+    const tParam = urlParams.get('t')
+    if (tParam && duration > 0 && initialSeekDoneRef.current !== `${lesson.id}-${tParam}`) {
+      const targetTime = Number(tParam)
+      if (!isNaN(targetTime) && targetTime >= 0) {
+        initialSeekDoneRef.current = `${lesson.id}-${tParam}`
+        seekToTime(targetTime)
+      }
+    }
+  }, [duration, lesson.id, seekToTime])
+
   const handleSpeedChange = useCallback(
     (speed: number) => {
       const video = videoRef.current
@@ -293,106 +224,7 @@ export function useLessonVideoPlayer({
     [triggerFeedback]
   )
 
-  useEffect(() => {
-    const hls = hlsRef.current
-    if (!hls || !hls.levels || hls.levels.length === 0) return
 
-    if (selectedQuality === 'auto') {
-      if (hls.nextLevel !== -1) {
-        hls.nextLevel = -1
-      }
-    } else {
-      const targetH = parseInt(selectedQuality.replace('p', ''), 10)
-      let bestIdx = -1
-      let minDiff = Infinity
-      hls.levels.forEach((l, idx) => {
-        const diff = Math.abs(l.height - targetH)
-        if (diff < minDiff) {
-          minDiff = diff
-          bestIdx = idx
-        }
-      })
-      if (bestIdx !== -1 && hls.nextLevel !== bestIdx) {
-        hls.nextLevel = bestIdx
-      }
-    }
-  }, [selectedQuality])
-
-  const handleQualityChange = useCallback(
-    (qKey: string) => {
-      setSelectedQuality(qKey)
-      setShowSettingsMenu(false)
-
-      const hls = hlsRef.current
-      if (hls && hls.levels && hls.levels.length > 0) {
-        if (qKey === 'auto') {
-          hls.nextLevel = -1
-          triggerFeedback('speed', 'Chất lượng: Tự động (Thích ứng)')
-        } else {
-          const targetH = parseInt(qKey.replace('p', ''), 10)
-          let bestIdx = -1
-          let minDiff = Infinity
-          hls.levels.forEach((l, idx) => {
-            const diff = Math.abs(l.height - targetH)
-            if (diff < minDiff) {
-              minDiff = diff
-              bestIdx = idx
-            }
-          })
-          if (bestIdx !== -1) {
-            hls.nextLevel = bestIdx
-            const label =
-              qKey === '1080p'
-                ? '1080p (Full HD)'
-                : qKey === '720p'
-                ? '720p (HD)'
-                : '360p (Tiết kiệm)'
-            triggerFeedback('speed', `Chất lượng: ${label}`)
-          }
-        }
-        return
-      }
-
-      if (lesson?.qualities && lesson.qualities[qKey]) {
-        const targetUrl = lesson.qualities[qKey]
-        const video = videoRef.current
-        if (video && targetUrl !== video.src) {
-          const savedTime = video.currentTime
-          const wasPlaying = !video.paused
-          video.src = targetUrl
-          const handleLoaded = () => {
-            video.currentTime = savedTime
-            if (wasPlaying) {
-              video.play().catch(() => {})
-            }
-            video.removeEventListener('loadedmetadata', handleLoaded)
-          }
-          video.addEventListener('loadedmetadata', handleLoaded)
-        }
-        const label =
-          qKey === '1080p'
-            ? '1080p (Full HD)'
-            : qKey === '720p'
-            ? '720p (HD)'
-            : qKey === '360p'
-            ? '360p (Tiết kiệm)'
-            : 'Tự động'
-        triggerFeedback('speed', `Chất lượng: ${label}`)
-        return
-      }
-
-      const label =
-        qKey === '1080p'
-          ? '1080p (Full HD)'
-          : qKey === '720p'
-          ? '720p (HD)'
-          : qKey === '360p'
-          ? '360p (Tiết kiệm)'
-          : 'Tự động'
-      triggerFeedback('speed', `Chất lượng: ${label}`)
-    },
-    [lesson?.qualities, triggerFeedback]
-  )
 
   const toggleFullscreen = useCallback(() => {
     const container = containerRef.current
@@ -509,9 +341,6 @@ export function useLessonVideoPlayer({
     volume,
     isMuted,
     playbackSpeed,
-    selectedQuality,
-    autoResolvedQuality,
-    effectiveQualityKey,
     isTheater,
     setIsTheater,
     isFullscreen,
@@ -543,7 +372,6 @@ export function useLessonVideoPlayer({
     seekRelative,
     seekToTime,
     handleSpeedChange,
-    handleQualityChange,
     toggleFullscreen,
     togglePip,
     handleTimeUpdate,

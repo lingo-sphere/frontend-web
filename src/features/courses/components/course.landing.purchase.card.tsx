@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import type { Course } from '@/features/courses/types/course'
 import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface CourseLandingPurchaseCardProps {
   course: Course
@@ -48,7 +49,7 @@ export function CourseLandingPurchaseCard({
     ''
   const thumbnailSrc =
     rawThumbnail !== ''
-      ? rawThumbnail
+      ? resolveMediaUrl(rawThumbnail)
       : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80'
 
   const handleShare = () => {
@@ -60,7 +61,7 @@ export function CourseLandingPurchaseCard({
   }
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl overflow-hidden sticky top-20 z-20 space-y-5">
+    <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl overflow-hidden space-y-5 transition-all duration-200">
       <div
         onClick={onOpenPreview}
         className="relative aspect-video w-full overflow-hidden cursor-pointer group bg-slate-950"

@@ -1,11 +1,8 @@
-/**
- * @file page.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến (auth)/verify-email
- */
-
+// Trang giao diện người dùng cho tuyến kích hoạt email tài khoản.
 'use client'
 
 import { Suspense, useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams, useNavigate } from '@/lib/navigation'
 import { motion } from 'motion/react'
 import { Icon } from '@/components/icon.map'
@@ -16,6 +13,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 type VerifyState = 'VERIFYING' | 'SUCCESS' | 'ERROR'
 
 function VerifyEmailContent() {
+  const { t } = useTranslation()
   const searchParams = useSearchParams()
   const navigate = useNavigate()
   const token = searchParams?.get('token')
@@ -33,7 +31,7 @@ function VerifyEmailContent() {
     const doVerify = async () => {
       if (!token || !email) {
         setState('ERROR')
-        setErrorMessage('Đường liên kết kích hoạt không hợp lệ hoặc thiếu thông tin xác thực.')
+        setErrorMessage(t('auth.verifyEmailInvalidLink'))
         return
       }
 
@@ -48,14 +46,13 @@ function VerifyEmailContent() {
             channel.postMessage({ type: 'EMAIL_VERIFIED_SUCCESS', user: res.user })
             channel.close()
           } catch {
-
           }
         }
         setState('SUCCESS')
       } catch (err: unknown) {
         if (!isMounted) return
         setState('ERROR')
-        const msg = err instanceof Error ? err.message : 'Mã xác thực email đã hết hạn hoặc không tồn tại.'
+        const msg = err instanceof Error ? err.message : t('auth.verifyEmailExpiredToken')
         setErrorMessage(msg)
       }
     }
@@ -65,7 +62,7 @@ function VerifyEmailContent() {
     return () => {
       isMounted = false
     }
-  }, [token, email, setUser])
+  }, [token, email, setUser, t])
 
   useEffect(() => {
     if (state !== 'SUCCESS') return
@@ -108,10 +105,9 @@ function VerifyEmailContent() {
               <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-text-primary">Đang kích hoạt tài khoản...</h3>
+              <h3 className="text-lg font-bold text-text-primary">{t('auth.verifyEmailVerifyingTitle')}</h3>
               <p className="text-xs text-text-secondary">
-                Vui lòng đợi giây lát, hệ thống đang xác thực email{' '}
-                <span className="font-semibold text-text-primary">{email}</span>
+                {t('auth.verifyEmailVerifyingDesc', { email })}
               </p>
             </div>
           </div>
@@ -123,21 +119,21 @@ function VerifyEmailContent() {
               <Icon name="check-circle" size={36} />
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-xl font-extrabold text-text-primary">Xác Thực Email Thành Công!</h3>
+              <h3 className="text-xl font-extrabold text-text-primary">{t('auth.verifyEmailSuccessTitle')}</h3>
               <p className="text-xs text-text-secondary leading-relaxed">
-                Chào mừng bạn đến với hệ sinh thái học tiếng Anh LingoSphere. Tài khoản của bạn đã được kích hoạt hoàn tất.
+                {t('auth.verifyEmailSuccessDesc')}
               </p>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-surface-subtle border border-surface-border text-xs text-text-secondary">
-              Tự động chuyển về trang học tập trong <span className="font-bold text-primary">{countdown}s</span>...
+              {t('auth.verifyEmailRedirectCountdown', { seconds: countdown })}
             </div>
 
             <Button
               onClick={() => navigate('/home')}
               className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-xl shadow-lg shadow-primary/25 cursor-pointer"
             >
-              Bắt Đầu Học Ngay Bây Giờ
+              {t('auth.verifyEmailStartLearning')}
             </Button>
           </div>
         )}
@@ -148,14 +144,14 @@ function VerifyEmailContent() {
               <Icon name="alert-circle" size={36} />
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-xl font-extrabold text-text-primary">Kích Hoạt Không Thành Công</h3>
+              <h3 className="text-xl font-extrabold text-text-primary">{t('auth.verifyEmailErrorTitle')}</h3>
               <p className="text-xs text-error font-medium leading-relaxed bg-error/10 border border-error/20 p-3 rounded-xl">
                 {errorMessage}
               </p>
             </div>
 
             <p className="text-xs text-text-tertiary">
-              Đường link có thể đã được sử dụng hoặc quá hạn. Bạn có thể đăng nhập hoặc yêu cầu gửi lại mã xác thực mới.
+              {t('auth.verifyEmailErrorHelp')}
             </p>
 
             <div className="flex gap-3 pt-2">
@@ -164,13 +160,13 @@ function VerifyEmailContent() {
                 onClick={() => navigate('/home')}
                 className="flex-1 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
               >
-                Trang Chủ
+                {t('nav.home')}
               </Button>
               <Button
                 onClick={() => navigate('/home')}
                 className="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-xl text-xs font-semibold shadow-md cursor-pointer"
               >
-                Đăng Nhập
+                {t('auth.login')}
               </Button>
             </div>
           </div>
@@ -180,9 +176,14 @@ function VerifyEmailContent() {
   )
 }
 
+function VerifyEmailFallback() {
+  const { t } = useTranslation()
+  return <div className="flex h-screen items-center justify-center">{t('auth.verifyEmailLoadingFallback')}</div>
+}
+
 export default function VerifyEmailAppPage() {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center">Đang xác thực email...</div>}>
+    <Suspense fallback={<VerifyEmailFallback />}>
       <VerifyEmailContent />
     </Suspense>
   )

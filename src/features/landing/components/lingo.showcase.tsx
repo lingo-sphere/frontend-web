@@ -3,7 +3,7 @@
 
 import { useRef, useEffect, useState } from "react"
 import Link from "next/link"
-import { motion, useScroll, useTransform } from "motion/react"
+import { motion, useMotionValue, useTransform } from "motion/react"
 import { Sparkles, Brain, ArrowRight, CheckCircle2, Cpu } from "lucide-react"
 import { landingLocales, type LandingLang } from "@/features/landing/components/landing.locales"
 
@@ -57,10 +57,28 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
     }
   }, [activeVideo])
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  })
+  const scrollYProgress = useMotionValue(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const el = sectionRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const windowHeight = window.innerHeight
+      const totalDist = windowHeight + rect.height
+      const currentPos = windowHeight - rect.top
+      scrollYProgress.set(Math.min(Math.max(currentPos / totalDist, 0), 1))
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    window.addEventListener("resize", handleScroll, { passive: true })
+    handleScroll()
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("resize", handleScroll)
+    }
+  }, [scrollYProgress])
 
   const maskScale = useTransform(scrollYProgress, [0.15, 0.52], [3.8, 1])
   const videoScale = useTransform(scrollYProgress, [0.15, 0.52], [1.12, 1.02])
@@ -188,7 +206,7 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
             <div className="pt-4">
               <Link
                 href="/home"
-                className="inline-flex items-center gap-3 rounded-2xl border border-[#48c9b0]/50 bg-[#2f7f78]/30 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_25px_rgba(72,201,176,0.3)] hover:scale-105 hover:bg-[#2f7f78] transition-all cursor-pointer"
+                className="inline-flex items-center gap-3 rounded-2xl border border-emerald-400/50 bg-emerald-500/25 px-8 py-4 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-105 hover:bg-emerald-400 hover:text-slate-950 transition-all cursor-pointer"
               >
                 {t.btnTry} <ArrowRight className="h-4 w-4" />
               </Link>
@@ -197,8 +215,8 @@ export function LingoShowcase({ lang = "vi" }: LingoShowcaseProps) {
 
           
           <div className="lg:col-span-5 grid grid-cols-2 gap-4">
-            <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-left shadow-lg hover:border-[#48c9b0]/40 transition-colors">
-              <div className="flex items-center gap-2 text-[#48c9b0] mb-3 font-mono text-xs font-bold">
+            <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-left shadow-lg hover:border-emerald-400/40 transition-colors">
+              <div className="flex items-center gap-2 text-emerald-400 mb-3 font-mono text-xs font-bold">
                 <Brain className="h-4 w-4" /> {lang === "vi" ? "TRÍ NHỚ SRS" : "SRS RETENTION"}
               </div>
               <div className="text-3xl sm:text-4xl font-black text-white">4.2x</div>

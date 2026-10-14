@@ -69,7 +69,6 @@ export interface Lesson {
   videoUrl?: string
   is_free_preview?: boolean
   is_preview?: boolean
-  qualities?: Record<string, string>
   resources?: LessonResource[]
   content: LessonContent
   theory_file_url?: string
@@ -226,8 +225,8 @@ export interface CourseAnnouncement {
 export interface Course {
   id: string
   _id?: string
+  slug?: string
   title: string
-  level: string
   description: string
   duration: string
   duration_minutes?: number
@@ -237,6 +236,7 @@ export interface Course {
   rating?: number
   ratingCount?: number
   studentsCount?: number
+  is_bestseller?: boolean
   badge?: string
   updatedAt?: string
   language?: string
@@ -288,7 +288,6 @@ export interface CourseCardData {
   instructor: string
   thumbnail: string
   category: string
-  level: string
   description: string
   duration: string
   totalLessons: number
@@ -300,6 +299,7 @@ export interface CourseCardData {
   discountPrice?: number
   targetScore?: number
   badge?: string
+  is_bestseller?: boolean
   progress?: number
   hasCertificate?: boolean
   isArchived?: boolean

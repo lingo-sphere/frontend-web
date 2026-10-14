@@ -25,7 +25,8 @@ interface CourseWorkspaceSidebarProps {
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
   onTakeTest: (
     chapter: Chapter | null,
-    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
+    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test',
+    isRetry?: boolean
   ) => void
   onOpenPracticeQuiz?: (chapter: Chapter, lesson: Lesson) => void
 }
@@ -134,6 +135,7 @@ export function CourseWorkspaceSidebar({
           course={course}
           currentLesson={currentLesson}
           isEnrolled={isEnrolled}
+          lockedChapterIds={lockedChapterIds}
           onSelectLesson={onSelectLesson}
           onOpenPracticeQuiz={onOpenPracticeQuiz}
         />

@@ -1,7 +1,7 @@
 // Trang tong quan va gioi thieu chi tiet khoa hoc cho hoc vien chua dang ky phong cach Udemy.
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Check,
@@ -13,6 +13,7 @@ import {
   BookOpen,
   ArrowLeft,
   Sparkles,
+  Star,
 } from 'lucide-react'
 import type { Course, Lesson } from '@/features/courses/types/course'
 import { CourseLandingHero } from '@/features/courses/components/course.landing.hero'
@@ -20,6 +21,9 @@ import { CourseLandingPurchaseCard } from '@/features/courses/components/course.
 import { CourseLandingCurriculum } from '@/features/courses/components/course.landing.curriculum'
 import { CourseLandingInstructor } from '@/features/courses/components/course.landing.instructor'
 import { CourseLandingPreviewModal } from '@/features/courses/components/course.landing.preview.modal'
+import { toast } from '@/store/toast.store'
+import { useLanguage } from '@/hooks/use.language'
+import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
 
 interface CourseLandingViewProps {
   course: Course
@@ -43,12 +47,28 @@ export function CourseLandingView({
   userAvatar,
 }: CourseLandingViewProps) {
   const router = useRouter()
+  const { isVietnamese } = useLanguage()
   const [previewLesson, setPreviewLesson] = useState<Lesson | null>(null)
   const [isDescExpanded, setIsDescExpanded] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const isLongDesc = (course.description?.trim().length || 0) > 400
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 220)
+    }
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const ratingValue = Number(course.rating || 5.0).toFixed(1)
+  const ratingCount = course.ratingCount ?? 0
+  const studentsCount = course.studentsCount ?? 0
+  const effectivePrice = getCourseEffectivePrice(course)
+
   const defaultLearningOutcomes = [
-    `Nắm vững toàn diện cấu trúc bài thi và bẫy thường gặp của bài thi ${course.level || 'TOEIC'}`,
+    'Nắm vững toàn diện cấu trúc bài thi và bẫy thường gặp của bài thi TOEIC',
     'Làm chủ hơn 1.200+ từ vựng học thuật & cụm diễn đạt thực chiến theo từng chủ đề',
     'Tối ưu hóa tốc độ làm bài với phương pháp quản lý thời gian độc quyền của LingoSphere',
     'Thực hành phản xạ với ngân hàng đề thi mô phỏng định dạng chuẩn mới nhất',
@@ -69,43 +89,116 @@ export function CourseLandingView({
     'Sự kiên trì, cam kết dành tối thiểu 45-60 phút mỗi ngày để theo sát lộ trình khóa học.',
   ]
 
-  const firstPreviewLesson =
-    course.chapters?.[0]?.lessons?.[0] ||
-    ({
-      id: 'preview-default',
-      chapterId: course.chapters?.[0]?.id || 'ch-1',
-      order: 1,
-      title: `${course.title} - Bài giảng giới thiệu & định hướng lộ trình`,
-      type: 'video',
-      duration: 360,
-      status: 'available',
-      progress: 0,
-      videoUrl: course.chapters?.[0]?.lessons?.[0]?.videoUrl,
-      content: { sections: [] },
-    } as Lesson)
+  const firstPreviewLesson = useMemo(() => {
+    for (const chapter of course.chapters || []) {
+      for (const les of chapter.lessons || []) {
+        if (les.is_free_preview || les.is_preview) {
+          return les
+        }
+      }
+    }
+    return null
+  }, [course])
 
   const handleOpenGeneralPreview = () => {
-    setPreviewLesson(firstPreviewLesson)
+    if (firstPreviewLesson) {
+      setPreviewLesson(firstPreviewLesson)
+    } else {
+      toast.info(
+        isVietnamese
+          ? 'Khóa học này hiện chưa có video xem trước miễn phí.'
+          : 'This course does not have a free preview video available yet.',
+        isVietnamese ? 'Thông báo' : 'Notice'
+      )
+    }
+  }
+
+  const handleHeaderCartClick = () => {
+    if (!isAuthenticated) {
+      toast.warning(
+        isVietnamese
+          ? 'Vui lòng đăng nhập để xem giỏ hàng của bạn.'
+          : 'Please log in to view your cart.',
+        isVietnamese ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
+      return
+    }
+    router.push('/cart')
+  }
+
+  const handleBuyNowFromPreview = () => {
+    if (!isAuthenticated) {
+      onEnrollOrBuy()
+      return
+    }
+    setPreviewLesson(null)
+    onEnrollOrBuy()
   }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white px-4 sm:px-8 py-3 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white px-4 sm:px-8 xl:px-12 py-2.5 sm:py-3 flex items-center justify-between shadow-md transition-all">
+        <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
           <button
             type="button"
             onClick={() => router.push('/courses')}
-            className="flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+            title="Khám phá các khóa học"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Khám phá các khóa học</span>
+            {!isScrolled && <span className="hidden sm:inline">Khám phá các khóa học</span>}
           </button>
+
+          {isScrolled && (
+            <div className="flex flex-col min-w-0 animate-in fade-in slide-in-from-top-1 duration-200">
+              <h2 className="text-xs sm:text-sm font-black text-white truncate max-w-sm sm:max-w-md lg:max-w-xl xl:max-w-2xl leading-snug">
+                {course.title}
+              </h2>
+              <div className="flex items-center gap-2 text-[11px] text-slate-300 pt-0.5 flex-wrap">
+                {course.is_bestseller ? (
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wider">
+                    Bán chạy nhất
+                  </span>
+                ) : null}
+                {course.target_score ? (
+                  <span className="text-teal-300 font-bold hidden sm:inline">
+                    🎯 Mục tiêu: {course.target_score}+ TOEIC
+                  </span>
+                ) : null}
+                <div className="flex items-center gap-1 text-amber-400 font-bold">
+                  <span>{ratingValue}</span>
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  <span className="text-slate-400 font-normal">
+                    ({ratingCount > 0 ? ratingCount.toLocaleString('vi-VN') : 'Chưa có xếp hạng'})
+                  </span>
+                </div>
+                <span className="text-slate-400 hidden md:inline">
+                  • {studentsCount.toLocaleString('vi-VN')} học viên
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
+          {isScrolled && (
+            <div className="flex items-center gap-2 lg:hidden">
+              <span className="text-xs font-black text-white">
+                {effectivePrice > 0 ? `₫${effectivePrice.toLocaleString('vi-VN')}` : 'Miễn phí'}
+              </span>
+              <button
+                type="button"
+                onClick={onEnrollOrBuy}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs transition-colors cursor-pointer shadow-xs"
+              >
+                Mua ngay
+              </button>
+            </div>
+          )}
+
           <button
             type="button"
-            onClick={() => router.push('/cart')}
+            onClick={handleHeaderCartClick}
             className="relative p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             title="Giỏ hàng của bạn"
           >
@@ -129,7 +222,7 @@ export function CourseLandingView({
                 </div>
               )}
               <span className="hidden sm:inline text-xs font-semibold text-slate-200">
-                {userName || 'Học viên'}
+                {userName}
               </span>
             </div>
           ) : (
@@ -149,8 +242,8 @@ export function CourseLandingView({
         onBack={() => router.push('/courses')}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10">
           <div className="lg:col-span-8 space-y-10 order-2 lg:order-1">
             <section className="rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 bg-white dark:bg-slate-900 shadow-xs space-y-4">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
@@ -234,14 +327,16 @@ export function CourseLandingView({
           </div>
 
           <div className="lg:col-span-4 lg:-mt-72 relative z-20 order-1 lg:order-2">
-            <CourseLandingPurchaseCard
-              course={course}
-              onEnrollOrBuy={onEnrollOrBuy}
-              onAddToCart={onAddToCart}
-              onOpenPreview={handleOpenGeneralPreview}
-              isInCart={isInCart}
-              isAddingToCart={isAddingToCart}
-            />
+            <div className="sticky top-24">
+              <CourseLandingPurchaseCard
+                course={course}
+                onEnrollOrBuy={onEnrollOrBuy}
+                onAddToCart={onAddToCart}
+                onOpenPreview={handleOpenGeneralPreview}
+                isInCart={isInCart}
+                isAddingToCart={isAddingToCart}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -250,9 +345,11 @@ export function CourseLandingView({
         open={Boolean(previewLesson)}
         onClose={() => setPreviewLesson(null)}
         lesson={previewLesson}
-        courseTitle={course.title}
-        coursePrice={course.discount_price || course.price}
-        onBuyNow={onEnrollOrBuy}
+        course={course}
+        onBuyNow={handleBuyNowFromPreview}
+        onAddToCart={onAddToCart}
+        isInCart={isInCart}
+        isAddingToCart={isAddingToCart}
       />
     </div>
   )

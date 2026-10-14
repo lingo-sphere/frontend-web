@@ -1,8 +1,4 @@
-/**
- * @file upgrade.modal.tsx
- * @description Modal nâng cấp LingoSphere Premium VIP điều phối các bước thanh toán và gia hạn
- */
-
+// Modal nang cap goi thanh vien LingoSphere Premium VIP dieu phoi cac buoc thanh toan va gia han.
 'use client'
 
 import { X, ArrowLeft, Crown } from 'lucide-react'
@@ -47,16 +43,11 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
-        onClick={() => {
-          stopAllTimers()
-          onOpenChange(false)
-        }}
       />
 
       <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
         <div
           className="relative w-full max-w-lg transform rounded-3xl bg-surface border border-border text-left shadow-2xl transition-all duration-300 animate-in zoom-in-95"
-          onClick={(e) => e.stopPropagation()}
         >
           <div className="relative p-5 sm:p-6 pb-4 border-b border-border">
             {step === 'PAYMENT_QR' && (

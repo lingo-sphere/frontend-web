@@ -1,16 +1,26 @@
-// Tiện ích dùng chung định dạng tiền tệ, số, thời gian tương đối, ngày tháng và thông điệp lỗi
-export function formatCurrency(amount?: number | null, fallback = '0 ₫'): string {
-  if (amount === undefined || amount === null) return fallback
-  if (amount <= 0 && fallback !== '0 ₫') return fallback
-  return `${amount.toLocaleString('vi-VN')} ₫`
+// Tiện ích dùng chung định dạng tiền tệ, số, thời gian tương đối, ngày tháng và thông điệp lỗi tự động theo ngôn ngữ hiện hành
+import i18n from '@/i18n/i18n.config'
+
+function isCurrentLanguageVi(): boolean {
+  return (i18n.language || 'vi').toLowerCase().startsWith('vi')
+}
+
+export function formatCurrency(amount?: number | null, fallback?: string): string {
+  const isVi = isCurrentLanguageVi()
+  const defaultFallback = isVi ? '0 ₫' : '0 VND'
+  const finalFallback = fallback !== undefined ? fallback : defaultFallback
+
+  if (amount === undefined || amount === null) return finalFallback
+  if (amount <= 0 && fallback !== undefined && fallback !== defaultFallback) return fallback
+  return isVi ? `${amount.toLocaleString('vi-VN')} ₫` : `${amount.toLocaleString('en-US')} VND`
 }
 
 export function formatNumber(value?: number | null): string {
   if (value === undefined || value === null) return '0'
-  return value.toLocaleString('vi-VN')
+  return value.toLocaleString(isCurrentLanguageVi() ? 'vi-VN' : 'en-US')
 }
 
-export function formatRelativeTime(dateInput: string | Date, isVietnamese = true): string {
+export function formatRelativeTime(dateInput: string | Date, isVietnamese = isCurrentLanguageVi()): string {
   const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
@@ -27,7 +37,7 @@ export function formatRelativeTime(dateInput: string | Date, isVietnamese = true
 
 export function formatDate(
   dateInput: string | Date,
-  isVietnamese = true,
+  isVietnamese = isCurrentLanguageVi(),
   options?: Intl.DateTimeFormatOptions
 ): string {
   const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
@@ -41,7 +51,7 @@ export function formatDate(
   )
 }
 
-export function formatDateTime(dateInput: string | Date, isVietnamese = true): string {
+export function formatDateTime(dateInput: string | Date, isVietnamese = isCurrentLanguageVi()): string {
   const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
   const time = date.toLocaleTimeString(isVietnamese ? 'vi-VN' : 'en-US', {
     hour: '2-digit',
@@ -56,8 +66,12 @@ export function truncateText(text: string, maxLength = 120): string {
   return text.slice(0, maxLength) + '...'
 }
 
-export function getErrorMessage(error: unknown, fallback = 'Đã có lỗi xảy ra'): string {
+export function getErrorMessage(error: unknown, fallback?: string): string {
+  const isVi = isCurrentLanguageVi()
+  const defaultFallback = isVi ? 'Đã có lỗi xảy ra' : 'An error occurred'
+  const finalFallback = fallback !== undefined ? fallback : defaultFallback
+
   if (error instanceof Error && error.message) return error.message
   if (typeof error === 'string' && error.trim()) return error
-  return fallback
+  return finalFallback
 }

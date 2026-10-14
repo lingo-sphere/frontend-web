@@ -1,8 +1,9 @@
-// Modal cảnh báo và gợi ý học viên làm bài test hoặc nhập điểm đầu vào theo kỹ năng khóa học.
+// Modal gợi ý học viên làm bài test hoặc nhập điểm đầu vào theo kỹ năng khóa học.
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import {
   Sparkles,
   ArrowRight,
@@ -19,7 +20,6 @@ import {
 } from 'lucide-react'
 import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
 
 interface CoursePlacementPromptModalProps {
@@ -29,7 +29,6 @@ interface CoursePlacementPromptModalProps {
   courseTitle?: string
   courseCategory?: string
   courseSkills?: string[]
-  courseLevel?: string
   courseTargetScore?: number
 }
 
@@ -43,6 +42,10 @@ export function CoursePlacementPromptModal({
   courseTargetScore,
 }: CoursePlacementPromptModalProps) {
   const router = useRouter()
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+
   const [showManualInput, setShowManualInput] = useState(false)
   const [listeningScore, setListeningScore] = useState<number>(300)
   const [readingScore, setReadingScore] = useState<number>(300)
@@ -51,27 +54,13 @@ export function CoursePlacementPromptModal({
   const [isSavingScore, setIsSavingScore] = useState(false)
 
   const is4SkillsCourse = useMemo(() => {
-    const cat = (courseCategory || '').toUpperCase()
-    const title = (courseTitle || '').toLowerCase()
-    const skills = (courseSkills || []).map((s) => s.toUpperCase())
-
-    return (
-      cat.includes('4_SKILLS') ||
-      cat.includes('4SKILLS') ||
-      cat.includes('SPEAKING') ||
-      cat.includes('WRITING') ||
-      cat.includes('COMMUNICATION') ||
-      title.includes('4 kỹ năng') ||
-      title.includes('4 ky nang') ||
-      title.includes('nói') ||
-      title.includes('viết') ||
-      title.includes('speaking') ||
-      title.includes('writing') ||
-      title.includes('giao tiếp') ||
-      skills.includes('SPEAKING') ||
-      skills.includes('WRITING')
+    if (courseCategory === 'TOEIC_4_SKILLS') return true
+    if (courseCategory === 'TOEIC_2_SKILLS') return false
+    return Boolean(
+      courseSkills &&
+        (courseSkills.includes('SPEAKING') || courseSkills.includes('WRITING'))
     )
-  }, [courseCategory, courseTitle, courseSkills])
+  }, [courseCategory, courseSkills])
 
   const calculatedTotal = useMemo(() => {
     if (is4SkillsCourse) {
@@ -81,8 +70,12 @@ export function CoursePlacementPromptModal({
   }, [is4SkillsCourse, listeningScore, readingScore, speakingScore, writingScore])
 
   const skillBadgeText = is4SkillsCourse
-    ? 'Khóa học 4 Kỹ Năng (Nghe - Nói - Đọc - Viết)'
-    : 'Khóa học 2 Kỹ Năng (Nghe - Đọc)'
+    ? isVietnamese
+      ? 'Khóa học 4 Kỹ Năng (Nghe - Nói - Đọc - Viết)'
+      : '4 Skills Course (Listening - Speaking - Reading - Writing)'
+    : isVietnamese
+      ? 'Khóa học 2 Kỹ Năng (Nghe - Đọc)'
+      : '2 Skills Course (Listening - Reading)'
 
   const handleGoToPlacementTest = (type: '2skills' | '4skills') => {
     onOpenChange(false)
@@ -95,22 +88,48 @@ export function CoursePlacementPromptModal({
 
   const handleSaveManualScore = useCallback(async () => {
     if (listeningScore < 0 || listeningScore > 495) {
-      toast.error('Điểm Nghe (Listening) phải từ 0 đến 495.')
+      toast.error(
+        isVietnamese
+          ? 'Điểm Nghe (Listening) phải từ 0 đến 495.'
+          : 'Listening score must be between 0 and 495.'
+      )
       return
     }
     if (readingScore < 0 || readingScore > 495) {
-      toast.error('Điểm Đọc (Reading) phải từ 0 đến 495.')
+      toast.error(
+        isVietnamese
+          ? 'Điểm Đọc (Reading) phải từ 0 đến 495.'
+          : 'Reading score must be between 0 and 495.'
+      )
       return
     }
     if (is4SkillsCourse) {
       if (speakingScore < 0 || speakingScore > 200) {
-        toast.error('Điểm Nói (Speaking) phải từ 0 đến 200.')
+        toast.error(
+          isVietnamese
+            ? 'Điểm Nói (Speaking) phải từ 0 đến 200.'
+            : 'Speaking score must be between 0 and 200.'
+        )
         return
       }
       if (writingScore < 0 || writingScore > 200) {
-        toast.error('Điểm Viết (Writing) phải từ 0 đến 200.')
+        toast.error(
+          isVietnamese
+            ? 'Điểm Viết (Writing) phải từ 0 đến 200.'
+            : 'Writing score must be between 0 and 200.'
+        )
         return
       }
+    }
+
+    const { isAuthenticated: authCheck, user, setUser } = useAuthStore.getState()
+    if (!authCheck) {
+      toast.warning(
+        isVietnamese
+          ? 'Vui lòng đăng nhập để lưu điểm đầu vào vào tài khoản của bạn.'
+          : 'Please log in to save your placement score to your account.'
+      )
+      return
     }
 
     setIsSavingScore(true)
@@ -123,15 +142,14 @@ export function CoursePlacementPromptModal({
         placement_speaking_score: is4SkillsCourse ? speakingScore : undefined,
         placement_writing_score: is4SkillsCourse ? writingScore : undefined,
         placement_skills_type: skillsType,
-        target_toeic_score: courseTargetScore || (is4SkillsCourse ? 650 : 500),
+        target_toeic_score:
+          courseTargetScore && courseTargetScore > 0 ? courseTargetScore : undefined,
         current_estimated_score: calculatedTotal,
         is_score_manually_edited: true,
         placement_tested_at: new Date().toISOString(),
       }
 
-      await userService.updateProfile(payload).catch(() => null)
-
-      const { user, setUser } = useAuthStore.getState()
+      await userService.updateProfile(payload)
       if (user) {
         setUser({
           ...user,
@@ -139,13 +157,20 @@ export function CoursePlacementPromptModal({
         })
       }
 
-      storage.set(STORAGE_KEYS.PLACEMENT_SCORE, payload)
-      toast.success('Đã lưu điểm đầu vào thành công!')
+      toast.success(
+        isVietnamese
+          ? 'Đã lưu điểm đầu vào thành công!'
+          : 'Placement score saved successfully!'
+      )
 
       onOpenChange(false)
       onProceedPurchase()
     } catch {
-      toast.error('Không thể lưu điểm đầu vào, vui lòng thử lại.')
+      toast.error(
+        isVietnamese
+          ? 'Không thể lưu điểm đầu vào, vui lòng thử lại.'
+          : 'Could not save placement score, please try again.'
+      )
     } finally {
       setIsSavingScore(false)
     }
@@ -159,20 +184,17 @@ export function CoursePlacementPromptModal({
     courseTargetScore,
     onOpenChange,
     onProceedPurchase,
+    isVietnamese,
   ])
 
   if (!open) return null
 
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onOpenChange(false)
-      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto"
     >
       <div
         className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-3xl w-full max-w-xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 relative overflow-hidden my-8"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
@@ -182,14 +204,18 @@ export function CoursePlacementPromptModal({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-                  Gợi Ý Đánh Giá Năng Lực Đầu Vào
+                  {isVietnamese
+                    ? 'Gợi Ý Đánh Giá Năng Lực Đầu Vào'
+                    : 'Placement Test Recommendation'}
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                   {skillBadgeText}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Đảm bảo nội dung khóa học sát với trình độ thực tế của bạn
+                {isVietnamese
+                  ? 'Đảm bảo nội dung khóa học sát với trình độ thực tế của bạn'
+                  : 'Ensure course content matches your real proficiency level'}
               </p>
             </div>
           </div>
@@ -206,10 +232,38 @@ export function CoursePlacementPromptModal({
           <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-1 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
             <p className="font-semibold">
-              Bạn chưa có điểm số hoặc kết quả kiểm tra năng lực đầu vào trong hệ thống.
+              {isVietnamese
+                ? 'Bạn chưa có điểm số hoặc kết quả kiểm tra năng lực đầu vào trong hệ thống.'
+                : 'You do not have a placement test score recorded in the system yet.'}
             </p>
             <p className="text-amber-800 dark:text-amber-300">
-              Để bài học trong khóa {courseTitle ? <strong className="font-bold text-amber-950 dark:text-amber-100">"{courseTitle}"</strong> : 'này'} được cá nhân hóa chính xác và phát huy tối đa hiệu quả, bạn nên <strong>thi bài test đầu vào</strong> hoặc <strong>nhập điểm thi hiện tại</strong> trước khi mua.
+              {isVietnamese ? (
+                <>
+                  Để bài học trong khóa{' '}
+                  {courseTitle ? (
+                    <strong className="font-bold text-amber-950 dark:text-amber-100">
+                      &ldquo;{courseTitle}&rdquo;
+                    </strong>
+                  ) : (
+                    'này'
+                  )}{' '}
+                  được cá nhân hóa chính xác và phát huy tối đa hiệu quả, bạn nên{' '}
+                  <strong>thi bài test đầu vào</strong> hoặc <strong>nhập điểm thi hiện tại</strong> trước khi mua.
+                </>
+              ) : (
+                <>
+                  To ensure lessons in{' '}
+                  {courseTitle ? (
+                    <strong className="font-bold text-amber-950 dark:text-amber-100">
+                      &ldquo;{courseTitle}&rdquo;
+                    </strong>
+                  ) : (
+                    'this course'
+                  )}{' '}
+                  are accurately tailored to your needs, you should{' '}
+                  <strong>take a placement test</strong> or <strong>enter your current score</strong> before purchasing.
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -217,9 +271,13 @@ export function CoursePlacementPromptModal({
         <div className="space-y-3">
           <div className="space-y-2.5">
             <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-slate-100 px-0.5">
-              <span>Lựa chọn bài kiểm tra năng lực phù hợp:</span>
+              <span>
+                {isVietnamese
+                  ? 'Lựa chọn bài kiểm tra năng lực phù hợp:'
+                  : 'Select suitable placement test:'}
+              </span>
               <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                Miễn phí 100%
+                {isVietnamese ? 'Miễn phí 100%' : '100% Free'}
               </span>
             </div>
 
@@ -230,19 +288,21 @@ export function CoursePlacementPromptModal({
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-xs">
-                          Khuyên Dùng Cho Khóa Này
+                          {isVietnamese ? 'Khuyên Dùng Cho Khóa Này' : 'Recommended For This Course'}
                         </span>
                         <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                          Bài Test Toàn Diện 4 Kỹ Năng
+                          {isVietnamese ? 'Bài Test Toàn Diện 4 Kỹ Năng' : 'Comprehensive 4-Skills Test'}
                         </span>
                       </div>
                       <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-                        90 Phút
+                        {isVietnamese ? '90 Phút' : '90 Mins'}
                       </span>
                     </div>
 
                     <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                      Khóa học bạn chọn có rèn luyện Speaking và Writing. Bài kiểm tra này giúp đánh giá toàn diện cả 4 kỹ năng Nghe, Đọc, Nói, Viết để giảng viên và AI đưa ra hướng dẫn sát nhất.
+                      {isVietnamese
+                        ? 'Khóa học bạn chọn có rèn luyện Speaking và Writing. Bài kiểm tra này giúp đánh giá toàn diện cả 4 kỹ năng Nghe, Đọc, Nói, Viết để giảng viên và AI đưa ra hướng dẫn sát nhất.'
+                        : 'This course trains Speaking and Writing. This test evaluates all 4 skills so instructors and AI can provide optimal guidance.'}
                     </p>
 
                     <button
@@ -251,7 +311,11 @@ export function CoursePlacementPromptModal({
                       className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 cursor-pointer"
                     >
                       <Mic className="w-4 h-4" />
-                      <span>Bắt Đầu Thi Test 4 Kỹ Năng Ngay</span>
+                      <span>
+                        {isVietnamese
+                          ? 'Bắt Đầu Thi Test 4 Kỹ Năng Ngay'
+                          : 'Start 4-Skills Test Now'}
+                      </span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -260,10 +324,16 @@ export function CoursePlacementPromptModal({
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
                         <Headphones className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Chỉ muốn kiểm tra Nghe & Đọc (2 Kỹ năng)?</span>
+                        <span>
+                          {isVietnamese
+                            ? 'Chỉ muốn kiểm tra Nghe & Đọc (2 Kỹ năng)?'
+                            : 'Only test Listening & Reading (2 Skills)?'}
+                        </span>
                       </div>
                       <p className="text-[11px] text-slate-400">
-                        Bài test Listening & Reading chuẩn format (60 phút)
+                        {isVietnamese
+                          ? 'Bài test Listening & Reading chuẩn format (60 phút)'
+                          : 'Standard Listening & Reading test format (60 mins)'}
                       </p>
                     </div>
                     <button
@@ -271,7 +341,7 @@ export function CoursePlacementPromptModal({
                       onClick={() => handleGoToPlacementTest('2skills')}
                       className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-indigo-500 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer whitespace-nowrap"
                     >
-                      Thi Test 2 Kỹ Năng
+                      {isVietnamese ? 'Thi Test 2 Kỹ Năng' : 'Take 2-Skills Test'}
                     </button>
                   </div>
                 </>
@@ -281,19 +351,23 @@ export function CoursePlacementPromptModal({
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-xs">
-                          Khuyên Dùng Cho Khóa Này
+                          {isVietnamese ? 'Khuyên Dùng Cho Khóa Này' : 'Recommended For This Course'}
                         </span>
                         <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                          Bài Test Chuẩn 2 Kỹ Năng (Nghe - Đọc)
+                          {isVietnamese
+                            ? 'Bài Test Chuẩn 2 Kỹ Năng (Nghe - Đọc)'
+                            : 'Standard 2-Skills Test (Listening - Reading)'}
                         </span>
                       </div>
                       <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-                        60 Phút
+                        {isVietnamese ? '60 Phút' : '60 Mins'}
                       </span>
                     </div>
 
                     <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                      Khóa học bạn chọn tập trung vào TOEIC Listening & Reading. Bài kiểm tra đầu vào 2 kỹ năng sẽ phân loại chính xác trình độ và xác định các điểm ngữ pháp/từ vựng bạn cần bổ sung.
+                      {isVietnamese
+                        ? 'Khóa học bạn chọn tập trung vào TOEIC Listening & Reading. Bài kiểm tra đầu vào 2 kỹ năng sẽ phân loại chính xác trình độ và xác định các điểm ngữ pháp/từ vựng bạn cần bổ sung.'
+                        : 'This course focuses on TOEIC Listening & Reading. This 2-skills test will accurately categorize your level and identify areas needing improvement.'}
                     </p>
 
                     <button
@@ -302,7 +376,11 @@ export function CoursePlacementPromptModal({
                       className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 cursor-pointer"
                     >
                       <Headphones className="w-4 h-4" />
-                      <span>Bắt Đầu Thi Test 2 Kỹ Năng Ngay</span>
+                      <span>
+                        {isVietnamese
+                          ? 'Bắt Đầu Thi Test 2 Kỹ Năng Ngay'
+                          : 'Start 2-Skills Test Now'}
+                      </span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -311,10 +389,16 @@ export function CoursePlacementPromptModal({
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
                         <Mic className="w-3.5 h-3.5 text-teal-500" />
-                        <span>Bạn muốn kiểm tra trọn gói cả Nói & Viết?</span>
+                        <span>
+                          {isVietnamese
+                            ? 'Bạn muốn kiểm tra trọn gói cả Nói & Viết?'
+                            : 'Want to test full package including Speaking & Writing?'}
+                        </span>
                       </div>
                       <p className="text-[11px] text-slate-400">
-                        Bài test toàn diện 4 kỹ năng (90 phút)
+                        {isVietnamese
+                          ? 'Bài test toàn diện 4 kỹ năng (90 phút)'
+                          : 'Comprehensive 4-skills test (90 mins)'}
                       </p>
                     </div>
                     <button
@@ -322,7 +406,7 @@ export function CoursePlacementPromptModal({
                       onClick={() => handleGoToPlacementTest('4skills')}
                       className="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer whitespace-nowrap"
                     >
-                      Thi Test 4 Kỹ Năng
+                      {isVietnamese ? 'Thi Test 4 Kỹ Năng' : 'Take 4-Skills Test'}
                     </button>
                   </div>
                 </>
@@ -342,10 +426,14 @@ export function CoursePlacementPromptModal({
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    Bạn đã có chứng chỉ hoặc điểm thi trước đó?
+                    {isVietnamese
+                      ? 'Bạn đã có chứng chỉ hoặc điểm thi trước đó?'
+                      : 'Already have a certificate or prior test score?'}
                   </div>
                   <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Nhập điểm ngay tại đây để lưu vào hồ sơ và tiếp tục mua khóa học
+                    {isVietnamese
+                      ? 'Nhập điểm ngay tại đây để lưu vào hồ sơ và tiếp tục mua khóa học'
+                      : 'Enter score here to save to your profile and proceed with purchase'}
                   </div>
                 </div>
               </div>
@@ -359,7 +447,9 @@ export function CoursePlacementPromptModal({
                 <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                      Điểm Nghe (Listening) (0 - 495)
+                      {isVietnamese
+                        ? 'Điểm Nghe (Listening) (0 - 495)'
+                        : 'Listening Score (0 - 495)'}
                     </label>
                     <input
                       type="number"
@@ -373,7 +463,9 @@ export function CoursePlacementPromptModal({
 
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                      Điểm Đọc (Reading) (0 - 495)
+                      {isVietnamese
+                        ? 'Điểm Đọc (Reading) (0 - 495)'
+                        : 'Reading Score (0 - 495)'}
                     </label>
                     <input
                       type="number"
@@ -389,7 +481,9 @@ export function CoursePlacementPromptModal({
                     <>
                       <div className="space-y-1">
                         <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                          Điểm Nói (Speaking) (0 - 200)
+                          {isVietnamese
+                            ? 'Điểm Nói (Speaking) (0 - 200)'
+                            : 'Speaking Score (0 - 200)'}
                         </label>
                         <input
                           type="number"
@@ -403,7 +497,9 @@ export function CoursePlacementPromptModal({
 
                       <div className="space-y-1">
                         <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                          Điểm Viết (Writing) (0 - 200)
+                          {isVietnamese
+                            ? 'Điểm Viết (Writing) (0 - 200)'
+                            : 'Writing Score (0 - 200)'}
                         </label>
                         <input
                           type="number"
@@ -421,31 +517,56 @@ export function CoursePlacementPromptModal({
                 <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
                     <Award className="w-4 h-4 text-amber-500" />
-                    <span>Tổng điểm ước tính:</span>
+                    <span>{isVietnamese ? 'Tổng điểm ước tính:' : 'Estimated Total Score:'}</span>
                   </div>
                   <span className="text-base font-black text-indigo-600 dark:text-indigo-400">
                     {calculatedTotal} / {is4SkillsCourse ? '1390' : '990'}
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleSaveManualScore}
-                  disabled={isSavingScore}
-                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                >
-                  {isSavingScore ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang lưu điểm...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Lưu Điểm Đầu Vào & Tiếp Tục Mua Khóa Học</span>
-                    </>
-                  )}
-                </button>
+                {!isAuthenticated ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast.warning(
+                        isVietnamese
+                          ? 'Vui lòng đăng nhập để lưu điểm đầu vào vào tài khoản của bạn.'
+                          : 'Please log in to save your placement score to your account.'
+                      )
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>
+                      {isVietnamese
+                        ? 'Đăng nhập để lưu điểm đầu vào'
+                        : 'Log in to save placement score'}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSaveManualScore}
+                    disabled={isSavingScore}
+                    className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  >
+                    {isSavingScore ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{isVietnamese ? 'Đang lưu điểm...' : 'Saving score...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>
+                          {isVietnamese
+                            ? 'Lưu Điểm Đầu Vào & Tiếp Tục Mua Khóa Học'
+                            : 'Save Placement Score & Continue Purchase'}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -457,7 +578,7 @@ export function CoursePlacementPromptModal({
             onClick={() => onOpenChange(false)}
             className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium transition-colors cursor-pointer"
           >
-            Đóng hộp thoại
+            {isVietnamese ? 'Đóng hộp thoại' : 'Close dialog'}
           </button>
 
           <button
@@ -468,7 +589,7 @@ export function CoursePlacementPromptModal({
             }}
             className="w-full sm:w-auto px-5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            <span>Bỏ qua cảnh báo & Tiếp tục mua</span>
+            <span>{isVietnamese ? 'Bỏ qua cảnh báo & Tiếp tục mua' : 'Skip warning & Proceed to purchase'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

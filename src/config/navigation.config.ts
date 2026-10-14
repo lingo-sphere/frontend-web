@@ -1,7 +1,4 @@
-/**
- * @file navigation.config.ts
- * @description Mã nguồn thành phần navigation.config.ts
- */
+// Cấu hình danh mục điều hướng chính cho ứng dụng frontend-web.
 
 export interface NavItem {
   id: string
@@ -40,8 +37,9 @@ export const NAV_GROUPS: NavGroup[] = [
           { id: 'courses-liked', labelVi: 'Khóa học yêu thích', labelEn: 'Liked courses', icon: 'heart', path: '/courses?tab=wishlist' },
         ],
       },
-      { id: 'vocabulary', labelVi: 'Từ vựng (SRS)', labelEn: 'Vocabulary', icon: 'cards', path: '/vocabulary' },
-      { id: 'toeic', labelVi: 'Đề thi TOEIC', labelEn: 'TOEIC Exam', icon: 'fileText', path: '/toeic', badge: 'ETS', badgeColor: 'bg-primary' },
+      { id: 'vocabulary', labelVi: 'Từ vựng', labelEn: 'Vocabulary', icon: 'cards', path: '/vocabulary' },
+      { id: 'mistakes', labelVi: 'Sổ tay lỗi sai', labelEn: 'Mistake Vault', icon: 'bookmarkCheck', path: '/practice/mistakes' },
+      { id: 'toeic', labelVi: 'Đề thi TOEIC', labelEn: 'TOEIC Exam', icon: 'fileText', path: '/toeic' },
     ],
   },
   {
@@ -50,23 +48,20 @@ export const NAV_GROUPS: NavGroup[] = [
     titleEn: '4 Skills',
     items: [
       { id: 'listening', labelVi: 'Luyện Nghe', labelEn: 'Listening', icon: 'headphones', path: '/listening' },
-      { id: 'speaking', labelVi: 'Luyện Nói (Whisper)', labelEn: 'Speaking', icon: 'mic', path: '/speaking', badge: 'AI', badgeColor: 'bg-accent' },
-      { id: 'writing', labelVi: 'Luyện Viết (Writing AI)', labelEn: 'Writing', icon: 'pencil', path: '/writing', badge: 'AI', badgeColor: 'bg-accent' },
-      { id: 'journal', labelVi: 'Nhật Ký AI', labelEn: 'Daily Journal', icon: 'fileText', path: '/journal', badge: 'Daily', badgeColor: 'bg-primary' },
+      { id: 'speaking', labelVi: 'Luyện Nói', labelEn: 'Speaking', icon: 'mic', path: '/speaking' },
+      { id: 'reading', labelVi: 'Luyện Đọc', labelEn: 'Reading', icon: 'book', path: '/reading' },
+      { id: 'writing', labelVi: 'Luyện Viết', labelEn: 'Writing', icon: 'pencil', path: '/writing' },
       { id: 'grammar', labelVi: 'Ngữ pháp', labelEn: 'Grammar', icon: 'bookCheck', path: '/grammar' },
       { id: 'ipa', labelVi: 'Bảng phiên âm IPA', labelEn: 'IPA Chart', icon: 'volume2', path: '/ipa' },
     ],
   },
   {
-    id: 'ai-community',
-    titleVi: 'AI & Cộng đồng',
-    titleEn: 'AI & Community',
+    id: 'ai-tools',
+    titleVi: 'AI & Tiện ích',
+    titleEn: 'AI & Tools',
     items: [
-      { id: 'ai-learning', labelVi: 'Gia sư AI', labelEn: 'AI Tutor', icon: 'sparkles', path: '/ai-learning', badge: 'Groq', badgeColor: 'bg-success' },
-      { id: 'translate', labelVi: 'Dịch Thuật AI', labelEn: 'AI Translation', icon: 'volume2', path: '/translate', badge: 'AI', badgeColor: 'bg-accent' },
-      { id: 'community', labelVi: 'Cộng đồng', labelEn: 'Community', icon: 'users', path: '/community' },
+      { id: 'translate', labelVi: 'Dịch Thuật AI', labelEn: 'AI Translation', icon: 'volume2', path: '/translate' },
       { id: 'leaderboard', labelVi: 'Bảng xếp hạng', labelEn: 'Leaderboard', icon: 'trophy', path: '/leaderboard' },
-      { id: 'notes', labelVi: 'Sổ tay ghi chú', labelEn: 'Notebook', icon: 'notes', path: '/notes' },
     ],
   },
 ]

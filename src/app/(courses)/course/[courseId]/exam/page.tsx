@@ -1,17 +1,15 @@
-// Trang làm bài thi khóa học toàn màn hình (Course Exam Workspace)
-
+// Trang làm bài thi khóa học toàn màn hình.
 'use client'
 
-import { useCallback, useMemo, Suspense } from 'react'
+import { useCallback, useMemo, Suspense, useEffect } from 'react'
 import { useParams, useSearchParams, useNavigate } from '@/lib/navigation'
-import { courseService } from '@/features/courses/services/course.service'
 import { mapCourseDataToWorkspace } from '@/features/courses/helpers/course.workspace.adapter'
 import { CourseTestRunnerWorkspace } from '@/features/courses/components/course.test.runner.workspace'
-import { CourseLoadingState } from '@/features/courses/components/course.loading.state'
+import { CourseExamLoadingState } from '@/features/courses/components/course.exam.loading.state'
 import type { Course, Chapter } from '@/features/courses/types/course'
 import type { TestAttemptItem } from '@/features/courses/types/test.runner.types'
 import { Button } from '@/components/button'
-import { AlertCircle, ArrowLeft } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Lock } from 'lucide-react'
 import { extractCourseId, buildCourseUrl } from '@/features/courses/lib/course.url'
 import { getQueryClient } from '@/config/query.config'
 import { progressKeys } from '@/features/progress/keys/progress.keys'
@@ -21,6 +19,8 @@ import {
   useCourseEnrollmentStatusQuery,
   useCourseProgressQuery,
 } from '@/features/courses/hooks/use.courses.query'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { toast } from '@/store/toast.store'
 
 function CourseExamContent() {
   const params = useParams<{ courseId: string }>()
@@ -35,12 +35,23 @@ function CourseExamContent() {
     | 'post-mini'
     | 'final-test'
   const chapterId = searchParams.get('chapterId') || searchParams.get('moduleId')
+  const isRetry = searchParams.get('retry') === 'true'
+
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isAuthLoading = useAuthStore((s) => s.isLoading)
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để tham gia làm bài thi khóa học')
+      navigate(`/login?returnUrl=/course/${rawParam}/exam`)
+    }
+  }, [isAuthLoading, isAuthenticated, rawParam, navigate])
 
   const { data: fetchedCourse, isLoading: isCourseLoading } = useCourseDetailQuery(courseId, Boolean(courseId))
-  const { data: enrollmentRes, isLoading: isEnrollmentLoading } = useCourseEnrollmentStatusQuery(courseId, Boolean(courseId))
-  const { data: progressRes } = useCourseProgressQuery(courseId, Boolean(courseId))
+  const { data: enrollmentRes, isLoading: isEnrollmentLoading } = useCourseEnrollmentStatusQuery(courseId, Boolean(courseId && isAuthenticated))
+  const { data: progressRes } = useCourseProgressQuery(courseId, Boolean(courseId && isAuthenticated))
 
-  const isLoading = isCourseLoading || isEnrollmentLoading
+  const isLoading = isAuthLoading || isCourseLoading || isEnrollmentLoading
   const isEnrolled = Boolean(enrollmentRes?.is_enrolled)
 
   const course: Course | null = useMemo(() => {
@@ -67,7 +78,7 @@ function CourseExamContent() {
   }, [navigate, course, courseId])
 
   if (isLoading) {
-    return <CourseLoadingState onBack={handleBackToCourse} />
+    return <CourseExamLoadingState onBack={handleBackToCourse} />
   }
 
   if (!course) {
@@ -80,6 +91,33 @@ function CourseExamContent() {
           <h2 className="text-xl font-bold text-text-primary">Không thể mở bài thi</h2>
           <p className="text-sm text-text-secondary leading-relaxed">
             Dữ liệu khóa học chưa sẵn sàng để làm bài thi.
+          </p>
+          <div className="pt-2">
+            <Button
+              onClick={handleBackToCourse}
+              className="w-full bg-primary text-white font-bold rounded-xl gap-2 cursor-pointer shadow-md"
+            >
+              <ArrowLeft size={16} />
+              <span>Quay lại khóa học</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const hasAccess = isAuthenticated && isEnrolled
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-6 antialiased">
+        <div className="w-full max-w-md p-8 bg-surface rounded-3xl border border-border shadow-xl text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+            <Lock size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-text-primary">Khóa học chưa được mở khóa</h2>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Bài thi này chỉ dành cho học viên đã đăng ký hoặc mua khóa học. Vui lòng mở khóa khóa học để tham gia làm bài thi.
           </p>
           <div className="pt-2">
             <Button
@@ -166,11 +204,13 @@ function CourseExamContent() {
     <CourseTestRunnerWorkspace
       courseId={courseId}
       courseTitle={course.title}
+      courseTargetScore={course.target_score || fetchedCourse?.target_score}
       chapter={selectedChapter}
       testType={testType}
       durationMinutes={durationMins}
+      isRetry={isRetry}
       finalTestQuestions={course.final_test_questions}
-      finalTestAudioUrl={course.final_test_audio_url}
+      finalTestAudioUrl={testType === 'final-test' ? course.final_test_audio_url : undefined}
       speakingPrompt={
         testType === 'final-test'
           ? course.final_test_speaking_prompt || selectedChapter?.speaking_prompt
@@ -207,7 +247,7 @@ function CourseExamContent() {
 
 export default function CourseExamPage() {
   return (
-    <Suspense fallback={<CourseLoadingState onBack={() => window.history.back()} />}>
+    <Suspense fallback={<CourseExamLoadingState onBack={() => window.history.back()} />}>
       <CourseExamContent />
     </Suspense>
   )

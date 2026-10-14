@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   PenTool,
   UploadCloud,
@@ -34,6 +35,9 @@ export function TestRunnerWritingSection({
   fileUrl,
   onScoreUpdated,
 }: TestRunnerWritingSectionProps) {
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+
   const [essayText, setEssayText] = useState('')
   const [writingInputMode, setWritingInputMode] = useState<'TYPE' | 'UPLOAD'>('TYPE')
   const [uploadedEssayFileName, setUploadedEssayFileName] = useState<string | null>(null)
@@ -46,12 +50,20 @@ export function TestRunnerWritingSection({
     if (!file) return
 
     if (!/\.(txt|md|docx|doc|pdf)$/i.test(file.name)) {
-      toast.error('Chỉ chấp nhận file văn bản (.txt, .md, .docx, .doc, .pdf)')
+      toast.error(
+        isVietnamese
+          ? 'Chỉ chấp nhận file văn bản (.txt, .md, .docx, .doc, .pdf)'
+          : 'Only text files (.txt, .md, .docx, .doc, .pdf) are accepted'
+      )
       return
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('Dung lượng file không được vượt quá 10MB')
+      toast.error(
+        isVietnamese
+          ? 'Dung lượng file không được vượt quá 10MB'
+          : 'File size cannot exceed 10MB'
+      )
       return
     }
 
@@ -64,7 +76,11 @@ export function TestRunnerWritingSection({
         const content = event.target?.result as string
         if (content) {
           setEssayText(content.trim())
-          toast.success(`Đã đọc nội dung bài viết từ file: ${file.name}`)
+          toast.success(
+            isVietnamese
+              ? `Đã đọc nội dung bài viết từ file: ${file.name}`
+              : `Read essay content from file: ${file.name}`
+          )
         }
       }
       reader.readAsText(file)
@@ -81,15 +97,23 @@ export function TestRunnerWritingSection({
             setEssayText(sanitized)
           } else {
             setEssayText(
-              `[Tệp đính kèm: ${file.name}]\n\nNội dung bài luận tiếng Anh của học viên đính kèm từ tệp ${file.name}.`
+              isVietnamese
+                ? `[Tệp đính kèm: ${file.name}]\n\nNội dung bài luận tiếng Anh của học viên đính kèm từ tệp ${file.name}.`
+                : `[Attached file: ${file.name}]\n\nLearner English essay content attached from file ${file.name}.`
             )
           }
         } else {
           setEssayText(
-            `[Tệp đính kèm: ${file.name}]\n\nNội dung bài luận tiếng Anh của học viên đính kèm từ tệp ${file.name}.`
+            isVietnamese
+              ? `[Tệp đính kèm: ${file.name}]\n\nNội dung bài luận tiếng Anh của học viên đính kèm từ tệp ${file.name}.`
+              : `[Attached file: ${file.name}]\n\nLearner English essay content attached from file ${file.name}.`
           )
         }
-        toast.success(`Đã đính kèm file bài viết: ${file.name}`)
+        toast.success(
+          isVietnamese
+            ? `Đã đính kèm file bài viết: ${file.name}`
+            : `Attached essay file: ${file.name}`
+        )
       }
       reader.readAsText(file)
     }
@@ -116,9 +140,17 @@ export function TestRunnerWritingSection({
       if (res?.ai_score !== undefined) {
         onScoreUpdated?.(res.ai_score)
       }
-      toast.success('Đã nộp bài viết thành công! AI đã hoàn tất phân tích bài luận.')
+      toast.success(
+        isVietnamese
+          ? 'Đã nộp bài viết thành công! AI đã hoàn tất phân tích bài luận.'
+          : 'Writing submitted successfully! AI has finished essay analysis.'
+      )
     } catch {
-      toast.error('Lỗi khi nộp bài viết. Vui lòng thử lại.')
+      toast.error(
+        isVietnamese
+          ? 'Lỗi khi nộp bài viết. Vui lòng thử lại.'
+          : 'Error submitting essay. Please try again.'
+      )
     } finally {
       setIsSubmittingWriting(false)
     }
@@ -132,7 +164,7 @@ export function TestRunnerWritingSection({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 dark:text-indigo-200">
             <PenTool className="h-4 w-4 text-indigo-600" />
-            <span>Đề bài viết luận Writing:</span>
+            <span>{isVietnamese ? 'Đề bài viết luận Writing:' : 'Writing essay prompt:'}</span>
           </div>
           {fileUrl && (
             <a
@@ -142,7 +174,7 @@ export function TestRunnerWritingSection({
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
             >
               <FileDown size={13} />
-              <span>Xem file đề bài đính kèm</span>
+              <span>{isVietnamese ? 'Xem file đề bài đính kèm' : 'View attached prompt file'}</span>
               <ExternalLink size={11} />
             </a>
           )}
@@ -164,7 +196,7 @@ export function TestRunnerWritingSection({
           }`}
         >
           <PenTool size={13} />
-          <span>Soạn thảo trực tiếp</span>
+          <span>{isVietnamese ? 'Soạn thảo trực tiếp' : 'Type directly'}</span>
         </button>
         <button
           type="button"
@@ -176,7 +208,7 @@ export function TestRunnerWritingSection({
           }`}
         >
           <UploadCloud size={13} />
-          <span>Tải file bài viết</span>
+          <span>{isVietnamese ? 'Tải file bài viết' : 'Upload file'}</span>
         </button>
       </div>
 
@@ -196,22 +228,24 @@ export function TestRunnerWritingSection({
             className="flex flex-col items-center gap-2 cursor-pointer w-full"
           >
             <FileText className="h-9 w-9 text-indigo-500" />
-            <span className="text-xs font-bold">Bấm để chọn file bài viết từ thiết bị</span>
+            <span className="text-xs font-bold">
+              {isVietnamese ? 'Bấm để chọn file bài viết từ thiết bị' : 'Click to select essay file from device'}
+            </span>
             <span className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80">
-              Hỗ trợ .txt, .md, .docx, .doc, .pdf (tối đa 10MB)
+              {isVietnamese ? 'Hỗ trợ .txt, .md, .docx, .doc, .pdf (tối đa 10MB)' : 'Supports .txt, .md, .docx, .doc, .pdf (max 10MB)'}
             </span>
           </button>
 
           {uploadedEssayFileName && (
             <div className="flex items-center gap-2 pt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
               <CheckCircle size={14} />
-              <span>Đã nạp file: {uploadedEssayFileName}</span>
+              <span>{isVietnamese ? `Đã nạp file: ${uploadedEssayFileName}` : `Loaded file: ${uploadedEssayFileName}`}</span>
               <button
                 type="button"
                 onClick={resetEssayFile}
                 className="text-rose-500 hover:underline text-[11px] ml-1 cursor-pointer"
               >
-                (Đổi file khác)
+                {isVietnamese ? '(Đổi file khác)' : '(Change file)'}
               </button>
             </div>
           )}
@@ -222,8 +256,8 @@ export function TestRunnerWritingSection({
         <div className="flex items-center justify-between text-xs">
           <label className="font-bold text-text-secondary">
             {writingInputMode === 'UPLOAD'
-              ? 'Nội dung bài viết đã nạp từ file:'
-              : 'Khung soạn thảo bài viết:'}
+              ? (isVietnamese ? 'Nội dung bài viết đã nạp từ file:' : 'Essay content loaded from file:')
+              : (isVietnamese ? 'Khung soạn thảo bài viết:' : 'Essay editor:')}
           </label>
           <span
             className={`font-bold px-2 py-0.5 rounded-md ${
@@ -232,7 +266,9 @@ export function TestRunnerWritingSection({
                 : 'bg-surface-subtle text-text-tertiary'
             }`}
           >
-            Đã viết: {essayWordCount} từ {essayWordCount < 80 ? '(Tối thiểu 80 từ)' : ''}
+            {isVietnamese
+              ? `Đã viết: ${essayWordCount} từ ${essayWordCount < 80 ? '(Tối thiểu 80 từ)' : ''}`
+              : `Written: ${essayWordCount} words ${essayWordCount < 80 ? '(Min 80 words)' : ''}`}
           </span>
         </div>
 
@@ -241,7 +277,11 @@ export function TestRunnerWritingSection({
           disabled={Boolean(writingResult)}
           value={essayText}
           onChange={(e) => setEssayText(e.target.value)}
-          placeholder="Gõ bài viết tiếng Anh của bạn tại đây hoặc tải file bài viết ở trên..."
+          placeholder={
+            isVietnamese
+              ? 'Gõ bài viết tiếng Anh của bạn tại đây hoặc tải file bài viết ở trên...'
+              : 'Type your English essay here or upload a file above...'
+          }
           className="w-full p-4 rounded-2xl border border-border bg-surface text-xs text-text-primary leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-primary"
         />
 
@@ -255,12 +295,16 @@ export function TestRunnerWritingSection({
             {isSubmittingWriting ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                <span>AI đang phân tích ngữ pháp & từ vựng...</span>
+                <span>
+                  {isVietnamese ? 'AI đang phân tích ngữ pháp & từ vựng...' : 'AI is analyzing grammar & vocabulary...'}
+                </span>
               </>
             ) : (
               <>
                 <Send size={14} />
-                <span>Nộp bài luận để AI chấm</span>
+                <span>
+                  {isVietnamese ? 'Nộp bài luận để AI chấm' : 'Submit essay for AI scoring'}
+                </span>
               </>
             )}
           </Button>
@@ -272,10 +316,10 @@ export function TestRunnerWritingSection({
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
               <CheckCircle2 size={16} />
-              <span>Kết quả đánh giá bài viết sơ bộ</span>
+              <span>{isVietnamese ? 'Kết quả đánh giá bài viết sơ bộ' : 'Preliminary Writing Evaluation'}</span>
             </div>
             <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-xl">
-              {writingResult.ai_score}/100 điểm
+              {writingResult.ai_score}/100 {isVietnamese ? 'điểm' : 'points'}
             </span>
           </div>
 
@@ -285,7 +329,9 @@ export function TestRunnerWritingSection({
 
           {Array.isArray(writingResult.ai_feedback?.improvement_tips) && (
             <div className="p-3.5 rounded-xl bg-surface-subtle border border-border space-y-1.5 text-xs">
-              <span className="font-bold text-primary block">💡 Gợi ý cải thiện:</span>
+              <span className="font-bold text-primary block">
+                {isVietnamese ? '💡 Gợi ý cải thiện:' : '💡 Improvement suggestions:'}
+              </span>
               <ul className="list-disc pl-4 space-y-1 text-text-secondary">
                 {writingResult.ai_feedback.improvement_tips.map((tip: string, tIdx: number) => (
                   <li key={tIdx}>{tip}</li>

@@ -2,33 +2,53 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2, TrendingUp } from 'lucide-react'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useNavigate } from '@/lib/navigation'
 import { useProgressData } from '@/features/progress/hooks/use.progress.data'
 import { ProgressMetricsHeader } from '@/features/progress/components/progress.metrics.header'
 import { ProgressCoursesTab } from '@/features/progress/components/progress.courses.tab'
-import { ProgressRoadmapTab } from '@/features/progress/components/progress.roadmap.tab'
 import { ProgressSkillsTab } from '@/features/progress/components/progress.skills.tab'
 import { ProgressRecentTestsTab } from '@/features/progress/components/progress.recent.tests.tab'
 import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
+import { progressService } from '@/features/progress/services/progress.service'
+import type { SkillsSummary } from '@/features/progress/services/progress.service'
 
 export default function ProgressAppPage() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'ROADMAP' | 'SKILLS' | 'RECENT_TESTS' | 'GROWTH_ANALYTICS'>('OVERVIEW')
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'SKILLS' | 'RECENT_TESTS' | 'GROWTH_ANALYTICS'>('OVERVIEW')
+  const [skillsSummary, setSkillsSummary] = useState<SkillsSummary | null>(null)
 
   const {
     isLoading,
     activeUser,
-    roadmapProgress,
     enrolledCourseCards,
     metrics,
     recentActivities,
     vocabStats,
     listeningScore,
     readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
   } = useProgressData(navigate)
+
+  // Fetch skills analytics summary
+  useEffect(() => {
+    const currentUserId = (activeUser as any)?.user_id || (activeUser as any)?.id || (activeUser as any)?._id
+    if (currentUserId) {
+      const userId = currentUserId
+      progressService.getSkillsSummary(userId, '7d').then((data) => {
+        setSkillsSummary(data)
+      }).catch(() => {
+        setSkillsSummary(null)
+      })
+    }
+  }, [activeUser])
 
   const formatDate = (isoString?: string) => {
     if (!isoString) return 'Chưa có'
@@ -65,17 +85,6 @@ export default function ProgressAppPage() {
           }`}
         >
           Khóa học ({enrolledCourseCards.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('ROADMAP')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeTab === 'ROADMAP'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'bg-surface-subtle text-text-secondary hover:text-text-primary'
-          }`}
-        >
-          Lộ trình mục tiêu
         </button>
         <button
           type="button"
@@ -124,20 +133,17 @@ export default function ProgressAppPage() {
           onNavigate={navigate}
           formatDate={formatDate}
         />
-      ) : activeTab === 'ROADMAP' ? (
-        <ProgressRoadmapTab
-          roadmapProgress={roadmapProgress}
-          currentScore={metrics.currentScore}
-          targetScore={metrics.targetScore}
-          baselineScore={activeUser?.placement_test_score}
-          onNavigate={navigate}
-        />
       ) : activeTab === 'SKILLS' ? (
         <ProgressSkillsTab
           listeningScore={listeningScore}
           readingScore={readingScore}
+          speakingScore={speakingScore}
+          writingScore={writingScore}
+          selectedSkillsType={placementSkillsType}
           vocabStats={vocabStats}
+          skillsSummary={skillsSummary}
           onNavigate={navigate}
+          userId={(activeUser as any)?.user_id || (activeUser as any)?.id || (activeUser as any)?._id || ''}
         />
       ) : activeTab === 'RECENT_TESTS' ? (
         <ProgressRecentTestsTab
@@ -148,10 +154,16 @@ export default function ProgressAppPage() {
         <ProgressGrowthAnalyticsTab
           recentActivities={recentActivities}
           enrolledCourseCards={enrolledCourseCards}
+          testAttempts={testAttempts}
+          toeicAttempts={toeicAttempts}
+          coursesMap={coursesMap}
           targetScore={metrics.targetScore}
           baselineScore={Number(activeUser?.placement_test_score) || 0}
           listeningScore={listeningScore}
           readingScore={readingScore}
+          speakingScore={speakingScore}
+          writingScore={writingScore}
+          initialSkillsType={placementSkillsType}
           onNavigate={navigate}
         />
       )}

@@ -36,6 +36,9 @@ interface TestRunnerResultViewProps {
   onToggleAiDetails: () => void
   onBackToLessons?: () => void
   onNavigateCourse?: (slugOrId: string) => void
+  onDrillTopic?: (topic: string) => void
+  onPracticeTopic?: (item: WrongQuestionItem) => void
+  onOpenMistakeVault?: () => void
 }
 
 export function TestRunnerResultView({
@@ -58,6 +61,9 @@ export function TestRunnerResultView({
   onToggleAiDetails,
   onBackToLessons,
   onNavigateCourse,
+  onDrillTopic,
+  onPracticeTopic,
+  onOpenMistakeVault,
 }: TestRunnerResultViewProps) {
   return (
     <div className="space-y-3.5">
@@ -91,6 +97,9 @@ export function TestRunnerResultView({
         aiExplanations={aiExplanations}
         onExplainMistakes={onExplainMistakes}
         onToggleAiDetails={onToggleAiDetails}
+        onDrillTopic={onDrillTopic}
+        onPracticeTopic={onPracticeTopic}
+        onOpenMistakeVault={onOpenMistakeVault}
       />
     </div>
   )

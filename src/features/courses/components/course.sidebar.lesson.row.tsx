@@ -2,6 +2,7 @@
 
 import { Check, Download, FileText, FolderDown, HelpCircle, Lock, PlayCircle } from 'lucide-react'
 import type { Lesson } from '@/features/courses/types/course'
+import { toast } from '@/store/toast.store'
 
 interface CourseSidebarLessonRowProps {
   lesson: Lesson
@@ -34,7 +35,9 @@ export function CourseSidebarLessonRow({
       className={`group flex items-center gap-3 p-3 rounded-2xl border transition-all cursor-pointer ${
         isActive
           ? 'border-primary/60 bg-primary/10 shadow-xs ring-1 ring-primary/20'
-          : 'border-border/60 bg-surface hover:bg-surface-hover/80 hover:border-border'
+          : isChapterLocked
+            ? 'border-border/40 bg-slate-100/60 dark:bg-slate-900/40 text-text-secondary opacity-75'
+            : 'border-border/60 bg-surface hover:bg-surface-hover/80 hover:border-border'
       }`}
     >
       <button
@@ -90,32 +93,70 @@ export function CourseSidebarLessonRow({
           </span>
 
           {lesson.theory_file_url && (
-            <a
-              href={lesson.theory_file_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20 transition-colors border border-blue-500/20 shrink-0 cursor-pointer"
-              title={lesson.theory_file_name || 'Xem file đề lý thuyết của bài học'}
-            >
-              <FileText size={10} className="text-blue-600 dark:text-blue-400" />
-              <span>Lý thuyết</span>
-            </a>
+            isChapterLocked || !isEnrolled ? (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toast.warning(
+                    isChapterLocked
+                      ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa tài liệu lý thuyết.'
+                      : 'Vui lòng đăng ký khóa học để tải tài liệu lý thuyết!',
+                    'Chương đang khóa'
+                  )
+                }}
+                className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-text-tertiary border border-border/50 shrink-0 cursor-not-allowed opacity-70"
+                title="Tài liệu lý thuyết bị khóa"
+              >
+                <Lock size={10} className="text-text-tertiary" />
+                <span>Lý thuyết</span>
+              </span>
+            ) : (
+              <a
+                href={lesson.theory_file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20 transition-colors border border-blue-500/20 shrink-0 cursor-pointer"
+                title={lesson.theory_file_name || 'Xem file đề lý thuyết của bài học'}
+              >
+                <FileText size={10} className="text-blue-600 dark:text-blue-400" />
+                <span>Lý thuyết</span>
+              </a>
+            )
           )}
 
           {Array.isArray(lesson.questions) && lesson.questions.length > 0 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onOpenPracticeQuiz?.()
-              }}
-              className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20 shrink-0 cursor-pointer"
-              title={`Luyện tập trắc nghiệm bài học: ${lesson.questions.length} câu`}
-            >
-              <HelpCircle size={10} className="text-emerald-600 dark:text-emerald-400" />
-              <span>Luyện tập ({lesson.questions.length})</span>
-            </button>
+            isChapterLocked || !isEnrolled ? (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toast.warning(
+                    isChapterLocked
+                      ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa bài luyện tập.'
+                      : 'Vui lòng đăng ký khóa học để làm bài luyện tập!',
+                    'Chương đang khóa'
+                  )
+                }}
+                className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-text-tertiary border border-border/50 shrink-0 cursor-not-allowed opacity-70"
+                title="Bài luyện tập bị khóa"
+              >
+                <Lock size={10} className="text-text-tertiary" />
+                <span>Luyện tập ({lesson.questions.length})</span>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenPracticeQuiz?.()
+                }}
+                className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20 shrink-0 cursor-pointer"
+                title={`Luyện tập trắc nghiệm bài học: ${lesson.questions.length} câu`}
+              >
+                <HelpCircle size={10} className="text-emerald-600 dark:text-emerald-400" />
+                <span>Luyện tập ({lesson.questions.length})</span>
+              </button>
+            )
           )}
 
           {lesson.resources && lesson.resources.length > 0 && (

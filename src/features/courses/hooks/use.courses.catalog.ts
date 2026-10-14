@@ -1,6 +1,7 @@
 // Custom hook quản lý danh sách khóa học, lọc theo danh mục, lịch học và wishlist
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useMounted } from '@/hooks/use.mounted'
 import { useSearchParams } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import { userService } from '@/features/user/services/user.service'
@@ -12,10 +13,12 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { useAllCoursesQuery, useUserEnrollments } from '@/features/courses/hooks/use.courses.query'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 export function useCoursesCatalog() {
   const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVi = mounted ? i18n.language === 'vi' : true
   const searchParams = useSearchParams()
   const { items: wishlistItems, toggleWishlist: toggleItemMutation, isInWishlist } = useWishlist()
   const { isAuthenticated, user } = useAuthStore()
@@ -116,12 +119,6 @@ export function useCoursesCatalog() {
             60) / 60
         )
       )
-      const rawLevel = String(c.level || '')
-      let levelDisplay = 'TOEIC'
-      if (rawLevel === 'BEGINNER') levelDisplay = 'Sơ cấp (Beginner)'
-      else if (rawLevel === 'INTERMEDIATE') levelDisplay = 'Trung cấp (Intermediate)'
-      else if (rawLevel === 'ADVANCED') levelDisplay = 'Nâng cao (Advanced)'
-      else if (rawLevel) levelDisplay = rawLevel
 
       const rawPrice = Number(raw.price ?? 0)
       const rawDiscount = Number(raw.discount_price ?? 0)
@@ -145,23 +142,23 @@ export function useCoursesCatalog() {
           raw.author_name || raw.instructor_name || 'Đội ngũ Giảng viên LingoSphere'
         ),
         thumbnail:
-          c.thumbnail_url ||
+          resolveMediaUrl(c.thumbnail_url) ||
           'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop',
         category: c.category || 'TOEIC_2_SKILLS',
-        level: levelDisplay,
         description: c.description || '',
         duration: `${durationHrs} giờ`,
         totalLessons: Number(c.total_lessons) || 0,
         chapters:
           Number(raw.total_modules) ||
           (Array.isArray(c.chapters) ? c.chapters.length : 0),
-        students: Number(raw.students_count || raw.enrollments || 0),
+        students: Number(c.students_count ?? raw.students_count ?? 0),
         rating: Number(raw.rating || raw.rating_avg || 5.0),
         ratingCount: Number(raw.rating_count || raw.reviews_count || 0),
         price: finalPrice,
         discountPrice: originalPrice > finalPrice ? originalPrice : undefined,
         targetScore: Number(raw.target_score) || 0,
         badge: is4Skills ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng',
+        is_bestseller: Boolean(raw.is_bestseller),
         progress: 0,
         hasCertificate: true,
       }
@@ -187,7 +184,6 @@ export function useCoursesCatalog() {
           isEnrolled(c.id) ||
           (c.slug ? isEnrolled(c.slug) : false) ||
           Boolean(user?.is_premium) ||
-          user?.role === 'ADMIN' ||
           user?.role === 'INSTRUCTOR'
         return matchesSearch && hasAccess
       }

@@ -88,14 +88,24 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
       if (lastMsg && lastMsg._id !== lastMessageIdRef.current) {
         lastMessageIdRef.current = lastMsg._id
         const isNearBottom =
-          scrollRef.current.scrollHeight - scrollRef.current.scrollTop - scrollRef.current.clientHeight < 160
+          scrollRef.current.scrollHeight - scrollRef.current.scrollTop - scrollRef.current.clientHeight < 240
         const isMe = user?.user_id === lastMsg.sender_id
         if (isNearBottom || isMe) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
         }
       }
     }
   }, [messages, user?.user_id])
+
+  useEffect(() => {
+    if (typingUsers.length > 0 && scrollRef.current) {
+      const isNearBottom =
+        scrollRef.current.scrollHeight - scrollRef.current.scrollTop - scrollRef.current.clientHeight < 240
+      if (isNearBottom) {
+        scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+      }
+    }
+  }, [typingUsers])
 
   useEffect(() => {
     if (isOpen && scrollRef.current && initialScrollDoneRef.current) {
@@ -104,16 +114,15 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
   }, [isOpen])
 
   const isRoomLocked = room ? !room.is_chat_enabled : false
-  const isPrivileged = eligibility?.role === 'ADMIN' || eligibility?.role === 'MODERATOR'
+  const isPrivileged = eligibility?.role === 'MODERATOR'
   const canPin =
-    eligibility?.role === 'ADMIN' ||
-    (eligibility?.role === 'MODERATOR' && Boolean(eligibility?.member?.moderator_permissions?.can_pin_messages))
+    eligibility?.role === 'MODERATOR' && Boolean(eligibility?.member?.moderator_permissions?.can_pin_messages)
 
   const activePinnedMsg = pinnedMessages.length > 0 ? pinnedMessages[pinnedMessages.length - 1] : undefined
 
   return (
     <div
-      className={`fixed bottom-24 right-6 z-50 flex h-[580px] max-h-[calc(100vh-120px)] w-[380px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-[28px] border-2 border-border/80 dark:border-teal-400/50 bg-surface/98 dark:bg-[#131e1e]/98 text-text-primary shadow-2xl shadow-slate-900/15 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(85,175,165,0.25)] ring-1 ring-black/5 dark:ring-white/15 backdrop-blur-xl transition-all duration-200 ease-out origin-bottom-right ${
+      className={`fixed bottom-6 right-4 sm:right-[88px] z-50 flex h-[580px] max-h-[calc(100vh-48px)] w-[380px] max-w-[calc(100vw-32px)] sm:max-w-[calc(100vw-110px)] flex-col overflow-hidden rounded-[28px] border-2 border-border/80 dark:border-teal-400/50 bg-surface/98 dark:bg-[#131e1e]/98 text-text-primary shadow-2xl shadow-slate-900/15 dark:shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(85,175,165,0.25)] ring-1 ring-black/5 dark:ring-white/15 backdrop-blur-xl transition-all duration-200 ease-out origin-bottom-right ${
         isOpen
           ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
           : 'opacity-0 scale-95 translate-y-2 pointer-events-none'
@@ -191,14 +200,15 @@ export function CommunityChatWidget({ chatState }: CommunityChatWidgetProps) {
           ))
         )}
 
-        {typingUsers.length > 0 && (
-          <div className="text-[11px] italic text-text-tertiary flex items-center gap-1.5 pt-1">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span>
-            <span>{typingUsers.join(', ')} đang soạn tin...</span>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-1 shrink-0" />
       </div>
+
+      {typingUsers.length > 0 && (
+        <div className="flex items-center gap-2 px-4 py-1.5 text-[11px] italic text-text-tertiary bg-surface/90 dark:bg-[#131e1e]/90 border-t border-border/40 shrink-0 transition-all duration-150">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+          <span className="truncate">{typingUsers.join(', ')} đang soạn tin...</span>
+        </div>
+      )}
 
       <CommunityChatInputBar
         isAuthenticated={isAuthenticated}

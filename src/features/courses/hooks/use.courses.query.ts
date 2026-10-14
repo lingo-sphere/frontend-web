@@ -42,6 +42,14 @@ export const courseQueries = {
       staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
     }),
+  bestsellers: (category?: string, enabled = true) =>
+    queryOptions({
+      queryKey: courseKeys.bestsellers(category),
+      queryFn: () => courseService.getBestsellers(category ? { category } : undefined),
+      enabled,
+      staleTime: 60 * 1000,
+      refetchOnWindowFocus: true,
+    }),
   enrollments: (enabled = true) =>
     queryOptions({
       queryKey: courseKeys.enrollments(),
@@ -78,6 +86,14 @@ export const courseQueries = {
       enabled: Boolean(courseId) && enabled,
       staleTime: 1 * 60 * 1000,
     }),
+  notes: (courseId: string, enabled = true) =>
+    queryOptions({
+      queryKey: courseKeys.notes(courseId),
+      queryFn: () => courseService.getCourseNotes(courseId),
+      enabled: Boolean(courseId) && enabled,
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: true,
+    }),
 }
 
 export function useAllCoursesQuery(params?: CourseQueryParams, enabled = true) {
@@ -98,6 +114,10 @@ export function useCourseReviewsQuery(courseId: string, enabled = true) {
 
 export function useCourseQnAQuery(courseId: string, enabled = true) {
   return useQuery(courseQueries.qna(courseId, enabled))
+}
+
+export function useCourseNotesDataQuery(courseId: string, enabled = true) {
+  return useQuery(courseQueries.notes(courseId, enabled))
 }
 
 export function useCourseProgressQuery(courseId: string, enabled = true) {
@@ -126,7 +146,7 @@ export function useUserEnrollments(enabled = true) {
   useEffect(() => {
     if (typeof document === 'undefined') return
     const authUser = storage.get<User>(STORAGE_KEYS.USER)
-    if (authUser?.is_premium || authUser?.role === 'ADMIN' || authUser?.role === 'INSTRUCTOR') {
+    if (authUser?.is_premium || authUser?.role === 'INSTRUCTOR') {
       storage.cookie.set(STORAGE_KEYS.IS_PRIVILEGED, 'true', { days: 30, path: '/' })
     }
     enrolledCourseIds.forEach((id) => {
@@ -139,7 +159,7 @@ export function useUserEnrollments(enabled = true) {
     (courseIdOrSlug: string) => {
       if (!courseIdOrSlug) return false
       const authUser = storage.get<User>(STORAGE_KEYS.USER)
-      if (authUser?.is_premium || authUser?.role === 'ADMIN' || authUser?.role === 'INSTRUCTOR') {
+      if (authUser?.is_premium || authUser?.role === 'INSTRUCTOR') {
         return true
       }
       return enrolledCourseIds.includes(String(courseIdOrSlug))
@@ -168,5 +188,9 @@ export function useEnrollCourseMutation() {
       queryClient.invalidateQueries({ queryKey: courseKeys.enrollments() })
     },
   })
+}
+
+export function useBestsellerCoursesQuery(category?: string, enabled = true) {
+  return useQuery(courseQueries.bestsellers(category, enabled))
 }
 

@@ -25,7 +25,6 @@ export type AccountStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'PENDING'
 
 export interface User {
   user_id: string
-  id?: string
   email: string
   full_name: string
   phone_number?: string | null
@@ -96,6 +95,15 @@ export interface AuthTokens {
 export interface AuthResponse {
   user: User
   access_token: string
+  refresh_token?: string
+}
+
+export interface RegisterResponse {
+  message?: string
+  email?: string
+  expire_minutes?: number
+  user?: User
+  access_token?: string
   refresh_token?: string
 }
 
@@ -221,7 +229,6 @@ export interface Course {
   skills?: string[]
   price: number
   discount_price?: number
-  level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | string
   category: string
   instructor_id?: string
   instructor_name?: string
@@ -235,6 +242,7 @@ export interface Course {
   rating_avg?: number
   rating_count?: number
   students_count?: number
+  is_bestseller?: boolean
   is_published: boolean
   approval_status?: string
   final_test_exam_id?: string
@@ -305,14 +313,6 @@ export interface UserCourseProgressItem {
   }>
   updated_at?: string
 }
-
-export type {
-  LearningRoadmapStage,
-  LearningRoadmap,
-  StageMilestone,
-  GrowthChartPoint,
-  UserRoadmapProgress,
-} from '@/features/courses/schemas/course.schema'
 
 export interface LexicalItem {
   id: string
@@ -417,7 +417,6 @@ export interface GamificationProfile {
   current_streak: number
   longest_streak: number
   streak_freezes_left?: number
-  gems?: number
   league?: string
 }
 

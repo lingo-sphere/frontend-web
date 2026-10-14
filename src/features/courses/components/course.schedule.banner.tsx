@@ -1,12 +1,9 @@
-/**
- * @file course.schedule.banner.tsx
- * @description Component giao diện React CourseScheduleBanner hiển thị trạng thái lịch học kèm định dạng đa ngôn ngữ
- */
-
+// Component hiển thị trạng thái và thông báo lịch học định kỳ của học viên
 'use client'
 
 import { useTranslation } from 'react-i18next'
 import { Clock, X, CalendarCheck2, Settings2, BellRing, Lock, AlertTriangle, RotateCcw } from 'lucide-react'
+import { useMounted } from '@/hooks/use.mounted'
 import type { CourseChapterLockState } from '@/features/courses/types/schedule.types'
 
 export interface UserScheduleData {
@@ -85,7 +82,8 @@ export function CourseScheduleBanner({
   onRetest,
 }: CourseScheduleBannerProps) {
   const { i18n } = useTranslation()
-  const isVi = i18n.language === 'vi'
+  const mounted = useMounted()
+  const isVi = mounted ? i18n.language === 'vi' : true
 
   if (lockState?.is_locked) {
     const lockedOrder = lockState.locked_chapter_order || 2
@@ -144,113 +142,90 @@ export function CourseScheduleBanner({
   const formattedTime = formatReminderTime(schedule?.reminder_time, isVi)
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative transition-all">
-      <div className="flex items-start gap-4">
+    <div className="rounded-2xl border border-border bg-surface px-4 py-3 sm:py-3.5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 relative transition-all">
+      <div className="flex items-center gap-3">
         <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl mt-0.5 ${
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
             hasActiveSchedule
               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
               : 'bg-primary-soft text-primary'
           }`}
         >
-          {hasActiveSchedule ? <CalendarCheck2 size={22} /> : <Clock size={22} />}
+          {hasActiveSchedule ? <CalendarCheck2 size={16} /> : <Clock size={16} />}
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-0.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm sm:text-base font-bold text-text-primary">
+            <h3 className="text-xs sm:text-sm font-bold text-text-primary">
               {hasActiveSchedule
-                ? (isVi ? 'Lịch nhắc học tập của bạn đang hoạt động' : 'Your Learning Schedule is Active')
-                : (isVi ? 'Lên lịch học tập hàng ngày' : 'Schedule learning time')}
+                ? (isVi ? 'Lịch nhắc học đang hoạt động' : 'Study Schedule Active')
+                : (isVi ? 'Lên lịch học tập hàng ngày' : 'Daily Study Schedule')}
             </h3>
             {hasActiveSchedule && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                <BellRing size={12} className="animate-pulse" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                <BellRing size={10} className="animate-pulse" />
                 {formattedTime}
               </span>
             )}
             {Boolean(lockState && lockState.violation_count > 0) && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[11px] font-extrabold text-amber-700 dark:text-amber-300">
-                <AlertTriangle size={12} className="text-amber-500" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-extrabold text-amber-700 dark:text-amber-300">
+                <AlertTriangle size={10} className="text-amber-500" />
                 {isVi
-                  ? `Cảnh báo vắng học: ${lockState?.violation_count}/5 lần`
-                  : `Absence warning: ${lockState?.violation_count}/5`}
+                  ? `Vắng học: ${lockState?.violation_count}/5`
+                  : `Absence: ${lockState?.violation_count}/5`}
               </span>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-text-secondary leading-relaxed max-w-3xl">
+          <p className="text-[11.5px] text-text-secondary line-clamp-1 sm:line-clamp-none max-w-2xl">
             {hasActiveSchedule ? (
               isVi ? (
-                <>
-                  Hệ thống sẽ gửi email nhắc học vào lúc{' '}
-                  <strong className="text-text-primary font-bold">{formattedTime}</strong> các ngày (
-                  <span className="text-primary font-bold">{formattedDays}</span>
-                  ) để giúp bạn duy trì thói quen học ngắt quãng và đạt điểm TOEIC cao hơn 68%.
-                </>
+                <>Email nhắc học lúc <strong className="text-text-primary font-bold">{formattedTime}</strong> ({formattedDays}).</>
               ) : (
-                <>
-                  Reminders will be sent to your email at{' '}
-                  <strong className="text-text-primary font-bold">{formattedTime}</strong> on (
-                  <span className="text-primary font-bold">{formattedDays}</span>
-                  ) to help maintain your study streak.
-                </>
+                <>Email reminders at <strong className="text-text-primary font-bold">{formattedTime}</strong> ({formattedDays}).</>
               )
             ) : isVi ? (
-              'Học một chút mỗi ngày tạo nên sự khác biệt lớn. Nghiên cứu não bộ chỉ ra rằng học viên duy trì thói quen học ngắt quãng đạt điểm TOEIC cao hơn 68%. Hãy đặt lịch và nhận thông báo nhắc học thông minh.'
+              'Duy trì thói quen học ngắt quãng mỗi ngày giúp tăng 68% điểm số TOEIC của bạn.'
             ) : (
-              'Learning a little each day adds up. Research shows that students who make learning a habit are more likely to reach their goals. Set time aside to learn and get reminders using your learning scheduler.'
+              'Learning a little each day builds consistency and increases your TOEIC score.'
             )}
           </p>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            {hasActiveSchedule ? (
-              <>
-                <button
-                  onClick={onOpenModal}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-sm"
-                >
-                  <Settings2 size={14} />
-                  {isVi ? 'Chỉnh sửa lịch học' : 'Edit Schedule'}
-                </button>
-                {onCancelSchedule && (
-                  <button
-                    onClick={onCancelSchedule}
-                    className="rounded-xl border border-border bg-surface px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-500/10 hover:border-rose-300 transition-all cursor-pointer shadow-sm"
-                  >
-                    {isVi ? 'Hủy lịch nhắc' : 'Cancel Schedule'}
-                  </button>
-                )}
-                <button
-                  onClick={onDismiss}
-                  className="text-xs font-semibold text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-2 py-1"
-                >
-                  {isVi ? 'Bỏ qua' : 'Dismiss'}
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={onOpenModal}
-                  className="rounded-xl border border-border bg-surface px-5 py-2 text-xs font-bold text-text-primary hover:bg-surface-hover hover:border-primary transition-all cursor-pointer shadow-sm"
-                >
-                  {isVi ? 'Bắt đầu lên lịch' : 'Get started'}
-                </button>
-                <button
-                  onClick={onDismiss}
-                  className="text-xs font-semibold text-text-tertiary hover:text-text-primary transition-colors cursor-pointer px-2 py-1"
-                >
-                  {isVi ? 'Bỏ qua' : 'Dismiss'}
-                </button>
-              </>
-            )}
-          </div>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0 self-end md:self-center pr-6">
+        {hasActiveSchedule ? (
+          <>
+            <button
+              onClick={onOpenModal}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer shadow-xs"
+            >
+              <Settings2 size={13} />
+              <span>{isVi ? 'Đổi lịch' : 'Edit'}</span>
+            </button>
+            {onCancelSchedule && (
+              <button
+                onClick={onCancelSchedule}
+                className="rounded-xl border border-border bg-surface px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-500/10 hover:border-rose-300 transition-all cursor-pointer shadow-xs"
+              >
+                {isVi ? 'Hủy' : 'Cancel'}
+              </button>
+            )}
+          </>
+        ) : (
+          <button
+            onClick={onOpenModal}
+            className="rounded-xl border border-border bg-surface px-3.5 py-1.5 text-xs font-bold text-text-primary hover:bg-surface-hover hover:border-primary transition-all cursor-pointer shadow-xs"
+          >
+            {isVi ? 'Lên lịch học' : 'Get started'}
+          </button>
+        )}
       </div>
 
       <button
         onClick={onDismiss}
-        className="absolute top-4 right-4 text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
+        className="absolute top-3 right-3 text-text-tertiary hover:text-text-primary transition-colors cursor-pointer p-1"
         title={isVi ? 'Đóng' : 'Close'}
       >
-        <X size={16} />
+        <X size={14} />
       </button>
     </div>
   )

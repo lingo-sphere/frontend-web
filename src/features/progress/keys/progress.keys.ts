@@ -2,7 +2,6 @@
 export const progressKeys = {
   all: ['progress'] as const,
   courses: () => [...progressKeys.all, 'courses'] as const,
-  roadmap: () => [...progressKeys.all, 'roadmap'] as const,
   testAttempts: () => [...progressKeys.all, 'test-attempts'] as const,
   examProfile: () => [...progressKeys.all, 'exam-profile'] as const,
   gamification: () => [...progressKeys.all, 'gamification'] as const,

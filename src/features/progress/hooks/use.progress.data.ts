@@ -1,15 +1,15 @@
 // Custom React hook quản lý trạng thái tải dữ liệu và tính toán chỉ số học tập trang Tiến độ bằng TanStack Query.
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useMounted } from '@/hooks/use.mounted'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { authService } from '@/features/auth/services/auth.service'
 import { progressKeys } from '@/features/progress/keys/progress.keys'
 import { courseKeys } from '@/features/courses/keys/course.keys'
 import {
   useCoursesProgressQuery,
-  useRoadmapProgressQuery,
   useExamProfileQuery,
   useGamificationProfileQuery,
   useTestAttemptsQuery,
@@ -30,7 +30,7 @@ export interface UnifiedCourseCardItem {
   course_id: string
   title: string
   thumbnail_url?: string
-  level: string
+  target_score?: number
   category: string
   progress_percentage: number
   completed_lessons_count: number
@@ -39,6 +39,7 @@ export interface UnifiedCourseCardItem {
   total_modules_count: number
   status: string
   enrolled_at: string
+  final_test_passing_score?: number
 }
 
 export interface ProgressMetrics {
@@ -81,11 +82,7 @@ export interface ProgressRecentActivity {
 export function useProgressData(navigate: (path: string) => void) {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
-  const [mounted, setMounted] = useState<boolean>(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useMounted()
 
   useEffect(() => {
     if (mounted && !authService.isAuthenticated()) {
@@ -98,7 +95,6 @@ export function useProgressData(navigate: (path: string) => void) {
   const coursesProgressQuery = useCoursesProgressQuery(isEnabled)
   const myEnrollmentsQuery = useMyEnrollmentsQuery(isEnabled)
   const allCoursesQuery = useAllCoursesQuery(undefined, isEnabled)
-  const roadmapProgressQuery = useRoadmapProgressQuery(isEnabled)
   const examProfileQuery = useExamProfileQuery(isEnabled)
   const gamificationQuery = useGamificationProfileQuery(isEnabled)
   const testAttemptsQuery = useTestAttemptsQuery(isEnabled)
@@ -107,14 +103,13 @@ export function useProgressData(navigate: (path: string) => void) {
 
   const activeUser = mounted ? user : null
 
-  const courseProgresses = coursesProgressQuery.data || []
-  const myEnrolledCourses = myEnrollmentsQuery.data || []
-  const allCourses = allCoursesQuery.data || []
-  const roadmapProgress = roadmapProgressQuery.data || null
+  const courseProgresses = useMemo(() => coursesProgressQuery.data || [], [coursesProgressQuery.data])
+  const myEnrolledCourses = useMemo(() => myEnrollmentsQuery.data || [], [myEnrollmentsQuery.data])
+  const allCourses = useMemo(() => allCoursesQuery.data || [], [allCoursesQuery.data])
   const examProfile = examProfileQuery.data || null
   const gamification = gamificationQuery.data || null
-  const testAttempts = testAttemptsQuery.data || []
-  const toeicAttempts = examHistoryQuery.data || []
+  const testAttempts = useMemo(() => testAttemptsQuery.data || [], [testAttemptsQuery.data])
+  const toeicAttempts = useMemo(() => examHistoryQuery.data || [], [examHistoryQuery.data])
   const rawVocab = vocabProgressQuery.data
 
   const vocabStats: VocabStatsSummary = useMemo(() => {
@@ -135,8 +130,15 @@ export function useProgressData(navigate: (path: string) => void) {
       if (c.id) map.set(c.id, c)
       if (c._id) map.set(c._id, c)
     })
+    myEnrolledCourses.forEach((e) => {
+      const c = e.course
+      if (c) {
+        if (c.id) map.set(c.id, c)
+        if (c._id) map.set(c._id, c)
+      }
+    })
     return map
-  }, [allCourses])
+  }, [allCourses, myEnrolledCourses])
 
   const enrolledCourseCards = useMemo<UnifiedCourseCardItem[]>(() => {
     const courseProgressMap = new Map<string, UserCourseProgressItem>()
@@ -164,7 +166,7 @@ export function useProgressData(navigate: (path: string) => void) {
 
       const title = catalogCourse?.title || 'Khóa học'
       const thumbnail_url = catalogCourse?.thumbnail_url
-      const level = catalogCourse?.level || 'Mọi cấp độ'
+      const target_score = catalogCourse?.target_score
       const category = catalogCourse?.category || 'TOEIC'
 
       const completedLessons = progress?.completed_lessons_count ?? 0
@@ -177,15 +179,16 @@ export function useProgressData(navigate: (path: string) => void) {
         course_id: courseId,
         title,
         thumbnail_url,
-        level,
+        target_score,
         category,
         progress_percentage: Math.min(100, Math.max(0, Math.round(progressPercent))),
         completed_lessons_count: completedLessons,
         total_lessons_count: totalLessons,
         completed_modules_count: completedModules,
         total_modules_count: totalModules,
-        status: enrollment?.status || (progressPercent >= 100 ? 'COMPLETED' : 'STUDYING'),
+        status: (progressPercent >= 100 || enrollment?.status === 'COMPLETED' || progress?.status === 'COMPLETED' || (totalLessons > 0 && completedLessons >= totalLessons)) ? 'COMPLETED' : (enrollment?.status || 'STUDYING'),
         enrolled_at: enrollment?.enrolled_at || new Date().toISOString(),
+        final_test_passing_score: catalogCourse?.final_test_passing_score,
       }
     })
   }, [courseProgresses, myEnrolledCourses, coursesMap])
@@ -219,7 +222,6 @@ export function useProgressData(navigate: (path: string) => void) {
     )
     const targetScore = Number(
       activeUser?.target_toeic_score ||
-        roadmapProgress?.target_score ||
         examProfile?.profile?.target_score ||
         0
     )
@@ -245,7 +247,7 @@ export function useProgressData(navigate: (path: string) => void) {
       xp,
       level,
     }
-  }, [enrolledCourseCards, testAttempts, toeicAttempts, activeUser, examProfile, roadmapProgress, gamification])
+  }, [enrolledCourseCards, testAttempts, toeicAttempts, activeUser, examProfile, gamification])
 
   const recentActivities: ProgressRecentActivity[] = useMemo(() => {
     const list: ProgressRecentActivity[] = []
@@ -321,6 +323,11 @@ export function useProgressData(navigate: (path: string) => void) {
       examProfile?.profile?.best_reading_score ??
       0
   )
+  const speakingScore = Number(activeUser?.placement_speaking_score ?? 0)
+  const writingScore = Number(activeUser?.placement_writing_score ?? 0)
+  const placementSkillsType: '2SKILLS' | '4SKILLS' =
+    (activeUser?.placement_skills_type as '2SKILLS' | '4SKILLS') ||
+    (speakingScore > 0 || writingScore > 0 ? '4SKILLS' : '2SKILLS')
 
   const reload = () => {
     queryClient.invalidateQueries({ queryKey: progressKeys.all })
@@ -334,13 +341,18 @@ export function useProgressData(navigate: (path: string) => void) {
   return {
     isLoading,
     activeUser,
-    roadmapProgress,
     enrolledCourseCards,
     metrics,
     recentActivities,
     vocabStats,
     listeningScore,
     readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
     reload,
   }
 }

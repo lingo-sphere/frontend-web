@@ -6,12 +6,12 @@ import { useApp } from '@/contexts/app.context'
 import { ContinueLearningCard } from '@/features/dashboard/components/continue.learning.card'
 import { ExploreTopics } from '@/features/dashboard/components/explore.topics'
 import { InsightRail } from '@/features/dashboard/components/insight.rail'
-import { LearningRoadmap } from '@/features/dashboard/components/learning.roadmap'
 import { StreakHistory } from '@/features/dashboard/components/streak.history'
 import { StreakLeaderboard } from '@/features/dashboard/components/streak.leaderboard'
 import { StreakRewards } from '@/features/dashboard/components/streak.rewards'
 import { TodaysLearningCard } from '@/features/dashboard/components/todays.learning.card'
 import { WelcomeBanner } from '@/features/dashboard/components/welcome.banner'
+import { MistakeDueBanner } from '@/features/dashboard/components/mistake.due.banner'
 import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
 import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 import type { LeaderboardEntry } from '@/features/user/services/user.service'
@@ -22,7 +22,6 @@ import type {
   LeaderboardData,
   Topic,
   LearningTask,
-  RoadmapUnit,
   StreakMilestone,
 } from '@/features/dashboard/types/dashboard'
 
@@ -35,8 +34,8 @@ export default function HomeAppPage() {
     const mappedEntries = Array.isArray(lbData)
       ? lbData.map((u: LeaderboardEntry, idx: number) => ({
           rank: idx + 1,
-          name: u.full_name || `Học viên #${idx + 1}`,
-          streakDays: u.current_streak ?? u.streak_days ?? 1,
+          name: u.full_name || '',
+          streakDays: u.current_streak ?? u.streak_days ?? 0,
         }))
       : []
 
@@ -50,8 +49,8 @@ export default function HomeAppPage() {
   const topics: Topic[] = useMemo(() => {
     if (!Array.isArray(topData)) return []
     return topData.map((t: BackendTopic) => ({
-      id: t._id || `topic-${t.code || ''}`,
-      label: t.name_vi || t.name_en || 'Chủ đề',
+      id: String(t._id || t.code || ''),
+      label: t.name_vi || t.name_en || '',
       emoji: '📚',
       words: t.lexical_count || 0,
     }))
@@ -102,23 +101,6 @@ export default function HomeAppPage() {
     },
   ]
 
-  const roadmapUnits: RoadmapUnit[] = [
-    {
-      id: 'unit-1',
-      label: 'Unit 1: Giao tiếp hàng ngày & Phát âm',
-      status: 'completed',
-    },
-    {
-      id: 'unit-2',
-      label: 'Unit 2: Từ vựng văn phòng & Phỏng vấn',
-      status: 'current',
-    },
-    {
-      id: 'unit-3',
-      label: 'Unit 3: Phản xạ giao tiếp nâng cao',
-      status: 'locked',
-    },
-  ]
 
   const milestones: StreakMilestone[] = [
     { days: 3, reward: '+50 XP', status: 'done' },
@@ -133,6 +115,7 @@ export default function HomeAppPage() {
         className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
       >
         <WelcomeBanner />
+        <MistakeDueBanner />
         <section>
           <StreakHistory days={defaultHeatmap} summary={heatmapSummary} />
         </section>
@@ -140,7 +123,6 @@ export default function HomeAppPage() {
           <div className="flex h-full flex-col gap-6">
             <ContinueLearningCard onAction={showAction} />
             <TodaysLearningCard onAction={showAction} tasks={tasks} />
-            <LearningRoadmap onAction={showAction} units={roadmapUnits} />
           </div>
           <InsightRail onAction={showAction} />
         </div>

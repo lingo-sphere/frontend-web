@@ -1,8 +1,10 @@
 // Quản lý trạng thái bài kiểm tra khóa học, đếm ngược thời gian, chấm điểm và AI giải thích.
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Chapter } from '@/features/courses/types/course'
 import { courseService } from '@/features/courses/services/course.service'
+import { mistakeService } from '@/features/practice/services/mistake.service'
 import { toast } from '@/store/toast.store'
 import {
   CourseTestQuestion,
@@ -13,12 +15,34 @@ import {
   getCorrectOptionIndex,
 } from '@/features/courses/types/test.runner.types'
 
+interface CourseTestDraft {
+  startedAt: number
+  totalDurationSeconds: number
+  selectedAnswers: Record<number, number>
+}
+
+const clearTestDraftStorage = (courseId: string, testType: string, chapterId?: string) => {
+  if (typeof window === 'undefined') return
+  try {
+    const targetKey = `lingo_course_test_draft_${courseId}_${testType}_${chapterId || 'final'}`
+    localStorage.removeItem(targetKey)
+    const prefix = `lingo_course_test_draft_${courseId}_${testType}`
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(prefix)) {
+        localStorage.removeItem(key)
+      }
+    }
+  } catch {}
+}
+
 interface UseCourseTestRunnerOptions {
   isOpen: boolean
   courseId: string
   chapter: Chapter | null
   testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
   durationMinutes?: number
+  isRetry?: boolean
   finalTestQuestions?: CourseTestQuestion[]
   finalTestAudioUrl?: string
   speakingPrompt?: string
@@ -38,6 +62,7 @@ export function useCourseTestRunner({
   chapter,
   testType,
   durationMinutes,
+  isRetry,
   finalTestQuestions,
   finalTestAudioUrl,
   speakingPrompt,
@@ -50,6 +75,9 @@ export function useCourseTestRunner({
   previousAttempts = [],
   onComplete,
 }: UseCourseTestRunnerOptions) {
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+
   const hasSpeaking = Boolean(speakingPrompt || chapter?.speaking_prompt)
   const hasWriting = Boolean(writingPrompt || chapter?.writing_prompt)
 
@@ -165,16 +193,23 @@ export function useCourseTestRunner({
   }, [chapter, testType, finalTestQuestions])
 
   const testAudioUrl = useMemo(() => {
+    if (testType === 'final-test') {
+      return (
+        finalTestAudioUrl ||
+        rawQuestions.find((q) => q.media_url?.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i))
+          ?.media_url ||
+        ''
+      )
+    }
     return (
-      finalTestAudioUrl ||
-      chapter?.test_audio_url ||
       chapter?.challenge_audio_url ||
+      chapter?.test_audio_url ||
       chapter?.audio_url ||
       rawQuestions.find((q) => q.media_url?.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i))
         ?.media_url ||
       ''
     )
-  }, [finalTestAudioUrl, chapter, rawQuestions])
+  }, [testType, finalTestAudioUrl, chapter, rawQuestions])
 
   const passingScore =
     testType === 'challenge'
@@ -185,12 +220,12 @@ export function useCourseTestRunner({
 
   const testTitle =
     testType === 'challenge'
-      ? `Bài test thử thách cuối chương - ${chapter?.title || ''}`
+      ? (isVietnamese ? `Bài test thử thách cuối chương - ${chapter?.title || ''}` : `Chapter Challenge Test - ${chapter?.title || ''}`)
       : testType === 'post-mini'
-      ? `Bài kiểm tra cuối chương - ${chapter?.title || ''}`
+      ? (isVietnamese ? `Bài kiểm tra cuối chương - ${chapter?.title || ''}` : `Chapter End Test - ${chapter?.title || ''}`)
       : testType === 'final-test'
-      ? `Bài thi tốt nghiệp khóa học (Exit Test)`
-      : `Bài luyện tập trắc nghiệm (${chapter?.title || ''})`
+      ? (isVietnamese ? 'Bài thi tốt nghiệp khóa học (Exit Test)' : 'Course Final Graduation Test (Exit Test)')
+      : (isVietnamese ? `Bài luyện tập trắc nghiệm (${chapter?.title || ''})` : `Multiple Choice Practice (${chapter?.title || ''})`)
 
   const effectiveDurationMinutes = useMemo(() => {
     if (typeof durationMinutes === 'number' && durationMinutes > 0) return durationMinutes
@@ -200,13 +235,16 @@ export function useCourseTestRunner({
     return testType === 'final-test' ? 60 : 15
   }, [durationMinutes, chapter, testType])
 
+  const storageKey = useMemo(() => {
+    return `lingo_course_test_draft_${courseId}_${testType}_${chapter?.id || 'final'}`
+  }, [courseId, testType, chapter?.id])
+
+  const hasRestoredDraftRef = useRef(false)
+  const handleSubmitTestRef = useRef<(isTimeout?: boolean) => Promise<void>>(async () => {})
+  const sessionIdRef = useRef<string | null>(null)
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [timeLeft, setTimeLeft] = useState<number>(effectiveDurationMinutes * 60)
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false)
-
-  useEffect(() => {
-    setTimeLeft(effectiveDurationMinutes * 60)
-    setHasAutoSubmitted(false)
-  }, [effectiveDurationMinutes, isOpen])
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600)
@@ -221,10 +259,56 @@ export function useCourseTestRunner({
 
   const handleSelectOption = (qIdx: number, optIdx: number) => {
     if (isSubmitted) return
-    setSelectedAnswers((prev) => ({ ...prev, [qIdx]: optIdx }))
+    setSelectedAnswers((prev) => {
+      const next = { ...prev, [qIdx]: optIdx }
+      if (typeof window !== 'undefined') {
+        try {
+          const totalSecs = effectiveDurationMinutes * 60
+          let startedAt = Date.now()
+          const existing = localStorage.getItem(storageKey)
+          if (existing) {
+            const parsed = JSON.parse(existing)
+            if (parsed && typeof parsed.startedAt === 'number') {
+              startedAt = parsed.startedAt
+            }
+          }
+          const draft: CourseTestDraft = {
+            startedAt,
+            totalDurationSeconds: totalSecs,
+            selectedAnswers: next,
+          }
+          localStorage.setItem(storageKey, JSON.stringify(draft))
+        } catch {}
+      }
+
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+      syncTimeoutRef.current = setTimeout(() => {
+        const currentSessionId = sessionIdRef.current
+        if (currentSessionId) {
+          const answersToSync = Object.entries(next).map(([idxStr, oIdx]) => {
+            const numIdx = Number(idxStr)
+            const q = rawQuestions[numIdx]
+            return {
+              question_index: numIdx,
+              question_id: q?._id || q?.id,
+              selected_index: oIdx,
+              selected_option: q?.options?.[oIdx] ?? '',
+            }
+          })
+          courseService.syncCourseTestAnswers(currentSessionId, answersToSync).catch(() => {})
+        }
+      }, 1500)
+
+      return next
+    })
   }
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
+    clearTestDraftStorage(courseId, testType, chapter?.id)
+    sessionIdRef.current = null
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current)
+    }
     setSelectedAnswers({})
     setIsSubmitted(false)
     setScoreResult(null)
@@ -234,10 +318,47 @@ export function useCourseTestRunner({
     setShowAiDetails(false)
     setTimeLeft(effectiveDurationMinutes * 60)
     setHasAutoSubmitted(false)
-  }
+
+    courseService
+      .startCourseTestSession(courseId, chapter?.id || 'final', {
+        test_type: testType,
+        duration_minutes: effectiveDurationMinutes,
+        passing_score: passingScore,
+        order_index: Number(chapter?.order || 1),
+        raw_questions: rawQuestions,
+        retry: true,
+      })
+      .then((sessionRes) => {
+        if (sessionRes && sessionRes.session_id) {
+          sessionIdRef.current = sessionRes.session_id
+          if (sessionRes.expires_at) {
+            const serverRemaining = Math.max(
+              0,
+              Math.floor((new Date(sessionRes.expires_at).getTime() - Date.now()) / 1000)
+            )
+            if (serverRemaining > 0) {
+              setTimeLeft(serverRemaining)
+            }
+          }
+        }
+      })
+      .catch(() => {})
+  }, [
+    courseId,
+    testType,
+    chapter?.id,
+    chapter?.order,
+    effectiveDurationMinutes,
+    passingScore,
+    rawQuestions,
+  ])
 
   const handleSubmitTest = useCallback(
     async (isTimeout = false) => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current)
+      }
+      clearTestDraftStorage(courseId, testType, chapter?.id)
       const answersPayload = rawQuestions.map((q, idx) => {
         const chosen = selectedAnswers[idx]
         const options = q.options ?? []
@@ -264,9 +385,13 @@ export function useCourseTestRunner({
             user_selected_answer:
               chosen !== undefined
                 ? options[chosen] ?? String.fromCharCode(65 + chosen)
-                : 'Chưa làm',
-            correct_answer: typeof correctIdx === 'number' && correctIdx >= 0 && options[correctIdx] ? options[correctIdx] : 'Chưa cập nhật',
-            category: chapter?.title ?? 'Kiến thức chung',
+                : '',
+            correct_answer: String(
+              typeof correctIdx === 'number' && correctIdx >= 0 && options[correctIdx]
+                ? options[correctIdx]
+                : (q.correct_answer || '')
+            ),
+            category: chapter?.title || '',
           })
         }
       })
@@ -396,7 +521,19 @@ export function useCourseTestRunner({
           applyGradedResult(saveRes.graded_questions, saveRes.wrong_questions)
         }
 
-        setWrongQuestionsList(finalWrongs)
+        const enrichedWrongs = finalWrongs.map((w, idx) => {
+          const qIdx = (w.question_number || idx + 1) - 1
+          const rawQ = rawQuestions[qIdx]
+          return {
+            ...w,
+            domain: rawQ?.domain || rawQ?.skill_type || (rawQ?.media_url?.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ? 'LISTENING' : 'GRAMMAR'),
+            context_id: rawQ?.context_id,
+            exercise_type: rawQ?.exercise_type,
+            grammar_knowledge_id: rawQ?.grammar_knowledge_id,
+          }
+        })
+
+        setWrongQuestionsList(enrichedWrongs)
         setScoreResult({
           correctCount: finalCorrect,
           totalQuestions: finalTotal,
@@ -406,23 +543,88 @@ export function useCourseTestRunner({
         setIsSubmitted(true)
         setShowSubmitConfirm(false)
 
-        if (isTimeout) toast.warning('Hết thời gian làm bài! Đã tự động nộp bài.')
-        else toast.success(`Nộp bài thành công! Điểm: ${finalScore}%`)
+        if (isTimeout) toast.warning(isVietnamese ? 'Hết thời gian làm bài! Đã tự động nộp bài.' : 'Time is up! Exam auto-submitted.')
+        else toast.success(isVietnamese ? `Nộp bài thành công! Điểm: ${finalScore}%` : `Submitted successfully! Score: ${finalScore}%`)
 
-        if (finalWrongs.length > 0) {
+        if (enrichedWrongs.length > 0) {
           setIsLoadingAi(true)
           setShowAiDetails(true)
           courseService
             .explainTestMistakes(courseId, {
               test_title: testTitle,
               test_type: testType,
-              wrong_questions: finalWrongs,
+              wrong_questions: enrichedWrongs,
             })
             .then((res: { data?: AiExplanationsData } | AiExplanationsData) => {
               const data = 'data' in res && res.data ? res.data : (res as AiExplanationsData)
               setAiExplanations(data)
+
+              const explanationMap = new Map<number, { topic?: string; focus?: string; why_wrong?: string }>()
+              if (Array.isArray(data?.explanations)) {
+                data.explanations.forEach((item) => {
+                  explanationMap.set(item.question_number, {
+                    topic: item.recommended_topic,
+                    focus: item.study_focus,
+                    why_wrong: item.why_wrong,
+                  })
+                })
+              }
+
+              const mistakePayloads = enrichedWrongs.map((w, idx) => {
+                const ex = explanationMap.get(w.question_number || idx + 1)
+                const qIdx = (w.question_number || idx + 1) - 1
+                const rawQ = rawQuestions[qIdx]
+                const stableId =
+                  rawQ?.id ||
+                  rawQ?._id ||
+                  `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
+                return {
+                  question_id: stableId,
+                  question_text: w.question_text,
+                  options: rawQ?.options || [],
+                  user_answer: w.user_selected_answer,
+                  correct_answer: w.correct_answer,
+                  explanation: ex?.why_wrong || w.explanation || '',
+                  topic_name_vi: ex?.topic || w.category || '',
+                  source_context: `${testTitle} (${testType})`,
+                  source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
+                  source_id: courseId,
+                  source_title: testTitle,
+                  domain: w.domain,
+                  context_id: w.context_id,
+                  exercise_type: w.exercise_type,
+                  grammar_knowledge_id: w.grammar_knowledge_id,
+                }
+              })
+
+              mistakeService.recordBatchMistakes({ mistakes: mistakePayloads }).catch(() => {})
             })
-            .catch(() => {})
+            .catch(() => {
+              const fallbackMistakes = enrichedWrongs.map((w, idx) => {
+                const qIdx = (w.question_number || idx + 1) - 1
+                const rawQ = rawQuestions[qIdx]
+                const stableId =
+                  rawQ?.id ||
+                  rawQ?._id ||
+                  `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
+                return {
+                  question_id: stableId,
+                  question_text: w.question_text,
+                  options: rawQ?.options || [],
+                  user_answer: w.user_selected_answer,
+                  correct_answer: w.correct_answer,
+                  source_context: `${testTitle} (${testType})`,
+                  source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
+                  source_id: courseId,
+                  source_title: testTitle,
+                  domain: w.domain,
+                  context_id: w.context_id,
+                  exercise_type: w.exercise_type,
+                  grammar_knowledge_id: w.grammar_knowledge_id,
+                }
+              })
+              mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})
+            })
             .finally(() => setIsLoadingAi(false))
         }
 
@@ -437,9 +639,34 @@ export function useCourseTestRunner({
         })
         setIsSubmitted(true)
         setShowSubmitConfirm(false)
+        if (fallbackWrongs.length > 0) {
+          const fallbackMistakes = fallbackWrongs.map((w, idx) => {
+            const qIdx = (w.question_number || idx + 1) - 1
+            const rawQ = rawQuestions[qIdx]
+            const stableId =
+              rawQ?.id ||
+              rawQ?._id ||
+              `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
+            return {
+              question_id: stableId,
+              question_text: w.question_text,
+              options: rawQ?.options || [],
+              user_answer: w.user_selected_answer,
+              correct_answer: w.correct_answer,
+              source_context: `${testTitle} (${testType})`,
+              source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
+              source_id: courseId,
+              source_title: testTitle,
+              context_id: rawQ?.context_id,
+            }
+          })
+          mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})
+        }
         onComplete?.(fallbackScore, fallbackScore >= passingScore)
       } finally {
         setIsSaving(false)
+        clearTestDraftStorage(courseId, testType, chapter?.id)
+        sessionIdRef.current = null
       }
     },
     [
@@ -453,6 +680,156 @@ export function useCourseTestRunner({
       onComplete,
     ]
   )
+
+  useEffect(() => {
+    handleSubmitTestRef.current = handleSubmitTest
+  }, [handleSubmitTest])
+
+  useEffect(() => {
+    if (!isOpen) {
+      hasRestoredDraftRef.current = false
+      return
+    }
+    if (hasRestoredDraftRef.current) return
+    hasRestoredDraftRef.current = true
+
+    const totalSecs = effectiveDurationMinutes * 60
+
+    if (isRetry) {
+      clearTestDraftStorage(courseId, testType, chapter?.id)
+      setSelectedAnswers({})
+      setTimeLeft(totalSecs)
+      setHasAutoSubmitted(false)
+
+      courseService
+        .startCourseTestSession(courseId, chapter?.id || 'final', {
+          test_type: testType,
+          duration_minutes: effectiveDurationMinutes,
+          passing_score: passingScore,
+          order_index: Number(chapter?.order || 1),
+          raw_questions: rawQuestions,
+          retry: true,
+        })
+        .then((sessionRes) => {
+          if (sessionRes && sessionRes.session_id) {
+            sessionIdRef.current = sessionRes.session_id
+            if (sessionRes.expires_at) {
+              const serverRemaining = Math.max(
+                0,
+                Math.floor((new Date(sessionRes.expires_at).getTime() - Date.now()) / 1000)
+              )
+              if (serverRemaining > 0) {
+                setTimeLeft(serverRemaining)
+              }
+            }
+          }
+        })
+        .catch(() => {})
+      return
+    }
+
+    let hasLocalDraft = false
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(storageKey)
+        if (saved) {
+          const draft: CourseTestDraft = JSON.parse(saved)
+          if (
+            draft &&
+            typeof draft.startedAt === 'number' &&
+            typeof draft.totalDurationSeconds === 'number' &&
+            draft.selectedAnswers &&
+            typeof draft.selectedAnswers === 'object'
+          ) {
+            const elapsed = Math.floor((Date.now() - draft.startedAt) / 1000)
+            const remaining = Math.max(0, draft.totalDurationSeconds - elapsed)
+
+            if (remaining <= 0) {
+              setTimeLeft(0)
+              setHasAutoSubmitted(true)
+              clearTestDraftStorage(courseId, testType, chapter?.id)
+              handleSubmitTestRef.current(true)
+              return
+            } else {
+              setSelectedAnswers(draft.selectedAnswers)
+              hasLocalDraft = true
+              setTimeLeft(remaining)
+              setHasAutoSubmitted(false)
+              toast.info(
+                isVietnamese
+                  ? 'Đã tự động khôi phục tiến trình bài làm trước đó của bạn.'
+                  : 'Restored previous test draft.'
+              )
+            }
+          }
+        }
+      } catch {}
+    }
+
+    if (!hasLocalDraft) {
+      setTimeLeft(totalSecs)
+      setHasAutoSubmitted(false)
+    }
+
+    courseService
+      .startCourseTestSession(courseId, chapter?.id || 'final', {
+        test_type: testType,
+        duration_minutes: effectiveDurationMinutes,
+        passing_score: passingScore,
+        order_index: Number(chapter?.order || 1),
+        raw_questions: rawQuestions,
+      })
+      .then((sessionRes) => {
+        if (sessionRes && sessionRes.session_id) {
+          sessionIdRef.current = sessionRes.session_id
+          if (sessionRes.expires_at) {
+            const serverRemaining = Math.max(
+              0,
+              Math.floor((new Date(sessionRes.expires_at).getTime() - Date.now()) / 1000)
+            )
+            if (serverRemaining <= 0) {
+              setTimeLeft(0)
+              handleSubmitTestRef.current(true)
+              return
+            }
+            setTimeLeft(serverRemaining)
+          }
+
+          if (
+            !hasLocalDraft &&
+            Array.isArray(sessionRes.interim_answers) &&
+            sessionRes.interim_answers.length > 0
+          ) {
+            const restoredMap: Record<number, number> = {}
+            sessionRes.interim_answers.forEach((ans) => {
+              if (
+                typeof ans.question_index === 'number' &&
+                typeof ans.selected_index === 'number' &&
+                ans.selected_index >= 0
+              ) {
+                restoredMap[ans.question_index] = ans.selected_index
+              }
+            })
+            if (Object.keys(restoredMap).length > 0) {
+              setSelectedAnswers(restoredMap)
+            }
+          }
+        }
+      })
+      .catch(() => {})
+  }, [
+    effectiveDurationMinutes,
+    isOpen,
+    storageKey,
+    isVietnamese,
+    courseId,
+    chapter?.id,
+    chapter?.order,
+    testType,
+    passingScore,
+    rawQuestions,
+    isRetry,
+  ])
 
   useEffect(() => {
     if (!isOpen || isSubmitted || timeLeft <= 0) return

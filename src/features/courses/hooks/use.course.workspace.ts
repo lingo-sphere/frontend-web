@@ -10,6 +10,7 @@ import {
   useCourseEnrollmentStatusQuery,
   useCourseReviewsQuery,
   useCourseQnAQuery,
+  useCourseNotesDataQuery,
   useCourseProgressQuery,
   useUserEnrollments,
 } from '@/features/courses/hooks/use.courses.query'
@@ -18,6 +19,7 @@ import { toast } from '@/store/toast.store'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import type {
   Course,
+  Chapter,
   Lesson,
   CourseProgressDetailInfo,
   ModuleProgressInfo,
@@ -52,11 +54,18 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     isAuthenticated && !isEnrolledInList
   )
 
+  const { data: progressData } = useCourseProgressQuery(
+    courseId,
+    Boolean(courseId && isAuthenticated)
+  )
+
   const [overrideEnrolled, setOverrideEnrolled] = useState<boolean | null>(null)
   const isEnrolled =
     overrideEnrolled ??
     (isEnrolledInList ||
       Boolean(enrollmentStatusRes?.is_enrolled) ||
+      Boolean(progressData?.course_progress) ||
+      Boolean(progressData?.completed_lesson_ids?.length) ||
       (enrollmentStatusRes === undefined && initialIsEnrolled))
 
   useEffect(() => {
@@ -75,7 +84,7 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
 
   const { data: reviewsData } = useCourseReviewsQuery(courseId, Boolean(rawCourse))
   const { data: qnaData } = useCourseQnAQuery(courseId, Boolean(rawCourse))
-  const { data: progressData } = useCourseProgressQuery(courseId, Boolean(rawCourse && isEnrolled))
+  const { data: notesData } = useCourseNotesDataQuery(courseId, Boolean(rawCourse && isEnrolled))
 
   const derivedCourse = useMemo(() => {
     if (!rawCourse) return null
@@ -85,10 +94,10 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       isEnrolled,
       progressData || null,
       reviewsData || null,
-      [],
+      notesData || null,
       qnaData || []
     )
-  }, [courseId, rawCourse, isEnrolled, progressData, reviewsData, qnaData])
+  }, [courseId, rawCourse, isEnrolled, progressData, reviewsData, notesData, qnaData])
 
   const [course, setCourse] = useState<Course | null>(null)
   const activeCourse = course || derivedCourse
@@ -115,11 +124,20 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       const prevPassingScore =
         prevCh.challengeTest?.passingScore || prevCh.challenge_passing_score || 80
       const prevScore = Number(prevMod?.challenge_score ?? prevMod?.post_mini_score ?? 0)
+      const prevLessons = prevCh.lessons || []
+      const prevCompleted = prevLessons.filter((l) => l.status === 'completed').length
+      const isPrevAllCompleted = prevLessons.length > 0 && prevCompleted === prevLessons.length
+      const prevQuestionsCount = Number(
+        prevCh.challengeTest?.questionsCount ||
+          prevCh.challenge_questions?.length ||
+          0
+      )
       const passedChallenge = Boolean(
         prevMod?.is_passed_by_challenge ||
           prevMod?.status === 'COMPLETED' ||
           prevMod?.status === 'SKIPPED_BY_CHALLENGE' ||
-          (Boolean(prevMod?.challenge_taken) && prevScore >= prevPassingScore)
+          (Boolean(prevMod?.challenge_taken) && prevScore >= prevPassingScore) ||
+          (prevQuestionsCount === 0 && isPrevAllCompleted)
       )
       if (!passedChallenge) {
         set.add(activeCourse.chapters[i].id)
@@ -168,34 +186,115 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
       isEnrolled,
       progressData || null,
       reviewsData || null,
-      [],
+      notesData || null,
       qnaData || []
     )
 
-    setCourse((prev) => {
-      if (!prev) return structured
-      return {
-        ...structured,
-        chapters: prev.chapters.length > 0 ? prev.chapters : structured.chapters,
-        reviews: reviewsData ? structured.reviews : prev.reviews,
-        qna: qnaData ? structured.qna : prev.qna,
-      }
+    queueMicrotask(() => {
+      setCourse((prev) => {
+        if (!prev) return structured
+        const mergedChapters = structured.chapters.map((ch) => {
+          const prevCh = prev.chapters.find((pc) => pc.id === ch.id)
+          if (!prevCh) return ch
+          const mergedLessons = ch.lessons.map((l) => {
+            const prevL = prevCh.lessons.find((pl) => pl.id === l.id)
+            if (!prevL) return l
+            const isCompleted = l.status === 'completed' || prevL.status === 'completed'
+            const bestProgress = isCompleted ? 100 : Math.max(l.progress || 0, prevL.progress || 0)
+            const bestStatus: Lesson['status'] = isCompleted
+              ? 'completed'
+              : bestProgress > 0
+              ? 'in-progress'
+              : l.status
+            return {
+              ...l,
+              status: bestStatus,
+              progress: bestProgress,
+              duration: prevL.duration || l.duration,
+            }
+          })
+          const chCompleted = mergedLessons.filter((l) => l.status === 'completed').length
+          const isAllComp = mergedLessons.length > 0 && chCompleted === mergedLessons.length
+          return {
+            ...ch,
+            status: isAllComp ? 'completed' : ch.status,
+            lessons: mergedLessons,
+          }
+        })
+        return {
+          ...structured,
+          chapters: mergedChapters,
+          reviews: reviewsData ? structured.reviews : prev.reviews,
+          qna: qnaData ? structured.qna : prev.qna,
+          notes: notesData ? structured.notes : prev.notes,
+        }
+      })
     })
 
-    navigation.setCurrentChapter((prev) => prev || structured.chapters[0] || null)
-    navigation.setCurrentLesson((prev) => prev || structured.chapters[0]?.lessons[0] || null)
-    navigation.setExpandedChapters((prev) => (prev.length > 0 ? prev : structured.chapters.map((c) => c.id)))
-  }, [rawCourse, isEnrolled, progressData, reviewsData, qnaData, courseId])
+    const allFlat: Array<{ chapter: Chapter; lesson: Lesson }> = []
+    structured.chapters.forEach((ch) => {
+      ch.lessons.forEach((les) => {
+        allFlat.push({ chapter: ch, lesson: les })
+      })
+    })
+
+    let targetId: string | undefined = navigation.currentLesson?.id
+
+    if (!targetId && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      targetId = urlParams.get('lesson') || urlParams.get('lessonId') || undefined
+    }
+
+    if (!targetId && typeof window !== 'undefined') {
+      const savedId = storage.get<string>(STORAGE_KEYS.COURSE_LAST_WATCHED(courseId))
+      if (savedId) {
+        targetId = savedId
+      }
+    }
+
+    if (!targetId && progressData?.completed_lesson_ids?.length) {
+      const completedSet = new Set(progressData.completed_lesson_ids)
+      const uncompleted = allFlat.find((item) => !completedSet.has(item.lesson.id))
+      if (uncompleted) {
+        targetId = uncompleted.lesson.id
+      }
+    }
+
+    let matchedItem = targetId ? allFlat.find((item) => item.lesson.id === targetId) : null
+    if (!matchedItem && allFlat.length > 0) {
+      matchedItem = allFlat[0]
+    }
+
+    if (matchedItem) {
+      const targetChapter = matchedItem.chapter
+      const targetLesson = matchedItem.lesson
+      navigation.setCurrentChapter(targetChapter)
+      navigation.setCurrentLesson(targetLesson)
+      navigation.setExpandedChapters((prev) =>
+        prev.includes(targetChapter.id) ? prev : [...prev, targetChapter.id]
+      )
+      if (typeof window !== 'undefined') {
+        storage.set(STORAGE_KEYS.COURSE_LAST_WATCHED(courseId), targetLesson.id)
+        const url = new URL(window.location.href)
+        if (url.searchParams.get('lesson') !== targetLesson.id) {
+          url.searchParams.set('lesson', targetLesson.id)
+          window.history.replaceState(null, '', url.toString())
+        }
+      }
+    }
+  }, [rawCourse, isEnrolled, progressData, reviewsData, qnaData, notesData, courseId])
 
   useEffect(() => {
     if (progressData) {
-      setProgressDetail(progressData)
-      if (progressData.course_progress?.schedule) {
-        setCourseSchedule(progressData.course_progress.schedule)
-      }
-      if (progressData.course_progress?.lock_state) {
-        setCourseLockState(progressData.course_progress.lock_state)
-      }
+      queueMicrotask(() => {
+        setProgressDetail(progressData)
+        if (progressData.course_progress?.schedule) {
+          setCourseSchedule(progressData.course_progress.schedule)
+        }
+        if (progressData.course_progress?.lock_state) {
+          setCourseLockState(progressData.course_progress.lock_state)
+        }
+      })
     }
   }, [progressData])
 
@@ -244,9 +343,9 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     let targetStatus: Lesson['status'] = 'completed'
     let chapterId = navigation.currentChapter?.id || ''
 
-    const nextChapters = activeCourse.chapters.map((ch) => ({
-      ...ch,
-      lessons: ch.lessons.map((l) => {
+    const nextChapters = activeCourse.chapters.map((ch) => {
+      let chStatus = ch.status
+      const lessons = ch.lessons.map((l) => {
         if (l.id === lessonId) {
           targetStatus = l.status === 'completed' ? 'available' : 'completed'
           if (!chapterId) chapterId = ch.id
@@ -257,8 +356,19 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
           }
         }
         return l
-      }),
-    }))
+      })
+      const chCompleted = lessons.filter((l) => l.status === 'completed').length
+      if (lessons.length > 0 && chCompleted === lessons.length) {
+        chStatus = 'completed'
+      } else if (chCompleted < lessons.length && chStatus === 'completed') {
+        chStatus = 'in-progress'
+      }
+      return {
+        ...ch,
+        status: chStatus,
+        lessons,
+      }
+    })
 
     setCourse({ ...activeCourse, chapters: nextChapters })
 
@@ -273,6 +383,10 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
         is_completed: isNowCompleted,
         score: isNowCompleted ? 100 : 0,
       })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'progress'] })
+        queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(String(activeCourse.id)), 'progress'] })
+      })
       .catch(() => {})
 
     if (isNowCompleted) {
@@ -285,28 +399,52 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const handleLessonProgress = (lessonId: string, progress: number) => {
     if (!activeCourse || !isEnrolled) return
     let justCompleted = false
+    let hasChanges = false
     let chapterId = navigation.currentChapter?.id || ''
     const isNowCompleted = progress >= 80 || progress >= 100
 
-    const nextChapters = activeCourse.chapters.map((ch) => ({
-      ...ch,
-      lessons: ch.lessons.map((l) => {
+    const nextChapters = activeCourse.chapters.map((ch) => {
+      let chStatus = ch.status
+      const lessons = ch.lessons.map((l) => {
         if (l.id === lessonId) {
           if (!chapterId) chapterId = ch.id
-          if (isNowCompleted && l.status !== 'completed') {
+          if (l.status === 'completed') {
+            return l
+          }
+          if (isNowCompleted) {
             justCompleted = true
+          }
+          const nextStatus: Lesson['status'] = isNowCompleted
+            ? 'completed'
+            : progress > 0
+            ? 'in-progress'
+            : l.status
+          const nextProgress = isNowCompleted ? 100 : Math.max(l.progress || 0, progress)
+          if (nextStatus !== l.status || nextProgress !== l.progress) {
+            hasChanges = true
           }
           return {
             ...l,
-            progress: isNowCompleted ? 100 : progress,
-            status: isNowCompleted ? 'completed' : progress > 0 ? 'in-progress' : l.status,
+            progress: nextProgress,
+            status: nextStatus,
           }
         }
         return l
-      }),
-    }))
+      })
+      const chCompleted = lessons.filter((l) => l.status === 'completed').length
+      if (lessons.length > 0 && chCompleted === lessons.length) {
+        chStatus = 'completed'
+      }
+      return {
+        ...ch,
+        status: chStatus,
+        lessons,
+      }
+    })
 
-    setCourse({ ...activeCourse, chapters: nextChapters })
+    if (hasChanges) {
+      setCourse({ ...activeCourse, chapters: nextChapters })
+    }
 
     if (justCompleted) {
       const curChapId = chapterId || activeCourse.chapters[0]?.id || ''
@@ -317,6 +455,10 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
           lesson_id: lessonId,
           score: 100,
           time_spent_seconds: Math.round(playerCurrentTime),
+        })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(courseId), 'progress'] })
+          queryClient.invalidateQueries({ queryKey: [...courseKeys.detail(String(activeCourse.id)), 'progress'] })
         })
         .catch(() => {})
     }

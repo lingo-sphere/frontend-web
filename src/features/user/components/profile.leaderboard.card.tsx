@@ -21,7 +21,7 @@ export function ProfileLeaderboardCard({ leaderboard }: ProfileLeaderboardCardPr
         <div className="space-y-3">
           {leaderboard.slice(0, 5).map((entry, idx) => (
             <div
-              key={entry.user_id || idx}
+              key={entry.user_id || `lb_${idx}`}
               className="flex items-center gap-3 rounded-xl bg-surface-subtle p-2.5 transition-colors"
             >
               <span className="w-5 text-center text-xs font-bold text-text-tertiary">
@@ -29,13 +29,10 @@ export function ProfileLeaderboardCard({ leaderboard }: ProfileLeaderboardCardPr
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-bold text-text-primary">
-                  {entry.full_name ||
-                    entry.username ||
-                    entry.user_name ||
-                    `Học viên #${idx + 1}`}
+                  {entry.full_name}
                 </p>
                 <p suppressHydrationWarning className="text-[11px] text-text-tertiary">
-                  {formatNumber(entry.xp_total || entry.xp || 100)} XP
+                  {formatNumber(entry.xp)} XP
                 </p>
               </div>
             </div>

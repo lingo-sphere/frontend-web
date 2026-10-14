@@ -28,7 +28,8 @@ interface CourseSidebarContentProps {
   onToggleLessonComplete: (lessonId: string, e: React.MouseEvent) => void
   onTakeTest?: (
     chapter: Chapter | null,
-    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test'
+    testType: 'challenge' | 'exercise' | 'post-mini' | 'final-test',
+    isRetry?: boolean
   ) => void
   onOpenPracticeQuiz?: (chapter: Chapter, lesson: Lesson) => void
 }
@@ -71,11 +72,20 @@ export function CourseSidebarContent({
       const passScore =
         ch.challengeTest?.passingScore || ch.challenge_passing_score || 80
       const chScore = Number(modProg?.challenge_score ?? modProg?.post_mini_score ?? 0)
+      const qCount = Number(
+        ch.challengeTest?.questionsCount ||
+          ch.challenge_questions?.length ||
+          0
+      )
+      const chLessons = ch.lessons || []
+      const chComp = chLessons.filter((l) => l.status === 'completed').length
+      const isAllLessonsComp = chLessons.length > 0 && chComp === chLessons.length
       return Boolean(
         modProg?.is_passed_by_challenge ||
           modProg?.status === 'COMPLETED' ||
           modProg?.status === 'SKIPPED_BY_CHALLENGE' ||
-          (Boolean(modProg?.challenge_taken) && chScore >= passScore)
+          (Boolean(modProg?.challenge_taken) && chScore >= passScore) ||
+          (qCount === 0 && isAllLessonsComp)
       )
     })
 
@@ -115,6 +125,10 @@ export function CourseSidebarContent({
           modProgress?.challenge_score ?? modProgress?.post_mini_score ?? 0
         )
 
+        const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
+        const chTotal = chapter.lessons.length
+        const isAllLessonsCompleted = chTotal > 0 && chCompleted === chTotal
+
         const isPassedChallenge = Boolean(
           modProgress?.is_passed_by_challenge ||
             modProgress?.status === 'COMPLETED' ||
@@ -129,6 +143,9 @@ export function CourseSidebarContent({
         )
 
         const prevChapter = chIdx > 0 ? chapters[chIdx - 1] : null
+        const prevCompleted = prevChapter?.lessons.filter((l) => l.status === 'completed').length || 0
+        const prevTotal = prevChapter?.lessons.length || 0
+        const prevAllDone = prevTotal > 0 && prevCompleted === prevTotal
         const prevOrder = Number(prevChapter?.order || chIdx)
         const prevModProgress = prevChapter
           ? modulesProgress?.find(
@@ -139,6 +156,11 @@ export function CourseSidebarContent({
                 Number(m.order_index) === chIdx
             )
           : null
+        const prevQuestionsCount = Number(
+          prevChapter?.challengeTest?.questionsCount ||
+            prevChapter?.challenge_questions?.length ||
+            0
+        )
         const prevPassedChallenge = Boolean(
           prevModProgress?.is_passed_by_challenge ||
             prevModProgress?.status === 'COMPLETED' ||
@@ -147,7 +169,8 @@ export function CourseSidebarContent({
               (prevModProgress?.challenge_score || 0) >=
                 (prevChapter?.challengeTest?.passingScore ||
                   prevChapter?.challenge_passing_score ||
-                  80))
+                  80)) ||
+            (prevQuestionsCount === 0 && prevAllDone)
         )
         const isLockedByReminder = Boolean(
           modProgress?.is_locked_by_reminder ||
@@ -183,7 +206,7 @@ export function CourseSidebarContent({
             onToggleResource={(lesId) =>
               setActiveResourceDropdown(activeResourceDropdown === lesId ? null : lesId)
             }
-            onTakeTest={() => onTakeTest?.(chapter, 'challenge')}
+            onTakeTest={(isRetry) => onTakeTest?.(chapter, 'challenge', isRetry)}
             onOpenPracticeQuiz={(les) => onOpenPracticeQuiz?.(chapter, les)}
           />
         )
@@ -200,7 +223,12 @@ export function CourseSidebarContent({
         finalTestWritingFileUrl={finalTestWritingFileUrl}
         allChaptersPassed={allChaptersPassed}
         isEnrolled={isEnrolled}
-        onTakeTest={() => onTakeTest?.(null, 'final-test')}
+        onTakeTest={() => {
+          const hasFinalCompleted =
+            Boolean(finalTestScore !== undefined && finalTestScore !== null && finalTestScore > 0) ||
+            (Array.isArray(finalTestAttempts) && finalTestAttempts.length > 0)
+          onTakeTest?.(null, 'final-test', hasFinalCompleted)
+        }}
       />
     </div>
   )

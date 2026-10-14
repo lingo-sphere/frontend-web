@@ -2,7 +2,7 @@
 
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, LearningRoadmap, LearningRoadmapStage, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
+import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
 import { CourseSchema, LessonSchema, PaginatedCoursesSchema } from '@/features/courses/schemas/course.schema'
 import type {
   CourseStudySchedule,
@@ -40,6 +40,20 @@ export interface WritingSubmissionResponse {
   status: string
 }
 
+export interface UserCourseNoteItem {
+  _id: string
+  course_id: string
+  course_title: string
+  course_slug: string
+  course_thumbnail?: string
+  lesson_id: string
+  lesson_title: string
+  timestamp: number
+  formatted_time: string
+  content: string
+  created_at: string
+}
+
 export const courseService = {
 
   async getAllCourses(params?: { category?: string; level?: string; search?: string; limit?: number; is_published?: boolean }): Promise<Course[]> {
@@ -48,6 +62,10 @@ export const courseService = {
       ...params,
     }, PaginatedCoursesSchema)
     return res.result
+  },
+
+  async getBestsellers(params?: { category?: string }): Promise<Course[]> {
+    return api.get<Course[]>(API_CONFIG.ENDPOINTS.COURSES.BESTSELLERS, params)
   },
 
   async getCourseById(id: string): Promise<Course> {
@@ -123,37 +141,6 @@ export const courseService = {
     if (params?.current_course_id) queryParams.current_course_id = params.current_course_id
 
     return api.get(API_CONFIG.ENDPOINTS.COURSES.RECOMMENDATIONS, queryParams)
-  },
-
-  async getRecommendedRoadmap(params?: {
-    total_score?: number
-    listening_score?: number
-    reading_score?: number
-    speaking_score?: number
-    writing_score?: number
-    skills_type?: string
-  }): Promise<{
-    recommended_roadmap: LearningRoadmap & { stages: LearningRoadmapStage[] }
-    individual_courses: Course[]
-    note?: string
-  }> {
-    const queryParams: Record<string, string | number> = {}
-    if (params?.total_score !== undefined) queryParams.total_score = params.total_score
-    if (params?.listening_score !== undefined) queryParams.listening_score = params.listening_score
-    if (params?.reading_score !== undefined) queryParams.reading_score = params.reading_score
-    if (params?.speaking_score !== undefined) queryParams.speaking_score = params.speaking_score
-    if (params?.writing_score !== undefined) queryParams.writing_score = params.writing_score
-    if (params?.skills_type) queryParams.skills_type = params.skills_type
-
-    return api.get(API_CONFIG.ENDPOINTS.COURSES.ROADMAP_RECOMMENDATION, queryParams)
-  },
-
-  async getAllRoadmaps(params?: { skills_focus?: string; is_published?: boolean }): Promise<LearningRoadmap[]> {
-    return api.get<LearningRoadmap[]>(API_CONFIG.ENDPOINTS.COURSES.ROADMAPS, params as Record<string, unknown>)
-  },
-
-  async getRoadmapById(id: string): Promise<LearningRoadmap> {
-    return api.get<LearningRoadmap>(API_CONFIG.ENDPOINTS.COURSES.ROADMAP_BY_ID(id))
   },
 
   async completeLesson(data: {
@@ -357,6 +344,76 @@ export const courseService = {
     return api.post(`/progress/courses/${courseId}/final-test`, data)
   },
 
+  async startCourseTestSession(
+    courseId: string,
+    moduleId: string,
+    data: {
+      test_type: string
+      duration_minutes?: number
+      passing_score?: number
+      order_index?: number
+      raw_questions?: unknown[]
+      retry?: boolean
+    }
+  ): Promise<{
+    session_id: string
+    started_at: string
+    expires_at: string
+    duration_minutes: number
+    interim_answers?: Array<{
+      question_index: number
+      question_id?: string
+      selected_index?: number
+      selected_option?: string
+    }>
+    status: string
+  }> {
+    return api.post(`/progress/courses/${courseId}/modules/${moduleId || 'final'}/session/start`, data)
+  },
+
+  async syncCourseTestAnswers(
+    sessionId: string,
+    answers: Array<{
+      question_index: number
+      question_id?: string
+      selected_index?: number
+      selected_option?: string
+    }>,
+    timeSpentSeconds?: number
+  ): Promise<{
+    success: boolean
+    saved_count?: number
+    expires_at?: string
+    is_expired?: boolean
+    message?: string
+  }> {
+    return api.put(`/progress/session/${sessionId}/sync-answers`, {
+      answers,
+      time_spent_seconds: timeSpentSeconds,
+    })
+  },
+
+  async getActiveCourseTestSession(
+    courseId: string,
+    moduleId: string,
+    testType?: string
+  ): Promise<{
+    session_id: string
+    started_at: string
+    expires_at: string
+    duration_minutes: number
+    interim_answers?: Array<{
+      question_index: number
+      question_id?: string
+      selected_index?: number
+      selected_option?: string
+    }>
+    status: string
+    is_expired?: boolean
+  } | null> {
+    return api.get(`/progress/courses/${courseId}/modules/${moduleId || 'final'}/session/active${testType ? `?testType=${testType}` : ''}`)
+  },
+
   async explainTestMistakes(
     courseId: string,
     data: {
@@ -452,6 +509,10 @@ export const courseService = {
   > {
     const qs = lessonId ? `?lesson_id=${lessonId}` : ''
     return api.get(`/courses/${courseId}/notes${qs}`)
+  },
+
+  async getMyCourseNotes(): Promise<UserCourseNoteItem[]> {
+    return api.get('/courses/my/notes')
   },
 
   async createCourseNote(

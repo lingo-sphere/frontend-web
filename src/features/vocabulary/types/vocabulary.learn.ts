@@ -1,7 +1,9 @@
 /**
- * @file vocabulary.learn.ts
- * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
+ * @file vocabulary.ts
+ * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống vocabulary
  */
+
+// ==================== CORE VOCABULARY TYPES ====================
 
 export interface LexicalItem {
   id: string
@@ -43,6 +45,8 @@ export interface Example {
   sentence_with_blank?: string
   blank_word_position?: number
 }
+
+// ==================== FLASHCARD TYPES ====================
 
 export interface FlashcardDeck {
   id: string
@@ -99,12 +103,13 @@ export interface UserCardProgress {
   longest_streak: number
   last_reviewed_at?: string
   next_review_at?: string
+  due_at?: string
   is_due: boolean
   learning_started_at?: string
   reviewing_started_at?: string
   mastered_at?: string
   created_at: string
-  updated_at?: string
+  updated_at: string
 }
 
 export type CardStatus = 'NEW' | 'LEARNING' | 'REVIEWING' | 'MASTERED' | 'RELEARNING'
@@ -126,6 +131,8 @@ export interface FlashcardDeckEnrollment {
   last_review_at?: string
   completed_at?: string
 }
+
+// ==================== REVIEW & SESSION TYPES ====================
 
 export interface ReviewSession {
   id: string
@@ -155,9 +162,7 @@ export type SessionMode =
   | 'TYPE_WORD'
   | 'IMAGE_WORD'
   | 'LISTEN_TYPE'
-  | 'PRONUNCIATION'
   | 'CONTEXT'
-  | 'SPEAKING'
   | 'DICTATION'
 
 export type ReviewType = 'DUE' | 'WEAK' | 'NEW' | 'MASTERED' | 'CUSTOM' | 'SMART'
@@ -200,6 +205,8 @@ export interface LearningStatistics {
   shadowing_practices: number
 }
 
+// ==================== LEARNING SESSION TYPES ====================
+
 export interface VocabularyItem {
   id: string
   word: string
@@ -240,7 +247,6 @@ export type ExerciseMode =
   | 'type-word'
   | 'image-word'
   | 'listen-type'
-  | 'pronunciation'
   | 'context'
 
 export type ReviewFilter = 'due' | 'weak' | 'new' | 'mastered'
@@ -272,8 +278,96 @@ export interface LearningResult {
     meaning: number
     spelling: number
     listening: number
-    pronunciation: number
     context: number
   }
   weakWords: VocabularyItem[]
+}
+
+// ==================== SAVED VOCABULARY TYPES ====================
+
+export interface SavedVocabulary {
+  id: string
+  lexical_item_id: string
+  user_id: string
+  added_at: string
+  deck_id?: string
+  lexical_item: LexicalItem
+  meanings?: Meaning[]
+  primary_meaning?: Meaning
+  learning_status?: LearningStatus
+  review_count?: number
+  accuracy_percent?: number
+  last_reviewed_at?: string
+}
+
+export type LearningStatus = 'NEW' | 'LEARNING' | 'MASTERED'
+
+// ==================== USER DECK & STATS TYPES ====================
+
+export interface UserDeck {
+  id: string
+  name: string
+  title?: string
+  cardCount: number
+  createdAt: string
+  description?: string
+  cefrLevel?: string
+  totalStudied?: number
+  lastStudied?: string
+}
+
+export interface VocabularyPack {
+  id: string
+  title: string
+  coverColor: string
+  wordCount: number
+  studentCount: number
+  tags: string[]
+  cefrLevel?: string
+}
+
+export interface VocabularyStats {
+  totalCards: number
+  due: number
+  weak: number
+  totalReviews: number
+  accuracy: number
+}
+
+export interface VocabularyStatus {
+  learning: number
+  reviewing: number
+  mastered: number
+  totalCards: number
+}
+
+export interface DeckCard {
+  id: string
+  deck_id: string
+  lexical_item_id: string
+  user_notes?: string
+  order_index?: number
+  created_at: string
+  saved_vocabulary?: SavedVocabulary
+  lexical_item?: LexicalItem
+}
+
+// ==================== MODAL PROPS TYPES ====================
+
+export interface SelectDeckModalProps {
+  isOpen: boolean
+  onClose: () => void
+  word: string
+  existingDecks: UserDeck[]
+  onSelectDeck: (deckId: string | null, createNew?: boolean) => void
+}
+
+export interface ConfirmDeleteModalProps {
+  isOpen: boolean
+  onClose: () => void
+  title: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+  onConfirm: () => void
 }

@@ -1,47 +1,63 @@
-/**
- * @file vocabulary.schema.ts
- * @description Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ vocabulary
- */
-
+// Zod Schemas định nghĩa cấu trúc dữ liệu cho dịch vụ từ vựng.
 import { z } from 'zod'
 
-export const LexicalItemSchema = z.object({
-  id: z.string().default(''),
-  _id: z.string().optional(),
-  word: z.string(),
-  ipa: z.string().default(''),
-  meaning_vi: z.string(),
-  meaning_en: z.string().optional(),
-  part_of_speech: z.string().default('noun'),
-  cefr_level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']).default('A1'),
-  example_sentence: z.string().default(''),
-  example_translation_vi: z.string().default(''),
-  audio_url: z.string().optional(),
-  image_url: z.string().optional(),
-  topic_tags: z.array(z.string()).optional(),
+export const BackendExampleSchema = z.object({
+  e: z.string().optional(),
+  v: z.string().optional(),
 })
 
-export const LexicalItemListSchema = z.array(LexicalItemSchema)
+export const BackendMeaningSchema = z.object({
+  pri: z.boolean().optional(),
+  p: z.string().optional(),
+  d: z.string().optional(),
+  sm: z.string().optional(),
+  ex: z.array(BackendExampleSchema).optional(),
+})
+
+export const LexicalItemSchema = z.object({
+  _id: z.string().optional(),
+  id: z.string().optional(),
+  word: z.string().optional(),
+  word_lowercase: z.string().optional(),
+  pronunciation: z.string().nullable().optional(),
+  cefr_level: z.string().optional(),
+  lexical_type: z.string().optional(),
+  primary_meaning: BackendMeaningSchema.nullable().optional(),
+})
+
+export const LexicalItemListSchema = z.union([
+  z.array(LexicalItemSchema),
+  z.object({ items: z.array(LexicalItemSchema) }),
+  z.object({ data: z.array(LexicalItemSchema) }),
+  z.object({ results: z.array(LexicalItemSchema) }),
+])
 
 export const DeckSchema = z.object({
   _id: z.string(),
   id: z.string().optional(),
   name: z.string().default(''),
-  name_vi: z.string().optional(),
+  name_vi: z.string().nullable().optional(),
   title: z.string().optional(),
-  description: z.string().optional(),
-  description_vi: z.string().optional(),
-  thumbnail_url: z.string().optional(),
+  description: z.string().nullable().optional(),
+  description_vi: z.string().nullable().optional(),
+  thumbnail_url: z.string().nullable().optional(),
   cefr_level: z.string().optional(),
   card_count: z.number().default(0),
   total_cards: z.number().optional(),
-  total_users: z.number().optional(),
   visibility: z.string().optional(),
   is_public: z.boolean().optional(),
-  creator_id: z.string().optional(),
-  cards: z.array(LexicalItemSchema).optional(),
+  creator_id: z.string().nullable().optional(),
+  creator_type: z.enum(['SYSTEM', 'USER']).or(z.string()).optional(),
+  topic_id: z.any().nullable().optional(),
+  settings: z.record(z.string(), z.any()).nullable().optional(),
+  cards: z.array(z.any()).optional(),
   tags: z.array(z.string()).optional(),
+  tags_vi: z.array(z.string()).optional(),
   category: z.string().optional(),
+  total_users: z.number().optional(),
+  rating_average: z.number().optional(),
+  rating_count: z.number().optional(),
+  save_count: z.number().optional(),
 })
 
 export const DeckListSchema = z.array(DeckSchema)
@@ -63,7 +79,8 @@ export const BackendTopicSchema = z.object({
 export const BackendTopicListSchema = z.array(BackendTopicSchema)
 
 export const BackendIpaSymbolSchema = z.object({
-  _id: z.string(),
+  id: z.string(),
+  _id: z.string().optional(),
   symbol: z.string(),
   symbol_type: z.enum(['VOWEL', 'CONSONANT', 'DIPHTHONG']).or(z.string()),
   description_en: z.string().optional(),
@@ -71,8 +88,14 @@ export const BackendIpaSymbolSchema = z.object({
   example_word: z.string().default(''),
   example_word_ipa: z.string().default(''),
   audio_url: z.string().optional(),
+  audio_url_us: z.string().optional(),
+  audio_url_uk: z.string().optional(),
   example_audio_url: z.string().optional(),
-}).passthrough()
+  example_audio_url_us: z.string().optional(),
+  example_audio_url_uk: z.string().optional(),
+  related_symbols: z.array(z.string()).optional(),
+  cefr_min_level: z.string().optional(),
+})
 
 export const BackendIpaSymbolListSchema = z.array(BackendIpaSymbolSchema)
 
@@ -109,3 +132,42 @@ export type Deck = z.infer<typeof DeckSchema>
 export type BackendTopic = z.infer<typeof BackendTopicSchema>
 export type BackendIpaSymbol = z.infer<typeof BackendIpaSymbolSchema>
 export type BackendGrammarPoint = z.infer<typeof BackendGrammarPointSchema>
+
+export const LookupResultItemSchema = z.object({
+  id: z.string(),
+  word: z.string(),
+  ipa: z.string().optional(),
+  pos: z.array(z.string()),
+  cefr: z.string().optional(),
+  meaning: z.string().optional(),
+  matchType: z.enum(['exact', 'prefix', 'fuzzy']),
+})
+
+export const LookupResponseSchema = z.object({
+  query: z.string(),
+  results: z.array(LookupResultItemSchema),
+  total: z.number(),
+})
+
+export type LookupResultItem = z.infer<typeof LookupResultItemSchema>
+export type LookupResponse = z.infer<typeof LookupResponseSchema>
+
+export const SearchHistoryItemSchema = z.object({
+  _id: z.string(),
+  vocabularyId: z.string().optional(),
+  clicked_item_id: z.string().optional(),
+  word: z.string().optional(),
+  searchQuery: z.string().optional(),
+  ipa: z.string().optional(),
+  cefr: z.string().optional(),
+  searchType: z.string().optional(),
+  searchedAt: z.date().or(z.string()),
+})
+
+export const SearchHistoryResponseSchema = z.object({
+  results: z.array(SearchHistoryItemSchema),
+  total: z.number(),
+})
+
+export type SearchHistoryItem = z.infer<typeof SearchHistoryItemSchema>
+export type SearchHistoryResponse = z.infer<typeof SearchHistoryResponseSchema>

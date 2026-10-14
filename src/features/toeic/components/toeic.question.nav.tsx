@@ -107,7 +107,7 @@ export function ToeicQuestionNav({
               </div>
               <div className="flex justify-between">
                 <span className="text-text-secondary">{isVietnamese ? 'Thời gian' : 'Time'}</span>
-                <span className="font-medium">{partTiming.description || 'N/A'}</span>
+                <span className="font-medium">{partTiming.description}</span>
               </div>
             </div>
           </CardContent>

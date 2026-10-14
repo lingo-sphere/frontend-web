@@ -1,10 +1,12 @@
 // Component giao diện không gian học tập trực tuyến Client cho học viên LingoSphere
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import { AlertCircle, ArrowLeft, ExternalLink, FileText, FolderDown, HelpCircle } from 'lucide-react'
+import { AlertCircle, ArrowLeft, ExternalLink, FileText, FolderDown, HelpCircle, Lock } from 'lucide-react'
 import { Button } from '@/components/button'
+import { AppResult } from '@/components/status/app.result'
 import { CourseWorkspaceHeader } from '@/features/courses/components/course.workspace.header'
 import { CourseRatingModal } from '@/features/courses/components/course.rating.modal'
 import { CourseLoadingState } from '@/features/courses/components/course.loading.state'
@@ -12,6 +14,7 @@ import { LessonPlayer } from '@/features/courses/components/lesson.player'
 import { CourseLockedPlayer } from '@/features/courses/components/course.locked.player'
 import { CourseCheckoutModal } from '@/features/courses/components/course.checkout.modal'
 import { CoursePlacementPromptModal } from '@/features/courses/components/course.placement.prompt.modal'
+import { LessonPracticeQuizModal } from '@/features/courses/components/lesson.practice.quiz.modal'
 import { UpgradeModal } from '@/features/upgrade/components/upgrade.modal'
 import { getQueryClient } from '@/config/query.config'
 import { courseKeys } from '@/features/courses/keys/course.keys'
@@ -25,6 +28,7 @@ import { CourseLandingLoadingState } from '@/features/courses/components/course.
 import { courseService } from '@/features/courses/services/course.service'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
 import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
+import type { Chapter, Lesson } from '@/features/courses/types/course'
 
 export interface CourseDetailClientProps {
   rawParam: string
@@ -36,6 +40,8 @@ export function CourseDetailClient({
   courseId,
   initialIsEnrolled,
 }: CourseDetailClientProps) {
+  const { t, i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
 
   const {
@@ -93,6 +99,35 @@ export function CourseDetailClient({
 
   const [showScheduleBanner, setShowScheduleBanner] = useState(true)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [showPracticeModal, setShowPracticeModal] = useState(false)
+
+  const handleOpenPracticeQuiz = useCallback(
+    (chapter?: Chapter, lesson?: Lesson) => {
+      const targetLesson = lesson || currentLesson
+      const targetChapter =
+        chapter || course?.chapters.find((ch) => ch.lessons.some((l) => l.id === targetLesson?.id))
+      const isLocked =
+        (targetChapter && lockedChapterIdSet.has(targetChapter.id)) ||
+        (!isEnrolled && !Boolean(targetLesson?.is_free_preview || targetLesson?.is_preview))
+
+      if (isLocked) {
+        toast.warning(
+          targetChapter && lockedChapterIdSet.has(targetChapter.id)
+            ? 'Chương này đang bị khóa! Vui lòng vượt qua bài kiểm tra của chương trước để mở khóa bài luyện tập.'
+            : 'Vui lòng đăng ký khóa học để làm bài luyện tập!',
+          'Chương đang khóa'
+        )
+        return
+      }
+
+      if (chapter && lesson) {
+        handleSelectLesson(chapter, lesson)
+      }
+      setActiveBottomTab('quiz')
+      setShowPracticeModal(true)
+    },
+    [handleSelectLesson, setActiveBottomTab, currentLesson, course, lockedChapterIdSet, isEnrolled]
+  )
 
   const handleBack = () => {
     if (
@@ -109,7 +144,12 @@ export function CourseDetailClient({
 
   const handleInitiateEnrollOrBuy = () => {
     if (!isAuthenticated) {
-      window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
+      toast.warning(
+        isVietnamese
+          ? 'Vui lòng đăng nhập để đăng ký hoặc mua khóa học.'
+          : 'Please log in to purchase or enroll in this course.',
+        isVietnamese ? 'Yêu cầu đăng nhập' : 'Authentication required'
+      )
       return
     }
 
@@ -136,25 +176,14 @@ export function CourseDetailClient({
 
   if (isError || !course) {
     return (
-      <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-6 antialiased">
-        <div className="w-full max-w-md p-8 bg-surface rounded-3xl border border-border shadow-xl text-center space-y-4">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-600 flex items-center justify-center">
-            <AlertCircle size={28} />
-          </div>
-          <h2 className="text-xl font-bold text-text-primary">Không tìm thấy khóa học</h2>
-          <p className="text-sm text-text-secondary leading-relaxed">
-            Khóa học bạn yêu cầu không tồn tại hoặc đã ngừng xuất bản trên hệ thống.
-          </p>
-          <div className="pt-2">
-            <Button
-              onClick={handleBack}
-              className="w-full bg-primary text-white font-bold rounded-xl gap-2 cursor-pointer shadow-md"
-            >
-              <ArrowLeft size={16} />
-              <span>Quay lại danh sách khóa học</span>
-            </Button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-surface-secondary text-text-primary flex flex-col items-center justify-center p-4 antialiased">
+        <AppResult
+          status="404"
+          title="404"
+          subTitle={isVietnamese ? 'Khóa học bạn yêu cầu không tồn tại hoặc đã ngừng xuất bản trên hệ thống.' : 'The requested course does not exist or has been unpublished.'}
+          onBack={handleBack}
+          backText={isVietnamese ? 'Quay lại danh sách khóa học' : 'Back to courses'}
+        />
       </div>
     )
   }
@@ -203,7 +232,7 @@ export function CourseDetailClient({
             onSuccess={() => {
               setIsEnrolled(true)
               getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
-              toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
+              toast.success(t('courses.unlockSuccess'), isVietnamese ? 'Đã mở khóa' : 'Unlocked')
               setShowScheduleModal(true)
             }}
           />
@@ -217,7 +246,6 @@ export function CourseDetailClient({
             courseTitle={course?.title}
             courseCategory={course?.category}
             courseSkills={course?.skills}
-            courseLevel={course?.level}
             courseTargetScore={course?.target_score}
           />
         )}
@@ -247,14 +275,14 @@ export function CourseDetailClient({
                 <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 shadow-md">
                   <div className="flex items-center gap-2">
                     <span className="text-sm">✨</span>
-                    <span>Bạn đang học thử miễn phí: <strong>{currentLesson?.title}</strong></span>
+                    <span>{t('courses.trialBanner', { title: currentLesson?.title })}</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleInitiateEnrollOrBuy}
                     className="px-3 py-1 rounded-lg bg-white text-emerald-800 hover:bg-emerald-50 text-[11px] font-extrabold shadow-xs transition-all cursor-pointer"
                   >
-                    Đăng ký mua khóa học để mở khóa toàn bộ bài học & đề thi
+                    {t('courses.buyToUnlockAll')}
                   </button>
                 </div>
               )}
@@ -275,46 +303,111 @@ export function CourseDetailClient({
               <div className="bg-surface border-b border-border/80 px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-xs font-bold text-text-secondary truncate">
-                    Bài {currentLesson.order || 1}: <strong className="text-text-primary">{currentLesson.title}</strong>
+                    {isVietnamese ? 'Bài' : 'Lesson'} {currentLesson.order || 1}: <strong className="text-text-primary">{currentLesson.title}</strong>
                   </span>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {currentLesson.theory_file_url && (
-                    <a
-                      href={currentLesson.theory_file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/30 transition-all cursor-pointer shadow-2xs"
-                      title={currentLesson.theory_file_name || 'Xem file đề lý thuyết của bài học'}
-                    >
-                      <FileText size={13} className="text-blue-600 dark:text-blue-400" />
-                      <span>Đề lý thuyết (PDF)</span>
-                      <ExternalLink size={11} className="opacity-70" />
-                    </a>
-                  )}
+                  {(() => {
+                    const currentChapter = course?.chapters.find((ch) =>
+                      ch.lessons.some((l) => l.id === currentLesson.id)
+                    )
+                    const isCurrentChapterLocked = currentChapter
+                      ? lockedChapterIdSet.has(currentChapter.id)
+                      : false
+                    const isCurrentLessonLocked =
+                      isCurrentChapterLocked ||
+                      (!isEnrolled &&
+                        !Boolean(currentLesson.is_free_preview || currentLesson.is_preview))
 
-                  {Array.isArray(currentLesson.questions) && currentLesson.questions.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setActiveBottomTab('quiz')}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
-                        activeBottomTab === 'quiz'
-                          ? 'bg-emerald-600 text-white border-emerald-600'
-                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                      }`}
-                    >
-                      <HelpCircle
-                        size={13}
-                        className={
-                          activeBottomTab === 'quiz'
-                            ? 'text-white'
-                            : 'text-emerald-600 dark:text-emerald-400'
-                        }
-                      />
-                      <span>Đề luyện tập ({currentLesson.questions.length} câu)</span>
-                    </button>
-                  )}
+                    return (
+                      <>
+                        {currentLesson.theory_file_url &&
+                          (isCurrentLessonLocked ? (
+                            <span
+                              onClick={() => {
+                                toast.warning(
+                                  isCurrentChapterLocked
+                                    ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa tài liệu lý thuyết.'
+                                    : 'Vui lòng đăng ký khóa học để xem tài liệu lý thuyết!',
+                                  'Chương đang khóa'
+                                )
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-text-tertiary text-xs font-bold border border-border/50 cursor-not-allowed opacity-70 shadow-2xs"
+                              title="Tài liệu lý thuyết bị khóa"
+                            >
+                              <Lock size={13} className="text-text-tertiary" />
+                              <span>{t('courses.theoryPdf')}</span>
+                            </span>
+                          ) : (
+                            <a
+                              href={currentLesson.theory_file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-500/30 transition-all cursor-pointer shadow-2xs"
+                              title={
+                                currentLesson.theory_file_name ||
+                                (isVietnamese
+                                  ? 'Xem file đề lý thuyết của bài học'
+                                  : 'View lesson theory file')
+                              }
+                            >
+                              <FileText size={13} className="text-blue-600 dark:text-blue-400" />
+                              <span>{t('courses.theoryPdf')}</span>
+                              <ExternalLink size={11} className="opacity-70" />
+                            </a>
+                          ))}
+
+                        {Array.isArray(currentLesson.questions) &&
+                          currentLesson.questions.length > 0 &&
+                          (isCurrentLessonLocked ? (
+                            <span
+                              onClick={() => {
+                                toast.warning(
+                                  isCurrentChapterLocked
+                                    ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa bài luyện tập.'
+                                    : 'Vui lòng đăng ký khóa học để làm bài luyện tập!',
+                                  'Chương đang khóa'
+                                )
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 text-text-tertiary text-xs font-bold border border-border/50 cursor-not-allowed opacity-70 shadow-2xs"
+                              title="Bài luyện tập bị khóa"
+                            >
+                              <Lock size={13} className="text-text-tertiary" />
+                              <span>
+                                {t('courses.practiceQuizCount', {
+                                  count: currentLesson.questions.length,
+                                })}
+                              </span>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPracticeQuiz()}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
+                                activeBottomTab === 'quiz'
+                                  ? 'bg-emerald-600 text-white border-emerald-600'
+                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                              }`}
+                            >
+                              <HelpCircle
+                                size={13}
+                                className={
+                                  activeBottomTab === 'quiz'
+                                    ? 'text-white'
+                                    : 'text-emerald-600 dark:text-emerald-400'
+                                }
+                              />
+                              <span>
+                                {t('courses.practiceQuizCount', {
+                                  count: currentLesson.questions.length,
+                                })}
+                              </span>
+                            </button>
+                          ))}
+                      </>
+                    )
+                  })()}
 
                   <button
                     type="button"
@@ -325,7 +418,7 @@ export function CourseDetailClient({
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-subtle hover:bg-surface-hover text-text-secondary hover:text-text-primary text-xs font-bold border border-border transition-all cursor-pointer shadow-2xs"
                   >
                     <FolderDown size={13} className="text-primary" />
-                    <span>Tài liệu khóa học</span>
+                    <span>{t('courses.documents')}</span>
                   </button>
                 </div>
               </div>
@@ -358,9 +451,9 @@ export function CourseDetailClient({
                         try {
                           await courseService.updateCourseSchedule(course.id, { is_reminder_enabled: false })
                           setCourseSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
-                          toast.info('Đã hủy lịch nhắc nhở học tập của khóa học này.', 'Đã hủy lịch')
+                          toast.info(t('courses.cancelReminderSuccess'), isVietnamese ? 'Đã hủy lịch' : 'Cancelled')
                         } catch {
-                          toast.error('Không thể hủy lịch nhắc học.', 'Lỗi')
+                          toast.error(t('courses.cancelReminderError'), isVietnamese ? 'Lỗi' : 'Error')
                         }
                       }
                     : undefined
@@ -372,7 +465,7 @@ export function CourseDetailClient({
                     (ch, idx) => Number(ch.order || idx + 1) === retestOrder
                   )
                   const targetModId = courseLockState?.retest_module_id || retestChapter?.id
-                  navigate(`/course/${course.id}/exam?type=challenge&chapterId=${targetModId || ''}`)
+                  navigate(`/course/${course.id}/exam?type=challenge&chapterId=${targetModId || ''}&retry=true`)
                 }}
               />
             </div>
@@ -415,8 +508,7 @@ export function CourseDetailClient({
           onToggleLessonComplete={handleToggleLessonComplete}
           onTakeTest={handleTakeTest}
           onOpenPracticeQuiz={(chapter, lesson) => {
-            handleSelectLesson(chapter, lesson)
-            setActiveBottomTab('quiz')
+            handleOpenPracticeQuiz(chapter, lesson)
           }}
         />
       </div>
@@ -451,7 +543,7 @@ export function CourseDetailClient({
           onSuccess={() => {
             setIsEnrolled(true)
             getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
-            toast.success('Mở khóa khóa học thành công! Chúc bạn học tốt!', 'Đã mở khóa')
+            toast.success(t('courses.unlockSuccess'), isVietnamese ? 'Đã mở khóa' : 'Unlocked')
             setShowScheduleModal(true)
           }}
         />
@@ -465,7 +557,6 @@ export function CourseDetailClient({
           courseTitle={course?.title}
           courseCategory={course?.category}
           courseSkills={course?.skills}
-          courseLevel={course?.level}
           courseTargetScore={course?.target_score}
         />
       )}
@@ -490,6 +581,14 @@ export function CourseDetailClient({
             setCourseSchedule((prev) => (prev ? { ...prev, is_reminder_enabled: false } : null))
             refreshCourseProgress()
           }}
+        />
+      )}
+
+      {showPracticeModal && currentLesson && (
+        <LessonPracticeQuizModal
+          open={showPracticeModal}
+          onClose={() => setShowPracticeModal(false)}
+          lesson={currentLesson}
         />
       )}
     </div>

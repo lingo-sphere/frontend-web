@@ -1,23 +1,21 @@
-// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và điều phối gợi ý lộ trình.
+// Hook quản lý trạng thái thi TOEIC, đồng hồ đếm ngược, chấm điểm và gợi ý khóa học.
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { courseService } from '@/features/courses/services/course.service'
-import { examService, type BackendToeicExam } from '@/features/toeic/services/exam.service'
+import { examService } from '@/features/toeic/services/exam.service'
 import { useToeicExamDetailQuery } from '@/features/toeic/hooks/use.toeic.query'
 import { toeicKeys } from '@/features/toeic/keys/toeic.keys'
-import { userService } from '@/features/user/services/user.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useNavigate } from '@/lib/navigation'
-import type { Course, LearningRoadmap } from '@/types/api.types'
+import type { Course } from '@/types/api.types'
 import type { ToeicQuestion } from '@/features/toeic/types/toeic'
 import type { ExamResultMetrics } from '@/features/toeic/components/toeic.exam.result'
 import { parseQuestionsFromExamData } from '@/features/toeic/helpers/toeic.question.parser'
 import { calculateToeicExamResults } from '@/features/toeic/helpers/toeic.score.helper'
 import { Analytics } from '@/lib/posthog'
 import { toast } from '@/store/toast.store'
-import { storage, STORAGE_KEYS } from '@/lib/storage'
 
 export type PracticeMode = 'FULL' | 'LISTENING' | 'READING' | 'PART'
 
@@ -48,6 +46,15 @@ export interface ExamState {
   timedMode: boolean
 }
 
+interface ToeicExamDraft {
+  attemptId: string | null
+  startedAt: number
+  totalDurationSeconds: number
+  answers: Record<number, string>
+  flagged: number[]
+  currentQuestionIndex: number
+}
+
 export function useToeicExam(examId?: string) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -75,9 +82,6 @@ export function useToeicExam(examId?: string) {
   const [recommendedCourses, setRecommendedCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
   >([])
-  const [recommendedRoadmap, setRecommendedRoadmap] = useState<
-    (LearningRoadmap & { stages?: unknown[] }) | null
-  >(null)
   const [targetBand, setTargetBand] = useState<string>('')
   const [levelLabel, setLevelLabel] = useState<string>('')
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState<boolean>(false)
@@ -85,6 +89,11 @@ export function useToeicExam(examId?: string) {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const attemptIdRef = useRef<string | null>(null)
   const initializedExamIdRef = useRef<string | null>(null)
+  const isSubmittingAttemptBackendRef = useRef(false)
+  const hasCompletedBackendSubmissionRef = useRef(false)
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const handleSubmitRef = useRef<() => void>(() => {})
+  const storageKey = examId ? `lingo_toeic_draft_${examId}` : ''
 
   useEffect(() => {
     if (!examData || initializedExamIdRef.current === examData._id) return
@@ -98,19 +107,74 @@ export function useToeicExam(examId?: string) {
         ? examData.duration_minutes * 60
         : 120 * 60
 
+    let draftRestored = false
+    let initialAnswers: Record<number, string> = {}
+    let initialFlagged: number[] = []
+    let initialQIndex = 0
+    let effectiveTime = time
+    let shouldAutoSubmit = false
+
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        const saved = localStorage.getItem(storageKey)
+        if (saved) {
+          const draft: ToeicExamDraft = JSON.parse(saved)
+          if (
+            draft &&
+            typeof draft.startedAt === 'number' &&
+            typeof draft.totalDurationSeconds === 'number'
+          ) {
+            const elapsed = Math.floor((Date.now() - draft.startedAt) / 1000)
+            const remaining = Math.max(0, draft.totalDurationSeconds - elapsed)
+
+            draftRestored = true
+            initialAnswers = draft.answers || {}
+            initialFlagged = draft.flagged || []
+            initialQIndex = typeof draft.currentQuestionIndex === 'number' ? draft.currentQuestionIndex : 0
+            if (draft.attemptId) {
+              attemptIdRef.current = draft.attemptId
+            }
+
+            if (remaining <= 0) {
+              effectiveTime = 0
+              shouldAutoSubmit = true
+              toast.warning('Thời gian làm bài đã kết thúc! Hệ thống tự động thu bài.')
+            } else {
+              effectiveTime = remaining
+              toast.info('Đã tự động khôi phục tiến trình bài thi TOEIC trước đó.')
+            }
+          }
+        }
+      } catch {}
+    }
+
     setState((prev) => ({
       ...prev,
       mode: 'FULL',
       selectedParts: allParts,
-      currentQuestionIndex: 0,
-      answers: {},
-      flagged: [],
-      timeRemaining: time,
+      currentQuestionIndex: initialQIndex,
+      answers: initialAnswers,
+      flagged: initialFlagged,
+      timeRemaining: effectiveTime,
       started: true,
-      submitted: false,
-      showAnswer: false,
+      submitted: shouldAutoSubmit,
+      showAnswer: shouldAutoSubmit,
       timedMode: true,
     }))
+
+    if (!draftRestored && typeof window !== 'undefined' && storageKey) {
+      try {
+        const newDraft: ToeicExamDraft = {
+          attemptId: attemptIdRef.current,
+          startedAt: Date.now(),
+          totalDurationSeconds: time,
+          answers: {},
+          flagged: [],
+          currentQuestionIndex: 0,
+        }
+        localStorage.setItem(storageKey, JSON.stringify(newDraft))
+      } catch {}
+    }
 
     const isSystemPlacement = Boolean(
       examData.is_system_placement ||
@@ -122,7 +186,7 @@ export function useToeicExam(examId?: string) {
     )
 
     const authUser = useAuthStore.getState().user
-    if (authUser && examId) {
+    if (authUser && examId && !attemptIdRef.current) {
       examService
         .startExamAttempt(examId, {
           attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
@@ -130,18 +194,59 @@ export function useToeicExam(examId?: string) {
         .then((attemptRes) => {
           if (attemptRes && attemptRes.attempt_id) {
             attemptIdRef.current = attemptRes.attempt_id
+            if (attemptRes.expires_at) {
+              const serverRemaining = Math.max(
+                0,
+                Math.floor((new Date(attemptRes.expires_at).getTime() - Date.now()) / 1000)
+              )
+              if (serverRemaining <= 0) {
+                handleSubmitRef.current()
+                return
+              }
+              setState((prev) => ({ ...prev, timeRemaining: serverRemaining }))
+            }
+
+            if (Array.isArray(attemptRes.interim_answers) && attemptRes.interim_answers.length > 0) {
+              setState((prev) => {
+                const merged = { ...prev.answers }
+                attemptRes.interim_answers?.forEach((ans) => {
+                  if (ans.question_number && ans.selected_option && !merged[ans.question_number]) {
+                    merged[ans.question_number] = ans.selected_option
+                  }
+                })
+                return { ...prev, answers: merged }
+              })
+            }
+
+            if (typeof window !== 'undefined' && storageKey) {
+              try {
+                const existing = localStorage.getItem(storageKey)
+                if (existing) {
+                  const parsed = JSON.parse(existing)
+                  localStorage.setItem(
+                    storageKey,
+                    JSON.stringify({ ...parsed, attemptId: attemptRes.attempt_id })
+                  )
+                }
+              } catch {}
+            }
           }
         })
         .catch(() => {})
     }
-  }, [examData, examId])
+  }, [examData, examId, storageKey])
 
   const calculateResults = useCallback((): ExamResultMetrics => {
     return calculateToeicExamResults(allQuestions, state.answers, evaluatedAnswers)
   }, [allQuestions, state.answers, evaluatedAnswers])
 
-  useEffect(() => {
-    if (!state.submitted) return
+  const submitAttemptToBackend = useCallback(async () => {
+    if (isSubmittingAttemptBackendRef.current || hasCompletedBackendSubmissionRef.current) return
+    const { user } = useAuthStore.getState()
+    if (!user) {
+      toast.error('Vui lòng đăng nhập để nộp bài thi và lưu kết quả vào hệ thống!')
+      return
+    }
 
     const res = calculateResults()
     Analytics.examSubmitted({
@@ -153,34 +258,7 @@ export function useToeicExam(examId?: string) {
       mode: state.timedMode ? 'timed' : 'practice',
     })
 
-    const is4Skills = Boolean(
-      examId?.includes('4skills') ||
-        examData?.skills_enabled === 'ALL' ||
-        (res.speakingTotal && res.speakingTotal > 0) ||
-        (res.writingTotal && res.writingTotal > 0)
-    )
 
-    const placementData = {
-      placement_test_score: res.estimatedTotal,
-      placement_listening_score: res.estimatedListening,
-      placement_reading_score: res.estimatedReading,
-      placement_speaking_score: is4Skills ? (res.estimatedSpeaking ?? 0) : undefined,
-      placement_writing_score: is4Skills ? (res.estimatedWriting ?? 0) : undefined,
-      placement_skills_type: is4Skills ? '4SKILLS' : '2SKILLS',
-      target_toeic_score: Math.min(990, res.estimatedTotal + 150),
-      current_estimated_score: res.estimatedTotal,
-      is_score_manually_edited: false,
-      placement_tested_at: new Date().toISOString(),
-    }
-
-    try {
-      storage.set(STORAGE_KEYS.PLACEMENT_SCORE, placementData)
-      userService.updateProfile(placementData).catch(() => null)
-      const { user, setUser } = useAuthStore.getState()
-      if (user) {
-        setUser({ ...user, ...placementData })
-      }
-    } catch {}
 
     const isSystemPlacement = Boolean(
       examData?.is_system_placement ||
@@ -201,107 +279,71 @@ export function useToeicExam(examId?: string) {
     const totalSeconds = examData?.duration_minutes ? examData.duration_minutes * 60 : 7200
     const timeSpent = Math.max(1, totalSeconds - state.timeRemaining)
 
-    const submitAttemptToBackend = async () => {
-      try {
-        setIsSubmittingAttempt(true)
-        let currentAttemptId = attemptIdRef.current
-        if (!currentAttemptId && examId) {
-          const newAttempt = await examService.startExamAttempt(examId, {
-            attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
-          })
-          if (newAttempt && newAttempt.attempt_id) {
-            currentAttemptId = newAttempt.attempt_id
-            attemptIdRef.current = currentAttemptId
-          }
+    try {
+      isSubmittingAttemptBackendRef.current = true
+      setIsSubmittingAttempt(true)
+      let currentAttemptId = attemptIdRef.current
+      if (!currentAttemptId && examId) {
+        const newAttempt = await examService.startExamAttempt(examId, {
+          attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
+        })
+        if (newAttempt && newAttempt.attempt_id) {
+          currentAttemptId = newAttempt.attempt_id
+          attemptIdRef.current = currentAttemptId
         }
-        if (currentAttemptId) {
-          const submitRes = await examService.submitExamAttempt(currentAttemptId, formattedAnswers, timeSpent)
-          if (submitRes && Array.isArray((submitRes as Record<string, unknown>).answers)) {
-            const rawAnswers = (submitRes as Record<string, unknown>).answers as Array<Record<string, unknown>>
-            const evalMap: Record<number, EvaluatedAnswerItem> = {}
-            rawAnswers.forEach((ans) => {
-              const qNum = typeof ans.question_number === 'number' ? ans.question_number : Number(ans.question_number)
-              if (qNum) {
-                evalMap[qNum] = {
-                  whisper_transcript: typeof ans.whisper_transcript === 'string' ? ans.whisper_transcript : undefined,
-                  ai_score: typeof ans.ai_score === 'number' ? ans.ai_score : undefined,
-                  ai_feedback: ans.ai_feedback as EvaluatedAnswerItem['ai_feedback'],
-                  is_correct: typeof ans.is_correct === 'boolean' ? ans.is_correct : undefined,
-                }
-              }
-            })
-            setEvaluatedAnswers(evalMap)
-            const updatedRes = calculateToeicExamResults(allQuestions, state.answers, evalMap)
-            const is4SkillsUpdated = Boolean(
-              examId?.includes('4skills') ||
-                examData?.skills_enabled === 'ALL' ||
-                (updatedRes.speakingTotal && updatedRes.speakingTotal > 0) ||
-                (updatedRes.writingTotal && updatedRes.writingTotal > 0)
-            )
-            const updatedPlacementData = {
-              placement_test_score: updatedRes.estimatedTotal,
-              placement_listening_score: updatedRes.estimatedListening,
-              placement_reading_score: updatedRes.estimatedReading,
-              placement_speaking_score: is4SkillsUpdated ? (updatedRes.estimatedSpeaking ?? 0) : undefined,
-              placement_writing_score: is4SkillsUpdated ? (updatedRes.estimatedWriting ?? 0) : undefined,
-              placement_skills_type: is4SkillsUpdated ? '4SKILLS' : '2SKILLS',
-              target_toeic_score: Math.min(990, updatedRes.estimatedTotal + 150),
-              current_estimated_score: updatedRes.estimatedTotal,
-              is_score_manually_edited: false,
-              placement_tested_at: new Date().toISOString(),
-            }
-            try {
-              storage.set(STORAGE_KEYS.PLACEMENT_SCORE, updatedPlacementData)
-              userService.updateProfile(updatedPlacementData).catch(() => null)
-              const { user, setUser } = useAuthStore.getState()
-              if (user) {
-                setUser({ ...user, ...updatedPlacementData })
-              }
-            } catch {}
-          }
-          queryClient.invalidateQueries({ queryKey: toeicKeys.history() })
-          queryClient.invalidateQueries({ queryKey: toeicKeys.courseAttempts() })
-        }
-      } catch (err) {
-        console.warn('Lỗi khi nộp bài lên hệ thống:', err)
-      } finally {
-        setIsSubmittingAttempt(false)
       }
+      if (currentAttemptId) {
+        const submitRes = await examService.submitExamAttempt(currentAttemptId, formattedAnswers, timeSpent)
+        hasCompletedBackendSubmissionRef.current = true
+        if (submitRes && Array.isArray((submitRes as Record<string, unknown>).answers)) {
+          const rawAnswers = (submitRes as Record<string, unknown>).answers as Array<Record<string, unknown>>
+          const evalMap: Record<number, EvaluatedAnswerItem> = {}
+          rawAnswers.forEach((ans) => {
+            const qNum = typeof ans.question_number === 'number' ? ans.question_number : Number(ans.question_number)
+            if (qNum) {
+              evalMap[qNum] = {
+                whisper_transcript: typeof ans.whisper_transcript === 'string' ? ans.whisper_transcript : undefined,
+                ai_score: typeof ans.ai_score === 'number' ? ans.ai_score : undefined,
+                ai_feedback: ans.ai_feedback as EvaluatedAnswerItem['ai_feedback'],
+                is_correct: typeof ans.is_correct === 'boolean' ? ans.is_correct : undefined,
+              }
+            }
+          })
+          setEvaluatedAnswers(evalMap)
+
+        }
+        queryClient.invalidateQueries({ queryKey: toeicKeys.history() })
+        queryClient.invalidateQueries({ queryKey: toeicKeys.courseAttempts() })
+      }
+    } catch (err) {
+      console.warn('Lỗi khi nộp bài lên hệ thống:', err)
+    } finally {
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          localStorage.removeItem(storageKey)
+        } catch {}
+      }
+      isSubmittingAttemptBackendRef.current = false
+      setIsSubmittingAttempt(false)
     }
-    submitAttemptToBackend()
 
     setIsLoadingRecommendations(true)
-
     const weakSkills: string[] = []
     if (res.listeningTotal > 0 && res.listeningCorrect / res.listeningTotal < 0.6) weakSkills.push('LISTENING')
     if (res.readingTotal > 0 && res.readingCorrect / res.readingTotal < 0.6) weakSkills.push('READING')
 
-    const skillsType =
-      examData?.skills_enabled === 'ALL' || examData?.placement_type === '4SKILLS' ? '4SKILLS' : '2SKILLS'
-
-    Promise.allSettled([
-      courseService.getRecommendedCourses({
+    courseService
+      .getRecommendedCourses({
         total_score: res.estimatedTotal,
         listening_score: res.estimatedListening,
         reading_score: res.estimatedReading,
         weak_skills: weakSkills,
-      }),
-      courseService.getRecommendedRoadmap({
-        total_score: res.estimatedTotal,
-        listening_score: res.estimatedListening,
-        reading_score: res.estimatedReading,
-        skills_type: skillsType,
-      }),
-    ])
-      .then(([coursesRes, roadmapRes]) => {
-        if (coursesRes.status === 'fulfilled' && coursesRes.value?.recommendations) {
-          setRecommendedCourses(coursesRes.value.recommendations)
-          setTargetBand(coursesRes.value.target_band || '')
-          setLevelLabel(coursesRes.value.level_label || '')
-        }
-
-        if (roadmapRes.status === 'fulfilled' && roadmapRes.value) {
-          setRecommendedRoadmap(roadmapRes.value.recommended_roadmap)
+      })
+      .then((coursesRes) => {
+        if (coursesRes?.recommendations) {
+          setRecommendedCourses(coursesRes.recommendations)
+          setTargetBand(coursesRes.target_band || '')
+          setLevelLabel(coursesRes.level_label || '')
         }
       })
       .catch((err) => {
@@ -310,7 +352,15 @@ export function useToeicExam(examId?: string) {
       .finally(() => {
         setIsLoadingRecommendations(false)
       })
-  }, [state.submitted, calculateResults, examId, examData, state.timedMode])
+  }, [allQuestions, calculateResults, examData, examId, queryClient, state.answers, state.timeRemaining, state.timedMode, storageKey])
+
+  useEffect(() => {
+    if (!state.submitted) return
+    const timer = setTimeout(() => {
+      submitAttemptToBackend()
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [state.submitted, submitAttemptToBackend])
 
   useEffect(() => {
     if (!state.started || state.submitted || !state.timedMode) return
@@ -334,33 +384,114 @@ export function useToeicExam(examId?: string) {
   const handleSelectAnswer = (optionKey: string) => {
     const currentQ = allQuestions[state.currentQuestionIndex]
     if (!currentQ || state.submitted) return
-    setState((prev) => ({
-      ...prev,
-      answers: { ...prev.answers, [currentQ.questionNumber]: optionKey },
-    }))
+    setState((prev) => {
+      const nextAnswers = { ...prev.answers, [currentQ.questionNumber]: optionKey }
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          const existing = localStorage.getItem(storageKey)
+          const base: ToeicExamDraft = existing
+            ? JSON.parse(existing)
+            : {
+                attemptId: attemptIdRef.current,
+                startedAt: Date.now(),
+                totalDurationSeconds: 120 * 60,
+                answers: {},
+                flagged: prev.flagged,
+                currentQuestionIndex: prev.currentQuestionIndex,
+              }
+          localStorage.setItem(storageKey, JSON.stringify({ ...base, answers: nextAnswers }))
+        } catch {}
+      }
+
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
+      syncTimeoutRef.current = setTimeout(() => {
+        const currentAttemptId = attemptIdRef.current
+        if (currentAttemptId) {
+          const formatted = allQuestions
+            .filter((q) => nextAnswers[q.questionNumber])
+            .map((q) => ({
+              question_id: q.id,
+              selected_option: nextAnswers[q.questionNumber],
+              question_number: q.questionNumber,
+            }))
+          examService.syncExamAnswers(currentAttemptId, formatted).catch(() => {})
+        }
+      }, 1500)
+
+      return { ...prev, answers: nextAnswers }
+    })
   }
 
   const goToQuestion = (index: number) => {
     if (index < 0 || index >= allQuestions.length) return
-    setState((prev) => ({ ...prev, currentQuestionIndex: index }))
+    setState((prev) => {
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          const existing = localStorage.getItem(storageKey)
+          if (existing) {
+            const base = JSON.parse(existing)
+            localStorage.setItem(storageKey, JSON.stringify({ ...base, currentQuestionIndex: index }))
+          }
+        } catch {}
+      }
+      return { ...prev, currentQuestionIndex: index }
+    })
   }
 
   const toggleFlag = () => {
     const currentQ = allQuestions[state.currentQuestionIndex]
     if (!currentQ) return
-    setState((prev) => ({
-      ...prev,
-      flagged: prev.flagged.includes(currentQ.questionNumber)
+    setState((prev) => {
+      const nextFlagged = prev.flagged.includes(currentQ.questionNumber)
         ? prev.flagged.filter((q) => q !== currentQ.questionNumber)
-        : [...prev.flagged, currentQ.questionNumber],
-    }))
+        : [...prev.flagged, currentQ.questionNumber]
+      if (typeof window !== 'undefined' && storageKey) {
+        try {
+          const existing = localStorage.getItem(storageKey)
+          if (existing) {
+            const base = JSON.parse(existing)
+            localStorage.setItem(storageKey, JSON.stringify({ ...base, flagged: nextFlagged }))
+          }
+        } catch {}
+      }
+      return { ...prev, flagged: nextFlagged }
+    })
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        localStorage.removeItem(storageKey)
+      } catch {}
+    }
     setState((prev) => ({ ...prev, submitted: true, showAnswer: true }))
-  }
+  }, [storageKey])
+
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit
+  }, [handleSubmit])
 
   const handleRetry = () => {
+    hasCompletedBackendSubmissionRef.current = false
+    attemptIdRef.current = null
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        localStorage.removeItem(storageKey)
+        const time =
+          typeof examData?.duration_minutes === 'number' && examData.duration_minutes > 0
+            ? examData.duration_minutes * 60
+            : 120 * 60
+        const newDraft: ToeicExamDraft = {
+          attemptId: null,
+          startedAt: Date.now(),
+          totalDurationSeconds: time,
+          answers: {},
+          flagged: [],
+          currentQuestionIndex: 0,
+        }
+        localStorage.setItem(storageKey, JSON.stringify(newDraft))
+      } catch {}
+    }
     setState((prev) => ({
       ...prev,
       answers: {},
@@ -372,8 +503,18 @@ export function useToeicExam(examId?: string) {
   }
 
   const handleChooseAnother = () => {
-    navigate('/roadmap')
+    navigate('/toeic')
   }
+
+  const handleSubmitAttemptAsync = useCallback(async () => {
+    if (typeof window !== 'undefined' && storageKey) {
+      try {
+        localStorage.removeItem(storageKey)
+      } catch {}
+    }
+    setState((prev) => ({ ...prev, submitted: true, showAnswer: true }))
+    await submitAttemptToBackend()
+  }, [storageKey, submitAttemptToBackend])
 
   return {
     examData,
@@ -381,7 +522,6 @@ export function useToeicExam(examId?: string) {
     allQuestions,
     state,
     recommendedCourses,
-    recommendedRoadmap,
     targetBand,
     levelLabel,
     isLoadingRecommendations,
@@ -389,6 +529,7 @@ export function useToeicExam(examId?: string) {
     goToQuestion,
     toggleFlag,
     handleSubmit,
+    handleSubmitAttemptAsync,
     handleRetry,
     handleChooseAnother,
     calculateResults,

@@ -1,10 +1,11 @@
-// Handles API endpoints configuration for frontend-web.
+// Cấu hình các endpoint API và hằng số cho frontend-web
 
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-  SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-  APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+  ADMIN_WEB_URL: process.env.NEXT_PUBLIC_ADMIN_WEB_URL,
+  APP_NAME: 'LingoSphere',
+  DEFAULT_LANG: 'vi',
   TIMEOUT: 120000,
   STORAGE_KEYS: {
     ACCESS_TOKEN: 'lingosphere_user_access_token',
@@ -55,6 +56,7 @@ export const API_CONFIG = {
 
     COURSES: {
       LIST: '/courses',
+      BESTSELLERS: '/courses/bestsellers',
       RECOMMENDATIONS: '/courses/recommendations',
       BY_ID: (id: string) => `/courses/${id}`,
       CURRICULUM: (id: string) => `/courses/${id}/curriculum`,
@@ -64,18 +66,12 @@ export const API_CONFIG = {
       LESSON_BY_ID: (lessonId: string) => `/courses/lessons/${lessonId}`,
       ENROLL: (courseId: string) => `/courses/${courseId}/enroll`,
       MY_ENROLLED: '/courses/my/enrolled',
-      ROADMAPS: '/courses/roadmaps',
-      ROADMAP_RECOMMENDATION: '/courses/roadmaps/recommendation',
-      ROADMAP_BY_ID: (id: string) => `/courses/roadmaps/${id}`,
     },
 
     PROGRESS: {
       COURSES: '/progress/courses',
       COURSE_DETAIL: (courseId: string) => `/progress/courses/${courseId}/detail`,
       GROWTH_CHART: (courseId: string) => `/progress/courses/${courseId}/growth-chart`,
-      ROADMAP_MY: '/progress/roadmaps/my',
-      ROADMAP_ENROLL: '/progress/roadmaps/enroll',
-      ROADMAP_CHECKPOINT: '/progress/roadmaps/checkpoint',
       TEST_ATTEMPTS: '/progress/test-attempts',
     },
 
@@ -97,6 +93,7 @@ export const API_CONFIG = {
       ITEMS: '/vocabulary/lexical-items',
       ITEM_BY_ID: (id: string) => `/vocabulary/lexical-items/${id}`,
       SEARCH: '/vocabulary/lexical-items/search',
+      LOOKUP: '/vocabulary/lookup',
       TOPICS: '/vocabulary/topics',
       TOPIC_BY_ID: (id: string) => `/vocabulary/topics/${id}`,
       IPA_SYMBOLS: '/vocabulary/ipa-symbols',
@@ -114,6 +111,10 @@ export const API_CONFIG = {
       SUBMIT_REVIEW: (sessionId: string) => `/vocabulary/reviews/${sessionId}/submit`,
       MY_PROGRESS: '/vocabulary/progress/my',
       SETTINGS: '/vocabulary/settings',
+      DAILY_PROGRESS: '/vocabulary/daily-progress',
+      SAVED: '/vocabulary/saved',
+      LOOKUP_WORD: '/vocabulary/lookup',
+      SEARCH_HISTORY: '/vocabulary/search-history',
     },
 
     EXAMS: {
@@ -136,20 +137,42 @@ export const API_CONFIG = {
       SRS_DUE: '/practice/srs/due',
       SRS_REVIEW: '/practice/srs/review',
       LISTENING: '/practice/listening/exercises',
+      LISTENING_PRACTICE_ITEMS: '/practice/listening/practice-items',
       LISTENING_BY_ID: (id: string) => `/practice/listening/exercises/${id}`,
       LISTENING_DICTATION_SUBMIT: '/practice/listening/dictation/submit',
       SPEAKING: '/practice/speaking/exercises',
       SPEAKING_BY_ID: (id: string) => `/practice/speaking/exercises/${id}`,
       SPEAKING_SUBMIT: '/practice/speaking/attempts/submit',
+      SPEAKING_SUBMIT_AUDIO: '/practice/speaking/attempts/submit-audio',
+      SPEAKING_ANALYSIS: (attemptId: string) => `/practice/speaking/attempts/${attemptId}/analysis`,
+      SPEAKING_MY_ATTEMPTS: '/practice/speaking/attempts/my',
+      SPEAKING_PROFILE_MY: '/practice/speaking/profile/my',
+      SPEAKING_PROFILE: (userId: string) => `/practice/speaking/profile/${userId}`,
       SPEAKING_EVALUATE: '/ai/evaluations/evaluate',
+      PRONUNCIATION_MASTERY: (userId: string) => `/practice/pronunciation/phoneme-mastery/${userId}`,
+      PRONUNCIATION_RECOMMENDATIONS: (userId: string) => `/practice/pronunciation/recommendations/${userId}`,
+      PRONUNCIATION_ANALYTICS: (userId: string) => `/practice/pronunciation/analytics/${userId}`,
+      PRONUNCIATION_SESSION: (userId: string) => `/practice/pronunciation/session/${userId}`,
+      PRONUNCIATION_SUBMIT: (userId: string) => `/practice/pronunciation/attempts/${userId}`,
       WRITING: '/practice/writing/exercises',
       WRITING_BY_ID: (id: string) => `/practice/writing/exercises/${id}`,
       WRITING_SUBMIT: '/practice/writing/submissions/submit',
+      WRITING_MY_SUBMISSIONS: '/practice/writing/submissions/my',
+      WRITING_SUBMISSION_BY_ID: (id: string) => `/practice/writing/submissions/${id}`,
+      WRITING_SUBMISSION_COMPARISON: (id: string) => `/practice/writing/submissions/${id}/comparison`,
+      WRITING_RECOMMENDATIONS: (userId: string) => `/practice/writing/recommendations/${userId}`,
       WRITING_EVALUATE: '/ai/evaluations/evaluate',
-      DAILY_PROMPT: '/practice/writing/journal/daily-prompt',
-      DAILY_JOURNAL_SUBMIT: '/practice/writing/journal/submit',
-      DAILY_JOURNAL_HISTORY: '/practice/writing/journal/history',
-      MY_PRACTICE_PROFILE: '/practice/profile/my',
+      MISTAKES_RECORD_BATCH: '/practice/mistakes/record-batch',
+      MISTAKES_MY: '/practice/mistakes/my',
+      MISTAKES_DUE: '/practice/mistakes/srs-due',
+      MISTAKE_REVIEW: (id: string) => `/practice/mistakes/${id}/review`,
+      MISTAKE_DELETE: (id: string) => `/practice/mistakes/${id}`,
+      TOPIC_DRILL: '/practice/topic-drill',
+      READING_PASSAGES: '/practice/reading/passages',
+      READING_PASSAGE_BY_ID: (id: string) => `/practice/reading/passages/${id}`,
+      READING_PASSAGE_QUESTIONS: (passageId: string) => `/practice/reading/passages/${passageId}/questions`,
+      READING_SUBMIT_ATTEMPT: '/practice/reading/attempts',
+      READING_ATTEMPT_HISTORY: '/practice/reading/attempts',
     },
 
     AI: {
@@ -167,6 +190,20 @@ export const API_CONFIG = {
       MARK_READ: (id: string) => `/notifications/${id}/read`,
       MARK_ALL_READ: '/notifications/my/read-all',
       PREFERENCES: '/notifications/preferences/my',
+    },
+
+    MEDIA: {
+      GET_BY_ID: (id: string) => `/media/files/${id}`,
+      STREAM: (storageKey: string) => `/media/stream/${storageKey}`,
+      PRACTICE_AUDIO_GENERATE: '/media/practice/audio/generate',
+    },
+
+    CONTEXT: {
+      LIST: '/practice/contexts',
+      TREE: '/practice/contexts/tree',
+      SEARCH: '/practice/contexts/search',
+      LISTENING_STATS: '/practice/contexts/listening-stats',
+      BREADCRUMB: (id: string) => `/practice/contexts/${id}/breadcrumb`,
     },
 
     COMMUNITY: {

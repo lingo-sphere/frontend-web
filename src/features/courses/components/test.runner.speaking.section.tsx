@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Mic,
   UploadCloud,
@@ -37,6 +38,9 @@ export function TestRunnerSpeakingSection({
   fileUrl,
   onScoreUpdated,
 }: TestRunnerSpeakingSectionProps) {
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+
   const [speakingInputMode, setSpeakingInputMode] = useState<'RECORD' | 'UPLOAD'>('RECORD')
   const [isSubmittingSpeaking, setIsSubmittingSpeaking] = useState(false)
   const [speakingResult, setSpeakingResult] = useState<SpeakingSubmissionResponse | null>(null)
@@ -60,18 +64,30 @@ export function TestRunnerSpeakingSection({
     if (!file) return
 
     if (!/\.(mp3|wav|m4a|ogg|webm)$/i.test(file.name)) {
-      toast.error('Chỉ chấp nhận file âm thanh (.mp3, .wav, .m4a, .ogg, .webm)')
+      toast.error(
+        isVietnamese
+          ? 'Chỉ chấp nhận file âm thanh (.mp3, .wav, .m4a, .ogg, .webm)'
+          : 'Only audio files (.mp3, .wav, .m4a, .ogg, .webm) are accepted'
+      )
       return
     }
 
     if (file.size > 50 * 1024 * 1024) {
-      toast.error('Dung lượng file âm thanh không được vượt quá 50MB')
+      toast.error(
+        isVietnamese
+          ? 'Dung lượng file âm thanh không được vượt quá 50MB'
+          : 'Audio file size cannot exceed 50MB'
+      )
       return
     }
 
     setAudioFile(file)
     setSpeakingResult(null)
-    toast.success(`Đã chọn file ghi âm: ${file.name}`)
+    toast.success(
+      isVietnamese
+        ? `Đã chọn file ghi âm: ${file.name}`
+        : `Selected audio file: ${file.name}`
+    )
   }
 
   const handleReset = () => {
@@ -128,13 +144,19 @@ export function TestRunnerSpeakingSection({
       if (res?.ai_score !== undefined) {
         onScoreUpdated?.(res.ai_score)
       }
-      toast.success('Đã nộp bài nói thành công! Whisper & AI đã hoàn tất chấm sơ bộ.')
+      toast.success(
+        isVietnamese
+          ? 'Đã nộp bài nói thành công! Whisper & AI đã hoàn tất chấm sơ bộ.'
+          : 'Speaking submitted successfully! Whisper & AI preliminary scoring complete.'
+      )
     } catch (err: unknown) {
       const apiError = err as { response?: { data?: { message?: string } }; message?: string }
       const errorMsg =
         apiError?.response?.data?.message ||
         apiError?.message ||
-        'Dịch vụ nhận diện giọng nói AI hiện chưa sẵn sàng. Vui lòng kiểm tra lại mic hoặc thử lại sau ít phút.'
+        (isVietnamese
+          ? 'Dịch vụ nhận diện giọng nói AI hiện chưa sẵn sàng. Vui lòng kiểm tra lại mic hoặc thử lại sau ít phút.'
+          : 'AI voice recognition service is not ready. Please check your mic or try again in a few moments.')
       toast.error(errorMsg)
     } finally {
       setIsSubmittingSpeaking(false)
@@ -147,7 +169,7 @@ export function TestRunnerSpeakingSection({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-200">
             <Mic className="h-4 w-4 text-amber-600" />
-            <span>Đề bài luyện nói Speaking:</span>
+            <span>{isVietnamese ? 'Đề bài luyện nói Speaking:' : 'Speaking prompt:'}</span>
           </div>
           {fileUrl && (
             <a
@@ -157,7 +179,7 @@ export function TestRunnerSpeakingSection({
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
             >
               <FileDown size={13} />
-              <span>Xem file tài liệu đính kèm</span>
+              <span>{isVietnamese ? 'Xem file tài liệu đính kèm' : 'View attached document'}</span>
               <ExternalLink size={11} />
             </a>
           )}
@@ -168,7 +190,9 @@ export function TestRunnerSpeakingSection({
         </p>
 
         <p className="text-[11px] text-amber-700/80 dark:text-amber-300/80">
-          ⚡ Giọng nói của bạn sẽ được chuyển thành văn bản bằng Whisper STT và AI chấm điểm phát âm. Giáo viên có thể nghe lại để phúc khảo điểm.
+          {isVietnamese
+            ? '⚡ Giọng nói của bạn sẽ được chuyển thành văn bản bằng Whisper STT và AI chấm điểm phát âm. Giáo viên có thể nghe lại để phúc khảo điểm.'
+            : '⚡ Your voice will be converted to text by Whisper STT and evaluated by AI. Teachers can listen back for grade review.'}
         </p>
       </div>
 
@@ -186,7 +210,7 @@ export function TestRunnerSpeakingSection({
           }`}
         >
           <Mic size={13} />
-          <span>Thu âm trực tiếp</span>
+          <span>{isVietnamese ? 'Thu âm trực tiếp' : 'Record directly'}</span>
         </button>
         <button
           type="button"
@@ -201,7 +225,7 @@ export function TestRunnerSpeakingSection({
           }`}
         >
           <UploadCloud size={13} />
-          <span>Tải file có sẵn</span>
+          <span>{isVietnamese ? 'Tải file có sẵn' : 'Upload file'}</span>
         </button>
       </div>
 
@@ -221,7 +245,7 @@ export function TestRunnerSpeakingSection({
             className="flex flex-col items-center gap-2 p-6 rounded-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/25 transition-all transform hover:scale-105 cursor-pointer"
           >
             <Mic className="h-8 w-8" />
-            <span className="text-xs font-black">Bấm để thu âm</span>
+            <span className="text-xs font-black">{isVietnamese ? 'Bấm để thu âm' : 'Tap to record'}</span>
           </button>
         )}
 
@@ -233,9 +257,11 @@ export function TestRunnerSpeakingSection({
           >
             <FileAudio className="h-9 w-9 text-amber-500" />
             <div className="text-center">
-              <span className="text-xs font-bold block">Bấm để chọn file ghi âm từ thiết bị</span>
+              <span className="text-xs font-bold block">
+                {isVietnamese ? 'Bấm để chọn file ghi âm từ thiết bị' : 'Tap to select audio file from device'}
+              </span>
               <span className="text-[11px] text-amber-700/80 dark:text-amber-300/80 block mt-0.5">
-                Hỗ trợ .mp3, .wav, .m4a, .ogg, .webm (tối đa 50MB)
+                {isVietnamese ? 'Hỗ trợ .mp3, .wav, .m4a, .ogg, .webm (tối đa 50MB)' : 'Supports .mp3, .wav, .m4a, .ogg, .webm (max 50MB)'}
               </span>
             </div>
           </button>
@@ -246,7 +272,8 @@ export function TestRunnerSpeakingSection({
             <div className="flex items-center gap-2 text-rose-500 font-black text-sm animate-pulse">
               <div className="h-3 w-3 rounded-full bg-rose-500" />
               <span>
-                Đang thu âm: {Math.floor(recordingSeconds / 60)}:
+                {isVietnamese ? 'Đang thu âm: ' : 'Recording: '}
+                {Math.floor(recordingSeconds / 60)}:
                 {(recordingSeconds % 60).toString().padStart(2, '0')}
               </span>
             </div>
@@ -259,7 +286,9 @@ export function TestRunnerSpeakingSection({
                 />
               </div>
               <span className="text-[11px] text-slate-500 font-medium">
-                {micVolume > 6 ? `Tín hiệu âm thanh micro: ${micVolume}% (Tốt)` : 'Hãy nói vào micro...'}
+                {micVolume > 6
+                  ? (isVietnamese ? `Tín hiệu âm thanh micro: ${micVolume}% (Tốt)` : `Microphone signal: ${micVolume}% (Good)`)
+                  : (isVietnamese ? 'Hãy nói vào micro...' : 'Speak into microphone...')}
               </span>
             </div>
 
@@ -269,7 +298,7 @@ export function TestRunnerSpeakingSection({
               className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md cursor-pointer transition-all"
             >
               <Square className="h-4 w-4 fill-white" />
-              <span>Dừng ghi âm</span>
+              <span>{isVietnamese ? 'Dừng ghi âm' : 'Stop recording'}</span>
             </button>
           </div>
         )}
@@ -279,8 +308,8 @@ export function TestRunnerSpeakingSection({
             <div className="flex items-center justify-between text-xs font-bold text-text-secondary">
               <span>
                 {uploadedAudioName
-                  ? `Tệp đã chọn: ${uploadedAudioName}`
-                  : `Bản thu của bạn (${recordingSeconds}s):`}
+                  ? (isVietnamese ? `Tệp đã chọn: ${uploadedAudioName}` : `Selected file: ${uploadedAudioName}`)
+                  : (isVietnamese ? `Bản thu của bạn (${recordingSeconds}s):` : `Your recording (${recordingSeconds}s):`)}
               </span>
               <button
                 type="button"
@@ -288,7 +317,11 @@ export function TestRunnerSpeakingSection({
                 className="flex items-center gap-1 text-rose-500 hover:underline cursor-pointer"
               >
                 <RotateCcw size={12} />
-                <span>{uploadedAudioName ? 'Đổi tệp khác' : 'Thu lại'}</span>
+                <span>
+                  {uploadedAudioName
+                    ? (isVietnamese ? 'Đổi tệp khác' : 'Change file')
+                    : (isVietnamese ? 'Thu lại' : 'Record again')}
+                </span>
               </button>
             </div>
 
@@ -310,12 +343,16 @@ export function TestRunnerSpeakingSection({
                 {isSubmittingSpeaking ? (
                   <>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>Whisper đang bóc tách & AI chấm điểm...</span>
+                    <span>
+                      {isVietnamese ? 'Whisper đang bóc tách & AI chấm điểm...' : 'Whisper transcribing & AI scoring...'}
+                    </span>
                   </>
                 ) : (
                   <>
                     <Send size={14} />
-                    <span>Nộp bài nói để Whisper & AI chấm</span>
+                    <span>
+                      {isVietnamese ? 'Nộp bài nói để Whisper & AI chấm' : 'Submit speaking for Whisper & AI scoring'}
+                    </span>
                   </>
                 )}
               </Button>

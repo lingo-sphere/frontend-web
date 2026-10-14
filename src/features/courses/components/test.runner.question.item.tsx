@@ -92,11 +92,11 @@ export function TestRunnerQuestionItem({
                 </div>
               ) : null
             ) : (
-              <div className="mt-2.5 max-w-md rounded-xl overflow-hidden border border-border">
+              <div className="mt-3 max-w-xl xl:max-w-2xl rounded-2xl overflow-hidden border border-border bg-surface-subtle shadow-2xs">
                 <img
                   src={question.media_url}
                   alt={`Question ${index + 1}`}
-                  className="w-full object-cover max-h-56"
+                  className="w-full object-contain max-h-80"
                 />
               </div>
             ))}

@@ -1,13 +1,9 @@
-/**
- * @file auth.reset.password.form.tsx
- * @description Component yêu cầu khôi phục và đặt lại mật khẩu mới
- */
-
+// Component yêu cầu khôi phục và đặt lại mật khẩu mới.
 'use client'
 
-import React, { RefObject } from 'react'
-import { Icon } from '@/components/icon.map'
-import { Input } from '@/components/input'
+import React, { useState, RefObject } from 'react'
+import { useTranslation } from 'react-i18next'
+import { KeyRound, Mail, Lock, Eye, EyeOff, RefreshCw } from 'lucide-react'
 
 interface AuthResetPasswordFormProps {
   mode: 'forgot_password' | 'reset_password'
@@ -24,6 +20,7 @@ interface AuthResetPasswordFormProps {
   onOtpKeyDown: (index: number, e: React.KeyboardEvent<HTMLInputElement>) => void
   onOtpPaste: (e: React.ClipboardEvent<HTMLInputElement>) => void
   onResendOtp: () => void
+  onToggleShowPassword?: () => void
 }
 
 export function AuthResetPasswordForm({
@@ -41,32 +38,42 @@ export function AuthResetPasswordForm({
   onOtpKeyDown,
   onOtpPaste,
   onResendOtp,
+  onToggleShowPassword,
 }: AuthResetPasswordFormProps) {
+  const { t } = useTranslation()
+  const [localShowPassword, setLocalShowPassword] = useState(false)
+
+  const isPasswordVisible = onToggleShowPassword ? showPassword : localShowPassword
+  const handleTogglePassword = onToggleShowPassword ?? (() => setLocalShowPassword((prev) => !prev))
+
   if (mode === 'forgot_password') {
     return (
       <div className="space-y-4">
-        <div className="text-center py-1">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-warning/10 text-warning mb-1">
-            <Icon name="key" size={24} />
+        <div className="text-center py-2 space-y-2">
+          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-md">
+            <KeyRound size={26} />
           </div>
-          <h3 className="text-base font-bold text-text-primary">Khôi phục mật khẩu</h3>
-          <p className="text-xs text-text-secondary mt-1">
-            Nhập địa chỉ email đăng ký để nhận mã xác thực đặt lại mật khẩu.
+          <h3 className="text-lg font-bold text-white tracking-tight">{t('auth.forgotPasswordTitle')}</h3>
+          <p className="text-xs text-slate-400 leading-relaxed px-4">
+            {t('auth.forgotPasswordDesc')}
           </p>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-            Địa chỉ Email <span className="text-error">*</span>
+          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            {t('auth.email')} <span className="text-red-400">*</span>
           </label>
-          <Input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => onEmailChange(e.target.value)}
-            placeholder="nguyennamtinh9999@gmail.com"
-            className="bg-surface-subtle"
-          />
+          <div className="relative flex items-center">
+            <Mail className="absolute left-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => onEmailChange(e.target.value)}
+              placeholder={t('auth.emailPlaceholder')}
+              className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-slate-800 bg-slate-950/70 text-white text-sm placeholder:text-slate-500 focus:bg-slate-950 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+            />
+          </div>
         </div>
       </div>
     )
@@ -74,14 +81,17 @@ export function AuthResetPasswordForm({
 
   return (
     <div className="space-y-4">
-      <div className="text-center py-1">
-        <h3 className="text-base font-bold text-text-primary">Đặt lại mật khẩu mới</h3>
-        <p className="text-xs text-text-secondary mt-1">
-          Nhập mã OTP 6 số và thiết lập mật khẩu mới cho tài khoản của bạn.
+      <div className="text-center py-2 space-y-1">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-md">
+          <KeyRound size={26} />
+        </div>
+        <h3 className="text-lg font-bold text-white tracking-tight">{t('auth.resetPasswordTitle')}</h3>
+        <p className="text-xs text-slate-400 leading-relaxed px-2">
+          {t('auth.resetPasswordDesc')}
         </p>
       </div>
 
-      <div className="flex justify-center gap-2 py-1">
+      <div className="flex justify-center gap-2.5 py-1">
         {otpDigits.map((digit, idx) => (
           <input
             key={idx}
@@ -97,34 +107,51 @@ export function AuthResetPasswordForm({
             onChange={(e) => onOtpChange(idx, e.target.value)}
             onKeyDown={(e) => onOtpKeyDown(idx, e)}
             onPaste={onOtpPaste}
-            className="h-12 w-11 rounded-xl border border-surface-border bg-surface-subtle text-center text-xl font-bold text-text-primary shadow-sm focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            className="h-12 w-11 sm:h-13 sm:w-12 rounded-xl border border-slate-800 bg-slate-950/70 text-center text-xl font-extrabold text-white shadow-sm focus:border-emerald-500 focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
           />
         ))}
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-          Mật khẩu mới <span className="text-error">*</span>
+        <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+          {t('auth.newPassword')} <span className="text-red-400">*</span>
         </label>
-        <Input
-          type={showPassword ? 'text' : 'password'}
-          required
-          value={newPassword}
-          onChange={(e) => onNewPasswordChange(e.target.value)}
-          placeholder="Tối thiểu 6 ký tự"
-          className="bg-surface-subtle"
-        />
+        <div className="relative flex items-center">
+          <Lock className="absolute left-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
+          <input
+            type={isPasswordVisible ? 'text' : 'password'}
+            required
+            value={newPassword}
+            onChange={(e) => onNewPasswordChange(e.target.value)}
+            placeholder={t('auth.passwordPlaceholder')}
+            className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-800 bg-slate-950/70 text-white text-sm placeholder:text-slate-500 focus:bg-slate-950 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+          />
+          <button
+            type="button"
+            onClick={handleTogglePassword}
+            className="absolute right-3 p-1 rounded-md text-slate-400 hover:text-white transition-colors cursor-pointer"
+          >
+            {isPasswordVisible ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between text-xs text-text-secondary">
-        <span>Chưa nhận được mã?</span>
+      <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
+        <span>{t('auth.didNotReceiveOtp')}</span>
         <button
           type="button"
           disabled={resendCooldown > 0 || isLoading}
           onClick={onResendOtp}
-          className="font-semibold text-primary hover:underline disabled:opacity-50 cursor-pointer"
+          className="inline-flex items-center gap-1 font-semibold text-emerald-400 hover:text-emerald-300 hover:underline disabled:opacity-50 cursor-pointer transition-colors"
         >
-          {resendCooldown > 0 ? `Gửi lại (${resendCooldown}s)` : 'Gửi lại OTP'}
+          {resendCooldown > 0 ? (
+            t('auth.resendOtpCountdown', { seconds: resendCooldown })
+          ) : (
+            <>
+              <RefreshCw size={12} />
+              <span>{t('auth.resendOtp')}</span>
+            </>
+          )}
         </button>
       </div>
     </div>

@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
-import { Trophy, Headphones, BookOpen } from 'lucide-react'
+import { Trophy, Headphones, BookOpen, Sparkles, ArrowRight, Layers } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import type { BackendToeicExam } from '@/features/toeic/services/exam.service'
@@ -12,11 +12,23 @@ import { useToeicExamsQuery } from '@/features/toeic/hooks/use.toeic.query'
 import type { ToeicExam, ToeicExamFilters } from '@/features/toeic/types/toeic'
 import { ExamCard } from '@/features/toeic/components/toeic.exam.card'
 import { ToeicFilterBar } from '@/features/toeic/components/toeic.filter.bar'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { toast } from '@/store/toast.store'
 
 export default function ToeicHubPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const isVietnamese = i18n.language === 'vi'
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  const handleExamClick = (examId: string) => {
+    if (!isAuthenticated) {
+      toast.info(isVietnamese ? 'Vui lòng đăng nhập để bắt đầu làm bài thi' : 'Please log in to start the exam')
+      navigate(`/login?returnUrl=/toeic/exam/${examId}`)
+      return
+    }
+    navigate(`/toeic/exam/${examId}`)
+  }
 
   const { data: rawExams = [], isLoading } = useToeicExamsQuery()
   const [searchQuery, setSearchQuery] = useState('')
@@ -24,22 +36,41 @@ export default function ToeicHubPage() {
 
   const exams: ToeicExam[] = useMemo(() => {
     if (!Array.isArray(rawExams)) return []
-    return rawExams.map((e: BackendToeicExam, idx: number) => ({
-      id: e._id,
-      title: e.title,
-      code: e.slug || `TOEIC-TEST-${idx + 1}`,
-      description: e.description || 'ETS Official TOEIC Test',
-      thumbnailUrl: '',
-      examSeries: 'ETS TOEIC',
-      releaseYear: 2024,
-      examType: 'FULL_TEST',
-      skillsEnabled: 'LR',
-      targetScore: 750,
-      difficultyLevel: 'MEDIUM',
-      totalQuestions: e.total_questions || 200,
-      totalAttempts: e.attempts_count || 1500,
-      status: 'PUBLISHED',
-    }))
+    return rawExams
+      .filter((e: BackendToeicExam) => e.is_published !== false)
+      .map((e: BackendToeicExam, idx: number) => {
+        const examType: ToeicExam['examType'] =
+          e.is_system_placement || e.exam_type === 'DIAGNOSTIC_TEST'
+            ? 'DIAGNOSTIC_TEST'
+            : e.exam_type === 'PRACTICE_TEST'
+            ? 'PRACTICE_TEST'
+            : e.exam_type === 'MOCK_TEST'
+            ? 'MOCK_TEST'
+            : 'FULL_TEST'
+
+        const skillsEnabled: ToeicExam['skillsEnabled'] =
+          e.skills_enabled === 'ALL' || e.skills_enabled === 'LRSW' ? 'LRSW' : 'LR'
+
+        const examSeries = typeof e.category === 'string' && e.category ? e.category : 'ETS TOEIC'
+        const releaseYear = typeof e.release_year === 'number' && e.release_year > 0 ? e.release_year : 2024
+
+        return {
+          id: e._id,
+          title: e.title,
+          code: e.slug || e.code || `TOEIC-TEST-${idx + 1}`,
+          description: e.description || (e.is_system_placement ? 'Đề thi đánh giá năng lực đầu vào' : 'ETS Official TOEIC Test'),
+          thumbnailUrl: '',
+          examSeries,
+          releaseYear,
+          examType,
+          skillsEnabled,
+          targetScore: 750,
+          difficultyLevel: 'MEDIUM' as const,
+          totalQuestions: e.total_questions || 200,
+          totalAttempts: e.attempts_count || 0,
+          status: 'PUBLISHED' as const,
+        }
+      })
   }, [rawExams])
 
   const filteredExams = useMemo(() => {
@@ -116,6 +147,41 @@ export default function ToeicHubPage() {
           </Card>
         </div>
 
+        {/* TOEIC Vocabulary Decks Highlight Banner */}
+        <div className="mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 sm:p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-primary">
+                  <Sparkles className="h-3 w-3" />
+                  {isVietnamese ? 'KHO TỪ VỰNG ETS 2024–2026' : 'ETS 2024–2026 VOCABULARY'}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                  <Layers className="h-3 w-3" />
+                  {isVietnamese ? '250 Units • 5.000 Thẻ' : '250 Units • 5,000 Cards'}
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-text-primary sm:text-xl">
+                {isVietnamese
+                  ? 'Luyện 5.000 từ vựng TOEIC trọng tâm theo Band & Part thi'
+                  : 'Master 5,000 Core TOEIC Words by Target Band & Exam Part'}
+              </h3>
+              <p className="max-w-2xl text-xs sm:text-sm text-text-secondary">
+                {isVietnamese
+                  ? 'Phân bổ theo lộ trình 350-500, 500-650, 650-800, 800-990. Mỗi Unit chuẩn 20 từ với Flashcards lật thẻ, phát âm US/UK chuẩn và ôn tập thông minh SRS.'
+                  : 'Structured into Band 350-500, 500-650, 650-800, 800-990. 20 words per unit with interactive flashcards, authentic audio & Spaced Repetition.'}
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/public-decks')}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all hover:bg-primary-hover hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+            >
+              {isVietnamese ? 'Học từ vựng TOEIC ngay' : 'Explore TOEIC Decks'}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
         <ToeicFilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -134,7 +200,7 @@ export default function ToeicHubPage() {
               <ExamCard
                 key={exam.id}
                 exam={exam}
-                onClick={() => navigate(`/toeic/exam/${exam.id}`)}
+                onClick={() => handleExamClick(exam.id)}
                 isVietnamese={isVietnamese}
               />
             ))}

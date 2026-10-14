@@ -1,13 +1,12 @@
-/**
- * @file notebook.deck.list.tsx
- * @description Component giao diện React NotebookDeckList cho học viên
- */
+'use client'
+
+// Component danh sach bo the tu vung (Decks) va modal tao bo the moi cho hoc vien.
 
 import { useState } from 'react'
 import { Plus, Layers3, BookOpen, X } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
-import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary'
+import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary.learn'
 
 interface DecksTabProps {
   decks: UserDeck[]
@@ -185,13 +184,21 @@ export function CreateDeckModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
       />
 
       <div className="relative z-10 w-full max-w-sm mx-4 rounded-2xl border border-border bg-surface p-6 shadow-lg">
-        <h3 className="text-[16px] font-bold text-text-primary">
-          {isVietnamese ? 'Tạo Deck Mới' : 'Create New Deck'}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-[16px] font-bold text-text-primary">
+            {isVietnamese ? 'Tạo Deck Mới' : 'Create New Deck'}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
         <div className="mt-4">
           <label className="text-[13px] font-medium text-text-secondary">

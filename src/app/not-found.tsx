@@ -1,51 +1,27 @@
-/**
- * @file not-found.tsx
- * @description Trang giao diện người dùng (Next.js App Router) cho tuyến not-found.tsx
- */
+// Trang thông báo 404 Không tìm thấy trang sử dụng Ant Design Result cho học viên LingoSphere
+'use client'
 
-import Link from 'next/link'
-import { Button } from '@/components/button'
-import { Icon } from '@/components/icon.map'
+import { useTranslation } from 'react-i18next'
+import { AppResult } from '@/components/status/app.result'
+import { useMounted } from '@/hooks/use.mounted'
 
 export default function NotFound() {
+  const { t } = useTranslation()
+  const mounted = useMounted()
+
   return (
-    <>
-      <main className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-4 py-16 text-center">
-        <div className="relative mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/10 text-primary shadow-inner">
-          <Icon name="helpCircle" size={48} />
-          <div className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-error text-xs font-bold text-white shadow-md">
-            404
-          </div>
-        </div>
-
-        <h1 className="text-3xl font-extrabold tracking-tight text-text-primary sm:text-4xl">
-          Không Tìm Thấy Trang
-        </h1>
-        <p className="mt-3 max-w-md text-sm text-text-secondary">
-          Đường dẫn bạn truy cập không tồn tại hoặc đã được thay đổi. Hãy kiểm tra lại URL hoặc quay về các khu vực học tập bên dưới.
-        </p>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/home">
-            <Button className="gap-2 bg-primary px-5 font-semibold text-white shadow-md hover:bg-primary/90">
-              <Icon name="home" size={16} />
-              Trang Chủ Dashboard
-            </Button>
-          </Link>
-          <Link href="/courses">
-            <Button variant="outline" className="gap-2">
-              <Icon name="book" size={16} />
-              Khám Phá Khóa Học
-            </Button>
-          </Link>
-          <Link href="/toeic">
-            <Button variant="outline" className="gap-2">
-              <Icon name="fileText" size={16} />
-              Đề Thi TOEIC
-            </Button>
-          </Link>
-        </div>
-      </main>
-    </>
+    <main className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-4 py-16">
+      <AppResult
+        status="404"
+        title={mounted ? t('errors.notFoundTitle') : '404 - Không Tìm Thấy Trang'}
+        subTitle={
+          mounted
+            ? t('errors.notFoundDesc')
+            : 'Xin lỗi, nội dung bạn tìm kiếm không tồn tại hoặc đã được chuyển đi.'
+        }
+        backUrl="/home"
+        backText={mounted ? t('common.backHome') : 'Về Trang Chủ'}
+      />
+    </main>
   )
 }

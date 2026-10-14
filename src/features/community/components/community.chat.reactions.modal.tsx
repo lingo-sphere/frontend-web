@@ -63,11 +63,9 @@ export function CommunityChatReactionsModal({
   return (
     <div
       className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
-      onClick={onClose}
     >
       <div
         className="relative flex h-[390px] w-[480px] max-w-[calc(100vw-32px)] flex-col overflow-hidden rounded-2xl border border-border dark:border-white/15 bg-surface dark:bg-[#141e1e] text-text-primary shadow-2xl animate-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border dark:border-white/10 px-5 py-3.5">
           <h3 className="text-base font-bold text-text-primary">Biểu cảm</h3>
@@ -132,19 +130,19 @@ export function CommunityChatReactionsModal({
                           {user.user_avatar ? (
                             <NextImage
                               src={user.user_avatar}
-                              alt={user.user_name || 'Học viên'}
+                              alt={user.user_name || ''}
                               width={36}
                               height={36}
                               className="h-full w-full object-cover"
                               unoptimized
                             />
                           ) : (
-                            <span>{(user.user_name || 'H').charAt(0).toUpperCase()}</span>
+                            <span>{(user.user_name || '').charAt(0).toUpperCase()}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           <span className="truncate text-xs font-semibold text-text-primary">
-                            {user.user_name || 'Học viên'}
+                            {user.user_name}
                           </span>
                           {isMe && (
                             <span className="shrink-0 rounded bg-primary/10 dark:bg-teal-400/15 px-1 py-0.2 text-[9px] font-medium text-primary dark:text-teal-300">

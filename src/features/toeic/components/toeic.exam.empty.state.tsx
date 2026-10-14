@@ -89,11 +89,11 @@ export function ToeicExamEmptyState({
 
                 <button
                   type="button"
-                  onClick={() => onNavigate('/roadmap')}
+                  onClick={() => onNavigate('/courses')}
                   className="px-4 py-2.5 rounded-xl bg-surface-subtle hover:bg-border text-text-primary text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border border-border hover:scale-[1.02]"
                 >
                   <Target className="w-4 h-4 text-teal-500" />
-                  <span>{isVietnamese ? 'Xem lộ trình cá nhân' : 'Personal Roadmap'}</span>
+                  <span>{isVietnamese ? 'Khám phá khóa học' : 'Explore Courses'}</span>
                 </button>
 
                 <button
@@ -276,7 +276,7 @@ export function ToeicExamEmptyState({
             </div>
             <div className="space-y-1">
               <h4 className="text-xs font-bold text-text-primary">
-                {isVietnamese ? '3. Lộ trình cá nhân hóa tự động' : '3. Auto Personalized Path'}
+                {isVietnamese ? '3. Gợi ý khóa học phù hợp' : '3. Recommended Courses'}
               </h4>
               <p className="text-xs text-text-secondary leading-relaxed">
                 {isVietnamese

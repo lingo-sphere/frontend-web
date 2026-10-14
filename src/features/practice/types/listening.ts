@@ -42,6 +42,7 @@ export interface ListeningExercise {
   mediaId: string
   mediaUrl?: string
   thumbnailUrl?: string
+  imageMediaId?: string
   durationSeconds: number
   exerciseType: ExerciseType
   difficultyLevel: DifficultyLevel
@@ -54,6 +55,15 @@ export interface ListeningExercise {
   createdAt: string
   updatedAt: string
   segments: TranscriptSegment[]
+  // PracticeItem specific fields
+  listeningExerciseId?: string
+  audioMediaId?: string
+  contextId?: string
+  questionData?: {
+    options?: Array<{ key: string; text: string; is_correct: boolean }>
+    explanation?: string
+    explanation_vi?: string
+  }
 }
 
 export interface BlankResult {

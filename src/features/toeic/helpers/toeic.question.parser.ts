@@ -2,6 +2,7 @@
 
 import type { BackendToeicExam } from '@/features/toeic/services/exam.service'
 import type { ToeicQuestion } from '@/features/toeic/types/toeic'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 export function parseQuestionsFromExamData(examData: BackendToeicExam, parts: number[]): ToeicQuestion[] {
   if (examData.questions && Array.isArray(examData.questions) && examData.questions.length > 0) {
@@ -83,8 +84,10 @@ export function parseQuestionsFromExamData(examData: BackendToeicExam, parts: nu
               })
               .filter((opt) => Boolean(opt.textEn.trim()))
 
-        const audioUrl = (q.media_url || q.audio_url || examData.audio_full_url || examData.audio_url) as string | undefined
-        const imageUrl = (q.image_url || '') as string
+        const rawAudio = (q.media_url || q.audio_url || examData.audio_full_url || examData.audio_url) as string | undefined
+        const rawImage = (q.image_url || '') as string
+        const audioUrl = rawAudio ? resolveMediaUrl(rawAudio) : undefined
+        const imageUrl = rawImage ? resolveMediaUrl(rawImage) : ''
 
         const finalSkillType: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' = isWriting
           ? 'WRITING'
@@ -148,8 +151,8 @@ export function parseQuestionsFromExamData(examData: BackendToeicExam, parts: nu
             options: q.options.map((opt) => ({ key: opt.key, textEn: opt.text })),
             correctOption: q.correct_answer || 'A',
             explanationEn: q.explanation,
-            imageMediaId: q.image_url,
-            audioMediaId: q.audio_url,
+            imageMediaId: q.image_url ? resolveMediaUrl(q.image_url) : undefined,
+            audioMediaId: q.audio_url ? resolveMediaUrl(q.audio_url) : undefined,
             hasImage: Boolean(q.image_url),
             hasAudio: Boolean(q.audio_url),
             difficultyLevel: 'MEDIUM',

@@ -1,7 +1,6 @@
 // Cấu hình quốc tế hóa i18next (Tiếng Việt và Tiếng Anh) cho frontend-web
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import vi from '@/i18n/vi.json'
 import en from '@/i18n/en.json'
@@ -12,30 +11,31 @@ const resources = {
 }
 
 if (!i18n.isInitialized) {
-  const isBrowser = typeof window !== 'undefined'
-
-  if (isBrowser) {
-    i18n.use(LanguageDetector)
-  }
-
   i18n
     .use(initReactI18next)
     .init({
       resources,
-      lng: storage.get<string>(STORAGE_KEYS.I18N_LNG) || 'vi',
+      lng: 'vi',
       fallbackLng: 'vi',
       supportedLngs: ['vi', 'en'],
       interpolation: {
         escapeValue: false,
       },
-      detection: {
-        order: ['localStorage', 'navigator', 'htmlTag'],
-        caches: ['localStorage'],
-      },
     })
 }
 
 export default i18n
+
+export const initClientLanguage = () => {
+  if (typeof window === 'undefined') return
+  const raw = storage.get<string>(STORAGE_KEYS.I18N_LNG)
+  if (raw) {
+    const lang = raw.toLowerCase().startsWith('en') ? 'en' : 'vi'
+    if (lang !== i18n.language) {
+      i18n.changeLanguage(lang)
+    }
+  }
+}
 
 export const changeLanguage = (lang: 'vi' | 'en') => {
   i18n.changeLanguage(lang)

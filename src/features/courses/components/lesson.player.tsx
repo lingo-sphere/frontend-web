@@ -1,7 +1,4 @@
-/**
- * @file lesson.player.tsx
- * @description Trình phát video bài học phong cách YouTube cao cấp cho học viên LingoSphere
- */
+// Trình phát video bài học phong cách YouTube cao cấp cho học viên LingoSphere.
 
 'use client'
 
@@ -57,9 +54,6 @@ export function LessonPlayer({
     volume,
     isMuted,
     playbackSpeed,
-    selectedQuality,
-    autoResolvedQuality,
-    effectiveQualityKey,
     isTheater,
     setIsTheater,
     isFullscreen,
@@ -90,7 +84,6 @@ export function LessonPlayer({
     seekRelative,
     seekToTime,
     handleSpeedChange,
-    handleQualityChange,
     toggleFullscreen,
     togglePip,
     handleTimeUpdate,
@@ -120,12 +113,15 @@ export function LessonPlayer({
           ? 'w-screen h-screen'
           : 'aspect-video rounded-3xl shadow-2xl border border-border/80'
       }`}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <div className="relative w-full h-full flex items-center justify-center bg-black">
-        {isDirectVideo ? (
+        {isDirectVideo && effectiveVideoUrl ? (
           <video
             ref={videoRef}
             playsInline
+            controlsList="nodownload"
+            onContextMenu={(e) => e.preventDefault()}
             className="w-full h-full object-contain cursor-pointer"
             onClick={togglePlay}
             onTimeUpdate={handleTimeUpdate}
@@ -140,7 +136,7 @@ export function LessonPlayer({
             onWaiting={() => setIsBuffering(true)}
             onPlaying={() => setIsBuffering(false)}
           />
-        ) : (
+        ) : effectiveVideoUrl ? (
           <iframe
             src={
               effectiveVideoUrl.includes('watch?v=')
@@ -151,6 +147,18 @@ export function LessonPlayer({
             className="w-full h-full aspect-video"
             allowFullScreen
           />
+        ) : (
+          <div className="flex flex-col items-center justify-center w-full h-full text-white/70 space-y-3 p-6 text-center select-none">
+            <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center text-white/50 backdrop-blur-sm border border-white/10">
+              <Play size={24} className="ml-0.5 opacity-50" />
+            </div>
+            <div className="space-y-1 max-w-sm">
+              <h4 className="text-sm font-bold text-white">{lesson.title}</h4>
+              <p className="text-xs text-white/60">
+                Bài giảng đang chuẩn bị nội dung video hoặc sử dụng tài liệu lý thuyết đính kèm bên dưới.
+              </p>
+            </div>
+          </div>
         )}
 
         {isBuffering && (
@@ -201,7 +209,7 @@ export function LessonPlayer({
         )}
       </div>
 
-      {isDirectVideo && (
+      {isDirectVideo && Boolean(effectiveVideoUrl) && (
         <PlayerControlsBar
           isPlaying={isPlaying}
           currentTime={currentTime}
@@ -210,9 +218,6 @@ export function LessonPlayer({
           volume={volume}
           isMuted={isMuted}
           playbackSpeed={playbackSpeed}
-          selectedQuality={selectedQuality}
-          autoResolvedQuality={autoResolvedQuality}
-          effectiveQualityKey={effectiveQualityKey}
           isTheater={isTheater}
           isFullscreen={isFullscreen}
           autoPlayNext={autoPlayNext}
@@ -236,7 +241,6 @@ export function LessonPlayer({
           }}
           onToggleSettings={() => setShowSettingsMenu(!showSettingsMenu)}
           onSpeedChange={handleSpeedChange}
-          onQualityChange={handleQualityChange}
           onToggleAutoPlay={() => setAutoPlayNext(!autoPlayNext)}
           onToggleTheater={() => setIsTheater(!isTheater)}
           onToggleFullscreen={toggleFullscreen}

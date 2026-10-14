@@ -21,7 +21,7 @@ export function CourseLandingHero({ course, onBack }: CourseLandingHeroProps) {
 
   return (
     <div className="w-full bg-slate-900 dark:bg-slate-950 text-slate-100 py-8 lg:py-12 border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="lg:w-7/12 space-y-4">
           <nav className="flex items-center gap-1.5 text-xs text-indigo-300 font-semibold flex-wrap">
             <button
@@ -49,15 +49,14 @@ export function CourseLandingHero({ course, onBack }: CourseLandingHeroProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="px-2.5 py-1 rounded-md bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-xs">
-              Bán chạy nhất
-            </span>
-            <span className="px-2.5 py-1 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-xs font-bold">
-              Trình độ: {course.level || 'Mọi cấp độ'}
-            </span>
+            {course.is_bestseller ? (
+              <span className="px-2.5 py-1 rounded-md bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-xs">
+                Bán chạy nhất
+              </span>
+            ) : null}
             {course.target_score ? (
-              <span className="px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-300 border border-purple-400/30 text-xs font-bold">
-                Mục tiêu: {course.target_score}+
+              <span className="px-2.5 py-1 rounded-md bg-teal-500/20 text-teal-300 border border-teal-400/30 text-xs font-bold">
+                🎯 Mục tiêu: {course.target_score}+ TOEIC
               </span>
             ) : null}
           </div>
