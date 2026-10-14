@@ -71,7 +71,7 @@ export function LandingFooter({ t }: LandingFooterProps) {
             <div className="text-[11px] uppercase tracking-[0.25em] text-[#48c9b0] font-bold">{t.footer.colPractice}</div>
             <ul className="space-y-2.5 text-xs text-white/60">
               <li><Link href="/toeic" className="hover:text-white transition-colors">{t.footer.prac1}</Link></li>
-              <li><Link href="/dictation" className="hover:text-white transition-colors">{t.footer.prac2}</Link></li>
+              <li><Link href="/listening" className="hover:text-white transition-colors">{t.footer.prac2}</Link></li>
               <li><Link href="/writing" className="hover:text-white transition-colors">{t.footer.prac3}</Link></li>
               <li><Link href="/grammar" className="hover:text-white transition-colors">{t.footer.prac4}</Link></li>
             </ul>
@@ -82,7 +82,7 @@ export function LandingFooter({ t }: LandingFooterProps) {
             <ul className="space-y-2.5 text-xs text-white/60">
               <li><Link href="/about" className="hover:text-white transition-colors">{t.footer.sys1}</Link></li>
               <li><Link href="/leaderboard" className="hover:text-white transition-colors">{t.footer.sys2}</Link></li>
-              <li><Link href="/badges" className="hover:text-white transition-colors">{t.footer.sys3}</Link></li>
+              <li><Link href="/leaderboard" className="hover:text-white transition-colors">{t.footer.sys3}</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition-colors">{t.footer.sys4}</Link></li>
             </ul>
           </div>
@@ -92,9 +92,10 @@ export function LandingFooter({ t }: LandingFooterProps) {
       <div className="relative z-10 mx-auto max-w-7xl border-t border-white/10 mt-16 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
         <div>{t.footer.copyright}</div>
         <div className="flex items-center gap-6">
-          <span className="hover:text-white transition-colors cursor-pointer">Terms of Service</span>
-          <span className="hover:text-white transition-colors cursor-pointer">Privacy Policy</span>
-          <span className="hover:text-white transition-colors cursor-pointer">System Status</span>
+          <Link href="/blog" className="hover:text-white transition-colors">Cẩm Nang TOEIC</Link>
+          <Link href="/about" className="hover:text-white transition-colors">Về LingoSphere</Link>
+          <Link href="/privacy" className="hover:text-white transition-colors">Chính Sách Bảo Mật</Link>
+          <span className="hover:text-white transition-colors cursor-pointer">System Operational</span>
         </div>
       </div>
     </footer>
