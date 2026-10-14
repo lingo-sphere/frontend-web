@@ -155,7 +155,6 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 sm:py-14">
-        {/* Visual Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-xs sm:text-sm text-text-secondary">
           <Link href="/" className="hover:text-primary transition-colors">Trang chủ</Link>
           <span>/</span>
@@ -191,14 +190,11 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             </div>
           </header>
 
-          {/* Excerpt Box */}
           <div className="p-4 sm:p-6 rounded-2xl bg-surface border-l-4 border-primary text-text-secondary text-sm sm:text-base leading-relaxed italic">
             {post.excerpt}
           </div>
 
-          {/* Featured Image */}
           <div className="relative rounded-2xl overflow-hidden aspect-[16/9] border border-border shadow-md">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={post.coverImage}
               alt={post.title}
@@ -207,7 +203,6 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             />
           </div>
 
-          {/* Article Body */}
           <div className="space-y-6 text-text-secondary leading-relaxed sm:text-lg">
             <ReactMarkdown
               components={{
@@ -238,7 +233,6 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             </ReactMarkdown>
           </div>
 
-          {/* Tags */}
           <div className="pt-6 border-t border-border flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold text-text-secondary">Chủ đề liên quan:</span>
             {post.tags.map((tag) => (
@@ -251,7 +245,6 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             ))}
           </div>
 
-          {/* E-E-A-T Trust Box */}
           <div className="p-6 rounded-2xl bg-surface/70 border border-border flex items-start gap-4">
             <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
               <Award className="w-6 h-6" />
@@ -267,7 +260,6 @@ export default async function BlogPostDetailPage({ params }: BlogPostPageProps) 
             </div>
           </div>
 
-          {/* Next Steps CTA */}
           <div className="p-8 rounded-3xl bg-gradient-to-br from-primary/15 via-surface to-surface border border-primary/30 space-y-4">
             <div className="space-y-2">
               <h3 className="text-xl sm:text-2xl font-bold text-text-primary">
