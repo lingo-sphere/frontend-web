@@ -29,6 +29,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.url),
+  icons: {
+    icon: '/assets/lingosphere-logo.png',
+    shortcut: '/assets/lingosphere-logo.png',
+    apple: '/assets/lingosphere-logo.png',
+  },
   title: {
     template: `%s | ${SITE_CONFIG.name} - Học Tiếng Anh & Luyện Thi TOEIC`,
     default: SITE_CONFIG.title,
