@@ -38,6 +38,7 @@ jobs:
       - name: Production Build
         run: npm run build
         env:
+          NODE_OPTIONS: "--max-old-space-size=5120"
           NEXT_PUBLIC_API_BASE_URL: https://api.lingosphere.io.vn
           NEXT_PUBLIC_ADMIN_WEB_URL: https://admin.lingosphere.io.vn
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: 790440593251-u1ht6t39hocf2qh6hncngudn8gm4sl19.apps.googleusercontent.com
