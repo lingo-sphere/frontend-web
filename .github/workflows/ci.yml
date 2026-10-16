@@ -1,10 +1,11 @@
-# Quy trình CI tự động kiểm tra typecheck và build production cho Frontend Web khi deploy lên main
+# Quy trình CI tự động kiểm tra typecheck và build production cho Frontend Web khi deploy lên main hoặc develop
 name: Frontend Web CI
 
 on:
   push:
     branches:
       - main
+      - develop
   workflow_dispatch:
 
 concurrency:
