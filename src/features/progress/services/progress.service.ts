@@ -35,7 +35,14 @@ export interface SkillStats {
   trend: TrendDirection
   trend_score: number
   last_practiced_at?: string
-  by_dimension?: Record<string, { accuracy: number; correct: number; total: number }>
+  by_dimension?: Record<string, { accuracy: number; correct: number; total: number; name?: string }>
+  by_context?: Record<string, {
+    accuracy: number
+    correct: number
+    total: number
+    context_name?: string
+    cefr_level?: string
+  }>
 }
 
 export interface WeaknessAnalysis {
@@ -50,6 +57,14 @@ export interface WeaknessAnalysis {
   trend_score: number
   weakness_score: number
   recommended_actions: string[]
+  grammar_knowledge?: {
+    code: string
+    name_vi: string
+    name_en: string
+    category: string
+    cefr_level: string
+    structure_pattern?: string
+  }
 }
 
 export interface SkillsSummary {
@@ -228,6 +243,116 @@ export const progressService = {
       return null
     }
   },
+
+  async getSkillCEFR(userId: string, skill: SkillType) {
+    try {
+      return await api.get<{
+        estimated_level: string
+        confidence: EvidenceLevel
+        level_attempted_meet: boolean
+        lower_level_meet: boolean
+        attempts_at_level: number
+        recommendation?: string
+      }>(`/practice/analytics/${userId}/skill/${skill}/cefr`)
+    } catch {
+      return null
+    }
+  },
+
+  async getGrammarContextBreakdown(userId: string, period: TimePeriod = '30d') {
+    try {
+      return await api.get<{
+        by_grammar_topic: Record<
+          string,
+          {
+            name_vi: string
+            cefr_level: string
+            total: number
+            correct: number
+            accuracy: number
+            by_context: Record<
+              string,
+              {
+                context_name: string
+                total: number
+                correct: number
+                accuracy: number
+              }
+            >
+          }
+        >
+        by_context: Record<
+          string,
+          {
+            context_name: string
+            cefr_level: string
+            total: number
+            correct: number
+            accuracy: number
+            grammar_topics: string[]
+          }
+        >
+      }>(`/practice/analytics/${userId}/grammar/context-breakdown?period=${period}`)
+    } catch {
+      return null
+    }
+  },
+
+  async getGrammarSessions(userId: string, limit: number = 10, page: number = 1) {
+    try {
+      return await api.get<{
+        total: number
+        page: number
+        limit: number
+        items: Array<{
+          session_id: string
+          practice_mode: string
+          grammar_knowledge_id?: string
+          topic_name_vi?: string
+          topic_name_en?: string
+          cefr_level?: string
+          total_questions: number
+          answered_questions: number
+          correct_answers: number
+          score_percent: number
+          time_spent_seconds: number
+          status: string
+          started_at?: string
+          completed_at?: string
+        }>
+      }>(`/practice/grammar/sessions?userId=${userId}&limit=${limit}&page=${page}`)
+    } catch {
+      return null
+    }
+  },
+
+  async getListeningSessions(userId: string, limit: number = 10, page: number = 1) {
+    try {
+      return await api.get<{
+        total: number
+        page: number
+        limit: number
+        items: Array<{
+          session_id: string
+          practice_mode: string
+          context_id?: string
+          context_name?: string
+          cefr_level?: string
+          exercise_type?: string
+          total_questions: number
+          answered_questions: number
+          correct_answers: number
+          score_percent: number
+          time_spent_seconds: number
+          status: string
+          started_at?: string
+          completed_at?: string
+        }>
+      }>(`/practice/listening/sessions?userId=${userId}&limit=${limit}&page=${page}`)
+    } catch {
+      return null
+    }
+  },
 }
 
 export interface RadarDataPoint {
@@ -364,6 +489,8 @@ export interface TimeGrowth {
       pronunciation?: { exercises: number; questions: number }
     }
   }>
+  daily_breakdown_14d?: Array<TimeGrowth['daily_breakdown_7d'][number]>
+  daily_breakdown_30d?: Array<TimeGrowth['daily_breakdown_7d'][number]>
 }
 
 export interface ContextPerformanceItem {

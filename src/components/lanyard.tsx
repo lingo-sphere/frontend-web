@@ -160,6 +160,7 @@ export function Lanyard({
   const isUnlockedRef = useRef<boolean>(false);
   const [isUnlockedState, setIsUnlockedState] = useState<boolean>(false);
   const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [hasWebGLError, setHasWebGLError] = useState<boolean>(false);
 
   const texts = landingLocales[lang]?.lanyard || landingLocales.vi.lanyard;
 
@@ -188,6 +189,17 @@ export function Lanyard({
     const container = mountRef.current;
     if (!container) return;
 
+    // Check WebGL availability upfront before Three.js tries to initialize
+    const canvas = document.createElement("canvas");
+    const gl =
+      canvas.getContext("webgl2") ||
+      canvas.getContext("webgl") ||
+      canvas.getContext("experimental-webgl");
+    if (!gl) {
+      const timer = setTimeout(() => setHasWebGLError(true), 0);
+      return () => clearTimeout(timer);
+    }
+
     const getContainerSize = () => ({
       w: container.clientWidth || window.innerWidth || 1200,
       h: container.clientHeight || 700,
@@ -203,17 +215,32 @@ export function Lanyard({
     );
     camera.position.set(0, 0, 8.5);
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      powerPreference: "high-performance",
-    });
+    let renderer: THREE.WebGLRenderer | null = null;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+        powerPreference: "default",
+        failIfMajorPerformanceCaveat: false,
+      });
+    } catch {
+      const timer = setTimeout(() => setHasWebGLError(true), 0);
+      return () => clearTimeout(timer);
+    }
+
+    if (!renderer || !renderer.domElement) {
+      const timer = setTimeout(() => setHasWebGLError(true), 0);
+      return () => clearTimeout(timer);
+    }
+
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     renderer.setPixelRatio(dpr);
     renderer.setSize(initialSize.w, initialSize.h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
+    renderer.debug.checkShaderErrors = false;
     container.appendChild(renderer.domElement);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
@@ -289,13 +316,10 @@ export function Lanyard({
         metalness: 0.7,
         roughness: 0.3,
       }),
-      new THREE.MeshPhysicalMaterial({
+      new THREE.MeshStandardMaterial({
         map: cardTexture,
         metalness: 0.35,
-        roughness: 0.2,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.1,
-        reflectivity: 0.95,
+        roughness: 0.25,
       }),
       new THREE.MeshStandardMaterial({
         color: 0x050c0b,
@@ -590,7 +614,82 @@ export function Lanyard({
       }
       renderer.dispose();
     };
-  }, [destinationUrl, triggerAccess]);
+  }, [destinationUrl, lang, triggerAccess]);
+
+  if (hasWebGLError) {
+    return (
+      <div
+        className={`relative w-full h-[620px] sm:h-[720px] mx-auto flex flex-col items-center justify-center select-none ${className}`}
+      >
+        <div
+          onClick={triggerAccess}
+          className="group relative cursor-pointer flex flex-col items-center transition-transform duration-300 hover:scale-105 active:scale-95"
+        >
+          {/* Lanyard Strap Visual */}
+          <div className="w-12 h-28 bg-gradient-to-b from-teal-500 to-emerald-600 rounded-b-md shadow-lg border border-teal-300/30 -mb-2 flex items-center justify-center">
+            <span className="text-[10px] font-black tracking-widest text-white/70 -rotate-90 whitespace-nowrap">
+              LINGOSPHERE
+            </span>
+          </div>
+
+          {/* Badge Clip */}
+          <div className="w-6 h-4 bg-zinc-400 rounded-sm shadow-md border border-zinc-200 z-10 -mb-1" />
+
+          {/* Student Pass Card 2D */}
+          <div className="w-[300px] sm:w-[340px] rounded-3xl p-6 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border-2 border-emerald-400/40 shadow-[0_20px_50px_rgba(16,185,129,0.2)] text-white space-y-4 relative overflow-hidden backdrop-blur-xl">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <span className="text-xs font-mono font-bold text-emerald-400">
+                ● {texts.vipPassport}
+              </span>
+              <span className="text-[10px] font-mono text-white/50">LS-990-PRO</span>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black tracking-wider text-white">LINGOSPHERE</h3>
+              <p className="text-xs text-teal-300 font-semibold">{texts.academy}</p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/80 italic font-serif">
+              {lang === "vi"
+                ? '"Học tiếng Anh bằng tư duy tự nhiên, bứt phá điểm số cùng AI."'
+                : '"Master English with natural logic, supercharged by AI."'}
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <div>
+                <span className="text-[10px] text-white/40 block font-medium">
+                  {texts.studentLabel}
+                </span>
+                <span className="text-sm font-bold text-white">{texts.studentName}</span>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-400/30">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 flex flex-col items-center gap-2">
+          {isUnlockedState ? (
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600 border border-emerald-400 px-6 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-[0_0_35px_rgba(52,211,153,0.95)] animate-pulse">
+              <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+              {texts.granted}
+            </div>
+          ) : (
+            <button
+              onClick={triggerAccess}
+              className="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-95 transition-all text-zinc-950 font-black px-6 py-2.5 text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25"
+            >
+              <ArrowDown className="w-4 h-4 animate-bounce" />
+              {texts.promptPull || "Nhấn để truy cập ngay"}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

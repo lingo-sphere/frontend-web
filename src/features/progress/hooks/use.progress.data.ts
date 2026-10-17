@@ -229,7 +229,7 @@ export function useProgressData(navigate: (path: string) => void) {
       ? Math.min(100, Math.max(0, Math.round((currentScore / targetScore) * 100)))
       : 0
 
-    const streak = Number(gamification?.streak ?? activeUser?.streak_count ?? 0)
+    const streak = Number(gamification?.current_streak ?? (gamification as any)?.streak ?? activeUser?.streak_count ?? 0)
     const xp = Number(gamification?.total_xp ?? activeUser?.xp ?? 0)
     const level = String(gamification?.level ?? activeUser?.level ?? 1)
 
