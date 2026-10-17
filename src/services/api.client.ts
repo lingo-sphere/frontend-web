@@ -46,6 +46,48 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = []
 }
 
+export async function refreshAuthToken(): Promise<string | null> {
+  const storedRefreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.get(STORAGE_KEYS.REFRESH_TOKEN)
+  const refreshHeaders: Record<string, string> = {}
+  if (storedRefreshToken) {
+    refreshHeaders['x-refresh-token'] = storedRefreshToken
+  }
+
+  const res = await axios.post<ApiResponse<{ access_token: string; refresh_token?: string }>>(
+    `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
+    {},
+    {
+      headers: refreshHeaders,
+      withCredentials: true,
+    },
+  )
+
+  const responseData = res.data as unknown as {
+    data?: { access_token?: string; refresh_token?: string }
+    access_token?: string
+    refresh_token?: string
+  }
+  const tokenPayload = responseData?.data || responseData
+  const newAccessToken = tokenPayload?.access_token
+  const newRefreshToken = tokenPayload?.refresh_token
+
+  if (newAccessToken) {
+    if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
+      storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+    } else {
+      storage.session.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
+    }
+    storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken, { days: 1 })
+    if (newRefreshToken) {
+      storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken, { days: 7 })
+      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+      storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
+    }
+    return newAccessToken
+  }
+  return null
+}
+
 apiClient.interceptors.response.use(
   (response) => {
     return response
@@ -112,50 +154,12 @@ apiClient.interceptors.response.use(
         isRefreshing = true
 
         try {
-          const storedRefreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN)
-
-          const refreshHeaders: Record<string, string> = {}
-          if (storedRefreshToken) {
-            refreshHeaders['x-refresh-token'] = storedRefreshToken
-          }
-
-          const res = await axios.post<ApiResponse<{ access_token: string; refresh_token?: string }>>(
-            `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN}`,
-            {},
-            {
-              headers: refreshHeaders,
-              withCredentials: true,
-            },
-          )
-
-          const responseData = res.data as unknown as {
-            data?: { access_token?: string; refresh_token?: string }
-            access_token?: string
-            refresh_token?: string
-          }
-          const tokenPayload = responseData?.data || responseData
-          const newAccessToken = tokenPayload?.access_token
-          const newRefreshToken = tokenPayload?.refresh_token
-
+          const newAccessToken = await refreshAuthToken()
           if (newAccessToken) {
-            if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
-              storage.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
-            } else {
-              storage.session.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken)
-            }
-            storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, newAccessToken, { days: 1 })
-            if (newRefreshToken) {
-              storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken, { days: 7 })
-              storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
-              storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
-            }
-
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
             }
-
             processQueue(null, newAccessToken)
-
             return apiClient(originalRequest)
           } else {
             throw new Error('Invalid token response structure')

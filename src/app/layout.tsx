@@ -6,6 +6,8 @@ import { AppClientProvider } from '@/providers/app.client.provider'
 import { PostHogProvider } from '@/providers/posthog.provider'
 import { QueryProvider } from '@/providers/query.provider'
 
+import { SITE_CONFIG } from '@/config/site.config'
+
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
   variable: '--font-sans',
@@ -26,41 +28,45 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: {
-    template: '%s | LingoSphere - Học Tiếng Anh & Luyện Thi TOEIC',
-    default: 'LingoSphere - Nền Tảng Học Tiếng Anh & Luyện Thi TOEIC Chuẩn Quốc Tế',
+  metadataBase: new URL(SITE_CONFIG.url),
+  icons: {
+    icon: '/assets/lingosphere-logo.png',
+    shortcut: '/assets/lingosphere-logo.png',
+    apple: '/assets/lingosphere-logo.png',
   },
-  description:
-    'Luyện thi TOEIC 7 Part, học từ vựng Spaced Repetition SRS, luyện nghe Dictation, phát âm Whisper AI và gia sư AI thông minh.',
-  keywords: [
-    'TOEIC online',
-    'Luyện thi TOEIC',
-    'ETS 2024',
-    'Học từ vựng tiếng Anh',
-    'Spaced Repetition SRS',
-    'Luyện nghe chép chính tả',
-    'Dictation',
-    'AI Tutor',
-    'LingoSphere',
-  ],
-  authors: [{ name: 'LingoSphere Education' }],
-  creator: 'LingoSphere',
-  publisher: 'LingoSphere',
-  metadataBase: new URL('https://lingosphere.edu.vn'),
+  title: {
+    template: `%s | ${SITE_CONFIG.name} - Học Tiếng Anh & Luyện Thi TOEIC`,
+    default: SITE_CONFIG.title,
+  },
+  description: SITE_CONFIG.description,
+  keywords: SITE_CONFIG.keywords,
+  authors: [{ name: SITE_CONFIG.author, url: SITE_CONFIG.url }],
+  creator: SITE_CONFIG.creator,
+  publisher: SITE_CONFIG.publisher,
+  alternates: {
+    canonical: './',
+  },
   openGraph: {
     type: 'website',
-    locale: 'vi_VN',
-    url: 'https://lingosphere.edu.vn',
-    siteName: 'LingoSphere',
-    title: 'LingoSphere - Nền Tảng Học Tiếng Anh & Luyện Thi TOEIC Chuẩn Quốc Tế',
-    description:
-      'Luyện thi TOEIC 7 Part chuẩn ETS, học 3000 từ vựng cốt lõi theo phương pháp lặp lại ngắt quãng SRS, luyện nghe Dictation và chấm điểm phát âm AI.',
+    locale: SITE_CONFIG.locale,
+    url: SITE_CONFIG.url,
+    siteName: SITE_CONFIG.name,
+    title: SITE_CONFIG.title,
+    description: SITE_CONFIG.description,
+    images: [
+      {
+        url: `${SITE_CONFIG.url}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: SITE_CONFIG.title,
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LingoSphere - Nền Tảng Học Tiếng Anh & Luyện Thi TOEIC Chuẩn Quốc Tế',
-    description:
-      'Luyện thi TOEIC 7 Part chuẩn ETS, học từ vựng SRS, nghe chép chính tả Dictation và gia sư AI.',
+    title: SITE_CONFIG.title,
+    description: SITE_CONFIG.description,
+    images: [`${SITE_CONFIG.url}/og-image.png`],
   },
   robots: {
     index: true,
@@ -68,6 +74,9 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
     },
   },
 }

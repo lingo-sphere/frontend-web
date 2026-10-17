@@ -10,6 +10,9 @@ const EXTERNAL_TRUSTED_HOSTS = [
   'res.cloudinary.com',
 ]
 
+export const IMAGE_FALLBACK_PLACEHOLDER =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120" fill="none"><rect width="160" height="120" fill="%23f1f5f9" rx="8"/><path d="M70 52a6 6 0 1 0 0-12 6 6 0 0 0 0 12ZM50 78h60l-18-24-14 18-8-10-20 16Z" fill="%2394a3b8"/><text x="80" y="98" fill="%2394a3b8" font-size="10" font-family="sans-serif" text-anchor="middle">Ảnh không khả dụng</text></svg>'
+
 export interface MediaFileInfo {
   _id: string
   file_name: string

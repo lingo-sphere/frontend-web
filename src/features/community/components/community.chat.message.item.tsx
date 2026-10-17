@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import type { ChatMessage } from '@/features/community/types/community.types'
 import { formatRelativeTime } from '@/lib/format'
-import { resolveMediaUrl } from '@/utils/media.utils'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/utils/media.utils'
 
 const QUICK_EMOJIS = ['👍', '❤️', '😆', '😲', '😭', '😡']
 
@@ -223,6 +223,7 @@ export function CommunityChatMessageItem({
                     >
                       <Image
                         src={resolveMediaUrl(url)}
+                        fallback={IMAGE_FALLBACK_PLACEHOLDER}
                         alt="attachment"
                         style={{
                           maxHeight: 135,
