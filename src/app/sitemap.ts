@@ -29,7 +29,7 @@ interface ApiTopicItem {
 
 async function fetchDynamicCourses(): Promise<MetadataRoute.Sitemap> {
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.io.vn'
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.online'
     const res = await fetch(`${apiBase}/courses`, { next: { revalidate: 3600 } })
     if (!res.ok) return []
     const json = await res.json()
@@ -50,7 +50,7 @@ async function fetchDynamicCourses(): Promise<MetadataRoute.Sitemap> {
 
 async function fetchDynamicExams(): Promise<MetadataRoute.Sitemap> {
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.io.vn'
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.online'
     const res = await fetch(`${apiBase}/exams`, { next: { revalidate: 3600 } })
     if (!res.ok) return []
     const json = await res.json()
@@ -71,7 +71,7 @@ async function fetchDynamicExams(): Promise<MetadataRoute.Sitemap> {
 
 async function fetchDynamicTopics(): Promise<MetadataRoute.Sitemap> {
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.io.vn'
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.online'
     const res = await fetch(`${apiBase}/vocabulary/topics`, { next: { revalidate: 3600 } })
     if (!res.ok) return []
     const json = await res.json()

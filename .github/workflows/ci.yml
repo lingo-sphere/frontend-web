@@ -1,10 +1,11 @@
-# Quy trình CI tự động kiểm tra typecheck và build production cho Frontend Web khi deploy lên main
+# Quy trình CI tự động kiểm tra typecheck và build production cho Frontend Web khi deploy lên main hoặc develop
 name: Frontend Web CI
 
 on:
   push:
     branches:
       - main
+      - develop
   workflow_dispatch:
 
 concurrency:
@@ -38,6 +39,7 @@ jobs:
       - name: Production Build
         run: npm run build
         env:
-          NEXT_PUBLIC_API_BASE_URL: https://api.lingosphere.io.vn
-          NEXT_PUBLIC_ADMIN_WEB_URL: https://admin.lingosphere.io.vn
+          NODE_OPTIONS: "--max-old-space-size=5120"
+          NEXT_PUBLIC_API_BASE_URL: https://api.lingosphere.online
+          NEXT_PUBLIC_ADMIN_WEB_URL: https://admin.lingosphere.online
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: 790440593251-u1ht6t39hocf2qh6hncngudn8gm4sl19.apps.googleusercontent.com
