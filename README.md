@@ -155,7 +155,7 @@ Fill in the environment variables:
 
 ```env
 # Public API Gateway Endpoint
-NEXT_PUBLIC_API_BASE_URL=https://api.lingosphere.online/api/v1
+NEXT_PUBLIC_API_BASE_URL=https://api.lingosphere.online
 
 # Admin Portal URL (for administrative redirection)
 NEXT_PUBLIC_ADMIN_WEB_URL=https://admin.lingosphere.online
