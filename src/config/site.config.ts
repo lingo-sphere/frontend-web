@@ -5,8 +5,8 @@ export const SITE_CONFIG = {
   titleTemplate: '%s | LingoSphere',
   description:
     'Luyện thi TOEIC 7 Part chuẩn ETS, học 3000 từ vựng Spaced Repetition SRS, luyện nghe Dictation, phát âm Whisper AI và gia sư AI thông minh.',
-  domain: 'lingosphere.io.vn',
-  url: process.env.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '') : 'https://lingosphere.io.vn',
+  domain: 'lingosphere.online',
+  url: process.env.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '') : 'https://lingosphere.online',
   ogImage: '/og-image.png',
   locale: 'vi_VN',
   author: 'LingoSphere Education',

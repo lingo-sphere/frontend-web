@@ -11,7 +11,7 @@
 
 **An intelligent, immersive, and gamified language learning web platform designed to elevate English proficiency through AI mentoring and full-length TOEIC simulations.**
 
-[Live Web Platform](https://lingosphere.io.vn) • [Admin Console](https://admin.lingosphere.io.vn) • [API Service](https://api.lingosphere.io.vn)
+[Live Web Platform](https://lingosphere.online) • [Admin Console](https://admin.lingosphere.online) • [API Service](https://api.lingosphere.online)
 
 </div>
 
@@ -155,10 +155,10 @@ Fill in the environment variables:
 
 ```env
 # Public API Gateway Endpoint
-NEXT_PUBLIC_API_BASE_URL=https://api.lingosphere.io.vn/api/v1
+NEXT_PUBLIC_API_BASE_URL=https://api.lingosphere.online/api/v1
 
 # Admin Portal URL (for administrative redirection)
-NEXT_PUBLIC_ADMIN_WEB_URL=https://admin.lingosphere.io.vn
+NEXT_PUBLIC_ADMIN_WEB_URL=https://admin.lingosphere.online
 
 # Google OAuth Client ID (for Google Sign-In)
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com

@@ -31,7 +31,7 @@ interface ServerCourseData {
 async function getCourseServer(id: string): Promise<ServerCourseData | null> {
   if (!id) return null
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.io.vn'
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.online'
     const res = await fetch(`${apiBase}/courses/${id}`, {
       next: { revalidate: 3600 },
     })
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: CourseDetailPageProps): Promi
       imageUrl = rawImage
     } else {
       const cleanKey = rawImage.replace(/^\/+/, '').replace(/^(api\/)?media\/stream\//i, '')
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.io.vn'
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.lingosphere.online'
       imageUrl = `${apiBase}/media/stream/${cleanKey}`
     }
   }

@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: '*.r2.dev' },
-      { protocol: 'https', hostname: 'assets.lingosphere.io.vn' },
-      { protocol: 'https', hostname: 'cdn.lingosphere.io.vn' },
+      { protocol: 'https', hostname: 'assets.lingosphere.online' },
+      { protocol: 'https', hostname: 'cdn.lingosphere.online' },
     ],
   },
   async rewrites() {
