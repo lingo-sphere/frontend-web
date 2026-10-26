@@ -31,7 +31,9 @@ export function HeaderStatsBadges({
         variant="ghost"
       >
         <Icon name="flame" size={16} />
-        <span>{(streak ?? 0).toLocaleString('vi-VN')}</span>
+        <span suppressHydrationWarning>
+          {(mounted ? (streak ?? 0) : 0).toLocaleString('vi-VN')}
+        </span>
       </Button>
 
       {mounted && !isPremium && (

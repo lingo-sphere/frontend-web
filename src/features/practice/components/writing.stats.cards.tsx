@@ -30,8 +30,8 @@ interface WritingStatsCardsProps {
 }
 
 // Percent values must be in [0, 100] for the UI; clamp to defend against bad data.
-const clampPercent = (n: number) =>
-  Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+const clampPercent = (n: number | null) =>
+  typeof n === "number" && Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
 
 // Skill display names
 const SKILL_DISPLAY: Record<string, { vi: string; en: string }> = {
@@ -122,13 +122,13 @@ export function WritingStatsCards({
               </div>
               <div>
                 <p className="text-[24px] font-bold text-text-primary">
-                  {clampPercent(stats.average_score).toFixed(1)}
+                  {stats.practical_submissions === 0 ? '—' : clampPercent(stats.average_score).toFixed(1)}
                   <span className="ml-0.5 text-[14px] font-medium text-text-tertiary">
                     /100
                   </span>
                 </p>
                 <p className="text-[12px] text-text-secondary">
-                  {isVietnamese ? "Điểm trung bình" : "Average Score"}
+                  {isVietnamese ? "Điểm thực tế gần đây" : "Recent practical average"}
                 </p>
               </div>
             </div>
@@ -179,7 +179,7 @@ export function WritingStatsCards({
               </div>
               <div>
                 <p className="text-[24px] font-bold text-text-primary">
-                  {clampPercent(stats.average_grammar_accuracy)}%
+                  {stats.average_grammar_accuracy === null ? "—" : `${clampPercent(stats.average_grammar_accuracy)}%`}
                 </p>
                 <p className="text-[12px] text-text-secondary">
                   {isVietnamese ? "Độ chính xác" : "Accuracy"}
@@ -220,7 +220,7 @@ export function WritingStatsCards({
                   ? stats.score_breakdown.naturalness
                   : stats.score_breakdown.register;
 
-              const isWeakest = progress.weakest_area === skill;
+              const isWeakest = score !== null && progress.weakest_area === skill;
               const colorClass = isWeakest ? "bg-red-500" : "bg-emerald-500";
 
               return (
@@ -245,13 +245,13 @@ export function WritingStatsCards({
                         isWeakest ? "text-red-600" : "text-text-primary"
                       }`}
                     >
-                      {clampPercent(score)}%
+                      {score === null ? "—" : `${clampPercent(score)}%`}
                     </span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-surface-subtle">
                     <div
                       className={`h-full rounded-full ${colorClass} transition-all`}
-                      style={{ width: `${clampPercent(score)}%` }}
+                      style={{ width: `${score === null ? "—" : `${clampPercent(score)}%`}` }}
                     />
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export function WritingStatsCards({
             })}
           </div>
 
-          {progress.weakest_area && (
+          {stats.average_score !== null && progress.weakest_area && (
             <div className="mt-4 rounded-lg bg-amber-50 p-3">
               <p className="text-[13px] text-amber-800">
                 <span className="font-medium">

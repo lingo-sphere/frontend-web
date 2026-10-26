@@ -1,36 +1,20 @@
-// Component giao diện React WritingResult cho học viên
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import {
-  ArrowLeft,
-  CheckCircle,
-  AlertTriangle,
-  Lightbulb,
-  RotateCcw,
-  ChevronRight,
-  BookOpen,
-  Sparkles,
-  Target,
-  FileText,
-  MessageSquare,
-  SpellCheck,
-  MapPin,
-  ClipboardList,
-  HelpCircle,
-} from 'lucide-react'
-import { Card, CardContent } from '@/components/card'
-import { Button } from '@/components/button'
-import type { WritingSubmission, WritingExercise } from '@/features/practice/types/writing'
+import { useNavigate } from "@/lib/navigation";
+import { useTranslation } from "react-i18next";
+import { ArrowLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Button } from "@/components/button";
+import { Card, CardContent } from "@/components/card";
+import type { WritingSubmission, WritingExercise } from "../types/writing";
+import { writingScoreLabel } from "../lib/writing-score";
+import { WritingEvaluationCard } from "./writing.evaluation.card";
 
 interface WritingResultProps {
-  submission: WritingSubmission
-  exercise: WritingExercise
-  onBack: () => void
-  onTryAgain: () => void
-  onNextExercise: () => void
-  onViewHistory: () => void
+  submission: WritingSubmission;
+  exercise: WritingExercise;
+  onBack: () => void;
+  onTryAgain: () => void;
+  onNextExercise: () => void;
+  onViewHistory: () => void;
 }
-
 export function WritingResult({
   submission,
   exercise,
@@ -39,334 +23,221 @@ export function WritingResult({
   onNextExercise,
   onViewHistory,
 }: WritingResultProps) {
-  const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
-
-  const [activeTab, setActiveTab] = useState<'overview' | 'vocabulary' | 'grammar' | 'errors' | 'vocabulary-detailed' | 'sentence'>('overview')
-
-  const aiEval = submission.ai_evaluation
-  const scores = {
-    overall: submission.overall_score || 0,
-    task: submission.task_achievement_score || 0,
-    coherence: submission.coherence_score || 0,
-    vocabulary: submission.lexical_resource_score || 0,
-    grammar: submission.grammatical_accuracy_score || 0,
-  }
-
-  // Backend AI evaluation returns scores on a 0-100 scale; thresholds follow
-  // the same proportions as the legacy 0-10 view (>=8/10 -> good, >=6/10 -> ok).
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-600'
-    if (score >= 60) return 'text-amber-600'
-    return 'text-red-600'
-  }
-
-  const getScoreBg = (score: number) => {
-    if (score >= 80) return 'bg-emerald-100'
-    if (score >= 60) return 'bg-amber-100'
-    return 'bg-red-100'
-  }
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'HIGH': return 'bg-red-100 text-red-700'
-      case 'MEDIUM': return 'bg-amber-100 text-amber-700'
-      case 'LOW': return 'bg-blue-100 text-blue-700'
-      default: return 'bg-gray-100 text-gray-700'
-    }
-  }
-
-  const getErrorIcon = (type: string) => {
-    switch (type) {
-      case 'GRAMMAR': return FileText
-      case 'SPELLING': return SpellCheck
-      case 'PUNCTUATION': return MapPin
-      case 'VOCABULARY': return BookOpen
-      case 'STYLE': return Sparkles
-      case 'FORMAT': return ClipboardList
-      default: return HelpCircle
-    }
-  }
-
-  const tabs = [
-    { id: 'overview', label: isVietnamese ? 'Tổng quan' : 'Overview', icon: Sparkles },
-    { id: 'vocabulary', label: isVietnamese ? 'Từ vựng' : 'Vocabulary', icon: BookOpen },
-    { id: 'grammar', label: isVietnamese ? 'Ngữ pháp' : 'Grammar', icon: MessageSquare },
-    { id: 'sentence', label: isVietnamese ? 'Câu' : 'Sentences', icon: FileText },
-  ]
-
+  const navigate = useNavigate();
+  const { i18n } = useTranslation(),
+    vi = i18n.language === "vi";
+  const evaluation = submission.ai_evaluation,
+    toeic = submission.grading_standard === "TOEIC";
+  const groups = [
+    [vi ? "Điểm mạnh" : "Strengths", evaluation?.strengths || []],
+    [vi ? "Cần cải thiện" : "Areas to improve", evaluation?.weaknesses || []],
+    [
+      vi ? "Việc nên làm tiếp" : "Next steps",
+      evaluation?.improvement_tips || [],
+    ],
+  ] as const;
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <button onClick={onBack} className="mb-6 flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
+    <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-text-secondary"
+      >
         <ArrowLeft size={18} />
-        {isVietnamese ? 'Quay lại' : 'Back'}
+        {vi ? "Quay lại" : "Back"}
       </button>
-
-      <section className="mb-8 text-center">
-        <div className={`inline-flex h-32 w-32 flex-col items-center justify-center rounded-full ${getScoreBg(scores.overall)}`}>
-          <span className={`text-[48px] font-bold ${getScoreColor(scores.overall)}`}>
-            {scores.overall.toFixed(1)}
-          </span>
-          <span className="text-[14px] text-text-tertiary">/10</span>
-        </div>
-        <h1 className="mt-4 text-[24px] font-bold text-text-primary">
-          {scores.overall >= 8 ? (isVietnamese ? 'Tuyệt vời!' : 'Excellent!') : scores.overall >= 6 ? (isVietnamese ? 'Tốt lắm!' : 'Good job!') : (isVietnamese ? 'Cố gắng hơn!' : 'Keep trying!')}
+      <section className="space-y-2 rounded-2xl border border-border bg-surface p-6 text-center">
+        <h1 className="text-xl font-semibold">
+          {vi ? "Kết quả Writing" : "Writing result"}
         </h1>
-        <div className="mt-2 flex items-center justify-center gap-2 text-[14px] text-text-secondary">
-          {aiEval?.estimated_cefr && (
-            <span className="rounded-full bg-purple-100 px-3 py-1 text-[12px] font-medium text-purple-700">
-              CEFR: {aiEval.estimated_cefr}
-            </span>
-          )}
-          <span>{submission.word_count} {isVietnamese ? 'từ' : 'words'}</span>
-          <span>•</span>
-          <span>{formatTime(submission.writing_time_seconds || 0, isVietnamese)}</span>
-        </div>
-        <p className="mt-3 text-[14px] text-text-secondary">
-          {aiEval?.overall_feedback || (isVietnamese ? 'Bài viết của bạn đã được đánh giá.' : 'Your writing has been evaluated.')}
+        <p className="text-text-secondary">{exercise.title}</p>
+        <p
+          className="text-4xl font-bold text-primary"
+          aria-label={vi ? "Điểm bài viết" : "Writing score"}
+        >
+          {writingScoreLabel(submission)}
+        </p>
+        <p className="text-sm">
+          {toeic
+            ? vi
+              ? "Điểm nhiệm vụ mô phỏng theo rubric TOEIC"
+              : "Simulated TOEIC task rubric score"
+            : vi
+            ? "Điểm luyện giao tiếp thực tế"
+            : "Practical communication score"}
+        </p>
+        {toeic && (
+          <p className="text-xs text-text-secondary">
+            {vi
+              ? "Không phải điểm TOEIC Writing toàn bài thi 0–200."
+              : "This is not a full-test TOEIC Writing score out of 200."}
+          </p>
+        )}
+        {!submission.grading_version && (
+          <p className="text-xs text-text-secondary">
+            {vi
+              ? "Kết quả từ bộ chấm trước; chưa có nhận xét rubric mới."
+              : "Legacy assessment; the new rubric feedback is unavailable."}
+          </p>
+        )}
+        <p className="whitespace-pre-wrap text-sm">
+          {evaluation?.score_reason ||
+            evaluation?.overall_feedback ||
+            (vi ? "Chưa có nhận xét." : "Feedback unavailable.")}
+        </p>
+        <p className="text-xs text-text-secondary">
+          {submission.word_count} {vi ? "từ" : "words"} ·{" "}
+          {Math.round((submission.writing_time_seconds || 0) / 60)}{" "}
+          {vi ? "phút" : "minutes"}
         </p>
       </section>
-
-      <section className="mb-6">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className={`rounded-xl p-3 ${getScoreBg(scores.task)}`}>
-            <div className="flex items-center gap-2">
-              <Target className={`h-4 w-4 ${getScoreColor(scores.task)}`} />
-              <span className="text-[11px] text-text-secondary">{isVietnamese ? 'Task' : 'Task'}</span>
-            </div>
-            <p className={`mt-1 text-[22px] font-bold ${getScoreColor(scores.task)}`}>{scores.task.toFixed(1)}</p>
-          </div>
-          <div className={`rounded-xl p-3 ${getScoreBg(scores.coherence)}`}>
-            <div className="flex items-center gap-2">
-              <FileText className={`h-4 w-4 ${getScoreColor(scores.coherence)}`} />
-              <span className="text-[11px] text-text-secondary">{isVietnamese ? 'Liên kết' : 'Coherence'}</span>
-            </div>
-            <p className={`mt-1 text-[22px] font-bold ${getScoreColor(scores.coherence)}`}>{scores.coherence.toFixed(1)}</p>
-          </div>
-          <div className={`rounded-xl p-3 ${getScoreBg(scores.vocabulary)}`}>
-            <div className="flex items-center gap-2">
-              <BookOpen className={`h-4 w-4 ${getScoreColor(scores.vocabulary)}`} />
-              <span className="text-[11px] text-text-secondary">{isVietnamese ? 'Từ vựng' : 'Vocabulary'}</span>
-            </div>
-            <p className={`mt-1 text-[22px] font-bold ${getScoreColor(scores.vocabulary)}`}>{scores.vocabulary.toFixed(1)}</p>
-          </div>
-          <div className={`rounded-xl p-3 ${getScoreBg(scores.grammar)}`}>
-            <div className="flex items-center gap-2">
-              <MessageSquare className={`h-4 w-4 ${getScoreColor(scores.grammar)}`} />
-              <span className="text-[11px] text-text-secondary">{isVietnamese ? 'Ngữ pháp' : 'Grammar'}</span>
-            </div>
-            <p className={`mt-1 text-[22px] font-bold ${getScoreColor(scores.grammar)}`}>{scores.grammar.toFixed(1)}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-6">
-        <div className="flex gap-2 border-b border-border">
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as 'overview' | 'vocabulary' | 'grammar' | 'errors' | 'vocabulary-detailed')}
-              className={`flex items-center gap-2 border-b-2 px-4 py-2 text-[13px] font-medium transition-colors ${
-                activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}>
-              <tab.icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-4">
-          {activeTab === 'overview' && aiEval && (
-            <div className="space-y-4">
-              {aiEval.overall_strengths && (
-                <Card className="dashboard-card border-emerald-200 bg-emerald-50/50">
-                  <CardContent className="p-4">
-                    <p className="mb-2 flex items-center gap-2 text-[14px] font-medium text-emerald-700">
-                      <CheckCircle className="h-4 w-4" />
-                      {isVietnamese ? 'Điểm mạnh' : 'Strengths'}
-                    </p>
-                    <p className="text-[13px] text-emerald-600">{aiEval.overall_strengths}</p>
-                  </CardContent>
-                </Card>
-              )}
-              {aiEval.overall_weaknesses && (
-                <Card className="dashboard-card border-amber-200 bg-amber-50/50">
-                  <CardContent className="p-4">
-                    <p className="mb-2 flex items-center gap-2 text-[14px] font-medium text-amber-700">
-                      <AlertTriangle className="h-4 w-4" />
-                      {isVietnamese ? 'Cần cải thiện' : 'Needs improvement'}
-                    </p>
-                    <p className="text-[13px] text-amber-600">{aiEval.overall_weaknesses}</p>
-                  </CardContent>
-                </Card>
-              )}
-              {aiEval.improvement_tips && aiEval.improvement_tips.length > 0 && (
-                <Card className="dashboard-card border-blue-200 bg-blue-50/50">
-                  <CardContent className="p-4">
-                    <p className="mb-3 flex items-center gap-2 text-[14px] font-medium text-blue-700">
-                      <Lightbulb className="h-4 w-4" />
-                      {isVietnamese ? 'Mẹo cải thiện' : 'Improvement tips'}
-                    </p>
-                    <ul className="space-y-2">
-                      {aiEval.improvement_tips.map((tip, index) => (
-                        <li key={index} className="flex items-start gap-2 text-[13px] text-blue-600">
-                          <span className="mt-1">•</span><span>{tip}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              )}
-              {aiEval.suggested_version && (
-                <Card className="dashboard-card border-purple-200 bg-purple-50/50">
-                  <CardContent className="p-4">
-                    <p className="mb-3 flex items-center gap-2 text-[14px] font-medium text-purple-700">
-                      <Sparkles className="h-4 w-4" />
-                      {isVietnamese ? 'Phiên bản cải thiện' : 'Improved version'}
-                    </p>
-                    <div className="rounded-lg bg-surface p-3">
-                      <p className="text-[14px] italic text-text-primary">"{aiEval.suggested_version}"</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'vocabulary' && aiEval?.vocabulary_analysis && (
-            <div className="space-y-4">
-              {aiEval.vocabulary_analysis.keywords_used.length > 0 && (
-                <Card className="dashboard-card">
-                  <CardContent className="p-4">
-                    <p className="mb-3 text-[14px] font-medium text-text-primary">{isVietnamese ? 'Từ khóa đã sử dụng' : 'Keywords used'}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {aiEval.vocabulary_analysis.keywords_used.map((item, index) => (
-                        <span key={index} className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[13px] ${item.is_correct ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                          <CheckCircle className="h-3 w-3" />{item.word}
-                        </span>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              {aiEval.lexical_resource_feedback && (
-                <Card className="dashboard-card">
-                  <CardContent className="p-4">
-                    <p className="mb-2 text-[14px] font-medium text-text-primary">{isVietnamese ? 'Nhận xét về từ vựng' : 'Vocabulary feedback'}</p>
-                    <p className="text-[13px] text-text-secondary">{aiEval.lexical_resource_feedback}</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'grammar' && aiEval && (
-            <div className="space-y-4">
-              {aiEval.errors && aiEval.errors.length > 0 && (
-                <div className="space-y-3">
-                  <p className="text-[14px] font-medium text-text-primary">{isVietnamese ? 'Lỗi được phát hiện' : 'Errors detected'} ({aiEval.errors.length})</p>
-                  {aiEval.errors.map((error, index) => (
-                    <Card key={index} className="dashboard-card border-red-200 bg-red-50/50">
-                      <CardContent className="p-4">
-                        <div className="mb-3 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {(() => {
-                              const ErrorIcon = getErrorIcon(error.type)
-                              return <ErrorIcon className="w-4 h-4 text-text-secondary" />
-                            })()}
-                            <span className="text-[13px] font-medium text-text-primary">{error.type}</span>
-                          </div>
-                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${getSeverityColor(error.severity)}`}>{error.severity}</span>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="rounded bg-surface p-2">
-                            <p className="text-[12px] text-text-secondary">{isVietnamese ? 'Câu của bạn:' : 'Your sentence:'}</p>
-                            <p className="text-[13px] font-medium text-text-primary">{error.original}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[13px] text-red-500 line-through">{error.original}</span>
-                            <span className="text-[13px] text-text-tertiary">→</span>
-                            <span className="text-[13px] font-medium text-emerald-600">{error.correction}</span>
-                          </div>
-                          <p className="text-[12px] text-text-secondary">{error.explanation}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
+      {toeic && !!evaluation?.rubric_snapshot?.bands.length && (
+        <details className="rounded-xl border border-border bg-surface p-4">
+          <summary className="cursor-pointer font-semibold">
+            {vi ? "Rubric nhiệm vụ TOEIC" : "TOEIC task rubric"}
+          </summary>
+          <p className="my-2 text-xs text-text-secondary">
+            {vi
+              ? "Mô tả mức điểm dùng trong lần chấm này (tiếng Anh)."
+              : "Band descriptions used for this assessment."}
+          </p>
+          <ul className="space-y-2 text-sm">
+            {evaluation.rubric_snapshot.bands.map((band, index) => (
+              <li
+                key={index}
+                className={
+                  index === submission.raw_score
+                    ? "rounded-lg bg-primary/10 p-2 font-medium"
+                    : "p-2"
+                }
+              >
+                {band}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+      {submission.grading_version === "writing-v2" && (
+        <section
+          className="space-y-2 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm"
+          aria-label={vi ? "Theo dõi ôn Writing" : "Writing review tracking"}
+        >
+          <h2 className="font-semibold">
+            {vi ? "Theo dõi lỗi và vận dụng" : "Error and application tracking"}
+          </h2>
+          <p>
+            {submission.writing_srs_version !== 1
+              ? vi
+                ? "Điểm bài đã lưu. Bằng chứng và lịch ôn đang chờ đồng bộ; bạn có thể mở sổ tay để thử lại."
+                : "Your grade is saved. Learning evidence is awaiting sync; open your notebook to retry."
+              : submission.writing_srs_summary?.some((row) => row.credited)
+              ? vi
+                ? "Đã ghi nhận vận dụng đúng trong bài khác với khoảng cách ôn đủ điều kiện. Lịch ôn đã cập nhật."
+                : "Eligible independent application in another spaced task was recorded. Your schedule is updated."
+              : submission.writing_srs_summary?.some(
+                  (row) => row.outcome === "ERROR",
+                )
+              ? vi
+                ? "Đã ghi nhận các mục tiêu cần theo dõi từ lỗi trong bài này."
+                : "Targets to monitor were recorded from errors in this response."
+              : vi
+              ? "Lượt này chưa có thêm bằng chứng đủ điều kiện để xác nhận vận dụng độc lập. Không suy mức thành thạo từ điểm tổng."
+              : "This response provides no additional eligible independent evidence. Mastery is not inferred from the overall score."}
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/practice/mistakes?section=WRITING")}
+          >
+            {vi ? "Mở sổ tay Writing" : "Open Writing notebook"}
+          </Button>
+        </section>
+      )}
+      <WritingEvaluationCard submission={submission} />
+      <div className="grid gap-3 md:grid-cols-3">
+        {groups.map(([label, items]) => (
+          <Card key={label}>
+            <CardContent className="space-y-2 p-4">
+              <h2 className="font-semibold">{label}</h2>
+              {items.length ? (
+                <ul className="list-disc space-y-2 pl-4 text-sm">
+                  {items.map((item, index) => (
+                    <li key={index}>{item}</li>
                   ))}
-                </div>
+                </ul>
+              ) : (
+                <p className="text-sm text-text-secondary">
+                  {vi
+                    ? "Không có nhận xét bổ sung."
+                    : "No additional comments."}
+                </p>
               )}
-              {aiEval.grammatical_accuracy_feedback && (
-                <Card className="dashboard-card">
-                  <CardContent className="p-4">
-                    <p className="mb-2 text-[14px] font-medium text-text-primary">{isVietnamese ? 'Nhận xét về ngữ pháp' : 'Grammar feedback'}</p>
-                    <p className="text-[13px] text-text-secondary">{aiEval.grammatical_accuracy_feedback}</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'sentence' && aiEval?.sentence_analysis && (
-            <div className="space-y-4">
-              <Card className="dashboard-card">
-                <CardContent className="p-4">
-                  <p className="mb-4 text-[14px] font-medium text-text-primary">{isVietnamese ? 'Phân tích câu' : 'Sentence analysis'}</p>
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <div className="text-center">
-                      <p className="text-[24px] font-bold text-primary">{aiEval.sentence_analysis.sentence_count}</p>
-                      <p className="text-[11px] text-text-secondary">{isVietnamese ? 'Số câu' : 'Sentences'}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[24px] font-bold text-primary">{aiEval.sentence_analysis.avg_sentence_length}</p>
-                      <p className="text-[11px] text-text-secondary">{isVietnamese ? 'TB từ/câu' : 'Avg words/sentence'}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[24px] font-bold text-emerald-600">{aiEval.sentence_analysis.complex_sentences}</p>
-                      <p className="text-[11px] text-text-secondary">{isVietnamese ? 'Câu phức' : 'Complex'}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[24px] font-bold text-blue-600">{aiEval.sentence_analysis.simple_sentences}</p>
-                      <p className="text-[11px] text-text-secondary">{isVietnamese ? 'Câu đơn' : 'Simple'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="mb-4 text-[16px] font-semibold text-text-primary">{isVietnamese ? 'Bài viết của bạn' : 'Your writing'}</h2>
-        <Card className="dashboard-card">
-          <CardContent className="p-4">
-            <div className="rounded-lg bg-surface-subtle p-4">
-              <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-primary">{submission.content}</p>
-            </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      {!!evaluation?.errors.length && (
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">
+            {vi
+              ? "Lỗi cần sửa và gợi ý diễn đạt"
+              : "Corrections and expression suggestions"}
+          </h2>
+          {evaluation.errors.map((error, index) => (
+            <Card key={index}>
+              <CardContent className="space-y-2 p-4">
+                <p className="text-sm font-medium">
+                  {error.type === "STYLE"
+                    ? vi
+                      ? "Gợi ý tùy chọn"
+                      : "Optional style suggestion"
+                    : error.type}
+                </p>
+                <p className="whitespace-pre-wrap text-sm">
+                  <span className="text-red-600">{error.original}</span> →{" "}
+                  <span className="text-emerald-600">{error.correction}</span>
+                </p>
+                <p className="text-sm text-text-secondary">
+                  {error.explanation}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+      )}
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">
+          {vi ? "Bài viết của bạn" : "Your writing"}
+        </h2>
+        <Card>
+          <CardContent className="whitespace-pre-wrap p-4">
+            {submission.content}
           </CardContent>
         </Card>
       </section>
-
-      <section className="flex flex-col gap-4 sm:flex-row sm:justify-end">
-        <Button variant="outline" onClick={onViewHistory}>{isVietnamese ? 'Xem lịch sử' : 'View history'}</Button>
-        <Button variant="outline" className="gap-2" onClick={onTryAgain}>
-          <RotateCcw size={16} />{isVietnamese ? 'Thử lại' : 'Try again'}
+      {evaluation?.suggested_version && (
+        <section>
+          <h2 className="mb-3 text-lg font-semibold">
+            {vi ? "Bản chỉnh sửa tham khảo" : "Suggested revision"}
+          </h2>
+          <Card>
+            <CardContent className="whitespace-pre-wrap p-4">
+              {evaluation.suggested_version}
+            </CardContent>
+          </Card>
+        </section>
+      )}
+      <section className="flex flex-wrap justify-end gap-3">
+        <Button variant="outline" onClick={onViewHistory}>
+          {vi ? "Lịch sử" : "History"}
         </Button>
-        <Button className="gap-2 bg-primary hover:bg-primary-hover" onClick={onNextExercise}>
-          {isVietnamese ? 'Bài tiếp theo' : 'Next exercise'}<ChevronRight size={16} />
+        <Button variant="outline" onClick={onTryAgain}>
+          <RotateCcw size={16} />
+          {vi ? "Luyện lại" : "Practice again"}
+        </Button>
+        <Button onClick={onNextExercise}>
+          {vi ? "Bài tiếp theo" : "Next exercise"}
+          <ChevronRight size={16} />
         </Button>
       </section>
-
-      {aiEval?.ai_model && (
-        <p className="mt-6 text-center text-[11px] text-text-tertiary">
-          {isVietnamese ? 'Được đánh giá bởi' : 'Evaluated by'} {aiEval.ai_model} {aiEval.ai_version} • {aiEval.processing_time_ms}ms
-        </p>
-      )}
     </main>
-  )
-}
-
-function formatTime(seconds: number, isVietnamese: boolean): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  if (mins === 0) return `${secs} ${isVietnamese ? 'giây' : 'sec'}`
-  return `${mins} ${isVietnamese ? 'phút' : 'min'} ${secs}s`
+  );
 }

@@ -1,8 +1,8 @@
 // Hook quản lý trạng thái bài tập luyện viết, lưu bản nháp và gửi chấm điểm bài luận AI.
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useParams } from '@/lib/navigation'
+import { useNavigate, useParams, useSearchParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { practiceService, type BackendWritingExercise } from '@/features/practice/services/practice.service'
@@ -14,7 +14,6 @@ import type {
   WritingSubmission,
   WritingStats,
   WritingProgress,
-  WritingDraft,
   WritingLevel,
   DifficultyLevel,
   ExerciseType,
@@ -64,6 +63,7 @@ function mapBackendToWritingExercise(item: any): WritingExercise {
   return {
     id: item._id,
     code: item.code,
+    grading_standard: item.grading_standard || 'PRACTICAL', task_requirements: item.task_requirements || [], image_description: item.image_description || '',
     title: item.title,
     title_vi: item.title_vi || item.title,
     description: item.description || '',
@@ -80,14 +80,16 @@ function mapBackendToWritingExercise(item: any): WritingExercise {
     reference_media_id: item.reference_media_id,
     directions: item.directions || [],
     directions_vi: item.directions_vi || [],
-    incoming_email: item.incoming_email,
+    source_text: item.source_text || item.incoming_email?.body || '',
+    source_text_vi: item.source_text_vi || '',
+    incoming_email: item.incoming_email || (item.source_text ? { body: item.source_text } : undefined),
     background_context: item.background_context,
     background_context_vi: item.background_context_vi,
     guiding_questions: item.guiding_questions || [],
     guiding_questions_vi: item.guiding_questions_vi || [],
     keywords: item.keywords || [],
-    min_words: item.min_words || 45,
-    max_words: item.max_words || 85,
+    min_words: item.min_words ?? 45,
+    max_words: item.max_words ?? 85,
     difficulty_level: toDifficultyLevel(item.difficulty_level),
     cefr_level: item.cefr_level || 'B1',
     total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
@@ -101,6 +103,8 @@ function mapBackendToWritingExercise(item: any): WritingExercise {
 function mapBackendToSubmission(sub: any): WritingSubmission {
   const aiEval = sub.ai_evaluation || {}
   return {
+    writing_srs_version: sub.writing_srs_version, writing_srs_summary: sub.writing_srs_summary,
+    grading_standard: sub.grading_standard, grading_version: sub.grading_version, raw_score: sub.raw_score, max_score: sub.max_score, grading_model: sub.grading_model,
     id: sub._id || sub.id,
     user_id: sub.user_id,
     exercise_id: typeof sub.exercise_id === 'object' ? sub.exercise_id?._id : sub.exercise_id,
@@ -110,12 +114,12 @@ function mapBackendToSubmission(sub: any): WritingSubmission {
     drafts: [],
     is_draft: sub.is_draft || false,
     overall_score: sub.overall_score ?? 0,
-    task_achievement_score: sub.task_achievement_score ?? sub.overall_score ?? 0,
-    coherence_score: sub.coherence_score ?? 0,
-    lexical_resource_score: sub.lexical_resource_score ?? 0,
-    grammatical_accuracy_score: sub.grammatical_accuracy_score ?? 0,
-    naturalness_score: sub.naturalness_score ?? 0,
-    register_score: sub.register_score ?? 0,
+    task_achievement_score: sub.task_achievement_score,
+    coherence_score: sub.coherence_score,
+    lexical_resource_score: sub.lexical_resource_score,
+    grammatical_accuracy_score: sub.grammatical_accuracy_score,
+    naturalness_score: sub.naturalness_score,
+    register_score: sub.register_score,
     parent_submission_id: sub.parent_submission_id,
     scaffold_blocks: sub.scaffold_blocks || [],
     writing_time_seconds: sub.writing_time_seconds || 0,
@@ -127,13 +131,15 @@ function mapBackendToSubmission(sub: any): WritingSubmission {
       ...aiEval,
       overall_feedback: aiEval.detailed_feedback || aiEval.overall_feedback || '',
       errors: (aiEval.grammar_errors || []).map((err: any) => ({
-        type: err.type || 'GRAMMAR',
+        type: ['GRAMMAR', 'SPELLING', 'PUNCTUATION', 'VOCABULARY', 'STYLE', 'FORMAT'].includes(err.category) ? err.category : err.type || 'GRAMMAR',
         original: err.original || '',
         correction: err.corrected || err.correction || '',
         explanation: err.explanation || '',
       })),
       suggested_version: aiEval.improved_version || aiEval.suggested_version || sub.content,
-      improvement_tips: aiEval.weaknesses || aiEval.improvement_tips || [],
+      overall_strengths: aiEval.strengths?.join(' ') || aiEval.overall_strengths,
+      overall_weaknesses: aiEval.weaknesses?.join(' ') || aiEval.overall_weaknesses,
+      improvement_tips: aiEval.actionable_tips || aiEval.improvement_tips || [],
     },
   }
 }
@@ -143,6 +149,8 @@ export function useWritingWorkspace() {
   const { showAction } = useApp()
   const navigate = useNavigate()
   const params = useParams()
+  const searchParams = useSearchParams()
+  const reviewSessionId = searchParams.get('review_session') || undefined
   const rawPath = params?.slug || params?.['*']
   const path = Array.isArray(rawPath) ? rawPath.join('/') : rawPath || ''
 
@@ -159,6 +167,7 @@ export function useWritingWorkspace() {
   const [currentView, setCurrentView] = useState<WritingView>(initialView)
   const [selectedExercise, setSelectedExercise] = useState<WritingExercise | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<WritingSubmission | null>(null)
+  const [scoreGroups, setScoreGroups] = useState<NonNullable<WritingStats['score_groups']>>([])
   const [historySubmissions, setHistorySubmissions] = useState<WritingSubmission[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
@@ -241,6 +250,7 @@ export function useWritingWorkspace() {
   useEffect(() => {
     practiceService.getMyWritingSubmissions()
       .then((res: any) => {
+        setScoreGroups(res?.score_groups || [])
         const items = res?.items || res?.data?.items || (Array.isArray(res) ? res : [])
         if (Array.isArray(items) && items.length > 0) {
           const mapped = items.map(mapBackendToSubmission)
@@ -274,29 +284,26 @@ export function useWritingWorkspace() {
     }
   }, [isInitialized, exerciseIdFromUrl, selectedExercise, exerciseList])
 
-  // Stats calculation
-  // NOTE: Backend AI evaluation returns all sub-scores on a 0-100 scale
-  // (see backend/apps/ai-service/src/services/ai-evaluation.service.ts prompt:
-  // "TIÊU CHÍ CHẤM ĐIỂM (Thang 0 - 100)"). We average them as-is, clamp to
-  // [0, 100] to defend against bad/outlier data, and round to 1 decimal place.
+  // TOEIC task bands and practical performance are not averaged together.
   const stats: WritingStats = useMemo(() => {
     const total = historySubmissions.length
 
-    const average = (selector: (s: WritingSubmission) => number) => {
-      if (total === 0) return 0
-      const sum = historySubmissions.reduce((acc, s) => acc + selector(s), 0)
-      const raw = sum / total
+    const practical = historySubmissions.filter(submission => submission.grading_standard === 'PRACTICAL' && submission.grading_version === 'writing-v2')
+    const average = (selector: (s: WritingSubmission) => number | null | undefined) => {
+      const values = practical.map(selector).filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+      if (!values.length) return null
+      const raw = values.reduce((a, b) => a + b, 0) / values.length
       const clamped = Math.max(0, Math.min(100, raw))
       return Math.round(clamped * 10) / 10
     }
 
     const avgScore = average((s) => s.overall_score ?? 0)
-    const avgGrammar = average((s) => s.grammatical_accuracy_score ?? s.overall_score ?? 0)
-    const avgVocab = average((s) => s.lexical_resource_score ?? s.overall_score ?? 0)
-    const avgTask = average((s) => s.task_achievement_score ?? s.overall_score ?? 0)
-    const avgCoherence = average((s) => s.coherence_score ?? 0)
-    const avgNaturalness = average((s) => s.naturalness_score ?? 0)
-    const avgRegister = average((s) => s.register_score ?? 0)
+    const avgGrammar = average((s) => s.grammatical_accuracy_score)
+    const avgVocab = average((s) => s.lexical_resource_score)
+    const avgTask = average((s) => s.task_achievement_score)
+    const avgCoherence = average((s) => s.coherence_score)
+    const avgNaturalness = average((s) => s.naturalness_score)
+    const avgRegister = average((s) => s.register_score)
 
     const avgTime =
       total > 0
@@ -308,6 +315,7 @@ export function useWritingWorkspace() {
         : 0
 
     return {
+      practical_submissions: practical.length, score_groups: scoreGroups,
       total_submissions: total,
       average_score: avgScore,
       total_words_written: historySubmissions.reduce((sum, s) => sum + (s.word_count || 0), 0),
@@ -323,7 +331,7 @@ export function useWritingWorkspace() {
         register: avgRegister,
       },
     }
-  }, [historySubmissions])
+  }, [historySubmissions, scoreGroups])
 
   // Get user ID from auth store
   const userId = useAuthStore((state) => state.user?.user_id)
@@ -338,7 +346,7 @@ export function useWritingWorkspace() {
 
   // Determine weakest skill from stats
   const weakestSkill: WritingSkillType = useMemo(() => {
-    const skills: { skill: WritingSkillType; score: number }[] = [
+    const skills: { skill: WritingSkillType; score: number | null }[] = [
       { skill: 'grammatical_accuracy', score: stats.score_breakdown.grammar },
       { skill: 'lexical_resource', score: stats.score_breakdown.vocabulary },
       { skill: 'coherence', score: stats.score_breakdown.coherence },
@@ -347,8 +355,9 @@ export function useWritingWorkspace() {
       { skill: 'register', score: stats.score_breakdown.register },
     ]
     // Sort by score ascending (lowest = weakest)
-    skills.sort((a, b) => a.score - b.score)
-    return skills[0].skill
+    const known = skills.filter((item): item is { skill: WritingSkillType; score: number } => typeof item.score === 'number')
+    known.sort((a, b) => a.score - b.score)
+    return known[0]?.skill || 'grammatical_accuracy'
   }, [stats])
 
   // Map skill type to display name
@@ -364,7 +373,7 @@ export function useWritingWorkspace() {
   const progress: WritingProgress = useMemo(() => {
     // These values are displayed as CSS `width: N%` so they must be in [0, 100].
     // Backend already returns sub-scores on a 0-100 scale, so we only clamp.
-    const clampPct = (n: number) => Math.max(0, Math.min(100, n))
+    const clampPct = (n: number | null) => n === null ? 0 : Math.max(0, Math.min(100, n))
     return {
       grammar: clampPct(stats.score_breakdown.grammar),
       vocabulary: clampPct(stats.score_breakdown.vocabulary),
@@ -431,24 +440,21 @@ export function useWritingWorkspace() {
     [showAction]
   )
 
+  const submissionRequest = useRef<{ exercise: string; content: string; id: string } | null>(null)
   const handleSubmitWriting = useCallback(
-    async (content: string, wordCount: number, writingTimeSeconds: number) => {
-      if (!selectedExercise) return
+    async (content: string, _wordCount: number, writingTimeSeconds: number) => {
+      if (!selectedExercise) return false
       const authUser = useAuthStore.getState().user
       if (!authUser) {
         toast.error('Vui lòng đăng nhập để nộp bài và nhận đánh giá AI!')
-        return
-      }
-
-      const newDraft: WritingDraft = {
-        content,
-        word_count: wordCount,
-        timestamp: new Date().toISOString(),
-        version_number: draftVersion,
+        return false
       }
 
       try {
+        if (submissionRequest.current?.exercise !== selectedExercise.id || submissionRequest.current.content !== content) submissionRequest.current = { exercise: selectedExercise.id, content, id: crypto.randomUUID() }
         const payload = {
+          request_id: submissionRequest.current.id,
+          review_session_id: reviewSessionId,
           exercise_id: selectedExercise.id,
           user_content: content,
           time_spent_seconds: writingTimeSeconds,
@@ -456,21 +462,26 @@ export function useWritingWorkspace() {
 
         const backendRes: any = await practiceService.submitWritingSubmission(payload)
         const subData = backendRes?.data || backendRes
-        const aiEval = subData?.ai_evaluation || {}
 
         const newSubmission: WritingSubmission = mapBackendToSubmission(subData)
 
+        submissionRequest.current = null
+        void practiceService.getMyWritingSubmissions().then((history: any) => setScoreGroups(history?.score_groups || [])).catch(() => undefined)
         setCurrentSubmission(newSubmission)
         setHistorySubmissions((prev) => [newSubmission, ...prev.filter((p) => p.id !== newSubmission.id)])
         queryClient.invalidateQueries({ queryKey: practiceKeys.writing() })
+        queryClient.invalidateQueries({ queryKey: ['writing-srs'] })
         setCurrentView('result')
         navigate(`/writing/result/${newSubmission.id}`)
+        return true
       } catch (submitErr) {
         console.error('[useWritingWorkspace] Submit error:', submitErr)
-        showAction('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại!')
+        setDraftContent(content)
+        showAction(submitErr instanceof Error ? submitErr.message : 'Chưa chấm được bài. Nội dung được giữ lại; vui lòng thử lại.')
+        return false
       }
     },
-    [selectedExercise, draftVersion, navigate, queryClient, showAction]
+    [selectedExercise, reviewSessionId, navigate, queryClient, showAction]
   )
 
   const handleViewSubmission = useCallback(
@@ -507,6 +518,7 @@ export function useWritingWorkspace() {
 
   return {
     // State
+    reviewSessionId,
     currentView,
     exerciseList,
     selectedExercise,

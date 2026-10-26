@@ -6,7 +6,10 @@
     "dev": "next dev -p 5174",
     "build": "next build",
     "start": "next start -p 5174",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:writing-srs": "node --test tests/writing-srs.test.cjs",
+    "test:writing-grading": "node --test tests/writing-grading.test.cjs",
+    "test:listening-catalog": "node --test tests/listening-catalog.test.cjs"
   },
   "dependencies": {
     "@designcodeio/threeui": "1.1.0",

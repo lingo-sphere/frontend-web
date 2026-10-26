@@ -57,6 +57,8 @@ export interface DialogueTurnAttemptResult {
   turn_grammar_feedback?: string
   better_alternative?: string
   feedback?: string
+  audio_data?: string
+  mime_type?: string
 }
 
 export interface TieredTimeLimit {

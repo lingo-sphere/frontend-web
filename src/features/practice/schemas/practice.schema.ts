@@ -147,17 +147,7 @@ export const SpeechAssessmentResultSchema = z.object({
   better_version: z.string().nullable().optional(),
 }).passthrough()
 
-export const WritingEvaluationResponseSchema = z.object({
-  grammar_score: z.number().default(0),
-  vocabulary_score: z.number().default(0),
-  coherence_score: z.number().default(0),
-  overall_score: z.number().default(0),
-  feedback_vi: z.string().default(''),
-  improved_essay: z.string().default(''),
-}).passthrough()
-
 export type BackendListeningExercise = z.infer<typeof BackendListeningExerciseSchema>
 export type BackendSpeakingExercise = z.infer<typeof BackendSpeakingExerciseSchema>
 export type BackendWritingExercise = z.infer<typeof BackendWritingExerciseSchema>
 export type SpeechAssessmentResult = z.infer<typeof SpeechAssessmentResultSchema>
-export type WritingEvaluationResponse = z.infer<typeof WritingEvaluationResponseSchema>

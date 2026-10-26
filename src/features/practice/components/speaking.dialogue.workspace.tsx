@@ -50,6 +50,18 @@ interface SpeakingDialogueWorkspaceProps {
   isSubmitting?: boolean
 }
 
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64 = reader.result as string
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
 type VadState = 'WAITING_FOR_SPEECH' | 'SPEAKING' | 'GRACE_PERIOD' | 'IDLE'
 
 export function SpeakingDialogueWorkspace({
@@ -668,8 +680,8 @@ export function SpeakingDialogueWorkspace({
     }
   }
 
-  // Nộp bài lên hệ thống
-  const handleFinalSubmit = () => {
+  // Nộp bài lên hệ thống (Gửi kèm toàn bộ audio của các lượt đối thoại)
+  const handleFinalSubmit = async () => {
     const fullTranscript = turns
       .filter((t) => t.speaker === 'USER')
       .map((t, idx) => turnTranscripts[turns.indexOf(t)] || t.text_en)
@@ -681,7 +693,28 @@ export function SpeakingDialogueWorkspace({
       0
     )
 
-    // Lấy 1 blob đại diện hoặc ghép blob
+    // Đóng gói base64 audio cho từng lượt đối thoại để gửi sang AI chấm điểm trực tiếp
+    const enrichedTurnsResults = await Promise.all(
+      turnsResults.map(async (r) => {
+        const turnIdx = turns.findIndex((t) => t.turn_number === r.turn_number)
+        const blob = turnAudioBlobs[turnIdx] || Object.values(turnAudioBlobs)[0]
+        let audioBase64: string | undefined = undefined
+        if (blob) {
+          try {
+            audioBase64 = await blobToBase64(blob)
+          } catch (e) {
+            console.warn('Failed to convert turn blob to base64:', e)
+          }
+        }
+        return {
+          ...r,
+          audio_data: audioBase64,
+          mime_type: blob?.type || 'audio/webm',
+        }
+      })
+    )
+
+    // Lấy 1 blob đại diện để upload R2 chính
     const firstBlob = turnAudioBlobs[1] || Object.values(turnAudioBlobs)[0]
 
     onSubmit(
@@ -689,7 +722,7 @@ export function SpeakingDialogueWorkspace({
       totalSpeakingDuration,
       firstBlob,
       selectedDifficulty,
-      turnsResults
+      enrichedTurnsResults
     )
   }
 
@@ -935,7 +968,7 @@ export function SpeakingDialogueWorkspace({
       </div>
 
       {/* Main Chat Stream / Turns Timeline */}
-      <div className="space-y-4 rounded-2xl border border-border bg-surface-subtle/50 p-4 sm:p-6 mb-4 min-h-[360px] max-h-[500px] overflow-y-auto">
+      <div className="space-y-6 sm:space-y-7 rounded-2xl border border-border bg-surface-subtle/50 p-4 sm:p-6 mb-5 min-h-[380px] max-h-[540px] overflow-y-auto">
         {turns.map((turn, index) => {
           const isPassed = index < currentTurnIndex
           const isCurrent = index === currentTurnIndex
@@ -950,7 +983,7 @@ export function SpeakingDialogueWorkspace({
               className={`flex flex-col ${isUserTurn ? 'items-end' : 'items-start'} transition-all`}
             >
               {/* Speaker Label */}
-              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-text-tertiary">
+              <div className="mb-2 flex items-center gap-2 text-[11.5px] font-semibold text-text-tertiary">
                 <span>{turn.speaker_name}</span>
                 <span>• Turn {turn.turn_number}</span>
                 {isCurrent && isBotSpeaking && !isUserTurn && (
@@ -975,7 +1008,7 @@ export function SpeakingDialogueWorkspace({
 
               {/* Chat Bubble */}
               <div
-                className={`relative max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-[13px] leading-relaxed shadow-xs transition ${
+                className={`relative max-w-[85%] sm:max-w-[75%] rounded-2xl p-4.5 sm:p-5 text-[13.5px] leading-relaxed shadow-xs transition ${
                   isUserTurn
                     ? isCurrent
                       ? 'border-2 border-primary bg-primary text-white'
@@ -1297,7 +1330,7 @@ export function SpeakingDialogueWorkspace({
             </div>
 
             {/* Modal Body: Danh sách cuộn các lượt thoại */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4.5">
               <div className="rounded-xl bg-primary/[0.04] border border-primary/20 p-3 text-[12px] text-text-secondary">
                 💡 {isVietnamese
                   ? 'Hãy nghe lại từng câu để kiểm tra chất lượng thu âm hoặc đối chiếu với câu thoại của Bot trước khi nộp bài cho AI.'
@@ -1315,7 +1348,7 @@ export function SpeakingDialogueWorkspace({
                 return (
                   <div
                     key={turn.turn_number}
-                    className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border p-3.5 transition ${
+                    className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 rounded-2xl border p-4 sm:p-4.5 transition ${
                       isUser
                         ? 'border-primary/20 bg-primary/[0.02]'
                         : 'border-border/70 bg-surface-subtle/50'
