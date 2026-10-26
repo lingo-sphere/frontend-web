@@ -234,21 +234,15 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
               return (
                 <div key={item.id} className="space-y-0.5">
                   <button
-                    className={`group relative w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs sm:text-[13px] transition-all cursor-pointer ${
-                      active ? 'bg-primary-soft' : 'hover:bg-surface-hover'
-                    }`}
+                    className="group relative w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs sm:text-[13px] transition-all cursor-pointer hover:bg-surface-hover"
                     onClick={() => toggleExpand(item.id)}
                     type="button"
                   >
-                    {active && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full" />
-                    )}
-
                     <div className="flex items-center gap-3 min-w-0 pl-1">
                       <div
                         className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                           active
-                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25'
+                            ? 'bg-primary/10 text-primary'
                             : 'bg-surface-subtle text-text-secondary group-hover:bg-surface-hover group-hover:text-text-primary'
                         }`}
                       >

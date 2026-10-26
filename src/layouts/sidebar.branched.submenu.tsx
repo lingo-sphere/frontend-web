@@ -17,10 +17,11 @@ interface SidebarBranchedSubmenuProps {
 
 const PAD = 4
 const ROW_HEIGHT = 34
-const INDENT = 38
+const INDENT = 36
 const TRUNK = 14
 const RADIUS = 8
 const LINE_WIDTH = 1.5
+const END_X = INDENT - 6
 
 export function SidebarBranchedSubmenu({
   items,
@@ -30,7 +31,7 @@ export function SidebarBranchedSubmenu({
   isVietnamese,
 }: SidebarBranchedSubmenuProps) {
   const r = Math.min(RADIUS, ROW_HEIGHT / 2 - 2)
-  const endX = INDENT - 6
+  const endX = END_X
   const rowY = (k: number) => PAD + k * ROW_HEIGHT + ROW_HEIGHT / 2
   const branch = (k: number) => `M ${TRUNK} ${rowY(k) - r} A ${r} ${r} 0 0 0 ${TRUNK + r} ${rowY(k)} H ${endX}`
   const reach = (k: number) => `M ${TRUNK} 0 V ${rowY(k) - r} A ${r} ${r} 0 0 0 ${TRUNK + r} ${rowY(k)} H ${endX}`
@@ -93,10 +94,10 @@ export function SidebarBranchedSubmenu({
             prefetch={true}
             onClick={() => onNavigate(item.id)}
             tabIndex={isExpanded ? 0 : -1}
-            className={`relative box-border flex w-full items-center gap-2 rounded-xl text-xs transition-colors duration-200 cursor-pointer ${
+            className={`group relative box-border flex w-full items-center gap-2 rounded-xl text-xs bg-transparent transition-colors duration-200 cursor-pointer ${
               active
-                ? 'text-primary bg-primary-soft font-bold'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover font-medium'
+                ? 'text-primary font-bold'
+                : 'text-text-secondary hover:text-text-primary font-medium'
             }`}
             style={{
               height: ROW_HEIGHT,
@@ -107,7 +108,7 @@ export function SidebarBranchedSubmenu({
             {item.icon && (
               <span
                 className={`inline-flex shrink-0 transition-colors ${
-                  active ? 'text-primary' : 'text-text-tertiary'
+                  active ? 'text-primary' : 'text-text-tertiary group-hover:text-text-primary'
                 }`}
                 aria-hidden="true"
               >
