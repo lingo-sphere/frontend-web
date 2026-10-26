@@ -14,6 +14,8 @@ import { WelcomeBanner } from '@/features/dashboard/components/welcome.banner'
 import { MistakeDueBanner } from '@/features/dashboard/components/mistake.due.banner'
 import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
 import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
+import { useGamificationProfileQuery } from '@/features/progress/hooks/use.progress.query'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import type { LeaderboardEntry } from '@/features/user/services/user.service'
 import type { BackendTopic } from '@/features/vocabulary/services/vocabulary.service'
 import type {
@@ -27,8 +29,13 @@ import type {
 
 export default function HomeAppPage() {
   const { showAction } = useApp()
+  const { isAuthenticated, user } = useAuthStore()
   const { data: lbData = [] } = useLeaderboardQuery('weekly')
   const { data: topData = [] } = useTopicsQuery()
+  const { data: gamification } = useGamificationProfileQuery(isAuthenticated)
+
+  const currentStreak = gamification?.current_streak ?? user?.streak_count ?? 0
+  const longestStreak = gamification?.longest_streak ?? currentStreak
 
   const leaderboard: LeaderboardData = useMemo(() => {
     const mappedEntries = Array.isArray(lbData)
@@ -71,7 +78,7 @@ export default function HomeAppPage() {
   const heatmapSummary: HeatmapSummary = {
     studyDays: 20,
     totalMinutes: 450,
-    longestStreak: 7,
+    longestStreak: longestStreak,
   }
 
   const tasks: LearningTask[] = [
@@ -101,11 +108,10 @@ export default function HomeAppPage() {
     },
   ]
 
-
   const milestones: StreakMilestone[] = [
-    { days: 3, reward: '+50 XP', status: 'done' },
-    { days: 7, reward: '+150 XP', status: 'current' },
-    { days: 14, reward: 'Huy hiệu Chiến Binh', status: 'locked' },
+    { days: 3, reward: '+50 XP', status: currentStreak >= 3 ? 'done' : currentStreak >= 1 ? 'current' : 'locked' },
+    { days: 7, reward: '+150 XP', status: currentStreak >= 7 ? 'done' : currentStreak >= 3 ? 'current' : 'locked' },
+    { days: 14, reward: 'Huy hiệu Chiến Binh', status: currentStreak >= 14 ? 'done' : currentStreak >= 7 ? 'current' : 'locked' },
   ]
 
   return (
@@ -117,7 +123,7 @@ export default function HomeAppPage() {
         <WelcomeBanner />
         <MistakeDueBanner />
         <section>
-          <StreakHistory days={defaultHeatmap} summary={heatmapSummary} />
+          <StreakHistory days={defaultHeatmap} summary={heatmapSummary} streak={currentStreak} />
         </section>
         <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.72fr)_minmax(320px,.92fr)]">
           <div className="flex h-full flex-col gap-6">
@@ -127,7 +133,7 @@ export default function HomeAppPage() {
           <InsightRail onAction={showAction} />
         </div>
         <section className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <StreakRewards milestones={milestones} onAction={showAction} />
+          <StreakRewards milestones={milestones} currentStreak={currentStreak} onAction={showAction} />
           <StreakLeaderboard leaderboard={leaderboard} onAction={showAction} />
           <ExploreTopics onAction={showAction} topics={topics} />
         </section>

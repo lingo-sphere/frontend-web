@@ -136,9 +136,7 @@ export function SpecularButton({
 }: SpecularButtonProps) {
   const btnRef = useRef<HTMLButtonElement>(null)
   const fxRef = useRef<HTMLSpanElement>(null)
-  const propsRef = useRef<ShaderProps>({} as ShaderProps)
-
-  propsRef.current = {
+  const propsRef = useRef<ShaderProps>({
     radius,
     lineColor,
     baseColor,
@@ -150,7 +148,35 @@ export function SpecularButton({
     followMouse,
     proximity,
     autoAnimate,
-  }
+  })
+
+  useEffect(() => {
+    propsRef.current = {
+      radius,
+      lineColor,
+      baseColor,
+      intensity,
+      shineSize,
+      shineFade,
+      thickness,
+      speed,
+      followMouse,
+      proximity,
+      autoAnimate,
+    }
+  }, [
+    radius,
+    lineColor,
+    baseColor,
+    intensity,
+    shineSize,
+    shineFade,
+    thickness,
+    speed,
+    followMouse,
+    proximity,
+    autoAnimate,
+  ])
 
   useEffect(() => {
     const btn = btnRef.current
@@ -158,14 +184,23 @@ export function SpecularButton({
     if (!btn || !fx) return
 
     const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1
+    // Check if WebGL is supported by the browser/system
+    const canvas = document.createElement('canvas')
+    const testGl =
+      canvas.getContext('webgl2') ||
+      canvas.getContext('webgl') ||
+      canvas.getContext('experimental-webgl')
+    if (!testGl) return
+
     let renderer: Renderer | null = null
     try {
-      renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr })
+      renderer = new Renderer({ canvas, alpha: true, premultipliedAlpha: true, antialias: true, dpr })
     } catch {
       return
     }
 
-    const gl = renderer.gl
+    const gl = renderer?.gl
+    if (!gl) return
     gl.clearColor(0, 0, 0, 0)
     gl.enable(gl.BLEND)
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)

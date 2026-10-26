@@ -61,6 +61,9 @@ export const TIME_MODE_OPTIONS: TimeModeConfig[] = [
 ]
 
 export interface WritingExercise {
+  grading_standard?: 'PRACTICAL' | 'TOEIC'
+  task_requirements?: string[]
+  image_description?: string
   id: string
   code?: string
   title: string
@@ -73,6 +76,8 @@ export interface WritingExercise {
   writing_level: WritingLevel
 
   prompt?: string
+  source_text?: string
+  source_text_vi?: string
   prompt_en?: string
   prompt_vi?: string
   instructions?: string
@@ -175,20 +180,27 @@ export interface SubmissionComparison {
   v2?: WritingSubmission
   delta?: {
     overall_score?: number
-    task_achievement_score?: number
-    grammatical_accuracy_score?: number
-    lexical_resource_score?: number
-    coherence_score?: number
-    naturalness_score?: number
-    register_score?: number
+    task_achievement_score?: number | null
+    grammatical_accuracy_score?: number | null
+    lexical_resource_score?: number | null
+    coherence_score?: number | null
+    naturalness_score?: number | null
+    register_score?: number | null
     word_count?: number
   }
   summary?: string
 }
 
 export interface WritingSubmission {
-  naturalness_score?: number
-  register_score?: number
+  writing_srs_version?: number
+  writing_srs_summary?: Array<{ key: string; outcome: string; credited: boolean; reason: string }>
+  grading_standard?: 'PRACTICAL' | 'TOEIC'
+  grading_version?: string
+  raw_score?: number
+  max_score?: number
+  grading_model?: string
+  naturalness_score?: number | null
+  register_score?: number | null
   parent_submission_id?: string
   scaffold_blocks?: Array<{ block_id: string; title: string; content: string }>
   id: string
@@ -206,10 +218,10 @@ export interface WritingSubmission {
   ai_evaluation?: AIEvaluation
 
   overall_score?: number
-  task_achievement_score?: number
-  coherence_score?: number
-  lexical_resource_score?: number
-  grammatical_accuracy_score?: number
+  task_achievement_score?: number | null
+  coherence_score?: number | null
+  lexical_resource_score?: number | null
+  grammatical_accuracy_score?: number | null
 
   keywords_included?: string[]
   keywords_missing?: string[]
@@ -232,6 +244,12 @@ export interface WritingSubmission {
 }
 
 export interface AIEvaluation {
+  rubric_snapshot?: { standard: string; max_score: number; bands: string[]; weights: Record<string, number>; version: string }
+  score_reason?: string
+  grading_version?: string
+  grading_standard?: 'PRACTICAL' | 'TOEIC'
+  criteria_feedback?: Record<string, { comment: string; evidence: string[] }>
+
 
   overall_feedback: string
   overall_strengths?: string
@@ -252,12 +270,12 @@ export interface AIEvaluation {
   }
 
   criteria_scores?: {
-    task_achievement?: number
-    grammatical_accuracy?: number
-    lexical_resource?: number
-    coherence?: number
-    naturalness?: number
-    register?: number
+    task_achievement?: number | null
+    grammatical_accuracy?: number | null
+    lexical_resource?: number | null
+    coherence?: number | null
+    naturalness?: number | null
+    register?: number | null
   }
   scaffold_template?: ScaffoldTemplate
   naturalness_feedback?: string
@@ -349,23 +367,26 @@ export interface ParaphraseAnalysis {
 }
 
 export interface WritingStats {
+  practical_submissions?: number
+  score_groups?: Array<{ _id: { standard: string; type: string; version: string; max_score: number }; count: number; average: number }>
+
   total_submissions: number
   /** Average overall score on a 0-100 scale (matches backend AI evaluation scale). */
-  average_score: number
+  average_score: number | null
   total_words_written: number
   /** Average grammar accuracy on a 0-100 scale. */
-  average_grammar_accuracy: number
+  average_grammar_accuracy: number | null
   /** Average vocabulary usage on a 0-100 scale. */
-  average_vocabulary_usage: number
+  average_vocabulary_usage: number | null
   average_writing_time_minutes: number
   /** All AI sub-scores on a 0-100 scale. */
   score_breakdown: {
-    task_achievement: number
-    coherence: number
-    vocabulary: number
-    grammar: number
-    naturalness: number
-    register: number
+    task_achievement: number | null
+    coherence: number | null
+    vocabulary: number | null
+    grammar: number | null
+    naturalness: number | null
+    register: number | null
   }
 }
 

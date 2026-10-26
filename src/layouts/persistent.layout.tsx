@@ -10,11 +10,14 @@ import { useApp } from '@/contexts/app.context'
 import { CommunityChatFloatingButton } from '@/features/community/components/community.chat.floating.button'
 import { AiTutorFloatingButton } from '@/features/ai-learning/components/ai.tutor.floating.button'
 import { ScrollToTopButton } from '@/components/scroll.to.top.button'
+import { StreakCelebrationModal } from '@/components/streak-celebration-modal'
+import { useStreakNotification } from '@/hooks/use-streak-notification'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
   const router = useRouter()
   const { showAction, mobileSidebarOpen, setMobileSidebarOpen, sidebarCollapsed } = useApp()
+  const { celebration, closeCelebration } = useStreakNotification()
 
   useEffect(() => {
     const handleOpenAuth = () => {
@@ -55,6 +58,13 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
         </div>
       )}
       <ScrollToTopButton />
+      <StreakCelebrationModal
+        open={celebration.open}
+        streak={celebration.streak}
+        isNewRecord={celebration.isNewRecord}
+        streakFreezesLeft={celebration.streakFreezesLeft}
+        onClose={closeCelebration}
+      />
     </>
   )
 }

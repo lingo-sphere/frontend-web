@@ -1,9 +1,11 @@
+'use client'
+
+import { writingScoreLabel } from '../lib/writing-score'
 /**
  * @file writing.recent.submissions.tsx
  * @description Thành phần hiển thị danh sách các bài viết đã nộp gần đây kèm điểm số và trạng thái chấm bài
  */
 
-'use client'
 
 import { Calendar, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
@@ -95,9 +97,8 @@ export function WritingRecentSubmissions({
                 {submission.overall_score !== undefined ? (
                   <div className="flex items-center gap-2">
                     <span className="text-[16px] font-bold text-primary">
-                      {Math.max(0, Math.min(100, submission.overall_score)).toFixed(1)}
+                      {writingScoreLabel(submission)}
                     </span>
-                    <span className="text-[12px] text-text-tertiary">/100</span>
                   </div>
                 ) : submission.is_correct !== undefined ? (
                   <div

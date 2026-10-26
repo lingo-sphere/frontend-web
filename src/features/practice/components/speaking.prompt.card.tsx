@@ -405,37 +405,37 @@ export function SpeakingPromptCard({
               </div>
             </div>
 
-            <div className="space-y-3 pt-1">
+            <div className="space-y-4 sm:space-y-5 pt-2">
               {exercise.dialogue_scenario.turns.map((turn) => (
                 <div
                   key={turn.turn_number}
-                  className={`rounded-xl p-3 text-[13px] ${
+                  className={`rounded-2xl p-4 sm:p-5 text-[13.5px] transition-all shadow-xs ${
                     turn.speaker === 'AI'
-                      ? 'border border-border/60 bg-surface'
-                      : 'border border-primary/30 bg-primary/5'
+                      ? 'border border-border/80 bg-surface shadow-2xs'
+                      : 'border border-primary/30 bg-primary/[0.03]'
                   }`}
                 >
-                  <div className="mb-1 flex items-center justify-between font-semibold">
+                  <div className="mb-2 pb-1.5 flex items-center justify-between font-semibold border-b border-border/30">
                     <span className={turn.speaker === 'AI' ? 'text-emerald-700' : 'text-primary'}>
                       {turn.speaker_name} ({turn.speaker === 'AI' ? 'AI' : isVietnamese ? 'Lượt của bạn' : 'Your turn'})
                     </span>
                     <span className="text-[11px] text-text-tertiary">Turn {turn.turn_number}</span>
                   </div>
 
-                  <p className="leading-relaxed text-text-primary">{turn.text_en}</p>
+                  <p className="leading-relaxed font-medium text-text-primary">{turn.text_en}</p>
                   {turn.text_vi && (
-                    <p className="mt-0.5 text-[12px] italic text-text-tertiary">{turn.text_vi}</p>
+                    <p className="mt-1 text-[12px] italic text-text-tertiary">{turn.text_vi}</p>
                   )}
 
                   {turn.user_guidance && (
-                    <div className="mt-2.5 rounded-lg border border-amber-200/80 bg-amber-50/80 p-2 text-[12px]">
+                    <div className="mt-3 rounded-xl border border-amber-200/80 bg-amber-50/80 p-3 text-[12px]">
                       <div className="flex items-center gap-1.5 font-medium text-amber-800">
                         <Lightbulb size={13} />
                         <span>{isVietnamese ? 'Nhiệm vụ: ' : 'Guidance: '}</span>
                         <span>{turn.user_guidance.goal_vi}</span>
                       </div>
                       {turn.user_guidance.suggested_phrases && turn.user_guidance.suggested_phrases.length > 0 && (
-                        <div className="mt-1 text-amber-900">
+                        <div className="mt-1.5 text-amber-900">
                           <span className="font-medium">{isVietnamese ? 'Gợi ý: ' : 'Suggested: '}</span>
                           {turn.user_guidance.suggested_phrases.join(' | ')}
                         </div>

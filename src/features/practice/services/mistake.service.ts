@@ -10,6 +10,7 @@ import type {
   ReviewMistakePayload,
   ReviewMistakeResponse,
   TopicDrillResponse,
+  SpeakingMistakesResponse,
 } from '@/features/practice/types/mistake'
 
 export const mistakeService = {
@@ -46,5 +47,9 @@ export const mistakeService = {
     return api.delete<{ success: boolean; message?: string }>(
       API_CONFIG.ENDPOINTS.PRACTICE.MISTAKE_DELETE(mistakeId),
     )
+  },
+
+  async getSpeakingMistakes(): Promise<SpeakingMistakesResponse> {
+    return api.get<SpeakingMistakesResponse>(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_MISTAKES_MY)
   },
 }

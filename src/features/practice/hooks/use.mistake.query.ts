@@ -13,6 +13,7 @@ import type {
   ReviewMistakePayload,
   ReviewMistakeResponse,
   TopicDrillResponse,
+  SpeakingMistakesResponse,
 } from '@/features/practice/types/mistake'
 
 export function useMyMistakesQuery(params?: QueryMistakesParams, enabled = true) {
@@ -78,3 +79,11 @@ export function useDeleteMistakeMutation() {
   })
 }
 
+export function useSpeakingMistakesQuery(enabled = true) {
+  return useQuery<SpeakingMistakesResponse>({
+    queryKey: ['speaking-mistakes-remedials'],
+    queryFn: () => mistakeService.getSpeakingMistakes(),
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}

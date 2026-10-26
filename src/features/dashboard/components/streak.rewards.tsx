@@ -14,15 +14,16 @@ import type { StreakMilestone } from '@/features/dashboard/types/dashboard'
 
 interface StreakRewardsProps {
   milestones: StreakMilestone[]
+  currentStreak?: number
   onAction: (message: string) => void
 }
 
-export function StreakRewards({ milestones, onAction }: StreakRewardsProps) {
+export function StreakRewards({ milestones, currentStreak = 0, onAction }: StreakRewardsProps) {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
-  const getRemainingDays = (days: number, currentStreak: number = 1) => {
-    const remaining = Math.max(0, days - currentStreak)
+  const getRemainingDays = (days: number, streakVal: number = currentStreak) => {
+    const remaining = Math.max(0, days - streakVal)
     return remaining
   }
 
@@ -37,7 +38,7 @@ export function StreakRewards({ milestones, onAction }: StreakRewardsProps) {
           {milestones.map((milestone) => {
             const isDone = milestone.status === 'done'
             const isCurrent = milestone.status === 'current'
-            const remaining = getRemainingDays(milestone.days, 1)
+            const remaining = getRemainingDays(milestone.days, currentStreak)
 
             return (
               <li

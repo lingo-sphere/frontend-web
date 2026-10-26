@@ -10,6 +10,7 @@ import {
 } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { useSearchParams } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
 import type {
   SpeakingExercise,
@@ -68,6 +69,8 @@ export function useSpeakingWorkspace() {
   const queryClient = useQueryClient()
   const [view, setView] = useState<SpeakingView>('home')
   const [selectedExercise, setSelectedExercise] = useState<SpeakingExercise | null>(null)
+
+
   const [currentSubmission, setCurrentSubmission] = useState<SpeakingAttempt | null>(null)
   const [historyAttempts, setHistoryAttempts] = useState<SpeakingAttempt[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)

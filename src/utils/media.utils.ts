@@ -28,6 +28,9 @@ const mediaUrlCache = new Map<string, string>()
 export function isExternalStorageUrl(urlOrPath?: string | null): boolean {
   if (!urlOrPath || typeof urlOrPath !== 'string') return false
   const trimmed = urlOrPath.trim()
+  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
+    return true
+  }
   if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) return false
 
   try {
@@ -171,4 +174,36 @@ export async function resolveMediaUrlsAsync(mediaIds: string[]): Promise<Map<str
 
 export function clearMediaCache(): void {
   mediaUrlCache.clear()
+}
+
+/**
+ * Lấy hoặc sinh audio TTS cho bài luyện tập (Part 1, 2, 3, 4, Dictation, Speaking).
+ * - Lần đầu tiên phát: Backend sinh TTS qua Edge Neural & lưu lên Cloudflare R2 vĩnh viễn.
+ * - Các lần sau đó: Lấy trực tiếp từ R2 (Cache hit tức thì).
+ */
+export async function getOrGeneratePracticeAudio(
+  text: string,
+  existingUrlOrMediaId?: string | null,
+  category: 'listening' | 'speaking' = 'listening'
+): Promise<string> {
+  if (existingUrlOrMediaId && existingUrlOrMediaId.trim()) {
+    const resolved = await resolveMediaUrlAsync(existingUrlOrMediaId)
+    if (resolved) return resolved
+  }
+
+  if (!text || !text.trim()) return ''
+
+  try {
+    const res = await api.post<{ url: string; cached?: boolean }>(
+      API_CONFIG.ENDPOINTS.MEDIA.PRACTICE_AUDIO_GENERATE,
+      { text, category }
+    )
+    if (res?.url) {
+      return resolveAudioUrl(res.url)
+    }
+  } catch (err) {
+    console.warn('[getOrGeneratePracticeAudio] Failed to generate/fetch audio:', err)
+  }
+
+  return ''
 }
