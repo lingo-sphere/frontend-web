@@ -14,7 +14,7 @@ export interface TargetVocabularyRef {
 }
 
 export interface GrammarLevelSummary {
-  level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1'
+  level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
   display_name: string
   meaning: string
   is_unlocked: boolean

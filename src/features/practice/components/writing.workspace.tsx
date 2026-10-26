@@ -1,5 +1,10 @@
+import { useWritingReviewDraft } from '../hooks/use.writing.review.draft'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { useWritingReviewSession, writingSrsKey } from '../hooks/use.writing.srs'
+import { writingSrsService } from '../services/writing-srs.service'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 // Component giao diện React WritingWorkspace cho học viên
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Save, Send, AlertCircle, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/button'
@@ -10,16 +15,18 @@ import { WritingTimer } from '@/features/practice/components/writing.timer'
 import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
 
 interface WritingWorkspaceProps {
+  reviewSessionId?: string
   exercise: WritingExercise
   initialContent?: string
   versionNumber?: number
   timeLimitSeconds?: number
   onBack: () => void
   onSaveDraft: (content: string, wordCount: number) => void
-  onSubmit: (content: string, wordCount: number, writingTimeSeconds: number) => void
+  onSubmit: (content: string, wordCount: number, writingTimeSeconds: number) => Promise<boolean> | boolean
 }
 
 export function WritingWorkspace({
+  reviewSessionId,
   exercise,
   initialContent = '',
   versionNumber = 1,
@@ -30,12 +37,22 @@ export function WritingWorkspace({
 }: WritingWorkspaceProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const review = useWritingReviewSession(reviewSessionId)
+  const queryClient = useQueryClient()
+  const hint = useMutation({ mutationFn: () => writingSrsService.hint(reviewSessionId!), onSuccess: () => queryClient.invalidateQueries({ queryKey: writingSrsKey }) })
+  const reviewReady = !reviewSessionId || (!!review.data && review.data.can_submit && !review.data.submission_id && review.data.exercise_id === exercise.id && new Date(review.data.expires_at).getTime() > Date.now() && !hint.isPending && !review.isFetching)
 
-  const [content, setContent] = useState(initialContent)
+  const draftOwner = useAuthStore(state => state.user?.user_id)
+  const reviewDraft = useWritingReviewDraft(reviewSessionId && draftOwner ? `writing-review-draft:${draftOwner}:${reviewSessionId}:${exercise.id}` : null)
+  const [editedContent, setContent] = useState<string | undefined>(initialContent || undefined)
+  const content = editedContent ?? reviewDraft.content ?? ''
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [imageUrl, setImageUrl] = useState<string>('')
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [submitFailed, setSubmitFailed] = useState(false)
+  const submitLock = useRef(false)
+  const elapsedSeconds = useRef(0)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   useEffect(() => {
@@ -59,33 +76,31 @@ export function WritingWorkspace({
     }
   }, [exercise.prompt_image_id, exercise.media_id])
 
-  // Callback khi hết giờ - auto submit
+  const submit = useCallback(async () => {
+    if (submitLock.current || !content.trim() || !reviewReady) return
+    submitLock.current = true; setIsSubmitted(true); setSubmitFailed(false)
+    try { const success = await onSubmit(content, content.trim().split(/\s+/).length, elapsedSeconds.current); if (!success) setSubmitFailed(true); else reviewDraft.clear() }
+    catch { setSubmitFailed(true) }
+    finally { submitLock.current = false; setIsSubmitted(false) }
+  }, [content, onSubmit, reviewReady, reviewDraft.clear])
   const handleTimeUp = useCallback(() => {
-    if (isSubmitted) return
-
-    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0
-
-    toast.warning(
-      isVietnamese ? 'Đã hết giờ! Bài viết đã được nộp tự động.' : 'Time is up! Your writing has been auto-submitted.',
-      isVietnamese ? 'Hết giờ' : 'Time Up'
-    )
-
-    setIsSubmitted(true)
-    onSubmit(content, wordCount, timeLimitSeconds)
-  }, [content, timeLimitSeconds, onSubmit, isSubmitted, isVietnamese])
+    toast.warning(isVietnamese ? 'Đã hết giờ. Đang gửi chấm bài.' : 'Time is up. Submitting your writing.')
+    void submit()
+  }, [submit, isVietnamese])
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0
   const maxWords = exercise.max_words || Infinity
   const isWordCountValid = wordCount <= maxWords
 
   const handleSaveDraft = useCallback(() => {
+    if (reviewSessionId && !reviewDraft.save(content)) { toast.error(isVietnamese ? 'Không lưu được bản nháp trên thiết bị. Hãy giữ trang này mở.' : 'Unable to save a device draft. Keep this page open.'); return }
     setIsSaving(true)
     onSaveDraft(content, wordCount)
     setTimeout(() => {
       setIsSaving(false)
       setLastSaved(new Date())
     }, 500)
-  }, [content, wordCount, onSaveDraft])
+  }, [content, wordCount, onSaveDraft, reviewSessionId, reviewDraft.save, isVietnamese])
 
   const handleSubmit = () => {
     if (isSubmitted) return
@@ -99,8 +114,7 @@ export function WritingWorkspace({
       )
       return
     }
-    setIsSubmitted(true)
-    onSubmit(content, wordCount, timeLimitSeconds)
+    void submit()
   }
 
   useEffect(() => {
@@ -111,10 +125,7 @@ export function WritingWorkspace({
   }, [content])
 
   const handleInitiateExit = () => {
-    if (isSubmitted) {
-      onBack()
-      return
-    }
+    if (isSubmitted) return
     // Tự động lưu nháp để không mất bài
     if (content && content !== initialContent) {
       handleSaveDraft()
@@ -133,7 +144,7 @@ export function WritingWorkspace({
 
   return (
     <main className="flex h-[calc(100vh-4rem)] flex-col">
-      <header className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs">
+      <header className="sticky top-0 z-30 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs">
         <div className="flex items-center gap-4">
           <button onClick={handleInitiateExit} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary cursor-pointer">
             <ArrowLeft size={18} />
@@ -150,23 +161,39 @@ export function WritingWorkspace({
         <div className="flex items-center gap-4">
           <WritingTimer
             totalSeconds={timeLimitSeconds}
+            onElapsedChange={value => { elapsedSeconds.current = value }}
             onTimeUp={handleTimeUp}
-            isPaused={showExitConfirm}
+            isPaused={showExitConfirm || isSubmitted}
           />
           <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || !content || isSubmitted}>
             <Save size={16} className="mr-2" />
             {isSaving ? (isVietnamese ? 'Đang lưu...' : 'Saving...') : (isVietnamese ? 'Lưu nháp' : 'Save draft')}
           </Button>
-          <Button size="sm" className="bg-primary hover:bg-primary-hover" onClick={handleSubmit} disabled={!isWordCountValid || isSubmitted}>
+          <Button size="sm" className="bg-primary hover:bg-primary-hover" onClick={handleSubmit} disabled={!wordCount || !isWordCountValid || isSubmitted || !reviewReady}>
             <Send size={16} className="mr-2" />
-            {isSubmitted ? (isVietnamese ? 'Đã nộp' : 'Submitted') : (isVietnamese ? 'Nộp bài' : 'Submit')}
+            {isSubmitted ? (isVietnamese ? 'Đang chấm…' : 'Grading…') : (isVietnamese ? 'Nộp bài' : 'Submit')}
           </Button>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-1/2 overflow-y-auto border-r border-border bg-surface p-6">
+      {reviewSessionId && <aside aria-label={isVietnamese ? 'Mục tiêu lượt ôn Writing' : 'Writing review targets'} className="space-y-2 border-b border-primary/20 bg-primary/5 p-4 text-sm">
+        {review.isLoading ? <p>{isVietnamese ? 'Đang tải mục tiêu ôn…' : 'Loading review targets…'}</p> : review.isError ? <div role="alert"><p>{review.error.message}</p><Button variant="outline" onClick={() => review.refetch()}>{isVietnamese ? 'Thử lại' : 'Retry'}</Button></div> : review.data && <>
+          <p className="font-semibold">{review.data.mode === 'REWRITE' ? (isVietnamese ? 'Sửa lại bài gốc · chưa xác nhận vận dụng độc lập' : 'Original task revision · not independent transfer') : (isVietnamese ? 'Vận dụng mục tiêu trong bài khác' : 'Apply the target in another task')}</p>
+          <ul className="list-disc pl-5">{review.data.targets.map(target => <li key={target.id}>{isVietnamese ? target.label : target.label_en}</li>)}</ul>
+          {!review.data.can_submit && !review.data.submission_id && <p role="alert">{isVietnamese ? 'Mục tiêu đang tạm dừng hoặc không còn khả dụng. Hãy quay lại sổ tay để chọn lượt ôn mới.' : 'The target is paused or unavailable. Return to your notebook to start another review.'}</p>}
+          {review.data.submission_id && <a className="inline-block underline text-primary" href={`/writing/result/${review.data.submission_id}`}>{isVietnamese ? 'Mở kết quả lượt ôn đã lưu' : 'Open the saved review result'}</a>}
+          {review.data.submission_id ? <p role="alert">{isVietnamese ? 'Lượt ôn đã được nộp. Xem kết quả trong lịch sử; hãy bắt đầu lượt mới nếu muốn viết tiếp.' : 'This review has already been submitted. Open your history or start a new review.'}</p> : <Button variant="outline" disabled={isSubmitted || hint.isPending || review.data.assisted || !review.data.can_submit} onClick={() => hint.mutate()}>{hint.isPending ? (isVietnamese ? 'Đang mở gợi ý…' : 'Opening hint…') : review.data.assisted ? (isVietnamese ? 'Đã dùng gợi ý trong lượt ôn' : 'Hint used in this review') : (isVietnamese ? 'Xem gợi ý · ghi nhận có hỗ trợ' : 'Show hint · recorded as assisted')}</Button>}
+          {review.data.assisted && review.data.targets.map(target => <div key={target.id} className="rounded-lg bg-surface p-3"><p>{target.original} {target.corrected && `→ ${target.corrected}`}</p><p className="mt-1 text-text-secondary">{target.explanation}</p></div>)}
+        </>}
+        <p className="text-xs text-text-secondary">{isVietnamese ? 'Bản nháp lượt ôn được lưu trên thiết bị này theo tài khoản.' : 'This review draft is saved on this device for your account.'}</p>
+        {reviewDraft.storageFailed && <p role="alert" className="text-red-700">{isVietnamese ? 'Chưa lưu được bản nháp trên thiết bị. Nội dung vẫn ở màn hình; hãy giữ trang mở.' : 'The device draft could not be saved. Your text is still on screen; keep this page open.'}</p>}
+        {hint.isError && <p role="alert" className="text-red-700">{hint.error.message}</p>}
+      </aside>}
+      {submitFailed && <p role="alert" className="border-b border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{isVietnamese ? 'Chưa chấm được bài. Nội dung được giữ nguyên; bạn có thể bấm Nộp bài để thử lại.' : 'Grading failed. Your writing is preserved; press Submit to retry.'}</p>}
+      <div className="flex flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+        <div className="w-full shrink-0 lg:w-1/2 lg:shrink lg:overflow-y-auto lg:border-r border-border bg-surface p-6">
           <div className="space-y-6">
+            <section className="rounded-xl border border-border p-4"><p className="font-semibold">{exercise.grading_standard === 'TOEIC' ? 'TOEIC Writing' : isVietnamese ? 'Giao tiếp thực tế · 0–100' : 'Practical communication · 0–100'}</p>{!!exercise.task_requirements?.length && <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">{exercise.task_requirements.map((requirement, index) => <li key={index}>{requirement}</li>)}</ul>}</section>
             {imageUrl && (
               <section className="overflow-hidden rounded-xl border border-border shadow-xs bg-surface-subtle">
                 <img
@@ -206,6 +233,12 @@ export function WritingWorkspace({
               </section>
             )}
 
+            {exercise.source_text && <section className="mb-6 rounded-lg bg-surface-subtle p-4">
+              <h2 className="mb-2 text-[13px] font-semibold uppercase text-text-tertiary">{exercise.exercise_type === 'WRITE_EMAIL' ? (isVietnamese ? 'Email nguồn' : 'Original email') : (isVietnamese ? 'Văn bản nguồn' : 'Source text')}</h2>
+              <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-primary">{exercise.source_text}</p>
+              {isVietnamese && exercise.source_text_vi && <p className="mt-2 whitespace-pre-wrap text-[14px] italic text-text-secondary">{exercise.source_text_vi}</p>}
+            </section>}
+
             {exercise.prompt_en && (
               <section>
                 <h2 className="mb-3 text-[14px] font-semibold uppercase text-text-tertiary">
@@ -230,18 +263,6 @@ export function WritingWorkspace({
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">✓</span>
                     {isVietnamese ? 'Tối đa' : 'Max'} {exercise.max_words} {isVietnamese ? 'từ' : 'words'}
                   </li>
-                )}
-                {exercise.exercise_type === 'PARAPHRASING' && (
-                  <>
-                    <li className="flex items-center gap-2 text-[14px] text-text-secondary">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">✓</span>
-                      {isVietnamese ? 'Giữ nguyên nghĩa câu gốc' : 'Keep original meaning'}
-                    </li>
-                    <li className="flex items-center gap-2 text-[14px] text-text-secondary">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[11px] font-medium text-primary">✓</span>
-                      {isVietnamese ? 'Sử dụng cách diễn đạt của riêng bạn' : 'Use your own expressions'}
-                    </li>
-                  </>
                 )}
               </ul>
             </section>
@@ -275,7 +296,7 @@ export function WritingWorkspace({
           </div>
         </div>
 
-        <div className="flex w-1/2 flex-col bg-surface-subtle/50">
+        <div className="flex min-h-[450px] w-full shrink-0 flex-col lg:w-1/2 lg:shrink bg-surface-subtle/50">
           <div className="mb-4 border-b border-border bg-surface px-6 py-4">
             <h2 className="text-[14px] font-semibold text-text-primary">
               {isVietnamese ? 'Bài viết của bạn' : 'Your writing'}
@@ -285,7 +306,8 @@ export function WritingWorkspace({
           <div className="flex-1 overflow-y-auto px-6">
             <textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              disabled={isSubmitted}
+              onChange={(e) => { setContent(e.target.value); if (reviewSessionId) reviewDraft.save(e.target.value) }}
               placeholder={isVietnamese ? 'Bắt đầu viết bài của bạn ở đây...' : 'Start writing your response here...'}
               className="h-full w-full resize-none rounded-lg border border-border bg-surface p-4 text-[15px] leading-relaxed text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none"
               style={{ minHeight: '300px' }}

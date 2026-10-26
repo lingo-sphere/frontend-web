@@ -49,6 +49,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry?: () => voi
 
 export default function WritingAppPage() {
   const {
+    reviewSessionId,
     currentView,
     exerciseList,
     selectedExercise,
@@ -63,6 +64,7 @@ export default function WritingAppPage() {
     error,
     handleGoHome,
     handleGoExercises,
+    handleGoHistory,
     handleSelectExercise,
     handleStartWriting,
     handleSaveDraft,
@@ -113,6 +115,7 @@ export default function WritingAppPage() {
       return (
         <WritingWorkspace
           exercise={selectedExercise}
+          reviewSessionId={reviewSessionId}
           initialContent={draftContent}
           versionNumber={draftVersion}
           timeLimitSeconds={timeSeconds}
@@ -133,7 +136,7 @@ export default function WritingAppPage() {
           onBack={handleGoExercises}
           onTryAgain={handlePracticeAgain}
           onNextExercise={handleNextExercise}
-          onViewHistory={() => {}}
+          onViewHistory={handleGoHistory}
         />
       )
 
@@ -159,7 +162,7 @@ export default function WritingAppPage() {
           onStartNew={handleGoExercises}
           onContinue={() => {}}
           onViewSubmission={handleViewSubmission}
-          onViewHistory={() => {}}
+          onViewHistory={handleGoHistory}
           onSelectExercise={(exerciseId) => {
             const ex = exerciseList.find((e) => e.id === exerciseId)
             if (ex) handleSelectExercise(ex)

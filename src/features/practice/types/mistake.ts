@@ -127,3 +127,86 @@ export interface TopicDrillResponse {
   total_found: number
   questions: TopicDrillQuestion[]
 }
+
+
+export interface SpeakingSrsDueExercise {
+  srs_id: string
+  exercise_id: string
+  title: string
+  exercise_type: string
+  difficulty_level: string
+  cefr_level: string
+  prompt_text_en: string
+  image_url?: string
+  due_at: string
+  due_type: string
+  interval_days: number
+  repetitions: number
+  last_score?: number | null
+  last_pronunciation_score?: number | null
+  last_practiced_at?: string | null
+  is_due: boolean
+}
+
+export interface SpeakingMispronouncedWord {
+  word: string
+  phonetic_expected?: string
+  phonetic_actual?: string
+  error_type?: string
+  count: number
+  last_exercise_id?: string
+  last_exercise_title?: string
+  last_occurred_at: string
+}
+
+export interface SpeakingPhonemeError {
+  phoneme: string
+  mastery_score: number
+  status: string
+  top_substitution?: string
+  speaking_error_count: number
+  last_practiced_at?: string
+}
+
+export interface SpeakingGrammarError {
+  error_category: string
+  original_phrase: string
+  corrected_phrase: string
+  rule_violated_vi: string
+  exercise_id?: string
+  exercise_title?: string
+  occurred_at: string
+}
+
+export interface SpeakingContextImprovement {
+  context_id: string
+  context_name: string
+  attempts: number
+  avg_score: number
+  last_practiced_at?: string
+}
+
+export interface SpeakingMistakesResponse {
+  summary: {
+    total_due_today: number
+    total_scheduled: number
+    total_mispronounced_words: number
+    total_phoneme_errors: number
+    total_grammar_errors: number
+    overall_speaking_score: number
+  }
+  due_exercises: SpeakingSrsDueExercise[]
+  all_scheduled_exercises: SpeakingSrsDueExercise[]
+  mispronounced_words: SpeakingMispronouncedWord[]
+  phoneme_errors: SpeakingPhonemeError[]
+  grammar_errors: SpeakingGrammarError[]
+  context_improvements: SpeakingContextImprovement[]
+  radar_skills?: {
+    pronunciation: number
+    fluency: number
+    grammar: number
+    vocabulary: number
+    task_achievement: number
+    naturalness: number
+  }
+}

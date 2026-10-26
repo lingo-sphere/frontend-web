@@ -14,14 +14,12 @@ import {
   BackendWritingExerciseSchema,
   BackendWritingExerciseListSchema,
   SpeechAssessmentResultSchema,
-  WritingEvaluationResponseSchema,
   type BackendListeningExercise,
   type BackendListeningPracticeItem,
   type BackendListeningPracticeItemPaginated,
   type BackendSpeakingExercise,
   type BackendWritingExercise,
   type SpeechAssessmentResult,
-  type WritingEvaluationResponse,
 } from '@/features/practice/schemas/practice.schema'
 
 export type {
@@ -31,7 +29,6 @@ export type {
   BackendSpeakingExercise,
   BackendWritingExercise,
   SpeechAssessmentResult,
-  WritingEvaluationResponse,
 }
 
 export const practiceService = {
@@ -131,17 +128,6 @@ export const practiceService = {
       API_CONFIG.ENDPOINTS.PRACTICE.WRITING_BY_ID(id),
       undefined,
       BackendWritingExerciseSchema
-    )
-  },
-
-  async evaluateWritingEssay(essay: string, topic: string): Promise<WritingEvaluationResponse> {
-    return api.post<WritingEvaluationResponse>(
-      API_CONFIG.ENDPOINTS.PRACTICE.WRITING_EVALUATE,
-      {
-        essay_text: essay,
-        topic: topic,
-      },
-      WritingEvaluationResponseSchema
     )
   },
 

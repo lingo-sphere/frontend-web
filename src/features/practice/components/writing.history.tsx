@@ -1,3 +1,4 @@
+import { writingScoreLabel } from '../lib/writing-score'
 // Component giao diện React WritingHistory cho học viên
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,6 +21,7 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
+  const [standardFilter, setStandardFilter] = useState<'all' | 'TOEIC' | 'PRACTICAL'>('all')
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [levelFilter, setLevelFilter] = useState<LevelFilter>('all')
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null)
@@ -29,6 +31,7 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
   }
 
   const filteredSubmissions = submissions
+    .filter(sub => standardFilter === 'all' || (sub.grading_standard || 'PRACTICAL') === standardFilter)
     .filter((sub) => {
       if (levelFilter === 'all') return true
       const exercise = getExercise(sub.exercise_id)
@@ -84,6 +87,7 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+      <label className="mb-4 flex items-center gap-3 text-sm">{isVietnamese ? 'Chuẩn chấm' : 'Grading standard'}<select aria-label={isVietnamese ? 'Lọc chuẩn chấm' : 'Filter grading standard'} className="rounded border border-border bg-surface px-3 py-2" value={standardFilter} onChange={event => setStandardFilter(event.target.value as typeof standardFilter)}><option value="all">{isVietnamese ? 'Tất cả' : 'All'}</option><option value="PRACTICAL">{isVietnamese ? 'Giao tiếp thực tế' : 'Practical'}</option><option value="TOEIC">TOEIC</option></select></label>
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
@@ -185,7 +189,7 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
                       {submission.overall_score !== undefined ? (
                         <div className={`flex h-12 w-12 flex-col items-center justify-center rounded-full ${getScoreBg(submission.overall_score)}`}>
                           <span className={`text-[18px] font-bold ${getScoreColor(submission.overall_score)}`}>
-                            {submission.overall_score.toFixed(1)}
+                            {writingScoreLabel(submission)}
                           </span>
                         </div>
                       ) : submission.is_correct !== undefined ? (
@@ -298,14 +302,14 @@ function formatTimeShort(seconds: number): string {
 
 interface ScoreItemProps {
   label: string
-  score?: number
+  score?: number | null
 }
 
 function ScoreItem({ label, score }: ScoreItemProps) {
   // Backend AI evaluation returns scores on a 0-100 scale; thresholds follow
   // the same proportions as the legacy 0-10 view (>=8/10 -> good, >=6/10 -> ok).
-  const getScoreColor = (s?: number) => {
-    if (s === undefined) return 'text-text-secondary'
+  const getScoreColor = (s?: number | null) => {
+    if (s == null) return 'text-text-secondary'
     if (s >= 80) return 'text-emerald-600'
     if (s >= 60) return 'text-amber-600'
     return 'text-red-600'
@@ -315,7 +319,7 @@ function ScoreItem({ label, score }: ScoreItemProps) {
     <div className="rounded-lg bg-surface p-2 text-center">
       <p className="text-[11px] text-text-tertiary">{label}</p>
       <p className={`text-[16px] font-bold ${getScoreColor(score)}`}>
-        {score !== undefined ? score.toFixed(1) : '-'}
+        {typeof score === 'number' ? score.toFixed(1) : '—'}
       </p>
     </div>
   )

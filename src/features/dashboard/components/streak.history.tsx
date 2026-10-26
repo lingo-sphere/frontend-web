@@ -12,12 +12,15 @@ import type { HeatmapDay, HeatmapSummary } from '@/features/dashboard/types/dash
 interface StreakHistoryProps {
   days: HeatmapDay[]
   summary: HeatmapSummary
+  streak?: number
 }
 
-export function StreakHistory({ days, summary }: StreakHistoryProps) {
+export function StreakHistory({ days, summary, streak }: StreakHistoryProps) {
   const { t } = useTranslation()
   const [selectedDayId, setSelectedHeatmapDay] = useState<string>('2026-08-14')
   const selectedDay = days.find((day) => day.id === selectedDayId) ?? days.at(-1)!
+
+  const displayStreak = streak ?? summary.longestStreak ?? 0
 
   return (
     <Card aria-labelledby="streak-history-title" className="dashboard-card p-0">
@@ -27,7 +30,7 @@ export function StreakHistory({ days, summary }: StreakHistoryProps) {
           <div>
             <h2 className="text-[20px] font-bold text-text-primary" id="streak-history-title">{t('dashboard.streak')}</h2>
             <p className="mt-1 text-[14px] text-text-secondary">
-              {t('dashboard.dayStreak', { count: 90 })}
+              {t('dashboard.dayStreak', { count: displayStreak })}
             </p>
           </div>
         </div>

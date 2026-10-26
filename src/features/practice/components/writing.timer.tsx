@@ -3,15 +3,16 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Clock, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatTime, getTimeStatus, URGENT_THRESHOLD_SECONDS } from '@/features/practice/lib/writing-time-mode'
+import { formatTime, getTimeStatus } from '@/features/practice/lib/writing-time-mode'
 
 interface WritingTimerProps {
   totalSeconds: number
   onTimeUp: () => void
+  onElapsedChange?: (seconds: number) => void
   isPaused?: boolean
 }
 
-export function WritingTimer({ totalSeconds, onTimeUp, isPaused = false }: WritingTimerProps) {
+export function WritingTimer({ totalSeconds, onTimeUp, onElapsedChange, isPaused = false }: WritingTimerProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const [elapsed, setElapsed] = useState(0)
@@ -19,8 +20,6 @@ export function WritingTimer({ totalSeconds, onTimeUp, isPaused = false }: Writi
 
   const remaining = Math.max(0, totalSeconds - elapsed)
   const status = getTimeStatus(remaining, totalSeconds)
-  const isUrgent = status === 'urgent' && remaining > 0
-  const isTimeUp = remaining === 0 && !hasTriggeredTimeUp
 
   // Timer logic
   useEffect(() => {
@@ -29,16 +28,14 @@ export function WritingTimer({ totalSeconds, onTimeUp, isPaused = false }: Writi
     const interval = setInterval(() => {
       setElapsed((prev) => {
         const next = prev + 1
-        // Trigger time up khi đạt limit
-        if (next >= totalSeconds) {
-          setHasTriggeredTimeUp(true)
-        }
         return next
       })
     }, 1000)
 
     return () => clearInterval(interval)
   }, [isPaused, remaining, totalSeconds])
+
+  useEffect(() => { onElapsedChange?.(elapsed) }, [elapsed, onElapsedChange])
 
   // Gọi callback khi hết giờ
   useEffect(() => {
@@ -130,7 +127,7 @@ interface WritingTimerProgressProps extends WritingTimerProps {
   showProgress?: boolean
 }
 
-export function WritingTimerProgress({ totalSeconds, onTimeUp, isPaused = false, showProgress = true }: WritingTimerProgressProps) {
+export function WritingTimerProgress({ totalSeconds, onTimeUp, onElapsedChange, isPaused = false, showProgress = true }: WritingTimerProgressProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const [elapsed, setElapsed] = useState(0)

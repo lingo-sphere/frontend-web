@@ -78,6 +78,7 @@ export function WritingExerciseDetail({
         </div>
       </div>
 
+      <section className="mb-4 rounded-xl border border-border p-4"><p className="font-semibold">{exercise.grading_standard === 'TOEIC' ? 'TOEIC Writing' : isVietnamese ? 'Giao tiếp thực tế · 0–100' : 'Practical communication · 0–100'}</p>{!!exercise.task_requirements?.length && <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">{exercise.task_requirements.map((requirement, index) => <li key={index}>{requirement}</li>)}</ul>}</section>
       {imageUrl && (
         <Card className="mb-6 overflow-hidden dashboard-card">
           <CardContent className="p-0">
@@ -116,6 +117,12 @@ export function WritingExerciseDetail({
               onCancel={() => setShowTimeSelector(false)}
             />
           ) : null}
+
+          {exercise.source_text && <section className="mb-6 rounded-lg bg-surface-subtle p-4">
+              <h2 className="mb-2 text-[13px] font-semibold uppercase text-text-tertiary">{exercise.exercise_type === 'WRITE_EMAIL' ? (isVietnamese ? 'Email nguồn' : 'Original email') : (isVietnamese ? 'Văn bản nguồn' : 'Source text')}</h2>
+              <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-text-primary">{exercise.source_text}</p>
+              {isVietnamese && exercise.source_text_vi && <p className="mt-2 whitespace-pre-wrap text-[14px] italic text-text-secondary">{exercise.source_text_vi}</p>}
+            </section>}
 
           {exercise.prompt_en && (
             <div className="mb-6">

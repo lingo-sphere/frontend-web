@@ -18,9 +18,9 @@ import {
 import type { ListeningExercise } from "@/features/practice/types/listening";
 
 interface ListeningPart1WorkspaceProps {
-  exercise: ListeningExercise;
+  exercise: ListeningExercise | any;
   onBack: () => void;
-  onComplete: (result: { selectedOption: string; isCorrect: boolean }) => void;
+  onComplete?: (result: { selectedOption: string; isCorrect: boolean }) => void;
 }
 
 export function ListeningPart1Workspace({
@@ -50,18 +50,25 @@ export function ListeningPart1Workspace({
           ),
         ]);
 
-        setImageUrl(
-          imgId || resolveImageUrl(exercise.imageMediaId || exercise.mediaId)
-        );
-        setAudioUrl(
-          audId || resolveAudioUrl(exercise.audioMediaId || exercise.mediaUrl)
-        );
+        if ((exercise as any).image_url) {
+          setImageUrl(resolveImageUrl((exercise as any).image_url));
+        } else {
+          setImageUrl(
+            imgId || resolveImageUrl(exercise.imageMediaId || exercise.mediaId)
+          );
+        }
+
+        if ((exercise as any).audio_url) {
+          setAudioUrl(resolveAudioUrl((exercise as any).audio_url));
+        } else {
+          setAudioUrl(
+            audId || resolveAudioUrl(exercise.audioMediaId || exercise.mediaUrl)
+          );
+        }
       } catch (error) {
         console.error("[ListeningPart1] Error resolving media:", error);
-        setImageUrl(resolveImageUrl(exercise.imageMediaId || exercise.mediaId));
-        setAudioUrl(
-          resolveAudioUrl(exercise.audioMediaId || exercise.mediaUrl)
-        );
+        setImageUrl(resolveImageUrl((exercise as any).image_url || exercise.imageMediaId || exercise.mediaId));
+        setAudioUrl(resolveAudioUrl((exercise as any).audio_url || exercise.audioMediaId || exercise.mediaUrl));
       } finally {
         setIsLoading(false);
       }
@@ -75,11 +82,14 @@ export function ListeningPart1Workspace({
     exercise.mediaUrl,
   ]);
 
-  // Get options from questionData
-  const options = exercise.questionData?.options || [];
+  // Get options from questionData or options field
+  const options: Array<{ key: string; text: string; text_vi?: string; is_correct?: boolean }> =
+    exercise.questionData?.options || (exercise as any).options || [];
 
   // Find correct answer
-  const correctOption = options.find((opt) => opt.is_correct);
+  const correctOption =
+    options.find((opt) => opt.is_correct) ||
+    (exercise.correct_answer ? { key: exercise.correct_answer, text: '', is_correct: true } : undefined);
 
   // Build options map for display
   const optionsMap = new Map(options.map(opt => [opt.key, opt]));
@@ -95,10 +105,12 @@ export function ListeningPart1Workspace({
     setHasAnswered(true);
     const isCorrect = selectedOption === correctOption.key;
 
-    onComplete({
-      selectedOption,
-      isCorrect,
-    });
+    if (onComplete) {
+      onComplete({
+        selectedOption,
+        isCorrect,
+      });
+    }
   };
 
   const handlePlayAudio = () => {
@@ -108,7 +120,10 @@ export function ListeningPart1Workspace({
     audio.onplay = () => setIsPlaying(true);
     audio.onended = () => setIsPlaying(false);
     audio.onerror = () => setIsPlaying(false);
-    audio.play();
+    audio.play().catch((err) => {
+      console.warn('[ListeningPart1] Play error:', err);
+      setIsPlaying(false);
+    });
   };
 
   const getOptionStyle = (key: string) => {
@@ -266,6 +281,32 @@ export function ListeningPart1Workspace({
                       </p>
                     </>
                   )}
+                </div>
+              )}
+
+              {/* Grammar Remedial Link when wrong */}
+              {selectedOption !== correctOption?.key && (exercise.grammar_point_title || exercise.grammar_point_title_vi) && (
+                <div className="flex items-center justify-between rounded-lg bg-rose-50/70 dark:bg-rose-950/30 p-3 border border-rose-200 dark:border-rose-900/50">
+                  <div className="flex items-center gap-2 text-xs text-text-primary">
+                    <Icon name="book" size={16} className="text-primary shrink-0" />
+                    <span>
+                      {isVietnamese ? 'Chủ điểm ngữ pháp cần ôn:' : 'Related Grammar:'}{' '}
+                      <strong className="text-primary">
+                        {isVietnamese
+                          ? exercise.grammar_point_title_vi || exercise.grammar_point_title
+                          : exercise.grammar_point_title}
+                      </strong>
+                    </span>
+                  </div>
+                  <a
+                    href={`/grammar?search=${encodeURIComponent(exercise.grammar_point_title || '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline ml-2 shrink-0"
+                  >
+                    <span>{isVietnamese ? 'Học lại ngữ pháp' : 'Review'}</span>
+                    <Icon name="externalLink" size={12} />
+                  </a>
                 </div>
               )}
 

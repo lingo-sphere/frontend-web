@@ -30,6 +30,7 @@ export type NotificationType =
   | 'PAYMENT_SUCCESS'
   | 'PAYMENT_FAILED'
   | 'STREAK_REMINDER'
+  | 'STREAK_UPDATED'
   | 'STREAK_BROKEN'
   | 'STREAK_MILESTONE'
   | 'STREAK_7_DAYS'
