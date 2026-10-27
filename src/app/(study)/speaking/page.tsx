@@ -10,6 +10,7 @@ import { useSpeakingWorkspace } from '@/features/practice/hooks/use.speaking.wor
 
 export default function SpeakingAppPage() {
   const {
+    pendingSpeaking, retryPendingSpeaking,
     view,
     setView,
     exerciseList,
@@ -46,6 +47,8 @@ export default function SpeakingAppPage() {
     case 'workspace':
       if (!selectedExercise) return null
       return (
+        <div className="space-y-4">
+        {pendingSpeaking && <div role="status" className="rounded-xl border border-amber-500 p-4 text-sm"><p>Bạn có bản ghi âm chưa hoàn tất chấm điểm. Có thể chấm lại bài đã lưu mà không cần thu âm lại.</p><button type="button" disabled={isSubmitting} className="mt-2 font-semibold text-primary underline" onClick={retryPendingSpeaking}>{isSubmitting ? 'Đang chấm…' : 'Chấm lại bản ghi đã lưu'}</button></div>}
         <SpeakingWorkspace
           exercise={selectedExercise}
           recordingState={recordingState}
@@ -54,6 +57,7 @@ export default function SpeakingAppPage() {
           onBack={handleGoList}
           isSubmitting={isSubmitting}
         />
+        </div>
       )
 
     case 'result':

@@ -87,10 +87,11 @@ export function CourseWorkspaceTabs({
                 Thiết lập mốc năng lực ban đầu (Baseline)
               </p>
               <p className="text-amber-800/90 dark:text-amber-200/80 mt-0.5">
-                Bạn chưa có điểm mốc Baseline để so sánh mức độ cải thiện. Hệ thống sẽ tự động lấy kết quả Post-mini Test của Chương 1 làm mốc ban đầu, hoặc bạn có thể cập nhật trong Hồ sơ cá nhân!
+                Ghi nhận bài thi đầu vào trong mục Tiến độ trước khi bắt đầu học. Nếu chưa có, chặng đánh giá đầu tiên chỉ được dùng làm mốc theo dõi trong khóa học.
               </p>
             </div>
           </div>
+          <button type="button" onClick={() => onTabChange('progress')} className="shrink-0 rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-bold">Thiết lập trong Tiến độ</button>
         </div>
       )}
 
@@ -117,15 +118,7 @@ export function CourseWorkspaceTabs({
 
       {activeTab === 'progress' && (
         <div className="space-y-6">
-          <CourseGrowthChart
-            growthData={progressDetail?.course_progress?.growth_chart_data}
-            baselineScore={progressDetail?.course_progress?.baseline_score}
-            baselineSource={progressDetail?.course_progress?.baseline_source}
-            isBaselineEstablished={progressDetail?.course_progress?.is_baseline_established}
-            totalScoreGrowth={progressDetail?.course_progress?.total_score_growth}
-            totalGrowthPercentage={progressDetail?.course_progress?.total_growth_percentage}
-            finalTestScore={progressDetail?.course_progress?.final_test_score}
-          />
+          <CourseGrowthChart courseId={course._id || course.id} />
         </div>
       )}
 

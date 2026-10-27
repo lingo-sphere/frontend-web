@@ -1,7 +1,9 @@
+import { api } from '@/services/api.client'
+import { readSkillDraft, writeSkillDraft } from '@/features/practice/lib/skill-draft';
 // Hook quản lý trạng thái bài tập luyện nói, quy trình thu âm và chấm điểm phát âm AI.
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { practiceService, type BackendSpeakingExercise } from '@/features/practice/services/practice.service'
 import {
   useSpeakingExercisesQuery,
@@ -10,7 +12,7 @@ import {
 } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useSearchParams } from '@/lib/navigation'
+import { useNavigate, useParams, useSearchParams } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
 import type {
   SpeakingExercise,
@@ -57,7 +59,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     const reader = new FileReader()
     reader.onloadend = () => {
       const result = reader.result as string
-      const base64 = result.includes(',') ? result.split(',')[1] : result
+      const base64 = result
       resolve(base64)
     }
     reader.onerror = reject
@@ -67,10 +69,18 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 
 export function useSpeakingWorkspace() {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const params = useParams<{ slug?: string[] }>()
+  const resultId = params.slug?.[0] === 'result' ? params.slug[1] : undefined
+  const resultQuery = useQuery({ queryKey: ['speaking-result', resultId], enabled: !!resultId && /^[a-f\d]{24}$/i.test(resultId),
+    queryFn: () => api.get<Record<string, any>>(`/practice/review-results/SPEAKING/${resultId}/submission`),
+  })
   const [view, setView] = useState<SpeakingView>('home')
   const [selectedExercise, setSelectedExercise] = useState<SpeakingExercise | null>(null)
 
 
+  const [pendingSpeaking, setPendingSpeaking] = useState<{ payload: Record<string, any> } | null>(null)
+  const speakingRequestRef = useRef<{ hash: string; id: string } | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<SpeakingAttempt | null>(null)
   const [historyAttempts, setHistoryAttempts] = useState<SpeakingAttempt[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -128,14 +138,24 @@ export function useSpeakingWorkspace() {
     }))
   }, [rawSpeakingExercises])
 
-  const stats: SpeakingStats = useMemo(() => {
-    const total = Math.max(userSpeakingProfile?.total_attempts || 0, historyAttempts.length)
+  useEffect(() => {
+    if (!resultQuery.data) return
+    const row = resultQuery.data
+    setCurrentSubmission({ ...row, id: String(row._id || row.id) } as SpeakingAttempt)
+    const original = row.exercise || exerciseList.find(item => item.id === String(row.exercise_id))
+    if (original) setSelectedExercise({ ...original, id: String(row.exercise_id), title: original.title || 'Bài luyện nói', title_vi: original.title_vi || '', exercise_type: original.exercise_type || row.exercise_type } as SpeakingExercise)
+    setView('result')
+  }, [resultQuery.data, exerciseList])
 
-    // Average score: fallback to userSpeakingProfile.overall_proficiency_score if historyAttempts is empty
+  const stats: SpeakingStats = useMemo(() => {
+    const comparableAttempts = historyAttempts.filter(item => item.grading_version === 'speaking-v2')
+    const total = Math.max(userSpeakingProfile?.total_attempts || 0, comparableAttempts.length)
+
+    // Average score: fallback to userSpeakingProfile.overall_proficiency_score if comparableAttempts is empty
     const avgScore = total > 0
-      ? (historyAttempts.length > 0
+      ? (comparableAttempts.length > 0
         ? Math.round(
-          (historyAttempts.reduce((sum, a) => sum + (a.overall_score || 0), 0) / historyAttempts.length) * 10
+          (comparableAttempts.reduce((sum, a) => sum + (a.overall_score || 0), 0) / comparableAttempts.length) * 10
         ) / 10
         : (userSpeakingProfile?.overall_proficiency_score || 0))
       : 0
@@ -143,7 +163,7 @@ export function useSpeakingWorkspace() {
     // Practice minutes
     const totalDurationSeconds = Math.max(
       userSpeakingProfile?.total_speaking_duration_seconds || 0,
-      historyAttempts.reduce((sum, a) => sum + (a.recording_duration_seconds || (a as any).speaking_time_seconds || 0), 0)
+      comparableAttempts.reduce((sum, a) => sum + (a.recording_duration_seconds || (a as any).speaking_time_seconds || 0), 0)
     )
     const practiceMinutes = Math.max(
       Math.round(totalDurationSeconds / 60),
@@ -154,38 +174,38 @@ export function useSpeakingWorkspace() {
     const radar = userSpeakingProfile?.radar_scores
     const avgPron = radar?.pronunciation !== undefined
       ? radar.pronunciation
-      : (historyAttempts.length > 0
-        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.pronunciation_score || 0), 0) / historyAttempts.length) * 10) / 10
+      : (comparableAttempts.length > 0
+        ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.pronunciation_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : 0)
 
     const avgFluency = radar?.fluency !== undefined
       ? radar.fluency
-      : (historyAttempts.length > 0
-        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.fluency_score || 0), 0) / historyAttempts.length) * 10) / 10
+      : (comparableAttempts.length > 0
+        ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.fluency_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : 0)
 
     const avgGrammar = radar?.grammar !== undefined
       ? radar.grammar
-      : (historyAttempts.length > 0
-        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.grammar_score || 0), 0) / historyAttempts.length) * 10) / 10
+      : (comparableAttempts.length > 0
+        ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.grammar_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : avgScore)
 
     const avgVocab = radar?.vocabulary !== undefined
       ? radar.vocabulary
-      : (historyAttempts.length > 0
-        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.vocabulary_score || 0), 0) / historyAttempts.length) * 10) / 10
+      : (comparableAttempts.length > 0
+        ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.vocabulary_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : avgScore)
 
     const avgCoherence = radar?.task_achievement !== undefined
       ? radar.task_achievement
-      : (historyAttempts.length > 0
-        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.coherence_score || 0), 0) / historyAttempts.length) * 10) / 10
+      : (comparableAttempts.length > 0
+        ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.coherence_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : avgScore)
 
     const avgContent = radar?.naturalness !== undefined
       ? radar.naturalness
-      : (historyAttempts.length > 0
-        ? Math.round((historyAttempts.reduce((sum, a) => sum + (a.content_score || 0), 0) / historyAttempts.length) * 10) / 10
+      : (comparableAttempts.length > 0
+        ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.content_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : avgScore)
 
     return {
@@ -226,6 +246,16 @@ export function useSpeakingWorkspace() {
     }
   }, [stats, exerciseList])
 
+  useEffect(() => {
+    const user = useAuthStore.getState().user
+    if (!selectedExercise || !user) { setPendingSpeaking(null); return }
+    let active = true
+    readSkillDraft<{ payload: Record<string, any> }>(`practice-speaking:${user.user_id}:${selectedExercise.id}`).then(draft => {
+      if (active) setPendingSpeaking(draft || null)
+    }).catch(() => {})
+    return () => { active = false }
+  }, [selectedExercise])
+
   const handleGoHome = useCallback(() => {
     setView('home')
     setSelectedExercise(null)
@@ -241,7 +271,7 @@ export function useSpeakingWorkspace() {
     })
   }, [])
 
-  const handleGoList = useCallback(() => setView('list'), [])
+  const handleGoList = useCallback(() => { setView('list'); navigate('/speaking') }, [navigate])
   const handleGoHistory = useCallback(() => setView('history'), [])
 
   const handleSelectExercise = useCallback((exercise: SpeakingExercise) => {
@@ -266,8 +296,11 @@ export function useSpeakingWorkspace() {
 
   const handleViewSubmission = useCallback((submission: SpeakingAttempt) => {
     setCurrentSubmission(submission)
+    const original = exerciseList.find(item => item.id === String(submission.exercise_id))
+    if (original) setSelectedExercise(original)
     setView('result')
-  }, [])
+    navigate(`/speaking/result/${submission.id}`)
+  }, [exerciseList, navigate])
 
   const handleStartPractice = useCallback(
     (exercise: SpeakingExercise) => {
@@ -303,15 +336,25 @@ export function useSpeakingWorkspace() {
 
       let backendResponse: any = null
       try {
-        backendResponse = await practiceService.submitSpeakingAttempt({
-          exercise_id: selectedExercise.id,
-          audio_data: audioBase64,
-          transcription: transcription,
-          speaking_time_seconds: duration,
+        const payload = {
+          exercise_id: selectedExercise.id, audio_data: audioBase64, mime_type: audioBlob?.type,
+          transcription, recording_duration_seconds: duration,
           preparation_time_seconds: selectedExercise.preparation_time_seconds,
           difficulty_chosen: difficultyChosen || selectedExercise.difficulty_level || 'MEDIUM',
           dialogue_turns_results: dialogueTurnsResults || [],
-        })
+        }
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(payload)))
+        const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
+        const draftKey = `practice-speaking:${authUser.user_id}:${selectedExercise.id}`
+        const draft = await readSkillDraft<{ hash: string; id: string; payload: Record<string, unknown> }>(draftKey).catch(() => undefined)
+        const request = draft?.hash === hash ? draft : speakingRequestRef.current?.hash === hash ? speakingRequestRef.current : { hash, id: crypto.randomUUID() }
+        speakingRequestRef.current = request
+        await writeSkillDraft(draftKey, { ...request, payload }).catch(() => {})
+        setPendingSpeaking({ payload })
+        backendResponse = await practiceService.submitSpeakingAttempt({ ...payload, request_id: request.id })
+        await writeSkillDraft(draftKey, undefined).catch(() => {})
+        setPendingSpeaking(null)
+
         queryClient.invalidateQueries({ queryKey: practiceKeys.speaking() })
         queryClient.invalidateQueries({ queryKey: ['speaking', 'profile', 'my'] })
         queryClient.invalidateQueries({ queryKey: ['speaking', 'attempts', 'my'] })
@@ -375,7 +418,7 @@ export function useSpeakingWorkspace() {
       const contentIssues = (analysis.task_achievement_analysis?.missing_ideas || []).map((m: string) => `Ý còn thiếu: ${m}`)
       const contentSuggestions = (analysis.task_achievement_analysis?.covered_ideas || []).map((c: string) => `Ý đã đạt: ${c}`)
 
-      const feedback = analysis.pedagogical_feedback?.summary_vi || attempt.ai_evaluation?.overall_feedback || 'Đã hoàn thành bài nói và phân tích AI'
+      const feedback = analysis.pedagogical_feedback?.summary_vi || attempt.ai_evaluation?.detailed_feedback || 'Đã hoàn thành bài nói và phân tích AI'
       const improvementTips = analysis.pedagogical_feedback?.next_actionable_drills || []
 
       const newSubmission: SpeakingAttempt = {
@@ -390,6 +433,7 @@ export function useSpeakingWorkspace() {
         transcription: finalTranscript,
         difficulty_chosen: difficultyChosen || selectedExercise.difficulty_level || 'MEDIUM',
         dialogue_turns_results: attempt.dialogue_turns_results || dialogueTurnsResults,
+        grading_version: attempt.grading_version,
         overall_score: overallScore,
         pronunciation_score: pronunciationScore,
         fluency_score: fluencyScore,
@@ -398,6 +442,7 @@ export function useSpeakingWorkspace() {
         coherence_score: coherenceScore,
         content_score: contentScore,
         ai_evaluation: {
+          ...attempt.ai_evaluation,
           overall_feedback: feedback,
           pronunciation_analysis: {
             score: pronunciationScore,
@@ -442,9 +487,17 @@ export function useSpeakingWorkspace() {
       setHistoryAttempts((prev) => [newSubmission, ...prev])
       setRecordingState((prev) => ({ ...prev, phase: 'reviewing' }))
       setView('result')
+      navigate(`/speaking/result/${attemptId}`)
     },
-    [selectedExercise, queryClient]
+    [selectedExercise, queryClient, navigate]
   )
+
+  const retryPendingSpeaking = useCallback(async () => {
+    if (!pendingSpeaking || isSubmitting) return
+    const p = pendingSpeaking.payload
+    const blob = p.audio_data ? await (await fetch(p.audio_data)).blob() : undefined
+    await handleSubmitRecording(p.transcription || '', p.recording_duration_seconds || 0, blob, p.difficulty_chosen, p.dialogue_turns_results)
+  }, [pendingSpeaking, isSubmitting, handleSubmitRecording])
 
   const handlePracticeAgain = useCallback(() => {
     if (!selectedExercise) return
@@ -469,6 +522,7 @@ export function useSpeakingWorkspace() {
   }, [selectedExercise, exerciseList, handleSelectExercise])
 
   return {
+    pendingSpeaking, retryPendingSpeaking,
     view,
     setView,
     exerciseList,

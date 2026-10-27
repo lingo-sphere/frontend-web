@@ -143,7 +143,7 @@ export const practiceService = {
   },
 
   async getWritingSubmissionById(id: string): Promise<any> {
-    return api.get<any>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMISSION_BY_ID(id));
+    return api.get<any>(`/practice/review-results/WRITING/${id}/submission`);
   },
 
   async getSubmissionComparison(id: string): Promise<any> {

@@ -1,3 +1,5 @@
+import { usePracticeReview } from '../hooks/use.practice.review'
+import { PracticeReviewPanel } from './practice.review.panel'
 import { useNavigate } from "@/lib/navigation";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronRight, RotateCcw } from "lucide-react";
@@ -23,6 +25,7 @@ export function WritingResult({
   onNextExercise,
   onViewHistory,
 }: WritingResultProps) {
+  const reviewState = usePracticeReview('WRITING', submission.id, Number.isFinite(submission.overall_score));
   const navigate = useNavigate();
   const { i18n } = useTranslation(),
     vi = i18n.language === "vi";
@@ -45,6 +48,7 @@ export function WritingResult({
         <ArrowLeft size={18} />
         {vi ? "Quay lại" : "Back"}
       </button>
+      <PracticeReviewPanel state={reviewState} />
       <section className="space-y-2 rounded-2xl border border-border bg-surface p-6 text-center">
         <h1 className="text-xl font-semibold">
           {vi ? "Kết quả Writing" : "Writing result"}
@@ -54,7 +58,7 @@ export function WritingResult({
           className="text-4xl font-bold text-primary"
           aria-label={vi ? "Điểm bài viết" : "Writing score"}
         >
-          {writingScoreLabel(submission)}
+          {writingScoreLabel(reviewState.query.data || submission)}
         </p>
         <p className="text-sm">
           {toeic

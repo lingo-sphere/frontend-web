@@ -8,6 +8,8 @@
     "start": "next start -p 5174",
     "lint": "eslint",
     "test:writing-srs": "node --test tests/writing-srs.test.cjs",
+    "test:course-assessment": "node --test tests/course-assessment.test.cjs",
+    "test:course-measurement": "node --test tests/course-measurement.test.cjs",
     "test:writing-grading": "node --test tests/writing-grading.test.cjs",
     "test:listening-catalog": "node --test tests/listening-catalog.test.cjs"
   },
