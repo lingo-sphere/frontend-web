@@ -1,3 +1,4 @@
+import type { SkillEvaluation } from '@/features/courses/services/course.service'
 /**
  * @file speaking.ts
  * @description Định nghĩa kiểu dữ liệu TypeScript cho hệ thống giao diện Web
@@ -139,6 +140,7 @@ export interface SpeakingRubric {
 }
 
 export interface SpeakingAttempt {
+  grading_version?: string
   id: string
   user_id: string
   exercise_id: string
@@ -175,7 +177,7 @@ export interface SpeakingAttempt {
   exercise?: SpeakingExercise
 }
 
-export interface AIEvaluationResult {
+export interface AIEvaluationResult extends SkillEvaluation {
   overall_feedback: string
   pronunciation_analysis?: {
     score: number

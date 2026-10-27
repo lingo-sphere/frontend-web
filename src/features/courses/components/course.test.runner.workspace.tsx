@@ -20,10 +20,6 @@ import {
   TestRunnerSubmitConfirmModal,
 } from '@/features/courses/components/test.runner.confirm.modal'
 import { TopicDrillModal } from '@/features/practice/components/topic.drill.modal'
-import { UserScoreUpgradeModal } from '@/features/user/components/user.score.upgrade.modal'
-import { useAuthStore } from '@/features/auth/store/auth.store'
-import { userService } from '@/features/user/services/user.service'
-import { toast } from '@/store/toast.store'
 import { useCourseTestRunner } from '@/features/courses/hooks/use.course.test.runner'
 import type { CourseTestQuestion, TestAttemptItem } from '@/features/courses/types/test.runner.types'
 
@@ -73,6 +69,7 @@ export function CourseTestRunnerWorkspace({
   onComplete,
 }: CourseTestRunnerWorkspaceProps) {
   const {
+    sessionId, skillSubmissions, setSkillSubmissions, awaitingGrading, skillScores, missingSkills,
     is4Skills,
     effectiveSpeakingPrompt,
     effectiveSpeakingFileUrl,
@@ -135,54 +132,6 @@ export function CourseTestRunnerWorkspace({
   const [nextCourses, setNextCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
   >([])
-  const [hasDismissedUpgrade, setHasDismissedUpgrade] = useState(false)
-
-  const user = useAuthStore((s) => s.user)
-
-  const currentListening = Number(user?.placement_listening_score || 0)
-  const currentReading = Number(user?.placement_reading_score || 0)
-  const currentSpeaking = Number(user?.placement_speaking_score || 0)
-  const currentWriting = Number(user?.placement_writing_score || 0)
-  const currentTotal = Number(
-    user?.placement_test_score ??
-    (user?.placement_skills_type === '4SKILLS'
-      ? currentListening + currentReading + currentSpeaking + currentWriting
-      : currentListening + currentReading)
-  )
-
-  const effectiveCourseTarget = courseTargetScore || 990
-  const finalPercentage = scoreResult?.score || 0
-  const convertedToeicScore =
-    finalPercentage > 100
-      ? Math.round(finalPercentage)
-      : Math.round((Math.max(0, finalPercentage) / 100) * effectiveCourseTarget)
-
-  const isFinalTestEligible =
-    !hasDismissedUpgrade &&
-    Boolean(user) &&
-    testType === 'final-test' &&
-    isSubmitted &&
-    convertedToeicScore > currentTotal &&
-    convertedToeicScore > 0
-
-  const handleConfirmFinalUpgrade = async () => {
-    const payload = {
-      placement_test_score: convertedToeicScore,
-      current_estimated_score: convertedToeicScore,
-      is_score_manually_edited: false,
-      placement_tested_at: new Date().toISOString(),
-      ...(user?.target_toeic_score && user.target_toeic_score <= convertedToeicScore
-        ? { target_toeic_score: Math.min(990, Math.ceil((convertedToeicScore + 50) / 10) * 10) }
-        : {}),
-    }
-    const updatedUser = await userService.updateProfile(payload)
-    const { user: currentUser, setUser } = useAuthStore.getState()
-    if (currentUser) {
-      setUser({ ...currentUser, ...payload, ...(updatedUser || {}) })
-    }
-    toast.success(`Đã cập nhật điểm tốt nghiệp khóa học (${convertedToeicScore}đ) vào hồ sơ của bạn!`)
-  }
-
   const handleConfirmExit = async () => {
     if (isExiting) return
     setIsExiting(true)
@@ -321,6 +270,11 @@ export function CourseTestRunnerWorkspace({
         </div>
       )}
 
+      {(awaitingGrading || Object.keys(skillScores).length > 0) && <div className="mx-4 mt-3 space-y-2 rounded-xl border border-border bg-surface p-4 text-sm" role="status">
+        {awaitingGrading && <><p className="font-semibold">Đã nộp bài — chưa đủ kết quả chấm</p><p>Chưa ghi nhận điểm tổng hoặc xét đạt. Hãy thử chấm lại bài Nói/Viết đã nộp, sau đó cập nhật kết quả.</p>{missingSkills.length > 0 && <p>Phần chưa có kết quả: {missingSkills.join(', ')}</p>}<Button disabled={isSaving} onClick={() => handleSubmitTest(false)}>Cập nhật kết quả tổng</Button><Button variant="outline" disabled={isSaving} onClick={handleRetry}>Làm lại lượt thi mới</Button></>}
+        <div className="flex flex-wrap gap-4">{Object.entries(skillScores).map(([skill, score]) => <span key={skill}>{skill}: <strong>{score}/100</strong></span>)}</div>
+        <p className="text-text-secondary">Điểm đánh giá nội bộ khóa học, chưa quy đổi sang điểm TOEIC chính thức.</p>
+      </div>}
       <main className="flex-1 flex flex-col lg:flex-row w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 gap-6 overflow-hidden">
         <div className="flex-1 overflow-y-auto space-y-6 pr-0 lg:pr-2">
           {activeSection === 'QUIZ' && (
@@ -383,6 +337,7 @@ export function CourseTestRunnerWorkspace({
                   index={idx}
                   chosenIdx={selectedAnswers[idx]}
                   isSubmitted={isSubmitted}
+                  isLocked={awaitingGrading || !sessionId || timeLeft <= 0}
                   isLoadingAi={isLoadingAi}
                   onSelectOption={handleSelectOption}
                 />
@@ -390,25 +345,21 @@ export function CourseTestRunnerWorkspace({
             </>
           )}
 
-          {activeSection === 'SPEAKING' && (
-            <TestRunnerSpeakingSection
-              courseId={courseId}
-              moduleId={chapter?.id}
-              testType={testType}
-              prompt={effectiveSpeakingPrompt}
-              fileUrl={effectiveSpeakingFileUrl}
-            />
-          )}
+          {is4Skills && sessionId && <>
+            <div hidden={activeSection !== 'SPEAKING'}>
+              <TestRunnerSpeakingSection key={`speaking:${sessionId}`} courseId={courseId} sessionId={sessionId} moduleId={chapter?.id} testType={testType} prompt={effectiveSpeakingPrompt} fileUrl={effectiveSpeakingFileUrl}
+                inputLocked={isSubmitted || awaitingGrading || timeLeft <= 0}
+                initialResult={skillSubmissions.find(item => item.skill === 'SPEAKING')}
+                onResult={result => setSkillSubmissions(previous => [...previous.filter(item => item.skill !== 'SPEAKING'), result])} />
+            </div>
+            <div hidden={activeSection !== 'WRITING'}>
+              <TestRunnerWritingSection key={`writing:${sessionId}`} courseId={courseId} sessionId={sessionId} moduleId={chapter?.id} testType={testType} prompt={effectiveWritingPrompt} fileUrl={effectiveWritingFileUrl}
+                inputLocked={isSubmitted || awaitingGrading || timeLeft <= 0}
+                initialResult={skillSubmissions.find(item => item.skill === 'WRITING')}
+                onResult={result => setSkillSubmissions(previous => [...previous.filter(item => item.skill !== 'WRITING'), result])} />
+            </div>
+          </>}
 
-          {activeSection === 'WRITING' && (
-            <TestRunnerWritingSection
-              courseId={courseId}
-              moduleId={chapter?.id}
-              testType={testType}
-              prompt={effectiveWritingPrompt}
-              fileUrl={effectiveWritingFileUrl}
-            />
-          )}
         </div>
 
         <div className="w-full lg:w-80 xl:w-88 2xl:w-96 shrink-0">
@@ -467,29 +418,7 @@ export function CourseTestRunnerWorkspace({
           topicTag={drillTopic}
         />
       )}
-      {isFinalTestEligible && (
-        <UserScoreUpgradeModal
-          open={isFinalTestEligible}
-          onClose={() => setHasDismissedUpgrade(true)}
-          examTitle={`Bài thi cuối khóa: ${courseTitle || 'Khóa học'}`}
-          currentScores={{
-            total: currentTotal,
-            listening: currentListening,
-            reading: currentReading,
-            speaking: currentSpeaking,
-            writing: currentWriting,
-            skillsType: user?.placement_skills_type === '4SKILLS' ? '4SKILLS' : '2SKILLS',
-          }}
-          newScores={{
-            total: convertedToeicScore,
-            listening: is4Skills ? undefined : Math.round(convertedToeicScore / 2),
-            reading: is4Skills ? undefined : Math.round(convertedToeicScore / 2),
-            skillsType: is4Skills ? '4SKILLS' : '2SKILLS',
-          }}
-          currentTargetScore={Number(user?.target_toeic_score) || undefined}
-          onConfirm={handleConfirmFinalUpgrade}
-        />
-      )}
+
     </div>
   )
 }

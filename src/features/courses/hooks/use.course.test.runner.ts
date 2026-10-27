@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Chapter } from '@/features/courses/types/course'
-import { courseService } from '@/features/courses/services/course.service'
+import { courseService, type SpeakingSubmissionResponse } from '@/features/courses/services/course.service'
 import { mistakeService } from '@/features/practice/services/mistake.service'
 import { toast } from '@/store/toast.store'
 import {
@@ -78,6 +78,14 @@ export function useCourseTestRunner({
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
+  const [sessionQuestions, setSessionQuestions] = useState<CourseTestQuestion[] | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [skillSubmissions, setSkillSubmissions] = useState<SpeakingSubmissionResponse[]>([])
+  const [awaitingGrading, setAwaitingGrading] = useState(false)
+  const [skillScores, setSkillScores] = useState<Record<string, number>>({})
+  const [missingSkills, setMissingSkills] = useState<string[]>([])
+  const [sessionPrompts, setSessionPrompts] = useState<{ speaking?: string; writing?: string }>({})
+
   const hasSpeaking = Boolean(speakingPrompt || chapter?.speaking_prompt)
   const hasWriting = Boolean(writingPrompt || chapter?.writing_prompt)
 
@@ -99,11 +107,11 @@ export function useCourseTestRunner({
 
   const effectiveSpeakingPrompt = useMemo(() => {
     return (
-      speakingPrompt ||
+      sessionPrompts.speaking || speakingPrompt ||
       chapter?.speaking_prompt ||
       ''
     )
-  }, [speakingPrompt, chapter])
+  }, [sessionPrompts.speaking, speakingPrompt, chapter])
 
   const effectiveSpeakingFileUrl = useMemo(() => {
     return (
@@ -116,11 +124,11 @@ export function useCourseTestRunner({
 
   const effectiveWritingPrompt = useMemo(() => {
     return (
-      writingPrompt ||
+      sessionPrompts.writing || writingPrompt ||
       chapter?.writing_prompt ||
       ''
     )
-  }, [writingPrompt, chapter])
+  }, [sessionPrompts.writing, writingPrompt, chapter])
 
   const effectiveWritingFileUrl = useMemo(() => {
     return (
@@ -173,6 +181,7 @@ export function useCourseTestRunner({
   }, [is4Skills, activeSection])
 
   const rawQuestions: CourseTestQuestion[] = useMemo(() => {
+    if (sessionQuestions) return sessionQuestions
     if (
       testType === 'final-test' &&
       Array.isArray(finalTestQuestions) &&
@@ -190,7 +199,7 @@ export function useCourseTestRunner({
       return (chapter?.test_questions ?? []) as unknown as CourseTestQuestion[]
     }
     return []
-  }, [chapter, testType, finalTestQuestions])
+  }, [sessionQuestions, chapter, testType, finalTestQuestions])
 
   const testAudioUrl = useMemo(() => {
     if (testType === 'final-test') {
@@ -258,7 +267,7 @@ export function useCourseTestRunner({
   }
 
   const handleSelectOption = (qIdx: number, optIdx: number) => {
-    if (isSubmitted) return
+    if (isSubmitted || awaitingGrading) return
     setSelectedAnswers((prev) => {
       const next = { ...prev, [qIdx]: optIdx }
       if (typeof window !== 'undefined') {
@@ -306,6 +315,11 @@ export function useCourseTestRunner({
   const handleRetry = useCallback(() => {
     clearTestDraftStorage(courseId, testType, chapter?.id)
     sessionIdRef.current = null
+    setSessionId(null)
+    setSkillSubmissions([])
+    setAwaitingGrading(false)
+    setSkillScores({})
+    setSessionQuestions(null)
     if (syncTimeoutRef.current) {
       clearTimeout(syncTimeoutRef.current)
     }
@@ -331,6 +345,11 @@ export function useCourseTestRunner({
       .then((sessionRes) => {
         if (sessionRes && sessionRes.session_id) {
           sessionIdRef.current = sessionRes.session_id
+          setSessionId(sessionRes.session_id)
+          setSkillSubmissions(sessionRes.skill_submissions || [])
+          setSessionPrompts({ speaking: sessionRes.skill_profiles?.speaking?.task_prompt, writing: sessionRes.skill_profiles?.writing?.task_prompt })
+          if (sessionRes.questions?.length) setSessionQuestions(sessionRes.questions)
+          if (sessionRes.status !== 'IN_PROGRESS') setAwaitingGrading(true)
           if (sessionRes.expires_at) {
             const serverRemaining = Math.max(
               0,
@@ -342,7 +361,7 @@ export function useCourseTestRunner({
           }
         }
       })
-      .catch(() => {})
+      .catch((error) => toast.error(error instanceof Error ? error.message : 'Chưa mở được phiên thi'))
   }, [
     courseId,
     testType,
@@ -358,7 +377,12 @@ export function useCourseTestRunner({
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current)
       }
-      clearTestDraftStorage(courseId, testType, chapter?.id)
+      if (!sessionIdRef.current && testType !== 'exercise') { toast.error('Chưa có phiên thi hợp lệ. Vui lòng mở lại bài kiểm tra.'); return }
+      if (!isTimeout && is4Skills && !awaitingGrading && ['SPEAKING', 'WRITING'].some(skill => !skillSubmissions.some(item => item.skill === skill))) {
+        toast.info('Hãy nộp bài Nói và Viết trước khi nộp kết quả tổng. Nếu AI lỗi, bạn có thể thử chấm lại bài đã nộp.')
+        setShowSubmitConfirm(false)
+        return
+      }
       const answersPayload = rawQuestions.map((q, idx) => {
         const chosen = selectedAnswers[idx]
         const options = q.options ?? []
@@ -461,6 +485,7 @@ export function useCourseTestRunner({
 
         if (testType === 'challenge' && chapter?.id) {
           const saveRes = await courseService.submitModuleChallenge(courseId, chapter.id, {
+            session_id: sessionIdRef.current || undefined,
             score: fallbackScore,
             correct_count: fallbackCorrect,
             total_questions: rawQuestions.length,
@@ -468,6 +493,15 @@ export function useCourseTestRunner({
             order_index: Number(chapter.order || 1),
             answers: answersPayload,
           })
+          if (saveRes.assessment_status === 'AWAITING_GRADING') {
+            setAwaitingGrading(true)
+            setSkillScores(saveRes.skill_scores || {})
+            setMissingSkills(saveRes.missing_skills || [])
+            setShowSubmitConfirm(false)
+            toast.info(saveRes.message)
+            return
+          }
+          setSkillScores(saveRes.skill_scores || {})
           completeRes = saveRes
           finalScore = saveRes.score
           finalPassed = saveRes.is_passed
@@ -479,19 +513,29 @@ export function useCourseTestRunner({
           applyGradedResult(saveRes.graded_questions, saveRes.wrong_questions)
         } else if (testType === 'post-mini' && chapter?.id) {
           const saveRes = await courseService.submitModulePostMini(courseId, chapter.id, {
+            session_id: sessionIdRef.current || undefined,
             score: fallbackScore,
             correct_count: fallbackCorrect,
             total_questions: rawQuestions.length,
             order_index: Number(chapter.order || 1),
             answers: answersPayload,
           })
+          if (saveRes.assessment_status === 'AWAITING_GRADING') {
+            setAwaitingGrading(true)
+            setSkillScores(saveRes.skill_scores || {})
+            setMissingSkills(saveRes.missing_skills || [])
+            setShowSubmitConfirm(false)
+            toast.info(saveRes.message)
+            return
+          }
+          setSkillScores(saveRes.skill_scores || {})
           completeRes = saveRes
           finalScore = saveRes.score
           if (typeof saveRes.is_passed === 'boolean') finalPassed = saveRes.is_passed
           if (typeof saveRes.correct_count === 'number') finalCorrect = saveRes.correct_count
           if (typeof saveRes.total_questions === 'number') finalTotal = saveRes.total_questions
           if (Array.isArray(saveRes.wrong_questions)) finalWrongs = saveRes.wrong_questions
-          if (saveRes.progression_comparison) {
+          if (saveRes.progression_comparison && saveRes.progression_comparison.score_diff !== 0) {
             setGrowthDiff({
               scoreDiff: saveRes.progression_comparison.score_diff,
               percent: saveRes.progression_comparison.percentage_improvement,
@@ -504,11 +548,21 @@ export function useCourseTestRunner({
           applyGradedResult(saveRes.graded_questions, saveRes.wrong_questions)
         } else if (testType === 'final-test') {
           const saveRes = await courseService.submitCourseFinalTest(courseId, {
+            session_id: sessionIdRef.current || undefined,
             score: fallbackScore,
             correct_count: fallbackCorrect,
             total_questions: rawQuestions.length,
             answers: answersPayload,
           })
+          if (saveRes.assessment_status === 'AWAITING_GRADING') {
+            setAwaitingGrading(true)
+            setSkillScores(saveRes.skill_scores || {})
+            setMissingSkills(saveRes.missing_skills || [])
+            setShowSubmitConfirm(false)
+            toast.info(saveRes.message)
+            return
+          }
+          setSkillScores(saveRes.skill_scores || {})
           completeRes = saveRes
           finalScore = saveRes.final_test_score
           if (typeof saveRes.is_passed === 'boolean') finalPassed = saveRes.is_passed
@@ -541,6 +595,8 @@ export function useCourseTestRunner({
           isPassed: finalPassed,
         })
         setIsSubmitted(true)
+        setAwaitingGrading(false)
+        clearTestDraftStorage(courseId, testType, chapter?.id)
         setShowSubmitConfirm(false)
 
         if (isTimeout) toast.warning(isVietnamese ? 'Hết thời gian làm bài! Đã tự động nộp bài.' : 'Time is up! Exam auto-submitted.')
@@ -629,44 +685,12 @@ export function useCourseTestRunner({
         }
 
         onComplete?.(finalScore, finalPassed, completeRes)
-      } catch {
-        setWrongQuestionsList(fallbackWrongs)
-        setScoreResult({
-          correctCount: fallbackCorrect,
-          totalQuestions: rawQuestions.length,
-          score: fallbackScore,
-          isPassed: fallbackScore >= passingScore,
-        })
-        setIsSubmitted(true)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Chưa lưu được kết quả. Bài làm vẫn được giữ để thử lại.')
         setShowSubmitConfirm(false)
-        if (fallbackWrongs.length > 0) {
-          const fallbackMistakes = fallbackWrongs.map((w, idx) => {
-            const qIdx = (w.question_number || idx + 1) - 1
-            const rawQ = rawQuestions[qIdx]
-            const stableId =
-              rawQ?.id ||
-              rawQ?._id ||
-              `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
-            return {
-              question_id: stableId,
-              question_text: w.question_text,
-              options: rawQ?.options || [],
-              user_answer: w.user_selected_answer,
-              correct_answer: w.correct_answer,
-              source_context: `${testTitle} (${testType})`,
-              source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
-              source_id: courseId,
-              source_title: testTitle,
-              context_id: rawQ?.context_id,
-            }
-          })
-          mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})
-        }
-        onComplete?.(fallbackScore, fallbackScore >= passingScore)
       } finally {
         setIsSaving(false)
-        clearTestDraftStorage(courseId, testType, chapter?.id)
-        sessionIdRef.current = null
+
       }
     },
     [
@@ -677,7 +701,7 @@ export function useCourseTestRunner({
       chapter,
       testType,
       testTitle,
-      onComplete,
+      onComplete, is4Skills, awaitingGrading, skillSubmissions,
     ]
   )
 
@@ -713,6 +737,11 @@ export function useCourseTestRunner({
         .then((sessionRes) => {
           if (sessionRes && sessionRes.session_id) {
             sessionIdRef.current = sessionRes.session_id
+          setSessionId(sessionRes.session_id)
+          setSkillSubmissions(sessionRes.skill_submissions || [])
+          setSessionPrompts({ speaking: sessionRes.skill_profiles?.speaking?.task_prompt, writing: sessionRes.skill_profiles?.writing?.task_prompt })
+          if (sessionRes.questions?.length) setSessionQuestions(sessionRes.questions)
+          if (sessionRes.status !== 'IN_PROGRESS') setAwaitingGrading(true)
             if (sessionRes.expires_at) {
               const serverRemaining = Math.max(
                 0,
@@ -747,9 +776,7 @@ export function useCourseTestRunner({
             if (remaining <= 0) {
               setTimeLeft(0)
               setHasAutoSubmitted(true)
-              clearTestDraftStorage(courseId, testType, chapter?.id)
-              handleSubmitTestRef.current(true)
-              return
+              setSelectedAnswers(draft.selectedAnswers)
             } else {
               setSelectedAnswers(draft.selectedAnswers)
               hasLocalDraft = true
@@ -782,12 +809,17 @@ export function useCourseTestRunner({
       .then((sessionRes) => {
         if (sessionRes && sessionRes.session_id) {
           sessionIdRef.current = sessionRes.session_id
+          setSessionId(sessionRes.session_id)
+          setSkillSubmissions(sessionRes.skill_submissions || [])
+          setSessionPrompts({ speaking: sessionRes.skill_profiles?.speaking?.task_prompt, writing: sessionRes.skill_profiles?.writing?.task_prompt })
+          if (sessionRes.questions?.length) setSessionQuestions(sessionRes.questions)
+          if (sessionRes.status !== 'IN_PROGRESS') setAwaitingGrading(true)
           if (sessionRes.expires_at) {
             const serverRemaining = Math.max(
               0,
               Math.floor((new Date(sessionRes.expires_at).getTime() - Date.now()) / 1000)
             )
-            if (serverRemaining <= 0) {
+            if (serverRemaining <= 0 && sessionRes.status === 'IN_PROGRESS') {
               setTimeLeft(0)
               handleSubmitTestRef.current(true)
               return
@@ -816,7 +848,7 @@ export function useCourseTestRunner({
           }
         }
       })
-      .catch(() => {})
+      .catch((error) => toast.error(error instanceof Error ? error.message : 'Chưa mở được phiên thi'))
   }, [
     effectiveDurationMinutes,
     isOpen,
@@ -832,7 +864,7 @@ export function useCourseTestRunner({
   ])
 
   useEffect(() => {
-    if (!isOpen || isSubmitted || timeLeft <= 0) return
+    if (!isOpen || isSubmitted || awaitingGrading || !sessionId || timeLeft <= 0) return
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -847,9 +879,10 @@ export function useCourseTestRunner({
       })
     }, 1000)
     return () => clearInterval(timer)
-  }, [isOpen, isSubmitted, timeLeft, hasAutoSubmitted, handleSubmitTest])
+  }, [isOpen, isSubmitted, awaitingGrading, sessionId, timeLeft, hasAutoSubmitted, handleSubmitTest])
 
   return {
+    sessionId, skillSubmissions, setSkillSubmissions, awaitingGrading, skillScores, missingSkills,
     is4Skills,
     effectiveSpeakingPrompt,
     effectiveSpeakingFileUrl,

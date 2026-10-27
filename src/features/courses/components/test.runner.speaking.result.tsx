@@ -51,25 +51,25 @@ export function TestRunnerSpeakingResult({ speakingResult }: TestRunnerSpeakingR
         <div className="p-2.5 rounded-xl bg-surface-subtle border border-border">
           <span className="text-[10px] text-text-tertiary block">{isVietnamese ? 'Phát âm' : 'Pronunciation'}</span>
           <span className="font-extrabold text-text-primary">
-            {speakingResult.ai_feedback?.pronunciation_score || 80}/100
+            {speakingResult.ai_feedback?.pronunciation_score ?? '—'}/100
           </span>
         </div>
         <div className="p-2.5 rounded-xl bg-surface-subtle border border-border">
           <span className="text-[10px] text-text-tertiary block">{isVietnamese ? 'Độ lưu loát' : 'Fluency'}</span>
           <span className="font-extrabold text-text-primary">
-            {speakingResult.ai_feedback?.fluency_score || 78}/100
+            {speakingResult.ai_feedback?.fluency_score ?? '—'}/100
           </span>
         </div>
         <div className="p-2.5 rounded-xl bg-surface-subtle border border-border">
           <span className="text-[10px] text-text-tertiary block">{isVietnamese ? 'Ngữ pháp' : 'Grammar'}</span>
           <span className="font-extrabold text-text-primary">
-            {speakingResult.ai_feedback?.grammar_score || 82}/100
+            {speakingResult.ai_feedback?.grammar_score ?? '—'}/100
           </span>
         </div>
         <div className="p-2.5 rounded-xl bg-surface-subtle border border-border">
           <span className="text-[10px] text-text-tertiary block">{isVietnamese ? 'Từ vựng' : 'Vocabulary'}</span>
           <span className="font-extrabold text-text-primary">
-            {speakingResult.ai_feedback?.vocabulary_score || 80}/100
+            {speakingResult.ai_feedback?.vocabulary_score ?? '—'}/100
           </span>
         </div>
       </div>

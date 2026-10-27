@@ -43,7 +43,7 @@ export function WritingWorkspace({
   const reviewReady = !reviewSessionId || (!!review.data && review.data.can_submit && !review.data.submission_id && review.data.exercise_id === exercise.id && new Date(review.data.expires_at).getTime() > Date.now() && !hint.isPending && !review.isFetching)
 
   const draftOwner = useAuthStore(state => state.user?.user_id)
-  const reviewDraft = useWritingReviewDraft(reviewSessionId && draftOwner ? `writing-review-draft:${draftOwner}:${reviewSessionId}:${exercise.id}` : null)
+  const reviewDraft = useWritingReviewDraft(draftOwner ? `writing-review-draft:${draftOwner}:${reviewSessionId || 'practice'}:${exercise.id}` : null)
   const [editedContent, setContent] = useState<string | undefined>(initialContent || undefined)
   const content = editedContent ?? reviewDraft.content ?? ''
   const [isSaving, setIsSaving] = useState(false)
@@ -93,7 +93,7 @@ export function WritingWorkspace({
   const isWordCountValid = wordCount <= maxWords
 
   const handleSaveDraft = useCallback(() => {
-    if (reviewSessionId && !reviewDraft.save(content)) { toast.error(isVietnamese ? 'Không lưu được bản nháp trên thiết bị. Hãy giữ trang này mở.' : 'Unable to save a device draft. Keep this page open.'); return }
+    if (!reviewDraft.save(content)) { toast.error(isVietnamese ? 'Không lưu được bản nháp trên thiết bị. Hãy giữ trang này mở.' : 'Unable to save a device draft. Keep this page open.'); return }
     setIsSaving(true)
     onSaveDraft(content, wordCount)
     setTimeout(() => {
@@ -307,7 +307,7 @@ export function WritingWorkspace({
             <textarea
               value={content}
               disabled={isSubmitted}
-              onChange={(e) => { setContent(e.target.value); if (reviewSessionId) reviewDraft.save(e.target.value) }}
+              onChange={(e) => { setContent(e.target.value); reviewDraft.save(e.target.value) }}
               placeholder={isVietnamese ? 'Bắt đầu viết bài của bạn ở đây...' : 'Start writing your response here...'}
               className="h-full w-full resize-none rounded-lg border border-border bg-surface p-4 text-[15px] leading-relaxed text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none"
               style={{ minHeight: '300px' }}

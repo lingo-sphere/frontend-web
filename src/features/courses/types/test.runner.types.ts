@@ -30,6 +30,8 @@ export interface GradedQuestionItem {
 }
 
 export interface TestAttemptItem {
+  skill_scores?: Record<string, number>
+  grading_version?: string
   attempt_id: string
   test_type?: string
   score: number
