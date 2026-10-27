@@ -14,6 +14,7 @@ interface TestRunnerQuestionItemProps {
   index: number
   chosenIdx?: number
   isSubmitted: boolean
+  isLocked?: boolean
   testAudioUrl?: string
   chapterTitle?: string
   matchingAiExp?: AiExplanationDetail
@@ -26,6 +27,7 @@ export function TestRunnerQuestionItem({
   index,
   chosenIdx,
   isSubmitted,
+  isLocked,
   testAudioUrl,
   chapterTitle,
   matchingAiExp,
@@ -113,7 +115,7 @@ export function TestRunnerQuestionItem({
             <button
               key={optIdx}
               type="button"
-              disabled={isSubmitted}
+              disabled={isSubmitted || isLocked}
               onClick={() => onSelectOption(index, optIdx)}
               className={`w-full p-3 rounded-xl border text-left text-xs font-medium transition-all flex items-center gap-3 cursor-pointer ${
                 isCorrectAnswer

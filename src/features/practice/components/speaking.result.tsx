@@ -1,3 +1,6 @@
+import { usePracticeReview } from '../hooks/use.practice.review'
+import { PracticeReviewPanel } from './practice.review.panel'
+import { SkillEvaluationFeedback } from './skill.evaluation.feedback'
 // Component giao diện React SpeakingResult cho học viên.
 
 import { useState, useRef, useEffect } from 'react'
@@ -48,6 +51,7 @@ export function SpeakingResult({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [playingTurnKey, setPlayingTurnKey] = useState<string | null>(null)
   const turnAudioRef = useRef<HTMLAudioElement | null>(null)
+  const reviewState = usePracticeReview('SPEAKING', submission.id, Number.isFinite(submission.overall_score))
   const evaluation = submission.ai_evaluation
 
   useEffect(() => {
@@ -142,6 +146,7 @@ export function SpeakingResult({
 
   const toScore100 = (val: number) => {
     const num = val || 0
+    if (submission.grading_version === 'speaking-v2' || evaluation?.grading_version === 'speaking-v2') return num
     return num <= 10 && num > 0 ? num * 10 : num
   }
 
@@ -199,7 +204,7 @@ export function SpeakingResult({
     return 'bg-red-100 text-red-700'
   }
 
-  const overallScore100 = toScore100(submission.overall_score || 0)
+  const overallScore100 = toScore100(reviewState.query.data?.overall_score ?? submission.overall_score ?? 0)
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
@@ -219,6 +224,8 @@ export function SpeakingResult({
           <p className="text-[13px] text-text-secondary">{exercise.title} - {exercise.title_vi}</p>
         </div>
       </div>
+
+      <PracticeReviewPanel state={reviewState} />
 
       <Card className="mb-6 dashboard-card border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
         <CardContent className="p-6">
@@ -443,11 +450,12 @@ export function SpeakingResult({
 
             <div className="mb-4 rounded-xl bg-surface-subtle p-4">
               <p className="text-[14px] leading-relaxed text-text-primary">
-                {evaluation.overall_feedback}
+                {evaluation.overall_feedback || evaluation.detailed_feedback}
               </p>
             </div>
 
-            <div className="space-y-3">
+            {evaluation.grading_version && <SkillEvaluationFeedback evaluation={evaluation} />}
+            {!evaluation.grading_version && <div className="space-y-3">
               {evaluation.pronunciation_analysis && (
                 <AnalysisItem
                   icon={Target}
@@ -520,9 +528,9 @@ export function SpeakingResult({
                   isVietnamese={isVietnamese}
                 />
               )}
-            </div>
+            </div>}
 
-            {evaluation.improvement_tips && evaluation.improvement_tips.length > 0 && (
+            {!evaluation.grading_version && evaluation.improvement_tips && evaluation.improvement_tips.length > 0 && (
               <div className="mt-4 rounded-xl bg-amber-50 p-4">
                 <h3 className="mb-2 flex items-center gap-2 text-[13px] font-semibold text-amber-700">
                   <Lightbulb size={16} className="text-amber-600" />

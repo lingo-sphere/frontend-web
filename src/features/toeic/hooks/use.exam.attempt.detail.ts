@@ -273,6 +273,8 @@ export function useExamAttemptDetail() {
   }, [courseQuestions, filterAnswerStatus])
 
   return {
+    courseSkillScores: cAttempt?.skill_scores || {},
+    courseSkillSubmissions: cAttempt?.skill_submissions || [],
     isLoading,
     detailData,
     courseQuestions,

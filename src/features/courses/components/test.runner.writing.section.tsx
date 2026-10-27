@@ -1,346 +1,199 @@
-// Phần thi kỹ năng Viết hỗ trợ nộp bài luận và nhận đánh giá từ AI.
-'use client'
+"use client";
 
-import { useState, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useEffect, useState } from "react";
+import { Button } from "@/components/button";
 import {
-  PenTool,
-  UploadCloud,
-  FileText,
-  CheckCircle,
-  Send,
-  Loader2,
-  CheckCircle2,
-  FileDown,
-  ExternalLink,
-} from 'lucide-react'
-import { Button } from '@/components/button'
-import { courseService, type WritingSubmissionResponse } from '@/features/courses/services/course.service'
-import { toast } from '@/store/toast.store'
+  courseService,
+  type WritingSubmissionResponse,
+} from "../services/course.service";
+import {
+  readSkillDraft,
+  writeSkillDraft,
+} from "@/features/practice/lib/skill-draft";
+import { SkillEvaluationFeedback } from "@/features/practice/components/skill.evaluation.feedback";
+import { toast } from "@/store/toast.store";
 
-interface TestRunnerWritingSectionProps {
-  courseId: string
-  moduleId?: string
-  testType: string
-  prompt: string
-  fileUrl?: string
-  onScoreUpdated?: (score: number) => void
+interface Props {
+  courseId: string;
+  sessionId: string | null;
+  moduleId?: string;
+  testType: string;
+  prompt: string;
+  fileUrl?: string;
+  initialResult?: WritingSubmissionResponse;
+  inputLocked?: boolean;
+  onResult?: (result: WritingSubmissionResponse) => void;
 }
 
 export function TestRunnerWritingSection({
   courseId,
-  moduleId,
-  testType,
+  sessionId,
   prompt,
   fileUrl,
-  onScoreUpdated,
-}: TestRunnerWritingSectionProps) {
-  const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  initialResult,
+  inputLocked,
+  onResult,
+}: Props) {
+  const [text, setText] = useState(initialResult?.essay_text || "");
+  const [localResult, setResult] = useState<WritingSubmissionResponse>();
+  const result = localResult || initialResult;
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [ready, setReady] = useState(false);
+  const key = `course-writing:${sessionId}`;
+  const graded =
+    result?.status === "AI_GRADED" || result?.status === "TEACHER_REVIEWED";
+  const locked =
+    busy || sent || !!result || inputLocked || !sessionId || !ready;
 
-  const [essayText, setEssayText] = useState('')
-  const [writingInputMode, setWritingInputMode] = useState<'TYPE' | 'UPLOAD'>('TYPE')
-  const [uploadedEssayFileName, setUploadedEssayFileName] = useState<string | null>(null)
-  const essayFileInputRef = useRef<HTMLInputElement>(null)
-  const [isSubmittingWriting, setIsSubmittingWriting] = useState(false)
-  const [writingResult, setWritingResult] = useState<WritingSubmissionResponse | null>(null)
-
-  const handleEssayFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!/\.(txt|md|docx|doc|pdf)$/i.test(file.name)) {
-      toast.error(
-        isVietnamese
-          ? 'Chỉ chấp nhận file văn bản (.txt, .md, .docx, .doc, .pdf)'
-          : 'Only text files (.txt, .md, .docx, .doc, .pdf) are accepted'
-      )
-      return
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error(
-        isVietnamese
-          ? 'Dung lượng file không được vượt quá 10MB'
-          : 'File size cannot exceed 10MB'
-      )
-      return
-    }
-
-    setUploadedEssayFileName(file.name)
-    setWritingResult(null)
-
-    if (/\.(txt|md)$/i.test(file.name)) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const content = event.target?.result as string
-        if (content) {
-          setEssayText(content.trim())
-          toast.success(
-            isVietnamese
-              ? `Đã đọc nội dung bài viết từ file: ${file.name}`
-              : `Read essay content from file: ${file.name}`
-          )
+  useEffect(() => {
+    let active = true;
+    if (!sessionId) return;
+    readSkillDraft<{ text: string; sent?: boolean }>(key)
+      .then((draft) => {
+        if (active && draft) {
+          setText(draft.text);
+          setSent(!!draft.sent);
         }
-      }
-      reader.readAsText(file)
-    } else {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const text = event.target?.result as string
-        if (text && text.length > 20) {
-          const sanitized = text
-            .replace(/[^\x20-\x7E\s\n\r\t]/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-          if (sanitized.length > 15) {
-            setEssayText(sanitized)
-          } else {
-            setEssayText(
-              isVietnamese
-                ? `[Tệp đính kèm: ${file.name}]\n\nNội dung bài luận tiếng Anh của học viên đính kèm từ tệp ${file.name}.`
-                : `[Attached file: ${file.name}]\n\nLearner English essay content attached from file ${file.name}.`
-            )
-          }
-        } else {
-          setEssayText(
-            isVietnamese
-              ? `[Tệp đính kèm: ${file.name}]\n\nNội dung bài luận tiếng Anh của học viên đính kèm từ tệp ${file.name}.`
-              : `[Attached file: ${file.name}]\n\nLearner English essay content attached from file ${file.name}.`
-          )
-        }
-        toast.success(
-          isVietnamese
-            ? `Đã đính kèm file bài viết: ${file.name}`
-            : `Attached essay file: ${file.name}`
-        )
-      }
-      reader.readAsText(file)
-    }
-  }
-
-  const resetEssayFile = () => {
-    setUploadedEssayFileName(null)
-    setEssayText('')
-    setWritingResult(null)
-    if (essayFileInputRef.current) essayFileInputRef.current.value = ''
-  }
-
-  const handleSubmitWriting = async () => {
-    if (!essayText.trim()) return
-    setIsSubmittingWriting(true)
-    try {
-      const res = await courseService.submitWritingSubmission(courseId, {
-        essay_text: essayText,
-        module_id: moduleId,
-        test_type: testType.toUpperCase(),
-        prompt: prompt,
       })
-      setWritingResult(res)
-      if (res?.ai_score !== undefined) {
-        onScoreUpdated?.(res.ai_score)
-      }
-      toast.success(
-        isVietnamese
-          ? 'Đã nộp bài viết thành công! AI đã hoàn tất phân tích bài luận.'
-          : 'Writing submitted successfully! AI has finished essay analysis.'
-      )
-    } catch {
-      toast.error(
-        isVietnamese
-          ? 'Lỗi khi nộp bài viết. Vui lòng thử lại.'
-          : 'Error submitting essay. Please try again.'
-      )
-    } finally {
-      setIsSubmittingWriting(false)
-    }
-  }
+      .catch(() => toast.warning("Chưa khôi phục được bản nháp trên thiết bị."))
+      .finally(() => {
+        if (active) setReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [key, sessionId]);
 
-  const essayWordCount = essayText.trim().split(/\s+/).filter(Boolean).length
+  const changeText = (value: string) => {
+    setText(value);
+    writeSkillDraft(key, { text: value }).catch(() =>
+      toast.warning("Chưa lưu được bản nháp. Hãy giữ trang này mở."),
+    );
+  };
+
+  const submit = async () => {
+    if (!sessionId || busy) return;
+    setBusy(true);
+    try {
+      setSent(true);
+      await writeSkillDraft(key, { text, sent: true }).catch(() => {});
+      const response = await courseService.submitWritingSubmission(courseId, {
+        session_id: sessionId,
+        essay_text: text || result?.essay_text || "",
+      });
+      setResult(response);
+      onResult?.(response);
+      if (
+        response.status === "AI_GRADED" ||
+        response.status === "TEACHER_REVIEWED"
+      ) {
+        await writeSkillDraft(key, undefined).catch(() => {});
+        toast.success("Đã chấm bài viết thành công.");
+      } else
+        toast.info(
+          response.grading_error ||
+            "Chưa chấm được bài viết. Nội dung đã được giữ để thử lại.",
+        );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Chưa chấm được bài viết. Bạn có thể thử lại.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <div className="space-y-5">
-      <div className="p-4.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 dark:text-indigo-200">
-            <PenTool className="h-4 w-4 text-indigo-600" />
-            <span>{isVietnamese ? 'Đề bài viết luận Writing:' : 'Writing essay prompt:'}</span>
-          </div>
-          {fileUrl && (
-            <a
-              href={fileUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
-            >
-              <FileDown size={13} />
-              <span>{isVietnamese ? 'Xem file đề bài đính kèm' : 'View attached prompt file'}</span>
-              <ExternalLink size={11} />
-            </a>
-          )}
-        </div>
-
-        <p className="text-xs text-indigo-900 dark:text-indigo-100 font-medium leading-relaxed whitespace-pre-line">
-          &ldquo;{prompt}&rdquo;
-        </p>
-      </div>
-
-      <div className="flex items-center gap-1.5 p-1 bg-surface-subtle border border-border rounded-2xl w-full max-w-sm mx-auto">
-        <button
-          type="button"
-          onClick={() => setWritingInputMode('TYPE')}
-          className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-            writingInputMode === 'TYPE'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-text-secondary hover:text-text-primary'
-          }`}
-        >
-          <PenTool size={13} />
-          <span>{isVietnamese ? 'Soạn thảo trực tiếp' : 'Type directly'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setWritingInputMode('UPLOAD')}
-          className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-            writingInputMode === 'UPLOAD'
-              ? 'bg-indigo-600 text-white shadow-xs'
-              : 'text-text-secondary hover:text-text-primary'
-          }`}
-        >
-          <UploadCloud size={13} />
-          <span>{isVietnamese ? 'Tải file bài viết' : 'Upload file'}</span>
-        </button>
-      </div>
-
-      <input
-        ref={essayFileInputRef}
-        type="file"
-        accept=".txt,.md,.docx,.doc,.pdf,text/plain"
-        onChange={handleEssayFileSelect}
-        className="hidden"
-      />
-
-      {writingInputMode === 'UPLOAD' && !writingResult && (
-        <div className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-indigo-400 bg-indigo-50/40 hover:bg-indigo-50/70 dark:bg-indigo-950/20 dark:border-indigo-700/60 dark:hover:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 transition-all space-y-2 text-center">
-          <button
-            type="button"
-            onClick={() => essayFileInputRef.current?.click()}
-            className="flex flex-col items-center gap-2 cursor-pointer w-full"
+    <section className="space-y-5">
+      <div className="rounded-2xl border border-border p-4">
+        <p className="font-semibold">Đề bài Writing</p>
+        <p className="whitespace-pre-wrap text-sm">{prompt}</p>
+        {fileUrl && (
+          <a
+            className="text-primary underline"
+            href={fileUrl}
+            target="_blank"
+            rel="noreferrer"
           >
-            <FileText className="h-9 w-9 text-indigo-500" />
-            <span className="text-xs font-bold">
-              {isVietnamese ? 'Bấm để chọn file bài viết từ thiết bị' : 'Click to select essay file from device'}
-            </span>
-            <span className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80">
-              {isVietnamese ? 'Hỗ trợ .txt, .md, .docx, .doc, .pdf (tối đa 10MB)' : 'Supports .txt, .md, .docx, .doc, .pdf (max 10MB)'}
-            </span>
-          </button>
-
-          {uploadedEssayFileName && (
-            <div className="flex items-center gap-2 pt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              <CheckCircle size={14} />
-              <span>{isVietnamese ? `Đã nạp file: ${uploadedEssayFileName}` : `Loaded file: ${uploadedEssayFileName}`}</span>
-              <button
-                type="button"
-                onClick={resetEssayFile}
-                className="text-rose-500 hover:underline text-[11px] ml-1 cursor-pointer"
-              >
-                {isVietnamese ? '(Đổi file khác)' : '(Change file)'}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <label className="font-bold text-text-secondary">
-            {writingInputMode === 'UPLOAD'
-              ? (isVietnamese ? 'Nội dung bài viết đã nạp từ file:' : 'Essay content loaded from file:')
-              : (isVietnamese ? 'Khung soạn thảo bài viết:' : 'Essay editor:')}
-          </label>
-          <span
-            className={`font-bold px-2 py-0.5 rounded-md ${
-              essayWordCount >= 80 && essayWordCount <= 150
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                : 'bg-surface-subtle text-text-tertiary'
-            }`}
-          >
-            {isVietnamese
-              ? `Đã viết: ${essayWordCount} từ ${essayWordCount < 80 ? '(Tối thiểu 80 từ)' : ''}`
-              : `Written: ${essayWordCount} words ${essayWordCount < 80 ? '(Min 80 words)' : ''}`}
-          </span>
-        </div>
-
-        <textarea
-          rows={7}
-          disabled={Boolean(writingResult)}
-          value={essayText}
-          onChange={(e) => setEssayText(e.target.value)}
-          placeholder={
-            isVietnamese
-              ? 'Gõ bài viết tiếng Anh của bạn tại đây hoặc tải file bài viết ở trên...'
-              : 'Type your English essay here or upload a file above...'
-          }
-          className="w-full p-4 rounded-2xl border border-border bg-surface text-xs text-text-primary leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-primary"
-        />
-
-        {!writingResult && (
-          <Button
-            type="button"
-            disabled={isSubmittingWriting || essayWordCount < 10}
-            onClick={handleSubmitWriting}
-            className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {isSubmittingWriting ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                <span>
-                  {isVietnamese ? 'AI đang phân tích ngữ pháp & từ vựng...' : 'AI is analyzing grammar & vocabulary...'}
-                </span>
-              </>
-            ) : (
-              <>
-                <Send size={14} />
-                <span>
-                  {isVietnamese ? 'Nộp bài luận để AI chấm' : 'Submit essay for AI scoring'}
-                </span>
-              </>
-            )}
-          </Button>
+            Xem tài liệu đính kèm
+          </a>
         )}
       </div>
-
-      {writingResult && (
-        <div className="p-5 rounded-2xl bg-surface border border-indigo-500/40 shadow-xs space-y-3.5 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-              <CheckCircle2 size={16} />
-              <span>{isVietnamese ? 'Kết quả đánh giá bài viết sơ bộ' : 'Preliminary Writing Evaluation'}</span>
-            </div>
-            <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-xl">
-              {writingResult.ai_score}/100 {isVietnamese ? 'điểm' : 'points'}
-            </span>
-          </div>
-
-          <p className="text-xs text-text-secondary leading-relaxed">
-            {writingResult.ai_feedback?.detailed_comment}
+      {!graded && (
+        <div className="space-y-3">
+          <label className="block text-sm">
+            Nạp nội dung từ TXT hoặc Markdown
+            <input
+              disabled={locked}
+              type="file"
+              accept=".txt,.md,text/plain,text/markdown"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                if (!/\.(txt|md)$/i.test(file.name) || file.size > 100000) {
+                  toast.error(
+                    "Chỉ nhận TXT/MD tối đa 100KB. Với PDF/DOCX, hãy sao chép nội dung vào khung viết.",
+                  );
+                  return;
+                }
+                try {
+                  changeText(await file.text());
+                } catch {
+                  toast.error("Không đọc được nội dung tệp.");
+                }
+              }}
+            />
+          </label>
+          <p className="text-sm text-text-secondary">
+            Độ dài và cách đánh giá theo yêu cầu của từng đề. Nội dung được khóa
+            khi nộp.
           </p>
-
-          {Array.isArray(writingResult.ai_feedback?.improvement_tips) && (
-            <div className="p-3.5 rounded-xl bg-surface-subtle border border-border space-y-1.5 text-xs">
-              <span className="font-bold text-primary block">
-                {isVietnamese ? '💡 Gợi ý cải thiện:' : '💡 Improvement suggestions:'}
-              </span>
-              <ul className="list-disc pl-4 space-y-1 text-text-secondary">
-                {writingResult.ai_feedback.improvement_tips.map((tip: string, tIdx: number) => (
-                  <li key={tIdx}>{tip}</li>
-                ))}
-              </ul>
-            </div>
+          <textarea
+            disabled={locked}
+            value={text}
+            maxLength={20000}
+            onChange={(event) => changeText(event.target.value)}
+            rows={12}
+            className="w-full rounded-2xl border border-border bg-surface p-4 text-sm"
+            placeholder="Nhập bài viết tiếng Anh…"
+          />
+          <p className="text-sm">
+            {text.trim().split(/\s+/).filter(Boolean).length} từ
+          </p>
+          {result?.grading_error && (
+            <p role="status" className="text-sm text-amber-700">
+              {result.grading_error}
+            </p>
           )}
+          <Button
+            disabled={
+              busy ||
+              !sessionId ||
+              !ready ||
+              !text.trim() ||
+              (!!inputLocked && !sent && !result)
+            }
+            onClick={submit}
+          >
+            {busy
+              ? "AI đang chấm bài viết…"
+              : sent || result
+              ? "Thử chấm lại bài đã nộp"
+              : "Nộp bài viết để AI chấm"}
+          </Button>
         </div>
       )}
-    </div>
-  )
+      {graded && (
+        <div className="space-y-4 rounded-2xl border border-emerald-500 p-5">
+          <p className="font-semibold">
+            Kết quả Writing: {result?.final_score ?? result?.ai_score}/100
+          </p>
+          <SkillEvaluationFeedback evaluation={result?.ai_evaluation} />
+        </div>
+      )}
+    </section>
+  );
 }

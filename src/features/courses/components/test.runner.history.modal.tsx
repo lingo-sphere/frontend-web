@@ -104,7 +104,7 @@ export function TestRunnerHistoryModal({
                   new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
               )
               .map((att, idx) => {
-                const isPassedAttempt = att.is_passed || att.score >= passingScore
+                const isPassedAttempt = typeof att.is_passed === 'boolean' ? att.is_passed : att.score >= passingScore
                 const isRecord = bestScore > 0 && att.score === bestScore
                 const attemptDate = new Date(att.submitted_at)
                 const formattedDate = !isNaN(attemptDate.getTime())
@@ -185,6 +185,8 @@ export function TestRunnerHistoryModal({
                         }`}
                       >
                         {att.score}%
+                        <span className="block text-[10px] font-normal">{att.grading_version ? 'Điểm nội bộ' : 'Phiên bản cũ'}</span>
+                        {Object.entries(att.skill_scores || {}).map(([skill, score]) => <span className="block text-[10px] font-normal" key={skill}>{skill}: {score}/100</span>)}
                       </span>
                     </div>
                   </div>

@@ -12,32 +12,51 @@ import type {
 } from '@/features/courses/types/schedule.types'
 import type { GradedQuestionItem, TestAttemptItem, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
 
+export interface SkillEvaluation {
+  grading_standard?: string
+  grading_version?: string
+  raw_score?: number
+  max_score?: number
+  overall_score?: number
+  criteria_scores?: Record<string, number | null>
+  criteria_feedback?: Record<string, { comment: string; evidence: string[] }>
+  strengths?: string[]
+  weaknesses?: string[]
+  actionable_tips?: string[]
+  detailed_feedback?: string
+  improved_version?: string
+  grammar_errors?: Array<{ original: string; corrected: string; explanation?: string }>
+}
+
 export interface SpeakingSubmissionResponse {
   _id: string
-  ai_score: number
-  whisper_transcript: string
-  ai_feedback: {
-    pronunciation_score: number
-    fluency_score: number
-    grammar_score: number
-    vocabulary_score: number
-    detailed_comment: string
-    improvement_tips: string[]
+  skill: string
+  session_id?: string
+  ai_score: number | null
+  final_score?: number | null
+  whisper_transcript?: string
+  audio_url?: string
+  essay_text?: string
+  grading_error?: string
+  ai_evaluation?: SkillEvaluation
+  ai_feedback?: {
+    pronunciation_score?: number
+    fluency_score?: number
+    grammar_score?: number
+    vocabulary_score?: number
+    detailed_comment?: string
+    improvement_tips?: string[]
   }
   status: string
 }
 
-export interface WritingSubmissionResponse {
-  _id: string
-  ai_score: number
-  ai_feedback: {
-    fluency_score: number
-    grammar_score: number
-    vocabulary_score: number
-    detailed_comment: string
-    improvement_tips: string[]
-  }
-  status: string
+export type WritingSubmissionResponse = SpeakingSubmissionResponse
+
+export interface CourseAssessmentResponse {
+  assessment_status?: 'AWAITING_GRADING' | 'COMPLETED'
+  session_id?: string
+  skill_scores?: Record<string, number>
+  missing_skills?: string[]
 }
 
 export interface UserCourseNoteItem {
@@ -208,6 +227,9 @@ export const courseService = {
   },
 
   async getCourseAttemptDetail(attemptId: string): Promise<{
+    skill_scores?: Record<string, number>
+    skill_submissions?: SpeakingSubmissionResponse[]
+    grading_version?: string
     attempt_id: string
     test_type: string
     course_id: string
@@ -238,6 +260,7 @@ export const courseService = {
     courseId: string,
     moduleId: string,
     data: {
+      session_id?: string
       score?: number
       correct_count?: number
       total_questions?: number
@@ -251,7 +274,7 @@ export const courseService = {
         selected_index?: number
       }>
     }
-  ): Promise<{
+  ): Promise<CourseAssessmentResponse & {
     is_passed: boolean
     score: number
     highest_score?: number
@@ -271,6 +294,7 @@ export const courseService = {
     courseId: string,
     moduleId: string,
     data: {
+      session_id?: string
       score?: number
       correct_count?: number
       total_questions?: number
@@ -283,7 +307,7 @@ export const courseService = {
         selected_index?: number
       }>
     }
-  ): Promise<{
+  ): Promise<CourseAssessmentResponse & {
     message: string
     module_id: string
     score: number
@@ -311,6 +335,7 @@ export const courseService = {
   async submitCourseFinalTest(
     courseId: string,
     data: {
+      session_id?: string
       score?: number
       correct_count?: number
       total_questions?: number
@@ -322,7 +347,7 @@ export const courseService = {
         selected_index?: number
       }>
     }
-  ): Promise<{
+  ): Promise<CourseAssessmentResponse & {
     message: string
     course_id: string
     final_test_score: number
@@ -356,6 +381,9 @@ export const courseService = {
       retry?: boolean
     }
   ): Promise<{
+    skill_submissions?: SpeakingSubmissionResponse[]
+    skill_profiles?: { speaking?: { task_prompt?: string; exercise_type?: string }; writing?: { task_prompt?: string; exercise_type?: string } }
+    questions?: import('@/features/courses/types/test.runner.types').CourseTestQuestion[]
     session_id: string
     started_at: string
     expires_at: string
@@ -600,6 +628,8 @@ export const courseService = {
   async submitSpeakingSubmission(
     courseId: string,
     data: {
+      session_id?: string
+      audio_mime_type?: string
       audio_url: string
       module_id?: string
       test_type?: string
@@ -612,6 +642,8 @@ export const courseService = {
   async submitWritingSubmission(
     courseId: string,
     data: {
+      session_id?: string
+      audio_mime_type?: string
       essay_text: string
       module_id?: string
       test_type?: string

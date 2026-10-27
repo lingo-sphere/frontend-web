@@ -1,6 +1,8 @@
 // Trang chi tiết kết quả bài kiểm tra và bài thi thử của học viên.
 'use client'
 
+import { SkillEvaluationFeedback } from '@/features/practice/components/skill.evaluation.feedback'
+
 import {
   RotateCcw,
   ArrowLeft,
@@ -24,6 +26,7 @@ import { useExamAttemptDetail } from '@/features/toeic/hooks/use.exam.attempt.de
 export default function ExamAttemptDetailPage() {
   const navigate = useNavigate()
   const {
+    courseSkillScores, courseSkillSubmissions,
     isLoading,
     detailData,
     courseQuestions,
@@ -128,6 +131,11 @@ export default function ExamAttemptDetailPage() {
         isScoreManuallyEdited={detailData?.attempt?.is_score_manually_edited}
       />
 
+      {isCourseTest && Object.keys(courseSkillScores).length > 0 && <section className="space-y-4 rounded-2xl border border-border p-4">
+        <p className="font-semibold">Kết quả 4 kỹ năng — điểm nội bộ khóa học</p>
+        <div className="flex flex-wrap gap-4 text-sm">{Object.entries(courseSkillScores).map(([skill, score]) => <span key={skill}>{skill}: <strong>{score}/100</strong></span>)}</div>
+        {courseSkillSubmissions.map(submission => <details key={submission._id} className="rounded-xl border border-border p-3"><summary className="cursor-pointer font-semibold">Phản hồi {submission.skill} — {submission.final_score ?? submission.ai_score}/100</summary><div className="mt-3"><SkillEvaluationFeedback evaluation={submission.ai_evaluation} /></div></details>)}
+      </section>}
       {isCourseTest && courseQuestions.length > 0 && (
         <div className="flex items-center gap-2 border-b border-border pb-3 overflow-x-auto scrollbar-none">
           <button

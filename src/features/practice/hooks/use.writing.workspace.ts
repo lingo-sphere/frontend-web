@@ -1,3 +1,4 @@
+import { readSkillDraft, writeSkillDraft } from '../lib/skill-draft'
 // Hook quản lý trạng thái bài tập luyện viết, lưu bản nháp và gửi chấm điểm bài luận AI.
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
@@ -151,6 +152,7 @@ export function useWritingWorkspace() {
   const params = useParams()
   const searchParams = useSearchParams()
   const reviewSessionId = searchParams.get('review_session') || undefined
+  const parentSubmissionId = searchParams.get('parent') || undefined
   const rawPath = params?.slug || params?.['*']
   const path = Array.isArray(rawPath) ? rawPath.join('/') : rawPath || ''
 
@@ -221,7 +223,7 @@ export function useWritingWorkspace() {
           const sub = mapBackendToSubmission(res)
           setCurrentSubmission(sub)
           // Tìm exercise tương ứng
-          const ex = exerciseList.find((e) => e.id === sub.exercise_id)
+          const ex = res.exercise ? mapBackendToWritingExercise(res.exercise) : exerciseList.find((e) => e.id === sub.exercise_id)
           if (ex) setSelectedExercise(ex)
         })
         .catch((err) => {
@@ -451,10 +453,15 @@ export function useWritingWorkspace() {
       }
 
       try {
+        const draftKey = `practice-writing-request:${authUser.user_id}:${reviewSessionId || parentSubmissionId || 'practice'}:${selectedExercise.id}`
+        const saved = await readSkillDraft<{ exercise: string; content: string; id: string }>(draftKey).catch(() => undefined)
+        if (saved?.content === content && saved.exercise === selectedExercise.id) submissionRequest.current = saved
         if (submissionRequest.current?.exercise !== selectedExercise.id || submissionRequest.current.content !== content) submissionRequest.current = { exercise: selectedExercise.id, content, id: crypto.randomUUID() }
+        await writeSkillDraft(draftKey, submissionRequest.current).catch(() => {})
         const payload = {
           request_id: submissionRequest.current.id,
           review_session_id: reviewSessionId,
+          parent_submission_id: parentSubmissionId,
           exercise_id: selectedExercise.id,
           user_content: content,
           time_spent_seconds: writingTimeSeconds,
@@ -465,6 +472,7 @@ export function useWritingWorkspace() {
 
         const newSubmission: WritingSubmission = mapBackendToSubmission(subData)
 
+        await writeSkillDraft(draftKey, undefined).catch(() => {})
         submissionRequest.current = null
         void practiceService.getMyWritingSubmissions().then((history: any) => setScoreGroups(history?.score_groups || [])).catch(() => undefined)
         setCurrentSubmission(newSubmission)
@@ -481,7 +489,7 @@ export function useWritingWorkspace() {
         return false
       }
     },
-    [selectedExercise, reviewSessionId, navigate, queryClient, showAction]
+    [selectedExercise, reviewSessionId, parentSubmissionId, navigate, queryClient, showAction]
   )
 
   const handleViewSubmission = useCallback(
@@ -500,10 +508,10 @@ export function useWritingWorkspace() {
   const handlePracticeAgain = useCallback(() => {
     if (!selectedExercise) return
     setDraftContent('')
-    setDraftVersion(1)
+    setDraftVersion((currentSubmission?.version_number || 1) + 1)
     setCurrentView('workspace')
-    navigate(`/writing/workspace/${selectedExercise.id}`)
-  }, [selectedExercise, navigate])
+    navigate(`/writing/workspace/${selectedExercise.id}${currentSubmission ? `?parent=${currentSubmission.id}` : ''}`)
+  }, [selectedExercise, currentSubmission, navigate])
 
   const handleNextExercise = useCallback(() => {
     if (!selectedExercise || exerciseList.length === 0) return

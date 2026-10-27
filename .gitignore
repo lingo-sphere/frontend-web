@@ -41,3 +41,5 @@ yarn-error.log*
 next-env.d.ts
 package-lock.json
 /.next-writing-test/
+/.next-assessment-test/
+/.next-assessment-clean/
