@@ -2,13 +2,14 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { useLocation } from '@/lib/navigation'
 import { useTranslation } from 'react-i18next'
 import { useMounted } from '@/hooks/use.mounted'
 import { Icon } from '@/components/icon.map'
+import { SidebarBranchedSubmenu } from '@/layouts/sidebar.branched.submenu'
 import type { NavGroup, NavItem } from '@/config/navigation.config'
 
 interface SidebarNavProps {
@@ -105,7 +106,9 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
     return null
   })
 
-  useEffect(() => {
+  const [prevLocationKey, setPrevLocationKey] = useState(`${currentPath}${currentSearch}`)
+  if (prevLocationKey !== `${currentPath}${currentSearch}`) {
+    setPrevLocationKey(`${currentPath}${currentSearch}`)
     let foundActiveWithChildren: string | null = null
     for (const group of groups) {
       for (const item of group.items) {
@@ -117,7 +120,7 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
       if (foundActiveWithChildren) break
     }
     setExpandedItem(foundActiveWithChildren)
-  }, [currentPath, currentSearch, groups])
+  }
 
   const toggleExpand = (id: string) => {
     setExpandedItem((prev) => (prev === id ? null : id))
@@ -231,21 +234,15 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
               return (
                 <div key={item.id} className="space-y-0.5">
                   <button
-                    className={`group relative w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs sm:text-[13px] transition-all cursor-pointer ${
-                      active ? 'bg-primary-soft' : 'hover:bg-surface-hover'
-                    }`}
+                    className="group relative w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs sm:text-[13px] transition-all cursor-pointer hover:bg-surface-hover"
                     onClick={() => toggleExpand(item.id)}
                     type="button"
                   >
-                    {active && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full" />
-                    )}
-
                     <div className="flex items-center gap-3 min-w-0 pl-1">
                       <div
                         className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                           active
-                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25'
+                            ? 'bg-primary/10 text-primary'
                             : 'bg-surface-subtle text-text-secondary group-hover:bg-surface-hover group-hover:text-text-primary'
                         }`}
                       >
@@ -287,35 +284,13 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
                     }`}
                   >
                     <div className="min-h-0 overflow-hidden">
-                      <div className="ml-4 pl-3 border-l-2 border-border space-y-0.5 py-1">
-                        {item.children!.map((child) => {
-                          const childActive = isChildActive(child)
-                          const childLabel = isVietnamese ? child.labelVi : child.labelEn
-                          const childPath = child.path
-
-                          return (
-                            <Link
-                              key={child.id}
-                              href={childPath}
-                              prefetch={true}
-                              onClick={() => onNavigate(child.id)}
-                              className={`relative w-full flex items-center justify-between pl-3 pr-2.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
-                                childActive
-                                  ? 'text-primary bg-primary-soft font-bold'
-                                  : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover font-medium'
-                              }`}
-                            >
-                              {childActive && (
-                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-primary rounded-r-full" />
-                              )}
-                              <span className="truncate" suppressHydrationWarning>{childLabel}</span>
-                              {childActive && (
-                                <ChevronRight className="w-3.5 h-3.5 text-primary shrink-0" />
-                              )}
-                            </Link>
-                          )
-                        })}
-                      </div>
+                      <SidebarBranchedSubmenu
+                        items={item.children!}
+                        isChildActive={isChildActive}
+                        onNavigate={onNavigate}
+                        isExpanded={isExpanded}
+                        isVietnamese={isVietnamese}
+                      />
                     </div>
                   </div>
                 </div>
@@ -327,7 +302,3 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
     </nav>
   )
 }
-
-
-
-
