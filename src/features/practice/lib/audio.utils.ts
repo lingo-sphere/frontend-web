@@ -1,6 +1,6 @@
 /**
  * @file audio.utils.ts
- * @description Mã nguồn thành phần audio-utils.ts
+ * @description Tiện ích phát âm thanh và Web Speech API
  */
 
 import type { VocabularyItem } from '@/features/vocabulary/types/vocabulary.learn'
@@ -14,14 +14,46 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled
 }
 
+// Giữ tham chiếu utterance để tránh bị Chrome Garbage Collector thu hồi trước khi kịp nói
+let activeUtterance: SpeechSynthesisUtterance | null = null
+
+// Khởi động sớm danh sách giọng đọc của trình duyệt ngay khi load module
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  window.speechSynthesis.getVoices()
+  if ('onvoiceschanged' in window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.getVoices()
+    }
+  }
+}
+
 export function speakWord(word: string, rate: number = 0.9, lang: string = 'en-US') {
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(word)
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+  if (!word || !word.trim()) return
+
+  const synth = window.speechSynthesis
+
+  // Khắc phục lỗi Chrome: Đảm bảo audio context không bị đóng băng/paused
+  if (synth.paused) {
+    synth.resume()
+  }
+
+  // Nếu đang nói hoặc đang chờ thì hủy, nhưng nếu đã rảnh thì không gọi cancel() để tránh race condition
+  if (synth.speaking || synth.pending) {
+    synth.cancel()
+  }
+
+  const doSpeak = () => {
+    if (synth.paused) {
+      synth.resume()
+    }
+
+    const utterance = new SpeechSynthesisUtterance(word.trim())
     utterance.rate = rate
+    activeUtterance = utterance
 
     try {
-      const voices = window.speechSynthesis.getVoices()
+      const voices = synth.getVoices()
       if (voices && voices.length > 0) {
         const langLower = lang.toLowerCase().replace('_', '-')
         // Tìm giọng khớp với lang yêu cầu (VD: en-GB hoặc en-US)
@@ -32,7 +64,7 @@ export function speakWord(word: string, rate: number = 0.9, lang: string = 'en-U
           utterance.voice = matchedVoice
           utterance.lang = matchedVoice.lang
         } else {
-          // Fallback: nếu thiết bị không có giọng en-GB, dùng bất kỳ giọng English nào có sẵn
+          // Fallback: nếu thiết bị không có giọng chỉ định, dùng bất kỳ giọng English nào có sẵn
           const anyEnVoice = voices.find((v) =>
             v.lang.toLowerCase().replace('_', '-').startsWith('en')
           )
@@ -44,25 +76,58 @@ export function speakWord(word: string, rate: number = 0.9, lang: string = 'en-U
           }
         }
       } else {
-        // Nếu trình duyệt chưa tải xong voice list hoặc không có en-GB, dùng en-US làm chuẩn
         utterance.lang = lang.startsWith('en') ? 'en-US' : lang
       }
     } catch {
       utterance.lang = 'en-US'
     }
 
-    window.speechSynthesis.speak(utterance)
+    utterance.onend = () => {
+      activeUtterance = null
+    }
+    utterance.onerror = () => {
+      activeUtterance = null
+    }
+
+    synth.speak(utterance)
   }
+
+  // Trì hoãn 15ms để Chrome hoàn tất luồng cancel trước khi nhận lệnh speak mới
+  setTimeout(doSpeak, 15)
 }
 
 export function speakSentence(sentence: string, rate: number = 0.85) {
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(sentence)
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+  if (!sentence || !sentence.trim()) return
+
+  const synth = window.speechSynthesis
+  if (synth.paused) {
+    synth.resume()
+  }
+  if (synth.speaking || synth.pending) {
+    synth.cancel()
+  }
+
+  const doSpeak = () => {
+    if (synth.paused) {
+      synth.resume()
+    }
+    const utterance = new SpeechSynthesisUtterance(sentence.trim())
     utterance.lang = 'en-US'
     utterance.rate = rate
-    window.speechSynthesis.speak(utterance)
+    activeUtterance = utterance
+
+    utterance.onend = () => {
+      activeUtterance = null
+    }
+    utterance.onerror = () => {
+      activeUtterance = null
+    }
+
+    synth.speak(utterance)
   }
+
+  setTimeout(doSpeak, 15)
 }
 
 export function getRandomDistractors(

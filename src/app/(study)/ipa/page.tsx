@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/card'
@@ -38,6 +38,8 @@ function IpaPageContent() {
   const [practiceModalOpen, setPracticeModalOpen] = useState(false)
   const [practicePhoneme, setPracticePhoneme] = useState<string | undefined>(undefined)
   const [practiceMode, setPracticeMode] = useState<'TARGETED' | 'FREE_PRACTICE'>('FREE_PRACTICE')
+  const dynamicAudioCache = useRef<Map<string, string>>(new Map())
+  const failedAudioUrls = useRef<Set<string>>(new Set())
 
   const searchParams = useSearchParams()
 
@@ -117,19 +119,22 @@ function IpaPageContent() {
     setPlayingKey(playId)
 
     const wordText = symbol.example_word || ''
+    const cacheKey = `${symbolId}-${selectedAccent}`
+    const cachedUrl = dynamicAudioCache.current.get(cacheKey)
     const rawAudioUrl =
-      selectedAccent === 'us'
+      cachedUrl ||
+      (selectedAccent === 'us'
         ? (symbol.example_audio_url_us || symbol.example_audio_url)
-        : (symbol.example_audio_url_uk || symbol.example_audio_url)
+        : (symbol.example_audio_url_uk || symbol.example_audio_url))
 
     const fallbackAndAutoGenerate = () => {
-      // 1. Phát ngay bằng Web Speech API
+      // 1. Phát ngay lập tức bằng Web Speech API
       if (wordText) {
         speakWord(wordText, 0.9, selectedAccent === 'uk' ? 'en-GB' : 'en-US')
       }
 
       // 2. Tự động sinh file bù vào kho vocabulary bằng Edge TTS
-      if (wordText) {
+      if (wordText && !dynamicAudioCache.current.has(cacheKey)) {
         const cefrLevel = symbol.cefr_min_level || 'A1'
         vocabularyService
           .autoGenerateAudio({
@@ -140,14 +145,23 @@ function IpaPageContent() {
           .then((res) => {
             const targetUrl = selectedAccent === 'us' ? res.audio_url_us : res.audio_url_uk
             if (targetUrl) {
-              setPlayingKey(playId)
-              const genAudio = new Audio(resolveAudioUrl(targetUrl))
-              genAudio.onended = () => setPlayingKey(null)
-              genAudio.play().catch(() => {})
+              dynamicAudioCache.current.set(cacheKey, targetUrl)
             }
           })
           .catch(() => {})
       }
+    }
+
+    // Nếu URL này đã từng phát hiện lỗi 404, không lặp lại request lỗi mà phát ngay
+    if (rawAudioUrl && failedAudioUrls.current.has(rawAudioUrl)) {
+      fallbackAndAutoGenerate()
+      setTimeout(() => {
+        setPlayingKey((curr) => (curr === playId ? null : curr))
+      }, 1200)
+      showAction(
+        `${isVietnamese ? 'Ví dụ' : 'Example'}: "${wordText}" (${selectedAccent === 'us' ? 'en-US' : 'en-UK'})`
+      )
+      return
     }
 
     if (rawAudioUrl) {
@@ -159,12 +173,14 @@ function IpaPageContent() {
         audio.onerror = () => {
           if (!hasFailed) {
             hasFailed = true
+            failedAudioUrls.current.add(rawAudioUrl)
             fallbackAndAutoGenerate()
           }
         }
         audio.play().catch(() => {
           if (!hasFailed) {
             hasFailed = true
+            failedAudioUrls.current.add(rawAudioUrl)
             fallbackAndAutoGenerate()
           }
         })
