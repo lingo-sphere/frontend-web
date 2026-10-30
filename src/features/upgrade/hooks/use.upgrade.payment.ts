@@ -12,6 +12,7 @@ import { toast } from '@/store/toast.store'
 import { getRemainingSubscriptionText } from '@/layouts/header.utils'
 import { getPlans, type Plan } from '@/features/upgrade/components/upgrade.data'
 import { useSubscriptionPlansQuery } from '@/features/upgrade/hooks/use.subscription.query'
+import { Analytics } from '@/lib/posthog'
 
 interface UseUpgradePaymentOptions {
   open: boolean
@@ -197,6 +198,12 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
     stopAllTimers()
     setStep('SUCCESS')
 
+    Analytics.paymentSucceeded({
+      orderCode: orderRef.current?.order_code,
+      amount: orderRef.current?.amount,
+      planId: selectedPlan,
+    })
+
     const currentUser = useAuthStore.getState().user
     if (currentUser) {
       const updatedUser = {
@@ -287,6 +294,10 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
       orderRef.current = newOrder
       setTimeLeftSeconds(900)
       setStep('PAYMENT_QR')
+      Analytics.checkoutStarted({
+        planId: currentPlan.id,
+        planName: currentPlan.duration?.vi || currentPlan.id,
+      })
     } catch (err: unknown) {
       const msg =
         err instanceof Error
@@ -295,6 +306,9 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
           ? 'Có lỗi xảy ra khi tạo đơn hàng'
           : 'Failed to create payment order'
       setErrorMessage(msg)
+      Analytics.paymentFailed({
+        reason: msg,
+      })
     } finally {
       setIsSubmitting(false)
     }

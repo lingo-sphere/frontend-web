@@ -1,6 +1,7 @@
 'use client'
 
 // Component hiển thị kết quả học từ vựng và thống kê tỷ lệ chính xác
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronRight, RotateCcw, Home, Award, TrendingUp, BookOpen, Volume2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
@@ -8,6 +9,7 @@ import { Button } from '@/components/button'
 import { useNavigate } from '@/lib/navigation'
 import { speakWord } from '@/features/practice/lib/audio.utils'
 import type { LearningResult, VocabularyItem } from '@/features/vocabulary/types/vocabulary.learn'
+import { Analytics } from '@/lib/posthog'
 
 interface LearningResultViewProps {
   result: LearningResult
@@ -32,6 +34,13 @@ export function LearningResultView({
   const safeTotalWords = Math.max(0, totalWords || 0)
   const safeCorrectAnswers = Math.min(safeTotalWords, Math.max(0, correctAnswers || 0))
   const safeAccuracy = Math.min(100, Math.max(0, accuracy || 0))
+
+  useEffect(() => {
+    Analytics.vocabSessionCompleted({
+      cardsReviewed: safeTotalWords,
+      accuracyRate: safeAccuracy,
+    })
+  }, [safeTotalWords, safeAccuracy])
 
   const getAccuracyColor = (acc: number) => {
     if (acc >= 90) return 'text-success'

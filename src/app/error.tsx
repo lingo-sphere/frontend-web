@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
+import { Analytics } from '@/lib/posthog'
 
 export default function GlobalError({
   error,
@@ -18,6 +19,11 @@ export default function GlobalError({
 
   useEffect(() => {
     console.error('Unhandled Next.js client error:', error)
+    Analytics.errorOccurred(error.name || 'ClientError', {
+      message: error.message,
+      digest: error.digest,
+      stack: error.stack,
+    })
   }, [error])
 
   return (

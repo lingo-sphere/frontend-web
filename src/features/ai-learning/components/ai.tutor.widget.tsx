@@ -13,6 +13,7 @@ import { useAiQuotaQuery } from '@/features/ai-learning/hooks/use.ai.query'
 import { aiKeys } from '@/features/ai-learning/keys/ai.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useMounted } from '@/hooks/use.mounted'
+import { Analytics } from '@/lib/posthog'
 
 const SUGGESTED_PROMPTS = [
   { label: 'Giải thích ngữ pháp', text: 'Hãy giải thích cho tôi cấu trúc câu điều kiện loại 3 kèm 3 ví dụ dễ hiểu.' },
@@ -76,11 +77,17 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
     if (!textToSend) setInput('')
     setIsLoading(true)
     setErrorBanner(null)
+    const startTime = Date.now()
 
     try {
       const res = await aiService.chatWithAiTutor(query, messages)
       const aiReply = res?.response || 'Xin lỗi, tôi gặp trục trặc khi kết nối với máy chủ AI. Vui lòng thử lại sau.'
       setMessages((prev) => [...prev, { role: 'assistant', content: aiReply }])
+      Analytics.aiTutorAsked({
+        topic: 'ai_tutor',
+        messageLength: query.length,
+        responseTimeMs: Date.now() - startTime,
+      })
       if (res?.quota) {
         queryClient.setQueryData(aiKeys.quota(), (prev: UserAiQuotaSummary | undefined) =>
           prev

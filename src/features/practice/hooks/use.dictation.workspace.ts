@@ -11,6 +11,7 @@ import {
   type TranscriptSegment,
   type Blank,
 } from '@/features/practice/types/listening'
+import { Analytics } from '@/lib/posthog'
 import type {
   CheckedResults,
   CheckedBlankResult,
@@ -312,6 +313,13 @@ export function useDictationWorkspace({
         totalBlanks,
         accuracy,
       }
+
+      Analytics.dictationCompleted({
+        audioId: exercise.id,
+        accuracyPercentage: accuracy,
+        wordCount: totalBlanks,
+        mistakesCount: Math.max(0, totalBlanks - totalCorrectBlanks),
+      })
 
       onComplete(attempt)
     } else {
