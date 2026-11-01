@@ -1,143 +1,159 @@
-// Trang chủ bảng điều khiển học tập cá nhân (Learner Dashboard).
+// Trang chủ bảng điều khiển học tập cá nhân theo phong cách Gogo Analytics Dashboard.
 'use client'
 
-import { useMemo } from 'react'
+import React from 'react'
+import { Loader2 } from 'lucide-react'
+import { useNavigate } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
-import { ContinueLearningCard } from '@/features/dashboard/components/continue.learning.card'
-import { ExploreTopics } from '@/features/dashboard/components/explore.topics'
-import { InsightRail } from '@/features/dashboard/components/insight.rail'
-import { StreakHistory } from '@/features/dashboard/components/streak.history'
-import { StreakLeaderboard } from '@/features/dashboard/components/streak.leaderboard'
-import { StreakRewards } from '@/features/dashboard/components/streak.rewards'
-import { TodaysLearningCard } from '@/features/dashboard/components/todays.learning.card'
-import { WelcomeBanner } from '@/features/dashboard/components/welcome.banner'
-import { MistakeDueBanner } from '@/features/dashboard/components/mistake.due.banner'
-import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
-import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
-import { useGamificationProfileQuery } from '@/features/progress/hooks/use.progress.query'
-import { useAuthStore } from '@/features/auth/store/auth.store'
-import type { LeaderboardEntry } from '@/features/user/services/user.service'
-import type { BackendTopic } from '@/features/vocabulary/services/vocabulary.service'
-import type {
-  HeatmapDay,
-  HeatmapSummary,
-  LeaderboardData,
-  Topic,
-  LearningTask,
-  StreakMilestone,
-} from '@/features/dashboard/types/dashboard'
+import { useProgressData } from '@/features/progress/hooks/use.progress.data'
+import { useProgressGrowthAnalytics } from '@/features/progress/hooks/use.progress.growth.analytics'
+import { GogoWelcomeHero } from '@/features/dashboard/components/gogo/gogo.welcome.hero'
+import { GogoStatsGrid } from '@/features/dashboard/components/gogo/gogo.stats.grid'
+import { GogoGrowthChartCard } from '@/features/dashboard/components/gogo/gogo.growth.chart.card'
+import { GogoLearningProcessesCard } from '@/features/dashboard/components/gogo/gogo.learning.processes.card'
+import { GogoRecentAssessmentsCard } from '@/features/dashboard/components/gogo/gogo.recent.assessments.card'
+import { GogoSkillsRadarCard } from '@/features/dashboard/components/gogo/gogo.skills.radar.card'
+import { GogoVocabularyDonutCard } from '@/features/dashboard/components/gogo/gogo.vocabulary.donut.card'
+import { GogoTasksRewardsCard } from '@/features/dashboard/components/gogo/gogo.tasks.rewards.card'
 
 export default function HomeAppPage() {
+  const navigate = useNavigate()
   const { showAction } = useApp()
-  const { isAuthenticated, user } = useAuthStore()
-  const { data: lbData = [] } = useLeaderboardQuery('weekly')
-  const { data: topData = [] } = useTopicsQuery()
-  const { data: gamification } = useGamificationProfileQuery(isAuthenticated)
 
-  const currentStreak = gamification?.current_streak ?? user?.streak_count ?? 0
-  const longestStreak = gamification?.longest_streak ?? currentStreak
+  const {
+    isLoading,
+    activeUser,
+    enrolledCourseCards,
+    metrics,
+    recentActivities,
+    vocabStats,
+    listeningScore,
+    readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
+  } = useProgressData(navigate)
 
-  const leaderboard: LeaderboardData = useMemo(() => {
-    const mappedEntries = Array.isArray(lbData)
-      ? lbData.map((u: LeaderboardEntry, idx: number) => ({
-          rank: idx + 1,
-          name: u.full_name || '',
-          streakDays: u.current_streak ?? u.streak_days ?? 0,
-        }))
-      : []
+  const {
+    chapter2SkillsPoints,
+    latestChapter2SkillsScore,
+    avgChapter2SkillsScore,
+    passRateChapter2Skills,
+    chapter4SkillsPoints,
+    latestChapter4SkillsScore,
+    avgChapter4SkillsScore,
+    passRateChapter4Skills,
+    toeicTimelinePoints,
+    toeicChartSeries,
+    latestToeicScore,
+  } = useProgressGrowthAnalytics({
+    enrolledCourseCards,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
+    baselineScore: Number(activeUser?.placement_test_score) || 0,
+    listeningScore,
+    readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType,
+  })
 
-    return {
-      week: mappedEntries,
-      month: mappedEntries,
-      year: mappedEntries,
-    }
-  }, [lbData])
-
-  const topics: Topic[] = useMemo(() => {
-    if (!Array.isArray(topData)) return []
-    return topData.map((t: BackendTopic) => ({
-      id: String(t._id || t.code || ''),
-      label: t.name_vi || t.name_en || '',
-      emoji: '📚',
-      words: t.lexical_count || 0,
-    }))
-  }, [topData])
-
-  const defaultHeatmap: HeatmapDay[] = Array.from({ length: 35 }, (_, i) => ({
-    id: `day-${i}`,
-    date: new Date(Date.now() - (34 - i) * 86400000).toISOString().split('T')[0],
-    intensity: (i % 3 === 0 ? 3 : i % 2 === 0 ? 2 : 0) as 0 | 1 | 2 | 3 | 4,
-    status: (i % 3 === 0 ? 'checked-in' : i % 2 === 0 ? 'checked-in' : 'inactive') as
-      | 'checked-in'
-      | 'freeze'
-      | 'inactive',
-    minutes: i % 3 === 0 ? 30 : i % 2 === 0 ? 15 : 0,
-    activityLabel: i % 2 === 0 ? 'Hoàn thành bài học' : 'Chưa học',
-  }))
-
-  const heatmapSummary: HeatmapSummary = {
-    studyDays: 20,
-    totalMinutes: 450,
-    longestStreak: longestStreak,
+  const stats2K = {
+    latestScore: latestChapter2SkillsScore,
+    avgScore: avgChapter2SkillsScore,
+    passed: passRateChapter2Skills !== null ? passRateChapter2Skills >= 70 : null,
   }
 
-  const tasks: LearningTask[] = [
-    {
-      id: 'task-1',
-      kind: 'vocabulary',
-      label: 'Học 10 từ vựng Spaced Repetition',
-      durationLabel: '5 phút',
-      icon: 'book',
-      completed: false,
-    },
-    {
-      id: 'task-2',
-      kind: 'listening',
-      label: 'Luyện 1 bài nghe chép chính tả Dictation',
-      durationLabel: '10 phút',
-      icon: 'headphones',
-      completed: false,
-    },
-    {
-      id: 'task-3',
-      kind: 'speaking',
-      label: 'Luyện 1 bài nói Whisper AI',
-      durationLabel: '10 phút',
-      icon: 'mic',
-      completed: false,
-    },
-  ]
+  const stats4K = {
+    latestScore: latestChapter4SkillsScore,
+    avgScore: avgChapter4SkillsScore,
+    passed: passRateChapter4Skills !== null ? passRateChapter4Skills >= 70 : null,
+  }
 
-  const milestones: StreakMilestone[] = [
-    { days: 3, reward: '+50 XP', status: currentStreak >= 3 ? 'done' : currentStreak >= 1 ? 'current' : 'locked' },
-    { days: 7, reward: '+150 XP', status: currentStreak >= 7 ? 'done' : currentStreak >= 3 ? 'current' : 'locked' },
-    { days: 14, reward: 'Huy hiệu Chiến Binh', status: currentStreak >= 14 ? 'done' : currentStreak >= 7 ? 'current' : 'locked' },
-  ]
+  const statsToeic = {
+    latestScore: latestToeicScore,
+    avgScore: latestToeicScore,
+    passed: latestToeicScore !== null ? latestToeicScore >= 450 : null,
+  }
+
+  if (isLoading) {
+    return (
+      <main className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-3 text-text-secondary">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-xs font-semibold">Đang chuẩn bị bảng phân tích học tập Gogo Analytics...</p>
+      </main>
+    )
+  }
 
   return (
-    <>
-      <main
-        aria-labelledby="dashboard-title"
-        className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
-      >
-        <WelcomeBanner />
-        <MistakeDueBanner />
-        <section>
-          <StreakHistory days={defaultHeatmap} summary={heatmapSummary} streak={currentStreak} />
-        </section>
-        <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.72fr)_minmax(320px,.92fr)]">
-          <div className="flex h-full flex-col gap-6">
-            <ContinueLearningCard onAction={showAction} />
-            <TodaysLearningCard onAction={showAction} tasks={tasks} />
-          </div>
-          <InsightRail onAction={showAction} />
+    <main
+      aria-labelledby="learner-analytics-dashboard"
+      className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
+    >
+      <GogoWelcomeHero
+        user={activeUser}
+        targetScore={metrics.targetScore}
+        currentStreak={metrics.streak}
+        level={metrics.level}
+        onRefresh={() => window.location.reload()}
+        onExplore={() => navigate('/toeic')}
+      />
+
+      <GogoStatsGrid
+        metrics={metrics}
+        vocabStats={vocabStats}
+        listeningScore={listeningScore}
+        readingScore={readingScore}
+        speakingScore={speakingScore}
+        writingScore={writingScore}
+        placementSkillsType={placementSkillsType}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-8 space-y-6">
+          <GogoGrowthChartCard
+            data2K={chapter2SkillsPoints}
+            stats2K={stats2K}
+            data4K={chapter4SkillsPoints}
+            stats4K={stats4K}
+            toeicData={toeicTimelinePoints}
+            toeicStats={statsToeic}
+            toeicSeries={toeicChartSeries}
+          />
+
+          <GogoLearningProcessesCard
+            courses={enrolledCourseCards}
+            onNavigate={navigate}
+          />
+
+          <GogoRecentAssessmentsCard
+            activities={recentActivities}
+          />
         </div>
-        <section className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <StreakRewards milestones={milestones} currentStreak={currentStreak} onAction={showAction} />
-          <StreakLeaderboard leaderboard={leaderboard} onAction={showAction} />
-          <ExploreTopics onAction={showAction} topics={topics} />
-        </section>
-      </main>
-    </>
+
+        <div className="lg:col-span-4 space-y-6">
+          <GogoSkillsRadarCard
+            listeningScore={listeningScore}
+            readingScore={readingScore}
+            speakingScore={speakingScore}
+            writingScore={writingScore}
+            skillsType={placementSkillsType}
+          />
+
+          <GogoVocabularyDonutCard
+            vocabStats={vocabStats}
+          />
+
+          <GogoTasksRewardsCard
+            currentStreak={metrics.streak}
+            onAction={showAction}
+          />
+        </div>
+      </div>
+    </main>
   )
 }

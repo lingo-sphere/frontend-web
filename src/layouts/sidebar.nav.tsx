@@ -151,32 +151,40 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
 
               if (collapsed) {
                 return (
-                  <Link
-                    key={item.id}
-                    href={itemRoute}
-                    prefetch={true}
-                    onClick={() => {
-                      setExpandedItem(null)
-                      onNavigate(item.id)
-                    }}
-                    className={`relative w-full flex items-center justify-center p-1.5 rounded-2xl transition-all cursor-pointer ${
-                      active ? 'bg-primary-soft' : 'hover:bg-surface-hover'
-                    }`}
-                    title={label}
-                  >
-                    {active && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full" />
-                    )}
-                    <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                        active
-                          ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
-                          : 'bg-surface-subtle text-text-secondary hover:text-text-primary'
+                  <div key={item.id} className="relative group/collapsed flex items-center justify-center">
+                    <Link
+                      href={itemRoute}
+                      prefetch={true}
+                      onClick={() => {
+                        setExpandedItem(null)
+                        onNavigate(item.id)
+                      }}
+                      className={`relative w-full flex items-center justify-center p-1.5 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer ${
+                        active ? 'bg-primary-soft' : 'hover:bg-surface-hover'
                       }`}
+                      title={label}
                     >
-                      <Icon className="w-4.5 h-4.5" name={item.icon} size={18} />
+                      {active && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full" />
+                      )}
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                          active
+                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+                            : 'bg-surface-subtle text-text-secondary group-hover/collapsed:scale-110 group-hover/collapsed:bg-primary-soft group-hover/collapsed:text-primary'
+                        }`}
+                      >
+                        <Icon className="w-4.5 h-4.5" name={item.icon} size={18} />
+                      </div>
+                    </Link>
+
+                    <div className="pointer-events-none opacity-0 group-hover/collapsed:opacity-100 group-hover/collapsed:pointer-events-auto absolute left-full top-1/2 -translate-y-1/2 ml-2.5 z-50 px-3 py-1.5 rounded-xl bg-surface border border-border shadow-xl text-xs font-bold text-text-primary whitespace-nowrap transition-all duration-200">
+                      {label}
+                      {hasChildren && (
+                        <span className="ml-1 text-[10px] text-text-tertiary">({item.children?.length})</span>
+                      )}
                     </div>
-                  </Link>
+                  </div>
                 )
               }
 
