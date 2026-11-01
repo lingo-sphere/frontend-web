@@ -49,7 +49,7 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
               <Sidebar mobile />
             </SheetContent>
           </Sheet>
-          <div className={`min-h-screen ${sidebarMargin} transition-[margin] duration-200 ease-in-out`}>
+          <div className={`min-h-screen ${sidebarMargin} transition-[margin] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]`}>
             <UtilityHeader onAction={showAction} />
             {children}
           </div>

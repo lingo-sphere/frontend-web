@@ -7,7 +7,7 @@ export type MilestoneStatus = 'done' | 'current' | 'locked'
 export type LeaderboardPeriod = 'week' | 'month' | 'year'
 export type HeatmapIntensity = 0 | 1 | 2 | 3 | 4
 export type HeatmapStatus = 'checked-in' | 'freeze' | 'inactive'
-export type LeaderboardType = 'streak' | 'learning' | 'vocabulary'
+export type LeaderboardType = 'streak' | 'learning' | 'vocabulary' | 'xp' | 'level'
 
 export interface NavItem {
   id: string
@@ -92,6 +92,11 @@ export interface MonthlyLeaderboardUser {
   wordsLearned: number
   freezes: number
   isCurrentUser?: boolean
+  avatarUrl?: string
+  xp?: number
+  level?: number
+  league?: string
+  userId?: string
 }
 
 export interface MonthlyReward {

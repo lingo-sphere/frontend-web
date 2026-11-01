@@ -1,5 +1,4 @@
-// Thanh điều hướng bên dành cho học viên hỗ trợ thu gọn và chuyển hướng.
-
+// Thanh điều hướng bên dành cho học viên hỗ trợ thu gọn và chuyển hướng theo phong cách Gogo.
 'use client'
 
 import { useTranslation } from 'react-i18next'
@@ -38,11 +37,11 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           }}
           type="button"
           title={isVietnamese ? 'Về trang Tổng quan' : 'Go to Dashboard'}
-          className={`w-full shrink-0 flex items-center gap-3 pb-3.5 border-b border-border text-left cursor-pointer group transition-all ${
+          className={`w-full shrink-0 flex items-center gap-3 pb-3.5 border-b border-border text-left cursor-pointer group transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${
             sidebarCollapsed && !mobile ? 'justify-center' : 'px-1'
           }`}
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary/90 to-primary flex items-center justify-center shadow-md shadow-primary/25 shrink-0 ring-1 ring-black/5 dark:ring-white/20 group-hover:scale-105 group-hover:shadow-primary/40 transition-all duration-200 overflow-hidden p-1">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary/90 to-primary flex items-center justify-center shadow-md shadow-primary/25 shrink-0 ring-1 ring-black/5 dark:ring-white/20 group-hover:scale-105 group-hover:shadow-primary/40 transition-all duration-300 overflow-hidden p-1">
             <img
               alt="LingoSphere logo"
               className="h-full w-full object-contain rounded-lg"
@@ -51,7 +50,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
           </div>
           {(!sidebarCollapsed || mobile) && (
             <div className="min-w-0 flex-1">
-              <p className="font-extrabold text-sm text-text-primary truncate tracking-tight group-hover:text-primary transition-colors" suppressHydrationWarning>
+              <p className="font-extrabold text-sm text-text-primary truncate tracking-tight group-hover:text-primary transition-colors duration-200" suppressHydrationWarning>
                 {t('common.appName')}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -74,14 +73,14 @@ export function Sidebar({ mobile = false }: SidebarProps) {
       <div className="pt-2 shrink-0 border-t border-border">
         {!mobile && (
           <button
-            className={`w-full flex items-center justify-center gap-2 py-2 px-2.5 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all cursor-pointer ${
+            className={`w-full flex items-center justify-center gap-2 py-2 px-2.5 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all duration-200 cursor-pointer ${
               sidebarCollapsed ? 'px-0' : ''
             }`}
             onClick={toggleSidebarCollapsed}
             type="button"
             title={sidebarCollapsed ? (isVietnamese ? 'Mở rộng menu' : 'Expand menu') : (isVietnamese ? 'Thu gọn menu' : 'Collapse menu')}
           >
-            <PanelLeftClose className={`w-4 h-4 shrink-0 transition-transform duration-200 ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+            <PanelLeftClose className={`w-4 h-4 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${sidebarCollapsed ? 'rotate-180' : ''}`} />
             {!sidebarCollapsed && (
               <span suppressHydrationWarning>
                 {isVietnamese ? 'Thu gọn menu' : t('common.collapse')}
@@ -100,7 +99,7 @@ export function Sidebar({ mobile = false }: SidebarProps) {
   return (
     <aside
       aria-label="Desktop sidebar"
-      className={`fixed inset-y-0 left-0 z-20 hidden flex-col border-r border-border bg-surface transition-all duration-200 lg:flex ${sidebarWidth} ${
+      className={`fixed inset-y-0 left-0 z-20 hidden flex-col border-r border-border bg-surface transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] lg:flex ${sidebarWidth} ${
         sidebarCollapsed ? 'p-2.5' : 'p-4'
       }`}
     >
@@ -108,4 +107,3 @@ export function Sidebar({ mobile = false }: SidebarProps) {
     </aside>
   )
 }
-

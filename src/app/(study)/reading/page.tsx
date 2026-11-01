@@ -107,7 +107,7 @@ export default function ReadingPracticePage() {
   }
 
   return (
-    <div className="container mx-auto space-y-6 px-4 py-6 max-w-7xl">
+    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-primary p-6 sm:p-8 text-white shadow-xl">
         <div className="relative z-10 max-w-2xl space-y-2">
@@ -206,7 +206,7 @@ export default function ReadingPracticePage() {
             </span>
           </div>
         ) : passagesData?.passages && passagesData.passages.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {passagesData.passages.map((passage: ReadingPassage) => (
               <Card
                 key={passage._id || passage.id}
@@ -283,6 +283,6 @@ export default function ReadingPracticePage() {
           onCancel={() => setPendingPassage(null)}
         />
       )}
-    </div>
+    </main>
   );
 }

@@ -1,143 +1,151 @@
-// Trang chủ bảng điều khiển học tập cá nhân (Learner Dashboard).
+// Trang chủ phân tích học tập và năng lực kỹ năng học viên mô phỏng toàn diện theo mẫu Gogo Analytics.
 'use client'
 
-import { useMemo } from 'react'
-import { useApp } from '@/contexts/app.context'
-import { ContinueLearningCard } from '@/features/dashboard/components/continue.learning.card'
-import { ExploreTopics } from '@/features/dashboard/components/explore.topics'
-import { InsightRail } from '@/features/dashboard/components/insight.rail'
-import { StreakHistory } from '@/features/dashboard/components/streak.history'
-import { StreakLeaderboard } from '@/features/dashboard/components/streak.leaderboard'
-import { StreakRewards } from '@/features/dashboard/components/streak.rewards'
-import { TodaysLearningCard } from '@/features/dashboard/components/todays.learning.card'
-import { WelcomeBanner } from '@/features/dashboard/components/welcome.banner'
-import { MistakeDueBanner } from '@/features/dashboard/components/mistake.due.banner'
-import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
-import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
-import { useGamificationProfileQuery } from '@/features/progress/hooks/use.progress.query'
-import { useAuthStore } from '@/features/auth/store/auth.store'
-import type { LeaderboardEntry } from '@/features/user/services/user.service'
-import type { BackendTopic } from '@/features/vocabulary/services/vocabulary.service'
-import type {
-  HeatmapDay,
-  HeatmapSummary,
-  LeaderboardData,
-  Topic,
-  LearningTask,
-  StreakMilestone,
-} from '@/features/dashboard/types/dashboard'
+import React, { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
+import { useNavigate } from '@/lib/navigation'
+import { useProgressData } from '@/features/progress/hooks/use.progress.data'
+import { progressService } from '@/features/progress/services/progress.service'
+import type { SkillsSummary, WeaknessAnalysis, PracticeDashboardData } from '@/features/progress/services/progress.service'
+import { GogoWelcomeHero } from '@/features/dashboard/components/gogo/gogo.welcome.hero'
+import { GogoStatsGrid } from '@/features/dashboard/components/gogo/gogo.stats.grid'
+import { GogoSalesCapsuleCard } from '@/features/dashboard/components/gogo/gogo.sales.capsule.card'
+import { GogoConfigurationCard } from '@/features/dashboard/components/gogo/gogo.configuration.card'
+import { GogoCurrenciesCard } from '@/features/dashboard/components/gogo/gogo.currencies.card'
+import { GogoLearningProcessesCard } from '@/features/dashboard/components/gogo/gogo.learning.processes.card'
+import { GogoVocabularyDonutCard } from '@/features/dashboard/components/gogo/gogo.vocabulary.donut.card'
+import { GogoSkillsRadarCard } from '@/features/dashboard/components/gogo/gogo.skills.radar.card'
+import { GogoWeaknessStatusCard } from '@/features/dashboard/components/gogo/gogo.weakness.status.card'
 
 export default function HomeAppPage() {
-  const { showAction } = useApp()
-  const { isAuthenticated, user } = useAuthStore()
-  const { data: lbData = [] } = useLeaderboardQuery('weekly')
-  const { data: topData = [] } = useTopicsQuery()
-  const { data: gamification } = useGamificationProfileQuery(isAuthenticated)
+  const navigate = useNavigate()
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('7d')
+  const [skillsSummary, setSkillsSummary] = useState<SkillsSummary | null>(null)
+  const [allWeaknesses, setAllWeaknesses] = useState<WeaknessAnalysis[]>([])
+  const [practiceDashboard, setPracticeDashboard] = useState<PracticeDashboardData | null>(null)
 
-  const currentStreak = gamification?.current_streak ?? user?.streak_count ?? 0
-  const longestStreak = gamification?.longest_streak ?? currentStreak
+  const {
+    isLoading,
+    activeUser,
+    enrolledCourseCards,
+    metrics,
+    vocabStats,
+    listeningScore,
+    readingScore,
+    speakingScore,
+    writingScore,
+    toeicAttempts,
+  } = useProgressData(navigate)
 
-  const leaderboard: LeaderboardData = useMemo(() => {
-    const mappedEntries = Array.isArray(lbData)
-      ? lbData.map((u: LeaderboardEntry, idx: number) => ({
-          rank: idx + 1,
-          name: u.full_name || '',
-          streakDays: u.current_streak ?? u.streak_days ?? 0,
-        }))
-      : []
+  useEffect(() => {
+    const userId = activeUser?.user_id
+    if (!userId) return
 
-    return {
-      week: mappedEntries,
-      month: mappedEntries,
-      year: mappedEntries,
-    }
-  }, [lbData])
+    progressService
+      .getSkillsSummary(userId, selectedPeriod as any)
+      .then((data) => setSkillsSummary(data))
+      .catch(() => setSkillsSummary(null))
 
-  const topics: Topic[] = useMemo(() => {
-    if (!Array.isArray(topData)) return []
-    return topData.map((t: BackendTopic) => ({
-      id: String(t._id || t.code || ''),
-      label: t.name_vi || t.name_en || '',
-      emoji: '📚',
-      words: t.lexical_count || 0,
-    }))
-  }, [topData])
+    progressService
+      .getAllWeaknesses(userId, 10)
+      .then((data) => setAllWeaknesses(data || []))
+      .catch(() => setAllWeaknesses([]))
 
-  const defaultHeatmap: HeatmapDay[] = Array.from({ length: 35 }, (_, i) => ({
-    id: `day-${i}`,
-    date: new Date(Date.now() - (34 - i) * 86400000).toISOString().split('T')[0],
-    intensity: (i % 3 === 0 ? 3 : i % 2 === 0 ? 2 : 0) as 0 | 1 | 2 | 3 | 4,
-    status: (i % 3 === 0 ? 'checked-in' : i % 2 === 0 ? 'checked-in' : 'inactive') as
-      | 'checked-in'
-      | 'freeze'
-      | 'inactive',
-    minutes: i % 3 === 0 ? 30 : i % 2 === 0 ? 15 : 0,
-    activityLabel: i % 2 === 0 ? 'Hoàn thành bài học' : 'Chưa học',
-  }))
+    progressService
+      .getPracticeDashboard(userId, selectedPeriod)
+      .then((data) => setPracticeDashboard(data))
+      .catch(() => setPracticeDashboard(null))
+  }, [activeUser?.user_id, selectedPeriod])
 
-  const heatmapSummary: HeatmapSummary = {
-    studyDays: 20,
-    totalMinutes: 450,
-    longestStreak: longestStreak,
+  if (isLoading) {
+    return (
+      <main className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-3 text-text-secondary">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-xs font-semibold">Đang chuẩn bị bảng phân tích học tập Gogo Analytics...</p>
+      </main>
+    )
   }
 
-  const tasks: LearningTask[] = [
-    {
-      id: 'task-1',
-      kind: 'vocabulary',
-      label: 'Học 10 từ vựng Spaced Repetition',
-      durationLabel: '5 phút',
-      icon: 'book',
-      completed: false,
-    },
-    {
-      id: 'task-2',
-      kind: 'listening',
-      label: 'Luyện 1 bài nghe chép chính tả Dictation',
-      durationLabel: '10 phút',
-      icon: 'headphones',
-      completed: false,
-    },
-    {
-      id: 'task-3',
-      kind: 'speaking',
-      label: 'Luyện 1 bài nói Whisper AI',
-      durationLabel: '10 phút',
-      icon: 'mic',
-      completed: false,
-    },
-  ]
-
-  const milestones: StreakMilestone[] = [
-    { days: 3, reward: '+50 XP', status: currentStreak >= 3 ? 'done' : currentStreak >= 1 ? 'current' : 'locked' },
-    { days: 7, reward: '+150 XP', status: currentStreak >= 7 ? 'done' : currentStreak >= 3 ? 'current' : 'locked' },
-    { days: 14, reward: 'Huy hiệu Chiến Binh', status: currentStreak >= 14 ? 'done' : currentStreak >= 7 ? 'current' : 'locked' },
-  ]
+  const dailyBreakdown = practiceDashboard?.growth_analytics?.time_growth?.daily_breakdown_7d || []
 
   return (
-    <>
-      <main
-        aria-labelledby="dashboard-title"
-        className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
-      >
-        <WelcomeBanner />
-        <MistakeDueBanner />
-        <section>
-          <StreakHistory days={defaultHeatmap} summary={heatmapSummary} streak={currentStreak} />
-        </section>
-        <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.72fr)_minmax(320px,.92fr)]">
-          <div className="flex h-full flex-col gap-6">
-            <ContinueLearningCard onAction={showAction} />
-            <TodaysLearningCard onAction={showAction} tasks={tasks} />
-          </div>
-          <InsightRail onAction={showAction} />
+    <main
+      aria-labelledby="learner-gogo-analytics-dashboard"
+      className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
+    >
+      <GogoWelcomeHero
+        user={activeUser}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={(p) => setSelectedPeriod(p)}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-8 flex flex-col justify-between gap-6">
+          <GogoStatsGrid
+            metrics={metrics}
+            vocabStats={vocabStats}
+            skillsSummary={skillsSummary}
+            listeningScore={listeningScore}
+            readingScore={readingScore}
+            speakingScore={speakingScore}
+            writingScore={writingScore}
+          />
+
+          <GogoSalesCapsuleCard dailyBreakdown={dailyBreakdown} />
         </div>
-        <section className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <StreakRewards milestones={milestones} currentStreak={currentStreak} onAction={showAction} />
-          <StreakLeaderboard leaderboard={leaderboard} onAction={showAction} />
-          <ExploreTopics onAction={showAction} topics={topics} />
-        </section>
-      </main>
-    </>
+
+        <div className="lg:col-span-4 flex flex-col">
+          <GogoConfigurationCard
+            targetScore={metrics.targetScore}
+            currentStreak={metrics.streak}
+            xp={metrics.xp}
+            onPractice={() => navigate('/toeic')}
+            onVocab={() => navigate('/vocabulary')}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-6 flex flex-col">
+          <GogoCurrenciesCard
+            listeningScore={listeningScore}
+            readingScore={readingScore}
+            skillsSummary={skillsSummary}
+          />
+        </div>
+
+        <div className="lg:col-span-6 flex flex-col">
+          <GogoLearningProcessesCard
+            metrics={metrics}
+            vocabStats={vocabStats}
+            courses={enrolledCourseCards}
+            toeicAttemptsCount={toeicAttempts.length}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="flex flex-col">
+          <GogoVocabularyDonutCard vocabStats={vocabStats} />
+        </div>
+
+        <div className="flex flex-col">
+          <GogoSkillsRadarCard
+            listeningScore={listeningScore}
+            readingScore={readingScore}
+            speakingScore={speakingScore}
+            writingScore={writingScore}
+            grammarScore={skillsSummary?.skills?.grammar?.accuracy ?? 85}
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <GogoWeaknessStatusCard
+            weaknesses={allWeaknesses}
+            onViewAll={() => navigate('/progress?tab=SKILLS')}
+          />
+        </div>
+      </div>
+    </main>
   )
 }
