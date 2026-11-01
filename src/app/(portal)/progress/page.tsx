@@ -20,6 +20,20 @@ export default function ProgressAppPage() {
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'SKILLS' | 'RECENT_TESTS' | 'GROWTH_ANALYTICS'>('OVERVIEW')
   const [skillsSummary, setSkillsSummary] = useState<SkillsSummary | null>(null)
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tabParam = params.get('tab')
+      if (tabParam === 'SKILLS' || tabParam === 'skills') {
+        setActiveTab('SKILLS')
+      } else if (tabParam === 'RECENT_TESTS') {
+        setActiveTab('RECENT_TESTS')
+      } else if (tabParam === 'GROWTH_ANALYTICS') {
+        setActiveTab('GROWTH_ANALYTICS')
+      }
+    }
+  }, [])
+
   const {
     isLoading,
     activeUser,

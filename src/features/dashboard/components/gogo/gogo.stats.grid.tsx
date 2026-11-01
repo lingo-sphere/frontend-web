@@ -1,147 +1,107 @@
-// Component lưới 6 thẻ chỉ số học tập tổng quan theo phong cách Gogo Analytics.
+// Component lưới 6 thẻ thống kê kỹ năng pastel theo phong cách Gogo Stats.
 'use client'
 
 import React from 'react'
-import { Target, BookOpen, Flame, Award, Layers, Compass, TrendingUp } from 'lucide-react'
+import { BookOpen, Headphones, FileText, Layers, Mic, PenTool } from 'lucide-react'
 import type { ProgressMetrics, VocabStatsSummary } from '@/features/progress/hooks/use.progress.data'
+import type { SkillsSummary } from '@/features/progress/services/progress.service'
 
 interface GogoStatsGridProps {
   metrics: ProgressMetrics
   vocabStats?: VocabStatsSummary | null
+  skillsSummary?: SkillsSummary | null
   listeningScore?: number
   readingScore?: number
   speakingScore?: number
   writingScore?: number
-  placementSkillsType?: '2SKILLS' | '4SKILLS'
 }
 
 export function GogoStatsGrid({
-  metrics,
   vocabStats,
+  skillsSummary,
   listeningScore = 0,
   readingScore = 0,
   speakingScore = 0,
   writingScore = 0,
-  placementSkillsType = '2SKILLS',
 }: GogoStatsGridProps) {
-  const cards = [
+  const readingAcc = skillsSummary?.skills?.reading?.accuracy ?? readingScore
+  const listeningAcc = skillsSummary?.skills?.listening?.accuracy ?? listeningScore
+  const grammarAcc = skillsSummary?.skills?.grammar?.accuracy ?? 0
+  const masteredVocab = vocabStats?.learned_words ?? 0
+  const speakingPts = skillsSummary?.skills?.speaking?.accuracy ?? speakingScore
+  const writingPts = skillsSummary?.skills?.writing?.accuracy ?? writingScore
+
+  const statItems = [
     {
-      id: 'target-score',
-      title: 'Điểm Số Mục Tiêu',
-      primaryValue: `${metrics.currentScore}`,
-      secondaryValue: `/ ${metrics.targetScore}`,
-      description: `Đạt ${metrics.scoreProgressPercent}% chặng đường TOEIC`,
-      progress: Math.min(100, metrics.scoreProgressPercent),
-      progressColor: 'bg-emerald-500',
-      icon: Target,
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
-      iconBg: 'bg-emerald-50 dark:bg-emerald-500/15',
-    },
-    {
-      id: 'course-progress',
-      title: 'Tiến Độ Khóa Học',
-      primaryValue: `${metrics.avgProgress}%`,
-      secondaryValue: `trung bình`,
-      description: `${metrics.completedCourses}/${metrics.totalCourses} khóa học đã hoàn thành`,
-      progress: Math.min(100, metrics.avgProgress),
-      progressColor: 'bg-teal-500',
+      id: 'reading',
+      label: 'Đọc hiểu',
+      value: readingAcc > 0 ? `${Math.round(readingAcc)}%` : '0%',
       icon: BookOpen,
-      iconColor: 'text-teal-600 dark:text-teal-400',
-      iconBg: 'bg-teal-50 dark:bg-teal-500/15',
+      cardBg: 'bg-emerald-50/70 dark:bg-emerald-950/25 border-emerald-100/70 dark:border-emerald-800/30 text-emerald-600 dark:text-emerald-400',
     },
     {
-      id: 'streak-days',
-      title: 'Chuyên Cần & Streak',
-      primaryValue: `${metrics.streak}`,
-      secondaryValue: 'ngày liên tiếp',
-      description: `Tích lũy ${metrics.xp.toLocaleString('vi-VN')} XP • Cấp độ ${metrics.level}`,
-      progress: Math.min(100, (metrics.streak / 30) * 100),
-      progressColor: 'bg-amber-500',
-      icon: Flame,
-      iconColor: 'text-amber-600 dark:text-amber-400',
-      iconBg: 'bg-amber-50 dark:bg-amber-500/15',
+      id: 'listening',
+      label: 'Nghe hiểu',
+      value: listeningAcc > 0 ? `${Math.round(listeningAcc)}%` : '0%',
+      icon: Headphones,
+      cardBg: 'bg-sky-50/70 dark:bg-sky-950/25 border-sky-100/70 dark:border-sky-800/30 text-sky-600 dark:text-sky-400',
     },
     {
-      id: 'assessment',
-      title: 'Khảo Thí & Đánh Giá',
-      primaryValue: `${metrics.totalAttemptsCount}`,
-      secondaryValue: 'lần làm bài',
-      description: `Tỷ lệ đạt chuẩn: ${metrics.passRate}% bài thi`,
-      progress: Math.min(100, metrics.passRate),
-      progressColor: 'bg-purple-500',
-      icon: Award,
-      iconColor: 'text-purple-600 dark:text-purple-400',
-      iconBg: 'bg-purple-50 dark:bg-purple-500/15',
+      id: 'grammar',
+      label: 'Ngữ pháp',
+      value: grammarAcc > 0 ? `${Math.round(grammarAcc)}%` : '0%',
+      icon: FileText,
+      cardBg: 'bg-lime-50/70 dark:bg-lime-950/25 border-lime-100/70 dark:border-lime-800/30 text-lime-600 dark:text-lime-400',
     },
     {
-      id: 'vocab-srs',
-      title: 'Từ Vựng SRS Đã Thuộc',
-      primaryValue: `${(vocabStats?.learned_words ?? 0).toLocaleString('vi-VN')}`,
-      secondaryValue: 'từ vựng',
-      description: `${vocabStats?.review_due ?? 0} thẻ đến hạn ôn hôm nay`,
-      progress: vocabStats?.total_cards ? Math.min(100, Math.round(((vocabStats.learned_words || 0) / vocabStats.total_cards) * 100)) : 0,
-      progressColor: 'bg-cyan-500',
+      id: 'vocab',
+      label: 'Từ vựng SRS',
+      value: `${masteredVocab}`,
       icon: Layers,
-      iconColor: 'text-cyan-600 dark:text-cyan-400',
-      iconBg: 'bg-cyan-50 dark:bg-cyan-500/15',
+      cardBg: 'bg-indigo-50/70 dark:bg-indigo-950/25 border-indigo-100/70 dark:border-indigo-800/30 text-indigo-600 dark:text-indigo-400',
     },
     {
-      id: 'skills-readiness',
-      title: 'Hồ Sơ Năng Lực',
-      primaryValue: placementSkillsType === '4SKILLS' ? '4 Kỹ Năng' : '2 Kỹ Năng',
-      secondaryValue: 'TOEIC',
-      description: `Nghe ${listeningScore} • Đọc ${readingScore} • Nói ${speakingScore} • Viết ${writingScore}`,
-      progress: Math.min(100, Math.round(((listeningScore + readingScore + speakingScore + writingScore) / 4)), 100),
-      progressColor: 'bg-indigo-500',
-      icon: Compass,
-      iconColor: 'text-indigo-600 dark:text-indigo-400',
-      iconBg: 'bg-indigo-50 dark:bg-indigo-500/15',
+      id: 'speaking',
+      label: 'Luyện nói',
+      value: speakingPts > 0 ? `${Math.round(speakingPts)}` : '0',
+      icon: Mic,
+      cardBg: 'bg-amber-50/70 dark:bg-amber-950/25 border-amber-100/70 dark:border-amber-800/30 text-amber-600 dark:text-amber-400',
+    },
+    {
+      id: 'writing',
+      label: 'Luyện viết',
+      value: writingPts > 0 ? `${Math.round(writingPts)}` : '0',
+      icon: PenTool,
+      cardBg: 'bg-teal-50/70 dark:bg-teal-950/25 border-teal-100/70 dark:border-teal-800/30 text-teal-600 dark:text-teal-400',
     },
   ]
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {cards.map((card) => {
-        const IconComponent = card.icon
-        return (
-          <div
-            key={card.id}
-            className="rounded-2xl bg-surface border border-border p-4 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
-          >
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-xs font-semibold text-text-secondary truncate">
-                  {card.title}
-                </span>
-                <span className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg} ${card.iconColor} group-hover:scale-110 transition-transform`}>
-                  <IconComponent className="w-4 h-4" />
-                </span>
+    <div className="space-y-3">
+      <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
+        Stats
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
+        {statItems.map((item) => {
+          const Icon = item.icon
+          return (
+            <div
+              key={item.id}
+              className={`rounded-2xl border p-4 sm:p-5 flex flex-col items-center justify-between text-center transition-transform hover:-translate-y-0.5 min-h-[130px] ${item.cardBg}`}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-1">
+                <Icon className="w-5 h-5 stroke-[1.8]" />
               </div>
-
-              <div className="flex items-baseline gap-1.5 mb-1">
-                <span className="text-2xl font-extrabold text-text-primary tracking-tight">
-                  {card.primaryValue}
-                </span>
-                <span className="text-[11px] font-medium text-text-tertiary truncate">
-                  {card.secondaryValue}
-                </span>
-              </div>
-
-              <p className="text-[11px] text-text-secondary line-clamp-1 mb-3">
-                {card.description}
-              </p>
+              <span className="text-[12px] font-medium text-text-secondary">
+                {item.label}
+              </span>
+              <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-text-primary">
+                {item.value}
+              </span>
             </div>
-
-            <div className="w-full bg-surface-subtle rounded-full h-1.5 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${card.progressColor}`}
-                style={{ width: `${card.progress}%` }}
-              />
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
-

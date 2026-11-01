@@ -1,84 +1,61 @@
-// Trang chủ bảng điều khiển học tập cá nhân theo phong cách Gogo Analytics Dashboard.
+// Trang chủ phân tích học tập và năng lực kỹ năng học viên mô phỏng toàn diện theo mẫu Gogo Analytics.
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
-import { useApp } from '@/contexts/app.context'
 import { useProgressData } from '@/features/progress/hooks/use.progress.data'
-import { useProgressGrowthAnalytics } from '@/features/progress/hooks/use.progress.growth.analytics'
+import { progressService } from '@/features/progress/services/progress.service'
+import type { SkillsSummary, WeaknessAnalysis, PracticeDashboardData } from '@/features/progress/services/progress.service'
 import { GogoWelcomeHero } from '@/features/dashboard/components/gogo/gogo.welcome.hero'
 import { GogoStatsGrid } from '@/features/dashboard/components/gogo/gogo.stats.grid'
-import { GogoGrowthChartCard } from '@/features/dashboard/components/gogo/gogo.growth.chart.card'
+import { GogoSalesCapsuleCard } from '@/features/dashboard/components/gogo/gogo.sales.capsule.card'
+import { GogoConfigurationCard } from '@/features/dashboard/components/gogo/gogo.configuration.card'
+import { GogoCurrenciesCard } from '@/features/dashboard/components/gogo/gogo.currencies.card'
 import { GogoLearningProcessesCard } from '@/features/dashboard/components/gogo/gogo.learning.processes.card'
-import { GogoRecentAssessmentsCard } from '@/features/dashboard/components/gogo/gogo.recent.assessments.card'
-import { GogoSkillsRadarCard } from '@/features/dashboard/components/gogo/gogo.skills.radar.card'
 import { GogoVocabularyDonutCard } from '@/features/dashboard/components/gogo/gogo.vocabulary.donut.card'
-import { GogoTasksRewardsCard } from '@/features/dashboard/components/gogo/gogo.tasks.rewards.card'
+import { GogoSkillsRadarCard } from '@/features/dashboard/components/gogo/gogo.skills.radar.card'
+import { GogoWeaknessStatusCard } from '@/features/dashboard/components/gogo/gogo.weakness.status.card'
 
 export default function HomeAppPage() {
   const navigate = useNavigate()
-  const { showAction } = useApp()
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('7d')
+  const [skillsSummary, setSkillsSummary] = useState<SkillsSummary | null>(null)
+  const [allWeaknesses, setAllWeaknesses] = useState<WeaknessAnalysis[]>([])
+  const [practiceDashboard, setPracticeDashboard] = useState<PracticeDashboardData | null>(null)
 
   const {
     isLoading,
     activeUser,
     enrolledCourseCards,
     metrics,
-    recentActivities,
     vocabStats,
     listeningScore,
     readingScore,
     speakingScore,
     writingScore,
-    placementSkillsType,
-    testAttempts,
     toeicAttempts,
-    coursesMap,
   } = useProgressData(navigate)
 
-  const {
-    chapter2SkillsPoints,
-    latestChapter2SkillsScore,
-    avgChapter2SkillsScore,
-    passRateChapter2Skills,
-    chapter4SkillsPoints,
-    latestChapter4SkillsScore,
-    avgChapter4SkillsScore,
-    passRateChapter4Skills,
-    toeicTimelinePoints,
-    toeicChartSeries,
-    latestToeicScore,
-  } = useProgressGrowthAnalytics({
-    enrolledCourseCards,
-    testAttempts,
-    toeicAttempts,
-    coursesMap,
-    baselineScore: Number(activeUser?.placement_test_score) || 0,
-    listeningScore,
-    readingScore,
-    speakingScore,
-    writingScore,
-    placementSkillsType,
-  })
+  useEffect(() => {
+    const userId = activeUser?.user_id
+    if (!userId) return
 
-  const stats2K = {
-    latestScore: latestChapter2SkillsScore,
-    avgScore: avgChapter2SkillsScore,
-    passed: passRateChapter2Skills !== null ? passRateChapter2Skills >= 70 : null,
-  }
+    progressService
+      .getSkillsSummary(userId, selectedPeriod as any)
+      .then((data) => setSkillsSummary(data))
+      .catch(() => setSkillsSummary(null))
 
-  const stats4K = {
-    latestScore: latestChapter4SkillsScore,
-    avgScore: avgChapter4SkillsScore,
-    passed: passRateChapter4Skills !== null ? passRateChapter4Skills >= 70 : null,
-  }
+    progressService
+      .getAllWeaknesses(userId, 10)
+      .then((data) => setAllWeaknesses(data || []))
+      .catch(() => setAllWeaknesses([]))
 
-  const statsToeic = {
-    latestScore: latestToeicScore,
-    avgScore: latestToeicScore,
-    passed: latestToeicScore !== null ? latestToeicScore >= 450 : null,
-  }
+    progressService
+      .getPracticeDashboard(userId, selectedPeriod)
+      .then((data) => setPracticeDashboard(data))
+      .catch(() => setPracticeDashboard(null))
+  }, [activeUser?.user_id, selectedPeriod])
 
   if (isLoading) {
     return (
@@ -89,68 +66,83 @@ export default function HomeAppPage() {
     )
   }
 
+  const dailyBreakdown = practiceDashboard?.growth_analytics?.time_growth?.daily_breakdown_7d || []
+
   return (
     <main
-      aria-labelledby="learner-analytics-dashboard"
+      aria-labelledby="learner-gogo-analytics-dashboard"
       className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6"
     >
       <GogoWelcomeHero
         user={activeUser}
-        targetScore={metrics.targetScore}
-        currentStreak={metrics.streak}
-        level={metrics.level}
-        onRefresh={() => window.location.reload()}
-        onExplore={() => navigate('/toeic')}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={(p) => setSelectedPeriod(p)}
       />
 
-      <GogoStatsGrid
-        metrics={metrics}
-        vocabStats={vocabStats}
-        listeningScore={listeningScore}
-        readingScore={readingScore}
-        speakingScore={speakingScore}
-        writingScore={writingScore}
-        placementSkillsType={placementSkillsType}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-8 space-y-6">
-          <GogoGrowthChartCard
-            data2K={chapter2SkillsPoints}
-            stats2K={stats2K}
-            data4K={chapter4SkillsPoints}
-            stats4K={stats4K}
-            toeicData={toeicTimelinePoints}
-            toeicStats={statsToeic}
-            toeicSeries={toeicChartSeries}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-8 flex flex-col justify-between gap-6">
+          <GogoStatsGrid
+            metrics={metrics}
+            vocabStats={vocabStats}
+            skillsSummary={skillsSummary}
+            listeningScore={listeningScore}
+            readingScore={readingScore}
+            speakingScore={speakingScore}
+            writingScore={writingScore}
           />
 
-          <GogoLearningProcessesCard
-            courses={enrolledCourseCards}
-            onNavigate={navigate}
-          />
+          <GogoSalesCapsuleCard dailyBreakdown={dailyBreakdown} />
+        </div>
 
-          <GogoRecentAssessmentsCard
-            activities={recentActivities}
+        <div className="lg:col-span-4 flex flex-col">
+          <GogoConfigurationCard
+            targetScore={metrics.targetScore}
+            currentStreak={metrics.streak}
+            xp={metrics.xp}
+            onPractice={() => navigate('/toeic')}
+            onVocab={() => navigate('/vocabulary')}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-6 flex flex-col">
+          <GogoCurrenciesCard
+            listeningScore={listeningScore}
+            readingScore={readingScore}
+            skillsSummary={skillsSummary}
           />
         </div>
 
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-6 flex flex-col">
+          <GogoLearningProcessesCard
+            metrics={metrics}
+            vocabStats={vocabStats}
+            courses={enrolledCourseCards}
+            toeicAttemptsCount={toeicAttempts.length}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="flex flex-col">
+          <GogoVocabularyDonutCard vocabStats={vocabStats} />
+        </div>
+
+        <div className="flex flex-col">
           <GogoSkillsRadarCard
             listeningScore={listeningScore}
             readingScore={readingScore}
             speakingScore={speakingScore}
             writingScore={writingScore}
-            skillsType={placementSkillsType}
+            grammarScore={skillsSummary?.skills?.grammar?.accuracy ?? 85}
           />
+        </div>
 
-          <GogoVocabularyDonutCard
-            vocabStats={vocabStats}
-          />
-
-          <GogoTasksRewardsCard
-            currentStreak={metrics.streak}
-            onAction={showAction}
+        <div className="flex flex-col">
+          <GogoWeaknessStatusCard
+            weaknesses={allWeaknesses}
+            onViewAll={() => navigate('/progress?tab=SKILLS')}
           />
         </div>
       </div>
