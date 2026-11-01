@@ -23,6 +23,19 @@ import { AuthCredentialForm } from '@/features/auth/components/auth.credential.f
 import { AuthOtpForm } from '@/features/auth/components/auth.otp.form'
 import { AuthResetPasswordForm } from '@/features/auth/components/auth.reset.password.form'
 
+function getSafeReturnUrl(rawUrl: string | null): string {
+  if (!rawUrl) return '/home'
+  if (
+    rawUrl.startsWith('/') &&
+    !rawUrl.startsWith('//') &&
+    !rawUrl.includes('\\') &&
+    rawUrl !== '/login'
+  ) {
+    return rawUrl
+  }
+  return '/home'
+}
+
 function LoginPageContent() {
   const { t } = useTranslation()
   const router = useRouter()
@@ -31,7 +44,7 @@ function LoginPageContent() {
 
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
   const rawReturnUrl = searchParams.get('returnUrl') || searchParams.get('redirect')
-  const returnUrl = rawReturnUrl && rawReturnUrl !== '/login' ? rawReturnUrl : '/home'
+  const returnUrl = getSafeReturnUrl(rawReturnUrl)
 
   useEffect(() => {
     if (isAuthenticated) {
