@@ -1,8 +1,4 @@
-/**
- * @file posthog.ts
- * @description Mã nguồn thành phần posthog.ts
- */
-
+// Cấu hình SDK PostHog, tracking sự kiện học tập và quản lý phiên người dùng cho học viên.
 import posthog from 'posthog-js'
 
 export const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
@@ -33,8 +29,7 @@ export function initPostHog(): void {
       capture_pageleave: true,
       autocapture: true,
       session_recording: {
-
-        maskAllInputs: false,
+        maskAllInputs: true,
         maskInputOptions: {
           password: true,
         },
@@ -156,6 +151,40 @@ export const Analytics = {
 
   errorOccurred: (errorName: string, detail?: Record<string, unknown>) => {
     trackError(errorName, detail)
+  },
+
+  checkoutStarted: (data: {
+    planId: string
+    planName?: string
+  }) => {
+    trackEvent('checkout_started', data)
+  },
+
+  paymentSucceeded: (data: {
+    orderCode?: string | number
+    amount?: number
+    planId?: string
+  }) => {
+    trackEvent('payment_succeeded', data)
+  },
+
+  paymentFailed: (data: {
+    orderCode?: string | number
+    reason?: string
+  }) => {
+    trackEvent('payment_failed', data)
+  },
+
+  userLoggedIn: (data: {
+    method: string
+  }) => {
+    trackEvent('user_logged_in', data)
+  },
+
+  userRegistered: (data: {
+    method: string
+  }) => {
+    trackEvent('user_registered', data)
   },
 }
 

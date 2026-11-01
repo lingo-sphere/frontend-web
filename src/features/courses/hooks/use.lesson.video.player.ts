@@ -5,6 +5,7 @@ import type { Lesson } from '@/features/courses/types/course'
 import { isDirectVideoUrl } from '@/features/courses/types/player.types'
 import { courseService } from '@/features/courses/services/course.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
+import { Analytics } from '@/lib/posthog'
 
 interface UseLessonVideoPlayerProps {
   lesson: Lesson
@@ -87,6 +88,17 @@ export function useLessonVideoPlayer({
     if (!video || !effectiveVideoUrl) return
     video.src = effectiveVideoUrl
   }, [effectiveVideoUrl])
+
+  useEffect(() => {
+    const lId = lesson?.id
+    if (lId) {
+      Analytics.lessonStarted({
+        courseId: courseId || '',
+        lessonId: lId,
+        lessonTitle: lesson.title,
+      })
+    }
+  }, [lesson?.id, courseId, lesson?.title])
 
   const triggerFeedback = useCallback(
     (

@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { CredentialResponse } from '@react-oauth/google'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { Analytics } from '@/lib/posthog'
 
 export type AuthMode = 'login' | 'register' | 'verify_email_otp' | 'forgot_password' | 'reset_password'
 
@@ -112,9 +113,11 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
     try {
       if (mode === 'login') {
         await login({ email, password, rememberMe })
+        Analytics.userLoggedIn({ method: 'credentials' })
         onClose()
       } else if (mode === 'register') {
         await register({ email, password, full_name: fullName, phone_number: phoneNumber })
+        Analytics.userRegistered({ method: 'credentials' })
         setSuccessMessage(`Mã OTP 6 số đã được gửi tới ${email}. Vui lòng kiểm tra hộp thư!`)
         setMode('verify_email_otp')
         setResendCooldown(60)
@@ -147,6 +150,7 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
         token,
         rememberMe,
       })
+      Analytics.userLoggedIn({ method: 'google' })
       onClose()
     } catch {}
   }
