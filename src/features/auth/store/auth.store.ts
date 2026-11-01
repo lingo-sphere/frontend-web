@@ -80,6 +80,9 @@ function create<T>(
 }
 
 const getInitialStoredUser = () => {
+  if (!authService.isAuthenticated()) {
+    return null
+  }
   const stored = authService.getStoredUser()
   if (stored?.role === 'ADMIN') {
     return null
@@ -280,15 +283,19 @@ export const useAuthStore = create<AuthState>((set) => ({
         window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
         const path = window.location.pathname
         const isProtected =
+          path.startsWith('/home') ||
           path.startsWith('/profile') ||
           path.startsWith('/settings') ||
           path.startsWith('/cart') ||
           path.startsWith('/ai-learning') ||
           path.startsWith('/notes') ||
           path.startsWith('/progress') ||
-          path.startsWith('/exam-history')
+          path.startsWith('/exam-history') ||
+          path.startsWith('/toeic/exam') ||
+          path.includes('/exam') ||
+          path.startsWith('/practice/mistakes')
         if (isProtected) {
-          window.location.href = '/'
+          window.location.href = `/login?returnUrl=${encodeURIComponent(path + window.location.search)}`
         }
       }
     }

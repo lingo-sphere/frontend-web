@@ -86,7 +86,8 @@ export function useProgressData(navigate: (path: string) => void) {
 
   useEffect(() => {
     if (mounted && !authService.isAuthenticated()) {
-      navigate('/')
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/home'
+      navigate(`/login?returnUrl=${encodeURIComponent(currentPath)}`)
     }
   }, [mounted, navigate])
 
