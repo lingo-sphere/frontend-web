@@ -30,12 +30,14 @@ function LoginPageContent() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
+  const rawReturnUrl = searchParams.get('returnUrl') || searchParams.get('redirect')
+  const returnUrl = rawReturnUrl && rawReturnUrl !== '/login' ? rawReturnUrl : '/home'
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/home')
+      router.push(returnUrl)
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, returnUrl])
 
   const {
     mode,
@@ -67,7 +69,7 @@ function LoginPageContent() {
     handleGoogleToken,
     switchMode,
   } = useAuthModal({
-    onClose: () => router.push('/home'),
+    onClose: () => router.push(returnUrl),
     initialMode,
   })
 

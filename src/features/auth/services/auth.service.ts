@@ -14,6 +14,32 @@ import {
 
 export type { AuthResponse, RegisterResponse, User }
 
+function isTokenValid(token: string | null | undefined): boolean {
+  if (!token || typeof token !== 'string') return false
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return false
+    const base64Url = parts[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const decoded = typeof atob === 'function'
+      ? atob(base64)
+      : Buffer.from(base64, 'base64').toString('binary')
+    const jsonPayload = decodeURIComponent(
+      decoded
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    const payload = JSON.parse(jsonPayload)
+    if (payload && typeof payload.exp === 'number') {
+      return Date.now() < (payload.exp * 1000 - 5000)
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponse> {
     const res = await api.post<AuthResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, payload, AuthResponseSchema)
@@ -195,11 +221,15 @@ export const authService = {
   },
 
   isAuthenticated(): boolean {
-    return (
-      !!storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) ||
-      !!storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN) ||
-      !!storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
-    )
+    const token = this.getAccessToken()
+    if (!token) return false
+    if (isTokenValid(token)) return true
+
+    const refreshToken = this.getRefreshToken()
+    if (isTokenValid(refreshToken)) return true
+
+    this.clearAuthStorage()
+    return false
   },
 
   getAccessToken(): string | null {

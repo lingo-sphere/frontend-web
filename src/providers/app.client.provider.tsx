@@ -123,11 +123,9 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
           path.startsWith('/exam-history') ||
           path.startsWith('/toeic/exam') ||
           path.includes('/exam') ||
-          path.startsWith('/practice/mistakes') ||
-          path.startsWith('/speaking') ||
-          path.startsWith('/writing')
+          path.startsWith('/practice/mistakes')
         if (isProtected) {
-          window.location.href = '/login'
+          window.location.href = `/login?returnUrl=${encodeURIComponent(path + window.location.search)}`
         }
       }
     }

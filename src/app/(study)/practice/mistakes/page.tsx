@@ -1,7 +1,10 @@
+// Trang giao diện Sổ tay câu sai (Mistake Vault) và ôn tập lặp lại ngắt quãng SRS.
 "use client";
 
 import { useWritingSrsQuery } from '@/features/practice/hooks/use.writing.srs';
-// Trang giao diện Sổ tay câu sai (Mistake Vault) và ôn tập lặp lại ngắt quãng (Spaced Repetition SRS).
+import { useMounted } from '@/hooks/use.mounted';
+import { useAuthStore } from '@/features/auth/store/auth.store';
+
 
 
 import { useState, useMemo, useEffect } from "react";
@@ -41,6 +44,9 @@ type MainMistakeSection = "OBJECTIVE" | "SPEAKING" | "WRITING";
 
 export default function MistakeVaultPage() {
   const navigate = useNavigate();
+  const mounted = useMounted();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthLoading = useAuthStore((s) => s.isLoading);
   const searchParams = useSearchParams();
   const urlTopic = searchParams.get("topic");
   const urlDomain = searchParams.get("domain");
@@ -64,7 +70,14 @@ export default function MistakeVaultPage() {
 
   const deleteMutation = useDeleteMistakeMutation();
 
-  // Đồng bộ bộ lọc khi URL query thay đổi
+  useEffect(() => {
+    if (mounted && !isAuthLoading && !isAuthenticated) {
+      toast.warning('Vui lòng đăng nhập để xem sổ tay lỗi sai!');
+      navigate('/login?returnUrl=/practice/mistakes');
+    }
+  }, [mounted, isAuthLoading, isAuthenticated, navigate]);
+
+
   useEffect(() => {
     if (urlTopic) setSelectedTopic(urlTopic);
     if (urlDomain) setSelectedDomain(urlDomain);
@@ -86,10 +99,11 @@ export default function MistakeVaultPage() {
     };
   }, [selectedStatus, selectedTopic, selectedDomain]);
 
-  const { data, isLoading, refetch } = useMyMistakesQuery(queryParams, activeSection === "OBJECTIVE");
-  const { data: dueData, refetch: refetchDue } = useDueMistakesQuery(activeSection === "OBJECTIVE");
-  const { data: speakingData } = useSpeakingMistakesQuery();
-  const { data: writingData } = useWritingSrsQuery({ status:'DUE',kind:'',context_id:'',search:'',page:1 }, activeSection === 'WRITING');
+  const isQueryEnabled = Boolean(mounted && isAuthenticated);
+  const { data, isLoading, refetch } = useMyMistakesQuery(queryParams, isQueryEnabled && activeSection === "OBJECTIVE");
+  const { data: dueData, refetch: refetchDue } = useDueMistakesQuery(isQueryEnabled && activeSection === "OBJECTIVE");
+  const { data: speakingData } = useSpeakingMistakesQuery(isQueryEnabled);
+  const { data: writingData } = useWritingSrsQuery({ status:'DUE',kind:'',context_id:'',search:'',page:1 }, isQueryEnabled && activeSection === 'WRITING');
   const changeSection = (section: MainMistakeSection) => { setActiveSection(section); const next = new URLSearchParams(searchParams.toString()); next.set('section',section); navigate(`/practice/mistakes?${next}`); };
 
   const mistakes = data?.items || [];

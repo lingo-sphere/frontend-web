@@ -27,7 +27,7 @@ export default function ProfileAppPage() {
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
-      navigate('/')
+      navigate('/login?returnUrl=/profile')
     }
   }, [mounted, isLoading, isAuthenticated, navigate])
 

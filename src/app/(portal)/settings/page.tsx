@@ -72,7 +72,7 @@ export default function SettingsAppPage() {
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
-      navigate('/')
+      navigate('/login?returnUrl=/settings')
     }
   }, [mounted, isLoading, isAuthenticated, navigate])
 
