@@ -150,7 +150,7 @@ export function SpeakingHome({
         <StatCard
           icon={<TrendingUp className="h-5 w-5 text-emerald-500" />}
           label={isVietnamese ? 'Điểm trung bình' : 'Average score'}
-          value={stats.average_score.toFixed(1)}
+          value={(stats.average_score ?? 0).toFixed(1)}
         />
         <StatCard
           icon={<Clock className="h-5 w-5 text-amber-500" />}
@@ -342,7 +342,7 @@ export function SpeakingHome({
                       {isVietnamese ? 'Bản ghi Xuất sắc nhất (Showcase)' : 'Best Voice Showcase'}
                     </span>
                   </div>
-                  {userSpeakingProfile?.best_sample_score !== undefined && (
+                  {typeof userSpeakingProfile?.best_sample_score === 'number' && (
                     <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[11px] font-bold text-primary">
                       {userSpeakingProfile.best_sample_score.toFixed(1)} pts
                     </span>

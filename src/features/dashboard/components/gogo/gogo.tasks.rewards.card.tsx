@@ -18,13 +18,11 @@ export function GogoTasksRewardsCard({ currentStreak = 0, onAction }: GogoTasksR
   })
 
   const toggleTask = (id: string) => {
-    setCompletedTasks((prev) => {
-      const next = !prev[id]
-      if (next && onAction) {
-        onAction('Đã ghi nhận hoàn thành mục tiêu học tập!')
-      }
-      return { ...prev, [id]: next }
-    })
+    const next = !completedTasks[id]
+    setCompletedTasks((prev) => ({ ...prev, [id]: next }))
+    if (next && onAction) {
+      onAction('Đã ghi nhận hoàn thành mục tiêu học tập!')
+    }
   }
 
   const tasks = [
