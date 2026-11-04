@@ -274,7 +274,7 @@ export function DictionaryModal({
         </div>
 
         {showDropdown && (
-          <div className="max-h-[50vh] overflow-y-auto">
+          <div className="max-h-[50vh] overflow-y-auto overscroll-contain">
             {showHistory && searchHistory.length > 0 && (
               <div className="border-b border-border">
                 <div className="flex items-center justify-between px-4 py-2">

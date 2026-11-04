@@ -1,21 +1,26 @@
 // Component dropdown hiển thị tóm tắt giỏ hàng người dùng trên thanh điều hướng Header.
 'use client'
 
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 import { formatCurrency } from '@/lib/format'
 import { resolveMediaUrl } from '@/utils/media.utils'
+import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 
 interface HeaderCartHoverProps {
   isOpen: boolean
 }
 
 export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
   const { data: cart } = useCartQuery()
+
+  usePreventScrollChain(containerRef, isOpen)
 
   const items = cart?.items || []
   const totalAmount = items.reduce(
@@ -25,13 +30,14 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
 
   return (
     <div
+      ref={containerRef}
       className={`absolute right-0 top-full pt-2 z-50 transition-all duration-200 ease-out origin-top-right ${
         isOpen
           ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
           : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
       }`}
     >
-      <div className="w-72 sm:w-80 rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden text-left">
+      <div className="w-72 sm:w-80 rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden text-left overscroll-contain">
       {items.length === 0 ? (
         <div className="py-8 px-6 text-center space-y-3">
           <p className="text-sm text-text-secondary font-medium">
@@ -46,7 +52,7 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
         </div>
       ) : (
         <>
-          <div className="divide-y divide-border/60 max-h-[340px] overflow-y-auto">
+          <div className="divide-y divide-border/60 max-h-[340px] overflow-y-auto overscroll-contain">
             {items.map((item) => {
               const itemPrice =
                 item.discount_price && item.discount_price > 0

@@ -1,7 +1,7 @@
-// Thẻ hiển thị bộ thẻ từ vựng flashcard với thiết kế hiện đại, gradient chuyển màu và huy hiệu tương tác.
+// Thẻ hiển thị bộ thẻ từ vựng flashcard theo phong cách thiết kế card hình học dải sóng xanh ngọc đồng bộ với hệ thống.
 'use client'
 
-import { Layers3, Users, Check, GraduationCap, Target, BookOpen, Play, ArrowRight, Sparkles } from 'lucide-react'
+import { Layers3, BookOpen, Play, ArrowRight, Sparkles, Check } from 'lucide-react'
 import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
 
 interface TopicInfo {
@@ -14,186 +14,138 @@ interface TopicInfo {
 
 interface VocabularyDeckCardProps {
   pack: Deck
-  index: number
+  index?: number
   packTopic?: TopicInfo | null
   isEnrolled: boolean
   isVietnamese: boolean
   onDeckClick: (pack: Deck) => void
 }
 
-const DECK_GRADIENTS = [
-  {
-    bg: 'from-indigo-600 via-indigo-700 to-violet-800',
-    iconBg: 'bg-white/20 text-white',
-    glow: 'bg-indigo-400/20',
-  },
-  {
-    bg: 'from-emerald-600 via-teal-600 to-teal-800',
-    iconBg: 'bg-white/20 text-white',
-    glow: 'bg-emerald-400/20',
-  },
-  {
-    bg: 'from-sky-600 via-blue-600 to-indigo-700',
-    iconBg: 'bg-white/20 text-white',
-    glow: 'bg-sky-400/20',
-  },
-  {
-    bg: 'from-amber-500 via-orange-600 to-rose-600',
-    iconBg: 'bg-white/20 text-white',
-    glow: 'bg-amber-400/20',
-  },
-  {
-    bg: 'from-purple-600 via-fuchsia-600 to-pink-600',
-    iconBg: 'bg-white/20 text-white',
-    glow: 'bg-fuchsia-400/20',
-  },
-  {
-    bg: 'from-teal-600 via-emerald-600 to-cyan-700',
-    iconBg: 'bg-white/20 text-white',
-    glow: 'bg-teal-400/20',
-  },
-]
-
 export function VocabularyDeckCard({
   pack,
-  index,
   packTopic,
   isEnrolled,
   isVietnamese,
   onDeckClick,
 }: VocabularyDeckCardProps) {
-  const gradientTheme = DECK_GRADIENTS[index % DECK_GRADIENTS.length]
   const targetBand = pack.settings?.target_band
   const examPart = pack.settings?.exam_part
   const cardCount = pack.card_count ?? 0
   const totalUsers = pack.total_users || 0
 
   const title = isVietnamese && pack.name_vi ? pack.name_vi : pack.name || pack.title
-  const description = isVietnamese && pack.description_vi ? pack.description_vi : pack.description || pack.description_vi
-  const topicName = packTopic ? (isVietnamese ? packTopic.name_vi || packTopic.name_en : packTopic.name_en) : null
+  const description =
+    isVietnamese && pack.description_vi
+      ? pack.description_vi
+      : pack.description || (isVietnamese ? 'Bộ thẻ từ vựng ôn luyện thông minh theo chuẩn SRS' : 'Vocabulary flashcard deck')
+  const topicName = packTopic
+    ? (isVietnamese ? packTopic.name_vi || packTopic.name_en : packTopic.name_en)
+    : null
+
+  const ribbonTitle = targetBand ? `BAND ${targetBand}` : 'TOEIC VOCAB'
+  const ribbonSubtitle = examPart ? examPart.replace('_', ' ') : topicName || (isVietnamese ? 'TỪ VỰNG CHUẨN' : 'OFFICIAL PACK')
+  const deckCode = `#DK-${String(pack._id || pack.id || '001').slice(-3).toUpperCase()}`
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => onDeckClick(pack)}
-      className="group relative flex flex-col justify-between rounded-3xl border border-border/80 bg-surface shadow-xs hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/40 transition-all duration-300 overflow-hidden cursor-pointer h-full"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onDeckClick(pack)
+        }
+      }}
+      className="group relative h-[270px] w-full cursor-pointer select-none overflow-hidden rounded-[26px] border border-border/80 bg-surface dark:bg-card shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/50 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/40 hover:shadow-emerald-500/10"
     >
-      <div className={`relative h-28 sm:h-32 w-full overflow-hidden bg-gradient-to-br ${gradientTheme.bg} p-3.5 flex flex-col justify-between`}>
-        <div className={`absolute -right-6 -bottom-6 w-28 h-28 rounded-full ${gradientTheme.glow} blur-xl pointer-events-none`} />
-        <div className="absolute -left-6 -top-6 w-24 h-24 rounded-full bg-white/10 blur-lg pointer-events-none" />
+      <div className="absolute top-0 left-0 z-20 flex flex-col justify-center rounded-br-[36px] bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 px-4 py-2.5 pr-7 shadow-xs">
+        <span className="text-xs font-black tracking-wider uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] sm:text-sm">
+          {ribbonTitle}
+        </span>
+        <span className="text-[10px] font-extrabold uppercase tracking-wide text-emerald-100 sm:text-[11px] max-w-[120px] truncate">
+          {ribbonSubtitle}
+        </span>
+      </div>
 
-        <div className="relative z-10 flex items-start justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {targetBand && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-black/35 backdrop-blur-md text-white text-[10px] font-black border border-white/20 shadow-xs">
-                <Target size={10} className="text-amber-300" />
-                <span>Band {targetBand}</span>
-              </span>
-            )}
-            {examPart && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-white/20 backdrop-blur-md text-white text-[10px] font-black border border-white/25 shadow-xs">
-                <span>{examPart.replace('_', ' ')}</span>
-              </span>
-            )}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+        {isEnrolled ? (
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-[10.5px] font-bold text-emerald-700 dark:text-emerald-300 backdrop-blur-xs shadow-2xs">
+            <Check size={11} className="stroke-[3]" />
+            <span>{isVietnamese ? 'Đang học' : 'Enrolled'}</span>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface-subtle/80 px-2.5 py-1 text-[10.5px] font-bold text-text-secondary backdrop-blur-xs shadow-2xs">
+            <Sparkles size={11} className="text-amber-500" />
+            <span>{cardCount} {isVietnamese ? 'thẻ từ' : 'cards'}</span>
+          </span>
+        )}
+      </div>
+
+      <div className="relative z-10 space-y-1.5 pt-16 pr-16 pl-4 sm:pt-17 sm:pr-20 sm:pl-4.5">
+        <h3 className="line-clamp-2 text-sm font-black leading-snug text-text-primary transition-colors duration-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 sm:text-[15px]">
+          {title}
+        </h3>
+        <p className="line-clamp-2 text-[11px] leading-relaxed text-text-tertiary">
+          {description}
+        </p>
+      </div>
+
+      <svg
+        className="pointer-events-none absolute right-0 bottom-0 z-10 h-[125px] w-[80%]"
+        viewBox="0 0 300 120"
+        preserveAspectRatio="none"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M 0 120 C 35 120 45 75 90 48 C 135 22 185 0 300 0 L 300 120 Z"
+          className="fill-[#0c192c] dark:fill-[#07111e]"
+        />
+      </svg>
+
+      <div className="absolute right-3.5 bottom-9 z-20 flex max-w-[70%] items-center justify-end gap-2.5">
+        <div className="space-y-0.5 text-right text-[10px] font-semibold leading-tight text-slate-200/95 sm:text-[11px]">
+          <div className="flex items-center justify-end gap-1.5">
+            <span>{cardCount} từ vựng</span>
           </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            {isEnrolled ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-emerald-500/95 backdrop-blur-md text-white text-[10px] font-black border border-white/30 shadow-sm">
-                <Check size={11} className="stroke-[3]" />
-                <span>{isVietnamese ? 'Đang học' : 'Enrolled'}</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-black/35 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 shadow-xs">
-                <GraduationCap size={11} className="text-amber-300" />
-                <span>Official</span>
-              </span>
-            )}
+          <div className="flex items-center justify-end gap-1.5">
+            <span>{totalUsers.toLocaleString()} học viên</span>
+          </div>
+          <div className="flex items-center justify-end gap-1.5">
+            <span>Chuẩn Spaced SRS</span>
+          </div>
+          <div className="flex items-center justify-end gap-1.5 text-emerald-400 font-bold">
+            <span>Mục tiêu {targetBand ? `Band ${targetBand}` : 'TOEIC 650+'}</span>
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-md flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-110">
-            <Layers3 className="w-5 h-5 stroke-[2.2] drop-shadow-sm" />
-          </div>
-
-          <div className="px-2 py-0.5 rounded-lg bg-black/40 backdrop-blur-md text-white/95 text-[10px] font-bold border border-white/15 flex items-center gap-1">
-            <BookOpen size={10} className="text-emerald-300" />
-            <span>{cardCount} {isVietnamese ? 'từ vựng' : 'words'}</span>
-          </div>
+        <div className="my-auto flex w-7 shrink-0 flex-col items-center justify-between gap-1.5 rounded-full bg-white py-2 shadow-md transition-all duration-300 group-hover:shadow-emerald-500/25 sm:w-7.5 dark:bg-slate-100">
+          <Layers3 size={11} className="text-slate-900" />
+          <BookOpen size={11} className="text-slate-900" />
+          <Sparkles size={11} className="text-slate-900" />
+          <Play size={11} className="fill-emerald-600 text-emerald-600 transition-transform duration-200 group-hover:scale-115" />
         </div>
       </div>
 
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-        <div className="space-y-2">
-          {topicName && (
-            <div>
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-2.5 py-0.5 text-[11px] font-extrabold text-primary border border-primary/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                <span>{topicName}</span>
-              </span>
-            </div>
-          )}
+      <div className="absolute bottom-2 left-4 z-10">
+        <span className="font-mono text-[10px] font-bold text-text-tertiary">
+          {deckCode}
+        </span>
+      </div>
 
-          <h4 className="text-[15px] sm:text-base font-black text-text-primary tracking-tight group-hover:text-primary transition-colors line-clamp-1 leading-snug">
-            {title}
-          </h4>
-
-          <p className="text-[12px] text-text-secondary leading-relaxed line-clamp-2 min-h-[34px]">
-            {description}
-          </p>
-        </div>
-
-        <div className="space-y-3 pt-1">
-          <div className="flex items-center gap-2 flex-wrap text-[10px]">
-            <span className="px-2 py-0.5 rounded-lg bg-surface-subtle text-text-tertiary font-bold flex items-center gap-1">
-              <Sparkles size={10} className="text-amber-500" />
-              <span>Ghi nhớ SRS</span>
-            </span>
-            <span className="px-2 py-0.5 rounded-lg bg-surface-subtle text-text-tertiary font-bold flex items-center gap-1">
-              <span>Chuẩn TOEIC</span>
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between border-t border-border/60 pt-2.5 text-xs text-text-secondary">
-            <span className="flex items-center gap-1.5 font-bold text-text-primary text-xs">
-              <Layers3 size={13} className="text-primary" />
-              <span>{cardCount} {isVietnamese ? 'thẻ từ' : 'cards'}</span>
-            </span>
-
-            <span className="flex items-center gap-1 text-[11px] text-text-tertiary font-medium">
-              <Users size={12} />
-              <span>{totalUsers.toLocaleString()} {isVietnamese ? 'học viên' : 'learners'}</span>
-            </span>
-          </div>
-
-          {isEnrolled ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDeckClick(pack)
-              }}
-              className="w-full mt-2 py-2.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xs shadow-sm hover:shadow-emerald-500/25 flex items-center justify-center gap-2 group-hover:scale-[1.01] transition-all cursor-pointer"
-            >
-              <Play size={13} className="fill-white" />
-              <span>{isVietnamese ? 'Học tiếp (Bộ thẻ của tôi)' : 'Continue Learning'}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDeckClick(pack)
-              }}
-              className="w-full mt-2 py-2.5 px-4 rounded-2xl bg-surface-subtle hover:bg-primary text-text-primary hover:text-white border border-border/80 hover:border-primary font-extrabold text-xs shadow-2xs flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer group-hover:bg-primary group-hover:text-white group-hover:border-primary"
-            >
-              <span>{isVietnamese ? 'Bắt đầu học' : 'Start Learning'}</span>
-              <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          )}
+      <div className="absolute right-0 bottom-0 left-[20%] z-30 flex h-7 items-center justify-between rounded-tl-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 px-3.5 shadow-xs">
+        <div className="flex w-full items-center justify-between text-[10px] font-black uppercase tracking-wider text-white sm:text-[11px]">
+          <span className="truncate max-w-[80px]">{targetBand ? `BAND ${targetBand}` : 'FLASHCARD'}</span>
+          <span className="text-emerald-100/60">|</span>
+          <span className="truncate max-w-[70px]">{topicName ? topicName.toUpperCase() : 'TỪ VỰNG'}</span>
+          <span className="text-emerald-100/60">|</span>
+          <span className="flex items-center gap-1 font-black shrink-0">
+            <span>{isEnrolled ? (isVietnamese ? 'HỌC TIẾP' : 'CONTINUE') : (isVietnamese ? 'HỌC NGAY' : 'STUDY')}</span>
+            <ArrowRight size={11} className="transition-transform duration-200 group-hover:translate-x-1" />
+          </span>
         </div>
       </div>
     </div>
   )
 }
-

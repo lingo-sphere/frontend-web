@@ -503,7 +503,7 @@ export function useToeicExam(examId?: string) {
   }
 
   const handleChooseAnother = () => {
-    navigate('/toeic')
+    navigate('/placement-test')
   }
 
   const handleSubmitAttemptAsync = useCallback(async () => {

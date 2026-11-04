@@ -1,6 +1,7 @@
 // Dropdown danh sách khóa học yêu thích trên Header đồng bộ dữ liệu bằng TanStack Query.
 'use client'
 
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Heart, ShoppingCart, Check, X, ArrowRight, ChevronRight } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
@@ -11,12 +12,14 @@ import { useUserEnrollments } from '@/features/courses/hooks/use.courses.query'
 import { toast } from '@/store/toast.store'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { formatCurrency } from '@/lib/format'
+import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 
 interface HeaderWishlistHoverProps {
   isOpen: boolean
 }
 
 export function HeaderWishlistHover({ isOpen }: HeaderWishlistHoverProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
@@ -26,6 +29,8 @@ export function HeaderWishlistHover({ isOpen }: HeaderWishlistHoverProps) {
   const { isEnrolled } = useUserEnrollments(isAuthenticated)
   const isPremiumUser = Boolean(user?.is_premium)
   const isPrivilegedUser = user?.role === 'INSTRUCTOR'
+
+  usePreventScrollChain(containerRef, isOpen)
 
   const handleAddToCart = async (e: React.MouseEvent, courseId: string) => {
     e.stopPropagation()
@@ -55,13 +60,14 @@ export function HeaderWishlistHover({ isOpen }: HeaderWishlistHoverProps) {
 
   return (
     <div
+      ref={containerRef}
       className={`absolute right-0 top-full pt-2 z-50 transition-all duration-200 ease-out origin-top-right ${
         isOpen
           ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
           : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
       }`}
     >
-      <div className="w-80 sm:w-[360px] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden text-left">
+      <div className="w-80 sm:w-[360px] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden text-left overscroll-contain">
       <div className="px-4 py-2.5 bg-surface-subtle/50 border-b border-border/70 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Heart size={15} className="text-red-500 fill-red-500" />
@@ -102,7 +108,7 @@ export function HeaderWishlistHover({ isOpen }: HeaderWishlistHoverProps) {
         </div>
       ) : (
         <>
-          <div className="divide-y divide-border/40 max-h-[340px] overflow-y-auto">
+          <div className="divide-y divide-border/40 max-h-[340px] overflow-y-auto overscroll-contain">
             {items.map((course) => {
               const inCart = isInCart(course.id)
               const hasAccess = isEnrolled(course.id) || isPremiumUser || isPrivilegedUser

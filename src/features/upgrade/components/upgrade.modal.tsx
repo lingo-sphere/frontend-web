@@ -97,7 +97,7 @@ export function UpgradeModal({ open, onOpenChange }: UpgradeModalProps) {
             </div>
           </div>
 
-          <div className="p-5 sm:p-6 max-h-[80vh] overflow-y-auto space-y-5">
+          <div className="p-5 sm:p-6 max-h-[80vh] overflow-y-auto overscroll-contain space-y-5">
             {step === 'SUCCESS' && (
               <UpgradeSuccessView isVietnamese={isVietnamese} />
             )}

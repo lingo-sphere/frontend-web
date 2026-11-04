@@ -27,6 +27,7 @@ import { useNavigate } from "@/lib/navigation";
 import {
   useMyNotifications,
   useMarkNotificationAsReadMutation,
+  useMarkAllNotificationsAsReadMutation,
 } from "@/features/notifications/hooks/use.notifications.query";
 import { useLanguage } from "@/hooks/use.language";
 
@@ -60,6 +61,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   );
   const { mutate: markNotificationAsRead } =
     useMarkNotificationAsReadMutation();
+  const { mutate: markAllNotificationsAsRead } = useMarkAllNotificationsAsReadMutation();
   const { data: gamification } = useGamificationProfileQuery(isAuthenticated);
   const streak = gamification?.current_streak ?? user?.streak_count ?? 0;
 
@@ -239,6 +241,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
               setHoveredHeaderMenu(null);
             }}
             onMarkAsRead={handleMarkAsRead}
+            onMarkAllAsRead={() => markAllNotificationsAsRead()}
             onAction={onAction}
             isVi={isVi}
           />
