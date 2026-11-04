@@ -9,13 +9,9 @@ import {
   Headphones,
   BookOpen,
   Sparkles,
-  ArrowRight,
   ClipboardCheck,
-  RotateCcw,
-  Clock,
   HelpCircle,
   Award,
-  CheckCircle2,
   FileEdit,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
@@ -28,6 +24,7 @@ import { toast } from '@/store/toast.store'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
 import { getUserScoreLevelInfo } from '@/features/user/utils/user.score.utils'
 import { formatDate } from '@/lib/format'
+import { PlacementExamCard } from '@/features/toeic/components/placement.exam.card'
 
 export default function PlacementTestPage() {
   const { i18n } = useTranslation()
@@ -78,11 +75,11 @@ export default function PlacementTestPage() {
           }
         />
 
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-7 border border-indigo-500/30 shadow-xl shadow-indigo-950/20">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white p-5 sm:p-7 border border-emerald-500/30 shadow-xl shadow-emerald-950/20">
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                   <Sparkles size={14} className="text-amber-400" />
                   <span>{isVietnamese ? 'Hồ Sơ Năng Lực Baseline' : 'Baseline Profile'}</span>
                 </span>
@@ -104,7 +101,7 @@ export default function PlacementTestPage() {
                     ? 'Bạn chưa có điểm đánh giá năng lực đầu vào'
                     : 'You have not taken an entrance test yet'}
                 </h3>
-                <p className="text-xs sm:text-sm text-indigo-200/90 leading-relaxed mt-1">
+                <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed mt-1">
                   {hasTested
                     ? levelInfo.desc
                     : isVietnamese
@@ -134,7 +131,7 @@ export default function PlacementTestPage() {
                     </span>
                   </div>
                   {user?.placement_tested_at && (
-                    <span className="text-[11px] text-indigo-300/80">
+                    <span className="text-[11px] text-emerald-300/80">
                       {isVietnamese ? 'Cập nhật:' : 'Updated:'}{' '}
                       {formatDate(user.placement_tested_at, isVietnamese)}
                     </span>
@@ -273,87 +270,15 @@ export default function PlacementTestPage() {
               </p>
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {placementExams.map((exam) => {
-                const skillsText =
-                  exam.skills_enabled === 'LRSW'
-                    ? isVietnamese
-                      ? '4 Kỹ năng (L, R, S, W)'
-                      : '4 Skills (L, R, S, W)'
-                    : isVietnamese
-                    ? '2 Kỹ năng (Nghe & Đọc)'
-                    : '2 Skills (Listening & Reading)'
-
-                const durationText = `${exam.duration_minutes || 120} ${
-                  isVietnamese ? 'phút' : 'mins'
-                }`
-                const questionsText = `${exam.total_questions || 40} ${
-                  isVietnamese ? 'câu hỏi' : 'questions'
-                }`
-
-                return (
-                  <Card
-                    key={exam._id}
-                    className="group relative flex flex-col justify-between rounded-3xl border border-border bg-surface p-5.5 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
-                  >
-                    <div className="space-y-3.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10.5px] font-extrabold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
-                          <CheckCircle2 size={12} />
-                          <span>
-                            {isVietnamese ? 'Đề thi đầu vào' : 'Entrance Placement'}
-                          </span>
-                        </span>
-
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold bg-primary/10 text-primary">
-                          {isVietnamese ? 'Miễn phí' : 'Free'}
-                        </span>
-                      </div>
-
-                      <h4 className="text-base font-extrabold text-text-primary group-hover:text-primary transition-colors leading-snug">
-                        {exam.title}
-                      </h4>
-
-                      <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed">
-                        {exam.description ||
-                          (isVietnamese
-                            ? 'Bộ đề thi đánh giá toàn diện năng lực tiếng Anh theo cấu trúc chuẩn quốc tế.'
-                            : 'Comprehensive entrance test assessing English proficiency under international standards.')}
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs">
-                        <div className="flex items-center gap-2 text-text-secondary">
-                          <Headphones size={14} className="text-primary shrink-0" />
-                          <span className="truncate">{skillsText}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-text-secondary">
-                          <Clock size={14} className="text-amber-500 shrink-0" />
-                          <span>{durationText}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-text-secondary">
-                          <ClipboardCheck size={14} className="text-sky-500 shrink-0" />
-                          <span>{questionsText}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-text-secondary">
-                          <Trophy size={14} className="text-amber-500 shrink-0" />
-                          <span>{isVietnamese ? 'Thang điểm 990' : 'Score 990'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-5 mt-2">
-                      <button
-                        type="button"
-                        onClick={() => handleStartExam(exam._id)}
-                        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary hover:bg-primary-hover text-white font-extrabold text-xs py-3 shadow-md shadow-primary/20 transition-all cursor-pointer group-hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        <span>{isVietnamese ? 'Bắt đầu làm bài thi' : 'Start Placement Exam'}</span>
-                        <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-                      </button>
-                    </div>
-                  </Card>
-                )
-              })}
+            <div className="grid gap-6 grid-cols-1">
+              {placementExams.map((exam) => (
+                <PlacementExamCard
+                  key={exam._id}
+                  exam={exam}
+                  onStartExam={handleStartExam}
+                  isVietnamese={isVietnamese}
+                />
+              ))}
             </div>
           )}
         </div>
