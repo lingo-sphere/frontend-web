@@ -1,7 +1,6 @@
 // Component lưới 6 thẻ trực quan hóa năng lực kỹ năng học viên dạng biểu đồ vòng đo tiến độ tròn mini theo phong cách Cuba Admin.
 'use client'
 
-import React from 'react'
 import { BookOpen, Headphones, FileText, Layers, Mic, PenTool } from 'lucide-react'
 import type { ProgressMetrics, VocabStatsSummary } from '@/features/progress/hooks/use.progress.data'
 import type { SkillsSummary } from '@/features/progress/services/progress.service'

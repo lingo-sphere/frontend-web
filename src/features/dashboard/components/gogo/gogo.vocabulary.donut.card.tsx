@@ -1,7 +1,6 @@
 // Component phân tích trí nhớ và phân bổ các cấp độ từ vựng theo thuật toán ngắt quãng SRS.
 'use client'
 
-import React from 'react'
 import { Brain, ArrowRight, BookOpen, RotateCcw } from 'lucide-react'
 import type { VocabStatsSummary } from '@/features/progress/hooks/use.progress.data'
 import type { VocabularyDashboardOverview } from '@/features/vocabulary/types/vocabulary.dashboard'

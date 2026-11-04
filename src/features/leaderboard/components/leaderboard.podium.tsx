@@ -1,7 +1,6 @@
 // Component bục vinh danh Top 3 học viên xuất sắc theo phong cách Olympic thể thao điện tử hiện đại.
 'use client'
 
-import React from 'react'
 import { Crown, Sparkles, Flame, Zap, Trophy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useMounted } from '@/hooks/use.mounted'

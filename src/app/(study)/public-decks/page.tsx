@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bookmark, Eye, Search, Filter, ArrowLeft, Users, Globe, Check, Loader2 } from 'lucide-react'
+import { Bookmark, Eye, Search, Filter, ArrowLeft, Globe, Check, Loader2 } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -35,7 +35,7 @@ interface FormattedDeck {
 type SortOption = 'views' | 'saves'
 
 export default function PublicDecksAppPage() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const { showAction } = useApp()
   const navigate = useNavigate()

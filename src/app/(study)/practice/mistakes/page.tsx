@@ -11,7 +11,6 @@ import { useState, useMemo, useEffect } from "react";
 import {
   BookmarkCheck,
   RotateCcw,
-  Sparkles,
   Flame,
   Award,
   Calendar,

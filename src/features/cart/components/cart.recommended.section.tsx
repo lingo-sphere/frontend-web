@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Check, Sparkles, BookOpen, Star } from 'lucide-react'
+import { Plus, Sparkles, Star } from 'lucide-react'
 import { useAllCoursesQuery, useUserEnrollments } from '@/features/courses/hooks/use.courses.query'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCart } from '@/features/cart/hooks/use.cart.query'

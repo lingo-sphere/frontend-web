@@ -21,7 +21,7 @@ interface ListenTypeExerciseProps {
   onSpeakSentence: () => void
 }
 
-export function ListenTypeExercise({ word, isAnswered, onAnswer, onNext, onSpeakWord }: ListenTypeExerciseProps) {
+export function ListenTypeExercise({ word, onAnswer, onNext }: ListenTypeExerciseProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 

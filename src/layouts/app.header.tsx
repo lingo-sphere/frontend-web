@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Heart, ShoppingCart } from "lucide-react";
 import { useMounted } from "@/hooks/use.mounted";
 

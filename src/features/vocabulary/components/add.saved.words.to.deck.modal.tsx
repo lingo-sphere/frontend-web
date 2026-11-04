@@ -88,7 +88,6 @@ export function AddSavedWordsToDeckModal({
   // Tìm deck đang chọn để kiểm tra giới hạn 30 thẻ
   const targetExistingDeck = existingDecks.find((d) => (d._id || d.id) === selectedDeckId)
   const currentDeckCount = targetExistingDeck?.card_count || 0
-  const availableSlots = Math.max(0, MAX_DECK_WORDS - currentDeckCount)
   const isExistingDeckOverflow = mode === 'existing' && targetExistingDeck && (currentDeckCount + selectedCount > MAX_DECK_WORDS)
 
   const canSubmit =

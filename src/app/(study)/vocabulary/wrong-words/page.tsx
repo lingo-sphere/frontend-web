@@ -6,18 +6,15 @@
  * Hỗ trợ hiển thị hạn mức Quota (100 từ), phân loại lỗi (SPELLING/DISTRACTOR), tiến độ phục hồi 2 lần liên tiếp, và ôn tập.
  */
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle,
   Play,
-  RotateCcw,
   CheckCircle2,
   Volume2,
   ArrowLeft,
-  Layers,
-  Sparkles,
   HelpCircle,
   Clock,
   ShieldCheck,
@@ -45,7 +42,7 @@ export default function WrongWordsPage() {
   const PAGE_SIZE = 12
 
   // Query danh sách từ sai từ Backend
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['vocabulary', 'wrong-words', activeTab, page],
     queryFn: async () => {
       const statusParam = activeTab === 'ALL' ? undefined : activeTab

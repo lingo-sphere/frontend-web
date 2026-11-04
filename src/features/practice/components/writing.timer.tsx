@@ -14,7 +14,6 @@ interface WritingTimerProps {
 
 export function WritingTimer({ totalSeconds, onTimeUp, onElapsedChange, isPaused = false }: WritingTimerProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
   const [elapsed, setElapsed] = useState(0)
   const [hasTriggeredTimeUp, setHasTriggeredTimeUp] = useState(false)
 
@@ -127,7 +126,7 @@ interface WritingTimerProgressProps extends WritingTimerProps {
   showProgress?: boolean
 }
 
-export function WritingTimerProgress({ totalSeconds, onTimeUp, onElapsedChange, isPaused = false, showProgress = true }: WritingTimerProgressProps) {
+export function WritingTimerProgress({ totalSeconds, onTimeUp, isPaused = false, showProgress = true }: WritingTimerProgressProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const [elapsed, setElapsed] = useState(0)

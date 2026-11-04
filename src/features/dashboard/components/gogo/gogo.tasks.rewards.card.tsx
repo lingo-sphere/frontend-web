@@ -1,9 +1,9 @@
 // Component thẻ nhiệm vụ học tập hàng ngày và phần thưởng chuỗi chuyên cần theo phong cách Gogo Tasks Card.
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { CheckSquare, Flame, Trophy, Gift, ArrowRight, Check } from 'lucide-react'
+import { CheckSquare, Flame, Gift, Check } from 'lucide-react'
 
 interface GogoTasksRewardsCardProps {
   currentStreak: number

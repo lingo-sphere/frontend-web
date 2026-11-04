@@ -7,7 +7,6 @@ import { createPortal } from "react-dom";
 import {
   X,
   Volume2,
-  Volume1,
   Bookmark,
   BookmarkCheck,
   BookOpen,
@@ -71,7 +70,6 @@ interface VocabularyDetailModalProps {
 
 export function VocabularyDetailModal({
   wordId,
-  word,
   open,
   onOpenChange,
   onAction,

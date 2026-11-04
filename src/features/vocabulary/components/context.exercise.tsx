@@ -20,7 +20,7 @@ interface ContextExerciseProps {
   onSpeakSentence: () => void
 }
 
-export function ContextExercise({ word, isAnswered, onAnswer, onNext, onSpeakSentence }: ContextExerciseProps) {
+export function ContextExercise({ word, onAnswer, onNext }: ContextExerciseProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 

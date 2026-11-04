@@ -4,7 +4,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/card'
-import { Button } from '@/components/button'
 import { Input } from '@/components/input'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Icon } from '@/components/icon.map'
@@ -115,7 +114,7 @@ function TheoryGrammarCard({ grammar, isVietnamese }: { grammar: BackendGrammarP
 }
 
 export default function GrammarAppPage() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
   const user = useAuthStore((s) => s.user)

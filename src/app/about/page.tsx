@@ -1,7 +1,7 @@
 // Trang giới thiệu tổng quan sứ mệnh và hệ sinh thái học tập LingoSphere
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Award, BookOpen, Brain, Sparkles, Target, Users, ShieldCheck, ArrowRight } from 'lucide-react'
+import { Brain, Sparkles, Target, ArrowRight } from 'lucide-react'
 import { SITE_CONFIG } from '@/config/site.config'
 
 export const metadata: Metadata = {

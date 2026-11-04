@@ -1,7 +1,7 @@
 // Trang chủ phân tích học tập LingoSphere thiết kế theo phong cách dashboard Cuba Next.js hiện đại.
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { useProgressData } from '@/features/progress/hooks/use.progress.data'

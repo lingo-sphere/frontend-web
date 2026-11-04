@@ -1,7 +1,6 @@
 // Component trực quan hóa nhật ký luyện tập ngày của học viên với biểu đồ vòng tròn mục tiêu và các thanh đo chỉ số.
 'use client'
 
-import React from 'react'
 import { Calendar, ArrowRight, CheckCircle2, Clock, CheckSquare, Target, Flame } from 'lucide-react'
 import type { TimeGrowth } from '@/features/progress/services/progress.service'
 

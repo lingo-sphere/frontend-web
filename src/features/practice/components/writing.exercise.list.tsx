@@ -7,18 +7,14 @@ import {
   Clock,
   ChevronRight,
   FileText,
-  SpellCheck,
   PenTool,
-  Key,
-  File,
-  BookOpen,
   Image,
   Mail,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { AppSelect } from '@/components/select'
-import type { WritingExercise, WritingLevel, ExerciseType } from '@/features/practice/types/writing'
+import type { WritingExercise, WritingLevel } from '@/features/practice/types/writing'
 
 interface WritingExerciseListProps {
   exercises: WritingExercise[]
@@ -212,7 +208,7 @@ interface ExerciseCardProps {
   levelLabels: Record<string, string>
 }
 
-function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese, levelLabels }: ExerciseCardProps) {
+function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese }: ExerciseCardProps) {
   const levelColors = {
     BASIC: 'bg-emerald-100 text-emerald-700',
     INTERMEDIATE: 'bg-amber-100 text-amber-700',

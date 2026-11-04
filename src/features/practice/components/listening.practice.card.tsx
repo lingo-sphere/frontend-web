@@ -1,7 +1,6 @@
 // Thẻ hiển thị bài luyện nghe Part 2, Part 3, Part 4 và Chép chính tả theo phong cách thiết kế hình học sóng xanh cao cấp.
 'use client'
 
-import React from 'react'
 import {
   Play,
   ArrowRight,

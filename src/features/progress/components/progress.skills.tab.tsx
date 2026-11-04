@@ -6,9 +6,7 @@ import { PronunciationDetailTab } from "./pronunciation.detail.tab";
 import type { VocabStatsSummary } from "@/features/progress/hooks/use.progress.data";
 import type {
   SkillsSummary,
-  WeaknessAnalysis,
   TimePeriod,
-  PracticeDashboardData,
 } from "@/features/progress/services/progress.service";
 import {
   useWeaknessesQuery,

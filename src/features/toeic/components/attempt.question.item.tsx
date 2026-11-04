@@ -1,5 +1,5 @@
 // Component hiển thị chi tiết câu hỏi, lựa chọn và giải thích cho từng câu bài làm.
-import { CheckCircle, XCircle, AlertCircle, Mic, Bot, Sparkles, Lightbulb, Volume2, PenTool } from 'lucide-react'
+import { CheckCircle, XCircle, AlertCircle, Mic, Bot, Lightbulb, Volume2, PenTool } from 'lucide-react'
 import { Card } from '@/components/card'
 import { Badge } from '@/components/badge'
 import { resolveMediaUrl } from '@/utils/media.utils'
@@ -347,7 +347,6 @@ interface CourseQuestionCardProps {
 export function CourseQuestionCard({
   question,
   courseTitle,
-  courseId,
 }: CourseQuestionCardProps) {
   const isAnswered =
     (question.selected_index !== undefined && question.selected_index >= 0) ||

@@ -1,7 +1,6 @@
 // Component hiển thị danh sách các điểm yếu và chuyên đề cần cải thiện theo phân tích dữ liệu thực tế.
 'use client'
 
-import React from 'react'
 import { ChevronRight, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react'
 import type { WeaknessAnalysis } from '@/features/progress/services/progress.service'
 

@@ -20,11 +20,8 @@ import {
   Clock,
   Calendar,
   Trophy,
-  Flame,
   Play,
   BookOpen,
-  Lock,
-  Share2,
   Trash2,
   AlertTriangle,
   Loader2,
@@ -53,8 +50,6 @@ export default function VocabularyAppPage() {
   const { showAction } = useApp();
 
   const {
-    publicDecks,
-    systemDecks,
     communityDecks,
     myDecks,
     isLoading,

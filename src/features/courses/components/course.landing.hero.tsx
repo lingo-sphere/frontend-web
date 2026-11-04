@@ -1,7 +1,7 @@
 // Component hero banner hien thi tieu de, danh gia, hoc vien va giang vien khoa hoc phong cach Udemy.
 'use client'
 
-import { Star, Users, Clock, Globe, Award, Sparkles, ChevronRight } from 'lucide-react'
+import { Star, Users, Clock, Globe, ChevronRight } from 'lucide-react'
 import type { Course } from '@/features/courses/types/course'
 
 interface CourseLandingHeroProps {

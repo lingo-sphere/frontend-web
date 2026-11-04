@@ -10,10 +10,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Icon } from '@/components/icon.map'
 import { Input } from '@/components/input'
 import { Button } from '@/components/button'
-import { Card, CardContent } from '@/components/card'
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { PracticeContext, ContextSearchResult } from '../types/context.types'
+import type { PracticeContext } from '../types/context.types'
 
 interface ReadingContextNavigationProps {
   isVietnamese?: boolean

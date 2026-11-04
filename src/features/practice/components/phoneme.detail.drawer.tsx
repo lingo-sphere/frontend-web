@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import {
   type PhonemeSkillItem,
 } from '@/features/practice/services/pronunciation.service'
-import { X, Volume2, Sparkles, TrendingUp, TrendingDown, Target, AlertTriangle } from 'lucide-react'
+import { X, Volume2, TrendingUp, TrendingDown, Target, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/button'
 
 interface PhonemeDetailDrawerProps {
@@ -21,12 +21,11 @@ export function PhonemeDetailDrawer({
   isOpen,
   onClose,
   symbol,
-  exampleWord,
   skillData,
   onPlaySound,
   onStartTargetedPractice,
 }: PhonemeDetailDrawerProps) {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
   if (!isOpen) return null

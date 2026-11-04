@@ -13,8 +13,6 @@ import { ProgressCoursesTab } from '@/features/progress/components/progress.cour
 import { ProgressSkillsTab } from '@/features/progress/components/progress.skills.tab'
 import { ProgressRecentTestsTab } from '@/features/progress/components/progress.recent.tests.tab'
 import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
-import { progressService } from '@/features/progress/services/progress.service'
-import type { SkillsSummary } from '@/features/progress/services/progress.service'
 
 export default function ProgressAppPage() {
   const navigate = useNavigate()

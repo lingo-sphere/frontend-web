@@ -143,10 +143,6 @@ export function ListeningPart1Workspace({
     return "border-border opacity-50";
   };
 
-  const getOptionLabel = (key: string) => {
-    const opt = optionsMap.get(key);
-    return opt ? `${key}. ${opt.text}` : key;
-  };
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-4">

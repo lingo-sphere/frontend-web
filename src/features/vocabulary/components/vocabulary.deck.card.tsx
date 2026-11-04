@@ -1,7 +1,6 @@
 // Thẻ hiển thị bộ thẻ từ vựng flashcard với thiết kế hiện đại, gradient chuyển màu và huy hiệu tương tác.
 'use client'
 
-import React from 'react'
 import { Layers3, Users, Check, GraduationCap, Target, BookOpen, Play, ArrowRight, Sparkles } from 'lucide-react'
 import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
 

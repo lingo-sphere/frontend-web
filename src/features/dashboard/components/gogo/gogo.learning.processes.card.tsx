@@ -1,7 +1,6 @@
 // Component hiển thị tiến trình hoàn thành khóa học, từ vựng và bài thi TOEIC kèm vòng tròn tiến độ.
 'use client'
 
-import React from 'react'
 import type { ProgressMetrics, VocabStatsSummary, UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
 
 interface GogoProcessesCardProps {

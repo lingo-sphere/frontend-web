@@ -1,8 +1,7 @@
 // Component biểu ngữ chào mừng học viên và bộ lọc thời gian theo phong cách thiết kế Cuba Dashboard.
 'use client'
 
-import React from 'react'
-import { Calendar, ChevronRight, Flame, Target, Sparkles, Rocket, BookOpen } from 'lucide-react'
+import { ChevronRight, Flame, Target, Sparkles, Rocket, BookOpen } from 'lucide-react'
 import { AppSelect } from '@/components/select'
 import type { User } from '@/types/api.types'
 

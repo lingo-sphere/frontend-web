@@ -1,8 +1,8 @@
 // Trang bảng xếp hạng thi đua vinh danh học viên toàn diện theo phong cách thể thao điện tử hiện đại.
 'use client'
 
-import React, { useState, useMemo } from 'react'
-import { Trophy, Zap, Flame, Sparkles } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Trophy, Zap, Flame } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useMounted } from '@/hooks/use.mounted'
 import { useAuthStore } from '@/features/auth/store/auth.store'

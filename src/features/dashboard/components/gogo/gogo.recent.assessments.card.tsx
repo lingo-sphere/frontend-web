@@ -1,7 +1,6 @@
 // Component thẻ nhật ký khảo thí và bài nộp gần đây theo phong cách Gogo Application Status Card.
 'use client'
 
-import React from 'react'
 import Link from 'next/link'
 import { Award, ChevronRight, CheckCircle2, AlertCircle, FileText } from 'lucide-react'
 import type { ProgressRecentActivity } from '@/features/progress/hooks/use.progress.data'

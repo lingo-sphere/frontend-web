@@ -1,7 +1,6 @@
 // Thẻ hiển thị chủ đề luyện ngữ pháp theo phong cách thiết kế card hình học dải sóng xanh cao cấp.
 'use client'
 
-import React from 'react'
 import { BookOpen, Target, Compass, Play, ArrowRight, CheckCircle2 } from 'lucide-react'
 import type { GrammarTopicItem } from '@/features/practice/types/grammar-practice'
 

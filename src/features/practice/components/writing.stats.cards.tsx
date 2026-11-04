@@ -11,7 +11,6 @@ import {
   TrendingUp,
   Target,
   Clock,
-  Zap,
   ArrowRight,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/card";
@@ -294,7 +293,7 @@ export function WritingStatsCards({
                   }"`}
             </p>
             <div className="space-y-2">
-              {progress.recommendations.map((rec, index) => (
+              {progress.recommendations.map((rec) => (
                 <RecommendationCard
                   key={rec.exercise_id}
                   recommendation={rec}

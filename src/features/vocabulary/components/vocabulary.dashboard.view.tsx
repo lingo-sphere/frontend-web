@@ -5,13 +5,12 @@
 
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import {
   Brain,
   Layers3,
-  Calendar,
   RotateCcw,
   ArrowRight,
   TrendingUp,
@@ -37,7 +36,7 @@ export interface VocabularyDashboardViewProps {
 }
 
 export function VocabularyDashboardView({ isEmbedded = false }: VocabularyDashboardViewProps) {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
   const navigate = useNavigate()
   const { data, isLoading, isError, refetch } = useVocabularyDashboard()

@@ -8,7 +8,6 @@ import {
   PlayCircle,
   FileText,
   Lock,
-  Clock,
   Eye,
 } from 'lucide-react'
 import type { Chapter, Lesson } from '@/features/courses/types/course'

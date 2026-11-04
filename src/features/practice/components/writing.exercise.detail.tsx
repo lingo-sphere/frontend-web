@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Clock, BookOpen, Lightbulb } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
-import type { WritingExercise, TimeMode } from '@/features/practice/types/writing'
+import type { WritingExercise } from '@/features/practice/types/writing'
 import { resolveMediaUrlAsync } from '@/utils/media.utils'
 import { WritingTimeModeSelector } from '@/features/practice/components/writing.time-mode-selector'
 

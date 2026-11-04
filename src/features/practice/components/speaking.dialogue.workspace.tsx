@@ -8,18 +8,16 @@
  * - Tách bạch audio và metrics từng lượt (Response Latency, Speaking Duration)
  */
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   ArrowLeft,
   Volume2,
   Mic,
-  MicOff,
   CheckCircle2,
   RotateCcw,
   Sparkles,
   Play,
   Pause,
-  AlertCircle,
   HelpCircle,
   Users,
   Clock,
@@ -684,7 +682,7 @@ export function SpeakingDialogueWorkspace({
   const handleFinalSubmit = async () => {
     const fullTranscript = turns
       .filter((t) => t.speaker === 'USER')
-      .map((t, idx) => turnTranscripts[turns.indexOf(t)] || t.text_en)
+      .map((t) => turnTranscripts[turns.indexOf(t)] || t.text_en)
       .join('. ')
 
     // Tính tổng thời lượng user phát âm thực tế

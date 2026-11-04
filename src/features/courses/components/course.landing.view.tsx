@@ -1,18 +1,14 @@
 // Trang tong quan va gioi thieu chi tiet khoa hoc cho hoc vien chua dang ky phong cach Udemy.
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Check,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
-  HelpCircle,
   ShoppingCart,
-  BookOpen,
   ArrowLeft,
-  Sparkles,
   Star,
 } from 'lucide-react'
 import type { Course, Lesson } from '@/features/courses/types/course'

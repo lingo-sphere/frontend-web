@@ -8,7 +8,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Clock, Zap, Target, BookOpen } from 'lucide-react'
-import { Button } from '@/components/button'
 import {
   TimePreset,
   TIME_PRESET_CONFIG,
@@ -24,7 +23,6 @@ interface TimePresetSelectorProps {
 export function TimePresetSelector({
   onSelect,
   defaultPreset = TimePreset.STANDARD,
-  topicName,
 }: TimePresetSelectorProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'

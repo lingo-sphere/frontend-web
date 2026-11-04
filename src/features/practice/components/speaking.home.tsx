@@ -17,7 +17,6 @@ import {
   Target,
   Compass,
   Award,
-  Layers,
   ArrowUpRight,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'

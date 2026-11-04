@@ -1,8 +1,7 @@
 // Thẻ hiển thị bài đọc Reading Practice theo phong cách thiết kế card hình học cao cấp với mã QR và capsule điều hướng.
 'use client'
 
-import React from 'react'
-import { BookOpen, HelpCircle, Clock, Play, ArrowRight, Sparkles } from 'lucide-react'
+import { BookOpen, HelpCircle, Clock, Play, ArrowRight } from 'lucide-react'
 import type { ReadingPassage } from '@/features/practice/types/reading'
 
 interface ReadingPassageCardProps {

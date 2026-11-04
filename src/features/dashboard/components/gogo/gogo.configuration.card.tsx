@@ -1,8 +1,7 @@
 // Component thẻ mục tiêu cá nhân hóa dạng đồng hồ đo tiến độ theo phong cách thiết kế Cuba Monthly Target Widget.
 'use client'
 
-import React from 'react'
-import { Rocket, BookOpen, Target, Sparkles, CheckCircle2, Flame, Award } from 'lucide-react'
+import { Rocket, BookOpen, Target, Sparkles, Flame } from 'lucide-react'
 
 interface GogoConfigurationCardProps {
   targetScore?: number

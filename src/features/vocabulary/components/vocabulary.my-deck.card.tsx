@@ -1,7 +1,6 @@
 // Thẻ hiển thị bộ thẻ cá nhân trong mục Bộ thẻ của tôi với thiết kế hiện đại, thanh tiến độ và các nút thao tác.
 'use client'
 
-import React from 'react'
 import {
   Layers3,
   Target,

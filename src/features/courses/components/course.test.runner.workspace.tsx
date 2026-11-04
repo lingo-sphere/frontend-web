@@ -64,7 +64,6 @@ export function CourseTestRunnerWorkspace({
   skills,
   highestScore = 0,
   previousAttempts = [],
-  courseTargetScore,
   onClose,
   onComplete,
 }: CourseTestRunnerWorkspaceProps) {

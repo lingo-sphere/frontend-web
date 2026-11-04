@@ -280,7 +280,7 @@ export function useListeningSession(options: UseListeningSessionOptions = {}) {
     isCorrectAnswer: (key: string) => {
       if (!currentExercise?.options) return false
       const opt = currentExercise.options.find(o => o.key === key)
-      return opt?.key === currentExercise.options?.find(o => {
+      return opt?.key === currentExercise.options?.find(() => {
         // Find correct answer from the original options
         return true // We'll need to track this differently
       })?.key

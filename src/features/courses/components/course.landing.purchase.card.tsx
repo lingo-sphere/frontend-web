@@ -5,7 +5,6 @@ import { useState } from 'react'
 import {
   Play,
   ShoppingCart,
-  Heart,
   ShieldCheck,
   Video,
   FileText,
