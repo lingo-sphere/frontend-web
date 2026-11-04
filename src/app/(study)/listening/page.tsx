@@ -11,6 +11,7 @@ import { Button } from "@/components/button";
 import { Card, CardContent } from "@/components/card";
 import { Icon } from "@/components/icon.map";
 import { Pagination } from "@/components/pagination";
+import { AppSelect } from "@/components/select";
 import { ListeningContextFilter } from "@/features/practice/components/listening.context.filter";
 import { LISTENING_SUBTYPES, readListeningCatalog, listeningCatalogParams, type ListeningCatalogState } from "@/features/practice/utils/listening.catalog";
 import { ListeningPracticeWorkspace } from "@/features/practice/components/listening.practice.workspace";
@@ -373,67 +374,56 @@ export default function ListeningAppPage() {
                 <span className="font-medium">
                   {isVietnamese ? "Độ khó:" : "Difficulty:"}
                 </span>
-                <select
-                  aria-label={isVietnamese ? "Độ khó" : "Difficulty"}
+                <AppSelect
                   value={difficultyFilter}
-                  onChange={(e) => {
-                    setDifficultyFilter(e.target.value);
-                  }}
-                  className="rounded-lg border border-border bg-surface-subtle px-2.5 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  <option value="ALL">
-                    {isVietnamese ? "Tất cả độ khó" : "All Difficulties"}
-                  </option>
-                  <option value="EASY">
-                    {isVietnamese ? "Dễ" : "Easy"}
-                  </option>
-                  <option value="MEDIUM">
-                    {isVietnamese ? "Trung bình" : "Medium"}
-                  </option>
-                  <option value="HARD">
-                    {isVietnamese ? "Khó" : "Hard"}
-                  </option>
-                </select>
+                  onChange={(val) => setDifficultyFilter(val)}
+                  options={[
+                    { value: "ALL", label: isVietnamese ? "Tất cả độ khó" : "All Difficulties" },
+                    { value: "EASY", label: isVietnamese ? "Dễ" : "Easy" },
+                    { value: "MEDIUM", label: isVietnamese ? "Trung bình" : "Medium" },
+                    { value: "HARD", label: isVietnamese ? "Khó" : "Hard" },
+                  ]}
+                  size="sm"
+                  ariaLabel={isVietnamese ? "Độ khó" : "Difficulty"}
+                />
               </div>
 
-              
               <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                 <span className="font-medium">CEFR:</span>
-                <select
-                  aria-label="CEFR"
+                <AppSelect
                   value={cefrFilter}
-                  onChange={(e) => {
-                    setCefrFilter(e.target.value);
-                  }}
-                  className="rounded-lg border border-border bg-surface-subtle px-2.5 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                >
-                  <option value="ALL">
-                    {isVietnamese ? "Tất cả cấp độ" : "All Levels"}
-                  </option>
-                  <option value="A1">A1</option>
-                  <option value="A2">A2</option>
-                  <option value="B1">B1</option>
-                  <option value="B2">B2</option>
-                  <option value="C1">C1</option>
-                  <option value="C2">C2</option>
-                </select>
+                  onChange={(val) => setCefrFilter(val)}
+                  options={[
+                    { value: "ALL", label: isVietnamese ? "Tất cả cấp độ" : "All Levels" },
+                    { value: "A1", label: "A1" },
+                    { value: "A2", label: "A2" },
+                    { value: "B1", label: "B1" },
+                    { value: "B2", label: "B2" },
+                    { value: "C1", label: "C1" },
+                    { value: "C2", label: "C2" },
+                  ]}
+                  size="sm"
+                  ariaLabel="CEFR"
+                />
               </div>
 
               {LISTENING_SUBTYPES[activeTab].length > 0 && (
-                <label className="flex items-center gap-2 text-xs text-text-secondary">
+                <div className="flex items-center gap-2 text-xs text-text-secondary">
                   <span className="font-medium">{isVietnamese ? "Phân loại:" : "Category:"}</span>
-                  <select
-                    aria-label={isVietnamese ? "Phân loại" : "Category"}
+                  <AppSelect
                     value={subTypeFilter}
-                    onChange={event => setSubTypeFilter(event.target.value)}
-                    className="rounded-lg border border-border bg-surface-subtle px-2.5 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="ALL">{isVietnamese ? "Tất cả phân loại" : "All categories"}</option>
-                    {LISTENING_SUBTYPES[activeTab].map(item => (
-                      <option key={item.value} value={item.value}>{isVietnamese ? item.vi : item.en}</option>
-                    ))}
-                  </select>
-                </label>
+                    onChange={(val) => setSubTypeFilter(val)}
+                    options={[
+                      { value: "ALL", label: isVietnamese ? "Tất cả phân loại" : "All categories" },
+                      ...LISTENING_SUBTYPES[activeTab].map((item) => ({
+                        value: item.value,
+                        label: isVietnamese ? item.vi : item.en,
+                      })),
+                    ]}
+                    size="sm"
+                    ariaLabel={isVietnamese ? "Phân loại" : "Category"}
+                  />
+                </div>
               )}
 
               {hasActiveFilters && (

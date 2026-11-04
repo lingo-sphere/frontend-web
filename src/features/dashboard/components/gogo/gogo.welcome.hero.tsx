@@ -3,6 +3,7 @@
 
 import React from 'react'
 import { Calendar, ChevronRight, Flame, Target, Sparkles, Rocket, BookOpen } from 'lucide-react'
+import { AppSelect } from '@/components/select'
 import type { User } from '@/types/api.types'
 
 interface GogoWelcomeHeroProps {
@@ -45,20 +46,19 @@ export function GogoWelcomeHero({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-surface border border-border shadow-2xs text-xs font-semibold text-text-secondary">
-            <Calendar className="w-3.5 h-3.5 text-primary" />
-            <select
-              value={selectedPeriod}
-              onChange={(e) => onPeriodChange?.(e.target.value)}
-              className="bg-transparent text-text-primary outline-none cursor-pointer text-xs font-medium"
-              aria-label="Chọn khoảng thời gian phân tích"
-            >
-              <option value="7d">Tuần này (7 ngày)</option>
-              <option value="30d">Tháng này (30 ngày)</option>
-              <option value="90d">90 ngày qua</option>
-              <option value="all">Toàn thời gian</option>
-            </select>
-          </div>
+          <AppSelect
+            value={selectedPeriod}
+            onChange={(val) => onPeriodChange?.(val)}
+            options={[
+              { value: '7d', label: 'Tuần này (7 ngày)' },
+              { value: '30d', label: 'Tháng này (30 ngày)' },
+              { value: '90d', label: '90 ngày qua' },
+              { value: 'all', label: 'Toàn thời gian' },
+            ]}
+            size="sm"
+            ariaLabel="Chọn khoảng thời gian phân tích"
+            triggerClassName="rounded-2xl border-border bg-surface px-3.5 py-1.5 shadow-2xs font-semibold"
+          />
         </div>
       </div>
 

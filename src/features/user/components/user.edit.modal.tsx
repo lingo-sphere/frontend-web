@@ -1,12 +1,10 @@
-/**
- * @file user.edit.modal.tsx
- * @description Component giao diện React UserProfileEditModal cho học viên
- */
+// Modal chỉnh sửa thông tin hồ sơ người dùng.
 
 import { useState } from 'react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Input } from '@/components/input'
+import { AppSelect } from '@/components/select'
 import { Icon } from '@/components/icon.map'
 import { UserAvatar } from '@/features/user/components/user.header'
 import type { User, EditProfileForm } from '@/features/user/types/user'
@@ -107,21 +105,25 @@ export function EditProfileModal({
                 <label className="block text-sm font-medium text-text-secondary mb-1">
                   Giới tính
                 </label>
-                <select
-                  value={form.gender}
-                  onChange={(e) =>
+                <AppSelect
+                  value={form.gender || ''}
+                  onChange={(val) =>
                     setForm({
                       ...form,
-                      gender: e.target.value as EditProfileForm['gender'],
+                      gender: val as EditProfileForm['gender'],
                     })
                   }
-                  className="w-full px-3 py-2 border border-surface-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-surface"
-                >
-                  <option value="">Chọn giới tính</option>
-                  <option value="male">Nam</option>
-                  <option value="female">Nữ</option>
-                  <option value="other">Khác</option>
-                </select>
+                  options={[
+                    { value: '', label: 'Chọn giới tính' },
+                    { value: 'male', label: 'Nam' },
+                    { value: 'female', label: 'Nữ' },
+                    { value: 'other', label: 'Khác' },
+                  ]}
+                  size="default"
+                  className="w-full"
+                  triggerClassName="w-full h-10 rounded-lg justify-between border-surface-subtle"
+                  ariaLabel="Giới tính"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">

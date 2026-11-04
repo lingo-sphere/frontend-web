@@ -1,11 +1,12 @@
+// Quản lý danh sách từ vựng trong sổ từ.
 'use client'
 
-// Quản lý danh sách từ vựng trong sổ từ.
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Bookmark, Search } from 'lucide-react'
 import { useVirtualizer, type VirtualItem } from '@tanstack/react-virtual'
 import { Button } from '@/components/button'
+import { AppSelect } from '@/components/select'
 import { VocabularyCard } from '@/features/vocabulary/components/vocabulary.card'
 import type { SavedVocabulary, UserDeck } from '@/features/vocabulary/types/vocabulary.learn'
 
@@ -132,22 +133,24 @@ export function VocabularyTab({
           />
         </div>
 
-        <select
+        <AppSelect
           value={filterDeck}
-          onChange={(e) => setFilterDeck(e.target.value as typeof filterDeck)}
-          className="h-10 rounded-xl border border-border bg-surface px-3 pr-8 text-[13px] text-text-primary focus:border-primary focus:outline-none"
-        >
-          <option value="all">{isVietnamese ? 'Tất cả' : 'All'}</option>
-          <option value="inbox">
-            {isVietnamese ? 'Danh sách từ vựng' : 'Vocabulary list'} (
-            {savedVocabulary.filter((w) => !w.deck_id).length})
-          </option>
-          {userDecks.map((deck) => (
-            <option key={deck.id} value={deck.id}>
-              {deck.name || 'Bộ thẻ'}
-            </option>
-          ))}
-        </select>
+          onChange={(val) => setFilterDeck(val as typeof filterDeck)}
+          options={[
+            { value: 'all', label: isVietnamese ? 'Tất cả' : 'All' },
+            {
+              value: 'inbox',
+              label: `${isVietnamese ? 'Danh sách từ vựng' : 'Vocabulary list'} (${savedVocabulary.filter((w) => !w.deck_id).length})`,
+            },
+            ...userDecks.map((deck) => ({
+              value: deck.id,
+              label: deck.name || 'Bộ thẻ',
+            })),
+          ]}
+          size="default"
+          triggerClassName="h-10 rounded-xl"
+          ariaLabel={isVietnamese ? 'Lọc theo bộ thẻ' : 'Filter by deck'}
+        />
       </div>
 
       <div className="flex gap-4 text-[12px] text-text-secondary">

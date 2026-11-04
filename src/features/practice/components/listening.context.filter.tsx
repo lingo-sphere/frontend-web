@@ -1,9 +1,11 @@
+// Bộ lọc chủ đề ngữ cảnh luyện nghe theo cây phân cấp đa tầng.
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import { Button } from '@/components/button'
+import { AppSelect } from '@/components/select'
 import type { PracticeContext } from '../types/context.types'
 
 interface Props {
@@ -28,31 +30,22 @@ export function ListeningContextFilter({
       api.get<PracticeContext[]>(API_CONFIG.ENDPOINTS.CONTEXT.LIST, {
         status: 'ACTIVE',
       }),
-    staleTime: 10 * 60 * 1000,
   })
-  const byId = new Map(
-    data.flatMap(
-      (row) =>
-        [
-          [row._id, row],
-          [row.code, row],
-        ] as const,
-    ),
-  )
-  const name = (row: PracticeContext) =>
-    vi ? row.name_vi || row.name_en : row.name_en
-  const path = (row: PracticeContext) => {
-    const parts = [name(row)],
-      seen = new Set([row._id])
-    let parent = row.parent_id ? byId.get(row.parent_id) : undefined
-    while (parent && !seen.has(parent._id)) {
-      seen.add(parent._id)
+
+  const byId = new Map(data.map((c) => [c._id, c]))
+  const name = (c: PracticeContext): string =>
+    (vi ? c.name_vi || c.name_en : c.name_en || c.name_vi) || ''
+
+  const path = (c: PracticeContext) => {
+    const parts: string[] = []
+    let parent: PracticeContext | undefined = c
+    while (parent) {
       parts.unshift(name(parent))
       parent = parent.parent_id ? byId.get(parent.parent_id) : undefined
     }
     return parts.join(' › ')
   }
-  // Include category nodes as filters: backend expands a parent to all descendants.
+
   const options = data
     .filter((row) => row.status === 'ACTIVE')
     .map((row) => ({ id: row._id, code: row.code, label: path(row) }))
@@ -61,38 +54,37 @@ export function ListeningContextFilter({
     (option) => option.id === value || option.code === value,
   )
 
+  const topicOptions = [
+    {
+      value: '',
+      label: isPending
+        ? vi
+          ? 'Đang tải chủ đề…'
+          : 'Loading topics…'
+        : vi
+        ? 'Tất cả chủ đề'
+        : 'All topics',
+    },
+    ...(value && !selected
+      ? [{ value, label: vi ? 'Chủ đề từ liên kết' : 'Topic from link' }]
+      : []),
+    ...options.map((opt) => ({ value: opt.id, label: opt.label })),
+  ]
+
   return (
     <div className="flex flex-col gap-1 max-w-full">
-      <label className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
         <span className="font-medium">{vi ? 'Chủ đề:' : 'Topic:'}</span>
-        <select
-          aria-label={vi ? 'Chủ đề' : 'Topic'}
+        <AppSelect
           value={selected?.id || value}
+          onChange={(newVal) => onChange(newVal)}
+          options={topicOptions}
           disabled={isPending}
-          onChange={(event) => onChange(event.target.value)}
-          className="w-full sm:w-64 max-w-full rounded-lg border border-border bg-surface-subtle px-2.5 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:ring-1 focus:ring-primary"
-        >
-          <option value="">
-            {isPending
-              ? vi
-                ? 'Đang tải chủ đề…'
-                : 'Loading topics…'
-              : vi
-              ? 'Tất cả chủ đề'
-              : 'All topics'}
-          </option>
-          {value && !selected && (
-            <option value={value}>
-              {vi ? 'Chủ đề từ liên kết' : 'Topic from link'}
-            </option>
-          )}
-          {options.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          size="sm"
+          ariaLabel={vi ? 'Chủ đề' : 'Topic'}
+          triggerClassName="w-full sm:w-64 max-w-full justify-between"
+        />
+      </div>
       {isError ? (
         <div role="alert" className="text-xs text-red-500">
           {vi ? 'Không tải được chủ đề.' : 'Could not load topics.'}{' '}

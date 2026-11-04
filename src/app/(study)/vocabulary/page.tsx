@@ -36,6 +36,7 @@ import { Card, CardContent } from "@/components/card";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 import { Pagination } from "@/components/pagination";
+import { AppSelect } from "@/components/select";
 import { SectionHeading } from "@/features/dashboard/components/section.heading";
 import { useApp } from "@/contexts/app.context";
 import { useVocabularyPage } from "@/features/vocabulary/hooks/use.vocabulary.page";
@@ -1070,7 +1071,7 @@ export default function VocabularyAppPage() {
                   );
                 })}
                 {availableTopics.length > 10 && (
-                  <select
+                  <AppSelect
                     value={
                       availableTopics
                         .slice(10)
@@ -1078,23 +1079,20 @@ export default function VocabularyAppPage() {
                         ? activeTopic
                         : ""
                     }
-                    onChange={(e) => setActiveTopic(e.target.value || "all")}
-                    aria-label={
-                      isVietnamese ? "Chọn chủ đề khác" : "Select more topics"
-                    }
-                    className="h-[34px] rounded-xl border border-border bg-surface-subtle px-3 text-[12px] font-medium text-text-secondary focus:border-primary focus:outline-none"
-                  >
-                    <option value="">
-                      {isVietnamese ? "Chủ đề khác..." : "More topics..."}
-                    </option>
-                    {availableTopics.slice(10).map((top) => (
-                      <option key={top._id} value={String(top._id)}>
-                        {isVietnamese
-                          ? top.name_vi || top.name_en
-                          : top.name_en}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setActiveTopic(val || "all")}
+                    options={[
+                      {
+                        value: "",
+                        label: isVietnamese ? "Chủ đề khác..." : "More topics...",
+                      },
+                      ...availableTopics.slice(10).map((top) => ({
+                        value: String(top._id),
+                        label: isVietnamese ? top.name_vi || top.name_en : top.name_en,
+                      })),
+                    ]}
+                    size="sm"
+                    ariaLabel={isVietnamese ? "Chọn chủ đề khác" : "Select more topics"}
+                  />
                 )}
               </div>
             </div>
