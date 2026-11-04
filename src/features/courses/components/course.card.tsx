@@ -16,7 +16,8 @@ import {
   Clock,
   BarChart2,
   Users,
-  Sparkles,
+  Gem,
+  Flame,
 } from 'lucide-react'
 import type { CourseCardData } from '@/features/courses/types/course'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -177,10 +178,14 @@ export function CourseCard({
     }
   }
 
-  const discountPercent =
-    course.discountPrice && course.discountPrice > course.price
-      ? Math.round(((course.discountPrice - course.price) / course.discountPrice) * 100)
-      : 0
+  const hasRealDiscount =
+    Boolean(course.discountPrice) &&
+    Number(course.discountPrice) > Number(course.price) &&
+    Number(course.price) > 0
+
+  const discountPercent = hasRealDiscount
+    ? Math.round(((Number(course.discountPrice) - Number(course.price)) / Number(course.discountPrice)) * 100)
+    : 0
 
   const levelLabel =
     course.targetScore && course.targetScore > 0
@@ -201,7 +206,7 @@ export function CourseCard({
         }
       }}
       onMouseEnter={handlePrefetch}
-      className="group relative flex flex-col justify-between rounded-[20px] border border-border/80 bg-white dark:bg-card shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:border-indigo-500/40 dark:hover:border-indigo-500/40 cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+      className="group relative flex flex-col justify-between rounded-[20px] border border-border/80 bg-white dark:bg-card shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:border-[#5b4df2]/40 dark:hover:border-[#5b4df2]/40 cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#5b4df2]/40"
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden rounded-t-[20px] bg-slate-100 dark:bg-zinc-900">
         <Link
@@ -221,32 +226,50 @@ export function CourseCard({
           />
 
           <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-indigo-600 shadow-xl transition-all duration-300 scale-90 group-hover:scale-100">
-              <Play size={18} className="ml-0.5 fill-indigo-600 text-indigo-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#5b4df2] shadow-xl transition-all duration-300 scale-90 group-hover:scale-100">
+              <Play size={20} className="ml-0.5 fill-[#5b4df2] text-[#5b4df2]" />
             </div>
           </div>
         </Link>
 
-        <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
-          <span className="inline-flex items-center rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 shadow-xs border border-white/40">
+        <div className="pointer-events-none absolute left-3.5 top-3.5 z-10 flex flex-col items-start gap-1.5">
+          <span className="inline-flex items-center rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-3.5 py-1 text-[11.5px] font-semibold text-[#5b4df2] dark:text-[#8b7eff] shadow-[0_2px_8px_rgba(0,0,0,0.12)] border border-white/80 dark:border-white/10 tracking-tight whitespace-nowrap">
             {course.badge || (course.category === 'TOEIC_4_SKILLS' ? 'TOEIC 4 Kỹ Năng' : 'TOEIC 2 Kỹ Năng')}
           </span>
 
-          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-600 text-white px-2.5 py-0.5 text-[10px] font-bold shadow-xs">
-            <Sparkles size={10} className="fill-white" />
-            <span>{course.is_bestseller ? (isVi ? 'Bán chạy nhất' : 'Bestseller') : 'All-Access Monthly'}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#5b4df2] to-[#705df8] text-white px-3 py-1 text-[11px] font-semibold shadow-[0_2px_10px_rgba(91,77,242,0.4)] border border-white/20 tracking-tight whitespace-nowrap">
+            {course.is_bestseller ? (
+              <>
+                <Flame size={12} className="fill-amber-300 text-amber-300 -ml-0.5" />
+                <span>{isVi ? 'Bán chạy nhất' : 'Bestseller'}</span>
+              </>
+            ) : (
+              <>
+                <Gem size={12} className="text-white fill-white/25 -ml-0.5" strokeWidth={2} />
+                <span>All-Access Monthly</span>
+              </>
+            )}
           </span>
         </div>
 
         {discountPercent > 0 ? (
-          <div className="pointer-events-none absolute right-3 top-3 z-10">
-            <span className="inline-flex items-center rounded-full bg-rose-500 text-white px-2.5 py-0.5 text-[11px] font-black shadow-xs tracking-tight">
+          <div
+            title={
+              course.discountPrice
+                ? isVi
+                  ? `Giảm ${discountPercent}% (Giá gốc: ${formatCurrency(course.discountPrice)} → Giá ưu đãi: ${formatCurrency(course.price)})`
+                  : `Discount ${discountPercent}% (${formatCurrency(course.discountPrice)} → ${formatCurrency(course.price)})`
+                : undefined
+            }
+            className="pointer-events-none absolute right-3.5 top-3.5 z-10"
+          >
+            <span className="inline-flex items-center rounded-full bg-[#ff3b5c] text-white px-2.5 py-0.5 text-[11px] font-black shadow-[0_2px_8px_rgba(255,59,92,0.35)] tracking-tight border border-white/20">
               -{discountPercent}%
             </span>
           </div>
         ) : course.targetScore ? (
-          <div className="pointer-events-none absolute right-3 top-3 z-10">
-            <span className="inline-flex items-center rounded-full bg-emerald-600 text-white px-2.5 py-0.5 text-[10px] font-bold shadow-xs">
+          <div className="pointer-events-none absolute right-3.5 top-3.5 z-10">
+            <span className="inline-flex items-center rounded-full bg-emerald-600 text-white px-2.5 py-0.5 text-[10.5px] font-bold shadow-xs">
               Target {course.targetScore}+
             </span>
           </div>
@@ -255,7 +278,7 @@ export function CourseCard({
         <button
           type="button"
           onClick={handleWishlistClick}
-          className="absolute left-3 bottom-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 dark:bg-zinc-900/90 backdrop-blur-md shadow-md text-slate-600 dark:text-slate-300 hover:text-rose-500 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+          className="absolute left-3.5 bottom-3.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 dark:bg-zinc-900/90 backdrop-blur-md shadow-[0_2px_8px_rgba(0,0,0,0.12)] border border-white/60 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-rose-500 hover:scale-110 active:scale-95 transition-all cursor-pointer"
           title={isFavorite ? (isVi ? 'Bỏ yêu thích' : 'Remove from wishlist') : (isVi ? 'Thêm vào yêu thích' : 'Add to wishlist')}
           aria-label={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
         >
@@ -267,13 +290,13 @@ export function CourseCard({
           />
         </button>
 
-        <div ref={menuRef} className="absolute right-3 bottom-3 z-20">
+        <div ref={menuRef} className="absolute right-3.5 bottom-3.5 z-20">
           <button
             type="button"
             onClick={(e) => onToggleMenu(course.id, e)}
-            className={`flex h-8 w-8 items-center justify-center rounded-full shadow-md backdrop-blur-md transition-all cursor-pointer ${
+            className={`flex h-8 w-8 items-center justify-center rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.12)] backdrop-blur-md border border-white/60 dark:border-white/10 transition-all cursor-pointer ${
               isMenuOpen
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-[#5b4df2] text-white'
                 : 'bg-white/95 text-slate-600 hover:bg-white hover:text-slate-900 dark:bg-zinc-900/90 dark:text-slate-300 dark:hover:bg-zinc-800'
             }`}
             title={isVi ? 'Tùy chọn' : 'Options'}
@@ -370,14 +393,14 @@ export function CourseCard({
         </div>
 
         <div>
-          <h3 className="text-[15px] sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1 leading-snug">
+          <h3 className="text-[15px] sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#5b4df2] dark:group-hover:text-[#8b7eff] transition-colors line-clamp-1 leading-snug">
             {course.title}
           </h3>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800/50 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] overflow-hidden flex-shrink-0">
-            <Users size={12} className="text-indigo-600 dark:text-indigo-400" />
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f0eefa] dark:bg-[#5b4df2]/20 border border-[#5b4df2]/30 text-[#5b4df2] dark:text-[#8b7eff] font-bold text-[10px] overflow-hidden flex-shrink-0">
+            <Users size={12} className="text-[#5b4df2] dark:text-[#8b7eff]" />
           </div>
           <span className="text-xs font-medium text-slate-600 dark:text-slate-300 line-clamp-1">
             {course.instructor}
@@ -414,9 +437,16 @@ export function CourseCard({
 
             <div className="flex items-baseline gap-1.5">
               {isAlreadyEnrolled ? (
-                <span className="text-base font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                  {isVi ? 'Đã kích hoạt' : 'Activated'}
-                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-base font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    {isVi ? 'Đã kích hoạt' : 'Activated'}
+                  </span>
+                  {course.price > 0 && (
+                    <span className="text-xs text-slate-400 font-medium">
+                      ({formatCurrency(course.price)})
+                    </span>
+                  )}
+                </div>
               ) : (
                 <>
                   <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white whitespace-nowrap">
@@ -445,7 +475,7 @@ export function CourseCard({
             <button
               type="button"
               onClick={handleAddToCart}
-              className="rounded-xl border border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1 shadow-2xs whitespace-nowrap flex-shrink-0 cursor-pointer active:scale-95"
+              className="rounded-xl border border-[#5b4df2] bg-[#f0eefa] text-[#5b4df2] dark:bg-[#5b4df2]/20 dark:text-[#8b7eff] px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1 shadow-2xs whitespace-nowrap flex-shrink-0 cursor-pointer active:scale-95"
             >
               <Check size={12} className="flex-shrink-0" />
               <span>{isVi ? 'Đã trong giỏ' : 'In Cart'}</span>
@@ -455,7 +485,7 @@ export function CourseCard({
               type="button"
               onClick={handleAddToCart}
               disabled={isAdding}
-              className="rounded-xl border border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white px-4 py-1.5 text-xs font-bold transition-all flex items-center gap-1 shadow-2xs whitespace-nowrap flex-shrink-0 cursor-pointer active:scale-95"
+              className="rounded-xl border border-[#5b4df2] text-[#5b4df2] hover:bg-[#5b4df2] hover:text-white dark:border-[#7562fa] dark:text-[#8b7eff] dark:hover:bg-[#5b4df2] dark:hover:text-white px-4 py-1.5 text-xs font-bold transition-all flex items-center gap-1 shadow-2xs whitespace-nowrap flex-shrink-0 cursor-pointer active:scale-95"
             >
               {isAdding ? (
                 <Loader2 size={12} className="animate-spin flex-shrink-0" />
