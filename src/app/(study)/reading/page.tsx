@@ -1,23 +1,17 @@
-/**
- * @file page.tsx
- * @description Màn hình chính Reading Practice với 4 Sub-Tabs & Chế độ luyện tập 2 bên (Split Screen)
- */
-
+// Màn hình chính phân hệ Reading Practice với 4 danh mục phụ và danh sách bài đọc.
 "use client";
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@/components/icon.map";
-import { Button } from "@/components/button";
-import { Card, CardContent } from "@/components/card";
 import { ReadingContextNavigation } from "@/features/practice/components/reading.context.navigation";
 import { ReadingWorkspace } from "@/features/practice/components/reading.workspace";
 import { ReadingTimeModeSelector } from "@/features/practice/components/reading.time-mode-selector";
+import { ReadingPassageCard } from "@/features/practice/components/reading.passage.card";
 import { readingPracticeService } from "@/features/practice/services/reading-practice.service";
 import type {
   ReadingPassage,
   ReadingType,
-  TimerPresetMode,
 } from "@/features/practice/types/reading";
 
 const TABS: Array<{
@@ -69,7 +63,6 @@ export default function ReadingPracticePage() {
   );
   const [timeLimitSeconds, setTimeLimitSeconds] = useState<number>(0);
 
-  // Fetch list of passages for active tab
   const { data: passagesData, isLoading } = useQuery({
     queryKey: ["reading-passages", activeTab, selectedContextId],
     queryFn: () =>
@@ -81,14 +74,12 @@ export default function ReadingPracticePage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch detailed passage when selected
-  const { data: detailedPassage, isLoading: isLoadingPassage } = useQuery({
+  const { data: detailedPassage } = useQuery({
     queryKey: ["reading-passage-detail", selectedPassageId],
     queryFn: () => readingPracticeService.getPassageById(selectedPassageId!),
     enabled: Boolean(selectedPassageId),
   });
 
-  // If a passage is selected for practice with time limit, render ReadingWorkspace
   if (selectedPassageId && detailedPassage && timeLimitSeconds > 0) {
     return (
       <ReadingWorkspace
@@ -108,7 +99,6 @@ export default function ReadingPracticePage() {
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
-      {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-primary p-6 sm:p-8 text-white shadow-xl">
         <div className="relative z-10 max-w-2xl space-y-2">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold backdrop-blur-md">
@@ -125,7 +115,6 @@ export default function ReadingPracticePage() {
           </p>
         </div>
 
-        {/* Decorative Background Icons */}
         <Icon
           name="book-open"
           size={180}
@@ -133,7 +122,6 @@ export default function ReadingPracticePage() {
         />
       </div>
 
-      {/* 4 Main Sub-Tabs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -175,7 +163,6 @@ export default function ReadingPracticePage() {
         })}
       </div>
 
-      {/* Context Filter for Task-Based and Information Matching */}
       {(activeTab === "REAL_WORLD_TASK" || activeTab === "INFO_MATCHING") && (
         <ReadingContextNavigation
           selectedContextId={selectedContextId}
@@ -183,7 +170,6 @@ export default function ReadingPracticePage() {
         />
       )}
 
-      {/* Passages List */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
@@ -208,49 +194,11 @@ export default function ReadingPracticePage() {
         ) : passagesData?.passages && passagesData.passages.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {passagesData.passages.map((passage: ReadingPassage) => (
-              <Card
+              <ReadingPassageCard
                 key={passage._id || passage.id}
-                className="group relative flex flex-col justify-between overflow-hidden border-border/60 bg-surface hover:border-primary/50 hover:shadow-md transition-all"
-              >
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                      {passage.cefr_level || "B1"}
-                    </span>
-                    <span className="text-[11px] font-medium text-text-tertiary flex items-center gap-1">
-                      <Icon name="clock" size={12} />
-                      {passage.estimated_reading_time_minutes || 5} phút
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-bold text-text-primary group-hover:text-primary transition-colors line-clamp-1">
-                      {passage.title_vi || passage.title}
-                    </h3>
-                    <p className="mt-1 text-xs text-text-tertiary line-clamp-2 leading-relaxed">
-                      {passage.content_summary ||
-                        passage.content.substring(0, 100) + "..."}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-border/40 text-xs text-text-tertiary">
-                    <span>{passage.word_count || 0} từ</span>
-                    <span>{passage.questions?.length || 4} câu hỏi</span>
-                  </div>
-
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => {
-                      setPendingPassage(passage);
-                    }}
-                    className="w-full justify-center gap-1.5 text-xs font-semibold"
-                  >
-                    <span>Luyện tập ngay</span>
-                    <Icon name="arrow-right" size={14} />
-                  </Button>
-                </CardContent>
-              </Card>
+                passage={passage}
+                onStartPractice={(selected) => setPendingPassage(selected)}
+              />
             ))}
           </div>
         ) : (
@@ -269,11 +217,10 @@ export default function ReadingPracticePage() {
         )}
       </div>
 
-      {/* Time Mode Selector Modal */}
       {pendingPassage && (
         <ReadingTimeModeSelector
           questionCount={pendingPassage.questions?.length || 4}
-          onSelect={(mode, totalSeconds) => {
+          onSelect={(_mode, totalSeconds) => {
             setTimeLimitSeconds(totalSeconds);
             setSelectedPassageId(
               pendingPassage._id || pendingPassage.id || null
