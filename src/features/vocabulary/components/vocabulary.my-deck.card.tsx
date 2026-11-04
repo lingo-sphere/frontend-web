@@ -1,25 +1,22 @@
-// Thẻ hiển thị bộ thẻ cá nhân trong mục Bộ thẻ của tôi với thiết kế hiện đại, thanh tiến độ và các nút thao tác.
+// Thẻ hiển thị bộ thẻ cá nhân trong mục Bộ thẻ của tôi theo phong cách thiết kế card hình học dải sóng xanh ngọc đồng bộ với hệ thống.
 'use client'
 
 import {
   Layers3,
-  Target,
-  GraduationCap,
-  Users,
+  BookOpen,
+  Sparkles,
+  Play,
+  ArrowRight,
   Globe,
   Lock,
-  Sparkles,
-  BookOpen,
-  Share2,
   Trash2,
-  Play,
-  CheckCircle2,
+  Loader2,
 } from 'lucide-react'
 import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
 
 interface VocabularyMyDeckCardProps {
   deck: Deck
-  index: number
+  index?: number
   currentUser?: { user_id?: string; id?: string } | null
   isVietnamese: boolean
   isDeleting?: boolean
@@ -29,43 +26,15 @@ interface VocabularyMyDeckCardProps {
   onRequestDelete: (deck: Deck) => void
 }
 
-const MY_DECK_GRADIENTS = [
-  {
-    bg: 'from-teal-600 via-emerald-600 to-teal-800',
-    glow: 'bg-emerald-400/20',
-  },
-  {
-    bg: 'from-indigo-600 via-indigo-700 to-purple-800',
-    glow: 'bg-indigo-400/20',
-  },
-  {
-    bg: 'from-sky-600 via-blue-600 to-indigo-700',
-    glow: 'bg-sky-400/20',
-  },
-  {
-    bg: 'from-amber-500 via-orange-600 to-rose-600',
-    glow: 'bg-amber-400/20',
-  },
-  {
-    bg: 'from-purple-600 via-fuchsia-600 to-pink-600',
-    glow: 'bg-fuchsia-400/20',
-  },
-]
-
 export function VocabularyMyDeckCard({
   deck,
-  index,
   currentUser,
   isVietnamese,
   isDeleting = false,
   onDeckClick,
   onToggleVisibility,
-  onCopyShareLink,
   onRequestDelete,
 }: VocabularyMyDeckCardProps) {
-  const gradientTheme = MY_DECK_GRADIENTS[index % MY_DECK_GRADIENTS.length]
-  const targetBand = deck.settings?.target_band
-  const examPart = deck.settings?.exam_part
   const isPublic = deck.visibility?.toUpperCase() === 'PUBLIC'
   const isUserDeck = deck.creator_type === 'USER'
   const currentUserId = currentUser?.user_id || currentUser?.id
@@ -73,232 +42,144 @@ export function VocabularyMyDeckCard({
     isUserDeck &&
     Boolean(currentUserId) &&
     (deck.creator_id === currentUserId || deck.user_id === currentUserId)
-  const isSystemDeck = deck.creator_type === 'SYSTEM' || !deck.creator_type
   const progressPercent =
-    typeof deck.progress_percent === 'number' ? deck.progress_percent : 0
+    typeof deck.progress_percent === 'number' ? Math.round(deck.progress_percent) : 0
   const cardCount = deck.card_count ?? 0
 
   const title = isVietnamese && deck.name_vi ? deck.name_vi : deck.name || deck.title
   const description =
     isVietnamese && deck.description_vi
       ? deck.description_vi
-      : deck.description ||
-        deck.description_vi ||
-        (isVietnamese ? 'Bộ thẻ đang học' : 'Enrolled deck')
+      : deck.description || (isVietnamese ? 'Bộ thẻ cá nhân ôn tập theo phương pháp lặp lại ngắt quãng' : 'Personal vocabulary flashcard deck')
+
+  const deckCode = `#MY-${String(deck._id || deck.id || '001').slice(-3).toUpperCase()}`
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => onDeckClick(deck)}
-      className="group relative flex flex-col justify-between rounded-3xl border border-border/80 bg-surface shadow-xs hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/40 transition-all duration-300 overflow-hidden cursor-pointer h-full"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onDeckClick(deck)
+        }
+      }}
+      className="group relative h-[270px] w-full cursor-pointer select-none overflow-hidden rounded-[26px] border border-border/80 bg-surface dark:bg-card shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/50 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/40 hover:shadow-emerald-500/10"
     >
-      <div className={`relative h-28 sm:h-32 w-full overflow-hidden bg-gradient-to-br ${gradientTheme.bg} p-3.5 flex flex-col justify-between`}>
-        <div className={`absolute -right-6 -bottom-6 w-28 h-28 rounded-full ${gradientTheme.glow} blur-xl pointer-events-none`} />
-        <div className="absolute -left-6 -top-6 w-24 h-24 rounded-full bg-white/10 blur-lg pointer-events-none" />
+      <div className="absolute top-0 left-0 z-20 flex flex-col justify-center rounded-br-[36px] bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 px-4 py-2.5 pr-7 shadow-xs">
+        <span className="text-xs font-black tracking-wider uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] sm:text-sm">
+          {isVietnamese ? 'BỘ THẺ CỦA TÔI' : 'MY DECK'}
+        </span>
+        <span className="text-[10px] font-extrabold uppercase tracking-wide text-emerald-100 sm:text-[11px]">
+          {isVietnamese ? `TIẾN ĐỘ ${progressPercent}%` : `PROGRESS ${progressPercent}%`}
+        </span>
+      </div>
 
-        <div className="relative z-10 flex items-start justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {targetBand && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-black/35 backdrop-blur-md text-white text-[10px] font-black border border-white/20 shadow-xs">
-                <Target size={10} className="text-amber-300" />
-                <span>Band {targetBand}</span>
-              </span>
-            )}
-            {examPart && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-white/20 backdrop-blur-md text-white text-[10px] font-black border border-white/25 shadow-xs">
-                <span>{examPart.replace('_', ' ')}</span>
-              </span>
-            )}
+      <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-1">
+        <div className="flex items-center gap-1">
+          {isOwnDeck && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleVisibility(deck)
+              }}
+              title={isPublic ? 'Công khai - Bấm để chuyển Riêng tư' : 'Riêng tư - Bấm để chuyển Công khai'}
+              className={`p-1.5 rounded-xl border backdrop-blur-xs transition-colors cursor-pointer ${
+                isPublic
+                  ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-surface-subtle/80 border-border/60 text-text-tertiary'
+              }`}
+            >
+              {isPublic ? <Globe size={13} /> : <Lock size={13} />}
+            </button>
+          )}
+
+          {onRequestDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onRequestDelete(deck)
+              }}
+              disabled={isDeleting}
+              title="Xóa bộ thẻ"
+              className="p-1.5 rounded-xl border border-border/60 bg-surface-subtle/80 text-text-tertiary hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-800 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isDeleting ? <Loader2 size={13} className="animate-spin text-rose-600" /> : <Trash2 size={13} />}
+            </button>
+          )}
+        </div>
+
+        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface-subtle/80 px-2 py-0.5 text-[10px] font-bold text-text-secondary backdrop-blur-xs">
+          <Sparkles size={10} className="text-amber-500" />
+          <span>{cardCount} {isVietnamese ? 'thẻ từ' : 'cards'}</span>
+        </span>
+      </div>
+
+      <div className="relative z-10 space-y-1.5 pt-16 pr-16 pl-4 sm:pt-17 sm:pr-20 sm:pl-4.5">
+        <h3 className="line-clamp-2 text-sm font-black leading-snug text-text-primary transition-colors duration-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 sm:text-[15px]">
+          {title}
+        </h3>
+        <p className="line-clamp-2 text-[11px] leading-relaxed text-text-tertiary">
+          {description}
+        </p>
+      </div>
+
+      <svg
+        className="pointer-events-none absolute right-0 bottom-0 z-10 h-[125px] w-[80%]"
+        viewBox="0 0 300 120"
+        preserveAspectRatio="none"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M 0 120 C 35 120 45 75 90 48 C 135 22 185 0 300 0 L 300 120 Z"
+          className="fill-[#0c192c] dark:fill-[#07111e]"
+        />
+      </svg>
+
+      <div className="absolute right-3.5 bottom-9 z-20 flex max-w-[70%] items-center justify-end gap-2.5">
+        <div className="space-y-0.5 text-right text-[10px] font-semibold leading-tight text-slate-200/95 sm:text-[11px]">
+          <div className="flex items-center justify-end gap-1.5">
+            <span>{cardCount} từ vựng</span>
           </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            {isOwnDeck ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggleVisibility(deck)
-                }}
-                title={
-                  isVietnamese
-                    ? isPublic
-                      ? 'Đang Công khai - Bấm để chuyển sang Riêng tư'
-                      : 'Đang Riêng tư - Bấm để chuyển sang Công khai'
-                    : 'Toggle Public / Private'
-                }
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl text-[10px] font-black backdrop-blur-md transition shadow-xs border ${
-                  isPublic
-                    ? 'bg-emerald-600/90 text-white hover:bg-emerald-600 border-white/30'
-                    : 'bg-black/45 text-white hover:bg-black/60 border-white/20'
-                }`}
-              >
-                {isPublic ? <Globe size={11} /> : <Lock size={11} />}
-                <span>
-                  {isPublic
-                    ? isVietnamese
-                      ? 'Công khai'
-                      : 'Public'
-                    : isVietnamese
-                    ? 'Riêng tư'
-                    : 'Private'}
-                </span>
-              </button>
-            ) : isSystemDeck ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-black/35 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 shadow-xs">
-                <GraduationCap size={11} className="text-amber-300" />
-                <span>{isVietnamese ? 'Hệ thống' : 'Official'}</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl bg-sky-600/80 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 shadow-xs">
-                <Users size={11} className="text-sky-200" />
-                <span>{isVietnamese ? 'Cộng đồng' : 'Community'}</span>
-              </span>
-            )}
+          <div className="flex items-center justify-end gap-1.5">
+            <span>Tiến độ: {progressPercent}%</span>
+          </div>
+          <div className="flex items-center justify-end gap-1.5">
+            <span>Chu kỳ Spaced SRS</span>
+          </div>
+          <div className="flex items-center justify-end gap-1.5 text-emerald-400 font-bold">
+            <span>{progressPercent >= 100 ? (isVietnamese ? 'Đã hoàn thành' : 'Mastered') : (isVietnamese ? 'Đang rèn luyện' : 'In Progress')}</span>
           </div>
         </div>
 
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-md flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-110">
-            <Layers3 className="w-5 h-5 stroke-[2.2] drop-shadow-sm" />
-          </div>
-
-          <div className="px-2 py-0.5 rounded-lg bg-black/40 backdrop-blur-md text-white/95 text-[10px] font-bold border border-white/15 flex items-center gap-1">
-            <BookOpen size={10} className="text-emerald-300" />
-            <span>{cardCount} {isVietnamese ? 'từ vựng' : 'words'}</span>
-          </div>
+        <div className="my-auto flex w-7 shrink-0 flex-col items-center justify-between gap-1.5 rounded-full bg-white py-2 shadow-md transition-all duration-300 group-hover:shadow-emerald-500/25 sm:w-7.5 dark:bg-slate-100">
+          <Layers3 size={11} className="text-slate-900" />
+          <BookOpen size={11} className="text-slate-900" />
+          <Sparkles size={11} className="text-slate-900" />
+          <Play size={11} className="fill-emerald-600 text-emerald-600 transition-transform duration-200 group-hover:scale-115" />
         </div>
       </div>
 
-      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
-        <div className="space-y-2">
-          <div>
-            {isSystemDeck ? (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-2.5 py-0.5 text-[11px] font-extrabold text-primary border border-primary/20">
-                <Sparkles size={11} className="text-amber-500" />
-                <span>{isVietnamese ? 'Bộ thẻ TOEIC chuẩn hóa' : 'Standard TOEIC Pack'}</span>
-              </span>
-            ) : isOwnDeck ? (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                <span>👑</span>
-                <span>{isVietnamese ? 'Bộ thẻ do bạn tạo' : 'Created by you'}</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500/10 px-2.5 py-0.5 text-[11px] font-extrabold text-sky-600 dark:text-sky-400 border border-sky-500/20">
-                <Users size={11} />
-                <span className="line-clamp-1">
-                  {isVietnamese ? 'Tác giả: ' : 'By: '}
-                  {deck.creator_name ||
-                    deck.author ||
-                    (isVietnamese ? 'Học viên chia sẻ' : 'Community Learner')}
-                </span>
-              </span>
-            )}
-          </div>
+      <div className="absolute bottom-2 left-4 z-10">
+        <span className="font-mono text-[10px] font-bold text-text-tertiary">
+          {deckCode}
+        </span>
+      </div>
 
-          <h4 className="text-[15px] sm:text-base font-black text-text-primary tracking-tight group-hover:text-primary transition-colors line-clamp-1 leading-snug">
-            {title}
-          </h4>
-
-          <p className="text-[12px] text-text-secondary leading-relaxed line-clamp-2 min-h-[34px]">
-            {description}
-          </p>
-        </div>
-
-        <div className="space-y-3 pt-1">
-          {progressPercent > 0 ? (
-            <div className="space-y-1.5 p-2.5 rounded-2xl bg-surface-subtle/70 border border-border/60">
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-text-secondary">
-                  <CheckCircle2 size={12} className="text-emerald-500" />
-                  <span>{isVietnamese ? 'Tiến độ học' : 'Study Progress'}</span>
-                </span>
-                <span className="font-black text-emerald-600 dark:text-emerald-400 text-xs">
-                  {progressPercent}%
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-surface-subtle border border-border/40">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-700"
-                  style={{ width: `${Math.max(5, progressPercent)}%` }}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 flex-wrap text-[10px]">
-              <span className="px-2 py-0.5 rounded-lg bg-surface-subtle text-text-tertiary font-bold flex items-center gap-1">
-                <Sparkles size={10} className="text-amber-500" />
-                <span>Ghi nhớ SRS</span>
-              </span>
-              <span className="px-2 py-0.5 rounded-lg bg-surface-subtle text-text-tertiary font-bold flex items-center gap-1">
-                <span>Sẵn sàng rèn luyện</span>
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between border-t border-border/60 pt-2.5 text-xs text-text-secondary">
-            <span className="flex items-center gap-1.5 font-bold text-text-primary text-xs">
-              <Layers3 size={13} className="text-primary" />
-              <span>{cardCount} {isVietnamese ? 'từ' : 'words'}</span>
-            </span>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                title={isVietnamese ? 'Sao chép liên kết bộ thẻ' : 'Copy share link'}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onCopyShareLink(deck)
-                }}
-                className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary transition-all hover:bg-surface-subtle hover:text-primary hover:border-primary/50 cursor-pointer"
-              >
-                <Share2 size={13} />
-              </button>
-
-              <button
-                type="button"
-                disabled={isDeleting}
-                title={
-                  isOwnDeck
-                    ? isVietnamese
-                      ? 'Xóa bộ thẻ'
-                      : 'Delete Deck'
-                    : isVietnamese
-                    ? 'Xóa khỏi Bộ thẻ của tôi'
-                    : 'Remove from My Decks'
-                }
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRequestDelete(deck)
-                }}
-                className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary transition-all hover:bg-rose-500/10 hover:text-rose-600 hover:border-rose-500/40 disabled:opacity-50 cursor-pointer"
-              >
-                <Trash2 size={13} />
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDeckClick(deck)
-                }}
-                className={`px-3.5 py-1.5 rounded-xl font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
-                  progressPercent > 0
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-600 text-white'
-                    : 'bg-primary hover:bg-primary-hover text-white'
-                }`}
-              >
-                <Play size={11} className="fill-white" />
-                <span>
-                  {progressPercent > 0
-                    ? isVietnamese
-                      ? 'Học tiếp'
-                      : 'Continue'
-                    : isVietnamese
-                    ? 'Luyện tập'
-                    : 'Practice'}
-                </span>
-              </button>
-            </div>
-          </div>
+      <div className="absolute right-0 bottom-0 left-[20%] z-30 flex h-7 items-center justify-between rounded-tl-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 px-3.5 shadow-xs">
+        <div className="flex w-full items-center justify-between text-[10px] font-black uppercase tracking-wider text-white sm:text-[11px]">
+          <span className="truncate max-w-[90px]">{isVietnamese ? `TIẾN ĐỘ ${progressPercent}%` : `PROGRESS ${progressPercent}%`}</span>
+          <span className="text-emerald-100/60">|</span>
+          <span>{isPublic ? (isVietnamese ? 'CÔNG KHAI' : 'PUBLIC') : (isVietnamese ? 'RIÊNG TƯ' : 'PRIVATE')}</span>
+          <span className="text-emerald-100/60">|</span>
+          <span className="flex items-center gap-1 font-black shrink-0">
+            <span>{isVietnamese ? 'HỌC TIẾP' : 'STUDY'}</span>
+            <ArrowRight size={11} className="transition-transform duration-200 group-hover:translate-x-1" />
+          </span>
         </div>
       </div>
     </div>

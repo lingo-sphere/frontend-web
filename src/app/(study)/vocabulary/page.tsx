@@ -758,7 +758,7 @@ export default function VocabularyAppPage() {
           </div>
 
           {myDecks.length > 0 ? (
-            <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {myDecks.map((deck: Deck, idx) => (
                 <VocabularyMyDeckCard
                   key={deck._id || idx}
@@ -1136,7 +1136,7 @@ export default function VocabularyAppPage() {
             </div>
           ) : filteredPacks.length > 0 ? (
             <>
-              <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {paginatedPacks.map((pack: Deck, idx) => {
                   const packTopic = pack.topic_id
                     ? topicMap.get(String(pack.topic_id))

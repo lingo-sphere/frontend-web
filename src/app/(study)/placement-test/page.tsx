@@ -60,7 +60,7 @@ export default function PlacementTestPage() {
 
   return (
     <>
-      <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 max-w-7xl mx-auto space-y-6">
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
         <SectionHeading
           eyebrow={isVietnamese ? 'ĐÁNH GIÁ NĂNG LỰC ĐẦU VÀO' : 'PLACEMENT TEST'}
           title={

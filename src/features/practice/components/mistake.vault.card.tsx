@@ -32,71 +32,6 @@ interface MistakeVaultCardProps {
   isDeleting?: boolean
 }
 
-function MiniQrCode({ className = 'w-7 h-7 text-slate-900 dark:text-slate-100' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 42 42" fill="currentColor" className={className} aria-hidden="true">
-      <rect x="2" y="2" width="12" height="12" rx="2.5" />
-      <rect x="4.5" y="4.5" width="7" height="7" rx="1" fill="white" className="dark:fill-slate-900" />
-      <rect x="6.5" y="6.5" width="3" height="3" rx="0.5" />
-
-      <rect x="28" y="2" width="12" height="12" rx="2.5" />
-      <rect x="30.5" y="4.5" width="7" height="7" rx="1" fill="white" className="dark:fill-slate-900" />
-      <rect x="32.5" y="6.5" width="3" height="3" rx="0.5" />
-
-      <rect x="2" y="28" width="12" height="12" rx="2.5" />
-      <rect x="4.5" y="30.5" width="7" height="7" rx="1" fill="white" className="dark:fill-slate-900" />
-      <rect x="6.5" y="32.5" width="3" height="3" rx="0.5" />
-
-      <rect x="17" y="3" width="2" height="2" rx="0.3" />
-      <rect x="21" y="3" width="2" height="2" rx="0.3" />
-      <rect x="19" y="7" width="2" height="2" rx="0.3" />
-      <rect x="23" y="7" width="2" height="2" rx="0.3" />
-      <rect x="17" y="11" width="3" height="2" rx="0.3" />
-      <rect x="22" y="11" width="3" height="2" rx="0.3" />
-
-      <rect x="3" y="17" width="2" height="2" rx="0.3" />
-      <rect x="7" y="17" width="2" height="2" rx="0.3" />
-      <rect x="11" y="17" width="2" height="2" rx="0.3" />
-      <rect x="17" y="17" width="2" height="2" rx="0.3" />
-      <rect x="21" y="17" width="2" height="2" rx="0.3" />
-      <rect x="25" y="17" width="2" height="2" rx="0.3" />
-      <rect x="29" y="17" width="2" height="2" rx="0.3" />
-      <rect x="33" y="17" width="2" height="2" rx="0.3" />
-      <rect x="37" y="17" width="2" height="2" rx="0.3" />
-
-      <rect x="17" y="21" width="4" height="2" rx="0.3" />
-      <rect x="23" y="21" width="2" height="2" rx="0.3" />
-      <rect x="27" y="21" width="3" height="2" rx="0.3" />
-      <rect x="32" y="21" width="2" height="2" rx="0.3" />
-      <rect x="36" y="21" width="3" height="2" rx="0.3" />
-
-      <rect x="17" y="25" width="2" height="2" rx="0.3" />
-      <rect x="21" y="25" width="3" height="2" rx="0.3" />
-      <rect x="26" y="25" width="2" height="2" rx="0.3" />
-      <rect x="30" y="25" width="3" height="2" rx="0.3" />
-      <rect x="35" y="25" width="2" height="2" rx="0.3" />
-
-      <rect x="17" y="29" width="3" height="2" rx="0.3" />
-      <rect x="22" y="29" width="2" height="2" rx="0.3" />
-      <rect x="26" y="29" width="3" height="2" rx="0.3" />
-      <rect x="31" y="29" width="2" height="2" rx="0.3" />
-      <rect x="35" y="29" width="3" height="2" rx="0.3" />
-
-      <rect x="17" y="33" width="2" height="2" rx="0.3" />
-      <rect x="21" y="33" width="3" height="2" rx="0.3" />
-      <rect x="26" y="33" width="2" height="2" rx="0.3" />
-      <rect x="30" y="33" width="3" height="2" rx="0.3" />
-      <rect x="35" y="33" width="4" height="2" rx="0.3" />
-
-      <rect x="17" y="37" width="3" height="2" rx="0.3" />
-      <rect x="22" y="37" width="3" height="2" rx="0.3" />
-      <rect x="27" y="37" width="2" height="2" rx="0.3" />
-      <rect x="31" y="37" width="3" height="2" rx="0.3" />
-      <rect x="36" y="37" width="3" height="2" rx="0.3" />
-    </svg>
-  )
-}
-
 function isMatchingAnswer(opt: string, optIndex: number, targetAnswer: string): boolean {
   if (!targetAnswer) return false
   const trimmedTarget = targetAnswer.trim()
@@ -274,11 +209,8 @@ export function MistakeVaultCard({
               </span>
             </div>
 
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="p-0.5 rounded-md bg-surface border border-border/60 shadow-2xs">
-                <MiniQrCode className="h-6 w-6 text-slate-900 dark:text-slate-100" />
-              </div>
-              <span className="text-[7px] font-mono font-bold text-text-tertiary uppercase">
+            <div className="flex items-center justify-center rounded-md bg-surface border border-border/60 px-1.5 py-0.5 shadow-2xs">
+              <span className="text-[7.5px] font-mono font-bold text-text-tertiary uppercase">
                 #{mistake._id.slice(-4).toUpperCase()}
               </span>
             </div>
