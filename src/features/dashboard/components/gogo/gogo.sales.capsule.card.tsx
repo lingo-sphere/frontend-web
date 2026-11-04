@@ -86,7 +86,7 @@ export function GogoSalesCapsuleCard({ dailyBreakdown = [] }: GogoSalesCapsuleCa
             const hasData = d.totalValue > 0
             const totalPercent = hasData
               ? Math.min(100, Math.max(16, Math.round((d.totalValue / (yTicks[0] || 1)) * 100)))
-              : 8
+              : 0
             const correctPercent = d.totalValue > 0
               ? Math.round((d.correctValue / d.totalValue) * 100)
               : 0
@@ -108,31 +108,31 @@ export function GogoSalesCapsuleCard({ dailyBreakdown = [] }: GogoSalesCapsuleCa
                   </div>
                 )}
 
-                <div
-                  className="w-5 sm:w-7 flex flex-col justify-end gap-0.5 transition-all duration-300"
-                  style={{ height: `${totalPercent}%` }}
-                >
-                  {hasData ? (
-                    <>
-                      {d.incorrectValue > 0 && (
-                        <div
-                          className={`w-full rounded-t-full border border-teal-500/50 bg-teal-500/25 transition-all ${
-                            isHovered ? 'bg-teal-500/40' : ''
-                          }`}
-                          style={{ height: `${100 - correctPercent}%` }}
-                        />
-                      )}
+                {hasData ? (
+                  <div
+                    className="w-5 sm:w-7 flex flex-col justify-end gap-0.5 transition-all duration-300"
+                    style={{ height: `${totalPercent}%` }}
+                  >
+                    {d.incorrectValue > 0 && (
                       <div
-                        className={`w-full ${d.incorrectValue > 0 ? 'rounded-b-full' : 'rounded-full'} border border-emerald-500 bg-emerald-500/80 transition-all ${
-                          isHovered ? 'brightness-110' : ''
+                        className={`w-full rounded-t-full border border-teal-500/50 bg-teal-500/25 transition-all ${
+                          isHovered ? 'bg-teal-500/40' : ''
                         }`}
-                        style={{ height: `${d.incorrectValue > 0 ? correctPercent : 100}%` }}
+                        style={{ height: `${100 - correctPercent}%` }}
                       />
-                    </>
-                  ) : (
-                    <div className="w-full h-2 rounded-full bg-surface-subtle border border-border/80" />
-                  )}
-                </div>
+                    )}
+                    <div
+                      className={`w-full ${d.incorrectValue > 0 ? 'rounded-b-full' : 'rounded-full'} border border-emerald-500 bg-emerald-500/80 transition-all ${
+                        isHovered ? 'brightness-110' : ''
+                      }`}
+                      style={{ height: `${d.incorrectValue > 0 ? correctPercent : 100}%` }}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-5 sm:w-7 h-16 rounded-2xl bg-surface-subtle/30 border border-dashed border-border/50 flex items-center justify-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-border" />
+                  </div>
+                )}
 
                 <span
                   className={`mt-2 text-[11px] font-bold transition-colors ${

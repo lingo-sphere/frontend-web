@@ -1,10 +1,11 @@
-// Trang chủ tổng quan phân tích học tập toàn diện kết hợp chỉ số phong độ, kỹ năng và từ vựng SRS.
+// Trang chủ tổng quan phân tích học tập toàn diện với biểu đồ tăng trưởng, phong độ và kỹ năng học viên.
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { useProgressData } from '@/features/progress/hooks/use.progress.data'
+import { useProgressGrowthAnalytics } from '@/features/progress/hooks/use.progress.growth.analytics'
 import {
   useSkillsSummaryQuery,
   useWeaknessesQuery,
@@ -13,6 +14,7 @@ import {
 import { useVocabularyDashboard } from '@/features/vocabulary/hooks/use.vocabulary.dashboard'
 import { GogoWelcomeHero } from '@/features/dashboard/components/gogo/gogo.welcome.hero'
 import { GogoStatsGrid } from '@/features/dashboard/components/gogo/gogo.stats.grid'
+import { GogoGrowthChartCard } from '@/features/dashboard/components/gogo/gogo.growth.chart.card'
 import { GogoRollingPerformanceCard } from '@/features/dashboard/components/gogo/gogo.rolling.performance.card'
 import { GogoGrowthVelocityCard } from '@/features/dashboard/components/gogo/gogo.growth.velocity.card'
 import { GogoDailyPracticeCard } from '@/features/dashboard/components/gogo/gogo.daily.practice.card'
@@ -39,6 +41,9 @@ export default function HomeAppPage() {
     speakingScore,
     writingScore,
     toeicAttempts,
+    testAttempts,
+    coursesMap,
+    placementSkillsType,
   } = useProgressData(navigate)
 
   const userId = activeUser?.user_id
@@ -50,6 +55,21 @@ export default function HomeAppPage() {
   const skillsSummary = skillsSummaryRes || null
   const allWeaknesses = allWeaknessesRes || []
   const practiceDashboard = practiceDashboardRes || null
+
+  const baselineScore = Number(activeUser?.placement_test_score) || (listeningScore + readingScore)
+
+  const growthAnalytics = useProgressGrowthAnalytics({
+    enrolledCourseCards,
+    testAttempts,
+    toeicAttempts,
+    coursesMap,
+    baselineScore,
+    listeningScore,
+    readingScore,
+    speakingScore,
+    writingScore,
+    placementSkillsType,
+  })
 
   if (isLoading) {
     return (
@@ -84,6 +104,28 @@ export default function HomeAppPage() {
         readingScore={readingScore}
         speakingScore={speakingScore}
         writingScore={writingScore}
+      />
+
+      <GogoGrowthChartCard
+        data2K={growthAnalytics.chapter2SkillsPoints}
+        stats2K={{
+          latestScore: growthAnalytics.latestChapter2SkillsScore,
+          avgScore: growthAnalytics.avgChapter2SkillsScore,
+          passed: growthAnalytics.passRateChapter2Skills >= 70,
+        }}
+        data4K={growthAnalytics.chapter4SkillsPoints}
+        stats4K={{
+          latestScore: growthAnalytics.latestChapter4SkillsScore,
+          avgScore: growthAnalytics.avgChapter4SkillsScore,
+          passed: growthAnalytics.passRateChapter4Skills >= 70,
+        }}
+        toeicData={growthAnalytics.toeicTimelinePoints}
+        toeicStats={{
+          latestScore: growthAnalytics.latestToeicScore,
+          avgScore: growthAnalytics.peakToeicScore,
+          passed: true,
+        }}
+        toeicSeries={growthAnalytics.toeicChartSeries}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">

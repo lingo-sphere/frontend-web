@@ -13,16 +13,18 @@ interface GogoConfigurationCardProps {
 }
 
 export function GogoConfigurationCard({
-  targetScore = 650,
+  targetScore = 0,
   currentStreak = 0,
   xp = 0,
   onPractice,
   onVocab,
 }: GogoConfigurationCardProps) {
+  const targetLabel = targetScore > 0 ? `mục tiêu ${targetScore} điểm TOEIC` : 'mục tiêu đề ra'
+
   return (
     <div className="space-y-3 h-full flex flex-col">
       <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-        Configuration
+        Lộ Trình & Mục Tiêu
       </h2>
       <div className="rounded-3xl bg-surface border border-border p-6 sm:p-8 shadow-xs flex-1 flex flex-col items-center justify-between text-center">
         <div className="w-full flex items-center justify-center py-4">
@@ -59,7 +61,7 @@ export function GogoConfigurationCard({
             Lộ Trình Cá Nhân Hóa
           </h3>
           <p className="text-xs text-text-secondary leading-relaxed">
-            Bám sát mục tiêu {targetScore} điểm TOEIC. Duy trì chuỗi {currentStreak} ngày học liên tiếp để bứt phá năng lực!
+            Bám sát {targetLabel}. Duy trì chuỗi {currentStreak} ngày học liên tiếp để bứt phá năng lực!
           </p>
           <div className="flex items-center justify-center gap-2 pt-1 text-xs text-emerald-700 dark:text-emerald-300 font-semibold">
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -89,4 +91,3 @@ export function GogoConfigurationCard({
     </div>
   )
 }
-

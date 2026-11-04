@@ -1,8 +1,8 @@
-// Component hiển thị tốc độ tăng trưởng nhịp học và biểu đồ thanh hoạt động 7 ngày gần nhất.
+// Component biểu đồ cột phân tích tốc độ tăng trưởng và nhịp độ luyện tập 7 ngày gần nhất của học viên.
 'use client'
 
-import React from 'react'
-import { ArrowRight, HelpCircle } from 'lucide-react'
+import React, { useState } from 'react'
+import { ArrowRight, HelpCircle, Activity, Clock, Award, CheckCircle2 } from 'lucide-react'
 import type { TimeGrowth, ActivityOverview } from '@/features/progress/services/progress.service'
 
 interface GogoGrowthVelocityCardProps {
@@ -16,6 +16,8 @@ export function GogoGrowthVelocityCard({
   activityOverview,
   onViewDetails,
 }: GogoGrowthVelocityCardProps) {
+  const [hoveredDayIdx, setHoveredDayIdx] = useState<number | null>(null)
+
   const thisWeekTotal = timeGrowth?.this_week_total ?? activityOverview?.this_week_questions ?? 0
   const activityGrowthPct = timeGrowth?.activity_growth_pct ?? 0
   const studyVelocity = timeGrowth?.study_velocity ?? 0
@@ -23,6 +25,7 @@ export function GogoGrowthVelocityCard({
   const trendLabel = timeGrowth?.trend_label || (deltaAccuracy > 0 ? 'Tăng trưởng tốt' : deltaAccuracy < 0 ? 'Nhịp học chững lại' : 'Nhịp học ổn định')
 
   const dailyBreakdown = timeGrowth?.daily_breakdown_7d || []
+  const maxDayQuestions = Math.max(20, ...dailyBreakdown.map((d) => d.questions_attempted || d.attempts || 0))
 
   const totalTimeFormatted = activityOverview?.this_week_time_formatted || '0m'
   const totalExercises = activityOverview?.this_week_exercises ?? 0
@@ -60,142 +63,137 @@ export function GogoGrowthVelocityCard({
       </div>
 
       <div className="rounded-3xl bg-surface border border-border p-5 sm:p-6 shadow-xs flex-1 flex flex-col justify-between space-y-4">
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          <div className="p-3 rounded-2xl border border-border/80 bg-surface-subtle/50 text-center">
-            <span className="text-[10px] text-text-tertiary block font-semibold uppercase tracking-wider">
-              Luyện 7 ngày qua
+        <div className="flex items-center justify-between flex-wrap gap-2 pb-1 border-b border-border/60">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-xl bg-primary/10 text-primary">
+              <Activity className="w-4 h-4" />
             </span>
-            <div className="flex items-baseline justify-center gap-1 mt-0.5">
-              <span className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
-                {thisWeekTotal}
+            <div>
+              <div className="text-sm font-extrabold text-text-primary">
+                {thisWeekTotal} câu / 7 ngày
+              </div>
+              <span className="text-[10px] text-text-tertiary">
+                Nhịp học: {studyVelocity} lượt/ngày
               </span>
-              <span className="text-[11px] text-text-tertiary">lượt</span>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs">
             <span
-              className={`text-[10px] font-bold block mt-0.5 ${
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border ${
                 activityGrowthPct > 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                   : activityGrowthPct < 0
-                  ? 'text-rose-600 dark:text-rose-400'
-                  : 'text-text-tertiary'
+                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                  : 'bg-surface-subtle text-text-tertiary border-border'
               }`}
             >
-              {activityGrowthPct > 0 ? `+${activityGrowthPct}%` : `${activityGrowthPct}%`}
+              {activityGrowthPct > 0 ? `+${activityGrowthPct}% số lượt` : `${activityGrowthPct}% số lượt`}
             </span>
-          </div>
-
-          <div className="p-3 rounded-2xl border border-border/80 bg-surface-subtle/50 text-center">
-            <span className="text-[10px] text-text-tertiary block font-semibold uppercase tracking-wider">
-              Nhịp độ học tập
-            </span>
-            <div className="flex items-baseline justify-center gap-1 mt-0.5">
-              <span className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
-                {studyVelocity}
-              </span>
-            </div>
-            <span className="text-[10px] text-text-secondary block mt-0.5">
-              lượt / ngày
-            </span>
-          </div>
-
-          <div className="p-3 rounded-2xl border border-border/80 bg-surface-subtle/50 text-center">
-            <span className="text-[10px] text-text-tertiary block font-semibold uppercase tracking-wider">
-              Δ Độ chính xác
-            </span>
-            <div className="flex items-baseline justify-center gap-1 mt-0.5">
-              <span
-                className={`text-xl sm:text-2xl font-black tracking-tight ${
-                  deltaAccuracy > 0
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : deltaAccuracy < 0
-                    ? 'text-rose-600 dark:text-rose-400'
-                    : 'text-text-secondary'
-                }`}
-              >
-                {deltaAccuracy > 0 ? `+${deltaAccuracy}%` : `${deltaAccuracy}%`}
-              </span>
-            </div>
-            <span className="text-[10px] text-text-secondary block mt-0.5">
-              so với 7 ngày trước
+            <span
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border ${
+                deltaAccuracy > 0
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                  : deltaAccuracy < 0
+                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                  : 'bg-surface-subtle text-text-tertiary border-border'
+              }`}
+            >
+              {deltaAccuracy > 0 ? `+${deltaAccuracy}% chính xác` : `${deltaAccuracy}% chính xác`}
             </span>
           </div>
         </div>
 
-        {dailyBreakdown.length > 0 ? (
-          <div className="space-y-3 p-3.5 rounded-2xl bg-surface-subtle/40 border border-border/70">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-text-tertiary font-medium">
-                Nhịp độ luyện tập 7 ngày qua:
+        <div className="relative pt-4 pb-1">
+          <div className="flex items-center justify-between text-[11px] text-text-tertiary mb-3">
+            <span>Biểu đồ cột tần suất câu hỏi 7 ngày:</span>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                Đạt chuẩn ≥70%
               </span>
-              <span className="text-[11px] text-text-tertiary font-medium">
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1" />
-                Đạt độ chính xác ≥ 70%
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-500/60" />
+                Luyện tập
               </span>
             </div>
+          </div>
 
-            <div className="grid grid-cols-7 gap-2">
-              {dailyBreakdown.slice(-7).map((d) => {
-                const questions = d.questions_attempted || d.attempts || 0
-                const acc = d.accuracy || 0
-                const isHighAcc = acc >= 70 && questions > 0
-                const hasActivity = questions > 0
+          <div className="h-36 flex items-end justify-between gap-2 sm:gap-4 pt-2 border-b border-border/80 pb-2">
+            {dailyBreakdown.slice(-7).map((d, idx) => {
+              const questions = d.questions_attempted || d.attempts || 0
+              const acc = d.accuracy || 0
+              const heightPct = Math.max(8, Math.round((questions / maxDayQuestions) * 100))
+              const isHighAcc = acc >= 70 && questions > 0
+              const isHovered = hoveredDayIdx === idx
 
-                return (
-                  <div key={d.date} className="flex flex-col items-center gap-1.5 text-center group cursor-pointer">
-                    <span className="text-[11px] font-semibold text-text-tertiary group-hover:text-text-primary transition-colors">
-                      {d.day_name || d.date.slice(5)}
-                    </span>
-                    <div className="w-full h-1.5 rounded-full bg-surface border border-border overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          !hasActivity
-                            ? 'bg-transparent'
-                            : isHighAcc
-                            ? 'bg-emerald-500'
-                            : 'bg-amber-400 dark:bg-amber-500'
-                        }`}
-                        style={{ width: hasActivity ? '100%' : '0%' }}
-                      />
+              return (
+                <div
+                  key={d.date}
+                  className="flex-1 flex flex-col items-center justify-end h-full relative cursor-pointer group"
+                  onMouseEnter={() => setHoveredDayIdx(idx)}
+                  onMouseLeave={() => setHoveredDayIdx(null)}
+                >
+                  {isHovered && (
+                    <div className="absolute -top-12 z-20 px-2.5 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-semibold whitespace-nowrap shadow-md pointer-events-none text-center">
+                      <div>{d.day_name || d.date}: {questions} câu</div>
+                      <div className="text-[10px] text-emerald-300">
+                        {acc}% chính xác • {d.time_spent_formatted || '0m'}
+                      </div>
                     </div>
-                    <span className="text-[10px] text-text-tertiary font-medium group-hover:text-text-secondary">
-                      {questions > 0 ? `${questions}` : '-'}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 rounded-2xl bg-surface-subtle/30 border border-border/60 text-center text-xs text-text-tertiary flex flex-col items-center justify-center gap-1 py-4">
-            <HelpCircle className="w-4 h-4 text-text-tertiary" />
-            <p>Chưa có dữ liệu nhịp độ luyện tập trong 7 ngày qua.</p>
-          </div>
-        )}
+                  )}
 
-        <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border/60 text-center">
-          <div className="space-y-0.5">
-            <span className="text-[10px] text-text-tertiary block font-medium">
+                  <div
+                    className={`w-full max-w-[36px] rounded-t-xl transition-all duration-300 ${
+                      questions === 0
+                        ? 'bg-surface-subtle border border-border/80'
+                        : isHighAcc
+                        ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-2xs'
+                        : 'bg-gradient-to-t from-sky-600 to-sky-400 shadow-2xs'
+                    } ${isHovered ? 'brightness-110 scale-x-105' : ''}`}
+                    style={{ height: `${heightPct}%` }}
+                  />
+
+                  <span
+                    className={`mt-2 text-[11px] font-bold transition-colors ${
+                      isHovered ? 'text-primary' : 'text-text-tertiary'
+                    }`}
+                  >
+                    {d.day_name || d.date.slice(5)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 pt-2 text-center">
+          <div className="p-2.5 rounded-2xl border border-border/60 bg-surface-subtle/40 flex flex-col items-center gap-1">
+            <span className="text-[10px] text-text-tertiary font-semibold uppercase tracking-wider flex items-center gap-1">
+              <Clock className="w-3 h-3 text-text-tertiary" />
               Thời gian học
             </span>
-            <span className="text-sm font-bold text-text-primary">
+            <span className="text-sm font-extrabold text-text-primary">
               {totalTimeFormatted}
             </span>
           </div>
 
-          <div className="space-y-0.5">
-            <span className="text-[10px] text-text-tertiary block font-medium">
-              Bài tập đã làm
+          <div className="p-2.5 rounded-2xl border border-border/60 bg-surface-subtle/40 flex flex-col items-center gap-1">
+            <span className="text-[10px] text-text-tertiary font-semibold uppercase tracking-wider flex items-center gap-1">
+              <Award className="w-3 h-3 text-text-tertiary" />
+              Bài hoàn thành
             </span>
-            <span className="text-sm font-bold text-text-primary">
+            <span className="text-sm font-extrabold text-text-primary">
               {totalExercises} bài
             </span>
           </div>
 
-          <div className="space-y-0.5">
-            <span className="text-[10px] text-text-tertiary block font-medium">
+          <div className="p-2.5 rounded-2xl border border-border/60 bg-surface-subtle/40 flex flex-col items-center gap-1">
+            <span className="text-[10px] text-text-tertiary font-semibold uppercase tracking-wider flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-text-tertiary" />
               Tỉ lệ chính xác
             </span>
-            <span className="text-sm font-bold text-text-primary">
+            <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
               {accuracyRate > 0 ? `${accuracyRate}%` : '0%'}
             </span>
           </div>
@@ -204,4 +202,3 @@ export function GogoGrowthVelocityCard({
     </div>
   )
 }
-
