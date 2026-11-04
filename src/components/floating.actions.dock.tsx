@@ -14,7 +14,6 @@ export function FloatingActionsDock() {
 
   const dragStartYRef = useRef(0)
   const dragStartBottomRef = useRef(24)
-  const hasDraggedRef = useRef(false)
   const dockRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -35,7 +34,6 @@ export function FloatingActionsDock() {
     if (e.button !== 0) return
     dragStartYRef.current = e.clientY
     dragStartBottomRef.current = bottomPx
-    hasDraggedRef.current = false
     setIsDragging(true)
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
@@ -45,16 +43,11 @@ export function FloatingActionsDock() {
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging) return
     const deltaY = dragStartYRef.current - e.clientY
-    if (Math.abs(deltaY) > 5) {
-      hasDraggedRef.current = true
-    }
-    if (hasDraggedRef.current) {
-      const dockHeight = dockRef.current?.offsetHeight || 180
-      const minBottom = 20
-      const maxBottom = Math.max(minBottom, window.innerHeight - dockHeight - 76)
-      const nextBottom = Math.max(minBottom, Math.min(maxBottom, dragStartBottomRef.current + deltaY))
-      setBottomPx(nextBottom)
-    }
+    const dockHeight = dockRef.current?.offsetHeight || 180
+    const minBottom = 20
+    const maxBottom = Math.max(minBottom, window.innerHeight - dockHeight - 76)
+    const nextBottom = Math.max(minBottom, Math.min(maxBottom, dragStartBottomRef.current + deltaY))
+    setBottomPx(nextBottom)
   }
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -65,31 +58,22 @@ export function FloatingActionsDock() {
     } catch {}
   }
 
-  const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (hasDraggedRef.current) {
-      e.preventDefault()
-      e.stopPropagation()
-      hasDraggedRef.current = false
-    }
-  }
-
   return (
     <div
       ref={dockRef}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      onClickCapture={handleClickCapture}
       style={{ bottom: `${bottomPx}px` }}
-      className={`fixed right-6 z-50 flex flex-col items-center gap-2.5 touch-none select-none ${
-        isDragging ? 'cursor-grabbing transition-none' : 'transition-[bottom] duration-200 ease-out'
+      className={`fixed right-6 z-50 flex flex-col items-center gap-2.5 ${
+        isDragging ? 'transition-none select-none' : 'transition-[bottom] duration-200 ease-out'
       }`}
     >
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className="flex h-5 w-8 items-center justify-center rounded-full border border-border/80 bg-surface/90 text-text-tertiary shadow-xs backdrop-blur-md transition-all hover:border-emerald-500/50 hover:text-emerald-600 dark:bg-card/90 dark:hover:text-emerald-400 cursor-grab active:cursor-grabbing"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            className="flex h-5.5 w-9 items-center justify-center rounded-full border border-border/80 bg-surface/95 text-text-tertiary shadow-sm backdrop-blur-md transition-all hover:border-emerald-500/50 hover:text-emerald-600 hover:shadow-md dark:bg-card/95 dark:hover:text-emerald-400 cursor-grab active:cursor-grabbing touch-none select-none"
             aria-label="Kéo thả để chỉnh vị trí hiển thị"
           >
             <GripHorizontal className="h-3.5 w-3.5 stroke-[2.2]" />

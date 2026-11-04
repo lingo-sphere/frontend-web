@@ -16,6 +16,7 @@ import { ListeningContextFilter } from "@/features/practice/components/listening
 import { LISTENING_SUBTYPES, readListeningCatalog, listeningCatalogParams, type ListeningCatalogState } from "@/features/practice/utils/listening.catalog";
 import { ListeningPracticeWorkspace } from "@/features/practice/components/listening.practice.workspace";
 import { ListeningPart1Card } from "@/features/practice/components/listening.part1.card";
+import { ListeningPracticeCard } from "@/features/practice/components/listening.practice.card";
 import { listeningLifecycleService } from "@/features/practice/services/listening-lifecycle.service";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import type { ListeningKind } from "@/features/practice/types/listening-lifecycle";
@@ -513,56 +514,16 @@ export default function ListeningAppPage() {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {part2Data.items.map((item) => (
-                        <Card
+                        <ListeningPracticeCard
                           key={item._id}
-                          className="dashboard-card group flex flex-col justify-between hover:shadow-md transition-all"
-                        >
-                          <CardContent className="p-5 space-y-4">
-                            <div className="flex items-center justify-between">
-                              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                                Part 2 • {categoryName("PART_2", item.question_type)}
-                              </span>
-                              <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-secondary">
-                                {item.cefr_level || "A2"} • {item.difficulty_level || "EASY"}
-                              </span>
-                            </div>
-
-                            <div className="rounded-xl bg-surface-subtle p-3.5 border border-border space-y-2">
-                              <div className="flex items-center gap-2 text-xs font-bold text-text-primary">
-                                <Icon name="headphones" size={16} className="text-primary" />
-                                <span>{isVietnamese ? "Hỏi & Đáp nhanh" : "Quick Q & A"}</span>
-                              </div>
-                              <p className="text-xs text-text-secondary leading-relaxed">
-                                {isVietnamese && item.title_vi
-                                  ? item.title_vi
-                                  : item.title || (isVietnamese ? "Nghe 1 câu hỏi và chọn 1 trong 3 phản hồi phù hợp." : "Listen to the question and select the best response.")}
-                              </p>
-                            </div>
-
-                            <div className="flex items-center gap-2 text-xs text-text-tertiary">
-                              <span className="rounded-md bg-surface-subtle px-1.5 py-0.5 font-semibold text-text-secondary">
-                                3 Options (A, B, C)
-                              </span>
-                              <span>•</span>
-                              <span>
-                                {isVietnamese ? "Bẫy distractor phân tích" : "Distractor analysis"}
-                              </span>
-                            </div>
-                          </CardContent>
-
-                          <div className="p-5 pt-0">
-                            <Button
-                              onClick={() =>
-                                openWorkspace({ type: "PART_2", item })
-                              }
-                              className="w-full gap-2"
-                              size="sm"
-                            >
-                              <Icon name="play" size={14} />
-                              {isVietnamese ? "Luyện tập ngay" : "Practice Now"}
-                            </Button>
-                          </div>
-                        </Card>
+                          type="PART_2"
+                          item={item}
+                          categoryName={categoryName("PART_2", item.question_type)}
+                          isVietnamese={isVietnamese}
+                          onStartPractice={() =>
+                            openWorkspace({ type: "PART_2", item })
+                          }
+                        />
                       ))}
                     </div>
                   )}
@@ -580,58 +541,16 @@ export default function ListeningAppPage() {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {part3Data.items.map((item) => (
-                        <Card
+                        <ListeningPracticeCard
                           key={item._id}
-                          className="dashboard-card group flex flex-col justify-between hover:shadow-md transition-all"
-                        >
-                          <CardContent className="p-5 space-y-4">
-                            <div className="flex items-center justify-between">
-                              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                                Part 3 • {categoryName("PART_3", item.conversation_type)}
-                              </span>
-                              <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-secondary">
-                                {item.cefr_level || "B1"} • {item.difficulty_level || "MEDIUM"}
-                              </span>
-                            </div>
-
-                            <div>
-                              <h3 className="font-bold text-sm text-text-primary line-clamp-1">
-                                {isVietnamese && item.title_vi
-                                  ? item.title_vi
-                                  : item.title}
-                              </h3>
-                              <div className="mt-2 flex items-center gap-2 text-xs text-text-tertiary">
-                                <span>🗣️ {item.speaker_1_name || "Speaker 1"} &amp; {item.speaker_2_name || "Speaker 2"}</span>
-                                <span>•</span>
-                                <span>⏱️ {item.duration_seconds || 45}s</span>
-                              </div>
-                            </div>
-
-                            <div className="rounded-xl bg-surface-subtle p-3 border border-border">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="font-semibold text-text-primary">
-                                  {isVietnamese ? "Chùm 3 câu hỏi" : "3 Questions Set"}
-                                </span>
-                                <span className="text-primary font-bold">
-                                  {item.questions?.length || 3} Qs
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-
-                          <div className="p-5 pt-0">
-                            <Button
-                              onClick={() =>
-                                openWorkspace({ type: "PART_3", item })
-                              }
-                              className="w-full gap-2"
-                              size="sm"
-                            >
-                              <Icon name="play" size={14} />
-                              {isVietnamese ? "Luyện tập ngay" : "Practice Now"}
-                            </Button>
-                          </div>
-                        </Card>
+                          type="PART_3"
+                          item={item}
+                          categoryName={categoryName("PART_3", item.conversation_type)}
+                          isVietnamese={isVietnamese}
+                          onStartPractice={() =>
+                            openWorkspace({ type: "PART_3", item })
+                          }
+                        />
                       ))}
                     </div>
                   )}
@@ -649,60 +568,16 @@ export default function ListeningAppPage() {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {part4Data.items.map((item) => (
-                        <Card
+                        <ListeningPracticeCard
                           key={item._id}
-                          className="dashboard-card group flex flex-col justify-between hover:shadow-md transition-all"
-                        >
-                          <CardContent className="p-5 space-y-4">
-                            <div className="flex items-center justify-between">
-                              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                                Part 4 • {categoryName("PART_4", item.talk_type)}
-                              </span>
-                              <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-secondary">
-                                {item.cefr_level || "B1"} • {item.difficulty_level || "MEDIUM"}
-                              </span>
-                            </div>
-
-                            <div>
-                              <h3 className="font-bold text-sm text-text-primary line-clamp-1">
-                                {isVietnamese && item.title_vi
-                                  ? item.title_vi
-                                  : item.title}
-                              </h3>
-                              <div className="mt-2 flex items-center gap-2 text-xs text-text-tertiary">
-                                <span>
-                                  🎙️ {item.speaker_name || "Speaker"} {item.speaker_role ? `(${item.speaker_role})` : ""}
-                                </span>
-                                <span>•</span>
-                                <span>⏱️ {item.duration_seconds || 50}s</span>
-                              </div>
-                            </div>
-
-                            <div className="rounded-xl bg-surface-subtle p-3 border border-border">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="font-semibold text-text-primary">
-                                  {isVietnamese ? "Chùm 3 câu hỏi" : "3 Questions Set"}
-                                </span>
-                                <span className="text-primary font-bold">
-                                  {item.questions?.length || 3} Qs
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-
-                          <div className="p-5 pt-0">
-                            <Button
-                              onClick={() =>
-                                openWorkspace({ type: "PART_4", item })
-                              }
-                              className="w-full gap-2"
-                              size="sm"
-                            >
-                              <Icon name="play" size={14} />
-                              {isVietnamese ? "Luyện tập ngay" : "Practice Now"}
-                            </Button>
-                          </div>
-                        </Card>
+                          type="PART_4"
+                          item={item}
+                          categoryName={categoryName("PART_4", item.talk_type)}
+                          isVietnamese={isVietnamese}
+                          onStartPractice={() =>
+                            openWorkspace({ type: "PART_4", item })
+                          }
+                        />
                       ))}
                     </div>
                   )}
@@ -720,66 +595,16 @@ export default function ListeningAppPage() {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {dictationData.items.map((item) => (
-                        <Card
+                        <ListeningPracticeCard
                           key={item._id}
-                          className="dashboard-card group flex flex-col justify-between hover:shadow-md transition-all"
-                        >
-                          <CardContent className="p-5 space-y-4">
-                            <div className="flex items-center justify-between">
-                              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                                Dictation
-                              </span>
-                              <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-text-secondary">
-                                {item.cefr_level || "B1"} • {item.difficulty_level || "MEDIUM"}
-                              </span>
-                            </div>
-
-                            <div>
-                              <h3 className="font-bold text-sm text-text-primary line-clamp-1">
-                                {isVietnamese && item.title_vi
-                                  ? item.title_vi
-                                  : item.title}
-                              </h3>
-                              <p className="mt-1 text-xs text-text-tertiary line-clamp-2">
-                                {isVietnamese && item.description_vi
-                                  ? item.description_vi
-                                  : item.description || "Luyện nghe chép chính tả từng câu tương tác."}
-                              </p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <div className="rounded-lg bg-surface-subtle p-2.5 text-center border border-border">
-                                <span className="block text-text-tertiary text-[10px]">
-                                  {isVietnamese ? "Phân đoạn" : "Segments"}
-                                </span>
-                                <span className="font-bold text-text-primary">
-                                  {item.total_segments || (item.segments?.length || 0)} câu
-                                </span>
-                              </div>
-                              <div className="rounded-lg bg-surface-subtle p-2.5 text-center border border-border">
-                                <span className="block text-text-tertiary text-[10px]">
-                                  {isVietnamese ? "Thời lượng" : "Duration"}
-                                </span>
-                                <span className="font-bold text-text-primary">
-                                  {item.duration_seconds || 60}s
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-
-                          <div className="p-5 pt-0">
-                            <Button
-                              onClick={() =>
-                                openWorkspace({ type: "DICTATION", item })
-                              }
-                              className="w-full gap-2"
-                              size="sm"
-                            >
-                              <Icon name="play" size={14} />
-                              {isVietnamese ? "Luyện tập ngay" : "Practice Now"}
-                            </Button>
-                          </div>
-                        </Card>
+                          type="DICTATION"
+                          item={item}
+                          categoryName={isVietnamese ? "Nghe chép chính tả" : "Dictation"}
+                          isVietnamese={isVietnamese}
+                          onStartPractice={() =>
+                            openWorkspace({ type: "DICTATION", item })
+                          }
+                        />
                       ))}
                     </div>
                   )}
