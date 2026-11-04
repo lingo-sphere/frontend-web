@@ -1,7 +1,7 @@
 // Component biểu đồ cột viên nang thể hiện tần suất và tỷ lệ đúng của bài tập theo từng ngày trong tuần.
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 interface DailyBarData {
   dayLabel: string

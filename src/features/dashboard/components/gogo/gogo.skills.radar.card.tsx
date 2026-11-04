@@ -1,7 +1,6 @@
 // Component biểu đồ mạng nhện đa giác đánh giá toàn diện năng lực các kỹ năng tiếng Anh của học viên.
 'use client'
 
-import React from 'react'
 
 interface GogoSkillsRadarCardProps {
   listeningScore: number

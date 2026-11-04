@@ -1,7 +1,6 @@
 // Component hiển thị chỉ số chính xác và xu hướng phát triển của các kỹ năng trọng tâm.
 'use client'
 
-import React from 'react'
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
 import type { SkillsSummary, TimeGrowth } from '@/features/progress/services/progress.service'
 
@@ -86,7 +85,6 @@ export function GogoCurrenciesCard({
           const deltaVal = item.delta
           const hasDelta = deltaVal !== undefined && deltaVal !== 0
           const isImproving = (deltaVal && deltaVal > 0) || item.trend === 'IMPROVING'
-          const isDeclining = (deltaVal && deltaVal < 0) || item.trend === 'DECLINING'
 
           return (
             <div

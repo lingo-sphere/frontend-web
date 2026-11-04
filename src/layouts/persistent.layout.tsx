@@ -7,8 +7,7 @@ import { Sheet, SheetContent } from '@/components/sheet'
 import { Sidebar } from '@/layouts/app.sidebar'
 import { UtilityHeader } from '@/layouts/app.header'
 import { useApp } from '@/contexts/app.context'
-import { CommunityChatFloatingButton } from '@/features/community/components/community.chat.floating.button'
-import { AiTutorFloatingButton } from '@/features/ai-learning/components/ai.tutor.floating.button'
+import { FloatingActionsDock } from '@/components/floating.actions.dock'
 import { ScrollToTopButton } from '@/components/scroll.to.top.button'
 import { StreakCelebrationModal } from '@/components/streak-celebration-modal'
 import { useStreakNotification } from '@/hooks/use-streak-notification'
@@ -41,7 +40,10 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
   return (
     <>
       {isStandalone ? (
-        children
+        <>
+          {children}
+          <ScrollToTopButton />
+        </>
       ) : (
         <div className="min-h-screen bg-background text-text-primary">
           <Sidebar />
@@ -54,11 +56,9 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
             <UtilityHeader onAction={showAction} />
             {children}
           </div>
-          <CommunityChatFloatingButton />
-          <AiTutorFloatingButton />
+          <FloatingActionsDock />
         </div>
       )}
-      <ScrollToTopButton />
       <StreakCelebrationModal
         open={celebration.open}
         streak={celebration.streak}

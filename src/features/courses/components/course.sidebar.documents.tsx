@@ -12,7 +12,6 @@ import {
   Search,
   FolderDown,
   Volume2,
-  CheckCircle2,
   Folder,
   Lock,
 } from 'lucide-react'

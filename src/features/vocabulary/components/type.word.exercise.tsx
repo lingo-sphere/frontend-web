@@ -20,7 +20,7 @@ interface TypeWordExerciseProps {
   onSpeakSentence: () => void
 }
 
-export function TypeWordExercise({ word, isAnswered, onAnswer, onNext, onSpeakWord }: TypeWordExerciseProps) {
+export function TypeWordExercise({ word, onAnswer, onNext }: TypeWordExerciseProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 

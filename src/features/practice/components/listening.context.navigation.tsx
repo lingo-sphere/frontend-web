@@ -23,7 +23,6 @@ interface ListeningContextNavigationProps {
 }
 
 export function ListeningContextNavigation({
-  isVietnamese,
   onSelectContext,
   onSelectRandom,
 }: ListeningContextNavigationProps) {

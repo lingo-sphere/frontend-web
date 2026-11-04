@@ -33,7 +33,7 @@ function getImageUrl(word: string): { url: string; fallback: string } {
   return data || { url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=300&fit=crop', fallback: '📖' }
 }
 
-export function ImageWordExercise({ word, isAnswered, onAnswer, onNext, onSpeakWord }: ImageWordExerciseProps) {
+export function ImageWordExercise({ word, onAnswer, onNext }: ImageWordExerciseProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 

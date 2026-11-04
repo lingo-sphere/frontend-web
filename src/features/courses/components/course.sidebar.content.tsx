@@ -125,9 +125,6 @@ export function CourseSidebarContent({
           modProgress?.challenge_score ?? modProgress?.post_mini_score ?? 0
         )
 
-        const chCompleted = chapter.lessons.filter((l) => l.status === 'completed').length
-        const chTotal = chapter.lessons.length
-        const isAllLessonsCompleted = chTotal > 0 && chCompleted === chTotal
 
         const isPassedChallenge = Boolean(
           modProgress?.is_passed_by_challenge ||

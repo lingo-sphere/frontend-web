@@ -22,9 +22,6 @@ import {
   Check,
   X,
   AlertCircle,
-  Sparkles,
-  CheckSquare,
-  Square,
 } from "lucide-react";
 import { Button } from "@/components/button";
 import { SectionHeading } from "@/features/dashboard/components/section.heading";

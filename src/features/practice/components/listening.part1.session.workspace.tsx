@@ -1,9 +1,11 @@
+// Phòng luyện thi Part 1 Mô tả tranh bấm giờ theo phiên làm việc.
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/button'
+import { AppSelect } from '@/components/select'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { resolveAudioUrl, resolveImageUrl } from '@/utils/media.utils'
 import { part1SessionService } from '../services/listening-part1-session.service'
@@ -151,26 +153,21 @@ export function ListeningPart1SessionWorkspace({
                 ? 'Phiên luyện có bấm giờ và lưu kết quả vào lịch sử. Đáp án và giải thích hiển thị sau khi nộp bài.'
                 : 'Timed practice with saved results. Answers and explanations appear after submission.'}
             </p>
-            <label className="flex flex-wrap items-center gap-3 text-sm text-text-primary">
-              {vi ? 'Thời gian cho phiên:' : 'Session time:'}
-              <select
-                aria-label={vi ? 'Thời gian cho phiên' : 'Session time'}
+            <div className="flex flex-wrap items-center gap-3 text-sm text-text-primary">
+              <span className="font-medium text-text-secondary">{vi ? 'Thời gian cho phiên:' : 'Session time:'}</span>
+              <AppSelect
+                ariaLabel={vi ? 'Thời gian cho phiên' : 'Session time'}
                 value={preset}
                 disabled={busy}
-                onChange={(event) => setPreset(event.target.value)}
-                className="rounded-lg border border-border bg-surface-subtle p-2"
-              >
-                <option value="quick">
-                  {vi ? 'Nhanh · 30 giây' : 'Quick · 30 seconds'}
-                </option>
-                <option value="standard">
-                  {vi ? 'Tiêu chuẩn · 48 giây' : 'Standard · 48 seconds'}
-                </option>
-                <option value="intensive">
-                  {vi ? 'Luyện kỹ · 60 giây' : 'Intensive · 60 seconds'}
-                </option>
-              </select>
-            </label>
+                onChange={(val) => setPreset(val)}
+                options={[
+                  { value: 'quick', label: vi ? 'Nhanh · 30 giây' : 'Quick · 30 seconds' },
+                  { value: 'standard', label: vi ? 'Tiêu chuẩn · 48 giây' : 'Standard · 48 seconds' },
+                  { value: 'intensive', label: vi ? 'Luyện kỹ · 60 giây' : 'Intensive · 60 seconds' },
+                ]}
+                size="sm"
+              />
+            </div>
             <Button disabled={busy} onClick={() => void start()}>
               {busy
                 ? vi

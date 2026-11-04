@@ -46,7 +46,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
   // AI Explanation State
   const [aiExplanation, setAiExplanation] = useState<AIReadingExplanation | null>(null)
   const [aiExplanationStatus, setAiExplanationStatus] = useState<'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null>(null)
-  const [isLoadingAi, setIsLoadingAi] = useState<boolean>(false)
+  const [isLoadingAi] = useState<boolean>(false)
   const aiPollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Track elapsed time for submission
@@ -163,7 +163,6 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
 
   // Check if all questions are answered
   const answeredCount = Object.keys(userAnswers).length
-  const isAllAnswered = questions.length > 0 && answeredCount === questions.length
 
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] w-full gap-3 overflow-hidden">
@@ -663,7 +662,6 @@ function WrongAnswerCard({ wrong }: { wrong: WrongAnswerItem }) {
 function AIExplanationSection({
   status,
   explanation,
-  isLoading,
 }: {
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null
   explanation: AIReadingExplanation | null

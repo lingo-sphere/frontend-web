@@ -1,8 +1,7 @@
 // Component danh sách thứ hạng học viên chi tiết với thông tin điểm số và liên đoàn.
 'use client'
 
-import React from 'react'
-import { Flame, Zap, Trophy, ShieldCheck, User as UserIcon } from 'lucide-react'
+import { Flame, Zap, Trophy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useMounted } from '@/hooks/use.mounted'
 import { resolveMediaUrl } from '@/utils/media.utils'

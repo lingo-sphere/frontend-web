@@ -1,7 +1,7 @@
 // Component biểu đồ đồng hồ bán nguyệt đo phong độ học tập kết hợp chuỗi sóng trả lời tương tác.
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Sparkles, ArrowRight, HelpCircle, TrendingUp, TrendingDown, Target, History } from 'lucide-react'
 import type { RollingPerformance } from '@/features/progress/services/progress.service'
 

@@ -7,17 +7,14 @@ import {
   Clock,
   ChevronRight,
   FileText,
-  SpellCheck,
   PenTool,
-  Key,
-  File,
-  BookOpen,
   Image,
   Mail,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
-import type { WritingExercise, WritingLevel, ExerciseType } from '@/features/practice/types/writing'
+import { AppSelect } from '@/components/select'
+import type { WritingExercise, WritingLevel } from '@/features/practice/types/writing'
 
 interface WritingExerciseListProps {
   exercises: WritingExercise[]
@@ -140,19 +137,23 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
 
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Dạng bài:' : 'Type:'}</span>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)}
-              className="h-9 rounded-lg border border-border bg-surface px-3 text-[12px] text-text-primary focus:border-primary focus:outline-none cursor-pointer">
-              <option value="all">{isVietnamese ? 'Tất cả dạng bài' : 'All Types'} ({exercises.length})</option>
-              {availableTypes.map((key) => {
-                const label = typeLabels[key];
-                const count = exercises.filter((e) => e.exercise_type === key).length;
-                return (
-                  <option key={key} value={key}>
-                    {label ? (isVietnamese ? label.vi : label.en) : key} ({count})
-                  </option>
-                );
-              })}
-            </select>
+            <AppSelect
+              value={typeFilter}
+              onChange={(val) => setTypeFilter(val as any)}
+              options={[
+                { value: 'all', label: `${isVietnamese ? 'Tất cả dạng bài' : 'All Types'} (${exercises.length})` },
+                ...availableTypes.map((key) => {
+                  const label = typeLabels[key];
+                  const count = exercises.filter((e) => e.exercise_type === key).length;
+                  return {
+                    value: key,
+                    label: `${label ? (isVietnamese ? label.vi : label.en) : key} (${count})`,
+                  };
+                }),
+              ]}
+              size="sm"
+              ariaLabel={isVietnamese ? 'Dạng bài' : 'Type'}
+            />
           </div>
         </div>
       </div>
@@ -207,7 +208,7 @@ interface ExerciseCardProps {
   levelLabels: Record<string, string>
 }
 
-function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese, levelLabels }: ExerciseCardProps) {
+function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese }: ExerciseCardProps) {
   const levelColors = {
     BASIC: 'bg-emerald-100 text-emerald-700',
     INTERMEDIATE: 'bg-amber-100 text-amber-700',

@@ -18,7 +18,6 @@ interface CourseSidebarChallengeTestCardProps {
 
 export function CourseSidebarChallengeTestCard({
   chapter,
-  chIdx,
   questionsCount,
   passingScore,
   challengeScore,

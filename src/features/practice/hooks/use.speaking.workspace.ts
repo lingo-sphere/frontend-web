@@ -12,7 +12,7 @@ import {
 } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useNavigate, useParams, useSearchParams } from '@/lib/navigation'
+import { useNavigate, useParams } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
 import type {
   SpeakingExercise,
@@ -24,7 +24,6 @@ import type {
   DifficultyLevel,
   DialogueTurnAttemptResult,
 } from '@/features/practice/types/speaking'
-import type { SpeechAssessmentResult } from '@/types/api.types'
 
 export type SpeakingView = 'home' | 'list' | 'workspace' | 'result' | 'history'
 

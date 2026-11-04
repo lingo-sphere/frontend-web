@@ -23,7 +23,6 @@ export function MultipleChoiceExercise({
   isAnswered,
   onAnswer,
   onNext,
-  onSpeakWord,
   allWords,
 }: MultipleChoiceExerciseProps) {
   const { i18n } = useTranslation()

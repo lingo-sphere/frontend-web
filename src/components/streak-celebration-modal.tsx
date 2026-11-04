@@ -19,7 +19,7 @@ export function StreakCelebrationModal({
   streakFreezesLeft,
   onClose,
 }: StreakCelebrationModalProps) {
-  const [showConfetti, setShowConfetti] = useState(false)
+  const [, setShowConfetti] = useState(false)
 
   useEffect(() => {
     if (open) {

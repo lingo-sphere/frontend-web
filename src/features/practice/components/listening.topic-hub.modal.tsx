@@ -5,7 +5,6 @@
 
 'use client';
 
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/card';
 import { Button } from '@/components/button';

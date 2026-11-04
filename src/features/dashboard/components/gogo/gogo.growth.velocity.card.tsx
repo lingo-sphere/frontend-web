@@ -1,8 +1,8 @@
 // Component biểu đồ cột phân tích tốc độ tăng trưởng và nhịp độ luyện tập 7 ngày gần nhất của học viên.
 'use client'
 
-import React, { useState } from 'react'
-import { ArrowRight, HelpCircle, Activity, Clock, Award, CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowRight, Activity, Clock, Award, CheckCircle2 } from 'lucide-react'
 import type { TimeGrowth, ActivityOverview } from '@/features/progress/services/progress.service'
 
 interface GogoGrowthVelocityCardProps {

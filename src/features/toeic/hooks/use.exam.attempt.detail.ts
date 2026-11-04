@@ -40,7 +40,6 @@ export function useExamAttemptDetail() {
   const isProfilePlacement = attemptId === 'profile-placement-baseline'
   const isCourseAttemptId = attemptId.startsWith('att')
   const isCourseTest = !isProfilePlacement && (rawSourceType === 'COURSE' || isCourseAttemptId)
-  const sourceType = isCourseTest ? 'COURSE' : (rawSourceType || 'TOEIC')
 
   const queryTestType = searchParams.get('testType') || ''
   const queryCourseId = searchParams.get('courseId') || ''

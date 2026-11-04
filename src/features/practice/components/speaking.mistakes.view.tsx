@@ -2,7 +2,7 @@
 
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Mic,
   Calendar,
@@ -12,33 +12,21 @@ import {
   ArrowRight,
   RotateCcw,
   Sparkles,
-  BookOpen,
-  Filter,
   Search,
-  Flame,
   Award,
   Layers,
-  HelpCircle,
-  Clock,
   ExternalLink,
   ChevronRight,
 } from 'lucide-react'
 import { Button } from '@/components/button'
 import { useSpeakingMistakesQuery } from '@/features/practice/hooks/use.mistake.query'
 import { useNavigate } from '@/lib/navigation'
-import type {
-  SpeakingSrsDueExercise,
-  SpeakingMispronouncedWord,
-  SpeakingPhonemeError,
-  SpeakingGrammarError,
-  SpeakingContextImprovement,
-} from '@/features/practice/types/mistake'
 
 type SpeakingSubTab = 'DUE' | 'WORDS' | 'PHONEMES' | 'GRAMMAR' | 'CONTEXT'
 
 export function SpeakingMistakesView() {
   const navigate = useNavigate()
-  const { data, isLoading, refetch } = useSpeakingMistakesQuery()
+  const { data } = useSpeakingMistakesQuery()
 
   const [activeSubTab, setActiveSubTab] = useState<SpeakingSubTab>('DUE')
   const [wordSearch, setWordSearch] = useState('')

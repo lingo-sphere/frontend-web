@@ -1,3 +1,4 @@
+// Giao diện xem và ôn tập các câu sai Writing theo chu kỳ lặp lại ngắt quãng SRS.
 "use client";
 import { useMounted } from "@/hooks/use.mounted";
 import { useEffect, useRef, useState } from "react";
@@ -13,6 +14,7 @@ import {
   Play,
 } from "lucide-react";
 import { Button } from "@/components/button";
+import { AppSelect } from "@/components/select";
 import { Card, CardContent } from "@/components/card";
 import {
   Sheet as Dialog,
@@ -255,62 +257,61 @@ export function WritingMistakesView() {
           });
         }}
       >
-        <label className="grid gap-1 text-xs text-text-secondary">
-          {vi ? "Trạng thái" : "Status"}
-          <select
-            aria-label={vi ? "Trạng thái" : "Status"}
-            className={field}
+        <div className="grid gap-1 text-xs text-text-secondary">
+          <span>{vi ? "Trạng thái" : "Status"}</span>
+          <AppSelect
+            ariaLabel={vi ? "Trạng thái" : "Status"}
+            className="w-full"
+            triggerClassName="w-full h-9 rounded-lg"
             value={filters.status}
-            onChange={(event) => change({ w_status: event.target.value })}
-          >
-            {[
-              ["DUE", vi ? "Đến hạn" : "Due"],
-              ["ALL", vi ? "Tất cả" : "All"],
-              ["STABLE", vi ? "Ổn định" : "Stable"],
-              ["PAUSED", vi ? "Tạm dừng" : "Paused"],
-            ].map(([value, text]) => (
-              <option key={value} value={value}>
-                {text}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid gap-1 text-xs text-text-secondary">
-          {vi ? "Nhóm mục tiêu" : "Target group"}
-          <select
-            aria-label={vi ? "Nhóm mục tiêu" : "Target group"}
-            className={field}
+            onChange={(val) => change({ w_status: val })}
+            options={[
+              { value: "DUE", label: vi ? "Đến hạn" : "Due" },
+              { value: "ALL", label: vi ? "Tất cả" : "All" },
+              { value: "STABLE", label: vi ? "Ổn định" : "Stable" },
+              { value: "PAUSED", label: vi ? "Tạm dừng" : "Paused" },
+            ]}
+          />
+        </div>
+        <div className="grid gap-1 text-xs text-text-secondary">
+          <span>{vi ? "Nhóm mục tiêu" : "Target group"}</span>
+          <AppSelect
+            ariaLabel={vi ? "Nhóm mục tiêu" : "Target group"}
+            className="w-full"
+            triggerClassName="w-full h-9 rounded-lg"
             value={filters.kind}
-            onChange={(event) => change({ w_kind: event.target.value })}
-          >
-            <option value="">{vi ? "Tất cả nhóm" : "All groups"}</option>
-            {["GRAMMAR", "VOCABULARY", "COMMUNICATION"].map((kind) => (
-              <option key={kind} value={kind}>
-                {kindName(kind)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid min-w-40 gap-1 text-xs text-text-secondary">
-          {vi ? "Ngữ cảnh" : "Context"}
-          <select
-            aria-label={vi ? "Ngữ cảnh" : "Context"}
-            className={field}
+            onChange={(val) => change({ w_kind: val })}
+            options={[
+              { value: "", label: vi ? "Tất cả nhóm" : "All groups" },
+              ...["GRAMMAR", "VOCABULARY", "COMMUNICATION"].map((kind) => ({
+                value: kind,
+                label: kindName(kind),
+              })),
+            ]}
+          />
+        </div>
+        <div className="grid min-w-40 gap-1 text-xs text-text-secondary">
+          <span>{vi ? "Ngữ cảnh" : "Context"}</span>
+          <AppSelect
+            ariaLabel={vi ? "Ngữ cảnh" : "Context"}
+            className="w-full"
+            triggerClassName="w-full h-9 rounded-lg"
             value={filters.context_id}
-            onChange={(event) => change({ w_context: event.target.value })}
-          >
-            <option value="">{vi ? "Tất cả ngữ cảnh" : "All contexts"}</option>
-            {query.data?.contexts
-              .filter((ctx) => ctx._id !== "GENERAL")
-              .map((ctx) => (
-                <option key={ctx._id} value={ctx._id}>
-                  {(vi ? ctx.name : ctx.name_en) ||
+            onChange={(val) => change({ w_context: val })}
+            options={[
+              { value: "", label: vi ? "Tất cả ngữ cảnh" : "All contexts" },
+              ...(query.data?.contexts || [])
+                .filter((ctx) => ctx._id !== "GENERAL")
+                .map((ctx) => ({
+                  value: ctx._id,
+                  label:
+                    (vi ? ctx.name : ctx.name_en) ||
                     ctx.name ||
-                    (vi ? "Ngữ cảnh đã lưu" : "Saved context")}
-                </option>
-              ))}
-          </select>
-        </label>
+                    (vi ? "Ngữ cảnh đã lưu" : "Saved context"),
+                })),
+            ]}
+          />
+        </div>
         <label className="grid min-w-48 flex-1 gap-1 text-xs text-text-secondary">
           {vi ? "Tìm mục tiêu hoặc câu sai" : "Find a target or error"}
           <input

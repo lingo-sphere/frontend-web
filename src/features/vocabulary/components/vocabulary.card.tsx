@@ -19,7 +19,6 @@ export function VocabularyCard({
   item,
   userDecks,
   onAddToDeck,
-  onRemoveFromDeck,
   onDeleteWord,
   onAction,
 }: VocabularyCardProps) {
@@ -142,7 +141,7 @@ interface MeaningItemProps {
   partOfSpeechMap: Record<string, { en: string; vi: string }>
 }
 
-function MeaningItem({ meaning, index, isVietnamese, partOfSpeechMap }: MeaningItemProps) {
+function MeaningItem({ meaning, isVietnamese, partOfSpeechMap }: MeaningItemProps) {
   const posLabel = partOfSpeechMap[meaning.part_of_speech]?.[isVietnamese ? 'vi' : 'en'] || meaning.part_of_speech
 
   return (

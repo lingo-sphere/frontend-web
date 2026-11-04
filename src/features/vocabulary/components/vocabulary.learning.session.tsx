@@ -5,24 +5,17 @@
  * @description Interactive Adaptive Learning Engine Runner (Hỗ trợ 6 chế độ học, Server-side Grading, Typo Feedback)
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   X,
   ChevronDown,
   Brain,
   Check,
-  Layers,
-  CheckSquare,
   RotateCcw,
-  Keyboard,
-  Headphones,
-  FileText,
   Volume2,
   AlertTriangle,
   ArrowRight,
-  Sparkles,
-  HelpCircle,
   Timer,
   Bookmark,
   CheckCircle2,
@@ -32,7 +25,6 @@ import { Button } from "@/components/button";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import type {
   VocabularyDeck,
-  ExerciseMode,
   LearningResult,
 } from "@/features/vocabulary/types/vocabulary.learn";
 import { vocabularyService } from "@/features/vocabulary/services/vocabulary.service";
@@ -128,7 +120,7 @@ export function VocabularyLearningSession({
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isRelearning, setIsRelearning] = useState(false);
   const [wrongItems, setWrongItems] = useState<any[]>([]);
-  const [correctStreak, setCorrectStreak] = useState(0);
+  const [, setCorrectStreak] = useState(0);
 
   const user = useAuthStore((state) => state.user);
   const userId = user?.user_id || (user as any)?._id || (user as any)?.id || "";

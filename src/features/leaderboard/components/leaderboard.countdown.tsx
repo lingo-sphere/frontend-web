@@ -1,7 +1,6 @@
 // Component giao diện hiển thị đồng hồ đếm ngược thời hạn bảng xếp hạng tinh gọn chuẩn phong cách hiện đại.
 'use client'
 
-import React from 'react'
 import { Clock3, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useMounted } from '@/hooks/use.mounted'

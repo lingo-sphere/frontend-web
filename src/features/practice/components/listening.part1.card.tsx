@@ -1,7 +1,7 @@
 // Thẻ hiển thị bài luyện nghe Part 1 Mô tả hình ảnh theo phong cách ảnh nền toàn cảnh điện ảnh The Card.
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { Play, ArrowRight, Camera } from 'lucide-react'
 import { resolveImageUrl } from '@/utils/media.utils'

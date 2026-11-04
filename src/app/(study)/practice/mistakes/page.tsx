@@ -11,7 +11,6 @@ import { useState, useMemo, useEffect } from "react";
 import {
   BookmarkCheck,
   RotateCcw,
-  Sparkles,
   Flame,
   Award,
   Calendar,
@@ -24,6 +23,7 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/button";
+import { AppSelect } from "@/components/select";
 import {
   useMyMistakesQuery,
   useDueMistakesQuery,
@@ -144,7 +144,7 @@ export default function MistakeVaultPage() {
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
-      {/* 3 PHÂN KHU SỔ TAY (OBJECTIVE - SPEAKING - WRITING) */}
+      
       <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-surface border border-border shadow-xs max-w-fit">
         <button
           type="button"
@@ -197,7 +197,7 @@ export default function MistakeVaultPage() {
         </button>
       </div>
 
-      {/* KHU VỰC 1: TRẮC NGHIỆM / CÂU HỎI ĐÚNG SAI (GRAMMAR, READING, VOCABULARY, LISTENING) */}
+      
       {activeSection === "OBJECTIVE" && (
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-slate-900 text-white shadow-xl">
@@ -330,7 +330,7 @@ export default function MistakeVaultPage() {
               </button>
             </div>
 
-            {/* Domain filter buttons */}
+            
             <div className="flex items-center gap-1.5 border-l border-border pl-3 ml-1">
               <span className="text-[10px] text-text-tertiary font-medium">
                 Kỹ năng:
@@ -384,20 +384,19 @@ export default function MistakeVaultPage() {
             {topicGroups.length > 0 && (
               <div className="flex items-center gap-2">
                 <Filter size={14} className="text-text-tertiary shrink-0" />
-                <select
+                <AppSelect
                   value={selectedTopic}
-                  onChange={(e) => setSelectedTopic(e.target.value)}
-                  className="bg-surface-secondary border border-border text-xs rounded-xl px-2.5 py-1.5 text-text-primary focus:outline-none focus:ring-1 focus:ring-purple-600 cursor-pointer"
-                >
-                  <option value="ALL">
-                    Tất cả chủ điểm ({topicGroups.length})
-                  </option>
-                  {topicGroups.map((g) => (
-                    <option key={g.topic} value={g.topic}>
-                      {g.topic} ({g.count})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedTopic(val)}
+                  options={[
+                    { value: "ALL", label: `Tất cả chủ điểm (${topicGroups.length})` },
+                    ...topicGroups.map((g) => ({
+                      value: g.topic,
+                      label: `${g.topic} (${g.count})`,
+                    })),
+                  ]}
+                  size="sm"
+                  ariaLabel="Lọc theo chủ điểm"
+                />
               </div>
             )}
           </div>
@@ -487,15 +486,15 @@ export default function MistakeVaultPage() {
         </div>
       )}
 
-      {/* KHU VỰC 2: SỔ TAY LUYỆN NÓI (SPEAKING REMEDIAL & SRS) */}
+      
       {activeSection === "SPEAKING" && <SpeakingMistakesView />}
 
-      {/* KHU VỰC 3: SỔ TAY LUYỆN VIẾT (WRITING REMEDIAL & SRS) */}
+      
       {activeSection === "WRITING" && (
         <WritingMistakesView />
       )}
 
-      {/* MODALS CHO PHÂN HỆ TRẮC NGHIỆM */}
+      
       {activeReviewMistake && (
         <MistakeReviewModal
           open={Boolean(activeReviewMistake)}

@@ -6,13 +6,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft } from 'lucide-react'
-import type { SpeakingExercise, RecordingState, SpeakingExerciseType } from '@/features/practice/types/speaking'
+import type { SpeakingExercise, RecordingState, SpeakingExerciseType, DialogueTurnAttemptResult } from '@/features/practice/types/speaking'
 import { toast } from '@/store/toast.store'
 import { SpeakingPromptCard } from '@/features/practice/components/speaking.prompt.card'
 import { SpeakingRecorderPanel } from '@/features/practice/components/speaking.recorder.panel'
 import { SpeakingDialogueWorkspace } from '@/features/practice/components/speaking.dialogue.workspace'
 import { PracticeExitConfirmModal } from '@/features/practice/components/practice.exit-confirm.modal'
-import type { DialogueTurnAttemptResult } from '@/features/practice/types/speaking'
 
 interface SpeakingWorkspaceProps {
   exercise: SpeakingExercise

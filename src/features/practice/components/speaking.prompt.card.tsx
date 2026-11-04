@@ -7,7 +7,6 @@
 import { useState, useRef, useEffect } from 'react'
 import {
   Volume2,
-  VolumeX,
   Image as ImageIcon,
   MessageSquare,
   MapPin,
@@ -21,9 +20,6 @@ import {
   X,
   Compass,
   Sparkles,
-  Layers,
-  Eye,
-  CheckCircle2,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import type { SpeakingExercise, SpeakingExerciseType } from '@/features/practice/types/speaking'

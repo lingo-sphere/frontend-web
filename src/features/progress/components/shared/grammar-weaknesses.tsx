@@ -1,4 +1,3 @@
-import React from "react";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { Card } from "@/components/card";
 import { Button } from "@/components/button";

@@ -11,7 +11,6 @@ import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { Pagination } from '@/components/pagination'
 import { useApp } from '@/contexts/app.context'
-import type { BackendTopic } from '@/features/vocabulary/services/vocabulary.service'
 import { useTopicsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 
 const ITEMS_PER_PAGE = 6
