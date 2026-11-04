@@ -1,11 +1,7 @@
-/**
- * @file header.learning.tsx
- * @description Component giao diện React HeaderMyLearningHover cho học viên
- */
-
+// Component dropdown hover xem nhanh danh sách khóa học đang theo học của học viên.
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BookOpen, Loader2 } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
@@ -13,6 +9,7 @@ import { courseService } from '@/features/courses/services/course.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { resolveMediaUrl } from '@/utils/media.utils'
+import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 import type { Course } from '@/types/api.types'
 
 interface LearningCourseItem {
@@ -27,12 +24,15 @@ interface HeaderMyLearningHoverProps {
 }
 
 export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStore()
   const [courses, setCourses] = useState<LearningCourseItem[]>([])
   const [loading, setLoading] = useState<boolean>(false)
+
+  usePreventScrollChain(containerRef, isOpen)
 
   useEffect(() => {
     let isMounted = true
@@ -89,13 +89,14 @@ export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
 
   return (
     <div
+      ref={containerRef}
       className={`absolute right-0 top-full pt-2 z-50 transition-all duration-200 ease-out origin-top-right ${
         isOpen
           ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
           : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
       }`}
     >
-      <div className="w-80 sm:w-[340px] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden text-left">
+      <div className="w-80 sm:w-[340px] rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden text-left overscroll-contain">
       {loading ? (
         <div className="p-8 text-center flex items-center justify-center gap-2 text-xs text-text-secondary">
           <Loader2 size={16} className="animate-spin text-primary" />
@@ -120,7 +121,7 @@ export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
         </div>
       ) : (
         <>
-          <div className="divide-y divide-border/60 max-h-[360px] overflow-y-auto">
+          <div className="divide-y divide-border/60 max-h-[360px] overflow-y-auto overscroll-contain">
             {courses.map((course) => (
               <div
                 key={course.id}

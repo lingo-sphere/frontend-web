@@ -1,4 +1,4 @@
-// Thẻ hiển thị bài đọc Reading Practice theo phong cách thiết kế card hình học cao cấp với mã QR và capsule điều hướng.
+// Thẻ hiển thị bài đọc Reading Practice theo phong cách thiết kế card hình học cao cấp dải xanh ngọc đồng bộ với hệ thống.
 'use client'
 
 import { BookOpen, HelpCircle, Clock, Play, ArrowRight } from 'lucide-react'

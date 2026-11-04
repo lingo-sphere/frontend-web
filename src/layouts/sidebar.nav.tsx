@@ -25,6 +25,7 @@ const routeMap: Record<string, string> = {
   'courses-all': '/courses?tab=all',
   'courses-my': '/courses?tab=my-courses',
   'courses-liked': '/courses?tab=wishlist',
+  'placement-test': '/placement-test',
   toeic: '/toeic',
   vocabulary: '/vocabulary',
   mistakes: '/practice/mistakes',
@@ -89,8 +90,13 @@ export function SidebarNav({ groups, onNavigate, collapsed = false }: SidebarNav
         currentPath.startsWith('/public-decks/')
       )
     }
-    if (item.id === 'toeic') {
-      return currentPath === '/toeic' || currentPath.startsWith('/toeic/')
+    if (item.id === 'placement-test' || item.id === 'toeic') {
+      return (
+        currentPath === '/placement-test' ||
+        currentPath.startsWith('/placement-test/') ||
+        currentPath === '/toeic' ||
+        currentPath.startsWith('/toeic/')
+      )
     }
     return currentPath === itemRoute || (itemRoute !== '/' && currentPath.startsWith(`${itemRoute}/`))
   }

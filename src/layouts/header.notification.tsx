@@ -7,6 +7,7 @@ import { Button } from '@/components/button'
 import { useNavigate } from '@/lib/navigation'
 import type { Notification } from '@/features/notifications/types/notification'
 import { formatNotifTime } from '@/layouts/header.utils'
+import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 import {
   Bell,
   BellRing,
@@ -123,6 +124,8 @@ export function HeaderNotificationDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
 
+  usePreventScrollChain(dropdownRef, isOpen)
+
   useEffect(() => {
     if (!isOpen) return
     const handleClickOutside = (event: MouseEvent) => {
@@ -172,7 +175,7 @@ export function HeaderNotificationDropdown({
             : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
         }`}
       >
-        <Card className="w-[380px] sm:w-[410px] rounded-[22px] border border-border/80 bg-surface/98 dark:bg-card/98 backdrop-blur-2xl shadow-2xl shadow-black/10 dark:shadow-black/50 overflow-hidden text-left ring-1 ring-black/5 dark:ring-white/10">
+        <Card className="w-[380px] sm:w-[410px] rounded-[22px] border border-border/80 bg-surface/98 dark:bg-card/98 backdrop-blur-2xl shadow-2xl shadow-black/10 dark:shadow-black/50 overflow-hidden text-left ring-1 ring-black/5 dark:ring-white/10 overscroll-contain">
           <div className="border-b border-border/60 bg-surface-subtle/50 px-4.5 pt-3.5 pb-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -228,7 +231,7 @@ export function HeaderNotificationDropdown({
             </div>
           </div>
 
-          <CardContent className="max-h-[360px] overflow-y-auto p-0 divide-y divide-border/50 scrollbar-thin">
+          <CardContent className="max-h-[360px] overflow-y-auto overscroll-contain p-0 divide-y divide-border/50 scrollbar-thin">
             {displayedNotifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-2">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 dark:bg-zinc-800 text-slate-400">

@@ -39,7 +39,7 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       { id: 'vocabulary', labelVi: 'Từ vựng', labelEn: 'Vocabulary', icon: 'cards', path: '/vocabulary' },
       { id: 'mistakes', labelVi: 'Sổ tay lỗi sai', labelEn: 'Mistake Vault', icon: 'bookmarkCheck', path: '/practice/mistakes' },
-      { id: 'toeic', labelVi: 'Đề thi TOEIC', labelEn: 'TOEIC Exam', icon: 'fileText', path: '/toeic' },
+      { id: 'placement-test', labelVi: 'Đề thi đầu vào', labelEn: 'Placement Test', icon: 'clipboardCheck', path: '/placement-test' },
     ],
   },
   {
