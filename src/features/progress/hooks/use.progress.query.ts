@@ -2,7 +2,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { progressService, type UserCourseProgressItem } from '@/features/progress/services/progress.service'
+import {
+  progressService,
+  type UserCourseProgressItem,
+  type SkillsSummary,
+  type WeaknessAnalysis,
+  type PracticeDashboardData,
+  type TimePeriod,
+} from '@/features/progress/services/progress.service'
 import { examService, type ToeicLearningProfile } from '@/features/toeic/services/exam.service'
 import { userService, type GamificationProfile } from '@/features/user/services/user.service'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
@@ -95,4 +102,32 @@ export function useGrowthChartQuery(courseId: string, enabled = true) {
     staleTime: 5 * 60 * 1000,
   })
 }
+
+export function useSkillsSummaryQuery(userId?: string, period: string = '7d', enabled = true) {
+  return useQuery<SkillsSummary | null>({
+    queryKey: progressKeys.skillsSummary(userId || '', period),
+    queryFn: () => progressService.getSkillsSummary(userId!, period as TimePeriod),
+    enabled: Boolean(userId) && enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function useWeaknessesQuery(userId?: string, limit: number = 10, enabled = true) {
+  return useQuery<WeaknessAnalysis[]>({
+    queryKey: progressKeys.weaknesses(userId || '', limit),
+    queryFn: () => progressService.getAllWeaknesses(userId!, limit),
+    enabled: Boolean(userId) && enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
+export function usePracticeDashboardQuery(userId?: string, period: string = '7d', enabled = true) {
+  return useQuery<PracticeDashboardData | null>({
+    queryKey: progressKeys.practiceDashboard(userId || '', period),
+    queryFn: () => progressService.getPracticeDashboard(userId!, period),
+    enabled: Boolean(userId) && enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
 

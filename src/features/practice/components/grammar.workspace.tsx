@@ -6,6 +6,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { progressKeys } from '@/features/progress/keys/progress.keys'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
@@ -28,6 +30,7 @@ interface GrammarWorkspaceProps {
 
 export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarWorkspaceProps) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({})
   const [currentAnswer, setCurrentAnswer] = useState('')
@@ -195,6 +198,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
         })
 
         setSessionResult(result)
+        queryClient.invalidateQueries({ queryKey: progressKeys.all })
       } catch (error) {
         console.error('Lỗi khi nộp bài:', error)
       } finally {

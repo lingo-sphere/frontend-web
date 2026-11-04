@@ -1,12 +1,8 @@
-/**
- * @file page.tsx
- * @description Trung tâm luyện nghe: Part 1–4 và Dictation, lọc Context dùng chung
- */
+// Trung tâm luyện nghe TOEIC Part 1-4 và Dictation với chế độ làm bài tương tác.
 
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -18,11 +14,11 @@ import { Pagination } from "@/components/pagination";
 import { ListeningContextFilter } from "@/features/practice/components/listening.context.filter";
 import { LISTENING_SUBTYPES, readListeningCatalog, listeningCatalogParams, type ListeningCatalogState } from "@/features/practice/utils/listening.catalog";
 import { ListeningPracticeWorkspace } from "@/features/practice/components/listening.practice.workspace";
+import { ListeningPart1Card } from "@/features/practice/components/listening.part1.card";
 import { listeningLifecycleService } from "@/features/practice/services/listening-lifecycle.service";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import type { ListeningKind } from "@/features/practice/types/listening-lifecycle";
 import { listeningPracticeService } from "@/features/practice/services/listening-practice.service";
-import { resolveImageUrl } from "@/utils/media.utils";
 import type {
   Part1Item,
   Part2Item,
@@ -138,7 +134,6 @@ export default function ListeningAppPage() {
   const setCefrFilter = (cefr: string) => updateCatalog({ cefr, page: 1 });
   const setSubTypeFilter = (subtype: string) => updateCatalog({ subtype, page: 1 });
 
-  // Old topic/mistake links enter the same catalog; they no longer start a duplicate session.
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
     if (["part", "exercise_type", "topic_name"].some(key => params.has(key)) || params.get("tab")?.toUpperCase() === "TOPIC") {
@@ -149,7 +144,6 @@ export default function ListeningAppPage() {
 
   const handleTabChange = (tab: TabId) => updateCatalog({ tab, subtype: "ALL", page: 1 });
 
-  // Build query filter params
   const queryParams = {
     page,
     limit: ITEMS_PER_PAGE,
@@ -169,7 +163,6 @@ export default function ListeningAppPage() {
       : {}),
   };
 
-  // Data fetching based on activeTab
   const {
     data: part1Data,
     isLoading: isPart1Loading,
@@ -230,7 +223,6 @@ export default function ListeningAppPage() {
     staleTime: 60 * 1000,
   });
 
-  // Current active data and pagination
   const currentLoading =
     activeTab === "PART_1"
       ? isPart1Loading
@@ -267,9 +259,6 @@ export default function ListeningAppPage() {
   const handleClearFilters = () => updateCatalog({ context: "", difficulty: "ALL", cefr: "ALL", subtype: "ALL", page: 1 });
   const hasActiveFilters = difficultyFilter !== "ALL" || cefrFilter !== "ALL" || subTypeFilter !== "ALL" || Boolean(selectedContextId);
 
-  // ---------------------------------------------------------------------------
-  // RENDER WORKSPACE VIEWS IF SELECTED
-  // ---------------------------------------------------------------------------
   if (isSetup || resumeId) {
     const tab = activeTab;
     const kind = tab === "DICTATION" ? "dictation" : tab.toLowerCase().replace('_', '') as ListeningKind;
@@ -297,12 +286,11 @@ export default function ListeningAppPage() {
     return item ? (isVietnamese ? item.vi : item.en) : (isVietnamese ? "Chưa phân loại" : "Uncategorized");
   };
 
-  // Active Tab Info
   const currentTabInfo = TABS.find((t) => t.id === activeTab) || TABS[0];
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
-      {/* Header Heading */}
+      
       <SectionHeading
         eyebrow={isVietnamese ? "Luyện nghe" : "Listening practice"}
         title={
@@ -329,7 +317,7 @@ export default function ListeningAppPage() {
         {pending.data.length > 5 && <Button size="sm" variant="ghost" onClick={() => setShowAllPending(!showAllPending)}>{showAllPending ? (isVietnamese ? "Thu gọn" : "Show fewer") : (isVietnamese ? `Xem thêm ${pending.data.length - 5} phiên` : `Show ${pending.data.length - 5} more sessions`)}</Button>}
       </section>}
 
-      {/* Modern Tabs Navigation Bar */}
+      
       <div className="border-b border-border">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
           {TABS.map((tab) => {
@@ -362,7 +350,7 @@ export default function ListeningAppPage() {
         </div>
       </div>
 
-      {/* Tab Context Description Banner */}
+      
       <div className="flex items-center gap-3 rounded-2xl bg-surface-subtle border border-border px-4 py-3 text-sm text-text-secondary">
         <Icon name="lightbulb" size={18} className="text-primary shrink-0" />
         <span className="leading-relaxed">
@@ -371,7 +359,7 @@ export default function ListeningAppPage() {
       </div>
 
         <div className="space-y-6">
-          {/* Filter Toolbar */}
+          
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-xs">
             <div className="flex flex-wrap items-center gap-3">
               <ListeningContextFilter
@@ -380,7 +368,7 @@ export default function ListeningAppPage() {
                 isVietnamese={isVietnamese}
               />
 
-              {/* Difficulty Filter */}
+              
               <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                 <span className="font-medium">
                   {isVietnamese ? "Độ khó:" : "Difficulty:"}
@@ -408,7 +396,7 @@ export default function ListeningAppPage() {
                 </select>
               </div>
 
-              {/* CEFR Level Filter */}
+              
               <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                 <span className="font-medium">CEFR:</span>
                 <select
@@ -466,7 +454,7 @@ export default function ListeningAppPage() {
                 {isVietnamese ? `Luyện ngẫu nhiên ${activeTab.replace("PART_", "Part ")}` : `Random ${activeTab.replace("PART_", "Part ")} practice`}
               </Button>
             )}
-            {/* Total items indicator */}
+            
             {currentPagination && (
               <div className="text-xs font-medium text-text-tertiary">
                 {isVietnamese
@@ -476,7 +464,7 @@ export default function ListeningAppPage() {
             )}
           </div>
 
-          {/* Loading Skeleton */}
+          
           {currentError ? (
             <div role="alert" className="rounded-2xl border border-border bg-card p-8 text-center space-y-3">
               <p className="text-text-secondary">{isVietnamese ? "Không tải được bài tập. Bộ lọc của bạn vẫn được giữ." : "Could not load exercises. Your filters have been kept."}</p>
@@ -496,9 +484,9 @@ export default function ListeningAppPage() {
               ))}
             </div>
           ) : (
-            /* Render Exercise Grid based on Active Tab */
+            
             <>
-              {/* ==================== PART 1: PHOTOGRAPHS ==================== */}
+              
               {activeTab === "PART_1" && (
                 <>
                   {!part1Data?.items?.length ? (
@@ -509,63 +497,22 @@ export default function ListeningAppPage() {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       {part1Data.items.map((item) => (
-                        <Card
+                        <ListeningPart1Card
                           key={item._id}
-                          className="dashboard-card group overflow-hidden flex flex-col justify-between hover:shadow-md transition-all"
-                        >
-                          <div>
-                            {/* Image Preview */}
-                            <div className="relative h-48 w-full bg-surface-subtle overflow-hidden">
-                              <ListeningPicture imageKey={item.image_url} title={item.title || "Part 1"} isVietnamese={isVietnamese} />
-                              <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                                <span className="rounded-full bg-primary/90 backdrop-blur-xs px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs">
-                                  Part 1
-                                </span>
-                                <span className="rounded-full bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[10px] font-medium text-white">
-                                  {categoryName("PART_1", item.picture_type)}
-                                </span>
-                              </div>
-                              <div className="absolute bottom-2.5 right-2.5">
-                                <span className="rounded-full bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-white">
-                                  {item.cefr_level || "A2"} • {item.difficulty_level || "EASY"}
-                                </span>
-                              </div>
-                            </div>
-
-                            <CardContent className="p-4 space-y-2">
-                              <h3 className="font-bold text-sm text-text-primary line-clamp-1">
-                                {isVietnamese && item.title_vi
-                                  ? item.title_vi
-                                  : item.title || "Bài mô tả tranh Part 1"}
-                              </h3>
-                              <p className="text-xs text-text-tertiary">
-                                {isVietnamese
-                                  ? "Nghe 4 lựa chọn A, B, C, D để chọn đáp án đúng"
-                                  : "Listen to 4 options (A, B, C, D) to find the answer"}
-                              </p>
-                            </CardContent>
-                          </div>
-
-                          <div className="p-4 pt-0">
-                            <Button
-                              onClick={() =>
-                                openWorkspace({ type: "PART_1", item })
-                              }
-                              className="w-full gap-2"
-                              size="sm"
-                            >
-                              <Icon name="play" size={14} />
-                              {isVietnamese ? "Luyện tập ngay" : "Practice Now"}
-                            </Button>
-                          </div>
-                        </Card>
+                          item={item}
+                          isVietnamese={isVietnamese}
+                          categoryName={categoryName("PART_1", item.picture_type)}
+                          onStartPractice={(selected) =>
+                            openWorkspace({ type: "PART_1", item: selected })
+                          }
+                        />
                       ))}
                     </div>
                   )}
                 </>
               )}
 
-              {/* ==================== PART 2: QUESTION & RESPONSE ==================== */}
+              
               {activeTab === "PART_2" && (
                 <>
                   {!part2Data?.items?.length ? (
@@ -632,7 +579,7 @@ export default function ListeningAppPage() {
                 </>
               )}
 
-              {/* ==================== PART 3: CONVERSATIONS ==================== */}
+              
               {activeTab === "PART_3" && (
                 <>
                   {!part3Data?.items?.length ? (
@@ -701,7 +648,7 @@ export default function ListeningAppPage() {
                 </>
               )}
 
-              {/* ==================== PART 4: SHORT TALKS ==================== */}
+              
               {activeTab === "PART_4" && (
                 <>
                   {!part4Data?.items?.length ? (
@@ -772,7 +719,7 @@ export default function ListeningAppPage() {
                 </>
               )}
 
-              {/* ==================== DICTATION ==================== */}
+              
               {activeTab === "DICTATION" && (
                 <>
                   {!dictationData?.items?.length ? (
@@ -849,7 +796,7 @@ export default function ListeningAppPage() {
                 </>
               )}
 
-              {/* PAGINATION COMPONENT */}
+              
               {currentPagination && currentPagination.totalPages > 1 && (
                 <div className="mt-8 flex justify-center">
                   <Pagination
@@ -871,9 +818,6 @@ export default function ListeningAppPage() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// EMPTY STATE COMPONENT
-// ---------------------------------------------------------------------------
 function EmptyState({
   isVietnamese,
   onReset,
@@ -902,13 +846,3 @@ function EmptyState({
   );
 }
 
-function ListeningPicture({ imageKey, title, isVietnamese }: { imageKey?: string; title: string; isVietnamese: boolean }) {
-  const [failedKey, setFailedKey] = useState<string | null>(null);
-  if (!imageKey || failedKey === imageKey) return (
-    <div className="flex h-full items-center justify-center gap-2 text-sm text-text-tertiary">
-      <Icon name="camera" size={20} />
-      <span>{isVietnamese ? "Ảnh chưa khả dụng" : "Image unavailable"}</span>
-    </div>
-  );
-  return <Image unoptimized fill src={resolveImageUrl(imageKey)} alt={title} className="object-cover transition-transform duration-300 group-hover:scale-105" onError={() => setFailedKey(imageKey)} />;
-}

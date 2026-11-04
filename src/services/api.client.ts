@@ -47,7 +47,11 @@ const processQueue = (error: unknown, token: string | null = null) => {
 }
 
 export async function refreshAuthToken(): Promise<string | null> {
-  const storedRefreshToken = storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.get(STORAGE_KEYS.REFRESH_TOKEN)
+  const storedRefreshToken =
+    storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN) ||
+    storage.cookie.get('refresh_token') ||
+    storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
+    storage.get<string>('refresh_token')
   const refreshHeaders: Record<string, string> = {}
   if (storedRefreshToken) {
     refreshHeaders['x-refresh-token'] = storedRefreshToken
@@ -118,6 +122,8 @@ apiClient.interceptors.response.use(
         storage.session.remove(STORAGE_KEYS.USER)
         storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
         storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+        storage.cookie.remove('refresh_token')
+        storage.cookie.remove('access_token')
         storage.cookie.remove(STORAGE_KEYS.IS_PRIVILEGED)
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('lingosphere:session_terminated', { detail: { message: errorMsg } }))
@@ -177,6 +183,8 @@ apiClient.interceptors.response.use(
           storage.session.remove(STORAGE_KEYS.USER)
           storage.cookie.remove(STORAGE_KEYS.ACCESS_TOKEN)
           storage.cookie.remove(STORAGE_KEYS.REFRESH_TOKEN)
+          storage.cookie.remove('refresh_token')
+          storage.cookie.remove('access_token')
           storage.cookie.remove(STORAGE_KEYS.USER)
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))

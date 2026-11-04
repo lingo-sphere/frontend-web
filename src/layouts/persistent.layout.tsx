@@ -12,6 +12,7 @@ import { AiTutorFloatingButton } from '@/features/ai-learning/components/ai.tuto
 import { ScrollToTopButton } from '@/components/scroll.to.top.button'
 import { StreakCelebrationModal } from '@/components/streak-celebration-modal'
 import { useStreakNotification } from '@/hooks/use-streak-notification'
+import { GlobalRouteGuard } from '@/components/auth/global.route.guard'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
@@ -72,7 +73,9 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
 export function PersistentLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={null}>
-      <PersistentLayoutContent>{children}</PersistentLayoutContent>
+      <GlobalRouteGuard>
+        <PersistentLayoutContent>{children}</PersistentLayoutContent>
+      </GlobalRouteGuard>
     </Suspense>
   )
 }
