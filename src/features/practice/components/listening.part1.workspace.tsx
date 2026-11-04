@@ -92,7 +92,6 @@ export function ListeningPart1Workspace({
     (exercise.correct_answer ? { key: exercise.correct_answer, text: '', is_correct: true } : undefined);
 
   // Build options map for display
-  const optionsMap = new Map(options.map(opt => [opt.key, opt]));
 
   const handleOptionClick = (key: string) => {
     if (hasAnswered) return;
