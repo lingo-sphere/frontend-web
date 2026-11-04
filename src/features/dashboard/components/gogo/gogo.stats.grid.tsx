@@ -1,8 +1,8 @@
-// Component lưới 6 thẻ trực quan hóa năng lực kỹ năng học viên dạng biểu đồ vòng đo tiến độ tròn mini.
+// Component lưới 6 thẻ trực quan hóa năng lực kỹ năng học viên dạng biểu đồ vòng đo tiến độ tròn mini theo phong cách Cuba Admin.
 'use client'
 
 import React from 'react'
-import { BookOpen, Headphones, FileText, Layers, Mic, PenTool, ArrowUpRight } from 'lucide-react'
+import { BookOpen, Headphones, FileText, Layers, Mic, PenTool } from 'lucide-react'
 import type { ProgressMetrics, VocabStatsSummary } from '@/features/progress/hooks/use.progress.data'
 import type { SkillsSummary } from '@/features/progress/services/progress.service'
 
@@ -21,8 +21,8 @@ function MiniCircularGauge({
   max = 100,
   color,
   textColor,
-  size = 54,
-  strokeWidth = 5,
+  size = 56,
+  strokeWidth = 5.5,
   displayValue,
 }: {
   value: number
@@ -107,9 +107,10 @@ export function GogoStatsGrid({
       icon: BookOpen,
       color: '#10b981',
       textColor: 'text-emerald-600 dark:text-emerald-400',
+      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
       badge: getCefrBadge(readingAcc),
       sub: `${skillsSummary?.skills?.reading?.total_questions ?? 0} câu đã làm`,
-      cardBg: 'bg-surface hover:border-emerald-300 dark:hover:border-emerald-700/50',
+      cardHover: 'hover:border-emerald-400/60 dark:hover:border-emerald-600/60',
     },
     {
       id: 'listening',
@@ -119,9 +120,10 @@ export function GogoStatsGrid({
       icon: Headphones,
       color: '#0284c7',
       textColor: 'text-sky-600 dark:text-sky-400',
+      iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
       badge: getCefrBadge(listeningAcc),
       sub: `${skillsSummary?.skills?.listening?.total_questions ?? 0} câu đã làm`,
-      cardBg: 'bg-surface hover:border-sky-300 dark:hover:border-sky-700/50',
+      cardHover: 'hover:border-sky-400/60 dark:hover:border-sky-600/60',
     },
     {
       id: 'grammar',
@@ -131,9 +133,10 @@ export function GogoStatsGrid({
       icon: FileText,
       color: '#84cc16',
       textColor: 'text-lime-600 dark:text-lime-400',
+      iconBg: 'bg-lime-500/10 text-lime-600 dark:text-lime-400',
       badge: getCefrBadge(grammarAcc),
       sub: `${skillsSummary?.skills?.grammar?.total_questions ?? 0} câu đã làm`,
-      cardBg: 'bg-surface hover:border-lime-300 dark:hover:border-lime-700/50',
+      cardHover: 'hover:border-lime-400/60 dark:hover:border-lime-600/60',
     },
     {
       id: 'vocab',
@@ -143,9 +146,10 @@ export function GogoStatsGrid({
       icon: Layers,
       color: '#6366f1',
       textColor: 'text-indigo-600 dark:text-indigo-400',
+      iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       badge: { label: `${masteredVocab}/${totalCards}`, bg: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' },
       sub: `${masteredVocab} từ đã thuộc`,
-      cardBg: 'bg-surface hover:border-indigo-300 dark:hover:border-indigo-700/50',
+      cardHover: 'hover:border-indigo-400/60 dark:hover:border-indigo-600/60',
     },
     {
       id: 'speaking',
@@ -155,9 +159,10 @@ export function GogoStatsGrid({
       icon: Mic,
       color: '#f59e0b',
       textColor: 'text-amber-600 dark:text-amber-400',
+      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
       badge: getCefrBadge(speakingPts),
       sub: `${skillsSummary?.skills?.speaking?.total_attempts ?? 0} bài ghi âm`,
-      cardBg: 'bg-surface hover:border-amber-300 dark:hover:border-amber-700/50',
+      cardHover: 'hover:border-amber-400/60 dark:hover:border-amber-600/60',
     },
     {
       id: 'writing',
@@ -167,9 +172,10 @@ export function GogoStatsGrid({
       icon: PenTool,
       color: '#0d9488',
       textColor: 'text-teal-600 dark:text-teal-400',
+      iconBg: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
       badge: getCefrBadge(writingPts),
       sub: `${skillsSummary?.skills?.writing?.total_attempts ?? 0} bài luận`,
-      cardBg: 'bg-surface hover:border-teal-300 dark:hover:border-teal-700/50',
+      cardHover: 'hover:border-teal-400/60 dark:hover:border-teal-600/60',
     },
   ]
 
@@ -177,10 +183,10 @@ export function GogoStatsGrid({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-          Biểu đồ Năng lực Kỹ năng & Từ vựng SRS
+          Chỉ Số Năng Lực Trọng Tâm
         </h2>
         <span className="text-xs text-text-tertiary">
-          Theo dõi vòng đo lường độ chính xác đa kỹ năng
+          Khung năng lực CEFR & Tỉ lệ chính xác
         </span>
       </div>
 
@@ -190,13 +196,13 @@ export function GogoStatsGrid({
           return (
             <div
               key={item.id}
-              className={`rounded-2xl border border-border p-3.5 sm:p-4 flex flex-col items-center justify-between text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs min-h-[155px] ${item.cardBg}`}
+              className={`rounded-2xl border border-border p-3.5 sm:p-4 flex flex-col items-center justify-between text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md min-h-[160px] bg-surface ${item.cardHover}`}
             >
               <div className="w-full flex items-center justify-between pb-1">
-                <span className="p-1 rounded-lg bg-surface-subtle text-text-secondary">
-                  <Icon className="w-3.5 h-3.5 stroke-[2]" />
+                <span className={`p-1.5 rounded-xl flex items-center justify-center ${item.iconBg}`}>
+                  <Icon className="w-4 h-4 stroke-[2]" />
                 </span>
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${item.badge.bg}`}>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${item.badge.bg}`}>
                   {item.badge.label}
                 </span>
               </div>

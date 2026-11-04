@@ -1,4 +1,4 @@
-// Trang chủ tổng quan phân tích học tập toàn diện với biểu đồ tăng trưởng, phong độ và kỹ năng học viên.
+// Trang chủ phân tích học tập LingoSphere thiết kế theo phong cách dashboard Cuba Next.js hiện đại.
 'use client'
 
 import React, { useState } from 'react'
@@ -25,6 +25,7 @@ import { GogoVocabularyDonutCard } from '@/features/dashboard/components/gogo/go
 import { GogoLearningProcessesCard } from '@/features/dashboard/components/gogo/gogo.learning.processes.card'
 import { GogoSkillsRadarCard } from '@/features/dashboard/components/gogo/gogo.skills.radar.card'
 import { GogoWeaknessStatusCard } from '@/features/dashboard/components/gogo/gogo.weakness.status.card'
+import { GogoRecentAssessmentsCard } from '@/features/dashboard/components/gogo/gogo.recent.assessments.card'
 
 export default function HomeAppPage() {
   const navigate = useNavigate()
@@ -35,6 +36,7 @@ export default function HomeAppPage() {
     activeUser,
     enrolledCourseCards,
     metrics,
+    recentActivities,
     vocabStats,
     listeningScore,
     readingScore,
@@ -92,8 +94,13 @@ export default function HomeAppPage() {
     >
       <GogoWelcomeHero
         user={activeUser}
+        targetScore={metrics.targetScore}
+        currentStreak={metrics.streak}
+        xp={metrics.xp}
         selectedPeriod={selectedPeriod}
         onPeriodChange={(p) => setSelectedPeriod(p)}
+        onPractice={() => navigate('/toeic')}
+        onVocab={() => navigate('/vocabulary')}
       />
 
       <GogoStatsGrid
@@ -106,27 +113,43 @@ export default function HomeAppPage() {
         writingScore={writingScore}
       />
 
-      <GogoGrowthChartCard
-        data2K={growthAnalytics.chapter2SkillsPoints}
-        stats2K={{
-          latestScore: growthAnalytics.latestChapter2SkillsScore,
-          avgScore: growthAnalytics.avgChapter2SkillsScore,
-          passed: growthAnalytics.passRateChapter2Skills >= 70,
-        }}
-        data4K={growthAnalytics.chapter4SkillsPoints}
-        stats4K={{
-          latestScore: growthAnalytics.latestChapter4SkillsScore,
-          avgScore: growthAnalytics.avgChapter4SkillsScore,
-          passed: growthAnalytics.passRateChapter4Skills >= 70,
-        }}
-        toeicData={growthAnalytics.toeicTimelinePoints}
-        toeicStats={{
-          latestScore: growthAnalytics.latestToeicScore,
-          avgScore: growthAnalytics.peakToeicScore,
-          passed: true,
-        }}
-        toeicSeries={growthAnalytics.toeicChartSeries}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-8 flex flex-col">
+          <GogoGrowthChartCard
+            data2K={growthAnalytics.chapter2SkillsPoints}
+            stats2K={{
+              latestScore: growthAnalytics.latestChapter2SkillsScore,
+              avgScore: growthAnalytics.avgChapter2SkillsScore,
+              passed: growthAnalytics.passRateChapter2Skills >= 70,
+            }}
+            data4K={growthAnalytics.chapter4SkillsPoints}
+            stats4K={{
+              latestScore: growthAnalytics.latestChapter4SkillsScore,
+              avgScore: growthAnalytics.avgChapter4SkillsScore,
+              passed: growthAnalytics.passRateChapter4Skills >= 70,
+            }}
+            toeicData={growthAnalytics.toeicTimelinePoints}
+            toeicStats={{
+              latestScore: growthAnalytics.latestToeicScore,
+              avgScore: growthAnalytics.peakToeicScore,
+              passed: true,
+            }}
+            toeicSeries={growthAnalytics.toeicChartSeries}
+          />
+        </div>
+
+        <div className="lg:col-span-4 flex flex-col">
+          <GogoConfigurationCard
+            targetScore={metrics.targetScore}
+            currentScore={metrics.currentScore}
+            baselineScore={baselineScore}
+            currentStreak={metrics.streak}
+            xp={metrics.xp}
+            onPractice={() => navigate('/toeic')}
+            onVocab={() => navigate('/vocabulary')}
+          />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         <GogoRollingPerformanceCard
@@ -134,11 +157,7 @@ export default function HomeAppPage() {
           onViewDetails={() => navigate('/progress?tab=SKILLS')}
         />
 
-        <GogoGrowthVelocityCard
-          timeGrowth={timeGrowth}
-          activityOverview={activityOverview}
-          onViewDetails={() => navigate('/progress?tab=GROWTH_ANALYTICS')}
-        />
+        <GogoSalesCapsuleCard dailyBreakdown={dailyBreakdown} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -150,19 +169,15 @@ export default function HomeAppPage() {
         </div>
 
         <div className="lg:col-span-4 flex flex-col">
-          <GogoConfigurationCard
-            targetScore={metrics.targetScore}
-            currentStreak={metrics.streak}
-            xp={metrics.xp}
-            onPractice={() => navigate('/toeic')}
-            onVocab={() => navigate('/vocabulary')}
+          <GogoGrowthVelocityCard
+            timeGrowth={timeGrowth}
+            activityOverview={activityOverview}
+            onViewDetails={() => navigate('/progress?tab=GROWTH_ANALYTICS')}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        <GogoSalesCapsuleCard dailyBreakdown={dailyBreakdown} />
-
         <GogoCurrenciesCard
           listeningScore={listeningScore}
           readingScore={readingScore}
@@ -171,6 +186,8 @@ export default function HomeAppPage() {
           skillsSummary={skillsSummary}
           skillsDelta={timeGrowth?.skills_delta}
         />
+
+        <GogoRecentAssessmentsCard activities={recentActivities} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
