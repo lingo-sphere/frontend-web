@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState, type ReactNode } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { authService } from '@/features/auth/services/auth.service'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
@@ -25,13 +25,12 @@ function isPublicRoute(pathname: string): boolean {
 
 export function GlobalRouteGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
-  const router = useRouter()
   const { user, isAuthenticated, isLoading } = useAuthStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    const token = storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) || storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN)
+    const token = authService.getAccessToken()
     if (token && !storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)) {
       storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, token, { days: 1 })
     }
@@ -46,9 +45,11 @@ export function GlobalRouteGuard({ children }: { children: ReactNode }) {
     if (!isAuthed && !isLoading) {
       const search = typeof window !== 'undefined' ? window.location.search : ''
       const returnUrl = encodeURIComponent(`${pathname}${search}`)
-      router.replace(`/login?returnUrl=${returnUrl}`)
+      if (typeof window !== 'undefined') {
+        window.location.replace(`/login?returnUrl=${returnUrl}`)
+      }
     }
-  }, [mounted, isPublic, isAuthenticated, isLoading, pathname, router])
+  }, [mounted, isPublic, isAuthenticated, isLoading, pathname])
 
   if (isPublic) {
     return <>{children}</>

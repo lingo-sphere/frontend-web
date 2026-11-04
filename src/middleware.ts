@@ -65,8 +65,8 @@ export function middleware(request: NextRequest) {
   const hasValidAuth = isTokenValid(accessToken) || isTokenValid(refreshToken)
 
   if (isPublicRoute(pathname)) {
-    if (pathname === '/login' && hasValidAuth) {
-      const rawReturnUrl = request.nextUrl.searchParams.get('returnUrl') || request.nextUrl.searchParams.get('redirect')
+    if (pathname === '/login' && hasValidAuth && !request.nextUrl.searchParams.has('returnUrl')) {
+      const rawReturnUrl = request.nextUrl.searchParams.get('redirect')
       const targetUrl = sanitizeReturnUrl(rawReturnUrl)
       return NextResponse.redirect(new URL(targetUrl, request.url))
     }

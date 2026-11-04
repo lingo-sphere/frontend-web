@@ -222,7 +222,6 @@ export const authService = {
 
   isAuthenticated(): boolean {
     const token = this.getAccessToken()
-    if (!token) return false
     if (isTokenValid(token)) return true
 
     const refreshToken = this.getRefreshToken()
@@ -236,12 +235,19 @@ export const authService = {
     return (
       storage.get<string>(STORAGE_KEYS.ACCESS_TOKEN) ||
       storage.session.get<string>(STORAGE_KEYS.ACCESS_TOKEN) ||
-      storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.cookie.get(STORAGE_KEYS.ACCESS_TOKEN) ||
+      storage.cookie.get('access_token') ||
+      storage.get<string>('access_token')
     )
   },
 
   getRefreshToken(): string | null {
-    return storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN) || storage.get(STORAGE_KEYS.REFRESH_TOKEN)
+    return (
+      storage.cookie.get(STORAGE_KEYS.REFRESH_TOKEN) ||
+      storage.cookie.get('refresh_token') ||
+      storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN) ||
+      storage.get<string>('refresh_token')
+    )
   },
 
   getStoredUser(): User | null {
