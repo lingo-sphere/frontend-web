@@ -15,6 +15,7 @@ import type { BackendGrammarPoint } from '@/features/vocabulary/services/vocabul
 import { useGrammarPointsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
 import { grammarPracticeService } from '@/features/practice/services/grammar-practice.service'
 import { GrammarWorkspace } from '@/features/practice/components/grammar.workspace'
+import { GrammarTopicCard } from '@/features/practice/components/grammar.topic.card'
 import { useSearchParams } from '@/lib/navigation'
 import type {
   GrammarLevelSummary,
@@ -24,9 +25,6 @@ import type {
 
 const ITEMS_PER_PAGE = 12
 
-// ============================================================================
-// COMPONENT: CARD LÝ THUYẾT (TRA CỨU)
-// ============================================================================
 function TheoryGrammarCard({ grammar, isVietnamese }: { grammar: BackendGrammarPoint; isVietnamese: boolean }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -116,9 +114,6 @@ function TheoryGrammarCard({ grammar, isVietnamese }: { grammar: BackendGrammarP
   )
 }
 
-// ============================================================================
-// MAIN PAGE COMPONENT
-// ============================================================================
 export default function GrammarAppPage() {
   const { t, i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
@@ -130,12 +125,10 @@ export default function GrammarAppPage() {
   const urlSearch = searchParams.get('search')
   const urlLevel = searchParams.get('level') as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | null
 
-  // Mode: 'practice' (Luyện tập) | 'handbook' (Tra cứu lý thuyết)
   const [activeTab, setActiveTab] = useState<'practice' | 'handbook'>(
     urlSearch ? 'handbook' : 'practice'
   )
 
-  // PRACTICE STATE
   const [levels, setLevels] = useState<GrammarLevelSummary[]>([])
   const [selectedLevel, setSelectedLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1'>(
     urlLevel || 'A1'
@@ -145,13 +138,11 @@ export default function GrammarAppPage() {
   const [startingSessionTopicId, setStartingSessionTopicId] = useState<string | null>(null)
   const [activeSession, setActiveSession] = useState<GrammarSession | null>(null)
 
-  // HANDBOOK STATE
   const { data: grammarItems = [], isLoading: isLoadingHandbook } = useGrammarPointsQuery()
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState(urlSearch || '')
   const [currentPage, setCurrentPage] = useState(1)
 
-  // Load levels
   const loadLevels = useCallback(async () => {
     try {
       const data = await grammarPracticeService.getLevels(userId)
@@ -161,7 +152,6 @@ export default function GrammarAppPage() {
     }
   }, [userId])
 
-  // Load topics by level
   const loadTopics = useCallback(async (level: string) => {
     setIsLoadingTopics(true)
     try {
@@ -185,7 +175,6 @@ export default function GrammarAppPage() {
     }
   }, [activeTab, selectedLevel, loadTopics])
 
-  // Start practice session for a topic
   const handleStartPractice = async (topic: GrammarTopicItem) => {
     setStartingSessionTopicId(topic._id)
     try {
@@ -205,7 +194,6 @@ export default function GrammarAppPage() {
     }
   }
 
-  // Filter for handbook
   const filteredGrammarPoints = useMemo(() => {
     return grammarItems.filter((item) => {
       const matchesType = selectedCategory === 'ALL' || item.category === selectedCategory
@@ -223,10 +211,8 @@ export default function GrammarAppPage() {
     return filteredGrammarPoints.slice(start, start + ITEMS_PER_PAGE)
   }, [filteredGrammarPoints, currentPage])
 
-  // Current Level Meta
   const currentLevelSummary = levels.find((l) => l.level === selectedLevel)
 
-  // IF SESSION IS ACTIVE: RENDER WORKSPACE DIRECTLY
   if (activeSession) {
     return (
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
@@ -253,7 +239,7 @@ export default function GrammarAppPage() {
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Top Header */}
+      
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <SectionHeading
           eyebrow={isVietnamese ? 'Luyện tập Ngữ Pháp' : 'Grammar Practice'}
@@ -265,7 +251,7 @@ export default function GrammarAppPage() {
           }
         />
 
-        {/* Tab Switcher: Luyện tập vs Tra cứu */}
+        
         <div className="flex items-center rounded-xl bg-surface-subtle p-1 border border-border">
           <button
             type="button"
@@ -295,12 +281,12 @@ export default function GrammarAppPage() {
         </div>
       </div>
 
-      {/* ==================================================================== */}
-      {/* TAB 1: LUYỆN TẬP THEO CẤP ĐỘ (A1 - C1) */}
-      {/* ==================================================================== */}
+      
+      
+      
       {activeTab === 'practice' && (
         <div className="mt-8 space-y-6">
-          {/* 5 CEFR LEVEL SELECTOR */}
+          
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {[
               { level: 'A1', name: 'Beginner', desc: 'Nền tảng' },
@@ -343,7 +329,7 @@ export default function GrammarAppPage() {
             })}
           </div>
 
-          {/* Level Summary Header Banner */}
+          
           {currentLevelSummary && (
             <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -373,7 +359,7 @@ export default function GrammarAppPage() {
             </div>
           )}
 
-          {/* Topic Cards Grid */}
+          
           {isLoadingTopics ? (
             <div className="flex h-48 items-center justify-center">
               <p className="text-sm text-text-secondary">Đang tải danh sách chủ đề ngữ pháp...</p>
@@ -384,71 +370,23 @@ export default function GrammarAppPage() {
               <p className="text-sm text-text-secondary">Chưa có bài tập cho cấp độ này.</p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {topics.map((topic) => {
-                const isStarting = startingSessionTopicId === topic._id
-
-                return (
-                  <Card
-                    key={topic._id}
-                    className="flex flex-col justify-between border border-border bg-surface-subtle transition-all hover:border-primary/40 hover:shadow-md"
-                  >
-                    <CardContent className="p-5 space-y-4">
-                      {/* Meta badge */}
-                      <div className="flex items-center justify-between">
-                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
-                          {topic.category}
-                        </span>
-                        <span className="text-xs text-text-tertiary">
-                          {topic.total_questions} bài tập
-                        </span>
-                      </div>
-
-                      {/* Title & Description */}
-                      <div>
-                        <h4 className="text-base font-bold text-text-primary line-clamp-1">
-                          {topic.name_vi || topic.name_en}
-                        </h4>
-                        <p className="text-xs text-text-secondary line-clamp-1">{topic.name_en}</p>
-                      </div>
-
-                      {/* Formula pattern box */}
-                      {topic.structure_pattern && (
-                        <div className="rounded-lg bg-surface-elevated p-2.5 border border-border">
-                          <span className="text-[10px] font-semibold uppercase text-text-tertiary block">
-                            Cấu trúc:
-                          </span>
-                          <span className="font-mono text-xs font-bold text-primary block mt-0.5 line-clamp-1">
-                            {topic.structure_pattern}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Primary Button */}
-                      <Button
-                        variant="default"
-                        disabled={isStarting}
-                        onClick={() => handleStartPractice(topic)}
-                        className="w-full gap-2 mt-2 shadow-sm font-semibold"
-                      >
-                        <Icon name="play" size={14} />
-                        <span>{isStarting ? 'Đang tạo phòng...' : 'Luyện tập ngay'}</span>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )
-              })}
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {topics.map((topic) => (
+                <GrammarTopicCard
+                  key={topic._id}
+                  topic={topic}
+                  isStarting={startingSessionTopicId === topic._id}
+                  onStartPractice={handleStartPractice}
+                />
+              ))}
             </div>
           )}
         </div>
       )}
 
-      {/* ==================================================================== */}
-      {/* TAB 2: TRA CỨU LÝ THUYẾT (HANDBOOK) */}
-      {/* ==================================================================== */}
       {activeTab === 'handbook' && (
         <div className="mt-8 space-y-6">
-          {/* Search & Filter */}
+          
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="w-full sm:max-w-xs">
               <Input
@@ -489,7 +427,6 @@ export default function GrammarAppPage() {
             </div>
           </div>
 
-          {/* Cards Grid */}
           {isLoadingHandbook ? (
             <div className="flex h-48 items-center justify-center">
               <p className="text-sm text-text-secondary">Đang tải lý thuyết ngữ pháp...</p>

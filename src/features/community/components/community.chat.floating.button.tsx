@@ -1,40 +1,43 @@
 // Component nút tròn nổi ở góc dưới bên phải màn hình để đóng mở hộp thoại chat cộng đồng.
-'use client';
+'use client'
 
-import { useEffect, useSyncExternalStore } from 'react';
-import { MessageSquare, X } from 'lucide-react';
-import { useCommunityChat } from '@/features/community/hooks/use.community.chat';
-import { CommunityChatWidget } from '@/features/community/components/community.chat.widget';
+import { useEffect, useSyncExternalStore } from 'react'
+import { MessageSquare, X } from 'lucide-react'
+import { useCommunityChat } from '@/features/community/hooks/use.community.chat'
+import { CommunityChatWidget } from '@/features/community/components/community.chat.widget'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/tooltip'
 
-const emptySubscribe = () => () => {};
+const emptySubscribe = () => () => {}
 
-export function CommunityChatFloatingButton() {
-  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-  const chatState = useCommunityChat();
-  const { isOpen, setIsOpen } = chatState;
+interface CommunityChatFloatingButtonProps {
+  embedded?: boolean
+}
+
+export function CommunityChatFloatingButton({ embedded = false }: CommunityChatFloatingButtonProps) {
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
+  const chatState = useCommunityChat()
+  const { isOpen, setIsOpen } = chatState
 
   useEffect(() => {
-    const handleClose = () => setIsOpen(false);
-    window.addEventListener('lingosphere:close-community-chat', handleClose);
+    const handleClose = () => setIsOpen(false)
+    window.addEventListener('lingosphere:close-community-chat', handleClose)
     return () => {
-      window.removeEventListener('lingosphere:close-community-chat', handleClose);
-    };
-  }, [setIsOpen]);
+      window.removeEventListener('lingosphere:close-community-chat', handleClose)
+    }
+  }, [setIsOpen])
 
   const handleToggle = () => {
     if (!isOpen) {
-      window.dispatchEvent(new CustomEvent('lingosphere:close-ai-chat'));
+      window.dispatchEvent(new CustomEvent('lingosphere:close-ai-chat'))
     }
-    setIsOpen(!isOpen);
-  };
+    setIsOpen(!isOpen)
+  }
 
-  if (!isMounted) return null;
+  if (!isMounted) return null
 
-  return (
-    <>
-      <CommunityChatWidget chatState={chatState} />
-
-      <div className="fixed bottom-6 right-6 z-50">
+  const buttonTrigger = (
+    <Tooltip>
+      <TooltipTrigger asChild>
         <button
           type="button"
           onClick={handleToggle}
@@ -55,7 +58,17 @@ export function CommunityChatFloatingButton() {
 
           <MessageSquare className="h-6 w-6 stroke-[1.8] transition-transform group-hover:rotate-6" />
         </button>
-      </div>
+      </TooltipTrigger>
+      <TooltipContent side="left" sideOffset={10}>
+        <span className="text-xs font-medium">Chat cộng đồng</span>
+      </TooltipContent>
+    </Tooltip>
+  )
+
+  return (
+    <>
+      <CommunityChatWidget chatState={chatState} />
+      {embedded ? buttonTrigger : <div className="fixed bottom-6 right-6 z-50">{buttonTrigger}</div>}
     </>
-  );
+  )
 }
