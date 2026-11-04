@@ -5,9 +5,12 @@ import React, { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
 import { useProgressData } from '@/features/progress/hooks/use.progress.data'
+import {
+  useSkillsSummaryQuery,
+  useWeaknessesQuery,
+  usePracticeDashboardQuery,
+} from '@/features/progress/hooks/use.progress.query'
 import { useVocabularyDashboard } from '@/features/vocabulary/hooks/use.vocabulary.dashboard'
-import { progressService } from '@/features/progress/services/progress.service'
-import type { SkillsSummary, WeaknessAnalysis, PracticeDashboardData } from '@/features/progress/services/progress.service'
 import { GogoWelcomeHero } from '@/features/dashboard/components/gogo/gogo.welcome.hero'
 import { GogoStatsGrid } from '@/features/dashboard/components/gogo/gogo.stats.grid'
 import { GogoRollingPerformanceCard } from '@/features/dashboard/components/gogo/gogo.rolling.performance.card'
@@ -24,9 +27,6 @@ import { GogoWeaknessStatusCard } from '@/features/dashboard/components/gogo/gog
 export default function HomeAppPage() {
   const navigate = useNavigate()
   const [selectedPeriod, setSelectedPeriod] = useState<string>('7d')
-  const [skillsSummary, setSkillsSummary] = useState<SkillsSummary | null>(null)
-  const [allWeaknesses, setAllWeaknesses] = useState<WeaknessAnalysis[]>([])
-  const [practiceDashboard, setPracticeDashboard] = useState<PracticeDashboardData | null>(null)
 
   const {
     isLoading,
@@ -41,27 +41,15 @@ export default function HomeAppPage() {
     toeicAttempts,
   } = useProgressData(navigate)
 
+  const userId = activeUser?.user_id
+  const { data: skillsSummaryRes } = useSkillsSummaryQuery(userId, selectedPeriod, Boolean(userId))
+  const { data: allWeaknessesRes } = useWeaknessesQuery(userId, 10, Boolean(userId))
+  const { data: practiceDashboardRes } = usePracticeDashboardQuery(userId, selectedPeriod, Boolean(userId))
   const { data: vocabDashboardData } = useVocabularyDashboard()
 
-  useEffect(() => {
-    const userId = activeUser?.user_id
-    if (!userId) return
-
-    progressService
-      .getSkillsSummary(userId, selectedPeriod as any)
-      .then((data) => setSkillsSummary(data))
-      .catch(() => setSkillsSummary(null))
-
-    progressService
-      .getAllWeaknesses(userId, 10)
-      .then((data) => setAllWeaknesses(data || []))
-      .catch(() => setAllWeaknesses([]))
-
-    progressService
-      .getPracticeDashboard(userId, selectedPeriod)
-      .then((data) => setPracticeDashboard(data))
-      .catch(() => setPracticeDashboard(null))
-  }, [activeUser?.user_id, selectedPeriod])
+  const skillsSummary = skillsSummaryRes || null
+  const allWeaknesses = allWeaknessesRes || []
+  const practiceDashboard = practiceDashboardRes || null
 
   if (isLoading) {
     return (
