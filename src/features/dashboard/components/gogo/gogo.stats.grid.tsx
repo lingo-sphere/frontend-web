@@ -1,4 +1,4 @@
-// Component lưới 6 thẻ thống kê kỹ năng pastel theo phong cách Gogo Stats.
+// Component lưới 6 thẻ thống kê nhanh năng lực 4 kỹ năng, ngữ pháp và từ vựng SRS.
 'use client'
 
 import React from 'react'
@@ -79,7 +79,7 @@ export function GogoStatsGrid({
   return (
     <div className="space-y-3">
       <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-        Stats
+        Tổng quan Kỹ năng & Từ vựng
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4">
         {statItems.map((item) => {
