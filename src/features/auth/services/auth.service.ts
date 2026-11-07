@@ -20,7 +20,10 @@ function isTokenValid(token: string | null | undefined): boolean {
     const parts = token.split('.')
     if (parts.length !== 3) return false
     const base64Url = parts[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    while (base64.length % 4) {
+      base64 += '='
+    }
     const decoded = typeof atob === 'function'
       ? atob(base64)
       : Buffer.from(base64, 'base64').toString('binary')
@@ -55,14 +58,18 @@ export const authService = {
       primaryStorage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (isRemember) {
         storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+        storage.cookie.set('access_token', res.access_token, { days: 1 })
       } else {
         storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+        storage.cookie.set('access_token', res.access_token)
       }
       if (res.refresh_token) {
         if (isRemember) {
           storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+          storage.cookie.set('refresh_token', res.refresh_token, { days: 7 })
         } else {
           storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+          storage.cookie.set('refresh_token', res.refresh_token)
         }
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
@@ -88,14 +95,18 @@ export const authService = {
       primaryStorage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       if (isRemember) {
         storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+        storage.cookie.set('access_token', res.access_token, { days: 1 })
       } else {
         storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
+        storage.cookie.set('access_token', res.access_token)
       }
       if (res.refresh_token) {
         if (isRemember) {
           storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+          storage.cookie.set('refresh_token', res.refresh_token, { days: 7 })
         } else {
           storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token)
+          storage.cookie.set('refresh_token', res.refresh_token)
         }
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.session.remove(STORAGE_KEYS.REFRESH_TOKEN)
@@ -112,8 +123,10 @@ export const authService = {
     if (res.access_token) {
       storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      storage.cookie.set('access_token', res.access_token, { days: 1 })
       if (res.refresh_token) {
         storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+        storage.cookie.set('refresh_token', res.refresh_token, { days: 7 })
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       }
       if (res.user) {
@@ -128,8 +141,10 @@ export const authService = {
     if (res.access_token) {
       storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      storage.cookie.set('access_token', res.access_token, { days: 1 })
       if (res.refresh_token) {
         storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+        storage.cookie.set('refresh_token', res.refresh_token, { days: 7 })
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       }
       if (res.user) {
@@ -144,8 +159,10 @@ export const authService = {
     if (res.access_token) {
       storage.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token)
       storage.cookie.set(STORAGE_KEYS.ACCESS_TOKEN, res.access_token, { days: 1 })
+      storage.cookie.set('access_token', res.access_token, { days: 1 })
       if (res.refresh_token) {
         storage.cookie.set(STORAGE_KEYS.REFRESH_TOKEN, res.refresh_token, { days: 7 })
+        storage.cookie.set('refresh_token', res.refresh_token, { days: 7 })
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
       }
       if (res.user) {
