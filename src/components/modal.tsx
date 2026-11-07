@@ -11,6 +11,7 @@ interface ModalProps {
   children: ReactNode
   footer?: ReactNode
   size?: 'sm' | 'md' | 'lg'
+  zIndexClassName?: string
 }
 
 const sizeClasses = {
@@ -19,7 +20,7 @@ const sizeClasses = {
   lg: 'max-w-lg',
 }
 
-export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, size = 'md', zIndexClassName }: ModalProps) {
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -45,7 +46,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
   return (
     <div
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className={`fixed inset-0 ${zIndexClassName || 'z-[100000]'} flex items-center justify-center`}
       role="dialog"
     >
 

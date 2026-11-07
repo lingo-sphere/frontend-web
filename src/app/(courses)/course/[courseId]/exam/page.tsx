@@ -42,6 +42,7 @@ function CourseExamContent() {
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
+      if (useAuthStore.getState().isKickedOut) return
       toast.warning('Vui lòng đăng nhập để tham gia làm bài thi khóa học')
       navigate(`/login?returnUrl=/course/${rawParam}/exam`)
     }

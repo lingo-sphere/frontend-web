@@ -27,6 +27,7 @@ export default function NotesAppPage() {
 
   useEffect(() => {
     if (isMounted && !isAuthLoading && !isAuthenticated) {
+      if (useAuthStore.getState().isKickedOut) return
       toast.warning('Vui lòng đăng nhập để xem sổ tay ghi chú khóa học!')
       navigate('/login?returnUrl=/notes')
     }

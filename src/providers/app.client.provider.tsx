@@ -68,11 +68,14 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       checkAuth()
       return
     }
+    const finalMsg =
+      message ||
+      t('common.sessionTerminatedDesc') ||
+      'Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác. Bạn đã bị đăng xuất.'
+    useAuthStore.getState().setKickout(finalMsg)
     authService.clearAuthStorage()
     setUser(null)
-    setKickoutMessage(
-      message || t('common.sessionTerminatedDesc')
-    )
+    setKickoutMessage(finalMsg)
   }
 
   useEffect(() => {
@@ -118,6 +121,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
     }
 
     const handleUnauthorized = () => {
+      if (useAuthStore.getState().isKickedOut) return
       authService.clearAuthStorage()
       setUser(null)
       if (typeof window !== 'undefined') {
@@ -219,24 +223,27 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
               onClose={() => {
                 authService.clearAuthStorage()
                 setKickoutMessage(null)
+                useAuthStore.getState().clearKickout()
                 if (typeof window !== 'undefined') {
                   window.location.href = '/login'
                 }
               }}
-              title={t('common.sessionTerminatedTitle')}
+              title={t('common.sessionTerminatedTitle') || 'Tài khoản đã đăng nhập nơi khác'}
               size="sm"
+              zIndexClassName="z-[100000]"
               footer={
                 <Button
                   className="w-full bg-primary font-semibold text-white shadow-md hover:bg-primary/90 cursor-pointer"
                   onClick={() => {
                     authService.clearAuthStorage()
                     setKickoutMessage(null)
+                    useAuthStore.getState().clearKickout()
                     if (typeof window !== 'undefined') {
                       window.location.href = '/login'
                     }
                   }}
                 >
-                  {t('common.understandAndReLogin')}
+                  {t('common.understandAndReLogin') || 'Đã hiểu và đăng nhập lại'}
                 </Button>
               }
             >

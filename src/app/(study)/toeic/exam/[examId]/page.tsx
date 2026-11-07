@@ -55,6 +55,7 @@ export default function ToeicExamAppPage() {
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
+      if (useAuthStore.getState().isKickedOut) return
       toast.warning(isVietnamese ? 'Vui lòng đăng nhập để bắt đầu bài thi TOEIC' : 'Please log in to take the TOEIC exam')
       navigate(`/login?returnUrl=/toeic/exam/${examId || ''}`)
     }
