@@ -12,6 +12,10 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  isKickedOut: boolean
+  kickoutMessage: string | null
+  setKickout: (message: string) => void
+  clearKickout: () => void
   setUser: (user: User | null) => void
   login: (payload: LoginPayload) => Promise<void>
   socialLogin: (payload: SocialLoginPayload) => Promise<void>
@@ -95,6 +99,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: Boolean(getInitialStoredUser()) && authService.isAuthenticated(),
   isLoading: false,
   error: null,
+  isKickedOut: false,
+  kickoutMessage: null,
+
+  setKickout: (message: string) => {
+    set({ isKickedOut: true, kickoutMessage: message, isAuthenticated: false })
+  },
+
+  clearKickout: () => {
+    set({ isKickedOut: false, kickoutMessage: null })
+  },
 
   setUser: (user) => {
     if (user?.role === 'ADMIN') {
@@ -118,7 +132,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearError: () => set({ error: null }),
 
   login: async (payload) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true, error: null, isKickedOut: false, kickoutMessage: null })
     try {
       authService.clearAuthStorage()
       const res = await authService.login(payload)
@@ -165,7 +179,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   socialLogin: async (payload) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true, error: null, isKickedOut: false, kickoutMessage: null })
     try {
       authService.clearAuthStorage()
       const res = await authService.socialLogin(payload)

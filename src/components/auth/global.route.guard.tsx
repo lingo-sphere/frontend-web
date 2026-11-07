@@ -25,7 +25,7 @@ function isPublicRoute(pathname: string): boolean {
 
 export function GlobalRouteGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
-  const { user, isAuthenticated, isLoading } = useAuthStore()
+  const { user, isAuthenticated, isLoading, isKickedOut } = useAuthStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function GlobalRouteGuard({ children }: { children: ReactNode }) {
   const isPublic = isPublicRoute(pathname)
 
   useEffect(() => {
-    if (!mounted || isPublic) return
+    if (!mounted || isPublic || isKickedOut) return
 
     const isAuthed = isAuthenticated || authService.isAuthenticated()
     if (!isAuthed && !isLoading) {
@@ -49,9 +49,13 @@ export function GlobalRouteGuard({ children }: { children: ReactNode }) {
         window.location.replace(`/login?returnUrl=${returnUrl}`)
       }
     }
-  }, [mounted, isPublic, isAuthenticated, isLoading, pathname])
+  }, [mounted, isPublic, isAuthenticated, isLoading, pathname, isKickedOut])
 
   if (isPublic) {
+    return <>{children}</>
+  }
+
+  if (isKickedOut) {
     return <>{children}</>
   }
 

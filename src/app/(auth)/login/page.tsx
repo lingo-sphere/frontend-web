@@ -41,6 +41,7 @@ function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const kickoutMessage = useAuthStore((s) => s.kickoutMessage)
 
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
   const rawReturnUrl = searchParams.get('returnUrl') || searchParams.get('redirect')
@@ -255,6 +256,13 @@ function LoginPageContent() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {kickoutMessage && !error && (
+              <div className="rounded-xl bg-amber-950/40 border border-amber-900/50 p-3 text-xs text-amber-300 flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle size={16} className="shrink-0 mt-0.5 text-amber-400" />
+                <span className="font-medium leading-relaxed">{kickoutMessage}</span>
+              </div>
+            )}
+
             {error && (
               <div className="rounded-xl bg-red-950/40 border border-red-900/50 p-3 text-xs text-red-300 flex items-start gap-2.5 animate-in fade-in">
                 <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-400" />

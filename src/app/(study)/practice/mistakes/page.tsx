@@ -72,6 +72,7 @@ export default function MistakeVaultPage() {
 
   useEffect(() => {
     if (mounted && !isAuthLoading && !isAuthenticated) {
+      if (useAuthStore.getState().isKickedOut) return
       toast.warning('Vui lòng đăng nhập để xem sổ tay lỗi sai!');
       navigate('/login?returnUrl=/practice/mistakes');
     }
