@@ -1,7 +1,7 @@
 // Trang xác thực đăng nhập và đăng ký toàn màn hình dành cho học viên LingoSphere.
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'motion/react'
@@ -25,13 +25,14 @@ import { AuthResetPasswordForm } from '@/features/auth/components/auth.reset.pas
 
 function getSafeReturnUrl(rawUrl: string | null): string {
   if (!rawUrl) return '/home'
+  const decoded = decodeURIComponent(rawUrl).trim()
   if (
-    rawUrl.startsWith('/') &&
-    !rawUrl.startsWith('//') &&
-    !rawUrl.includes('\\') &&
-    rawUrl !== '/login'
+    decoded.startsWith('/') &&
+    !decoded.startsWith('//') &&
+    !decoded.includes('\\') &&
+    !decoded.startsWith('/login')
   ) {
-    return rawUrl
+    return decoded
   }
   return '/home'
 }
@@ -42,16 +43,27 @@ function LoginPageContent() {
   const searchParams = useSearchParams()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const kickoutMessage = useAuthStore((s) => s.kickoutMessage)
+  const isNavigatingRef = useRef(false)
 
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
   const rawReturnUrl = searchParams.get('returnUrl') || searchParams.get('redirect')
   const returnUrl = getSafeReturnUrl(rawReturnUrl)
 
+  const navigateToDestination = (targetUrl: string) => {
+    if (isNavigatingRef.current) return
+    isNavigatingRef.current = true
+    if (typeof window !== 'undefined') {
+      window.location.replace(targetUrl)
+    } else {
+      router.push(targetUrl)
+    }
+  }
+
   useEffect(() => {
     if (isAuthenticated) {
-      router.push(returnUrl)
+      navigateToDestination(returnUrl)
     }
-  }, [isAuthenticated, router, returnUrl])
+  }, [isAuthenticated, returnUrl])
 
   const {
     mode,
@@ -83,7 +95,7 @@ function LoginPageContent() {
     handleGoogleToken,
     switchMode,
   } = useAuthModal({
-    onClose: () => router.push(returnUrl),
+    onClose: () => navigateToDestination(returnUrl),
     initialMode,
   })
 

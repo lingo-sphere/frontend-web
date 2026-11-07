@@ -59,16 +59,16 @@ const cookieUtil = {
   set(name: string, value: string, options?: CookieOptions): void {
     if (typeof document === 'undefined') return
     const path = options?.path || '/'
-    let cookieStr = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; path=${path}`
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    const isSecure = options?.secure ?? isHttps
+    const sameSite = options?.sameSite || 'Lax'
+    let cookieStr = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; path=${path}; samesite=${sameSite}`
     if (options?.days) {
       const date = new Date()
       date.setTime(date.getTime() + options.days * 24 * 60 * 60 * 1000)
       cookieStr += `; expires=${date.toUTCString()}`
     }
-    if (options?.sameSite) {
-      cookieStr += `; samesite=${options.sameSite}`
-    }
-    if (options?.secure) {
+    if (isSecure) {
       cookieStr += '; secure'
     }
     document.cookie = cookieStr
@@ -76,7 +76,9 @@ const cookieUtil = {
 
   remove(name: string, path: string = '/'): void {
     if (typeof document === 'undefined') return
-    document.cookie = `${encodeURIComponent(name)}=; path=${path}; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:'
+    const secureFlag = isHttps ? '; secure' : ''
+    document.cookie = `${encodeURIComponent(name)}=; path=${path}; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=Lax${secureFlag}`
   },
 }
 
