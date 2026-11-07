@@ -1,31 +1,28 @@
-/**
- * @file posthog.provider.tsx
- * @description Component giao diện React PostHogProvider cho học viên
- */
-
+// Component giao diện React PostHogProvider và theo dõi lượt xem trang cho học viên
 'use client'
 
-import { useEffect, Suspense } from 'react'
+import { memo, useEffect, useRef, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { initPostHog, identifyUser, resetUser, trackPageView } from '@/lib/posthog'
 
-function PostHogPageViewTracker() {
+const PostHogPageViewTracker = memo(function PostHogPageViewTracker() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const lastTrackedUrlRef = useRef<string | null>(null)
+
+  const queryString = searchParams?.toString() ?? ''
 
   useEffect(() => {
-    if (pathname && typeof window !== 'undefined') {
-      let url = window.origin + pathname
-      if (searchParams && searchParams.toString()) {
-        url = `${url}?${searchParams.toString()}`
-      }
-      trackPageView(url)
-    }
-  }, [pathname, searchParams])
+    if (!pathname || typeof window === 'undefined') return
+    const url = queryString ? `${window.origin}${pathname}?${queryString}` : `${window.origin}${pathname}`
+    if (lastTrackedUrlRef.current === url) return
+    lastTrackedUrlRef.current = url
+    trackPageView(url)
+  }, [pathname, queryString])
 
   return null
-}
+})
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
@@ -35,7 +32,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (user) {
+    if (user?.user_id) {
       identifyUser(user)
     } else {
       resetUser()

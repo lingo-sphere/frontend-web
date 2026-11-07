@@ -120,6 +120,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (payload) => {
     set({ isLoading: true, error: null })
     try {
+      authService.clearAuthStorage()
       const res = await authService.login(payload)
       if (res.user?.role === 'ADMIN') {
         await authService.logout().catch(() => {})
@@ -153,6 +154,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Đăng nhập không thành công'
       set({ error: msg, isLoading: false })
@@ -163,6 +167,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   socialLogin: async (payload) => {
     set({ isLoading: true, error: null })
     try {
+      authService.clearAuthStorage()
       const res = await authService.socialLogin(payload)
       if (res.user?.role === 'ADMIN') {
         await authService.logout().catch(() => {})
@@ -196,6 +201,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Đăng nhập qua mạng xã hội không thành công'
       set({ error: msg, isLoading: false })
@@ -225,6 +233,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Mã xác thực OTP không chính xác hoặc đã hết hạn'
       set({ error: msg, isLoading: false })
