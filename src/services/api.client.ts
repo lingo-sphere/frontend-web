@@ -113,7 +113,7 @@ apiClient.interceptors.response.use(
         originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD) ||
         originalRequest.url?.includes(API_CONFIG.ENDPOINTS.AUTH.REFRESH_TOKEN)
 
-      if (isKickout) {
+      if (isKickout && !isAuthEndpoint) {
         storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
         storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
         storage.remove(STORAGE_KEYS.USER)

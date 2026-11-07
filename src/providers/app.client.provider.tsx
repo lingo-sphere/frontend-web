@@ -64,7 +64,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
   const triggerKickout = (message?: string) => {
     if (typeof window === 'undefined') return
-    if (Date.now() - lastVerifiedAt.current < 8000) {
+    if (Date.now() - lastVerifiedAt.current < 10000) {
       checkAuth()
       return
     }
@@ -77,6 +77,11 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
   useEffect(() => {
     checkAuth()
+
+    const handleLoginSuccess = () => {
+      lastVerifiedAt.current = Date.now()
+      setKickoutMessage(null)
+    }
 
     let channel: BroadcastChannel | null = null
     try {
@@ -97,7 +102,12 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
     }
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'access_token' || e.key === 'user') {
+      if (
+        e.key === STORAGE_KEYS.ACCESS_TOKEN ||
+        e.key === STORAGE_KEYS.USER ||
+        e.key === 'access_token' ||
+        e.key === 'user'
+      ) {
         checkAuth()
       }
     }
@@ -130,6 +140,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       }
     }
 
+    window.addEventListener('lingosphere:login_success', handleLoginSuccess)
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener(
       'lingosphere:session_terminated',
@@ -139,6 +150,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
     return () => {
       channel?.close()
+      window.removeEventListener('lingosphere:login_success', handleLoginSuccess)
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener(
         'lingosphere:session_terminated',
