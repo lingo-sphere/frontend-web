@@ -5,7 +5,7 @@
 
 import { api } from '@/services/api.client'
 import type {
-  GrammarLevelSummary,
+  GrammarFeedback, GrammarDraft, GrammarSessionList, GrammarLevelSummary,
   GrammarTopicItem,
   GrammarSession,
   GrammarSessionResult,
@@ -15,6 +15,9 @@ import type {
 } from '../types/grammar-practice'
 
 export const grammarPracticeService = {
+  getSession(id: string): Promise<GrammarSession> { return api.get('/practice/grammar/sessions/' + id) },
+  getSessions(page = 1): Promise<GrammarSessionList> { return api.get('/practice/grammar/sessions', { page, limit: 10 }) },
+  saveDraft(id: string, payload: GrammarDraft): Promise<{ revision: number }> { return api.put('/practice/grammar/sessions/' + id, payload) },
   /**
    * Lấy danh sách 5 cấp độ ngữ pháp (A1 -> C1) cùng tiến độ
    */
@@ -38,26 +41,26 @@ export const grammarPracticeService = {
    * Tạo phiên luyện tập ngữ pháp mới
    */
   async createSession(params: CreateGrammarSessionParams): Promise<GrammarSession> {
-    const activeUserId = params.userId
-    const query = activeUserId ? `?userId=${encodeURIComponent(activeUserId)}` : ''
-    return api.post<GrammarSession>(`/practice/grammar/sessions${query}`, params)
+    const { grammar_knowledge_id, cefr_level, question_count, session_key } = params
+    const payload = { grammar_knowledge_id, cefr_level, question_count, session_key }
+    return api.post<GrammarSession>('/practice/grammar/sessions', payload)
   },
 
   /**
    * Trả lời từng câu hỏi
    */
-  async submitAnswer(params: SubmitGrammarAnswerParams): Promise<{ success: boolean; is_correct: boolean }> {
-    const activeUserId = params.userId
-    const query = activeUserId ? `?userId=${encodeURIComponent(activeUserId)}` : ''
-    return api.post<{ success: boolean; is_correct: boolean }>(`/practice/grammar/sessions/answer${query}`, params)
+  async submitAnswer(params: SubmitGrammarAnswerParams): Promise<GrammarFeedback> {
+    const { session_id, question_index, answer } = params
+    const payload = { session_id, question_index, answer }
+    return api.post<GrammarFeedback>('/practice/grammar/sessions/answer', payload)
   },
 
   /**
    * Nộp toàn bộ bài tập ngữ pháp
    */
   async submitSession(params: SubmitGrammarSessionParams): Promise<GrammarSessionResult> {
-    const activeUserId = params.userId
-    const query = activeUserId ? `?userId=${encodeURIComponent(activeUserId)}` : ''
-    return api.post<GrammarSessionResult>(`/practice/grammar/sessions/submit${query}`, params)
+    const { session_id, answers, total_time_seconds, skipped_indices } = params
+    const payload = { session_id, answers, total_time_seconds, skipped_indices }
+    return api.post<GrammarSessionResult>('/practice/grammar/sessions/submit', payload)
   },
 }

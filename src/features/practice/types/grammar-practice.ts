@@ -46,6 +46,7 @@ export interface GrammarQuestionOption {
 }
 
 export interface GrammarQuestionItem {
+  media_id?: string
   question_index: number
   question_id: string
   question_type: 'MULTIPLE_CHOICE' | 'FILL_BLANK' | 'ORDERING' | 'SHORT_ANSWER'
@@ -60,6 +61,13 @@ export interface GrammarQuestionItem {
 }
 
 export interface GrammarSession {
+  revision?: number
+  status?: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED'
+  answers?: Record<string, string>
+  checked?: Record<string, GrammarFeedback>
+  current_index?: number
+  time_spent_seconds?: number
+  result?: GrammarSessionResult | null
   session_id: string
   grammar_knowledge_id?: string
   topic_name_en: string
@@ -70,6 +78,7 @@ export interface GrammarSession {
 }
 
 export interface GrammarSessionResultDetail {
+  question_text_en?: string
   question_index: number
   question_id: string
   user_answer: string
@@ -92,10 +101,33 @@ export interface GrammarSessionResult {
 }
 
 export interface CreateGrammarSessionParams {
+  session_key?: string
   grammar_knowledge_id?: string
   cefr_level?: string
   question_count?: number
   userId?: string
+}
+
+export interface GrammarFeedback {
+  success: boolean
+  is_correct: boolean
+  user_answer: string
+  correct_answer: string
+  explanation?: string
+  explanation_vi?: string
+  revision: number
+}
+export interface GrammarDraft {
+  expected_revision: number
+  answers: Record<string, string>
+  current_index: number
+  time_spent_seconds: number
+}
+export interface GrammarSessionList {
+  items: Array<{ session_id: string; topic_name_vi: string; cefr_level: string; status: string; total_questions: number; answered_questions: number; score_percent: number }>
+  page: number
+  limit: number
+  total: number
 }
 
 export interface SubmitGrammarAnswerParams {

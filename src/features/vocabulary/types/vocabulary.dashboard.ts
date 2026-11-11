@@ -5,13 +5,14 @@
 
 export interface DashboardSummary {
   total_words: number;
+  unique_words?: number;
   mastered_count: number;
   learning_count: number;
   new_count: number;
   net_retained_words: number;
   due_today_count: number;
   overdue_count: number;
-  retention_rate_30d: number;
+  retention_rate_30d: number | null;
   net_mastered_growth_30d: number;
   active_weak_count: number;
   recovered_weak_count: number;
@@ -38,7 +39,7 @@ export interface CefrLevelData {
 export interface DailyActivityItem {
   date: string;
   reviews_count: number;
-  accuracy: number;
+  accuracy: number | null;
 }
 
 export interface DashboardWeakWord {

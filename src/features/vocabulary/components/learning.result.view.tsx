@@ -32,7 +32,7 @@ export function LearningResultView({
 
   const { totalWords, correctAnswers, accuracy, skillBreakdown, weakWords } = result
   const safeTotalWords = Math.max(0, totalWords || 0)
-  const safeCorrectAnswers = Math.min(safeTotalWords, Math.max(0, correctAnswers || 0))
+  const safeCorrectAnswers = Math.min(result.totalItems ?? safeTotalWords, Math.max(0, correctAnswers || 0))
   const safeAccuracy = Math.min(100, Math.max(0, accuracy || 0))
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export function LearningResultView({
             )}
           </div>
         </div>
-        <h1 className="text-[28px] font-bold text-text-primary">{getAccuracyMessage(safeAccuracy)}</h1>
+        <h1 className="text-[28px] font-bold text-text-primary">{result.assessmentType === 'LEGACY' ? (isVietnamese ? 'Kết quả phiên học cũ' : 'Previous session result') : result.assessmentType === 'SELF_REPORTED' ? (isVietnamese ? 'Hoàn tất tự đánh giá' : 'Self review completed') : getAccuracyMessage(safeAccuracy)}</h1>
         <p className="mt-2 text-[14px] text-text-secondary">
           {isVietnamese ? 'Bạn đã hoàn thành phiên học từ vựng.' : 'You completed your vocabulary session.'}
         </p>
@@ -101,13 +101,13 @@ export function LearningResultView({
         </Card>
         <Card className="dashboard-card">
           <CardContent className="p-4 text-center">
-            <p className="text-[32px] font-bold text-success">{safeCorrectAnswers}</p>
-            <p className="text-[12px] text-text-secondary">{isVietnamese ? 'Đúng' : 'Correct'}</p>
+            <p className="text-[32px] font-bold text-success">{result.assessmentType === 'SELF_REPORTED' ? (result.totalItems ?? safeTotalWords) : safeCorrectAnswers}</p>
+            <p className="text-[12px] text-text-secondary">{result.assessmentType === 'SELF_REPORTED' ? (isVietnamese ? 'Thẻ tự đánh giá' : 'Self reviewed cards') : (isVietnamese ? 'Thẻ trả lời đúng' : 'Correct items')}</p>
           </CardContent>
         </Card>
         <Card className="dashboard-card">
           <CardContent className="p-4 text-center">
-            <p className={`text-[32px] font-bold ${getAccuracyColor(safeAccuracy)}`}>{safeAccuracy}%</p>
+            <p className={`text-[32px] font-bold ${getAccuracyColor(safeAccuracy)}`}>{accuracy === null ? '—' : `${safeAccuracy}%`}</p>
             <p className="text-[12px] text-text-secondary">{isVietnamese ? 'Độ chính xác' : 'Accuracy'}</p>
           </CardContent>
         </Card>
@@ -176,7 +176,7 @@ export function LearningResultView({
   )
 }
 
-function SkillBar({ label, value }: { label: string; value: number }) {
+function SkillBar({ label, value }: { label: string; value: number | null }) {
   const getColor = (val: number) => {
     if (val >= 90) return 'bg-success'
     if (val >= 70) return 'bg-primary'
@@ -184,6 +184,7 @@ function SkillBar({ label, value }: { label: string; value: number }) {
     return 'bg-error'
   }
 
+  if (value === null || value === undefined) return <div className="flex justify-between text-[13px]"><span>{label}</span><span>Chưa đủ dữ liệu / Not tested</span></div>
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[13px]">

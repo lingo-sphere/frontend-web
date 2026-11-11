@@ -66,6 +66,9 @@ export interface PassageMetadata {
 }
 
 export interface ReadingPassage {
+  question_count?: number
+  media_id?: string
+  media_type?: 'IMAGE' | 'VIDEO'
   _id: string
   id?: string
   title: string
@@ -91,9 +94,24 @@ export interface SubmitAnswerPayload {
 }
 
 export interface SubmitReadingAttemptPayload {
+  expected_revision?: number
   passage_id: string
   session_id?: string
   answers: SubmitAnswerPayload[]
+}
+
+export interface ReadingSession {
+  session_id: string
+  revision: number
+  status: 'OPEN' | 'SUBMITTED'
+  time_mode: TimerPresetMode
+  started_at: string
+  deadline_at: string
+  server_now: string
+  time_limit_seconds: number
+  answers: Record<string, string>
+  passage: ReadingPassage
+  result?: ReadingAttemptResultEnhanced
 }
 
 export interface ReadingAttemptResult {
@@ -168,6 +186,8 @@ export interface AIReadingExplanation {
 }
 
 export interface ReadingAttemptResultEnhanced {
+  answers?: SubmitAnswerPayload[]
+  submitted_after_deadline?: boolean
   // Basic stats
   attempt_id: string
   score_percent: number

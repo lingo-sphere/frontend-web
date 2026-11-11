@@ -3,21 +3,21 @@
  * @description Topic / Context Selection Grid cho 2 dạng bài tập Reading mở rộng (Task-based & Info Matching)
  */
 
-'use client'
+"use client";
 
-import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Icon } from '@/components/icon.map'
-import { Input } from '@/components/input'
-import { Button } from '@/components/button'
-import { api } from '@/services/api.client'
-import { API_CONFIG } from '@/config/api.config'
-import type { PracticeContext } from '../types/context.types'
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Icon } from "@/components/icon.map";
+import { Input } from "@/components/input";
+import { Button } from "@/components/button";
+import { api } from "@/services/api.client";
+import { API_CONFIG } from "@/config/api.config";
+import type { PracticeContext } from "../types/context.types";
 
 interface ReadingContextNavigationProps {
-  isVietnamese?: boolean
-  selectedContextId?: string | null
-  onSelectContext: (contextId: string | null) => void
+  isVietnamese?: boolean;
+  selectedContextId?: string | null;
+  onSelectContext: (contextId: string | null) => void;
 }
 
 export function ReadingContextNavigation({
@@ -25,40 +25,49 @@ export function ReadingContextNavigation({
   selectedContextId,
   onSelectContext,
 }: ReadingContextNavigationProps) {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch ALL practice contexts
-  const { data: allContexts, isLoading } = useQuery<PracticeContext[]>({
-    queryKey: ['contexts', 'reading'],
+  const {
+    data: allContexts,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<PracticeContext[]>({
+    queryKey: ["contexts", "reading"],
     queryFn: async () => {
       const res = await api.get<PracticeContext[]>(
-        `${API_CONFIG.ENDPOINTS.PRACTICE.SETS ? '/practice/contexts' : '/practice/contexts'}?status=ACTIVE`
-      )
-      return res || []
+        `${
+          API_CONFIG.ENDPOINTS.PRACTICE.SETS
+            ? "/practice/contexts"
+            : "/practice/contexts"
+        }?status=ACTIVE`
+      );
+      return res || [];
     },
     staleTime: 10 * 60 * 1000,
-  })
+  });
 
   // Filter selectable contexts
   const availableContexts = useMemo(() => {
-    if (!allContexts) return []
-    return allContexts.filter((ctx) => ctx.is_selectable)
-  }, [allContexts])
+    if (!allContexts) return [];
+    return allContexts.filter((ctx) => ctx.is_selectable);
+  }, [allContexts]);
 
   // Search filter
   const filteredContexts = useMemo(() => {
-    if (!searchQuery.trim()) return availableContexts.slice(0, 12)
-    const q = searchQuery.toLowerCase()
+    if (!searchQuery.trim()) return availableContexts.slice(0, 12);
+    const q = searchQuery.toLowerCase();
     return availableContexts.filter(
       (ctx) =>
         ctx.name_vi?.toLowerCase().includes(q) ||
         ctx.name_en?.toLowerCase().includes(q) ||
         ctx.code?.toLowerCase().includes(q)
-    )
-  }, [availableContexts, searchQuery])
+    );
+  }, [availableContexts, searchQuery]);
 
   const getContextName = (ctx: PracticeContext) =>
-    isVietnamese ? ctx.name_vi || ctx.name_en : ctx.name_en
+    isVietnamese ? ctx.name_vi || ctx.name_en : ctx.name_en;
 
   return (
     <div className="space-y-4 rounded-2xl border border-border/40 bg-surface/50 p-4 backdrop-blur-sm">
@@ -69,7 +78,8 @@ export function ReadingContextNavigation({
             <span>Chọn chủ đề ngữ cảnh luyện tập</span>
           </h3>
           <p className="text-xs text-text-tertiary">
-            Lựa chọn môi trường thực tế để làm bài giải quyết nhiệm vụ hoặc ghép thông tin
+            Lựa chọn môi trường thực tế để làm bài giải quyết nhiệm vụ hoặc ghép
+            thông tin
           </p>
         </div>
 
@@ -91,7 +101,7 @@ export function ReadingContextNavigation({
           </div>
 
           <Button
-            variant={selectedContextId === null ? 'default' : 'outline'}
+            variant={selectedContextId === null ? "default" : "outline"}
             size="sm"
             onClick={() => onSelectContext(null)}
             className="text-xs shrink-0"
@@ -101,38 +111,53 @@ export function ReadingContextNavigation({
         </div>
       </div>
 
+      {error && (
+        <div role="alert">
+          Không tải được chủ đề.{" "}
+          <Button onClick={() => void refetch()}>Thử lại</Button>
+        </div>
+      )}
       {/* Grid of Context Chips */}
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
           <Icon name="loader" className="animate-spin text-primary" size={20} />
-          <span className="ml-2 text-xs text-text-tertiary">Đang tải chủ đề...</span>
+          <span className="ml-2 text-xs text-text-tertiary">
+            Đang tải chủ đề...
+          </span>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {filteredContexts.map((ctx) => {
-            const isSelected = selectedContextId === ctx.code || selectedContextId === ctx._id
+            const isSelected =
+              selectedContextId === ctx.code || selectedContextId === ctx._id;
             return (
               <button
                 key={ctx._id || ctx.code}
                 type="button"
-                onClick={() => onSelectContext(isSelected ? null : ctx.code || ctx._id || null)}
+                onClick={() =>
+                  onSelectContext(
+                    isSelected ? null : ctx._id || ctx.code || null
+                  )
+                }
                 className={`flex items-center gap-2 rounded-xl p-2.5 text-left text-xs font-medium transition-all ${
                   isSelected
-                    ? 'bg-primary text-white shadow-md ring-2 ring-primary/40'
-                    : 'bg-surface-elevated text-text-secondary border border-border/50 hover:border-primary/50 hover:bg-surface-hover'
+                    ? "bg-primary text-white shadow-md ring-2 ring-primary/40"
+                    : "bg-surface-elevated text-text-secondary border border-border/50 hover:border-primary/50 hover:bg-surface-hover"
                 }`}
               >
                 <Icon
-                  name={ctx.icon || 'book-open'}
+                  name={ctx.icon || "book-open"}
                   size={16}
-                  className={isSelected ? 'text-white' : 'text-primary'}
+                  className={isSelected ? "text-white" : "text-primary"}
                 />
-                <span className="line-clamp-1 flex-1">{getContextName(ctx)}</span>
+                <span className="line-clamp-1 flex-1">
+                  {getContextName(ctx)}
+                </span>
               </button>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }

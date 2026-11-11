@@ -12,6 +12,18 @@
 
 # testing
 /coverage
+/tests/
+tests/
+/test/
+test/
+
+# documentation
+/docs/
+docs/
+
+# scripts
+/scripts/
+scripts/
 
 # next.js
 /.next/
@@ -43,3 +55,6 @@ package-lock.json
 /.next-writing-test/
 /.next-assessment-test/
 /.next-assessment-clean/
+
+# Browser test screenshots and local verification logs
+/.tmp/

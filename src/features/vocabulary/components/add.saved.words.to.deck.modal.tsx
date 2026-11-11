@@ -6,6 +6,7 @@
  */
 
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
   Layers3,
@@ -65,6 +66,7 @@ export function AddSavedWordsToDeckModal({
   const { showAction } = useApp()
   const navigate = useNavigate()
 
+  const queryClient = useQueryClient()
   const [mode, setMode] = useState<'create' | 'existing'>('create')
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null)
   const [deckName, setDeckName] = useState('')
@@ -113,57 +115,25 @@ export function AddSavedWordsToDeckModal({
 
     try {
       setIsSubmitting(true)
-      let targetDeckId = selectedDeckId
-
-      // 1. Tạo deck mới nếu ở chế độ 'create'
-      if (mode === 'create') {
-        const newDeck = await vocabularyService.createDeck({
-          name: deckName.trim(),
-          description: deckDescription.trim() || (isVietnamese ? 'Bộ thẻ tạo từ sổ tay cá nhân' : 'Personal notebook deck'),
-          visibility,
-          settings: {
-            target_band: targetBand,
-          },
-        })
-
-        targetDeckId = newDeck._id || (newDeck as any).id
-
-        // Tự động enroll deck cho user
-        if (targetDeckId) {
-          try {
-            await vocabularyService.enrollDeck(targetDeckId)
-          } catch {
-            // Đã được enroll mặc định
-          }
-        }
-      }
-
-      if (!targetDeckId) {
-        throw new Error('Không thể xác định bộ thẻ mục tiêu')
-      }
-
-      // 2. Thêm từng từ vào bộ thẻ
-      for (const word of selectedWords) {
-        await vocabularyService.addCardToDeck(targetDeckId, {
-          lexical_item_id: word.lexical_item_id,
-          meaning_index: word.meaning_index,
-          front_text: word.word,
-          back_text: word.meaning,
-        })
-      }
-
-      // 3. Nếu bật checkbox "Xóa khỏi sổ tay", gọi API unsave cho từng từ
-      const removedIds: string[] = []
-      if (removeAfterAdd && userId) {
-        for (const word of selectedWords) {
-          try {
-            await vocabularyService.unsaveVocabulary(userId, word.lexical_item_id, word.meaning_index)
-            removedIds.push(word.saved_id)
-          } catch (err) {
-            console.error('Lỗi bỏ lưu từ:', err)
-          }
-        }
-      }
+      const payload = {
+        deck_id: mode === 'existing' ? selectedDeckId || undefined : undefined,
+        name: mode === 'create' ? deckName.trim() : undefined,
+        description: mode === 'create' ? deckDescription.trim() : undefined,
+        visibility, settings: { target_band: targetBand },
+        words: selectedWords.map(word => ({ lexical_item_id: word.lexical_item_id, meaning_index: word.meaning_index })),
+        remove_after_add: removeAfterAdd,
+      };
+      const storageKey = `vocabulary-package:${userId}`;
+      const fingerprint = JSON.stringify(payload);
+      let prior: { fingerprint: string; key: string } | null = null;
+      try { prior = JSON.parse(sessionStorage.getItem(storageKey) || 'null'); } catch {}
+      const operation = prior?.fingerprint === fingerprint ? prior : { fingerprint, key: crypto.randomUUID() };
+      sessionStorage.setItem(storageKey, JSON.stringify(operation));
+      const result = await vocabularyService.packageSavedWords({ ...payload, operation_id: operation.key });
+      await queryClient.invalidateQueries({ queryKey: ['vocabulary'] });
+      const targetDeckId = result.deck_id;
+      const removedIds = result.removed_ids;
+      sessionStorage.removeItem(storageKey);
 
       if (mode === 'create') {
         setCreatedSuccess({
@@ -193,9 +163,9 @@ export function AddSavedWordsToDeckModal({
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/vocabulary/learn/${createdSuccess.deckId}`
     : ''
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     if (!shareUrl) return
-    navigator.clipboard.writeText(shareUrl)
+    try { await navigator.clipboard.writeText(shareUrl) } catch { showAction(isVietnamese ? 'Không sao chép được liên kết.' : 'Unable to copy link.'); return }
     setIsCopied(true)
     showAction(isVietnamese ? 'Đã sao chép liên kết bộ thẻ vào bộ nhớ tạm!' : 'Copied link to clipboard!')
     setTimeout(() => setIsCopied(false), 2500)

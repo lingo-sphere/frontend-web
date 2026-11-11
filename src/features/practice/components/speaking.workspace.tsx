@@ -1,3 +1,5 @@
+import { resolveSpeakingPolicy } from '@/features/practice/lib/speaking-policy'
+import { useSpeakingSession, type RecordingSubmission } from '@/features/practice/hooks/use.speaking.session'
 /**
  * @file speaking.workspace.tsx
  * @description Component điều phối toàn diện phiên làm bài thi Speaking và chấm điểm trực tiếp
@@ -24,7 +26,8 @@ interface SpeakingWorkspaceProps {
     duration: number,
     audioBlob?: Blob,
     difficultyChosen?: 'EASY' | 'MEDIUM' | 'HARD',
-    dialogueTurnsResults?: DialogueTurnAttemptResult[]
+    dialogueTurnsResults?: DialogueTurnAttemptResult[],
+    recordingSubmission?: RecordingSubmission
   ) => void
   onBack: () => void
   isSubmitting?: boolean
@@ -56,16 +59,6 @@ interface SpeechRecognitionConstructor {
   new (): ISpeechRecognitionInstance
 }
 
-const needsPreparation = (type: SpeakingExerciseType): boolean => {
-  return (
-    type === 'DESCRIBE_PICTURE' ||
-    type === 'ANSWER_QUESTION' ||
-    type === 'OPINION_RESPONSE' ||
-    type === 'TOPIC' ||
-    type === 'RESPOND_SITUATION'
-  )
-}
-
 export function SpeakingWorkspace({
   exercise,
   recordingState,
@@ -89,7 +82,21 @@ export function SpeakingWorkspace({
     )
   }
 
-  const [selectedTier, setSelectedTier] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM')
+  return <SpeakingMonologueWorkspace key={exercise.id} {...{ exercise, recordingState, onUpdateRecording, onSubmit, onBack, isSubmitting }} />
+}
+
+function SpeakingMonologueWorkspace({ exercise, recordingState, onUpdateRecording, onSubmit, onBack, isSubmitting }: SpeakingWorkspaceProps) {
+  const { i18n } = useTranslation()
+  const isVietnamese = i18n.language === 'vi'
+  const [selectedTier, setSelectedTier] = useState<'EASY' | 'MEDIUM' | 'HARD'>(exercise.difficulty_level || 'MEDIUM')
+  const session = useSpeakingSession(exercise, selectedTier)
+  const reserveTake = session.reserve
+  const policy = resolveSpeakingPolicy(exercise, selectedTier)
+  const submissionRef = useRef<RecordingSubmission | undefined>(undefined)
+  const startingRef = useRef(false)
+  const mountedRef = useRef(true)
+  const streamRef = useRef<MediaStream | null>(null)
+  const localUrlRef = useRef<string | null>(null)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   const [transcription, setTranscription] = useState('')
@@ -98,6 +105,16 @@ export function SpeakingWorkspace({
   const audioChunksRef = useRef<Blob[]>([])
   const audioBlobRef = useRef<Blob | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => { mountedRef.current = true; return () => {
+    mountedRef.current = false
+    speechRecognitionRef.current?.stop?.()
+    const recorder = mediaRecorderRef.current
+    if (recorder) { recorder.onstop = null; if (recorder.state !== 'inactive') recorder.stop() }
+    streamRef.current?.getTracks().forEach(track => track.stop())
+    audioRef.current?.pause()
+    if (localUrlRef.current) URL.revokeObjectURL(localUrlRef.current)
+  } }, [])
 
   const {
     phase,
@@ -109,6 +126,8 @@ export function SpeakingWorkspace({
   } = recordingState
 
   const startRecording = useCallback(async () => {
+    if (startingRef.current || mediaRecorderRef.current?.state === 'recording') return
+    startingRef.current = true
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -118,6 +137,10 @@ export function SpeakingWorkspace({
         },
       })
 
+      streamRef.current = stream
+      if (!mountedRef.current) { stream.getTracks().forEach(track => track.stop()); return }
+      submissionRef.current = await reserveTake()
+      if (!mountedRef.current) { stream.getTracks().forEach(track => track.stop()); return }
       const audioTrack = stream.getAudioTracks()[0]
       if (audioTrack) {
         audioTrack.enabled = true
@@ -149,7 +172,9 @@ export function SpeakingWorkspace({
         const finalMime = mediaRecorder.mimeType || mimeType || 'audio/webm'
         const audioBlob = new Blob(audioChunksRef.current, { type: finalMime })
         audioBlobRef.current = audioBlob
+        if (localUrlRef.current) URL.revokeObjectURL(localUrlRef.current)
         const url = URL.createObjectURL(audioBlob)
+        localUrlRef.current = url
         onUpdateRecording((prev: RecordingState) => ({
           ...prev,
           audioUrl: url,
@@ -185,16 +210,19 @@ export function SpeakingWorkspace({
         phase: 'recording',
         duration: 0,
         preparationTimeLeft: 0,
+        speakingTimeLeft: policy.response_time_seconds,
       }))
-    } catch {
+    } catch (error) {
+      streamRef.current?.getTracks().forEach(track => track.stop())
+      onUpdateRecording(prev => ({ ...prev, phase: 'idle' }))
       toast.error(
         isVietnamese
-          ? 'Không thể truy cập microphone. Vui lòng kiểm tra quyền truy cập.'
+          ? (error instanceof Error ? error.message : 'Không thể truy cập microphone hoặc đã hết lượt thu âm.')
           : 'Cannot access microphone. Please check permissions.',
         isVietnamese ? 'Microphone' : 'Microphone error'
       )
-    }
-  }, [onUpdateRecording, isVietnamese])
+    } finally { startingRef.current = false }
+  }, [onUpdateRecording, isVietnamese, reserveTake, policy.response_time_seconds])
 
   const stopRecording = useCallback(() => {
     if (speechRecognitionRef.current) {
@@ -248,27 +276,13 @@ export function SpeakingWorkspace({
     }
   }, [speakingTimeLeft, phase, stopRecording])
 
-  const getTierTimes = useCallback((tier: 'EASY' | 'MEDIUM' | 'HARD') => {
-    const t = exercise.tiered_time_limits
-    if (tier === 'EASY') {
-      return {
-        prep: t?.easy?.preparation_time_seconds || 60,
-        speak: t?.easy?.response_time_seconds || 45,
-      }
-    }
-    if (tier === 'HARD') {
-      return {
-        prep: t?.hard?.preparation_time_seconds || 20,
-        speak: t?.hard?.response_time_seconds || 30,
-      }
-    }
-    return {
-      prep: t?.medium?.preparation_time_seconds || exercise.preparation_time_seconds || 45,
-      speak: t?.medium?.response_time_seconds || exercise.response_time_seconds || 45,
-    }
-  }, [exercise])
+  const getTierTimes = (tier: 'EASY' | 'MEDIUM' | 'HARD') => {
+    const config = resolveSpeakingPolicy(exercise, tier)
+    return { prep: config.preparation_time_seconds, speak: config.response_time_seconds }
+  }
 
   const handleSelectTier = (tier: 'EASY' | 'MEDIUM' | 'HARD') => {
+    if ((session.counts.turn_0 || 0) > 0) return
     setSelectedTier(tier)
     const { prep, speak } = getTierTimes(tier)
     onUpdateRecording((prev: RecordingState) => ({
@@ -279,7 +293,7 @@ export function SpeakingWorkspace({
   }
 
   const handleStartPractice = () => {
-    if (needsPreparation(exercise.exercise_type)) {
+    if (policy.preparation_time_seconds > 0) {
       const { prep, speak } = getTierTimes(selectedTier)
       onUpdateRecording((prev: RecordingState) => ({
         ...prev,
@@ -316,10 +330,13 @@ export function SpeakingWorkspace({
 
   const handleSubmit = () => {
     const userTranscription = transcription.trim()
-    onSubmit(userTranscription, duration, audioBlobRef.current || undefined, selectedTier)
+    onSubmit(userTranscription, duration, audioBlobRef.current || undefined, selectedTier, undefined, submissionRef.current)
   }
 
   const handleReset = () => {
+    if ((session.counts.turn_0 || 0) >= policy.max_record_attempts) return
+    audioBlobRef.current = null
+    if (localUrlRef.current) { URL.revokeObjectURL(localUrlRef.current); localUrlRef.current = null }
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current = null
@@ -401,6 +418,7 @@ export function SpeakingWorkspace({
         exercise={exercise}
         isVietnamese={isVietnamese}
         typeLabels={typeLabels}
+        showHints={policy.show_hints}
       />
 
       <SpeakingRecorderPanel
@@ -412,7 +430,9 @@ export function SpeakingWorkspace({
         audioUrl={audioUrl}
         isPlaying={isPlaying}
         isVietnamese={isVietnamese}
-        needsPreparation={needsPreparation(exercise.exercise_type)}
+        needsPreparation={Boolean(exercise.tiered_time_limits)}
+        canRetake={(session.counts.turn_0 || 0) < policy.max_record_attempts}
+        takesUsed={session.counts.turn_0 || 0}
         selectedTier={selectedTier}
         onSelectTier={handleSelectTier}
         onSkipPreparation={handleSkipPreparation}

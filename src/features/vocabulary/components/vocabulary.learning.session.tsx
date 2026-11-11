@@ -12,10 +12,17 @@ import {
   ChevronDown,
   Brain,
   Check,
+  Layers,
+  CheckSquare,
   RotateCcw,
+  Keyboard,
+  Headphones,
+  FileText,
   Volume2,
   AlertTriangle,
   ArrowRight,
+  Sparkles,
+  HelpCircle,
   Timer,
   Bookmark,
   CheckCircle2,
@@ -25,6 +32,7 @@ import { Button } from "@/components/button";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import type {
   VocabularyDeck,
+  ExerciseMode,
   LearningResult,
 } from "@/features/vocabulary/types/vocabulary.learn";
 import { vocabularyService } from "@/features/vocabulary/services/vocabulary.service";
@@ -96,6 +104,10 @@ export function VocabularyLearningSession({
   // Current Question Data
   const [currentQuestion, setCurrentQuestion] = useState<{
     lexical_item_id: string;
+    question_id: string;
+    queue_item_id?: string;
+    meaning_index: number;
+    notice?: string;
     mode: string;
     prompt: QuestionPrompt;
     options?: QuestionOption[];
@@ -119,8 +131,7 @@ export function VocabularyLearningSession({
   const [totalCount, setTotalCount] = useState(deck?.cardCount || 10);
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isRelearning, setIsRelearning] = useState(false);
-  const [wrongItems, setWrongItems] = useState<any[]>([]);
-  const [, setCorrectStreak] = useState(0);
+  const [correctStreak, setCorrectStreak] = useState(0);
 
   const user = useAuthStore((state) => state.user);
   const userId = user?.user_id || (user as any)?._id || (user as any)?.id || "";
@@ -128,40 +139,169 @@ export function VocabularyLearningSession({
   // Saved word tracking
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isPlayingAudio, setIsPlayingAudio] = useState<"us" | "uk" | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioNotice, setAudioNotice] = useState("");
+  const [isPlayingAudio, setIsPlayingAudio] = useState<"us" | "uk" | null>(
+    null
+  );
 
   // Bộ đếm thời gian học Flashcard theo thời gian thực (Stopwatch)
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const startTimeRef = useRef<number>(Date.now());
-  const pauseStartRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (showExitConfirm) return;
+    if (showExitConfirm || !sessionId) return;
     const timer = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
+      if (!document.hidden) setElapsedSeconds((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [showExitConfirm]);
+  }, [showExitConfirm, sessionId]);
 
-  const handleInitiateExit = () => {
-    pauseStartRef.current = Date.now();
-    setShowExitConfirm(true);
+  const [error, setError] = useState("");
+  const [retryInit, setRetryInit] = useState(0);
+  const revisionRef = useRef(0);
+  const chainRef = useRef<Promise<unknown>>(Promise.resolve());
+  const serialize = <T,>(operation: () => Promise<T>): Promise<T> => {
+    const next = chainRef.current.catch(() => {}).then(operation);
+    chainRef.current = next;
+    return next;
   };
-
-  const handleResume = () => {
-    if (pauseStartRef.current) {
-      const pausedDuration = Date.now() - pauseStartRef.current;
-      startTimeRef.current += pausedDuration;
-      pauseStartRef.current = null;
+  const pointerKey = `vocabulary-session:${userId}:${sourceType}:${
+    sourceId || deck?.id || ""
+  }:${sessionMode}:${sessionType || ""}`;
+  const [preferences, setPreferences] = useState({
+    autoPlayAudio: true,
+    showPhonetic: true,
+  });
+  useEffect(() => {
+    try {
+      const value = JSON.parse(
+        localStorage.getItem("lingosphere_user_preferences") || "{}"
+      );
+      setPreferences({
+        autoPlayAudio: value.learning?.autoPlayAudio ?? true,
+        showPhonetic: value.learning?.showPhonetic ?? true,
+      });
+    } catch {}
+  }, []);
+  const draftRef = useRef({
+    question_id: "",
+    input: "",
+    selected_option_id: null as string | null,
+  });
+  useEffect(() => {
+    draftRef.current = {
+      question_id: currentQuestion?.question_id || "",
+      input: userInput,
+      selected_option_id: selectedOptionId,
+    };
+  }, [currentQuestion?.question_id, userInput, selectedOptionId]);
+  const saveState = (action: "SAVE" | "PAUSE" | "RESUME") => {
+    if (!sessionId) return Promise.reject(new Error("Phiên chưa sẵn sàng"));
+    const draft = { ...draftRef.current };
+    return serialize(async () => {
+      const result = await vocabularyService.saveLearningSession(sessionId, {
+        action,
+        expected_revision: revisionRef.current,
+        draft,
+      });
+      revisionRef.current = result.revision;
+      return result;
+    });
+  };
+  useEffect(() => {
+    if (!sessionId || !currentQuestion || feedback || showExitConfirm) return;
+    try {
+      localStorage.setItem(
+        `vocabulary-draft:${userId}:${sessionId}`,
+        JSON.stringify(draftRef.current)
+      );
+    } catch {}
+    const timer = setTimeout(() => {
+      void saveState("SAVE").catch(() =>
+        setError(
+          isVietnamese
+            ? "Chưa đồng bộ bản nháp; bản sao đang ở thiết bị."
+            : "Draft sync failed; copy saved on this device."
+        )
+      );
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [
+    sessionId,
+    currentQuestion?.question_id,
+    userInput,
+    selectedOptionId,
+    feedback,
+    showExitConfirm,
+  ]);
+  useEffect(() => {
+    if (!sessionId) return;
+    const syncVisibility = () => {
+      if (!document.hidden && showExitConfirm) return;
+      void saveState(document.hidden ? "PAUSE" : "RESUME").catch(() =>
+        setError(
+          isVietnamese
+            ? "Chưa đồng bộ phiên. Hãy thử lại khi có mạng."
+            : "Session sync failed. Retry when online."
+        )
+      );
+    };
+    const heartbeat = setInterval(() => {
+      if (!document.hidden && !showExitConfirm)
+        void saveState("SAVE").catch(() =>
+          setError(
+            isVietnamese
+              ? "Phiên chưa đồng bộ; bản nháp đang ở thiết bị."
+              : "Session sync failed; draft is on this device."
+          )
+        );
+    }, 15000);
+    document.addEventListener("visibilitychange", syncVisibility);
+    return () => {
+      clearInterval(heartbeat);
+      document.removeEventListener("visibilitychange", syncVisibility);
+    };
+  }, [sessionId, showExitConfirm]);
+  const handleInitiateExit = async () => {
+    if (isSubmitting || isLoading) return;
+    try {
+      await saveState("PAUSE");
+      setShowExitConfirm(true);
+      setError("");
+    } catch {
+      setError(
+        isVietnamese
+          ? "Không thể đồng bộ tạm dừng. Hãy thử lại."
+          : "Failed to sync pause. Please retry."
+      );
     }
-    setShowExitConfirm(false);
   };
-
-  const handleConfirmExit = () => {
-    setShowExitConfirm(false);
-    pauseStartRef.current = null;
-    onExit();
+  const handleResume = async () => {
+    try {
+      await saveState("RESUME");
+      setShowExitConfirm(false);
+      setError("");
+    } catch {
+      setError(
+        isVietnamese
+          ? "Không thể tiếp tục phiên. Hãy thử lại."
+          : "Unable to resume. Please retry."
+      );
+    }
+  };
+  const handleConfirmExit = async () => {
+    try {
+      await saveState("PAUSE");
+      setShowExitConfirm(false);
+      onExit();
+    } catch {
+      setError(
+        isVietnamese
+          ? "Chưa lưu được phiên. Hãy thử lại."
+          : "Session has not synced. Please retry."
+      );
+    }
   };
 
   const formatTimer = (totalSeconds: number) => {
@@ -169,33 +309,102 @@ export function VocabularyLearningSession({
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
     if (hours > 0) {
-      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+        2,
+        "0"
+      )}:${String(seconds).padStart(2, "0")}`;
     }
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0"
+    )}`;
   };
 
   // 1. Khởi tạo phiên học từ Backend Learning Engine
   useEffect(() => {
     let isMounted = true;
+    if (!userId) {
+      setIsLoading(false);
+      setError(
+        isVietnamese
+          ? "Hãy đăng nhập để học và lưu tiến độ."
+          : "Please sign in to study and save progress."
+      );
+      return;
+    }
 
     async function initSession() {
       setIsLoading(true);
       try {
-        const resolvedSourceId = sourceId || (deck ? deck.id : undefined);
-        const res = await vocabularyService.startLearningSession({
-          source_type: sourceType,
-          source_id: resolvedSourceId,
-          session_mode: selectedMode,
-          session_type: sessionType,
-        });
-
+        const resolvedSourceId = sourceId || deck?.id;
+        const url = new URL(window.location.href);
+        const previous =
+          url.searchParams.get("session") || sessionStorage.getItem(pointerKey);
+        const keyName = `${pointerKey}:start-key`;
+        let startKey = sessionStorage.getItem(keyName);
+        if (!startKey) {
+          startKey = crypto.randomUUID();
+          sessionStorage.setItem(keyName, startKey);
+        }
+        const res = previous
+          ? await vocabularyService.readLearningSession(previous)
+          : await vocabularyService.startLearningSession({
+              source_type: sourceType,
+              source_id: resolvedSourceId,
+              session_mode: sessionMode,
+              session_type: sessionType,
+              session_key: startKey,
+            });
         if (!isMounted) return;
-        setSessionId(res.session_id);
+        const activeId = res.session_id;
+        sessionStorage.setItem(pointerKey, activeId);
+        url.searchParams.set("session", activeId);
+        window.history.replaceState(null, "", url);
+        setSessionId(activeId);
         setTotalCount(res.total_items);
-
-        // Tải câu hỏi đầu tiên
-        await fetchNextQuestion(res.session_id);
+        revisionRef.current = res.revision || 0;
+        setElapsedSeconds(res.elapsed_seconds || 0);
+        if (res.summary) {
+          await handleFinishSession(activeId);
+          return;
+        }
+        if (res.status === "PAUSED") {
+          const resumed = await vocabularyService.saveLearningSession(
+            activeId,
+            {
+              action: "RESUME",
+              expected_revision: revisionRef.current,
+              draft: res.draft || {},
+            }
+          );
+          revisionRef.current = resumed.revision;
+        }
+        if (res.question) {
+          setCurrentQuestion(res.question);
+          setFeedback(res.feedback);
+          setIsFlipped(Boolean(res.feedback));
+          const local = JSON.parse(
+            localStorage.getItem(`vocabulary-draft:${userId}:${activeId}`) ||
+              "null"
+          );
+          const draft =
+            local?.question_id === res.question.question_id ? local : res.draft;
+          setUserInput(draft?.input || "");
+          setSelectedOptionId(draft?.selected_option_id || null);
+          setResolvedCount(
+            res.feedback?.progress?.resolved ??
+              res.question.progress?.resolved ??
+              0
+          );
+          setCurrentIndex(res.question.progress?.current_index || 1);
+          setIsRelearning(Boolean(res.question.progress?.is_relearning));
+        } else await fetchNextQuestion(activeId);
       } catch (err: unknown) {
+        setError(
+          isVietnamese
+            ? "Không thể tải phiên học. Hãy thử lại hoặc bắt đầu phiên mới."
+            : "Unable to load session. Retry or start a new session."
+        );
         console.error("Không thể khởi tạo phiên học:", err);
         onAction?.(
           isVietnamese
@@ -212,45 +421,42 @@ export function VocabularyLearningSession({
     return () => {
       isMounted = false;
     };
-  }, [sourceType, sourceId, deck?.id]);
+  }, [sourceType, sourceId, deck?.id, userId, retryInit]);
 
   // 2. Kéo câu hỏi tiếp theo từ Adaptive Engine
-  const fetchNextQuestion = async (
+  async function fetchNextQuestion(
     activeSessionId: string,
     requestedMode?: string,
     targetVocabId?: string
-  ) => {
+  ) {
     setIsLoading(true);
-    setFeedback(null);
-    setUserInput("");
-    setSelectedOptionId(null);
-    setIsFlipped(false);
-    startTimeRef.current = Date.now();
-
     try {
-      const modeParam =
-        requestedMode !== undefined
-          ? requestedMode !== "SMART_ADAPTIVE"
-            ? requestedMode
-            : undefined
-          : selectedMode !== "SMART_ADAPTIVE"
-          ? selectedMode
-          : undefined;
-
-      const q = await vocabularyService.getNextLearningQuestion(
-        activeSessionId,
-        modeParam,
-        targetVocabId
+      const q = await serialize(() =>
+        vocabularyService.getNextLearningQuestion(
+          activeSessionId,
+          requestedMode,
+          targetVocabId
+        )
       );
-
+      revisionRef.current = q.revision ?? revisionRef.current;
+      setError("");
       if (q.is_completed) {
         // Đã hoàn thành toàn bộ câu hỏi trong phiên
         await handleFinishSession(activeSessionId);
         return;
       }
 
+      setAudioNotice("");
+      setFeedback(null);
+      setUserInput("");
+      setSelectedOptionId(null);
+      setIsFlipped(false);
       setCurrentQuestion({
         lexical_item_id: q.lexical_item_id || "",
+        question_id: q.question_id || "",
+        queue_item_id: q.queue_item_id,
+        meaning_index: q.meaning_index ?? 0,
+        notice: q.notice,
         mode: q.mode || "FLASHCARD",
         prompt: q.prompt || {},
         options: q.options || [],
@@ -268,96 +474,90 @@ export function VocabularyLearningSession({
         }
       }
     } catch (err: unknown) {
+      setError(
+        isVietnamese
+          ? "Không thể tải câu kế tiếp. Nhấn Thử lại."
+          : "Unable to load next question. Retry."
+      );
       console.error("Lỗi khi tải câu hỏi kế tiếp:", err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   // 3. Hoàn thành phiên và chốt dữ liệu
-  const handleFinishSession = async (activeSessionId: string) => {
+  async function handleFinishSession(activeSessionId: string) {
     try {
-      const summary = await vocabularyService.completeLearningSession(
-        activeSessionId
+      const summary = await serialize(() =>
+        vocabularyService.completeLearningSession(activeSessionId)
       );
-
-      const totalWords = Math.max(1, summary.total_words || 1);
-      const correctAnswers = Math.min(totalWords, Math.max(0, summary.correct_count ?? 0));
-      const accuracy = Math.min(100, Math.max(0, summary.accuracy_percent ?? 0));
 
       const learningResult: LearningResult = {
-        totalWords,
-        correctAnswers,
-        accuracy,
-        skillBreakdown: {
-          meaning: accuracy,
-          spelling: Math.max(60, accuracy - 5),
-          listening: Math.max(65, accuracy - 3),
-          context: accuracy,
-        },
-        weakWords: wrongItems,
+        totalWords: summary.total_words,
+        correctAnswers: summary.correct_count,
+        totalItems: summary.total_items,
+        assessmentType: summary.assessment_type,
+        accuracy: summary.accuracy_percent,
+        skillBreakdown: summary.skill_breakdown,
+        weakWords: summary.weak_words || [],
       };
-
+      sessionStorage.removeItem(pointerKey);
+      sessionStorage.removeItem(`${pointerKey}:start-key`);
+      localStorage.removeItem(`vocabulary-draft:${userId}:${activeSessionId}`);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("session");
+      window.history.replaceState(null, "", url);
       onAction?.(
         isVietnamese
-          ? `Hoàn thành! Bạn đạt ${summary.accuracy_percent}% độ chính xác (+${summary.xp_earned} XP).`
-          : `Session completed! (+${summary.xp_earned} XP)`
+          ? `Đã hoàn thành phiên (+${summary.xp_earned} XP).`
+          : `Session completed (+${summary.xp_earned} XP).`
       );
-
       onComplete(learningResult);
     } catch (err: unknown) {
       console.error("Lỗi khi chốt phiên học:", err);
-      onExit();
+      setError(
+        isVietnamese
+          ? "Chưa chốt được kết quả. Nhấn Thử lại; tiến độ đã trả lời vẫn được lưu."
+          : "Unable to finalize. Retry; submitted answers are saved."
+      );
     }
-  };
+  }
 
   // 4. Nộp câu trả lời để Server tự đánh giá
   const handleSubmitAnswer = async (answerRaw: string) => {
     if (!sessionId || !currentQuestion || isSubmitting || feedback) return;
 
     setIsSubmitting(true);
-    const timeSpent = Math.max(
-      1,
-      Math.round((Date.now() - startTimeRef.current) / 1000)
-    );
 
     try {
-      const result = await vocabularyService.submitLearningAnswer(sessionId, {
-        lexical_item_id: currentQuestion.lexical_item_id,
-        mode: currentQuestion.mode,
-        answer_raw: answerRaw,
-        time_spent_seconds: timeSpent,
-      });
-
+      const requestStorage = `vocabulary-answer:${userId}:${sessionId}:${currentQuestion.question_id}`;
+      const pending = sessionStorage.getItem(requestStorage);
+      const request = pending
+        ? JSON.parse(pending)
+        : {
+            question_id: currentQuestion.question_id,
+            request_key: crypto.randomUUID(),
+            answer_raw: answerRaw,
+          };
+      sessionStorage.setItem(requestStorage, JSON.stringify(request));
+      const result = await serialize(() =>
+        vocabularyService.submitLearningAnswer(sessionId, request)
+      );
+      revisionRef.current = result.revision;
+      setError("");
       setFeedback(result);
 
-      if (result.is_correct) {
-        setCorrectStreak((prev) => prev + 1);
-        setWrongItems((prev) =>
-          prev.filter((item) => item.id !== currentQuestion.lexical_item_id)
-        );
-      } else {
-        setCorrectStreak(0);
-        // Ghi nhận vào danh sách từ yếu của phiên (tránh trùng lặp từ)
-        setWrongItems((prev) => {
-          if (prev.some((item) => item.id === currentQuestion.lexical_item_id)) {
-            return prev;
-          }
-          return [
-            ...prev,
-            {
-              id: currentQuestion.lexical_item_id,
-              word: (result as any).word || currentQuestion.prompt.word || result.correct_answer,
-              meaningVi: result.meaning_vi || "",
-            },
-          ];
-        });
-      }
+      setCorrectStreak((previous) => (result.is_correct ? previous + 1 : 0));
 
       if (result.progress) {
         setResolvedCount(result.progress.resolved);
       }
     } catch (err: unknown) {
+      setError(
+        isVietnamese
+          ? "Chưa nhận xác nhận. Nhấn trả lời để gửi lại cùng đáp án an toàn."
+          : "Not confirmed. Submit again to retry the same answer safely."
+      );
       console.error("Lỗi khi nộp câu trả lời:", err);
     } finally {
       setIsSubmitting(false);
@@ -368,14 +568,18 @@ export function VocabularyLearningSession({
   useEffect(() => {
     let isMounted = true;
     async function checkSaved() {
-      if (!currentQuestion?.lexical_item_id || !userId) {
+      if (
+        !currentQuestion?.lexical_item_id ||
+        currentQuestion.lexical_item_id.startsWith("card:") ||
+        !userId
+      ) {
         setIsSaved(false);
         return;
       }
       try {
         const saved = await vocabularyService.checkVocabularySaved(
           currentQuestion.lexical_item_id,
-          0
+          currentQuestion.meaning_index
         );
         if (isMounted) {
           setIsSaved(Boolean(saved));
@@ -388,11 +592,21 @@ export function VocabularyLearningSession({
     return () => {
       isMounted = false;
     };
-  }, [currentQuestion?.lexical_item_id, userId]);
+  }, [
+    currentQuestion?.lexical_item_id,
+    currentQuestion?.meaning_index,
+    userId,
+  ]);
 
   // Xử lý lưu / bỏ lưu từ vào kho từ vựng đã lưu (Sổ tay)
   const handleToggleSave = async () => {
-    if (!currentQuestion?.lexical_item_id || !userId || isSaving) return;
+    if (
+      !currentQuestion?.lexical_item_id ||
+      currentQuestion.lexical_item_id.startsWith("card:") ||
+      !userId ||
+      isSaving
+    )
+      return;
     setIsSaving(true);
     const wordText = currentQuestion.prompt.word || "";
     try {
@@ -400,7 +614,7 @@ export function VocabularyLearningSession({
         await vocabularyService.unsaveVocabulary(
           userId,
           currentQuestion.lexical_item_id,
-          0
+          currentQuestion.meaning_index
         );
         setIsSaved(false);
         onAction?.(
@@ -412,7 +626,7 @@ export function VocabularyLearningSession({
         await vocabularyService.saveVocabulary(
           userId,
           currentQuestion.lexical_item_id,
-          0
+          currentQuestion.meaning_index
         );
         setIsSaved(true);
         onAction?.(
@@ -435,7 +649,8 @@ export function VocabularyLearningSession({
 
   // Xử lý đánh dấu Thành thạo (Master) trực tiếp
   const handleMarkMastered = () => {
-    handleSubmitAnswer("master");
+    if (currentQuestion?.mode === "FLASHCARD")
+      void handleSubmitAnswer("master");
   };
 
   // Lấy nhãn hiển thị cho từng chế độ học
@@ -472,7 +687,11 @@ export function VocabularyLearningSession({
 
     // Nếu đang ở câu hỏi hiện tại chưa nộp đáp án, lập tức chuyển đổi câu hỏi hiện tại sang mode mới
     if (sessionId && currentQuestion && !feedback) {
-      await fetchNextQuestion(sessionId, newMode, currentQuestion.lexical_item_id);
+      await fetchNextQuestion(
+        sessionId,
+        newMode,
+        currentQuestion.queue_item_id || currentQuestion.lexical_item_id
+      );
     }
 
     onAction?.(
@@ -491,14 +710,30 @@ export function VocabularyLearningSession({
 
   // Phát âm thanh hỗ trợ 2 giọng US và UK (Cơ chế Hybrid: R2 First + Web Speech Fallback + Tự động sinh bù file bằng Piper TTS)
   const handlePlayAudio = (type: "us" | "uk" = "us") => {
+    audioRef.current?.pause();
+    setAudioNotice("");
     setIsPlayingAudio(type);
     const wordText = currentQuestion?.prompt?.word || "";
     const rawAudioUrl =
       type === "us"
-        ? (currentQuestion?.prompt?.audio_url_us || currentQuestion?.prompt?.audio_url)
-        : (currentQuestion?.prompt?.audio_url_uk || (currentQuestion?.prompt?.audio_url?.includes('/uk/') || currentQuestion?.prompt?.audio_url?.includes('en-UK') ? currentQuestion?.prompt?.audio_url : undefined));
+        ? currentQuestion?.prompt?.audio_url_us ||
+          currentQuestion?.prompt?.audio_url
+        : currentQuestion?.prompt?.audio_url_uk ||
+          (currentQuestion?.prompt?.audio_url?.includes("/uk/") ||
+          currentQuestion?.prompt?.audio_url?.includes("en-UK")
+            ? currentQuestion?.prompt?.audio_url
+            : undefined);
 
     const fallbackAndAutoGenerate = () => {
+      if (!wordText) {
+        setIsPlayingAudio(null);
+        setAudioNotice(
+          isVietnamese
+            ? "Không phát được audio. Hãy thử lại hoặc đổi chế độ học."
+            : "Audio unavailable. Retry or switch mode."
+        );
+        return;
+      }
       // 1. Phát âm thanh ngay lập tức bằng Web Speech TTS để học viên không bị trễ
       if (wordText) {
         speakWord(wordText, 0.9, type === "uk" ? "en-GB" : "en-US");
@@ -507,7 +742,9 @@ export function VocabularyLearningSession({
       // 2. Tự động gọi backend Edge TTS sinh file MP3 và upload bù lên Cloudflare R2
       if (wordText) {
         const levelMatch = rawAudioUrl?.match(/\/(A1|A2|B1|B2|C1|C2)\//i);
-        const cefrLevel = levelMatch ? levelMatch[1].toUpperCase() : ((currentQuestion?.prompt as any)?.cefr_level || "B1");
+        const cefrLevel = levelMatch
+          ? levelMatch[1].toUpperCase()
+          : (currentQuestion?.prompt as any)?.cefr_level || "B1";
 
         vocabularyService
           .autoGenerateAudio({
@@ -524,7 +761,8 @@ export function VocabularyLearningSession({
               if (res.audio_url_uk) {
                 currentQuestion.prompt.audio_url_uk = res.audio_url_uk;
               }
-              const targetUrl = type === "us" ? res.audio_url_us : res.audio_url_uk;
+              const targetUrl =
+                type === "us" ? res.audio_url_us : res.audio_url_uk;
               if (targetUrl) {
                 if (type === "us") {
                   currentQuestion.prompt.audio_url = res.audio_url_us;
@@ -534,6 +772,7 @@ export function VocabularyLearningSession({
                 // Tự động phát ngay âm thanh vừa sinh thành công trên R2
                 setIsPlayingAudio(type);
                 const genAudio = new Audio(resolveAudioUrl(targetUrl));
+                audioRef.current = genAudio;
                 genAudio.onended = () => setIsPlayingAudio(null);
                 genAudio.play().catch(() => {});
               }
@@ -547,6 +786,7 @@ export function VocabularyLearningSession({
       const resolved = resolveAudioUrl(rawAudioUrl);
       if (resolved) {
         const audio = new Audio(resolved);
+        audioRef.current = audio;
         let hasFailed = false;
         audio.onerror = () => {
           if (!hasFailed) {
@@ -554,7 +794,16 @@ export function VocabularyLearningSession({
             fallbackAndAutoGenerate();
           }
         };
-        audio.play().catch(() => {
+        audio.play().catch((error: DOMException) => {
+          if (error.name === "NotAllowedError") {
+            setIsPlayingAudio(null);
+            setAudioNotice(
+              isVietnamese
+                ? "Trình duyệt chặn tự phát. Nhấn nút loa để nghe."
+                : "Autoplay is blocked. Press the speaker button."
+            );
+            return;
+          }
           if (!hasFailed) {
             hasFailed = true;
             fallbackAndAutoGenerate();
@@ -571,7 +820,8 @@ export function VocabularyLearningSession({
   };
 
   const getInputFeedbackClass = () => {
-    if (!feedback) return "border-border focus:border-primary text-text-primary";
+    if (!feedback)
+      return "border-border focus:border-primary text-text-primary";
     if (feedback.result === "CORRECT")
       return "border-emerald-500 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200";
     if (feedback.result === "NEAR_CORRECT")
@@ -584,6 +834,20 @@ export function VocabularyLearningSession({
     totalCount > 0
       ? Math.min(100, Math.round((displayCardNumber / totalCount) * 100))
       : 0;
+
+  useEffect(
+    () => () => {
+      audioRef.current?.pause();
+      if (typeof window.speechSynthesis !== "undefined")
+        window.speechSynthesis.cancel();
+    },
+    [currentQuestion?.question_id]
+  );
+  useEffect(() => {
+    if (!currentQuestion || feedback || !preferences.autoPlayAudio) return;
+    const timer = setTimeout(() => handlePlayAudio("us"), 150);
+    return () => clearTimeout(timer);
+  }, [currentQuestion?.question_id, preferences.autoPlayAudio]);
 
   if (isLoading && !currentQuestion) {
     return (
@@ -598,12 +862,61 @@ export function VocabularyLearningSession({
     );
   }
 
-  if (!currentQuestion) return null;
+  if (!currentQuestion)
+    return (
+      <div role="alert" className="p-6 space-y-4">
+        <p>{error || "Chưa có câu hỏi / No question available"}</p>
+        <Button onClick={() => setRetryInit((n) => n + 1)}>Thử lại</Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            sessionStorage.removeItem(pointerKey);
+            sessionStorage.removeItem(`${pointerKey}:start-key`);
+            const url = new URL(window.location.href);
+            url.searchParams.delete("session");
+            window.history.replaceState(null, "", url);
+            setRetryInit((n) => n + 1);
+          }}
+        >
+          Bắt đầu phiên mới
+        </Button>
+        <Button variant="outline" onClick={onExit}>
+          Quay lại
+        </Button>
+      </div>
+    );
 
   const { mode, prompt, options = [] } = currentQuestion;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-7">
+    <div
+      data-testid="vocabulary-session"
+      className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-7"
+    >
+      {error && (
+        <div role="alert" className="mb-4 rounded-xl border border-error p-3">
+          <p>{error}</p>
+          <Button
+            onClick={() =>
+              feedback
+                ? fetchNextQuestion(sessionId!)
+                : setRetryInit((n) => n + 1)
+            }
+          >
+            Thử lại
+          </Button>
+        </div>
+      )}
+      {audioNotice && (
+        <p role="status" className="mb-3 text-text-secondary">
+          {audioNotice}
+        </p>
+      )}
+      {currentQuestion.notice && (
+        <p role="status" className="mb-4 text-warning">
+          {currentQuestion.notice}
+        </p>
+      )}
       {/* HEADER: Thoát, Tiến độ, Chế độ */}
       <div className="mb-6 flex items-center justify-between">
         <button
@@ -628,7 +941,11 @@ export function VocabularyLearningSession({
             {/* Huy hiệu số từ đã thuộc trong phiên */}
             <span
               className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
-              title={isVietnamese ? "Số từ đã thuộc trong phiên" : "Mastered in session"}
+              title={
+                isVietnamese
+                  ? "Số từ đã thuộc trong phiên"
+                  : "Mastered in session"
+              }
             >
               <Check size={12} className="stroke-[2.5]" />
               <span>{resolvedCount}</span>
@@ -638,7 +955,11 @@ export function VocabularyLearningSession({
             {isRelearning && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-500/20"
-                title={isVietnamese ? "Đang ôn lại thẻ chưa thuộc" : "Relearning weak cards"}
+                title={
+                  isVietnamese
+                    ? "Đang ôn lại thẻ chưa thuộc"
+                    : "Relearning weak cards"
+                }
               >
                 <RotateCcw size={11} className="stroke-[2.5]" />
                 <span>{isVietnamese ? "Ôn lại" : "Review"}</span>
@@ -651,7 +972,11 @@ export function VocabularyLearningSession({
               type="button"
               onClick={() => setShowModeMenu(!showModeMenu)}
               className="flex items-center gap-1.5 rounded-full bg-primary/10 hover:bg-primary/20 transition px-3 py-1 text-[12px] font-bold text-primary cursor-pointer border border-primary/20"
-              title={isVietnamese ? "Nhấn để đổi chế độ học" : "Click to switch learning mode"}
+              title={
+                isVietnamese
+                  ? "Nhấn để đổi chế độ học"
+                  : "Click to switch learning mode"
+              }
             >
               <Brain size={14} />
               <span>{getModeLabel(mode)}</span>
@@ -740,7 +1065,9 @@ export function VocabularyLearningSession({
 
         {/* BỘ ĐẾM THỜI GIAN HỌC FLASHCARD */}
         <div
-          title={isVietnamese ? "Thời gian học phiên này" : "Session study timer"}
+          title={
+            isVietnamese ? "Thời gian học phiên này" : "Session study timer"
+          }
           className="flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-1.5 font-mono text-[13px] font-bold text-primary shadow-sm"
         >
           <Timer size={14} className="animate-pulse" />
@@ -786,7 +1113,7 @@ export function VocabularyLearningSession({
                     <h2 className="text-[36px] font-extrabold text-text-primary sm:text-[42px]">
                       {prompt.word}
                     </h2>
-                    {prompt.ipa && (
+                    {preferences.showPhonetic && prompt.ipa && (
                       <p className="mt-2 font-mono text-[16px] text-text-secondary">
                         {prompt.ipa}
                       </p>
@@ -805,9 +1132,18 @@ export function VocabularyLearningSession({
                             ? "border-primary bg-primary text-white shadow-xs"
                             : "border-border bg-surface-subtle text-text-primary hover:bg-surface-hover hover:border-text-tertiary"
                         }`}
-                        title={isVietnamese ? "Phát âm tiếng Anh - Mỹ (en-US)" : "Play en-US pronunciation"}
+                        title={
+                          isVietnamese
+                            ? "Phát âm tiếng Anh - Mỹ (en-US)"
+                            : "Play en-US pronunciation"
+                        }
                       >
-                        <Volume2 size={16} className={isPlayingAudio === "us" ? "animate-pulse" : ""} />
+                        <Volume2
+                          size={16}
+                          className={
+                            isPlayingAudio === "us" ? "animate-pulse" : ""
+                          }
+                        />
                         <span>en-US</span>
                       </button>
 
@@ -822,9 +1158,18 @@ export function VocabularyLearningSession({
                             ? "border-primary bg-primary text-white shadow-xs"
                             : "border-border bg-surface-subtle text-text-primary hover:bg-surface-hover hover:border-text-tertiary"
                         }`}
-                        title={isVietnamese ? "Phát âm tiếng Anh - Anh (en-UK)" : "Play en-UK pronunciation"}
+                        title={
+                          isVietnamese
+                            ? "Phát âm tiếng Anh - Anh (en-UK)"
+                            : "Play en-UK pronunciation"
+                        }
                       >
-                        <Volume2 size={16} className={isPlayingAudio === "uk" ? "animate-pulse" : ""} />
+                        <Volume2
+                          size={16}
+                          className={
+                            isPlayingAudio === "uk" ? "animate-pulse" : ""
+                          }
+                        />
                         <span>en-UK</span>
                       </button>
                     </div>
@@ -934,13 +1279,19 @@ export function VocabularyLearningSession({
                       onClick={handleMarkMastered}
                       className="inline-flex items-center gap-2 rounded-xl border border-violet-300/80 bg-violet-50 px-4 py-2 text-[14px] font-bold text-violet-700 shadow-xs transition hover:bg-violet-100 hover:border-violet-400 active:scale-95 disabled:opacity-50 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-300 cursor-pointer"
                     >
-                      <CheckCircle2 size={18} className="text-violet-600 dark:text-violet-400" />
+                      <CheckCircle2
+                        size={18}
+                        className="text-violet-600 dark:text-violet-400"
+                      />
                       <span>{isVietnamese ? "Thành thạo" : "Mastered"}</span>
                     </button>
 
                     <button
                       type="button"
-                      disabled={isSaving}
+                      disabled={
+                        isSaving ||
+                        currentQuestion.lexical_item_id.startsWith("card:")
+                      }
                       onClick={handleToggleSave}
                       className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-[14px] font-bold shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer ${
                         isSaved
@@ -950,7 +1301,11 @@ export function VocabularyLearningSession({
                     >
                       <Bookmark
                         size={18}
-                        className={isSaved ? "fill-amber-500 text-amber-500" : "text-text-tertiary"}
+                        className={
+                          isSaved
+                            ? "fill-amber-500 text-amber-500"
+                            : "text-text-tertiary"
+                        }
                       />
                       <span>
                         {isSaved
@@ -984,11 +1339,13 @@ export function VocabularyLearningSession({
                 <h2 className="mt-3 text-[30px] font-extrabold text-text-primary">
                   {mode === "REVERSE" ? prompt.meaning_vi : prompt.word}
                 </h2>
-                {prompt.ipa && mode !== "REVERSE" && (
-                  <p className="mt-1 font-mono text-[14px] text-text-secondary">
-                    {prompt.ipa}
-                  </p>
-                )}
+                {preferences.showPhonetic &&
+                  prompt.ipa &&
+                  mode !== "REVERSE" && (
+                    <p className="mt-1 font-mono text-[14px] text-text-secondary">
+                      {prompt.ipa}
+                    </p>
+                  )}
                 <div className="mt-2.5 flex items-center justify-center gap-2">
                   <button
                     type="button"
@@ -998,9 +1355,16 @@ export function VocabularyLearningSession({
                         ? "border-primary bg-primary text-white shadow-xs"
                         : "border-border bg-surface-subtle text-text-primary hover:bg-surface-hover hover:border-text-tertiary"
                     }`}
-                    title={isVietnamese ? "Phát âm en-US" : "Play en-US pronunciation"}
+                    title={
+                      isVietnamese
+                        ? "Phát âm en-US"
+                        : "Play en-US pronunciation"
+                    }
                   >
-                    <Volume2 size={14} className={isPlayingAudio === "us" ? "animate-pulse" : ""} />
+                    <Volume2
+                      size={14}
+                      className={isPlayingAudio === "us" ? "animate-pulse" : ""}
+                    />
                     <span>en-US</span>
                   </button>
                   <button
@@ -1011,9 +1375,16 @@ export function VocabularyLearningSession({
                         ? "border-primary bg-primary text-white shadow-xs"
                         : "border-border bg-surface-subtle text-text-primary hover:bg-surface-hover hover:border-text-tertiary"
                     }`}
-                    title={isVietnamese ? "Phát âm en-UK" : "Play en-UK pronunciation"}
+                    title={
+                      isVietnamese
+                        ? "Phát âm en-UK"
+                        : "Play en-UK pronunciation"
+                    }
                   >
-                    <Volume2 size={14} className={isPlayingAudio === "uk" ? "animate-pulse" : ""} />
+                    <Volume2
+                      size={14}
+                      className={isPlayingAudio === "uk" ? "animate-pulse" : ""}
+                    />
                     <span>en-UK</span>
                   </button>
                 </div>
@@ -1022,17 +1393,23 @@ export function VocabularyLearningSession({
               <div className="grid w-full grid-cols-1 sm:grid-cols-2 gap-3">
                 {options.map((opt) => {
                   const isSelected = selectedOptionId === opt.id;
-                  const isCorrectOption = opt.id === currentQuestion.lexical_item_id;
-                  const isWrongPick = isSelected && feedback && !feedback.is_correct;
+                  const isCorrectOption =
+                    opt.id === currentQuestion.lexical_item_id;
+                  const isWrongPick =
+                    isSelected && feedback && !feedback.is_correct;
 
-                  let buttonStyle = "border-border bg-surface hover:border-primary/50 text-text-primary";
+                  let buttonStyle =
+                    "border-border bg-surface hover:border-primary/50 text-text-primary";
                   if (feedback) {
                     if (isCorrectOption) {
-                      buttonStyle = "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold";
+                      buttonStyle =
+                        "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold";
                     } else if (isWrongPick) {
-                      buttonStyle = "border-rose-500 bg-rose-500/15 text-rose-700 dark:text-rose-300 font-bold";
+                      buttonStyle =
+                        "border-rose-500 bg-rose-500/15 text-rose-700 dark:text-rose-300 font-bold";
                     } else {
-                      buttonStyle = "border-border/60 bg-surface/50 text-text-tertiary opacity-40";
+                      buttonStyle =
+                        "border-border/60 bg-surface/50 text-text-tertiary opacity-40";
                     }
                   } else if (isSelected) {
                     buttonStyle = "border-primary bg-primary/10 text-primary";
@@ -1152,9 +1529,16 @@ export function VocabularyLearningSession({
                         ? "border-primary bg-primary text-white shadow-sm scale-105"
                         : "border-border bg-surface-subtle text-text-primary hover:bg-surface-hover hover:border-text-tertiary"
                     }`}
-                    title={isVietnamese ? "Phát âm tiếng Anh - Mỹ (en-US)" : "Play en-US pronunciation"}
+                    title={
+                      isVietnamese
+                        ? "Phát âm tiếng Anh - Mỹ (en-US)"
+                        : "Play en-US pronunciation"
+                    }
                   >
-                    <Volume2 size={22} className={isPlayingAudio === "us" ? "animate-pulse" : ""} />
+                    <Volume2
+                      size={22}
+                      className={isPlayingAudio === "us" ? "animate-pulse" : ""}
+                    />
                     <span className="text-[12px] font-semibold">en-US</span>
                   </button>
 
@@ -1166,9 +1550,16 @@ export function VocabularyLearningSession({
                         ? "border-primary bg-primary text-white shadow-sm scale-105"
                         : "border-border bg-surface-subtle text-text-primary hover:bg-surface-hover hover:border-text-tertiary"
                     }`}
-                    title={isVietnamese ? "Phát âm tiếng Anh - Anh (en-UK)" : "Play en-UK pronunciation"}
+                    title={
+                      isVietnamese
+                        ? "Phát âm tiếng Anh - Anh (en-UK)"
+                        : "Play en-UK pronunciation"
+                    }
                   >
-                    <Volume2 size={22} className={isPlayingAudio === "uk" ? "animate-pulse" : ""} />
+                    <Volume2
+                      size={22}
+                      className={isPlayingAudio === "uk" ? "animate-pulse" : ""}
+                    />
                     <span className="text-[12px] font-semibold">en-UK</span>
                   </button>
                 </div>
@@ -1343,16 +1734,17 @@ export function VocabularyLearningSession({
                     </h4>
                     <p className="mt-1 text-[13px]">
                       {feedback.message ||
-                        (mode !== "FLASHCARD" && feedback.result !== "CORRECT" && (
-                          <span>
-                            {isVietnamese
-                              ? "Đáp án đúng là:"
-                              : "Correct answer:"}{" "}
-                            <strong className="underline">
-                              {feedback.correct_answer}
-                            </strong>
-                          </span>
-                        ))}
+                        (mode !== "FLASHCARD" &&
+                          feedback.result !== "CORRECT" && (
+                            <span>
+                              {isVietnamese
+                                ? "Đáp án đúng là:"
+                                : "Correct answer:"}{" "}
+                              <strong className="underline">
+                                {feedback.correct_answer}
+                              </strong>
+                            </span>
+                          ))}
                     </p>
                     {feedback.meaning_vi && (
                       <p className="mt-0.5 text-[12px] opacity-80">
@@ -1382,16 +1774,20 @@ export function VocabularyLearningSession({
         isOpen={showExitConfirm}
         onClose={handleResume}
         onConfirmExit={handleConfirmExit}
-        title={isVietnamese ? 'Tạm dừng phiên học từ vựng?' : 'Pause Vocabulary Session?'}
+        title={
+          isVietnamese
+            ? "Tạm dừng phiên học từ vựng?"
+            : "Pause Vocabulary Session?"
+        }
         description={
           isVietnamese
-            ? 'Đồng hồ đếm thời gian đang được tạm ngưng. Bạn có chắc muốn dừng bài học này?'
-            : 'Study timer is paused. Are you sure you want to stop?'
+            ? "Đồng hồ đếm thời gian đang được tạm ngưng. Bạn có chắc muốn dừng bài học này?"
+            : "Study timer is paused. Are you sure you want to stop?"
         }
         savedNotice={
           isVietnamese
-            ? 'Các từ bạn đã trả lời trước đó đã được hệ thống lưu lại và cập nhật vào lịch ôn Spaced Repetition.'
-            : 'Words you already practiced have been safely saved to your Spaced Repetition schedule.'
+            ? "Các từ bạn đã trả lời trước đó đã được hệ thống lưu lại và cập nhật vào lịch ôn Spaced Repetition."
+            : "Words you already practiced have been safely saved to your Spaced Repetition schedule."
         }
       />
     </div>

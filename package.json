@@ -1,4 +1,3 @@
-
 {
   "name": "frontend-web",
   "version": "0.1.0",
@@ -12,7 +11,11 @@
     "test:course-assessment": "node --test tests/course-assessment.test.cjs",
     "test:course-measurement": "node --test tests/course-measurement.test.cjs",
     "test:writing-grading": "node --test tests/writing-grading.test.cjs",
-    "test:listening-catalog": "node --test tests/listening-catalog.test.cjs"
+    "test:listening-catalog": "node --test tests/listening-catalog.test.cjs",
+    "test:speaking-settings": "node --test tests/speaking-settings.test.cjs",
+    "test:reading-session": "node --test tests/reading-session.test.cjs",
+    "test:grammar-session": "node --test tests/grammar-session.test.cjs",
+    "test:vocabulary-session": "node --test tests/vocabulary-session.test.cjs"
   },
   "dependencies": {
     "@designcodeio/threeui": "1.1.0",

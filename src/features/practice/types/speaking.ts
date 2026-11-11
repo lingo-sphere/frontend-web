@@ -44,6 +44,7 @@ export interface DialogueScenario {
 
 export interface DialogueTurnAttemptResult {
   turn_number: number
+  recording_take_id?: string
   user_transcription?: string
   recording_media_id?: string
   recording_storage_key?: string
@@ -105,6 +106,8 @@ export interface SpeakingExercise {
   target_ipa_symbol_ids?: string[]
   target_grammar_point_ids?: string[]
   target_phonetics_knowledge_ids?: string[]
+  target_grammar_knowledge_ids?: string[]
+  target_phonetics_labels?: string[]
 
   expected_keywords?: string[]
   expected_structure?: string[]
@@ -131,12 +134,12 @@ export interface SpeakingExercise {
 }
 
 export interface SpeakingRubric {
-  pronunciation?: { weight: number; criteria: string[] }
-  fluency?: { weight: number; criteria: string[] }
-  grammar?: { weight: number; criteria: string[] }
-  vocabulary?: { weight: number; criteria: string[] }
-  coherence?: { weight: number; criteria: string[] }
-  content?: { weight: number; criteria: string[] }
+  pronunciation?: number
+  fluency?: number
+  grammar?: number
+  vocabulary?: number
+  coherence?: number
+  content?: number
 }
 
 export interface SpeakingAttempt {
@@ -178,6 +181,7 @@ export interface SpeakingAttempt {
 }
 
 export interface AIEvaluationResult extends SkillEvaluation {
+  turn_evaluations?: Array<{ turn_number: number; goal_accomplished?: 'YES' | 'PARTIAL' | 'NO'; user_transcript?: string; better_alternative?: string; feedback?: string }>
   overall_feedback: string
   pronunciation_analysis?: {
     score: number
