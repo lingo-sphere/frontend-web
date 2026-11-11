@@ -100,6 +100,10 @@ export function useGrammarSession(session: GrammarSession, userId?: string) {
       await persist()
       const response = await grammarPracticeService.submitSession(data.current.pending)
       complete.current = true; dirty.current = false; setResult(response); setPending(false)
+      // Refresh progress as soon as submission is committed, including browser-back navigation.
+      for (const query of ['grammar-levels', 'grammar-topics', 'grammar-sessions']) {
+        void queryClient.invalidateQueries({ queryKey: [query, userId] })
+      }
       // Invalidate every filtered vault query, not just the unfiltered {} key.
       void queryClient.invalidateQueries({ queryKey: [...practiceKeys.all, 'mistakes'] })
       await localQueue.current; await writeSkillDraft(key, undefined).catch(() => {})

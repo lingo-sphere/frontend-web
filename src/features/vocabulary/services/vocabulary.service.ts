@@ -1,6 +1,7 @@
 // Service xử lý các logic nghiệp vụ chính cho dịch vụ từ vựng.
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
+import { WrongWordSchema, type WrongWord } from '../schemas/wrong-word.schema'
 import {
   DeckSchema,
   DeckListSchema,
@@ -387,7 +388,7 @@ export const vocabularyService = {
   // ==================== WRONG WORDS COLLECTION ====================
 
   async getWrongWords(params?: { status?: string; page?: number; limit?: number; search?: string }): Promise<{
-    items: Array<any>
+    items: WrongWord[]
     pagination: {
       page: number
       limit: number
@@ -397,7 +398,11 @@ export const vocabularyService = {
       max_quota: number
     }
   }> {
-    return api.get('/vocabulary/wrong-words', params as Record<string, unknown>)
+    const response = await api.get<{
+      items: unknown[]
+      pagination: { page: number; limit: number; total: number; total_pages: number; quota_used: number; max_quota: number }
+    }>('/vocabulary/wrong-words', params as Record<string, unknown>)
+    return { ...response, items: response.items.map(item => WrongWordSchema.parse(item)) }
   },
 
   // ==================== DASHBOARD & LEARNING ANALYTICS ====================
