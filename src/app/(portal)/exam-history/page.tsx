@@ -24,6 +24,7 @@ export default function ExamHistoryPage() {
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
+      if (useAuthStore.getState().isKickedOut) return
       toast.warning('Vui lòng đăng nhập để xem lịch sử thi!')
       navigate('/login?returnUrl=/exam-history')
     }

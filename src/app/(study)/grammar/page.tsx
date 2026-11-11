@@ -1,33 +1,37 @@
 // Trang Luyện tập Ngữ Pháp theo cấp độ CEFR (A1 - C1) & Tra cứu lý thuyết ngữ pháp
-'use client'
+"use client";
 
-import { useState, useMemo, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Card, CardContent } from '@/components/card'
-import { Button } from '@/components/button'
-import { Input } from '@/components/input'
-import { SectionHeading } from '@/features/dashboard/components/section.heading'
-import { Icon } from '@/components/icon.map'
-import { Pagination } from '@/components/pagination'
-import { toast } from '@/store/toast.store'
-import { useAuthStore } from '@/features/auth/store/auth.store'
-import type { BackendGrammarPoint } from '@/features/vocabulary/services/vocabulary.service'
-import { useGrammarPointsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
-import { grammarPracticeService } from '@/features/practice/services/grammar-practice.service'
-import { GrammarWorkspace } from '@/features/practice/components/grammar.workspace'
-import { useSearchParams, useNavigate } from '@/lib/navigation'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type {
-  GrammarTopicItem,
-} from '@/features/practice/types/grammar-practice'
+import { useState, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent } from "@/components/card";
+import { Button } from "@/components/button";
+import { Input } from "@/components/input";
+import { SectionHeading } from "@/features/dashboard/components/section.heading";
+import { Icon } from "@/components/icon.map";
+import { Pagination } from "@/components/pagination";
+import { toast } from "@/store/toast.store";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import type { BackendGrammarPoint } from "@/features/vocabulary/services/vocabulary.service";
+import { useGrammarPointsQuery } from "@/features/vocabulary/hooks/use.vocabulary.query";
+import { grammarPracticeService } from "@/features/practice/services/grammar-practice.service";
+import { GrammarWorkspace } from "@/features/practice/components/grammar.workspace";
+import { useSearchParams, useNavigate } from "@/lib/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { GrammarTopicItem } from "@/features/practice/types/grammar-practice";
 
-const ITEMS_PER_PAGE = 12
+const ITEMS_PER_PAGE = 12;
 
 // ============================================================================
 // COMPONENT: CARD LÝ THUYẾT (TRA CỨU)
 // ============================================================================
-function TheoryGrammarCard({ grammar, isVietnamese }: { grammar: BackendGrammarPoint; isVietnamese: boolean }) {
-  const [isExpanded, setIsExpanded] = useState(false)
+function TheoryGrammarCard({
+  grammar,
+  isVietnamese,
+}: {
+  grammar: BackendGrammarPoint;
+  isVietnamese: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <Card className="dashboard-card cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg">
@@ -36,19 +40,23 @@ function TheoryGrammarCard({ grammar, isVietnamese }: { grammar: BackendGrammarP
           <div className="flex-1 min-w-0">
             <div className="mb-1 flex items-center gap-2">
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary font-medium">
-                {grammar.cefr_level || 'B1'}
+                {grammar.cefr_level || "B1"}
               </span>
               <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-xs text-text-secondary">
                 {grammar.category}
               </span>
             </div>
             <h4 className="text-[16px] font-semibold text-text-primary line-clamp-1">
-              {isVietnamese ? (grammar.title_vi || grammar.title_en) : grammar.title_en}
+              {isVietnamese
+                ? grammar.title_vi || grammar.title_en
+                : grammar.title_en}
             </h4>
-            <p className="text-[12px] text-text-secondary">{isVietnamese ? grammar.title_en : grammar.title_vi}</p>
+            <p className="text-[12px] text-text-secondary">
+              {isVietnamese ? grammar.title_en : grammar.title_vi}
+            </p>
           </div>
           <Icon
-            name={isExpanded ? 'chevronDown' : 'chevronRight'}
+            name={isExpanded ? "chevronDown" : "chevronRight"}
             size={18}
             className="flex-shrink-0 text-text-tertiary"
           />
@@ -56,7 +64,9 @@ function TheoryGrammarCard({ grammar, isVietnamese }: { grammar: BackendGrammarP
 
         {grammar.structure_form && (
           <div className="mt-3 rounded-lg bg-surface-subtle p-2">
-            <p className="text-[12px] text-text-secondary">{isVietnamese ? 'Cấu trúc:' : 'Structure:'}</p>
+            <p className="text-[12px] text-text-secondary">
+              {isVietnamese ? "Cấu trúc:" : "Structure:"}
+            </p>
             <p className="font-mono text-[13px] font-medium text-primary">
               {grammar.structure_form}
             </p>
@@ -66,29 +76,46 @@ function TheoryGrammarCard({ grammar, isVietnamese }: { grammar: BackendGrammarP
         {isExpanded && (
           <div className="mt-4 space-y-4 border-t border-border pt-4">
             <div>
-              <p className="text-[12px] font-medium text-text-secondary">{isVietnamese ? 'Mô tả & Định nghĩa:' : 'Description:'}</p>
+              <p className="text-[12px] font-medium text-text-secondary">
+                {isVietnamese ? "Mô tả & Định nghĩa:" : "Description:"}
+              </p>
               <p className="mt-1 text-[13px] text-text-primary">
-                {isVietnamese ? (grammar.description_vi || grammar.description_en) : grammar.description_en}
+                {isVietnamese
+                  ? grammar.description_vi || grammar.description_en
+                  : grammar.description_en}
               </p>
             </div>
 
             {(grammar.rule_vi || grammar.rule_en) && (
               <div>
-                <p className="text-[12px] font-medium text-text-secondary">{isVietnamese ? 'Quy tắc ngữ pháp:' : 'Rule:'}</p>
+                <p className="text-[12px] font-medium text-text-secondary">
+                  {isVietnamese ? "Quy tắc ngữ pháp:" : "Rule:"}
+                </p>
                 <p className="mt-1 text-[13px] text-text-primary">
-                  {isVietnamese ? grammar.rule_vi || grammar.rule_en : grammar.rule_en || grammar.rule_vi}
+                  {isVietnamese
+                    ? grammar.rule_vi || grammar.rule_en
+                    : grammar.rule_en || grammar.rule_vi}
                 </p>
               </div>
             )}
 
             {grammar.examples && grammar.examples.length > 0 && (
               <div>
-                <p className="text-[12px] font-medium text-text-secondary">{isVietnamese ? 'Ví dụ minh họa:' : 'Examples:'}</p>
+                <p className="text-[12px] font-medium text-text-secondary">
+                  {isVietnamese ? "Ví dụ minh họa:" : "Examples:"}
+                </p>
                 <div className="mt-2 space-y-2">
                   {grammar.examples.map((ex, idx) => (
-                    <div key={idx} className="rounded-lg bg-surface-subtle p-2.5">
-                      <p className="text-[13px] font-medium text-text-primary">{ex.sentence_en}</p>
-                      <p className="mt-0.5 text-[12px] text-text-secondary">{ex.sentence_vi}</p>
+                    <div
+                      key={idx}
+                      className="rounded-lg bg-surface-subtle p-2.5"
+                    >
+                      <p className="text-[13px] font-medium text-text-primary">
+                        {ex.sentence_en}
+                      </p>
+                      <p className="mt-0.5 text-[12px] text-text-secondary">
+                        {ex.sentence_vi}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -97,125 +124,284 @@ function TheoryGrammarCard({ grammar, isVietnamese }: { grammar: BackendGrammarP
 
             {grammar.usage_notes && (
               <div className="rounded-lg bg-info/10 p-3">
-                <p className="text-[12px] font-semibold text-info">{isVietnamese ? 'Lưu ý ứng dụng:' : 'Usage Notes:'}</p>
-                <p className="mt-1 text-[12px] text-text-primary">{grammar.usage_notes}</p>
+                <p className="text-[12px] font-semibold text-info">
+                  {isVietnamese ? "Lưu ý ứng dụng:" : "Usage Notes:"}
+                </p>
+                <p className="mt-1 text-[12px] text-text-primary">
+                  {grammar.usage_notes}
+                </p>
               </div>
             )}
 
             {grammar.common_mistakes && (
               <div className="rounded-lg bg-warning/10 p-3">
-                <p className="text-[12px] font-semibold text-warning">{isVietnamese ? 'Lỗi sai thường gặp:' : 'Common Mistakes:'}</p>
-                <p className="mt-1 text-[12px] text-text-primary">{grammar.common_mistakes}</p>
+                <p className="text-[12px] font-semibold text-warning">
+                  {isVietnamese ? "Lỗi sai thường gặp:" : "Common Mistakes:"}
+                </p>
+                <p className="mt-1 text-[12px] text-text-primary">
+                  {grammar.common_mistakes}
+                </p>
               </div>
             )}
           </div>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ============================================================================
 // MAIN PAGE COMPONENT
 // ============================================================================
 export default function GrammarAppPage() {
-  const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const { i18n } = useTranslation();
+  const isVietnamese = i18n.language === "vi";
 
-  const user = useAuthStore((s) => s.user)
-  const userId = user?.user_id
+  const user = useAuthStore((s) => s.user);
+  const userId = user?.user_id;
 
-  const searchParams = useSearchParams()
-  const navigate = useNavigate(), queryClient = useQueryClient()
-  const sessionId = searchParams.get('session')
-  const urlSearch = searchParams.get('search')
-  const urlLevel = searchParams.get('level') as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | null
+  const searchParams = useSearchParams();
+  const navigate = useNavigate(),
+    queryClient = useQueryClient();
+  const sessionId = searchParams.get("session");
+  const urlSearch = searchParams.get("search");
+  const urlLevel = searchParams.get("level") as
+    | "A1"
+    | "A2"
+    | "B1"
+    | "B2"
+    | "C1"
+    | "C2"
+    | null;
 
   // Mode: 'practice' (Luyện tập) | 'handbook' (Tra cứu lý thuyết)
-  const [activeTab, setActiveTab] = useState<'practice' | 'handbook'>(
-    urlSearch ? 'handbook' : 'practice'
-  )
+  const [activeTab, setActiveTab] = useState<"practice" | "handbook">(
+    urlSearch ? "handbook" : "practice"
+  );
 
   // PRACTICE STATE
-  const [selectedLevel, setSelectedLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'>(
-    urlLevel || 'A1'
-  )
-  const [startingSessionTopicId, setStartingSessionTopicId] = useState<string | null>(null)
-  const [sessionsPage, setSessionsPage] = useState(1)
-  const startingRef = useRef(false)
-  const startKey = useRef<{ topic: string; value: string } | null>(null)
-  const levelsQuery = useQuery({ queryKey: ['grammar-levels', userId], queryFn: () => grammarPracticeService.getLevels(userId) })
-  const topicsQuery = useQuery({ queryKey: ['grammar-topics', userId, selectedLevel], queryFn: () => grammarPracticeService.getTopics(selectedLevel, userId), enabled: activeTab === 'practice' && !sessionId })
-  const sessionsQuery = useQuery({ queryKey: ['grammar-sessions', userId, sessionsPage], queryFn: () => grammarPracticeService.getSessions(sessionsPage), enabled: Boolean(userId) && !sessionId, staleTime: 0 })
-  const sessionQuery = useQuery({ queryKey: ['grammar-session', userId, sessionId], queryFn: () => grammarPracticeService.getSession(sessionId!), enabled: Boolean(userId && sessionId), staleTime: 0, refetchOnWindowFocus: false, retry: false })
-  const levels = levelsQuery.data || [], topics = topicsQuery.data || [], isLoadingTopics = topicsQuery.isPending
-  const activeSession = sessionQuery.data
-  const navigateSession = (id: string | null) => { const next = new URLSearchParams(searchParams.toString()); if (id) next.set('session', id); else next.delete('session'); navigate('/grammar?' + next.toString()) }
-  const login = () => window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
-  const closeSession = () => { for (const key of ['grammar-levels', 'grammar-topics', 'grammar-sessions']) void queryClient.invalidateQueries({ queryKey: [key] }); navigateSession(null) }
+  const [selectedLevel, setSelectedLevel] = useState<
+    "A1" | "A2" | "B1" | "B2" | "C1" | "C2"
+  >(urlLevel || "A1");
+  const [startingSessionTopicId, setStartingSessionTopicId] = useState<
+    string | null
+  >(null);
+  const [sessionsPage, setSessionsPage] = useState(1);
+  const startingRef = useRef(false);
+  const startKey = useRef<{ topic: string; value: string } | null>(null);
+  const levelsQuery = useQuery({
+    queryKey: ["grammar-levels", userId],
+    queryFn: () => grammarPracticeService.getLevels(userId),
+  });
+  const topicsQuery = useQuery({
+    queryKey: ["grammar-topics", userId, selectedLevel],
+    queryFn: () => grammarPracticeService.getTopics(selectedLevel, userId),
+    enabled: activeTab === "practice" && !sessionId,
+  });
+  const sessionsQuery = useQuery({
+    queryKey: ["grammar-sessions", userId, sessionsPage],
+    queryFn: () => grammarPracticeService.getSessions(sessionsPage),
+    enabled: Boolean(userId) && !sessionId,
+    staleTime: 0,
+  });
+  const sessionQuery = useQuery({
+    queryKey: ["grammar-session", userId, sessionId],
+    queryFn: () => grammarPracticeService.getSession(sessionId!),
+    enabled: Boolean(userId && sessionId),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+  const levels = levelsQuery.data || [],
+    topics = topicsQuery.data || [],
+    isLoadingTopics = topicsQuery.isPending;
+  const activeSession = sessionQuery.data;
+  const navigateSession = (id: string | null) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (id) next.set("session", id);
+    else next.delete("session");
+    navigate("/grammar?" + next.toString());
+  };
+  const login = () =>
+    window.dispatchEvent(new CustomEvent("lingosphere:open-auth-modal"));
+  const closeSession = () => {
+    for (const key of ["grammar-levels", "grammar-topics", "grammar-sessions"])
+      void queryClient.invalidateQueries({ queryKey: [key] });
+    navigateSession(null);
+  };
 
   // HANDBOOK STATE
-  const { data: grammarItems = [], isLoading: isLoadingHandbook, error: handbookError, refetch: refetchHandbook } = useGrammarPointsQuery()
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
-  const [searchQuery, setSearchQuery] = useState(urlSearch || '')
-  const [currentPage, setCurrentPage] = useState(1)
+  const {
+    data: grammarItems = [],
+    isLoading: isLoadingHandbook,
+    error: handbookError,
+    refetch: refetchHandbook,
+  } = useGrammarPointsQuery();
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState(urlSearch || "");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleStartPractice = async (topic: GrammarTopicItem) => {
-    if (!userId) { login(); return }
-    if (startingRef.current) return
-    startingRef.current = true; setStartingSessionTopicId(topic._id)
-    startKey.current ??= { topic: topic._id, value: crypto.randomUUID() }
-    if (startKey.current.topic !== topic._id) startKey.current = { topic: topic._id, value: crypto.randomUUID() }
+    if (!userId) {
+      login();
+      return;
+    }
+    if (startingRef.current) return;
+    startingRef.current = true;
+    setStartingSessionTopicId(topic._id);
+    startKey.current ??= { topic: topic._id, value: crypto.randomUUID() };
+    if (startKey.current.topic !== topic._id)
+      startKey.current = { topic: topic._id, value: crypto.randomUUID() };
     try {
-      const session = await grammarPracticeService.createSession({ grammar_knowledge_id: topic._id, cefr_level: topic.cefr_level, question_count: 10, session_key: startKey.current.value })
-      queryClient.setQueryData(['grammar-session', userId, session.session_id], session)
-      navigateSession(session.session_id); startKey.current = null
-    } catch (error) { toast.error(error instanceof Error ? error.message : 'Không tạo được phiên luyện tập') }
-    finally { startingRef.current = false; setStartingSessionTopicId(null) }
-  }
+      const session = await grammarPracticeService.createSession({
+        grammar_knowledge_id: topic._id,
+        cefr_level: topic.cefr_level,
+        question_count: 10,
+        session_key: startKey.current.value,
+      });
+      queryClient.setQueryData(
+        ["grammar-session", userId, session.session_id],
+        session
+      );
+      navigateSession(session.session_id);
+      startKey.current = null;
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không tạo được phiên luyện tập"
+      );
+    } finally {
+      startingRef.current = false;
+      setStartingSessionTopicId(null);
+    }
+  };
 
   // Filter for handbook
   const filteredGrammarPoints = useMemo(() => {
     return grammarItems.filter((item) => {
-      const matchesType = selectedCategory === 'ALL' || item.category === selectedCategory
+      const matchesType =
+        selectedCategory === "ALL" || item.category === selectedCategory;
       const matchesSearch =
-        searchQuery.trim() === '' ||
-        (item.title_en && item.title_en.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.title_vi && item.title_vi.toLowerCase().includes(searchQuery.toLowerCase()))
-      return matchesType && matchesSearch
-    })
-  }, [grammarItems, selectedCategory, searchQuery])
+        searchQuery.trim() === "" ||
+        (item.title_en &&
+          item.title_en.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.title_vi &&
+          item.title_vi.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesType && matchesSearch;
+    });
+  }, [grammarItems, selectedCategory, searchQuery]);
 
-  const totalPages = Math.ceil(filteredGrammarPoints.length / ITEMS_PER_PAGE)
+  const totalPages = Math.ceil(filteredGrammarPoints.length / ITEMS_PER_PAGE);
   const paginatedGrammarPoints = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE
-    return filteredGrammarPoints.slice(start, start + ITEMS_PER_PAGE)
-  }, [filteredGrammarPoints, currentPage])
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredGrammarPoints.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredGrammarPoints, currentPage]);
 
   // Current Level Meta
-  const currentLevelSummary = levels.find((l) => l.level === selectedLevel)
+  const currentLevelSummary = levels.find((l) => l.level === selectedLevel);
 
   if (sessionId) {
-    if (!userId) return <main className="p-6"><Button onClick={login}>Đăng nhập để mở phiên Grammar</Button></main>
-    if (sessionQuery.isPending || sessionQuery.isFetching) return <p role="status" className="p-6">Đang mở phiên Grammar…</p>
-    if (sessionQuery.error || !activeSession) return <div role="alert" className="p-6">Không mở được phiên: {sessionQuery.error?.message}<Button onClick={() => void sessionQuery.refetch()}>Thử lại</Button><Button onClick={closeSession}>Quay lại</Button></div>
-    return <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8"><GrammarWorkspace key={activeSession.session_id} session={activeSession} userId={userId} onClose={closeSession} onRetry={() => { void handleStartPractice({ _id: activeSession.grammar_knowledge_id || '', cefr_level: activeSession.cefr_level } as GrammarTopicItem) }} /></main>
+    if (!userId)
+      return (
+        <main className="p-6">
+          <Button onClick={login}>Đăng nhập để mở phiên Grammar</Button>
+        </main>
+      );
+    if (sessionQuery.isPending || sessionQuery.isFetching)
+      return (
+        <p role="status" className="p-6">
+          Đang mở phiên Grammar…
+        </p>
+      );
+    if (sessionQuery.error || !activeSession)
+      return (
+        <div role="alert" className="p-6">
+          Không mở được phiên: {sessionQuery.error?.message}
+          <Button onClick={() => void sessionQuery.refetch()}>Thử lại</Button>
+          <Button onClick={closeSession}>Quay lại</Button>
+        </div>
+      );
+    return (
+      <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        <GrammarWorkspace
+          key={activeSession.session_id}
+          session={activeSession}
+          userId={userId}
+          onClose={closeSession}
+          onRetry={() => {
+            void handleStartPractice({
+              _id: activeSession.grammar_knowledge_id || "",
+              cefr_level: activeSession.cefr_level,
+            } as GrammarTopicItem);
+          }}
+        />
+      </main>
+    );
   }
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {levelsQuery.error && <div role="alert">Không tải được tiến độ cấp độ. <Button onClick={() => void levelsQuery.refetch()}>Thử lại</Button></div>}
-      {sessionsQuery.error && <div role="alert">Không tải được lịch sử phiên. <Button onClick={() => void sessionsQuery.refetch()}>Thử lại</Button></div>}
-      {sessionsQuery.data && sessionsQuery.data.items.length > 0 && <section className="mb-5 space-y-2"><h2 className="font-bold">Phiên gần đây</h2>{sessionsQuery.data.items.map(row => <div key={row.session_id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"><span>{row.topic_name_vi} · {row.cefr_level}{row.status === 'COMPLETED' ? ' · ' + row.score_percent + '%' : ' · Đang làm'}</span><Button onClick={() => navigateSession(row.session_id)}>{row.status === 'COMPLETED' ? 'Xem lại' : 'Tiếp tục'}</Button></div>)}<div className="flex gap-3"><Button disabled={sessionsPage === 1 || sessionsQuery.isFetching} onClick={() => setSessionsPage(v => v - 1)}>Phiên trước</Button><span>Trang {sessionsPage}</span><Button disabled={sessionsPage * sessionsQuery.data.limit >= sessionsQuery.data.total || sessionsQuery.isFetching} onClick={() => setSessionsPage(v => v + 1)}>Phiên sau</Button></div></section>}
+      {levelsQuery.error && (
+        <div role="alert">
+          Không tải được tiến độ cấp độ.{" "}
+          <Button onClick={() => void levelsQuery.refetch()}>Thử lại</Button>
+        </div>
+      )}
+      {sessionsQuery.error && (
+        <div role="alert">
+          Không tải được lịch sử phiên.{" "}
+          <Button onClick={() => void sessionsQuery.refetch()}>Thử lại</Button>
+        </div>
+      )}
+      {sessionsQuery.data && sessionsQuery.data.items.length > 0 && (
+        <section className="mb-5 space-y-2">
+          <h2 className="font-bold">Phiên gần đây</h2>
+          {sessionsQuery.data.items.map((row) => (
+            <div
+              key={row.session_id}
+              className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+            >
+              <span>
+                {row.topic_name_vi} · {row.cefr_level}
+                {row.status === "COMPLETED"
+                  ? " · " + row.score_percent + "%"
+                  : " · Đang làm"}
+              </span>
+              <Button onClick={() => navigateSession(row.session_id)}>
+                {row.status === "COMPLETED" ? "Xem lại" : "Tiếp tục"}
+              </Button>
+            </div>
+          ))}
+          <div className="flex gap-3">
+            <Button
+              disabled={sessionsPage === 1 || sessionsQuery.isFetching}
+              onClick={() => setSessionsPage((v) => v - 1)}
+            >
+              Phiên trước
+            </Button>
+            <span>Trang {sessionsPage}</span>
+            <Button
+              disabled={
+                sessionsPage * sessionsQuery.data.limit >=
+                  sessionsQuery.data.total || sessionsQuery.isFetching
+              }
+              onClick={() => setSessionsPage((v) => v + 1)}
+            >
+              Phiên sau
+            </Button>
+          </div>
+        </section>
+      )}
       {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <SectionHeading
-          eyebrow={isVietnamese ? 'Luyện tập Ngữ Pháp' : 'Grammar Practice'}
-          title={isVietnamese ? 'Ngữ pháp tiếng Anh' : 'English Grammar'}
+          eyebrow={isVietnamese ? "Luyện tập Ngữ Pháp" : "Grammar Practice"}
+          title={isVietnamese ? "Ngữ pháp tiếng Anh" : "English Grammar"}
           description={
             isVietnamese
-              ? 'Luyện tập theo 6 cấp độ CEFR từ nền tảng đến nâng cao kèm giải thích chi tiết.'
-              : 'Practice across 6 CEFR levels with interactive exercises and clear explanations.'
+              ? "Luyện tập theo 6 cấp độ CEFR từ nền tảng đến nâng cao kèm giải thích chi tiết."
+              : "Practice across 6 CEFR levels with interactive exercises and clear explanations."
           }
         />
 
@@ -223,11 +409,11 @@ export default function GrammarAppPage() {
         <div className="flex items-center rounded-xl bg-surface-subtle p-1 border border-border">
           <button
             type="button"
-            onClick={() => setActiveTab('practice')}
+            onClick={() => setActiveTab("practice")}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-              activeTab === 'practice'
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
+              activeTab === "practice"
+                ? "bg-primary text-white shadow-sm"
+                : "text-text-secondary hover:text-text-primary"
             }`}
           >
             <Icon name="bookCheck" size={16} />
@@ -236,11 +422,11 @@ export default function GrammarAppPage() {
 
           <button
             type="button"
-            onClick={() => setActiveTab('handbook')}
+            onClick={() => setActiveTab("handbook")}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-              activeTab === 'handbook'
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
+              activeTab === "handbook"
+                ? "bg-primary text-white shadow-sm"
+                : "text-text-secondary hover:text-text-primary"
             }`}
           >
             <Icon name="bookOpen" size={16} />
@@ -252,49 +438,70 @@ export default function GrammarAppPage() {
       {/* ==================================================================== */}
       {/* TAB 1: LUYỆN TẬP THEO CẤP ĐỘ (A1 - C1) */}
       {/* ==================================================================== */}
-      {activeTab === 'practice' && (
+      {activeTab === "practice" && (
         <div className="mt-8 space-y-6">
           {/* 5 CEFR LEVEL SELECTOR */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
             {[
-              { level: 'A1', name: 'Beginner', desc: 'Nền tảng' },
-              { level: 'A2', name: 'Elementary', desc: 'Giao tiếp cơ bản' },
-              { level: 'B1', name: 'Intermediate', desc: 'Độc lập' },
-              { level: 'B2', name: 'Upper-Inter', desc: 'Cấu trúc phức tạp' },
-              { level: 'C1', name: 'Advanced', desc: 'Nâng cao' },
-              { level: 'C2', name: 'Proficiency', desc: 'Thành thạo' },
+              { level: "A1", name: "Beginner", desc: "Nền tảng" },
+              { level: "A2", name: "Elementary", desc: "Giao tiếp cơ bản" },
+              { level: "B1", name: "Intermediate", desc: "Độc lập" },
+              { level: "B2", name: "Upper-Inter", desc: "Cấu trúc phức tạp" },
+              { level: "C1", name: "Advanced", desc: "Nâng cao" },
+              { level: "C2", name: "Proficiency", desc: "Thành thạo" },
             ].map((lvlItem) => {
-              const isSelected = selectedLevel === lvlItem.level
-              const lvlData = levels.find((l) => l.level === lvlItem.level)
-              const isUnlocked = lvlData ? lvlData.is_unlocked : lvlItem.level === 'A1'
+              const isSelected = selectedLevel === lvlItem.level;
+              const lvlData = levels.find((l) => l.level === lvlItem.level);
+              const isUnlocked = lvlData
+                ? lvlData.is_unlocked
+                : lvlItem.level === "A1";
 
               return (
                 <button
                   key={lvlItem.level}
                   type="button"
-                  disabled={!isUnlocked || levelsQuery.isPending || Boolean(levelsQuery.error)} onClick={() => setSelectedLevel(lvlItem.level as typeof selectedLevel)}
+                  disabled={
+                    !isUnlocked ||
+                    levelsQuery.isPending ||
+                    Boolean(levelsQuery.error)
+                  }
+                  onClick={() =>
+                    setSelectedLevel(lvlItem.level as typeof selectedLevel)
+                  }
                   className={`relative flex flex-col items-start rounded-xl border p-4 text-left transition-all ${
                     isSelected
-                      ? 'border-primary bg-primary/10 shadow-sm ring-2 ring-primary/20'
-                      : 'border-border bg-surface-subtle hover:border-primary/40 hover:bg-surface-elevated'
+                      ? "border-primary bg-primary/10 shadow-sm ring-2 ring-primary/20"
+                      : "border-border bg-surface-subtle hover:border-primary/40 hover:bg-surface-elevated"
                   }`}
                 >
                   <div className="flex w-full items-center justify-between">
-                    <span className={`text-base font-black ${isSelected ? 'text-primary' : 'text-text-primary'}`}>
+                    <span
+                      className={`text-base font-black ${
+                        isSelected ? "text-primary" : "text-text-primary"
+                      }`}
+                    >
                       {lvlItem.level}
                     </span>
                     {!isUnlocked ? (
-                      <Icon name="lock" size={14} className="text-text-tertiary" />
+                      <Icon
+                        name="lock"
+                        size={14}
+                        className="text-text-tertiary"
+                      />
                     ) : (
                       <span className="rounded bg-success/15 px-1.5 py-0.5 text-[10px] font-bold text-success">
                         Mở
                       </span>
                     )}
                   </div>
-                  <span className="mt-1 text-xs font-semibold text-text-primary">{lvlItem.name}</span>
-                  <span className="text-[11px] text-text-tertiary">{lvlItem.desc}</span>
+                  <span className="mt-1 text-xs font-semibold text-text-primary">
+                    {lvlItem.name}
+                  </span>
+                  <span className="text-[11px] text-text-tertiary">
+                    {lvlItem.desc}
+                  </span>
                 </button>
-              )
+              );
             })}
           </div>
 
@@ -307,11 +514,13 @@ export default function GrammarAppPage() {
                     Level {currentLevelSummary.level}
                   </span>
                   <h3 className="text-base font-bold text-text-primary">
-                    {currentLevelSummary.display_name} — {currentLevelSummary.meaning}
+                    {currentLevelSummary.display_name} —{" "}
+                    {currentLevelSummary.meaning}
                   </h3>
                 </div>
                 <p className="mt-1 text-xs text-text-secondary">
-                  Hoàn thành 80% chủ điểm và đạt 80% độ chính xác để tự động mở khóa level kế tiếp.
+                  Hoàn thành 80% chủ điểm và đạt 80% độ chính xác để tự động mở
+                  khóa level kế tiếp.
                 </p>
               </div>
 
@@ -329,19 +538,34 @@ export default function GrammarAppPage() {
           )}
 
           {/* Topic Cards Grid */}
-          {topicsQuery.error ? <div role="alert">Không tải được chủ điểm. <Button onClick={() => void topicsQuery.refetch()}>Thử lại</Button></div> : isLoadingTopics ? (
+          {topicsQuery.error ? (
+            <div role="alert">
+              Không tải được chủ điểm.{" "}
+              <Button onClick={() => void topicsQuery.refetch()}>
+                Thử lại
+              </Button>
+            </div>
+          ) : isLoadingTopics ? (
             <div className="flex h-48 items-center justify-center">
-              <p className="text-sm text-text-secondary">Đang tải danh sách chủ đề ngữ pháp...</p>
+              <p className="text-sm text-text-secondary">
+                Đang tải danh sách chủ đề ngữ pháp...
+              </p>
             </div>
           ) : topics.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-12 text-center">
-              <Icon name="bookOpen" size={36} className="mx-auto mb-2 text-text-tertiary opacity-40" />
-              <p className="text-sm text-text-secondary">Chưa có bài tập cho cấp độ này.</p>
+              <Icon
+                name="bookOpen"
+                size={36}
+                className="mx-auto mb-2 text-text-tertiary opacity-40"
+              />
+              <p className="text-sm text-text-secondary">
+                Chưa có bài tập cho cấp độ này.
+              </p>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {topics.map((topic) => {
-                const isStarting = startingSessionTopicId === topic._id
+                const isStarting = startingSessionTopicId === topic._id;
 
                 return (
                   <Card
@@ -364,7 +588,9 @@ export default function GrammarAppPage() {
                         <h4 className="text-base font-bold text-text-primary line-clamp-1">
                           {topic.name_vi || topic.name_en}
                         </h4>
-                        <p className="text-xs text-text-secondary line-clamp-1">{topic.name_en}</p>
+                        <p className="text-xs text-text-secondary line-clamp-1">
+                          {topic.name_en}
+                        </p>
                       </div>
 
                       {/* Formula pattern box */}
@@ -382,16 +608,30 @@ export default function GrammarAppPage() {
                       {/* Primary Button */}
                       <Button
                         variant="default"
-                        disabled={Boolean(startingSessionTopicId) || !topic.is_unlocked || topic.total_questions < 6 || levelsQuery.isPending || Boolean(levelsQuery.error)}
+                        disabled={
+                          Boolean(startingSessionTopicId) ||
+                          !topic.is_unlocked ||
+                          topic.total_questions < 6 ||
+                          levelsQuery.isPending ||
+                          Boolean(levelsQuery.error)
+                        }
                         onClick={() => handleStartPractice(topic)}
                         className="w-full gap-2 mt-2 shadow-sm font-semibold"
                       >
                         <Icon name="play" size={14} />
-                        <span>{isStarting ? 'Đang tạo phiên...' : !topic.is_unlocked ? 'Chưa mở khóa' : topic.total_questions < 6 ? 'Chưa đủ 6 câu' : 'Luyện tập ngay'}</span>
+                        <span>
+                          {isStarting
+                            ? "Đang tạo phiên..."
+                            : !topic.is_unlocked
+                            ? "Chưa mở khóa"
+                            : topic.total_questions < 6
+                            ? "Chưa đủ 6 câu"
+                            : "Luyện tập ngay"}
+                        </span>
                       </Button>
                     </CardContent>
                   </Card>
-                )
+                );
               })}
             </div>
           )}
@@ -401,41 +641,45 @@ export default function GrammarAppPage() {
       {/* ==================================================================== */}
       {/* TAB 2: TRA CỨU LÝ THUYẾT (HANDBOOK) */}
       {/* ==================================================================== */}
-      {activeTab === 'handbook' && (
+      {activeTab === "handbook" && (
         <div className="mt-8 space-y-6">
           {/* Search & Filter */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="w-full sm:max-w-xs">
               <Input
-                placeholder={isVietnamese ? 'Tìm kiếm cấu trúc ngữ pháp...' : 'Search grammar rules...'}
+                placeholder={
+                  isVietnamese
+                    ? "Tìm kiếm cấu trúc ngữ pháp..."
+                    : "Search grammar rules..."
+                }
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setCurrentPage(1)
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
                 }}
               />
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
               {[
-                { value: 'ALL', label: 'Tất cả' },
-                { value: 'TENSES', label: 'Các Thì' },
-                { value: 'PREPOSITIONS', label: 'Giới từ' },
-                { value: 'CLAUSES', label: 'Mệnh đề' },
-                { value: 'CONDITIONALS', label: 'Câu điều kiện' },
-                { value: 'PASSIVE_VOICE', label: 'Bị động' },
+                { value: "ALL", label: "Tất cả" },
+                { value: "TENSES", label: "Các Thì" },
+                { value: "PREPOSITIONS", label: "Giới từ" },
+                { value: "CLAUSES", label: "Mệnh đề" },
+                { value: "CONDITIONALS", label: "Câu điều kiện" },
+                { value: "PASSIVE_VOICE", label: "Bị động" },
               ].map((type) => (
                 <button
                   key={type.value}
                   type="button"
                   onClick={() => {
-                    setSelectedCategory(type.value)
-                    setCurrentPage(1)
+                    setSelectedCategory(type.value);
+                    setCurrentPage(1);
                   }}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                     selectedCategory === type.value
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'bg-surface-subtle text-text-secondary hover:bg-surface-elevated'
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-surface-subtle text-text-secondary hover:bg-surface-elevated"
                   }`}
                 >
                   {type.label}
@@ -445,19 +689,36 @@ export default function GrammarAppPage() {
           </div>
 
           {/* Cards Grid */}
-          {handbookError ? <div role="alert">Không tải được lý thuyết. <Button onClick={() => void refetchHandbook()}>Thử lại</Button></div> : isLoadingHandbook ? (
+          {handbookError ? (
+            <div role="alert">
+              Không tải được lý thuyết.{" "}
+              <Button onClick={() => void refetchHandbook()}>Thử lại</Button>
+            </div>
+          ) : isLoadingHandbook ? (
             <div className="flex h-48 items-center justify-center">
-              <p className="text-sm text-text-secondary">Đang tải lý thuyết ngữ pháp...</p>
+              <p className="text-sm text-text-secondary">
+                Đang tải lý thuyết ngữ pháp...
+              </p>
             </div>
           ) : filteredGrammarPoints.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-12 text-center">
-              <Icon name="search" size={32} className="mx-auto mb-2 text-text-tertiary opacity-40" />
-              <p className="text-sm text-text-secondary">Không tìm thấy cấu trúc ngữ pháp phù hợp.</p>
+              <Icon
+                name="search"
+                size={32}
+                className="mx-auto mb-2 text-text-tertiary opacity-40"
+              />
+              <p className="text-sm text-text-secondary">
+                Không tìm thấy cấu trúc ngữ pháp phù hợp.
+              </p>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {paginatedGrammarPoints.map((item) => (
-                <TheoryGrammarCard key={item._id} grammar={item} isVietnamese={isVietnamese} />
+                <TheoryGrammarCard
+                  key={item._id}
+                  grammar={item}
+                  isVietnamese={isVietnamese}
+                />
               ))}
             </div>
           )}
@@ -474,5 +735,5 @@ export default function GrammarAppPage() {
         </div>
       )}
     </main>
-  )
+  );
 }

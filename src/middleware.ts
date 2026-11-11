@@ -17,7 +17,10 @@ function isTokenValid(token?: string | null): boolean {
     const parts = token.split('.')
     if (parts.length !== 3) return false
     const base64Url = parts[1]
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    while (base64.length % 4) {
+      base64 += '='
+    }
     const decoded = typeof atob === 'function'
       ? atob(base64)
       : Buffer.from(base64, 'base64').toString('binary')
@@ -45,8 +48,14 @@ function isPublicRoute(pathname: string): boolean {
 
 function sanitizeReturnUrl(url: string | null): string {
   if (!url) return '/home'
-  if (url.startsWith('/') && !url.startsWith('//') && !url.includes('\\') && url !== '/login') {
-    return url
+  const decoded = decodeURIComponent(url).trim()
+  if (
+    decoded.startsWith('/') &&
+    !decoded.startsWith('//') &&
+    !decoded.includes('\\') &&
+    !decoded.startsWith('/login')
+  ) {
+    return decoded
   }
   return '/home'
 }
@@ -66,7 +75,9 @@ export function middleware(request: NextRequest) {
 
   if (isPublicRoute(pathname)) {
     if (pathname === '/login' && hasValidAuth) {
-      const rawReturnUrl = request.nextUrl.searchParams.get('returnUrl') || request.nextUrl.searchParams.get('redirect')
+      const rawReturnUrl =
+        request.nextUrl.searchParams.get('returnUrl') ||
+        request.nextUrl.searchParams.get('redirect')
       const targetUrl = sanitizeReturnUrl(rawReturnUrl)
       return NextResponse.redirect(new URL(targetUrl, request.url))
     }

@@ -12,6 +12,10 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  isKickedOut: boolean
+  kickoutMessage: string | null
+  setKickout: (message: string) => void
+  clearKickout: () => void
   setUser: (user: User | null) => void
   login: (payload: LoginPayload) => Promise<void>
   socialLogin: (payload: SocialLoginPayload) => Promise<void>
@@ -95,6 +99,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: Boolean(getInitialStoredUser()) && authService.isAuthenticated(),
   isLoading: false,
   error: null,
+  isKickedOut: false,
+  kickoutMessage: null,
+
+  setKickout: (message: string) => {
+    set({ isKickedOut: true, kickoutMessage: message, isAuthenticated: false })
+  },
+
+  clearKickout: () => {
+    set({ isKickedOut: false, kickoutMessage: null })
+  },
 
   setUser: (user) => {
     if (user?.role === 'ADMIN') {
@@ -118,8 +132,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   clearError: () => set({ error: null }),
 
   login: async (payload) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true, error: null, isKickedOut: false, kickoutMessage: null })
     try {
+      authService.clearAuthStorage()
       const res = await authService.login(payload)
       if (res.user?.role === 'ADMIN') {
         await authService.logout().catch(() => {})
@@ -153,6 +168,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Đăng nhập không thành công'
       set({ error: msg, isLoading: false })
@@ -161,8 +179,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   socialLogin: async (payload) => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true, error: null, isKickedOut: false, kickoutMessage: null })
     try {
+      authService.clearAuthStorage()
       const res = await authService.socialLogin(payload)
       if (res.user?.role === 'ADMIN') {
         await authService.logout().catch(() => {})
@@ -196,6 +215,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Đăng nhập qua mạng xã hội không thành công'
       set({ error: msg, isLoading: false })
@@ -225,6 +247,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       })
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Mã xác thực OTP không chính xác hoặc đã hết hạn'
       set({ error: msg, isLoading: false })

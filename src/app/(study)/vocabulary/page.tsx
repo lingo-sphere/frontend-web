@@ -91,16 +91,21 @@ export default function VocabularyAppPage() {
     deck: Deck;
     saversCount: number;
   }
-  const [pendingDeleteDeck, setPendingDeleteDeck] = useState<PendingDeleteState | null>(null);
-  const [checkingDeleteDeckId, setCheckingDeleteDeckId] = useState<string | null>(null);
+  const [pendingDeleteDeck, setPendingDeleteDeck] =
+    useState<PendingDeleteState | null>(null);
+  const [checkingDeleteDeckId, setCheckingDeleteDeckId] = useState<
+    string | null
+  >(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleRequestDeleteDeck = async (deck: Deck) => {
-    const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
+    const currentUserId =
+      (currentUser as any)?.user_id || (currentUser as any)?.id;
     const isOwnDeck =
       deck.creator_type === "USER" &&
       Boolean(currentUserId) &&
-      ((deck as any).creator_id === currentUserId || (deck as any).user_id === currentUserId);
+      ((deck as any).creator_id === currentUserId ||
+        (deck as any).user_id === currentUserId);
 
     const deckId = String(
       deck._id || deck.id || (deck as any).deck_id?._id || (deck as any).deck_id
@@ -127,11 +132,13 @@ export default function VocabularyAppPage() {
     const deckId = String(
       deck._id || deck.id || (deck as any).deck_id?._id || (deck as any).deck_id
     );
-    const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
+    const currentUserId =
+      (currentUser as any)?.user_id || (currentUser as any)?.id;
     const isOwnDeck =
       deck.creator_type === "USER" &&
       Boolean(currentUserId) &&
-      ((deck as any).creator_id === currentUserId || (deck as any).user_id === currentUserId);
+      ((deck as any).creator_id === currentUserId ||
+        (deck as any).user_id === currentUserId);
 
     setIsDeleting(true);
     try {
@@ -154,7 +161,9 @@ export default function VocabularyAppPage() {
         await vocabularyService.unenrollDeck(deckId);
         showAction(
           isVietnamese
-            ? `Đã gỡ bộ thẻ "${deck.name || (deck as any).title}" khỏi Bộ thẻ của tôi`
+            ? `Đã gỡ bộ thẻ "${
+                deck.name || (deck as any).title
+              }" khỏi Bộ thẻ của tôi`
             : `Removed deck "${deck.name || (deck as any).title}" from My Decks`
         );
       }
@@ -249,8 +258,19 @@ export default function VocabularyAppPage() {
   return (
     <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <VocabularyResumeSessions />
-      {dataError && <div role="alert" className="mb-5 border border-error rounded-xl p-4"><p>{isVietnamese ? 'Một phần dữ liệu chưa tải được. Các số đếm có thể chưa đầy đủ.' : 'Some data could not load. Counts may be incomplete.'}</p><Button variant="outline" onClick={retryData}>{isVietnamese ? 'Thử lại' : 'Retry'}</Button></div>}
+        <VocabularyResumeSessions />
+        {dataError && (
+          <div role="alert" className="mb-5 border border-error rounded-xl p-4">
+            <p>
+              {isVietnamese
+                ? "Một phần dữ liệu chưa tải được. Các số đếm có thể chưa đầy đủ."
+                : "Some data could not load. Counts may be incomplete."}
+            </p>
+            <Button variant="outline" onClick={retryData}>
+              {isVietnamese ? "Thử lại" : "Retry"}
+            </Button>
+          </div>
+        )}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
@@ -482,7 +502,11 @@ export default function VocabularyAppPage() {
                     </span>
                     <span className="my-1 text-[18px] font-extrabold text-emerald-600 dark:text-emerald-400">
                       {masteryStats.totalReviews > 0
-                        ? `${masteryStats.reviewAccuracy === null ? "—" : `${masteryStats.reviewAccuracy}%`}`
+                        ? `${
+                            masteryStats.reviewAccuracy === null
+                              ? "—"
+                              : `${masteryStats.reviewAccuracy}%`
+                          }`
                         : "--%"}
                     </span>
                     <span className="text-[9.5px] text-text-tertiary">
@@ -771,10 +795,19 @@ export default function VocabularyAppPage() {
                 const examPart = deck.settings?.exam_part;
                 const isPublic = deck.visibility?.toUpperCase() === "PUBLIC";
                 const isUserDeck = deck.creator_type === "USER";
-                const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
-                const isOwnDeck = isUserDeck && Boolean(currentUserId) && ((deck as any).creator_id === currentUserId || (deck as any).user_id === currentUserId);
-                const isSystemDeck = deck.creator_type === "SYSTEM" || !deck.creator_type;
-                const progressPercent = typeof (deck as any).progress_percent === 'number' ? (deck as any).progress_percent : 0;
+                const currentUserId =
+                  (currentUser as any)?.user_id || (currentUser as any)?.id;
+                const isOwnDeck =
+                  isUserDeck &&
+                  Boolean(currentUserId) &&
+                  ((deck as any).creator_id === currentUserId ||
+                    (deck as any).user_id === currentUserId);
+                const isSystemDeck =
+                  deck.creator_type === "SYSTEM" || !deck.creator_type;
+                const progressPercent =
+                  typeof (deck as any).progress_percent === "number"
+                    ? (deck as any).progress_percent
+                    : 0;
 
                 return (
                   <Card
@@ -846,13 +879,20 @@ export default function VocabularyAppPage() {
                           </button>
                         ) : isSystemDeck ? (
                           <span className="flex items-center gap-1 rounded-md bg-black/50 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/20">
-                            <GraduationCap size={11} className="text-amber-400" />
-                            <span>{isVietnamese ? "Hệ thống" : "Official"}</span>
+                            <GraduationCap
+                              size={11}
+                              className="text-amber-400"
+                            />
+                            <span>
+                              {isVietnamese ? "Hệ thống" : "Official"}
+                            </span>
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 rounded-md bg-info/70 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/20">
                             <Users size={11} />
-                            <span>{isVietnamese ? "Cộng đồng" : "Community"}</span>
+                            <span>
+                              {isVietnamese ? "Cộng đồng" : "Community"}
+                            </span>
                           </span>
                         )}
                       </div>
@@ -871,16 +911,26 @@ export default function VocabularyAppPage() {
                         {isSystemDeck ? (
                           <span className="flex items-center gap-1 text-text-tertiary">
                             <Sparkles size={11} className="text-amber-500" />
-                            <span>{isVietnamese ? "Bộ thẻ TOEIC chuẩn hóa" : "Standard TOEIC Pack"}</span>
+                            <span>
+                              {isVietnamese
+                                ? "Bộ thẻ TOEIC chuẩn hóa"
+                                : "Standard TOEIC Pack"}
+                            </span>
                           </span>
                         ) : isOwnDeck ? (
                           <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                            {isVietnamese ? "• Bộ thẻ do bạn tạo" : "• Created by you"}
+                            {isVietnamese
+                              ? "• Bộ thẻ do bạn tạo"
+                              : "• Created by you"}
                           </span>
                         ) : (
                           <span className="text-text-secondary line-clamp-1">
                             {isVietnamese ? "• Tác giả: " : "• By: "}
-                            {(deck as any).creator_name || (deck as any).author || (isVietnamese ? "Học viên chia sẻ" : "Community Learner")}
+                            {(deck as any).creator_name ||
+                              (deck as any).author ||
+                              (isVietnamese
+                                ? "Học viên chia sẻ"
+                                : "Community Learner")}
                           </span>
                         )}
                       </div>
@@ -899,13 +949,19 @@ export default function VocabularyAppPage() {
                       {progressPercent > 0 && (
                         <div className="mt-2.5 space-y-1">
                           <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-text-tertiary">{isVietnamese ? "Tiến độ học" : "Progress"}</span>
-                            <span className="font-semibold text-primary">{progressPercent}%</span>
+                            <span className="text-text-tertiary">
+                              {isVietnamese ? "Tiến độ học" : "Progress"}
+                            </span>
+                            <span className="font-semibold text-primary">
+                              {progressPercent}%
+                            </span>
                           </div>
                           <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-subtle">
                             <div
                               className="h-full rounded-full bg-primary transition-all"
-                              style={{ width: `${Math.max(5, progressPercent)}%` }}
+                              style={{
+                                width: `${Math.max(5, progressPercent)}%`,
+                              }}
                             />
                           </div>
                         </div>
@@ -933,7 +989,9 @@ export default function VocabularyAppPage() {
                           </button>
                           <button
                             type="button"
-                            disabled={checkingDeleteDeckId === (deck._id || deck.id)}
+                            disabled={
+                              checkingDeleteDeckId === (deck._id || deck.id)
+                            }
                             title={
                               isOwnDeck
                                 ? isVietnamese
@@ -1347,7 +1405,9 @@ export default function VocabularyAppPage() {
                   const targetBand = pack.settings?.target_band;
                   const examPart = pack.settings?.exam_part;
 
-                  const isEnrolled = enrolledDeckIdSet.has(String(pack._id || pack.id));
+                  const isEnrolled = enrolledDeckIdSet.has(
+                    String(pack._id || pack.id)
+                  );
 
                   return (
                     <Card
@@ -1385,11 +1445,16 @@ export default function VocabularyAppPage() {
                           {isEnrolled ? (
                             <span className="flex items-center gap-1 rounded-md bg-emerald-600/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm shadow-sm ring-1 ring-white/30">
                               <Check size={11} />
-                              <span>{isVietnamese ? "Đang học" : "Enrolled"}</span>
+                              <span>
+                                {isVietnamese ? "Đang học" : "Enrolled"}
+                              </span>
                             </span>
                           ) : (
                             <span className="rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm flex items-center gap-1">
-                              <GraduationCap size={11} className="text-amber-400" />
+                              <GraduationCap
+                                size={11}
+                                className="text-amber-400"
+                              />
                               <span>Official</span>
                             </span>
                           )}
@@ -1578,8 +1643,10 @@ export default function VocabularyAppPage() {
           pendingDeleteDeck &&
           pendingDeleteDeck.deck.creator_type === "USER" &&
           Boolean((currentUser as any)?.user_id || (currentUser as any)?.id) &&
-          ((pendingDeleteDeck.deck as any).creator_id === ((currentUser as any)?.user_id || (currentUser as any)?.id) ||
-            (pendingDeleteDeck.deck as any).user_id === ((currentUser as any)?.user_id || (currentUser as any)?.id))
+          ((pendingDeleteDeck.deck as any).creator_id ===
+            ((currentUser as any)?.user_id || (currentUser as any)?.id) ||
+            (pendingDeleteDeck.deck as any).user_id ===
+              ((currentUser as any)?.user_id || (currentUser as any)?.id))
             ? pendingDeleteDeck.saversCount > 0
               ? isVietnamese
                 ? "Xác nhận xóa bộ thẻ đang có người theo học"
@@ -1592,10 +1659,11 @@ export default function VocabularyAppPage() {
             : "Remove from My Decks"
         }
       >
-        {pendingDeleteDeck && (
+        {pendingDeleteDeck &&
           (() => {
             const { deck, saversCount } = pendingDeleteDeck;
-            const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
+            const currentUserId =
+              (currentUser as any)?.user_id || (currentUser as any)?.id;
             const isOwn =
               deck.creator_type === "USER" &&
               Boolean(currentUserId) &&
@@ -1635,7 +1703,10 @@ export default function VocabularyAppPage() {
                               {saversCount}
                             </span>{" "}
                             learners actively studying your deck{" "}
-                            <span className="font-semibold">&quot;{deckTitle}&quot;</span>.
+                            <span className="font-semibold">
+                              &quot;{deckTitle}&quot;
+                            </span>
+                            .
                           </>
                         )}
                       </p>
@@ -1701,7 +1772,10 @@ export default function VocabularyAppPage() {
                         ) : (
                           <>
                             Are you sure you want to permanently delete deck{" "}
-                            <span className="font-semibold">&quot;{deckTitle}&quot;</span>?
+                            <span className="font-semibold">
+                              &quot;{deckTitle}&quot;
+                            </span>
+                            ?
                           </>
                         )}
                       </p>
@@ -1761,7 +1835,10 @@ export default function VocabularyAppPage() {
                       ) : (
                         <>
                           Are you sure you want to remove{" "}
-                          <span className="font-semibold">&quot;{deckTitle}&quot;</span> from your study list?
+                          <span className="font-semibold">
+                            &quot;{deckTitle}&quot;
+                          </span>{" "}
+                          from your study list?
                         </>
                       )}
                     </p>
@@ -1799,8 +1876,7 @@ export default function VocabularyAppPage() {
                 </div>
               </div>
             );
-          })()
-        )}
+          })()}
       </Modal>
     </>
   );

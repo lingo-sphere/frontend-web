@@ -33,7 +33,7 @@ export function ListeningPart4Workspace({
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [audioSrc, setAudioSrc] = useState<string>(() => resolveAudioUrl(talk.audio_url));
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
-  const [showTranscript, setShowTranscript] = useState(false);
+  const [, setShowTranscript] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {

@@ -1,8 +1,8 @@
 // Component thẻ biểu đồ tăng trưởng điểm số học tập theo phong cách Gogo Analytics.
 'use client'
 
-import React, { useState } from 'react'
-import { TrendingUp, Layers, CheckCircle2, AlertCircle, ArrowUpRight } from 'lucide-react'
+import { useState } from 'react'
+import { TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react'
 import { GrowthAreaChart } from '@/components/growth.area.chart'
 import type { GrowthChartDataPoint, GrowthChartSeries } from '@/components/growth.area.chart'
 

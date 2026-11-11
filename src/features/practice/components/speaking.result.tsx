@@ -582,7 +582,6 @@ function AnalysisItem({
   score,
   issues,
   suggestions,
-  scoreColor,
   scoreBg,
   isVietnamese,
 }: {

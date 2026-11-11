@@ -27,6 +27,7 @@ export default function ProfileAppPage() {
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
+      if (useAuthStore.getState().isKickedOut) return
       navigate('/login?returnUrl=/profile')
     }
   }, [mounted, isLoading, isAuthenticated, navigate])

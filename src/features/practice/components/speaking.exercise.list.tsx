@@ -70,25 +70,6 @@ export function SpeakingExerciseList({
     })
   }, [exercises, searchQuery, typeFilter, levelFilter])
 
-  const groupedExercises = useMemo(() => {
-    const groups: Record<SpeakingExerciseType, SpeakingExercise[]> = {
-      READ_ALOUD: [],
-      DESCRIBE_PICTURE: [],
-      SHORT_DIALOGUE: [],
-      ANSWER_QUESTION: [],
-      OPINION_RESPONSE: [],
-      TOPIC: [],
-      RESPOND_SITUATION: [],
-      PRONUNCIATION: [],
-      SHADOWING: [],
-    }
-    filteredExercises.forEach((ex) => {
-      if (groups[ex.exercise_type]) {
-        groups[ex.exercise_type].push(ex)
-      }
-    })
-    return groups
-  }, [filteredExercises])
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredExercises.length / PAGE_SIZE)

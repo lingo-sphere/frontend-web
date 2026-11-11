@@ -28,6 +28,7 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', ''])
   const [resendCooldown, setResendCooldown] = useState<number>(0)
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const isSubmittingRef = useRef<boolean>(false)
 
   const {
     login,
@@ -107,6 +108,8 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSubmittingRef.current || isLoading) return
+    isSubmittingRef.current = true
     clearError()
     setSuccessMessage(null)
 
@@ -138,11 +141,14 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
         setSuccessMessage('Đã đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.')
         setMode('login')
       }
-    } catch {}
+    } catch {} finally {
+      isSubmittingRef.current = false
+    }
   }
 
   const handleGoogleToken = async (token: string) => {
-    if (!token) return
+    if (!token || isSubmittingRef.current || isLoading) return
+    isSubmittingRef.current = true
     try {
       clearError()
       await socialLogin({
@@ -152,7 +158,9 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
       })
       Analytics.userLoggedIn({ method: 'google' })
       onClose()
-    } catch {}
+    } catch {} finally {
+      isSubmittingRef.current = false
+    }
   }
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {

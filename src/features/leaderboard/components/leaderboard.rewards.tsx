@@ -1,8 +1,7 @@
 // Component hiển thị thông tin phần thưởng đua top và thể lệ tích lũy kinh nghiệm trong tuần.
 'use client'
 
-import React from 'react'
-import { Trophy, Award, Zap, CheckCircle2, Flame, Gift } from 'lucide-react'
+import { Award, Zap, CheckCircle2, Gift } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useMounted } from '@/hooks/use.mounted'
 import type { MonthlyReward } from '@/features/dashboard/types/dashboard'

@@ -1,7 +1,6 @@
 // Component hiển thị danh mục con thanh bên với hiệu ứng đường rẽ nhánh SVG động.
 'use client'
 
-import React from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { Icon } from '@/components/icon.map'

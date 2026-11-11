@@ -1,8 +1,7 @@
 // Quản lý điều hướng chương, chọn bài học và kiểm tra trạng thái khóa bài trong khóa học.
 
 import { useState, useMemo, useCallback } from 'react'
-import type { Course, Chapter, Lesson } from '@/features/courses/types/course'
-import type { CourseProgressDetailInfo } from '@/features/courses/types/course'
+import type { Course, Chapter, Lesson, CourseProgressDetailInfo } from '@/features/courses/types/course'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 import { toast } from '@/store/toast.store'
 

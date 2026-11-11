@@ -1,7 +1,7 @@
 // Trang xác thực đăng nhập và đăng ký toàn màn hình dành cho học viên LingoSphere.
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'motion/react'
@@ -25,13 +25,14 @@ import { AuthResetPasswordForm } from '@/features/auth/components/auth.reset.pas
 
 function getSafeReturnUrl(rawUrl: string | null): string {
   if (!rawUrl) return '/home'
+  const decoded = decodeURIComponent(rawUrl).trim()
   if (
-    rawUrl.startsWith('/') &&
-    !rawUrl.startsWith('//') &&
-    !rawUrl.includes('\\') &&
-    rawUrl !== '/login'
+    decoded.startsWith('/') &&
+    !decoded.startsWith('//') &&
+    !decoded.includes('\\') &&
+    !decoded.startsWith('/login')
   ) {
-    return rawUrl
+    return decoded
   }
   return '/home'
 }
@@ -41,16 +42,28 @@ function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const kickoutMessage = useAuthStore((s) => s.kickoutMessage)
+  const isNavigatingRef = useRef(false)
 
   const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
   const rawReturnUrl = searchParams.get('returnUrl') || searchParams.get('redirect')
   const returnUrl = getSafeReturnUrl(rawReturnUrl)
 
+  const navigateToDestination = (targetUrl: string) => {
+    if (isNavigatingRef.current) return
+    isNavigatingRef.current = true
+    if (typeof window !== 'undefined') {
+      window.location.replace(targetUrl)
+    } else {
+      router.push(targetUrl)
+    }
+  }
+
   useEffect(() => {
     if (isAuthenticated) {
-      router.push(returnUrl)
+      navigateToDestination(returnUrl)
     }
-  }, [isAuthenticated, router, returnUrl])
+  }, [isAuthenticated, returnUrl])
 
   const {
     mode,
@@ -82,7 +95,7 @@ function LoginPageContent() {
     handleGoogleToken,
     switchMode,
   } = useAuthModal({
-    onClose: () => router.push(returnUrl),
+    onClose: () => navigateToDestination(returnUrl),
     initialMode,
   })
 
@@ -255,6 +268,13 @@ function LoginPageContent() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {kickoutMessage && !error && (
+              <div className="rounded-xl bg-amber-950/40 border border-amber-900/50 p-3 text-xs text-amber-300 flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle size={16} className="shrink-0 mt-0.5 text-amber-400" />
+                <span className="font-medium leading-relaxed">{kickoutMessage}</span>
+              </div>
+            )}
+
             {error && (
               <div className="rounded-xl bg-red-950/40 border border-red-900/50 p-3 text-xs text-red-300 flex items-start gap-2.5 animate-in fade-in">
                 <AlertCircle size={16} className="shrink-0 mt-0.5 text-red-400" />

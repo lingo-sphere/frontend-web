@@ -11,7 +11,6 @@ import { useState, useMemo, useEffect } from "react";
 import {
   BookmarkCheck,
   RotateCcw,
-  Sparkles,
   Flame,
   Award,
   Calendar,
@@ -24,6 +23,7 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/button";
+import { AppSelect } from "@/components/select";
 import {
   useMyMistakesQuery,
   useDueMistakesQuery,
@@ -72,6 +72,7 @@ export default function MistakeVaultPage() {
 
   useEffect(() => {
     if (mounted && !isAuthLoading && !isAuthenticated) {
+      if (useAuthStore.getState().isKickedOut) return
       toast.warning('Vui lòng đăng nhập để xem sổ tay lỗi sai!');
       navigate('/login?returnUrl=/practice/mistakes');
     }
@@ -144,14 +145,14 @@ export default function MistakeVaultPage() {
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
-      {/* 3 PHÂN KHU SỔ TAY (OBJECTIVE - SPEAKING - WRITING) */}
+      
       <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-surface border border-border shadow-xs max-w-fit">
         <button
           type="button"
           onClick={() => changeSection("OBJECTIVE")}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
             activeSection === "OBJECTIVE"
-              ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25"
               : "text-text-secondary hover:text-text-primary hover:bg-surface-secondary"
           }`}
         >
@@ -197,23 +198,23 @@ export default function MistakeVaultPage() {
         </button>
       </div>
 
-      {/* KHU VỰC 1: TRẮC NGHIỆM / CÂU HỎI ĐÚNG SAI (GRAMMAR, READING, VOCABULARY, LISTENING) */}
+      
       {activeSection === "OBJECTIVE" && (
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-slate-900 text-white shadow-xl">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white shadow-xl border border-emerald-500/20">
             <div className="space-y-1.5 max-w-3xl">
               <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-white/10 text-purple-200">
+                <span className="p-2 rounded-xl bg-white/10 text-emerald-200">
                   <BookmarkCheck size={20} />
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-purple-300">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
                   Spaced Repetition System (SRS SM-2)
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                 Sổ tay lỗi sai & Khắc phục kiến thức trắc nghiệm
               </h1>
-              <p className="text-xs sm:text-sm text-purple-200/90 leading-relaxed">
+              <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
                 Mỗi câu bạn từng làm sai trong bài thi hoặc bài tập trắc nghiệm được lên lịch nhắc lại ngắt quãng vào ngày
                 1, ngày 3, ngày 7. Khi trả lời đúng 3 lần liên tiếp, câu hỏi sẽ được
                 đánh dấu đã làm chủ vĩnh viễn.
@@ -243,7 +244,7 @@ export default function MistakeVaultPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
             <div className="p-4 rounded-2xl bg-surface border border-border space-y-1">
               <div className="flex items-center gap-1.5 text-xs text-text-secondary font-medium">
-                <BookOpen size={14} className="text-purple-600" />
+                <BookOpen size={14} className="text-emerald-600 dark:text-emerald-400" />
                 <span>Tổng câu đã ghi nhận</span>
               </div>
               <div className="text-2xl font-black text-text-primary">
@@ -289,7 +290,7 @@ export default function MistakeVaultPage() {
                 onClick={() => setSelectedStatus("ALL")}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   selectedStatus === "ALL"
-                    ? "bg-purple-600 text-white shadow-xs"
+                    ? "bg-emerald-600 text-white shadow-xs"
                     : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
                 }`}
               >
@@ -330,7 +331,7 @@ export default function MistakeVaultPage() {
               </button>
             </div>
 
-            {/* Domain filter buttons */}
+            
             <div className="flex items-center gap-1.5 border-l border-border pl-3 ml-1">
               <span className="text-[10px] text-text-tertiary font-medium">
                 Kỹ năng:
@@ -340,7 +341,7 @@ export default function MistakeVaultPage() {
                 onClick={() => setSelectedDomain("ALL")}
                 className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                   selectedDomain === "ALL"
-                    ? "bg-purple-600 text-white"
+                    ? "bg-emerald-600 text-white"
                     : "bg-surface-secondary text-text-secondary hover:bg-surface-hover"
                 }`}
               >
@@ -384,20 +385,19 @@ export default function MistakeVaultPage() {
             {topicGroups.length > 0 && (
               <div className="flex items-center gap-2">
                 <Filter size={14} className="text-text-tertiary shrink-0" />
-                <select
+                <AppSelect
                   value={selectedTopic}
-                  onChange={(e) => setSelectedTopic(e.target.value)}
-                  className="bg-surface-secondary border border-border text-xs rounded-xl px-2.5 py-1.5 text-text-primary focus:outline-none focus:ring-1 focus:ring-purple-600 cursor-pointer"
-                >
-                  <option value="ALL">
-                    Tất cả chủ điểm ({topicGroups.length})
-                  </option>
-                  {topicGroups.map((g) => (
-                    <option key={g.topic} value={g.topic}>
-                      {g.topic} ({g.count})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedTopic(val)}
+                  options={[
+                    { value: "ALL", label: `Tất cả chủ điểm (${topicGroups.length})` },
+                    ...topicGroups.map((g) => ({
+                      value: g.topic,
+                      label: `${g.topic} (${g.count})`,
+                    })),
+                  ]}
+                  size="sm"
+                  ariaLabel="Lọc theo chủ điểm"
+                />
               </div>
             )}
           </div>
@@ -405,14 +405,14 @@ export default function MistakeVaultPage() {
           <div className="space-y-4">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 space-y-3">
-                <Loader2 size={32} className="animate-spin text-purple-600" />
+                <Loader2 size={32} className="animate-spin text-emerald-600" />
                 <p className="text-xs text-text-secondary">
                   Đang tải danh sách câu hỏi trong sổ tay...
                 </p>
               </div>
             ) : mistakes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center space-y-3 p-8 rounded-3xl bg-surface border border-border">
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 size={32} />
                 </div>
                 <h3 className="text-base font-bold text-text-primary">
@@ -427,7 +427,7 @@ export default function MistakeVaultPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {mistakes.map((item) => (
                   <MistakeVaultCard
                     key={item._id}
@@ -487,15 +487,15 @@ export default function MistakeVaultPage() {
         </div>
       )}
 
-      {/* KHU VỰC 2: SỔ TAY LUYỆN NÓI (SPEAKING REMEDIAL & SRS) */}
+      
       {activeSection === "SPEAKING" && <SpeakingMistakesView />}
 
-      {/* KHU VỰC 3: SỔ TAY LUYỆN VIẾT (WRITING REMEDIAL & SRS) */}
+      
       {activeSection === "WRITING" && (
         <WritingMistakesView />
       )}
 
-      {/* MODALS CHO PHÂN HỆ TRẮC NGHIỆM */}
+      
       {activeReviewMistake && (
         <MistakeReviewModal
           open={Boolean(activeReviewMistake)}

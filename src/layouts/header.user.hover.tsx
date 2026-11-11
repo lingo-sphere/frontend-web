@@ -2,6 +2,7 @@
 
 'use client'
 
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Globe, Crown } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
@@ -11,6 +12,7 @@ import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
 import { Icon } from '@/components/icon.map'
 import { getRemainingSubscriptionText } from '@/layouts/app.header'
 import { resolveMediaUrl } from '@/utils/media.utils'
+import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 
 interface HeaderUserHoverProps {
   isOpen: boolean
@@ -27,6 +29,7 @@ export function HeaderUserHover({
   currentLanguage = 'VI',
   onOpenUpgrade,
 }: HeaderUserHoverProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const { i18n } = useTranslation()
   const isVi = currentLanguage === 'VI' || i18n.language === 'vi'
   const navigate = useNavigate()
@@ -35,6 +38,8 @@ export function HeaderUserHover({
   const { data: wishlist } = useWishlistQuery(Boolean(user))
   const cartItemCount = cart?.total_items || cart?.items?.length || 0
   const wishlistCount = wishlist?.total_items || wishlist?.items?.length || 0
+
+  usePreventScrollChain(containerRef, isOpen)
 
   if (!user) return null
 
@@ -61,13 +66,14 @@ export function HeaderUserHover({
 
   return (
     <div
+      ref={containerRef}
       className={`absolute right-0 top-full pt-2 z-50 transition-all duration-200 ease-out origin-top-right ${
         isOpen
           ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto visible'
           : 'opacity-0 -translate-y-2 scale-[0.98] pointer-events-none invisible duration-150 ease-in'
       }`}
     >
-      <div className="w-72 sm:w-80 max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-surface shadow-2xl text-left divide-y divide-border scrollbar-thin">
+      <div className="w-72 sm:w-80 max-h-[85vh] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface shadow-2xl text-left divide-y divide-border scrollbar-thin">
         
         <div
           onClick={() => handleItemClick('/profile')}

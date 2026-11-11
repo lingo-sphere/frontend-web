@@ -1,18 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  BookOpen,
-  CheckCircle,
-  Clock,
-  Sparkles,
-  Award,
   ChevronRight,
-  Target,
-  Lightbulb,
   Loader2,
   AlertTriangle,
-  Minus,
 } from "lucide-react";
 import { Card } from "@/components/card";
 import { Button } from "@/components/button";

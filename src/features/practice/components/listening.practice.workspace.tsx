@@ -1,3 +1,4 @@
+// Không gian làm bài luyện nghe thực hành với điều khiển tốc độ và lưu tiến độ.
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
@@ -179,27 +180,26 @@ export function ListeningPracticeWorkspace({
                   : 'Timed practice with saved progress. Resume after reloading or returning to the catalog.'}
               </p>
               {kind === 'dictation' ? (
-                <label className="flex flex-wrap items-center gap-3 text-sm text-text-primary">
-                  {vi ? 'Mức luyện:' : 'Practice level:'}
-                  <select
-                    aria-label={vi ? 'Mức luyện' : 'Practice level'}
+                <div className="flex flex-wrap items-center gap-3 text-sm text-text-primary">
+                  <span className="font-medium text-text-secondary">{vi ? 'Mức luyện:' : 'Practice level:'}</span>
+                  <AppSelect
+                    ariaLabel={vi ? 'Mức luyện' : 'Practice level'}
                     value={difficulty}
                     disabled={busy}
-                    onChange={(event) => setDifficulty(event.target.value)}
-                    className="rounded-lg border border-border bg-surface-subtle p-2"
-                  >
-                    <option value="EASY">{vi ? 'Dễ' : 'Easy'}</option>
-                    <option value="MEDIUM">
-                      {vi ? 'Trung bình' : 'Medium'}
-                    </option>
-                    <option value="HARD">{vi ? 'Khó' : 'Hard'}</option>
-                  </select>
-                </label>
+                    onChange={(val) => setDifficulty(val)}
+                    options={[
+                      { value: 'EASY', label: vi ? 'Dễ' : 'Easy' },
+                      { value: 'MEDIUM', label: vi ? 'Trung bình' : 'Medium' },
+                      { value: 'HARD', label: vi ? 'Khó' : 'Hard' },
+                    ]}
+                    size="sm"
+                  />
+                </div>
               ) : (
-                <label className="flex flex-wrap items-center gap-3 text-sm text-text-primary">
-                  {vi ? 'Thời gian cho phiên:' : 'Session time:'}
-                  <select
-                    aria-label={vi ? 'Thời gian cho phiên' : 'Session time'}
+                <div className="flex flex-wrap items-center gap-3 text-sm text-text-primary">
+                  <span className="font-medium text-text-secondary">{vi ? 'Thời gian cho phiên:' : 'Session time:'}</span>
+                  <AppSelect
+                    ariaLabel={vi ? 'Thời gian cho phiên' : 'Session time'}
                     value={preset}
                     disabled={busy}
                     onChange={(event) => setPreset(event.target.value)}
@@ -367,15 +367,15 @@ export function ListeningPracticeWorkspace({
                 onRefresh={practice.refreshSession}
                 disabled={busy || expired}
               />
-              <label className="flex items-center gap-3 text-sm text-text-secondary">
-                {vi ? 'Tốc độ:' : 'Speed:'}
-                <select
-                  aria-label={vi ? 'Tốc độ' : 'Speed'}
-                  value={draft.playback_speed}
+              <div className="flex items-center gap-3 text-sm text-text-secondary">
+                <span className="font-medium">{vi ? 'Tốc độ:' : 'Speed:'}</span>
+                <AppSelect
+                  ariaLabel={vi ? 'Tốc độ' : 'Speed'}
+                  value={String(draft.playback_speed)}
                   disabled={busy}
-                  onChange={(event) =>
+                  onChange={(val) =>
                     practice.update({
-                      playback_speed: Number(event.target.value),
+                      playback_speed: Number(val),
                     })
                   }
                   className="rounded-lg border border-border bg-surface-subtle p-2"

@@ -70,7 +70,6 @@ export function PlayerControlsBar({
   isMuted,
   playbackSpeed,
   showSettingsMenu,
-  isTheater,
   isFullscreen,
   autoPlayNext,
   hasPrevLesson,

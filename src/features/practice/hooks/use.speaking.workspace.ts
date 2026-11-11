@@ -74,7 +74,8 @@ export function useSpeakingWorkspace() {
   const navigate = useNavigate()
   const params = useParams<{ slug?: string[] }>()
   const resultId = params.slug?.[0] === 'result' ? params.slug[1] : undefined
-  const resultQuery = useQuery({ queryKey: ['speaking-result', resultId], enabled: !!resultId && /^[a-f\d]{24}$/i.test(resultId),
+  const resultQuery = useQuery({
+    queryKey: ['speaking-result', resultId], enabled: !!resultId && /^[a-f\d]{24}$/i.test(resultId),
     queryFn: () => api.get<Record<string, any>>(`/practice/review-results/SPEAKING/${resultId}/submission`),
   })
   const [view, setView] = useState<SpeakingView>('home')
@@ -257,7 +258,7 @@ export function useSpeakingWorkspace() {
     let active = true
     readSkillDraft<{ payload: Record<string, any> }>(`practice-speaking:${user.user_id}:${selectedExercise.id}`).then(draft => {
       if (active) setPendingSpeaking(draft || null)
-    }).catch(() => {})
+    }).catch(() => { })
     return () => { active = false }
   }, [selectedExercise])
 
@@ -356,10 +357,10 @@ export function useSpeakingWorkspace() {
         const draft = await readSkillDraft<{ hash: string; id: string; payload: Record<string, unknown> }>(draftKey).catch(() => undefined)
         const request = draft?.hash === hash ? draft : speakingRequestRef.current?.hash === hash ? speakingRequestRef.current : { hash, id: crypto.randomUUID() }
         speakingRequestRef.current = request
-        await writeSkillDraft(draftKey, { ...request, payload }).catch(() => {})
+        await writeSkillDraft(draftKey, { ...request, payload }).catch(() => { })
         setPendingSpeaking({ payload })
         backendResponse = await practiceService.submitSpeakingAttempt({ ...payload, request_id: request.id })
-        await writeSkillDraft(draftKey, undefined).catch(() => {})
+        await writeSkillDraft(draftKey, undefined).catch(() => { })
         setPendingSpeaking(null)
 
         queryClient.invalidateQueries({ queryKey: practiceKeys.speaking() })

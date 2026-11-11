@@ -1,18 +1,17 @@
-// Component hiển thị phân tích kỹ năng TOEIC và tiến độ từ vựng
-// Refactored: Các tab chi tiết đã được tách thành các module riêng biệt trong thư mục ./tabs
-
+// Component phân tích kỹ năng TOEIC và tiến độ từ vựng sử dụng TanStack Query tối ưu hiệu năng.
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PronunciationDetailTab } from "./pronunciation.detail.tab";
 import type { VocabStatsSummary } from "@/features/progress/hooks/use.progress.data";
 import type {
   SkillsSummary,
-  WeaknessAnalysis,
   TimePeriod,
-  PracticeDashboardData,
 } from "@/features/progress/services/progress.service";
-import { progressService } from "@/features/progress/services/progress.service";
+import {
+  useWeaknessesQuery,
+  usePracticeDashboardQuery,
+} from "@/features/progress/hooks/use.progress.query";
 import {
   OverviewTab,
   ReadingDetailTab,
@@ -59,46 +58,20 @@ export function ProgressSkillsTab({
   const [activeSkillTab, setActiveSkillTab] =
     useState<SkillTabType>("overview");
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("7d");
-  const [allWeaknesses, setAllWeaknesses] = useState<WeaknessAnalysis[]>([]);
-  const [loadingWeaknesses, setLoadingWeaknesses] = useState(false);
-  const [dashboardData, setDashboardData] =
-    useState<PracticeDashboardData | null>(null);
-  const [loadingDashboard, setLoadingDashboard] = useState(false);
+  const { data: allWeaknessesData, isLoading: loadingWeaknesses } = useWeaknessesQuery(
+    userId,
+    10,
+    Boolean(userId)
+  );
+  const allWeaknesses = allWeaknessesData || [];
 
-  // Tự động tải điểm yếu ngay khi có userId
-  useEffect(() => {
-    if (userId) {
-      setLoadingWeaknesses(true);
-      progressService
-        .getAllWeaknesses(userId, 10)
-        .then((data: WeaknessAnalysis[]) => {
-          setAllWeaknesses(data || []);
-          setLoadingWeaknesses(false);
-        })
-        .catch(() => {
-          setAllWeaknesses([]);
-          setLoadingWeaknesses(false);
-        });
-    }
-  }, [userId]);
+  const { data: dashboardDataRes, isLoading: loadingDashboard } = usePracticeDashboardQuery(
+    userId,
+    selectedPeriod,
+    Boolean(userId)
+  );
+  const dashboardData = dashboardDataRes || null;
 
-  // Tự động tải dashboard analytics theo mốc thời gian người dùng chọn
-  useEffect(() => {
-    if (userId) {
-      setLoadingDashboard(true);
-      progressService
-        .getPracticeDashboard(userId, selectedPeriod)
-        .then((data: PracticeDashboardData | null) => {
-          setDashboardData(data);
-          setLoadingDashboard(false);
-        })
-        .catch(() => {
-          setLoadingDashboard(false);
-        });
-    }
-  }, [userId, selectedPeriod]);
-
-  // Lấy dữ liệu 5 kỹ năng từ skillsSummary
   const readingStats = skillsSummary?.skills?.reading;
   const listeningStats = skillsSummary?.skills?.listening;
   const grammarStats = skillsSummary?.skills?.grammar;

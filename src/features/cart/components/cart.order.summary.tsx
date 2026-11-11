@@ -1,7 +1,7 @@
 // Component hiển thị khung tóm tắt đơn hàng, mã giảm giá và nút tiến hành thanh toán VietQR
 'use client'
 
-import { ShieldCheck, Award, QrCode, Tag, Check, ArrowRight, Lock } from 'lucide-react'
+import { QrCode, Tag, Check, ArrowRight, Lock } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
 
 interface CartOrderSummaryProps {

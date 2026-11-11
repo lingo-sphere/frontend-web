@@ -64,19 +64,27 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
   const triggerKickout = (message?: string) => {
     if (typeof window === 'undefined') return
-    if (Date.now() - lastVerifiedAt.current < 8000) {
+    if (Date.now() - lastVerifiedAt.current < 10000) {
       checkAuth()
       return
     }
+    const finalMsg =
+      message ||
+      t('common.sessionTerminatedDesc') ||
+      'Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác. Bạn đã bị đăng xuất.'
+    useAuthStore.getState().setKickout(finalMsg)
     authService.clearAuthStorage()
     setUser(null)
-    setKickoutMessage(
-      message || t('common.sessionTerminatedDesc')
-    )
+    setKickoutMessage(finalMsg)
   }
 
   useEffect(() => {
     checkAuth()
+
+    const handleLoginSuccess = () => {
+      lastVerifiedAt.current = Date.now()
+      setKickoutMessage(null)
+    }
 
     let channel: BroadcastChannel | null = null
     try {
@@ -97,7 +105,12 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
     }
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'access_token' || e.key === 'user') {
+      if (
+        e.key === STORAGE_KEYS.ACCESS_TOKEN ||
+        e.key === STORAGE_KEYS.USER ||
+        e.key === 'access_token' ||
+        e.key === 'user'
+      ) {
         checkAuth()
       }
     }
@@ -108,6 +121,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
     }
 
     const handleUnauthorized = () => {
+      if (useAuthStore.getState().isKickedOut) return
       authService.clearAuthStorage()
       setUser(null)
       if (typeof window !== 'undefined') {
@@ -130,6 +144,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       }
     }
 
+    window.addEventListener('lingosphere:login_success', handleLoginSuccess)
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener(
       'lingosphere:session_terminated',
@@ -139,6 +154,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
     return () => {
       channel?.close()
+      window.removeEventListener('lingosphere:login_success', handleLoginSuccess)
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener(
         'lingosphere:session_terminated',
@@ -207,24 +223,27 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
               onClose={() => {
                 authService.clearAuthStorage()
                 setKickoutMessage(null)
+                useAuthStore.getState().clearKickout()
                 if (typeof window !== 'undefined') {
                   window.location.href = '/login'
                 }
               }}
-              title={t('common.sessionTerminatedTitle')}
+              title={t('common.sessionTerminatedTitle') || 'Tài khoản đã đăng nhập nơi khác'}
               size="sm"
+              zIndexClassName="z-[100000]"
               footer={
                 <Button
                   className="w-full bg-primary font-semibold text-white shadow-md hover:bg-primary/90 cursor-pointer"
                   onClick={() => {
                     authService.clearAuthStorage()
                     setKickoutMessage(null)
+                    useAuthStore.getState().clearKickout()
                     if (typeof window !== 'undefined') {
                       window.location.href = '/login'
                     }
                   }}
                 >
-                  {t('common.understandAndReLogin')}
+                  {t('common.understandAndReLogin') || 'Đã hiểu và đăng nhập lại'}
                 </Button>
               }
             >

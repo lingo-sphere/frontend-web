@@ -5,6 +5,9 @@ export const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
 export const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
 let isInitialized = false
+let lastIdentifiedUserId: string | null = null
+let lastTrackedUrl: string | null = null
+let lastTrackedTimestamp = 0
 
 const IMPORTANT_LEARNING_PATHS = [
   '/exam',
@@ -56,7 +59,9 @@ export function identifyUser(user: {
   if (typeof window === 'undefined' || !posthog) return
   const userId = user.user_id
   if (!userId) return
+  if (lastIdentifiedUserId === userId) return
 
+  lastIdentifiedUserId = userId
   posthog.identify(userId, {
     email: user.email,
     name: user.full_name || '',
@@ -67,6 +72,8 @@ export function identifyUser(user: {
 
 export function resetUser(): void {
   if (typeof window === 'undefined' || !posthog) return
+  if (!lastIdentifiedUserId) return
+  lastIdentifiedUserId = null
   posthog.reset()
 }
 
@@ -76,7 +83,13 @@ export function trackEvent(eventName: string, properties?: Record<string, unknow
 }
 
 export function trackPageView(url: string): void {
-  if (typeof window === 'undefined' || !posthog) return
+  if (typeof window === 'undefined' || !posthog || !url) return
+  const now = Date.now()
+  if (lastTrackedUrl === url && now - lastTrackedTimestamp < 2000) return
+
+  lastTrackedUrl = url
+  lastTrackedTimestamp = now
+
   posthog.capture('$pageview', {
     $current_url: url,
   })

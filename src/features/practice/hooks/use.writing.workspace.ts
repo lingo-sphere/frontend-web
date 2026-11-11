@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearchParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { practiceService, type BackendWritingExercise } from '@/features/practice/services/practice.service'
+import { practiceService } from '@/features/practice/services/practice.service'
 import { useWritingExercisesQuery, useWritingExerciseByIdQuery, useWritingRecommendationsQuery } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import { toast } from '@/store/toast.store'
@@ -363,14 +363,6 @@ export function useWritingWorkspace() {
   }, [stats])
 
   // Map skill type to display name
-  const SKILL_DISPLAY: Record<WritingSkillType, string> = {
-    task_achievement: 'Hoàn thành nhiệm vụ',
-    coherence: 'Mạch lạc & Liên kết',
-    lexical_resource: 'Từ vựng',
-    grammatical_accuracy: 'Ngữ pháp',
-    naturalness: 'Tự nhiên',
-    register: 'Phong cách',
-  }
 
   const progress: WritingProgress = useMemo(() => {
     // These values are displayed as CSS `width: N%` so they must be in [0, 100].

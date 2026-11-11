@@ -1,10 +1,11 @@
+// Component giao diện WritingHistory hiển thị lịch sử bài làm cho học viên.
 import { writingScoreLabel } from '../lib/writing-score'
-// Component giao diện React WritingHistory cho học viên
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Calendar, Trophy, Clock, ChevronRight, Layers } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
+import { AppSelect } from '@/components/select'
 import type { WritingSubmission, WritingLevel, WritingExercise } from '@/features/practice/types/writing'
 
 interface WritingHistoryProps {
@@ -56,8 +57,6 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
     setExpandedSubmission(expandedSubmission === submissionId ? null : submissionId)
   }
 
-  // Backend AI evaluation returns scores on a 0-100 scale; thresholds follow
-  // the same proportions as the legacy 0-10 view (>=8/10 -> good, >=6/10 -> ok).
   const getScoreColor = (score?: number) => {
     if (!score) return 'text-text-secondary'
     if (score >= 80) return 'text-emerald-600'
@@ -87,7 +86,20 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <label className="mb-4 flex items-center gap-3 text-sm">{isVietnamese ? 'Chuẩn chấm' : 'Grading standard'}<select aria-label={isVietnamese ? 'Lọc chuẩn chấm' : 'Filter grading standard'} className="rounded border border-border bg-surface px-3 py-2" value={standardFilter} onChange={event => setStandardFilter(event.target.value as typeof standardFilter)}><option value="all">{isVietnamese ? 'Tất cả' : 'All'}</option><option value="PRACTICAL">{isVietnamese ? 'Giao tiếp thực tế' : 'Practical'}</option><option value="TOEIC">TOEIC</option></select></label>
+      <div className="mb-4 flex items-center gap-3 text-sm">
+        <span className="font-medium text-text-secondary">{isVietnamese ? 'Chuẩn chấm:' : 'Grading standard:'}</span>
+        <AppSelect
+          value={standardFilter}
+          onChange={(val) => setStandardFilter(val as typeof standardFilter)}
+          options={[
+            { value: 'all', label: isVietnamese ? 'Tất cả' : 'All' },
+            { value: 'PRACTICAL', label: isVietnamese ? 'Giao tiếp thực tế' : 'Practical' },
+            { value: 'TOEIC', label: 'TOEIC' },
+          ]}
+          size="sm"
+          ariaLabel={isVietnamese ? 'Lọc chuẩn chấm' : 'Filter grading standard'}
+        />
+      </div>
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
@@ -118,10 +130,13 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
 
         <div className="flex items-center gap-2">
           <span className="text-[13px] text-text-secondary">{isVietnamese ? 'Cấp độ:' : 'Level:'}</span>
-          <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value as LevelFilter)}
-            className="h-9 rounded-lg border border-border bg-surface px-3 text-[12px] text-text-primary focus:border-primary focus:outline-none">
-            {levelOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-          </select>
+          <AppSelect
+            value={levelFilter}
+            onChange={(val) => setLevelFilter(val as LevelFilter)}
+            options={levelOptions}
+            size="sm"
+            ariaLabel={isVietnamese ? 'Cấp độ' : 'Level'}
+          />
         </div>
       </div>
 
@@ -306,8 +321,6 @@ interface ScoreItemProps {
 }
 
 function ScoreItem({ label, score }: ScoreItemProps) {
-  // Backend AI evaluation returns scores on a 0-100 scale; thresholds follow
-  // the same proportions as the legacy 0-10 view (>=8/10 -> good, >=6/10 -> ok).
   const getScoreColor = (s?: number | null) => {
     if (s == null) return 'text-text-secondary'
     if (s >= 80) return 'text-emerald-600'

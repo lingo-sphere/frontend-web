@@ -1,6 +1,6 @@
 // Trang danh mục cẩm nang và hướng dẫn luyện thi TOEIC LingoSphere
 import Link from 'next/link'
-import { BookOpen, Sparkles, Target, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight } from 'lucide-react'
 import { BLOG_POSTS } from '@/features/blog/data/blog.posts'
 import { BlogCard } from '@/features/blog/components/blog.card'
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Brain,
   TrendingUp,
@@ -14,12 +14,6 @@ import {
   Lightbulb,
   Loader2,
   Sparkles,
-  Award,
-  BookOpen,
-  Headphones,
-  FileText,
-  Mic,
-  PenTool,
   Activity,
   Calendar,
   ArrowRight,
@@ -28,20 +22,14 @@ import { Card } from "@/components/card";
 import { Button } from "@/components/button";
 import type { VocabStatsSummary } from "@/features/progress/hooks/use.progress.data";
 import type {
-  SkillsSummary,
   SkillStats,
   WeaknessAnalysis,
   PracticeDashboardData,
 } from "@/features/progress/services/progress.service";
-import { SkillRadarChart } from "../skill-radar-chart";
-import type { RadarDataPoint } from "../skill-radar-chart";
 import {
   formatSkillName,
   formatTrendName,
   formatDimensionName,
-  SKILL_VN_MAP,
-  TREND_VN_MAP,
-  EXERCISE_AND_DIMENSION_MAP,
 } from "../progress.helpers";
 
 export type SkillTabType =
@@ -79,13 +67,11 @@ export function OverviewTab({
   writingStats,
   speakingStats,
   pronunciationStats,
-  vocabStats,
   listeningScore: _listeningScore,
   readingScore: _readingScore,
   weaknesses = [],
   loadingWeaknesses = false,
   dashboardData,
-  loadingDashboard = false,
   onNavigate,
   onSelectSkillTab,
 }: {
@@ -108,7 +94,6 @@ export function OverviewTab({
   const rolling = dashboardData?.growth_analytics?.rolling_performance;
   const timeGrowth = dashboardData?.growth_analytics?.time_growth;
   const activity = dashboardData?.growth_analytics?.activity_overview;
-  const skillsRecent = rolling?.skills_recent;
   const topWeaknesses =
     dashboardData?.top_weaknesses && dashboardData.top_weaknesses.length > 0
       ? dashboardData.top_weaknesses

@@ -21,7 +21,6 @@ import {
 import { Button } from "@/components/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { progressKeys } from "@/features/progress/keys/progress.keys";
-import { useAuthStore } from "@/features/auth/store/auth.store";
 import { PracticeExitConfirmModal } from "./practice.exit-confirm.modal";
 
 interface IpaPracticeModalProps {
@@ -41,7 +40,7 @@ export function IpaPracticeModal({
   mode = "FREE_PRACTICE",
   onPracticeComplete,
 }: IpaPracticeModalProps) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isVietnamese = i18n.language === "vi";
   const queryClient = useQueryClient();
 

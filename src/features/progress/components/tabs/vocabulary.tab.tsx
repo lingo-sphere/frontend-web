@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { VocabularyDashboardView } from "@/features/vocabulary/components/vocabulary.dashboard.view";
 import type { VocabStatsSummary } from "@/features/progress/hooks/use.progress.data";
 

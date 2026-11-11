@@ -1,9 +1,11 @@
 // Hook quản lý phiên luyện nghe và nộp bài đánh giá.
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from '@/store/toast.store'
 import { useAuthStore } from '@/features/auth/store/auth.store'
+import { progressKeys } from '@/features/progress/keys/progress.keys'
 import { listeningSessionService } from '@/features/practice/services/listening-session.service'
 import type {
   ListeningSession,
@@ -17,6 +19,7 @@ interface UseListeningSessionOptions {
 }
 
 export function useListeningSession(options: UseListeningSessionOptions = {}) {
+  const queryClient = useQueryClient()
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
@@ -120,6 +123,7 @@ export function useListeningSession(options: UseListeningSessionOptions = {}) {
       })
 
       setResult(sessionResult)
+      queryClient.invalidateQueries({ queryKey: progressKeys.all })
       setIsCompleted(true)
       setShowResult(true)
       options.onComplete?.(sessionResult)
@@ -276,7 +280,7 @@ export function useListeningSession(options: UseListeningSessionOptions = {}) {
     isCorrectAnswer: (key: string) => {
       if (!currentExercise?.options) return false
       const opt = currentExercise.options.find(o => o.key === key)
-      return opt?.key === currentExercise.options?.find(o => {
+      return opt?.key === currentExercise.options?.find(() => {
         // Find correct answer from the original options
         return true // We'll need to track this differently
       })?.key

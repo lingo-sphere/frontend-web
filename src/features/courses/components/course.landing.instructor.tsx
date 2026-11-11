@@ -1,7 +1,6 @@
 // Component hiển thị thông tin giảng viên và đánh giá học viên trên trang tổng quan khóa học.
 'use client'
 
-import React from 'react'
 import { Star, Award, Users, BookOpen, ThumbsUp, CheckCircle2 } from 'lucide-react'
 import type { CourseInstructor, CourseReviewItem } from '@/features/courses/types/course'
 

@@ -72,6 +72,7 @@ export default function SettingsAppPage() {
 
   useEffect(() => {
     if (mounted && !isLoading && !isAuthenticated) {
+      if (useAuthStore.getState().isKickedOut) return
       navigate('/login?returnUrl=/settings')
     }
   }, [mounted, isLoading, isAuthenticated, navigate])

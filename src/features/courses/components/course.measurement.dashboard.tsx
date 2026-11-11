@@ -1,7 +1,9 @@
+// Bảng báo cáo tiến độ và hiệu chuẩn năng lực khóa học của học viên.
 'use client'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/services/api.client'
+import { AppSelect } from '@/components/select'
 import type { CourseMeasurementReport } from '../types/measurement'
 
 const names: Record<string, string> = { INTERNAL: 'Điểm nội bộ', LISTENING: 'Listening', READING: 'Reading', SPEAKING: 'Speaking', WRITING: 'Writing', LISTENING_READING: 'TOEIC Listening & Reading' }
@@ -51,7 +53,18 @@ export function CourseMeasurementDashboard({ courseId }: { courseId: string }) {
     </section>
     {!query.data?.is_baseline_established && !report.timeline.length && <form onSubmit={event => { event.preventDefault(); baseline.mutate() }} className="space-y-3 rounded-2xl border border-border bg-surface p-5">
       <h3 className="font-bold">Ghi nhận mốc đầu vào trước khi bắt đầu học</h3><p className="text-xs text-text-secondary">Chỉ ghi một lần. Bài thi thử cần đủ 200 câu, được đo trong 90 ngày trước ghi danh hoặc trước khi bắt đầu học.</p>
-      <select aria-label="Nguồn mốc đầu vào" value={source} onChange={event => { setSource(event.target.value); setValue('') }} className="w-full rounded-lg border border-border bg-surface p-2"><option value="PRE_TEST_2K">Bài TOEIC L&R đầy đủ của tôi</option><option value="SELF_DECLARED">Điểm TOEIC L&R tự khai, chưa xác minh</option></select>
+      <AppSelect
+        ariaLabel="Nguồn mốc đầu vào"
+        value={source}
+        onChange={(val) => { setSource(val); setValue('') }}
+        options={[
+          { value: 'PRE_TEST_2K', label: 'Bài TOEIC L&R đầy đủ của tôi' },
+          { value: 'SELF_DECLARED', label: 'Điểm TOEIC L&R tự khai, chưa xác minh' },
+        ]}
+        size="default"
+        className="w-full"
+        triggerClassName="w-full h-10 rounded-lg justify-between"
+      />
       <input aria-label="Giá trị mốc đầu vào" value={value} onChange={event => setValue(event.target.value)} placeholder={source === 'PRE_TEST_2K' ? 'ID lượt thi trong lịch sử bài thi của bạn' : 'Điểm từ 10 đến 990'} className="w-full rounded-lg border border-border bg-surface p-2" />
       {baseline.isError && <p role="alert" className="text-sm text-red-600">{baseline.error.message}</p>}<button disabled={baseline.isPending || !value.trim()} className="rounded-lg bg-primary px-4 py-2 text-white disabled:opacity-50">{baseline.isPending ? 'Đang lưu…' : 'Lưu mốc đầu vào'}</button>
     </form>}

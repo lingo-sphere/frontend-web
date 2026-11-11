@@ -24,9 +24,7 @@ interface FlashcardExerciseProps {
 
 export function FlashcardExercise({
   word,
-  isAnswered,
   onAnswer,
-  onNext,
   onSpeakWord,
   onMarkMastered,
   onSaveWord,

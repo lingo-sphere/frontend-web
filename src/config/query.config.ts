@@ -10,8 +10,10 @@ function makeQueryClient() {
         retry: (failureCount, error: unknown) => {
           const status = (error as { response?: { status?: number }; status?: number })?.response?.status || (error as { status?: number })?.status
           if (status === 401 || status === 403) return false
+          if (status === 503 || status === 502 || status === 504) return failureCount < 3
           return failureCount < 1
         },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
         refetchOnWindowFocus: true,
       },
     },

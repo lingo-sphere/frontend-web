@@ -10,7 +10,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/tooltip'
 
 const emptySubscribe = () => () => {}
 
-export function ScrollToTopButton() {
+interface ScrollToTopButtonProps {
+  embedded?: boolean
+}
+
+export function ScrollToTopButton({ embedded = false }: ScrollToTopButtonProps) {
   const pathname = usePathname() || '/'
   const { t } = useTranslation()
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
@@ -19,33 +23,17 @@ export function ScrollToTopButton() {
   const [scrollProgress, setScrollProgress] = useState(0)
 
   useEffect(() => {
+    setIsVisible(false)
+    setScrollProgress(0)
+
     let ticking = false
 
     const updateScroll = () => {
-      const winScroll = window.scrollY || document.documentElement.scrollTop
-      let maxScroll = winScroll
-      let currentProgress = 0
-
+      const winScroll = window.scrollY || document.documentElement.scrollTop || 0
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
-      if (docHeight > 0) {
-        currentProgress = Math.min(Math.max(winScroll / docHeight, 0), 1)
-      }
+      const currentProgress = docHeight > 0 ? Math.min(Math.max(winScroll / docHeight, 0), 1) : 0
 
-      if (maxScroll <= 280) {
-        const activeScrollables = document.querySelectorAll('.overflow-y-auto')
-        for (let i = 0; i < activeScrollables.length; i++) {
-          const el = activeScrollables[i] as HTMLElement
-          if (el.scrollTop > maxScroll) {
-            maxScroll = el.scrollTop
-            const elScrollHeight = el.scrollHeight - el.clientHeight
-            if (elScrollHeight > 0) {
-              currentProgress = Math.min(Math.max(el.scrollTop / elScrollHeight, 0), 1)
-            }
-          }
-        }
-      }
-
-      setIsVisible(maxScroll > 280)
+      setIsVisible(winScroll > 300)
       setScrollProgress(currentProgress)
       ticking = false
     }
@@ -57,11 +45,11 @@ export function ScrollToTopButton() {
       }
     }
 
-    window.addEventListener('scroll', onScroll, { capture: true, passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
     updateScroll()
 
     return () => {
-      window.removeEventListener('scroll', onScroll, { capture: true })
+      window.removeEventListener('scroll', onScroll)
     }
   }, [pathname])
 
@@ -73,18 +61,14 @@ export function ScrollToTopButton() {
     pathname.startsWith('/verify-email') ||
     pathname.startsWith('/course/')
 
-  const positionClasses = isStandalone
-    ? 'bottom-6 right-6'
-    : 'bottom-[152px] right-[27px]'
+  const positionClasses = embedded
+    ? 'relative flex items-center justify-center'
+    : isStandalone
+      ? 'fixed bottom-6 right-6 z-40 flex items-center justify-center'
+      : 'fixed bottom-[152px] right-[27px] z-40 flex items-center justify-center'
 
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
-    const activeScrollables = document.querySelectorAll('.overflow-y-auto')
-    activeScrollables.forEach((el) => {
-      if (el.scrollTop > 0) {
-        el.scrollTo({ top: 0, behavior: 'smooth' })
-      }
-    })
   }
 
   const radius = 19.5
@@ -99,7 +83,7 @@ export function ScrollToTopButton() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.6, y: 12 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className={`fixed ${positionClasses} z-40 flex items-center justify-center`}
+          className={positionClasses}
         >
           <Tooltip>
             <TooltipTrigger asChild>

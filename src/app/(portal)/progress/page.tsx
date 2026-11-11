@@ -7,18 +7,16 @@ import { Loader2, TrendingUp } from 'lucide-react'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useNavigate } from '@/lib/navigation'
 import { useProgressData } from '@/features/progress/hooks/use.progress.data'
+import { useSkillsSummaryQuery } from '@/features/progress/hooks/use.progress.query'
 import { ProgressMetricsHeader } from '@/features/progress/components/progress.metrics.header'
 import { ProgressCoursesTab } from '@/features/progress/components/progress.courses.tab'
 import { ProgressSkillsTab } from '@/features/progress/components/progress.skills.tab'
 import { ProgressRecentTestsTab } from '@/features/progress/components/progress.recent.tests.tab'
 import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
-import { progressService } from '@/features/progress/services/progress.service'
-import type { SkillsSummary } from '@/features/progress/services/progress.service'
 
 export default function ProgressAppPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'SKILLS' | 'RECENT_TESTS' | 'GROWTH_ANALYTICS'>('OVERVIEW')
-  const [skillsSummary, setSkillsSummary] = useState<SkillsSummary | null>(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -51,18 +49,9 @@ export default function ProgressAppPage() {
     coursesMap,
   } = useProgressData(navigate)
 
-  // Fetch skills analytics summary
-  useEffect(() => {
-    const currentUserId = (activeUser as any)?.user_id || (activeUser as any)?.id || (activeUser as any)?._id
-    if (currentUserId) {
-      const userId = currentUserId
-      progressService.getSkillsSummary(userId, '7d').then((data) => {
-        setSkillsSummary(data)
-      }).catch(() => {
-        setSkillsSummary(null)
-      })
-    }
-  }, [activeUser])
+  const currentUserId = activeUser?.user_id
+  const { data: skillsSummaryRes } = useSkillsSummaryQuery(currentUserId, '7d', Boolean(currentUserId))
+  const skillsSummary = skillsSummaryRes || null
 
   const formatDate = (isoString?: string) => {
     if (!isoString) return 'Chưa có'
