@@ -23,7 +23,7 @@ export function GogoVocabularyDonutCard({
   const masteredWords = summary?.mastered_count ?? vocabStats?.learned_words ?? 0
   const learningWords = summary?.learning_count ?? (totalWords > masteredWords ? totalWords - masteredWords : 0)
   const dueToday = summary?.due_today_count ?? vocabStats?.review_due ?? 0
-  const retentionRate = summary?.retention_rate_30d !== undefined ? Math.round(summary.retention_rate_30d) : 0
+  const retentionRate = Math.round(summary?.retention_rate_30d ?? 0)
 
   const deepMemCount = memory?.deep_memory?.count ?? masteredWords
   const stableCount = memory?.stable?.count ?? 0
