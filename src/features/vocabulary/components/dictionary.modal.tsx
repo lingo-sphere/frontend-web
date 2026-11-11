@@ -13,6 +13,7 @@ import type {
 } from "@/features/vocabulary/schemas/vocabulary.schema";
 
 interface DictionaryModalProps {
+  initialQuery?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAction: (message: string) => void;
@@ -21,6 +22,7 @@ interface DictionaryModalProps {
 
 export function DictionaryModal({
   open,
+  initialQuery = "",
   onOpenChange,
   onAction,
   userId,
@@ -190,14 +192,14 @@ export function DictionaryModal({
 
   useEffect(() => {
     if (open) {
-      setQuery("");
+      setQuery(initialQuery);
       setSuggestions([]);
       setSelectedIndex(-1);
       setShowHistory(true);
       fetchSearchHistory();
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [open, fetchSearchHistory]);
+  }, [open, initialQuery, fetchSearchHistory]);
 
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";

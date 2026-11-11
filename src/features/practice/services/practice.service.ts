@@ -95,6 +95,14 @@ export const practiceService = {
     return api.post(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_SUBMIT, payload)
   },
 
+  async startSpeakingSession(payload: Record<string, unknown>): Promise<unknown> {
+    return api.post('/practice/speaking/sessions', payload)
+  },
+
+  async reserveSpeakingTake(sessionId: string, payload: Record<string, unknown>): Promise<{ count: number }> {
+    return api.post(`/practice/speaking/sessions/${encodeURIComponent(sessionId)}/takes`, payload)
+  },
+
   async submitSpeakingAudioFile(formData: FormData): Promise<any> {
     return api.post(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_SUBMIT_AUDIO, formData)
   },

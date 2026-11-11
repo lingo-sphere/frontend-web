@@ -1,6 +1,7 @@
 // Trang giao diện khám phá và quản lý các bộ thẻ từ vựng LingoSphere.
 "use client";
 
+import { VocabularyResumeSessions } from "@/features/vocabulary/components/vocabulary.resume.sessions";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@/lib/navigation";
 import { useTranslation } from "react-i18next";
@@ -20,8 +21,11 @@ import {
   Clock,
   Calendar,
   Trophy,
+  Flame,
   Play,
   BookOpen,
+  Lock,
+  Share2,
   Trash2,
   AlertTriangle,
   Loader2,
@@ -33,14 +37,11 @@ import { Card, CardContent } from "@/components/card";
 import { Button } from "@/components/button";
 import { Modal } from "@/components/modal";
 import { Pagination } from "@/components/pagination";
-import { AppSelect } from "@/components/select";
 import { SectionHeading } from "@/features/dashboard/components/section.heading";
 import { useApp } from "@/contexts/app.context";
 import { useVocabularyPage } from "@/features/vocabulary/hooks/use.vocabulary.page";
 import { vocabularyService } from "@/features/vocabulary/services/vocabulary.service";
 import { vocabularyKeys } from "@/features/vocabulary/keys/vocabulary.keys";
-import { VocabularyDeckCard } from "@/features/vocabulary/components/vocabulary.deck.card";
-import { VocabularyMyDeckCard } from "@/features/vocabulary/components/vocabulary.my-deck.card";
 import type { Deck } from "@/features/vocabulary/schemas/vocabulary.schema";
 
 export default function VocabularyAppPage() {
@@ -50,9 +51,13 @@ export default function VocabularyAppPage() {
   const { showAction } = useApp();
 
   const {
+    publicDecks,
+    systemDecks,
     communityDecks,
     myDecks,
     isLoading,
+    dataError,
+    retryData,
     activeTag,
     setActiveTag,
     activeBand,
@@ -86,16 +91,21 @@ export default function VocabularyAppPage() {
     deck: Deck;
     saversCount: number;
   }
-  const [pendingDeleteDeck, setPendingDeleteDeck] = useState<PendingDeleteState | null>(null);
-  const [checkingDeleteDeckId, setCheckingDeleteDeckId] = useState<string | null>(null);
+  const [pendingDeleteDeck, setPendingDeleteDeck] =
+    useState<PendingDeleteState | null>(null);
+  const [checkingDeleteDeckId, setCheckingDeleteDeckId] = useState<
+    string | null
+  >(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleRequestDeleteDeck = async (deck: Deck) => {
-    const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
+    const currentUserId =
+      (currentUser as any)?.user_id || (currentUser as any)?.id;
     const isOwnDeck =
       deck.creator_type === "USER" &&
       Boolean(currentUserId) &&
-      ((deck as any).creator_id === currentUserId || (deck as any).user_id === currentUserId);
+      ((deck as any).creator_id === currentUserId ||
+        (deck as any).user_id === currentUserId);
 
     const deckId = String(
       deck._id || deck.id || (deck as any).deck_id?._id || (deck as any).deck_id
@@ -122,11 +132,13 @@ export default function VocabularyAppPage() {
     const deckId = String(
       deck._id || deck.id || (deck as any).deck_id?._id || (deck as any).deck_id
     );
-    const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
+    const currentUserId =
+      (currentUser as any)?.user_id || (currentUser as any)?.id;
     const isOwnDeck =
       deck.creator_type === "USER" &&
       Boolean(currentUserId) &&
-      ((deck as any).creator_id === currentUserId || (deck as any).user_id === currentUserId);
+      ((deck as any).creator_id === currentUserId ||
+        (deck as any).user_id === currentUserId);
 
     setIsDeleting(true);
     try {
@@ -149,7 +161,9 @@ export default function VocabularyAppPage() {
         await vocabularyService.unenrollDeck(deckId);
         showAction(
           isVietnamese
-            ? `Đã gỡ bộ thẻ "${deck.name || (deck as any).title}" khỏi Bộ thẻ của tôi`
+            ? `Đã gỡ bộ thẻ "${
+                deck.name || (deck as any).title
+              }" khỏi Bộ thẻ của tôi`
             : `Removed deck "${deck.name || (deck as any).title}" from My Decks`
         );
       }
@@ -244,6 +258,19 @@ export default function VocabularyAppPage() {
   return (
     <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        <VocabularyResumeSessions />
+        {dataError && (
+          <div role="alert" className="mb-5 border border-error rounded-xl p-4">
+            <p>
+              {isVietnamese
+                ? "Một phần dữ liệu chưa tải được. Các số đếm có thể chưa đầy đủ."
+                : "Some data could not load. Counts may be incomplete."}
+            </p>
+            <Button variant="outline" onClick={retryData}>
+              {isVietnamese ? "Thử lại" : "Retry"}
+            </Button>
+          </div>
+        )}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
@@ -475,7 +502,11 @@ export default function VocabularyAppPage() {
                     </span>
                     <span className="my-1 text-[18px] font-extrabold text-emerald-600 dark:text-emerald-400">
                       {masteryStats.totalReviews > 0
-                        ? `${masteryStats.reviewAccuracy}%`
+                        ? `${
+                            masteryStats.reviewAccuracy === null
+                              ? "—"
+                              : `${masteryStats.reviewAccuracy}%`
+                          }`
                         : "--%"}
                     </span>
                     <span className="text-[9.5px] text-text-tertiary">
@@ -758,21 +789,248 @@ export default function VocabularyAppPage() {
           </div>
 
           {myDecks.length > 0 ? (
-            <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {myDecks.map((deck: Deck, idx) => (
-                <VocabularyMyDeckCard
-                  key={deck._id || idx}
-                  deck={deck}
-                  index={idx}
-                  currentUser={currentUser}
-                  isVietnamese={isVietnamese}
-                  isDeleting={checkingDeleteDeckId === (deck._id || deck.id)}
-                  onDeckClick={handleDeckClick}
-                  onToggleVisibility={handleToggleVisibility}
-                  onCopyShareLink={handleCopyShareLink}
-                  onRequestDelete={handleRequestDeleteDeck}
-                />
-              ))}
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {myDecks.map((deck: Deck, idx) => {
+                const targetBand = deck.settings?.target_band;
+                const examPart = deck.settings?.exam_part;
+                const isPublic = deck.visibility?.toUpperCase() === "PUBLIC";
+                const isUserDeck = deck.creator_type === "USER";
+                const currentUserId =
+                  (currentUser as any)?.user_id || (currentUser as any)?.id;
+                const isOwnDeck =
+                  isUserDeck &&
+                  Boolean(currentUserId) &&
+                  ((deck as any).creator_id === currentUserId ||
+                    (deck as any).user_id === currentUserId);
+                const isSystemDeck =
+                  deck.creator_type === "SYSTEM" || !deck.creator_type;
+                const progressPercent =
+                  typeof (deck as any).progress_percent === "number"
+                    ? (deck as any).progress_percent
+                    : 0;
+
+                return (
+                  <Card
+                    key={deck._id || idx}
+                    className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                    onClick={() => handleDeckClick(deck)}
+                  >
+                    <div
+                      className="relative flex h-20 w-full items-center justify-center"
+                      style={{
+                        backgroundColor: [
+                          "#00b894",
+                          "#6c5ce7",
+                          "#0984e3",
+                          "#fdcb6e",
+                        ][idx % 4],
+                      }}
+                    >
+                      <Layers3 className="text-white/60" size={30} />
+                      <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1">
+                        {targetBand && (
+                          <span className="rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                            Band {targetBand}
+                          </span>
+                        )}
+                        {examPart && (
+                          <span className="rounded-md bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                            {examPart.replace("_", " ")}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* PHÂN LOẠI: NÚT CHỌN CÔNG KHAI (NẾU CỦA MÌNH) HOẶC BADGE HỆ THỐNG / CỘNG ĐỒNG */}
+                      <div className="absolute right-2.5 top-2.5 flex items-center gap-1">
+                        {isOwnDeck ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleVisibility(deck);
+                            }}
+                            title={
+                              isVietnamese
+                                ? isPublic
+                                  ? "Đang Công khai - Bấm để chuyển sang Riêng tư"
+                                  : "Đang Riêng tư - Bấm để chuyển sang Công khai"
+                                : "Toggle Public / Private"
+                            }
+                            className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold backdrop-blur-md transition shadow-sm ${
+                              isPublic
+                                ? "bg-emerald-600/90 text-white hover:bg-emerald-600 ring-1 ring-white/30"
+                                : "bg-black/60 text-white hover:bg-black/80 ring-1 ring-white/20"
+                            }`}
+                          >
+                            {isPublic ? (
+                              <Globe size={11} />
+                            ) : (
+                              <Lock size={11} />
+                            )}
+                            <span>
+                              {isPublic
+                                ? isVietnamese
+                                  ? "Công khai"
+                                  : "Public"
+                                : isVietnamese
+                                ? "Riêng tư"
+                                : "Private"}
+                            </span>
+                          </button>
+                        ) : isSystemDeck ? (
+                          <span className="flex items-center gap-1 rounded-md bg-black/50 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/20">
+                            <GraduationCap
+                              size={11}
+                              className="text-amber-400"
+                            />
+                            <span>
+                              {isVietnamese ? "Hệ thống" : "Official"}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 rounded-md bg-info/70 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/20">
+                            <Users size={11} />
+                            <span>
+                              {isVietnamese ? "Cộng đồng" : "Community"}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <CardContent className="p-3.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="text-[14px] font-semibold text-text-primary line-clamp-1">
+                          {isVietnamese && deck.name_vi
+                            ? deck.name_vi
+                            : deck.name || deck.title}
+                        </h4>
+                      </div>
+
+                      {/* NGUỒN GỐC & TÁC GIẢ BỘ THẺ */}
+                      <div className="mt-1 flex items-center gap-1.5 text-[11px]">
+                        {isSystemDeck ? (
+                          <span className="flex items-center gap-1 text-text-tertiary">
+                            <Sparkles size={11} className="text-amber-500" />
+                            <span>
+                              {isVietnamese
+                                ? "Bộ thẻ TOEIC chuẩn hóa"
+                                : "Standard TOEIC Pack"}
+                            </span>
+                          </span>
+                        ) : isOwnDeck ? (
+                          <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                            {isVietnamese
+                              ? "• Bộ thẻ do bạn tạo"
+                              : "• Created by you"}
+                          </span>
+                        ) : (
+                          <span className="text-text-secondary line-clamp-1">
+                            {isVietnamese ? "• Tác giả: " : "• By: "}
+                            {(deck as any).creator_name ||
+                              (deck as any).author ||
+                              (isVietnamese
+                                ? "Học viên chia sẻ"
+                                : "Community Learner")}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="mt-1.5 text-[12px] text-text-secondary line-clamp-2">
+                        {isVietnamese && deck.description_vi
+                          ? deck.description_vi
+                          : deck.description ||
+                            deck.description_vi ||
+                            (isVietnamese
+                              ? "Bộ thẻ đang học"
+                              : "Enrolled deck")}
+                      </p>
+
+                      {/* THANH TIẾN ĐỘ HỌC TẬP (NẾU ĐÃ BẮT ĐẦU HỌC) */}
+                      {progressPercent > 0 && (
+                        <div className="mt-2.5 space-y-1">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-text-tertiary">
+                              {isVietnamese ? "Tiến độ học" : "Progress"}
+                            </span>
+                            <span className="font-semibold text-primary">
+                              {progressPercent}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-subtle">
+                            <div
+                              className="h-full rounded-full bg-primary transition-all"
+                              style={{
+                                width: `${Math.max(5, progressPercent)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2 text-[12px] text-text-secondary">
+                        <span className="font-medium text-text-primary">
+                          {deck.card_count ?? 0} {isVietnamese ? "từ" : "words"}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            title={
+                              isVietnamese
+                                ? "Sao chép liên kết bộ thẻ"
+                                : "Copy share link"
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyShareLink(deck);
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition hover:bg-surface-hover hover:text-primary hover:border-primary/50"
+                          >
+                            <Share2 size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={
+                              checkingDeleteDeckId === (deck._id || deck.id)
+                            }
+                            title={
+                              isOwnDeck
+                                ? isVietnamese
+                                  ? "Xóa bộ thẻ"
+                                  : "Delete Deck"
+                                : isVietnamese
+                                ? "Xóa khỏi Bộ thẻ của tôi"
+                                : "Remove from My Decks"
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRequestDeleteDeck(deck);
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 disabled:opacity-50"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                          <Button
+                            size="sm"
+                            className="bg-primary hover:bg-primary-hover"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeckClick(deck);
+                            }}
+                          >
+                            {progressPercent > 0
+                              ? isVietnamese
+                                ? "Học tiếp"
+                                : "Continue"
+                              : isVietnamese
+                              ? "Luyện tập"
+                              : "Practice"}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="mt-4 rounded-2xl border border-dashed border-border/80 bg-surface p-6 text-center">
@@ -1066,7 +1324,7 @@ export default function VocabularyAppPage() {
                   );
                 })}
                 {availableTopics.length > 10 && (
-                  <AppSelect
+                  <select
                     value={
                       availableTopics
                         .slice(10)
@@ -1074,20 +1332,23 @@ export default function VocabularyAppPage() {
                         ? activeTopic
                         : ""
                     }
-                    onChange={(val) => setActiveTopic(val || "all")}
-                    options={[
-                      {
-                        value: "",
-                        label: isVietnamese ? "Chủ đề khác..." : "More topics...",
-                      },
-                      ...availableTopics.slice(10).map((top) => ({
-                        value: String(top._id),
-                        label: isVietnamese ? top.name_vi || top.name_en : top.name_en,
-                      })),
-                    ]}
-                    size="sm"
-                    ariaLabel={isVietnamese ? "Chọn chủ đề khác" : "Select more topics"}
-                  />
+                    onChange={(e) => setActiveTopic(e.target.value || "all")}
+                    aria-label={
+                      isVietnamese ? "Chọn chủ đề khác" : "Select more topics"
+                    }
+                    className="h-[34px] rounded-xl border border-border bg-surface-subtle px-3 text-[12px] font-medium text-text-secondary focus:border-primary focus:outline-none"
+                  >
+                    <option value="">
+                      {isVietnamese ? "Chủ đề khác..." : "More topics..."}
+                    </option>
+                    {availableTopics.slice(10).map((top) => (
+                      <option key={top._id} value={String(top._id)}>
+                        {isVietnamese
+                          ? top.name_vi || top.name_en
+                          : top.name_en}
+                      </option>
+                    ))}
+                  </select>
                 )}
               </div>
             </div>
@@ -1136,23 +1397,128 @@ export default function VocabularyAppPage() {
             </div>
           ) : filteredPacks.length > 0 ? (
             <>
-              <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {paginatedPacks.map((pack: Deck, idx) => {
                   const packTopic = pack.topic_id
                     ? topicMap.get(String(pack.topic_id))
                     : null;
-                  const isEnrolled = enrolledDeckIdSet.has(String(pack._id || pack.id));
+                  const targetBand = pack.settings?.target_band;
+                  const examPart = pack.settings?.exam_part;
+
+                  const isEnrolled = enrolledDeckIdSet.has(
+                    String(pack._id || pack.id)
+                  );
 
                   return (
-                    <VocabularyDeckCard
+                    <Card
                       key={pack._id || idx}
-                      pack={pack}
-                      index={idx}
-                      packTopic={packTopic}
-                      isEnrolled={isEnrolled}
-                      isVietnamese={isVietnamese}
-                      onDeckClick={handleDeckClick}
-                    />
+                      className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                      onClick={() => handleDeckClick(pack)}
+                    >
+                      <div
+                        className="relative flex h-24 w-full items-center justify-center"
+                        style={{
+                          backgroundColor: [
+                            "#6b5ce7",
+                            "#00b894",
+                            "#0984e3",
+                            "#fdcb6e",
+                          ][idx % 4],
+                        }}
+                      >
+                        <Layers3 className="text-white/60" size={36} />
+                        <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1">
+                          {targetBand && (
+                            <span className="rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                              Band {targetBand}
+                            </span>
+                          )}
+                          {examPart && (
+                            <span className="rounded-md bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                              {examPart.replace("_", " ")}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* NHÃN ĐÃ LƯU / ĐANG TRONG BỘ THẺ CỦA TÔI */}
+                        <div className="absolute right-2.5 top-2.5 flex items-center gap-1">
+                          {isEnrolled ? (
+                            <span className="flex items-center gap-1 rounded-md bg-emerald-600/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm shadow-sm ring-1 ring-white/30">
+                              <Check size={11} />
+                              <span>
+                                {isVietnamese ? "Đang học" : "Enrolled"}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm flex items-center gap-1">
+                              <GraduationCap
+                                size={11}
+                                className="text-amber-400"
+                              />
+                              <span>Official</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <CardContent className="p-3.5">
+                        {packTopic && (
+                          <div className="mb-1.5">
+                            <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                              {isVietnamese
+                                ? packTopic.name_vi || packTopic.name_en
+                                : packTopic.name_en}
+                            </span>
+                          </div>
+                        )}
+                        <h4 className="text-[14px] font-semibold text-text-primary line-clamp-1">
+                          {isVietnamese && pack.name_vi
+                            ? pack.name_vi
+                            : pack.name || pack.title}
+                        </h4>
+                        <p className="mt-1 text-[12px] text-text-secondary line-clamp-2">
+                          {isVietnamese && pack.description_vi
+                            ? pack.description_vi
+                            : pack.description || pack.description_vi}
+                        </p>
+                        <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2 text-[12px] text-text-secondary">
+                          <span className="font-medium text-text-primary">
+                            {pack.card_count ?? 0}{" "}
+                            {isVietnamese ? "từ" : "words"}
+                          </span>
+                          <span className="flex items-center gap-1 text-[12px] text-text-secondary">
+                            <Users size={12} />
+                            {(pack.total_users || 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <Button
+                          size="sm"
+                          className={`mt-3 w-full font-medium ${
+                            isEnrolled
+                              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                              : "bg-primary hover:bg-primary-hover"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeckClick(pack);
+                          }}
+                        >
+                          {isEnrolled ? (
+                            <span className="flex items-center justify-center gap-1.5">
+                              <Check size={14} />
+                              <span>
+                                {isVietnamese
+                                  ? "Học tiếp (Bộ thẻ của tôi)"
+                                  : "Continue (In My Decks)"}
+                              </span>
+                            </span>
+                          ) : isVietnamese ? (
+                            "Bắt đầu học"
+                          ) : (
+                            "Start Learning"
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
                   );
                 })}
               </div>
@@ -1218,10 +1584,10 @@ export default function VocabularyAppPage() {
                     </span>{" "}
                     người đang lưu bộ thẻ{" "}
                     <span className="font-semibold">
-                      "
+                      &quot;
                       {pendingPrivacyDeck?.deck.name_vi ||
                         pendingPrivacyDeck?.deck.name}
-                      "
+                      &quot;
                     </span>{" "}
                     của bạn.
                   </>
@@ -1233,7 +1599,7 @@ export default function VocabularyAppPage() {
                     </span>{" "}
                     learners who have saved your deck{" "}
                     <span className="font-semibold">
-                      "{pendingPrivacyDeck?.deck.name}"
+                      &quot;{pendingPrivacyDeck?.deck.name}&quot;
                     </span>
                     .
                   </>
@@ -1241,8 +1607,8 @@ export default function VocabularyAppPage() {
               </p>
               <p className="mt-2 text-[12.5px] leading-relaxed text-text-secondary">
                 {isVietnamese
-                  ? "Nếu chuyển sang Riêng tư, bộ thẻ này sẽ không còn xuất hiện trên kho cộng đồng cho những người mới. Tuy nhiên, những học viên đã lưu trước đó vẫn có thể tiếp tục ôn luyện bộ thẻ này trong danh sách của họ."
-                  : "If switched to Private, this deck will no longer appear in the community repository for new learners. However, learners who already saved it will still keep it in their personal study list."}
+                  ? "Nếu chuyển sang Riêng tư, bộ thẻ sẽ rút khỏi kho cộng đồng. Những học viên đã lưu trước đó sẽ không còn xem hoặc học trực tiếp bộ thẻ này. Bản sao độc lập họ đã tạo trước đó vẫn được giữ."
+                  : "Making this deck private removes it from the community and revokes direct access for enrolled learners. Independent copies they previously created are retained."}
               </p>
               <p className="mt-2 text-[13px] font-medium text-text-primary">
                 {isVietnamese
@@ -1277,8 +1643,10 @@ export default function VocabularyAppPage() {
           pendingDeleteDeck &&
           pendingDeleteDeck.deck.creator_type === "USER" &&
           Boolean((currentUser as any)?.user_id || (currentUser as any)?.id) &&
-          ((pendingDeleteDeck.deck as any).creator_id === ((currentUser as any)?.user_id || (currentUser as any)?.id) ||
-            (pendingDeleteDeck.deck as any).user_id === ((currentUser as any)?.user_id || (currentUser as any)?.id))
+          ((pendingDeleteDeck.deck as any).creator_id ===
+            ((currentUser as any)?.user_id || (currentUser as any)?.id) ||
+            (pendingDeleteDeck.deck as any).user_id ===
+              ((currentUser as any)?.user_id || (currentUser as any)?.id))
             ? pendingDeleteDeck.saversCount > 0
               ? isVietnamese
                 ? "Xác nhận xóa bộ thẻ đang có người theo học"
@@ -1291,10 +1659,11 @@ export default function VocabularyAppPage() {
             : "Remove from My Decks"
         }
       >
-        {pendingDeleteDeck && (
+        {pendingDeleteDeck &&
           (() => {
             const { deck, saversCount } = pendingDeleteDeck;
-            const currentUserId = (currentUser as any)?.user_id || (currentUser as any)?.id;
+            const currentUserId =
+              (currentUser as any)?.user_id || (currentUser as any)?.id;
             const isOwn =
               deck.creator_type === "USER" &&
               Boolean(currentUserId) &&
@@ -1323,7 +1692,7 @@ export default function VocabularyAppPage() {
                             </span>{" "}
                             người đang lưu và học bộ thẻ{" "}
                             <span className="font-semibold text-text-primary">
-                              "{deckTitle}"
+                              &quot;{deckTitle}&quot;
                             </span>{" "}
                             của bạn.
                           </>
@@ -1334,7 +1703,10 @@ export default function VocabularyAppPage() {
                               {saversCount}
                             </span>{" "}
                             learners actively studying your deck{" "}
-                            <span className="font-semibold">"{deckTitle}"</span>.
+                            <span className="font-semibold">
+                              &quot;{deckTitle}&quot;
+                            </span>
+                            .
                           </>
                         )}
                       </p>
@@ -1393,14 +1765,17 @@ export default function VocabularyAppPage() {
                           <>
                             Bạn có chắc muốn xóa vĩnh viễn bộ thẻ{" "}
                             <span className="font-semibold text-text-primary">
-                              "{deckTitle}"
+                              &quot;{deckTitle}&quot;
                             </span>{" "}
                             không?
                           </>
                         ) : (
                           <>
                             Are you sure you want to permanently delete deck{" "}
-                            <span className="font-semibold">"{deckTitle}"</span>?
+                            <span className="font-semibold">
+                              &quot;{deckTitle}&quot;
+                            </span>
+                            ?
                           </>
                         )}
                       </p>
@@ -1453,14 +1828,17 @@ export default function VocabularyAppPage() {
                         <>
                           Bạn có chắc muốn gỡ bộ thẻ{" "}
                           <span className="font-semibold text-text-primary">
-                            "{deckTitle}"
+                            &quot;{deckTitle}&quot;
                           </span>{" "}
                           khỏi danh sách học của bạn?
                         </>
                       ) : (
                         <>
                           Are you sure you want to remove{" "}
-                          <span className="font-semibold">"{deckTitle}"</span> from your study list?
+                          <span className="font-semibold">
+                            &quot;{deckTitle}&quot;
+                          </span>{" "}
+                          from your study list?
                         </>
                       )}
                     </p>
@@ -1498,8 +1876,7 @@ export default function VocabularyAppPage() {
                 </div>
               </div>
             );
-          })()
-        )}
+          })()}
       </Modal>
     </>
   );

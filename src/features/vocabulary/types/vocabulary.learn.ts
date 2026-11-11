@@ -273,12 +273,14 @@ export interface SessionState {
 export interface LearningResult {
   totalWords: number
   correctAnswers: number
-  accuracy: number
+  totalItems?: number
+  assessmentType?: 'TESTED' | 'SELF_REPORTED' | 'LEGACY'
+  accuracy: number | null
   skillBreakdown: {
-    meaning: number
-    spelling: number
-    listening: number
-    context: number
+    meaning: number | null
+    spelling: number | null
+    listening: number | null
+    context: number | null
   }
   weakWords: VocabularyItem[]
 }

@@ -1,6 +1,7 @@
 // Custom hook quản lý truy vấn từ vựng bằng TanStack Query.
 'use client'
 
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useQuery } from '@tanstack/react-query'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { vocabularyKeys } from '@/features/vocabulary/keys/vocabulary.keys'
@@ -21,24 +22,19 @@ export function usePublicDecksQuery(params?: { cefr_level?: string; search?: str
 }
 
 export function useMyVocabularyEnrollmentsQuery(enabled = true) {
+  const userId = useAuthStore(state => state.user?.user_id)
   return useQuery<Deck[]>({
-    queryKey: vocabularyKeys.myEnrollments(),
-    queryFn: async () => {
-      try {
-        const res = await vocabularyService.getMyEnrollments()
-        return Array.isArray(res) ? res : []
-      } catch {
-        return []
-      }
-    },
-    enabled,
+    queryKey: [...vocabularyKeys.myEnrollments(), userId],
+    queryFn: () => vocabularyService.getMyEnrollments(),
+    enabled: enabled && Boolean(userId),
     staleTime: 2 * 60 * 1000,
   })
 }
 
 export function useDeckDetailQuery(deckId: string, enabled = true) {
+  const userId = useAuthStore(state => state.user?.user_id)
   return useQuery<Deck | null>({
-    queryKey: vocabularyKeys.deck(deckId),
+    queryKey: [...vocabularyKeys.deck(deckId), userId || 'anonymous'],
     queryFn: () => vocabularyService.getDeckById(deckId),
     enabled: Boolean(deckId) && enabled,
     staleTime: 5 * 60 * 1000,

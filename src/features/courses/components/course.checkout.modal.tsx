@@ -67,15 +67,15 @@ export function CourseCheckoutModal({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-extrabold tracking-tight text-text-primary truncate">
-                    {isVi ? 'Thanh toán Khóa học' : 'Course Checkout'}
+                    {totalAmount <= 0 ? (isVi ? 'Đăng ký khóa học miễn phí' : 'Free course enrollment') : (isVi ? 'Thanh toán Khóa học' : 'Course Checkout')}
                   </h2>
                   <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                     <ShieldCheck size={12} />
-                    <span>VietQR 24/7</span>
+                    <span>{totalAmount <= 0 ? (isVi ? 'Miễn phí' : 'Free') : 'VietQR 24/7'}</span>
                   </span>
                 </div>
                 <p className="text-xs text-text-secondary mt-0.5 truncate">
-                  {isVi
+                  {totalAmount <= 0 ? (isVi ? 'Đăng ký trực tiếp để bắt đầu học' : 'Enroll directly to start learning') : isVi
                     ? 'Quét mã VietQR chuyển khoản tự động xác thực trong 30 giây'
                     : 'Scan VietQR for instant automatic activation'}
                 </p>
@@ -96,7 +96,7 @@ export function CourseCheckoutModal({
           </div>
 
           <div className="p-5 sm:p-6 md:p-7 max-h-[85vh] overflow-y-auto">
-            {step === 'SUCCESS' && <CheckoutSuccessView isVi={isVi} />}
+            {step === 'SUCCESS' && <CheckoutSuccessView isVi={isVi} free={totalAmount <= 0} />}
 
             {step === 'PAYMENT_QR' && (
               <div className="space-y-4">
@@ -107,16 +107,16 @@ export function CourseCheckoutModal({
                   </div>
                 )}
 
-                {isSubmitting || !order ? (
+                {isSubmitting || (!order && !errorMessage) ? (
                   <div className="flex flex-col items-center justify-center py-16 space-y-3.5">
                     <div className="p-4 rounded-full bg-purple-500/10 text-purple-600">
                       <RefreshCw className="h-8 w-8 animate-spin" />
                     </div>
                     <p className="text-sm font-semibold text-text-secondary">
-                      {isVi ? 'Đang tạo mã VietQR thanh toán cho bạn...' : 'Generating VietQR code...'}
+                      {totalAmount <= 0 ? (isVi ? 'Đang đăng ký khóa học miễn phí...' : 'Enrolling in the free course...') : (isVi ? 'Đang tạo mã VietQR thanh toán cho bạn...' : 'Generating VietQR code...')}
                     </p>
                   </div>
-                ) : (
+                ) : order ? (
                   <CheckoutQrCard
                     order={order}
                     courses={courses}
@@ -128,7 +128,7 @@ export function CourseCheckoutModal({
                     onCopy={handleCopy}
                     onManualCheck={handleManualCheck}
                   />
-                )}
+                ) : null}
               </div>
             )}
           </div>

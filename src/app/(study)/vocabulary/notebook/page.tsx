@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bookmark,
@@ -22,6 +22,9 @@ import {
   Check,
   X,
   AlertCircle,
+  Sparkles,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { Button } from "@/components/button";
 import { SectionHeading } from "@/features/dashboard/components/section.heading";
@@ -73,11 +76,24 @@ export default function NotebookAppPage() {
   const [isUnsaveLoading, setIsUnsaveLoading] = useState<string | null>(null);
 
   // State chọn từ để đóng gói vào bộ thẻ (Min 5, Max 30)
-  const [selectedWordIds, setSelectedWordIds] = useState<Set<string>>(new Set());
+  const [selectedWordIds, setSelectedWordIds] = useState<Set<string>>(
+    new Set()
+  );
   const [isAddToDeckModalOpen, setIsAddToDeckModalOpen] = useState(false);
 
   // Lấy danh sách bộ thẻ của user để thêm vào
-  const { data: myDecks = [] } = useMyVocabularyEnrollmentsQuery(isAuthenticated);
+  const { data: myDecks = [] } =
+    useMyVocabularyEnrollmentsQuery(isAuthenticated);
+
+  const [knownWords, setKnownWords] = useState(
+    new Map<string, SavedMeaningItem>()
+  );
+  useEffect(() => {
+    setKnownWords(new Map());
+    setSelectedWordIds(new Set());
+  }, [userId]);
+
+  const fetchSequence = useRef(0);
 
   // Fetch saved vocabulary
   const fetchSavedVocabulary = useCallback(
@@ -89,17 +105,27 @@ export default function NotebookAppPage() {
         return;
       }
 
+      const sequence = ++fetchSequence.current;
       try {
         setIsLoading(true);
         const response = await vocabularyService.getSavedVocabulary({
           page: pageNum,
           limit: ITEMS_PER_PAGE,
+          search: searchQuery,
         });
 
+        if (sequence !== fetchSequence.current) return;
+        setKnownWords((previous) => {
+          const next = new Map(previous);
+          for (const item of response.items || [])
+            next.set(item.saved_id, item);
+          return next;
+        });
         setSavedItems(response.items || []);
         setTotalPages(response.pagination?.total_pages || 1);
         setTotalItems(response.pagination?.total || 0);
       } catch (err) {
+        if (sequence !== fetchSequence.current) return;
         console.error("Failed to fetch saved vocabulary:", err);
         showAction(
           isVietnamese
@@ -107,31 +133,21 @@ export default function NotebookAppPage() {
             : "Failed to load saved vocabulary"
         );
       } finally {
-        setIsLoading(false);
+        if (sequence === fetchSequence.current) setIsLoading(false);
       }
     },
-    [isAuthenticated, showAction, isVietnamese]
+    [isAuthenticated, userId, showAction, isVietnamese, searchQuery]
   );
 
   useEffect(() => {
     fetchSavedVocabulary(page);
   }, [fetchSavedVocabulary, page, isAuthenticated]);
 
-  // Filter by search
-  const filteredItems = useMemo(() => {
-    if (!searchQuery) return savedItems;
-    const query = searchQuery.toLowerCase();
-    return savedItems.filter(
-      (item) =>
-        item.word.toLowerCase().includes(query) ||
-        item.meaning.toLowerCase().includes(query) ||
-        item.part_of_speech.toLowerCase().includes(query)
-    );
-  }, [savedItems, searchQuery]);
+  const filteredItems = savedItems;
 
   // Danh sách các từ được chọn
   const selectedWords = useMemo<SavedWordItem[]>(() => {
-    return savedItems
+    return [...knownWords.values()]
       .filter((item) => selectedWordIds.has(item.saved_id))
       .map((item) => ({
         saved_id: item.saved_id,
@@ -142,7 +158,7 @@ export default function NotebookAppPage() {
         meaning: item.meaning,
         examples: item.examples,
       }));
-  }, [savedItems, selectedWordIds]);
+  }, [knownWords, selectedWordIds]);
 
   const selectedCount = selectedWordIds.size;
 
@@ -229,7 +245,9 @@ export default function NotebookAppPage() {
   const handleAddToDeckSuccess = (removedWordIds: string[]) => {
     if (removedWordIds.length > 0) {
       // Cập nhật lại state sau khi đã xóa khỏi sổ tay
-      setSavedItems((prev) => prev.filter((i) => !removedWordIds.includes(i.saved_id)));
+      setSavedItems((prev) =>
+        prev.filter((i) => !removedWordIds.includes(i.saved_id))
+      );
       setTotalItems((prev) => Math.max(0, prev - removedWordIds.length));
     }
     setSelectedWordIds(new Set());
@@ -247,7 +265,9 @@ export default function NotebookAppPage() {
             onClick={() => navigate("/vocabulary")}
           >
             <ArrowLeft size={16} />
-            <span>{isVietnamese ? "Quay về Từ vựng" : "Back to Vocabulary"}</span>
+            <span>
+              {isVietnamese ? "Quay về Từ vựng" : "Back to Vocabulary"}
+            </span>
           </Button>
         </div>
 
@@ -311,7 +331,10 @@ export default function NotebookAppPage() {
               isVietnamese ? "Tìm kiếm từ đã lưu..." : "Search saved words..."
             }
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
             className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none"
           />
         </div>
@@ -414,7 +437,8 @@ export default function NotebookAppPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredItems.map((item) => {
                 const isSelected = selectedWordIds.has(item.saved_id);
-                const isMaxReached = selectedCount >= MAX_DECK_WORDS && !isSelected;
+                const isMaxReached =
+                  selectedCount >= MAX_DECK_WORDS && !isSelected;
 
                 return (
                   <SavedMeaningCard
@@ -471,11 +495,15 @@ export default function NotebookAppPage() {
             </span>
             <div className="text-[13px]">
               <span className="font-bold text-text-primary">
-                {isVietnamese ? `Đã chọn ${selectedCount}/${MAX_DECK_WORDS} từ` : `Selected ${selectedCount}/${MAX_DECK_WORDS}`}
+                {isVietnamese
+                  ? `Đã chọn ${selectedCount}/${MAX_DECK_WORDS} từ`
+                  : `Selected ${selectedCount}/${MAX_DECK_WORDS}`}
               </span>
               {selectedCount < MIN_DECK_WORDS && (
                 <span className="ml-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                  {isVietnamese ? `(Cần thêm ${MIN_DECK_WORDS - selectedCount} từ)` : `(Need ${MIN_DECK_WORDS - selectedCount} more)`}
+                  {isVietnamese
+                    ? `(Cần thêm ${MIN_DECK_WORDS - selectedCount} từ)`
+                    : `(Need ${MIN_DECK_WORDS - selectedCount} more)`}
                 </span>
               )}
             </div>
@@ -488,9 +516,7 @@ export default function NotebookAppPage() {
               onClick={() => setIsAddToDeckModalOpen(true)}
             >
               <Layers3 size={16} />
-              <span>
-                {isVietnamese ? "Thêm vào bộ thẻ" : "Add to Deck"}
-              </span>
+              <span>{isVietnamese ? "Thêm vào bộ thẻ" : "Add to Deck"}</span>
             </Button>
 
             <Button
@@ -576,7 +602,13 @@ function SavedMeaningCard({
                 ? "border-border/60 bg-surface-subtle cursor-not-allowed"
                 : "border-border hover:border-primary/60 bg-surface"
             }`}
-            title={isSelected ? "Bỏ chọn" : isMaxReached ? "Đã đạt giới hạn 30 từ" : "Chọn từ này"}
+            title={
+              isSelected
+                ? "Bỏ chọn"
+                : isMaxReached
+                ? "Đã đạt giới hạn 30 từ"
+                : "Chọn từ này"
+            }
           >
             {isSelected && <Check size={13} strokeWidth={3} />}
           </button>
@@ -646,9 +678,13 @@ function SavedMeaningCard({
               key={idx}
               className="rounded-lg border-l-2 border-primary/30 bg-surface-subtle px-2.5 py-1.5"
             >
-              <p className="text-[11px] italic text-text-primary">"{ex.en}"</p>
+              <p className="text-[11px] italic text-text-primary">
+                &quot;{ex.en}&quot;
+              </p>
               {ex.vi && (
-                <p className="mt-0.5 text-[11px] text-text-secondary">{ex.vi}</p>
+                <p className="mt-0.5 text-[11px] text-text-secondary">
+                  {ex.vi}
+                </p>
               )}
             </div>
           ))}

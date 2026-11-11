@@ -1,5 +1,5 @@
 // Component chọn chế độ thời gian cho Reading Practice
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Clock, Zap, Target, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -13,6 +13,8 @@ import {
 } from '@/features/practice/lib/reading-time-mode'
 
 interface ReadingTimeModeSelectorProps {
+  isStarting?: boolean
+  error?: string
   questionCount: number
   onSelect: (mode: TimerPresetMode, totalSeconds: number) => void
   onCancel: () => void
@@ -86,16 +88,12 @@ export function ReadingTimeModeSelector({
   questionCount,
   onSelect,
   onCancel,
+  isStarting = false,
+  error,
 }: ReadingTimeModeSelectorProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
-  const [selectedMode, setSelectedMode] = useState<TimerPresetMode>('STANDARD')
-
-  // Load saved preference
-  useEffect(() => {
-    const saved = getSavedReadingTimeModePreference()
-    setSelectedMode(saved)
-  }, [])
+  const [selectedMode, setSelectedMode] = useState<TimerPresetMode>(getSavedReadingTimeModePreference)
 
   const handleStart = () => {
     saveReadingTimeModePreference(selectedMode)
@@ -185,6 +183,7 @@ export function ReadingTimeModeSelector({
           </div>
         </div>
 
+        {error && <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>}
         {/* Actions */}
         <div className="mt-5 flex items-center justify-between">
           <p className="text-[11px] text-text-tertiary">
@@ -201,9 +200,10 @@ export function ReadingTimeModeSelector({
             </button>
             <button
               onClick={handleStart}
+              disabled={isStarting || questionCount < 1}
               className="rounded-lg bg-primary px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover"
             >
-              {isVietnamese ? 'Bắt đầu luyện tập' : 'Start Practice'}
+              {isStarting ? (isVietnamese ? 'Đang mở phiên…' : 'Starting…') : isVietnamese ? 'Bắt đầu luyện tập' : 'Start Practice'}
             </button>
           </div>
         </div>
