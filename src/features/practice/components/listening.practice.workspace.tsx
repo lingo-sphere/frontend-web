@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/button'
+import { AppSelect } from '@/components/select'
 import { DictationWordDiff } from './dictation.word.diff'
 import { useListeningMedia } from '../hooks/use.listening.media'
 import { listeningLifecycleService } from '../services/listening-lifecycle.service'
@@ -202,21 +203,24 @@ export function ListeningPracticeWorkspace({
                     ariaLabel={vi ? 'Thời gian cho phiên' : 'Session time'}
                     value={preset}
                     disabled={busy}
-                    onChange={(event) => setPreset(event.target.value)}
-                    className="rounded-lg border border-border bg-surface-subtle p-2"
-                  >
-                    {['quick', 'standard', 'intensive'].map((value, index) => (
-                      <option key={value} value={value}>
-                        {
-                          (vi
-                            ? ['Nhanh', 'Tiêu chuẩn', 'Luyện kỹ']
-                            : ['Quick', 'Standard', 'Intensive'])[index]
-                        }{' '}
-                        · {[0.75, 1, 1.5][index]}×
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    onChange={(val) => setPreset(val)}
+                    options={[
+                      {
+                        value: 'quick',
+                        label: `${vi ? 'Nhanh' : 'Quick'} · 0.75×`,
+                      },
+                      {
+                        value: 'standard',
+                        label: `${vi ? 'Tiêu chuẩn' : 'Standard'} · 1×`,
+                      },
+                      {
+                        value: 'intensive',
+                        label: `${vi ? 'Luyện kỹ' : 'Intensive'} · 1.5×`,
+                      },
+                    ]}
+                    size="sm"
+                  />
+                </div>
               )}
               <Button
                 disabled={busy}
@@ -378,15 +382,13 @@ export function ListeningPracticeWorkspace({
                       playback_speed: Number(val),
                     })
                   }
-                  className="rounded-lg border border-border bg-surface-subtle p-2"
-                >
-                  {[0.5, 0.75, 1, 1.25, 1.5].map((speed) => (
-                    <option key={speed} value={speed}>
-                      {speed}×
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  options={[0.5, 0.75, 1, 1.25, 1.5].map((speed) => ({
+                    value: String(speed),
+                    label: `${speed}×`,
+                  }))}
+                  size="sm"
+                />
+              </div>
               {group.dialogue && group.dialogue.length > 0 && (
                 <div className="rounded-xl bg-surface-subtle p-4 space-y-2">
                   {group.dialogue.map((line, index) => (

@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icon.map";
+import { Button } from "@/components/button";
+import { Card, CardContent } from "@/components/card";
 import { ReadingContextNavigation } from "@/features/practice/components/reading.context.navigation";
 import { ReadingWorkspace } from "@/features/practice/components/reading.workspace";
 import { ReadingTimeModeSelector } from "@/features/practice/components/reading.time-mode-selector";
@@ -14,6 +16,7 @@ import { readingPracticeService } from "@/features/practice/services/reading-pra
 import type {
   ReadingPassage,
   ReadingType,
+  TimerPresetMode,
 } from "@/features/practice/types/reading";
 
 const TABS: Array<{
