@@ -1,3 +1,4 @@
+import { resolveSpeakingPolicy } from '@/features/practice/lib/speaking-policy'
 /**
  * @file speaking.recorder.panel.tsx
  * @description Bảng điều khiển ghi âm, đồng hồ đếm ngược và nghe lại bài nói của học viên
@@ -28,6 +29,8 @@ interface SpeakingRecorderPanelProps {
   onPlayPause: () => void
   onReset: () => void
   onSubmit: () => void
+  canRetake: boolean
+  takesUsed: number
   isSubmitting?: boolean
 }
 
@@ -51,20 +54,22 @@ export function SpeakingRecorderPanel({
   onPlayPause,
   onReset,
   onSubmit,
+  canRetake, takesUsed,
   isSubmitting = false,
 }: SpeakingRecorderPanelProps) {
   // Lấy các mốc thời gian theo tier
-  const easyPrep = exercise.tiered_time_limits?.easy?.preparation_time_seconds || 60
-  const medPrep = exercise.tiered_time_limits?.medium?.preparation_time_seconds || 45
-  const hardPrep = exercise.tiered_time_limits?.hard?.preparation_time_seconds || 20
+  const easyPrep = resolveSpeakingPolicy(exercise, 'EASY').preparation_time_seconds
+  const medPrep = resolveSpeakingPolicy(exercise, 'MEDIUM').preparation_time_seconds
+  const hardPrep = resolveSpeakingPolicy(exercise, 'HARD').preparation_time_seconds
 
-  const easySpeak = exercise.tiered_time_limits?.easy?.response_time_seconds || 45
-  const medSpeak = exercise.tiered_time_limits?.medium?.response_time_seconds || 45
-  const hardSpeak = exercise.tiered_time_limits?.hard?.response_time_seconds || 30
+  const easySpeak = resolveSpeakingPolicy(exercise, 'EASY').response_time_seconds
+  const medSpeak = resolveSpeakingPolicy(exercise, 'MEDIUM').response_time_seconds
+  const hardSpeak = resolveSpeakingPolicy(exercise, 'HARD').response_time_seconds
 
   return (
     <Card className="dashboard-card">
       <CardContent className="p-6">
+        <p className="mb-3 text-center text-sm text-text-secondary">{isVietnamese ? 'Lượt thu âm' : 'Takes'}: {takesUsed}/{resolveSpeakingPolicy(exercise, selectedTier).max_record_attempts}</p>
         {phase === 'idle' && (
           <div className="text-center">
             {/* Bộ chọn 3 mức độ thời gian chuẩn bị (Dễ - Trung bình - Nhanh) */}
@@ -83,7 +88,7 @@ export function SpeakingRecorderPanel({
                   {/* Mức 1: Dễ */}
                   <button
                     type="button"
-                    onClick={() => onSelectTier('EASY')}
+                    disabled={takesUsed > 0} onClick={() => onSelectTier('EASY')}
                     className={`flex flex-col rounded-xl border p-3 text-left transition cursor-pointer ${
                       selectedTier === 'EASY'
                         ? 'border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500'
@@ -108,7 +113,7 @@ export function SpeakingRecorderPanel({
                   {/* Mức 2: Trung bình */}
                   <button
                     type="button"
-                    onClick={() => onSelectTier('MEDIUM')}
+                    disabled={takesUsed > 0} onClick={() => onSelectTier('MEDIUM')}
                     className={`flex flex-col rounded-xl border p-3 text-left transition cursor-pointer ${
                       selectedTier === 'MEDIUM'
                         ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary'
@@ -133,7 +138,7 @@ export function SpeakingRecorderPanel({
                   {/* Mức 3: Nhanh */}
                   <button
                     type="button"
-                    onClick={() => onSelectTier('HARD')}
+                    disabled={takesUsed > 0} onClick={() => onSelectTier('HARD')}
                     className={`flex flex-col rounded-xl border p-3 text-left transition cursor-pointer ${
                       selectedTier === 'HARD'
                         ? 'border-amber-600 bg-amber-500/10 shadow-xs ring-1 ring-amber-600'
@@ -168,7 +173,7 @@ export function SpeakingRecorderPanel({
             <p className="mb-6 text-[13px] text-text-secondary">
               {needsPreparation
                 ? isVietnamese
-                  ? `Chế độ đã chọn: ${selectedTier === 'EASY' ? 'Dễ (60s)' : selectedTier === 'MEDIUM' ? 'Trung bình (45s)' : 'Nhanh (20s)'}. Bạn có thời gian chuẩn bị trước khi micro bật.`
+                  ? `Chuẩn bị ${resolveSpeakingPolicy(exercise, selectedTier).preparation_time_seconds}s · Nói ${resolveSpeakingPolicy(exercise, selectedTier).response_time_seconds}s.`
                   : `Selected pace: ${selectedTier}. You will have time to prepare before microphone activates.`
                 : isVietnamese
                   ? 'Nhấn nút bên dưới để bắt đầu ghi âm.'
@@ -178,7 +183,7 @@ export function SpeakingRecorderPanel({
             <Button
               size="lg"
               className="h-13 gap-2 bg-primary px-8 text-base font-semibold hover:bg-primary-hover shadow-md cursor-pointer"
-              onClick={onStartPractice}
+              onClick={onStartPractice} disabled={!canRetake || isSubmitting}
             >
               <Mic size={20} />
               {needsPreparation
@@ -294,7 +299,7 @@ export function SpeakingRecorderPanel({
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button variant="outline" className="gap-2" onClick={onReset} disabled={isSubmitting}>
+              <Button variant="outline" className="gap-2" onClick={onReset} disabled={!canRetake || isSubmitting}>
                 <RotateCcw size={18} />
                 {isVietnamese ? 'Làm lại' : 'Try Again'}
               </Button>

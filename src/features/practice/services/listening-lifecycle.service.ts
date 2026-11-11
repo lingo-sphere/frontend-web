@@ -15,6 +15,19 @@ interface RawQuestion {
   options: { key: string; text: string }[]
 }
 interface RawGroup {
+  time_limit_seconds?: number
+  play_count?: number
+  playback_completed?: boolean
+  has_listened?: boolean
+  is_completed?: boolean
+  settings?: {
+    allow_replay?: boolean
+    replay_limit?: number
+    show_image_before?: boolean
+    show_questions_before_audio?: boolean
+  }
+  checked_result?: ListeningGroup['checkedResult']
+  segments?: ListeningGroup['dialogue']
   question_id?: string
   conversation_id?: string
   talk_id?: string
@@ -40,6 +53,7 @@ interface RawGroup {
   }[]
 }
 interface RawSession {
+  settings?: ListeningPracticeSession['settings']
   session_id: string
   title?: string
   status: string
@@ -71,6 +85,19 @@ export function listeningSessionView(
         row.talk_id ||
         String(row.segment_index),
       index,
+      timeSeconds:
+        row.time_limit_seconds ??
+        Math.ceil(raw.total_time_seconds / rows.length),
+      allowReplay: row.settings?.allow_replay ?? true,
+      replayLimit: row.settings?.replay_limit ?? 1,
+      showImageBefore: row.settings?.show_image_before ?? true,
+      showQuestionsBefore: row.settings?.show_questions_before_audio ?? true,
+      playCount: row.play_count || 0,
+      playbackCompleted: row.playback_completed,
+      hasListened: row.has_listened || false,
+      completed: row.is_completed || false,
+      checkedResult: row.checked_result,
+      dialogue: row.segments,
       title:
         row.title ||
         (kind === 'dictation'
@@ -124,10 +151,36 @@ export function listeningSessionView(
     title: raw.title || kind.replace('part', 'Part '),
     totalSeconds: raw.total_time_seconds,
     status: raw.status,
+    settings: raw.settings,
     groups,
   }
 }
 export const listeningLifecycleService = {
+  playback(
+    kind: ListeningKind,
+    id: string,
+    index: number,
+    action: 'start' | 'complete',
+  ) {
+    return api.post<{ starts: number; completed: boolean; remaining: number }>(
+      `/practice/listening/progress/${kind}/${encodeURIComponent(id)}/playback`,
+      { group_index: index, action },
+    )
+  },
+  check(id: string, group: ListeningGroup, answers: Record<string, string>) {
+    return api.post(
+      `/practice/dictation/sessions/${encodeURIComponent(
+        id.replace(/^dict_/, ''),
+      )}/segment`,
+      {
+        segment_index: Number(group.id),
+        answers: group.blanks.map((blank) => ({
+          blank_index: Number(blank.key.split('_')[1]),
+          answer: answers[blank.key] || '',
+        })),
+      },
+    )
+  },
   hint(id: string, key: string) {
     const [segment_index, blank_index] = key.split('_').map(Number)
     return api.post<{ hint: string; hints_remaining: number }>(
@@ -162,7 +215,6 @@ export const listeningLifecycleService = {
         ? {
             exercise_id: exerciseId,
             difficulty,
-            enable_hints: true,
             playback_speed: 1,
           }
         : {
@@ -206,6 +258,7 @@ export const listeningLifecycleService = {
         elapsed_seconds: draft.elapsed_seconds,
         audio_position: draft.audio_position,
         playback_speed: draft.playback_speed,
+        group_elapsed: draft.group_elapsed || {},
       },
     ),
   async pending() {
@@ -233,7 +286,12 @@ export const listeningLifecycleService = {
             total_time_seconds: elapsed,
             expected_draft_revision: revision,
           }
-        : { session_id: id, answers, total_time_seconds: elapsed, expected_draft_revision: revision }
+        : {
+            session_id: id,
+            answers,
+            total_time_seconds: elapsed,
+            expected_draft_revision: revision,
+          }
     return api.post<ListeningResult>(
       kind === 'dictation'
         ? `${base(kind)}/${encodeURIComponent(id.replace(/^dict_/, ''))}/submit`

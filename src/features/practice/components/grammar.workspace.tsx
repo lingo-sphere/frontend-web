@@ -5,17 +5,18 @@
 
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState } from 'react'
+import { useGrammarSession } from '../hooks/use.grammar.session'
+import { GrammarMedia } from './grammar.media'
+import { DictionaryModal } from '@/features/vocabulary/components/dictionary.modal'
+import { toast } from '@/store/toast.store'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Icon } from '@/components/icon.map'
 import { useNavigate } from '@/lib/navigation'
-import { VocabQuickPopover } from './vocab.quick.popover'
 import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
-import { grammarPracticeService } from '../services/grammar-practice.service'
 import type {
   GrammarSession,
-  GrammarSessionResult,
   GrammarQuestionItem,
 } from '../types/grammar-practice'
 
@@ -28,180 +29,26 @@ interface GrammarWorkspaceProps {
 
 export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarWorkspaceProps) {
   const navigate = useNavigate()
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({})
-  const [currentAnswer, setCurrentAnswer] = useState('')
-  const [checkedState, setCheckedState] = useState<{
-    isChecked: boolean
-    isCorrect: boolean
-    correctAnswerText?: string
-    explanationVi?: string
-  }>({ isChecked: false, isCorrect: false })
-
-  // Reordering specific state
-  const [reorderSelectedWords, setReorderSelectedWords] = useState<string[]>([])
-
-  // Timer
-  const [seconds, setSeconds] = useState(0)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const state = useGrammarSession(session, userId)
+  const { index: currentIndex, currentAnswer, result: sessionResult, submitting: isSubmitting } = state
   const [showExitConfirm, setShowExitConfirm] = useState(false)
-
-  // Submitting session state
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [sessionResult, setSessionResult] = useState<GrammarSessionResult | null>(null)
-
+  const [exitError, setExitError] = useState('')
+  const [lookupWord, setLookupWord] = useState('')
   const currentQuestion: GrammarQuestionItem | undefined = session.questions[currentIndex]
   const totalQuestions = session.total_questions
-
-  // Start timer - tự động ngưng khi mở modal xác nhận thoát hoặc khi đã có kết quả
-  useEffect(() => {
-    if (showExitConfirm || sessionResult) {
-      if (timerRef.current) clearInterval(timerRef.current)
-      return
-    }
-
-    timerRef.current = setInterval(() => {
-      setSeconds((prev) => prev + 1)
-    }, 1000)
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [showExitConfirm, sessionResult])
-
-  const handleInitiateExit = () => {
-    if (sessionResult) {
-      onClose()
-      return
-    }
-    setShowExitConfirm(true)
-  }
-
-  const handleResume = () => {
-    setShowExitConfirm(false)
-  }
-
-  const handleConfirmExit = () => {
-    setShowExitConfirm(false)
-    onClose()
-  }
-
-  // Sync state on index change
-  useEffect(() => {
-    if (!currentQuestion) return
-
-    const existingAns = userAnswers[currentIndex.toString()] || ''
-    setCurrentAnswer(existingAns)
-    setCheckedState({ isChecked: false, isCorrect: false })
-
-    if (currentQuestion.question_type === 'ORDERING' && currentQuestion.ordering_items) {
-      if (existingAns) {
-        setReorderSelectedWords(existingAns.split(' '))
-      } else {
-        setReorderSelectedWords([])
-      }
-    }
-  }, [currentIndex, currentQuestion])
-
-  // Format time MM:SS
-  const formattedTime = useMemo(() => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }, [seconds])
-
-  if (!currentQuestion && !sessionResult) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <p className="text-text-secondary">Đang tải câu hỏi...</p>
-      </div>
-    )
-  }
-
-  // Handle reorder word click
-  const handleSelectWord = (word: string) => {
-    if (checkedState.isChecked) return
-    const updated = [...reorderSelectedWords, word]
-    setReorderSelectedWords(updated)
-    const answerText = updated.join(' ')
-    setCurrentAnswer(answerText)
-  }
-
-  const handleRemoveWord = (wordIndex: number) => {
-    if (checkedState.isChecked) return
-    const updated = reorderSelectedWords.filter((_, idx) => idx !== wordIndex)
-    setReorderSelectedWords(updated)
-    const answerText = updated.join(' ')
-    setCurrentAnswer(answerText)
-  }
-
-  const handleResetReorder = () => {
-    if (checkedState.isChecked) return
-    setReorderSelectedWords([])
-    setCurrentAnswer('')
-  }
-
-  // Check answer for current question
-  const handleCheckAnswer = async () => {
-    if (!currentAnswer.trim() || !currentQuestion) return
-
-    try {
-      const res = await grammarPracticeService.submitAnswer({
-        session_id: session.session_id,
-        question_index: currentIndex,
-        answer: currentAnswer.trim(),
-        userId,
-      })
-
-      // Save user answer
-      setUserAnswers((prev) => ({
-        ...prev,
-        [currentIndex.toString()]: currentAnswer.trim(),
-      }))
-
-      setCheckedState({
-        isChecked: true,
-        isCorrect: res.is_correct,
-        explanationVi: currentQuestion.instruction_vi,
-      })
-    } catch (error) {
-      console.error('Error submitting single answer:', error)
-      setCheckedState({
-        isChecked: true,
-        isCorrect: true,
-      })
-    }
-  }
-
-  // Handle Next Question or Submit Session
-  const handleNextOrFinish = async () => {
-    if (currentIndex < totalQuestions - 1) {
-      setCurrentIndex((prev) => prev + 1)
-    } else {
-      // Final submit
-      setIsSubmitting(true)
-      if (timerRef.current) clearInterval(timerRef.current)
-
-      try {
-        const finalAnswers = {
-          ...userAnswers,
-          [currentIndex.toString()]: currentAnswer.trim(),
-        }
-
-        const result = await grammarPracticeService.submitSession({
-          session_id: session.session_id,
-          answers: finalAnswers,
-          total_time_seconds: seconds,
-          userId,
-        })
-
-        setSessionResult(result)
-      } catch (error) {
-        console.error('Lỗi khi nộp bài:', error)
-      } finally {
-        setIsSubmitting(false)
-      }
-    }
-  }
+  const checkedState = { isChecked: Boolean(state.checked), isCorrect: state.checked?.is_correct || false }
+  const reorderSelectedWords = currentAnswer ? currentAnswer.split(' ') : []
+  const locked = !state.ready || state.checking || isSubmitting || state.pending || checkedState.isChecked
+  const formattedTime = Math.floor(state.seconds / 60).toString().padStart(2, '0') + ':' + (state.seconds % 60).toString().padStart(2, '0')
+  const handleInitiateExit = () => { if (sessionResult) onClose(); else { state.setPaused(true); setShowExitConfirm(true) } }
+  const handleResume = () => { state.setPaused(false); setShowExitConfirm(false) }
+  const handleConfirmExit = async () => { try { await state.exit(); onClose() } catch { setExitError('Chưa đồng bộ được bản nháp. Hãy thử lại hoặc tiếp tục làm bài.'); setShowExitConfirm(false); state.setPaused(false) } }
+  const handleSelectWord = (word: string) => state.change([...reorderSelectedWords, word].join(' '))
+  const handleRemoveWord = (index: number) => state.change(reorderSelectedWords.filter((_word, i) => i !== index).join(' '))
+  const handleResetReorder = () => state.change('')
+  const handleCheckAnswer = () => { void state.check() }
+  const handleNextOrFinish = () => { if (currentIndex < totalQuestions - 1) state.next(); else void state.submit() }
+  if (!currentQuestion) return <p role="alert">Phiên không có câu hỏi. <Button onClick={onClose}>Quay lại</Button></p>
 
   // ==========================================================================
   // RENDER: KẾT QUẢ PHIÊN LUYỆN TẬP
@@ -246,12 +93,12 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
             </div>
 
             {/* Note about Mistake Vault */}
-            {sessionResult.incorrect_count > 0 && (
+            {sessionResult.incorrect_count + sessionResult.skipped_count > 0 && (
               <div className="rounded-xl border border-warning/30 bg-warning/10 p-4">
                 <div className="flex items-start gap-3">
                   <Icon name="alertCircle" className="mt-0.5 text-warning flex-shrink-0" size={18} />
                   <div className="text-xs text-text-primary">
-                    <span className="font-bold">Đã tự động lưu {sessionResult.incorrect_count} câu sai vào Sổ tay lỗi sai:</span>
+                    <span className="font-bold">Đã tự động lưu {sessionResult.incorrect_count + sessionResult.skipped_count} câu sai/bỏ qua vào Sổ tay lỗi sai:</span>
                     <p className="mt-0.5 text-text-secondary">
                       Bạn có thể ôn tập lại bất kỳ lúc nào với thuật toán lặp lại ngắt quãng (SRS) để ghi nhớ bền vững.
                     </p>
@@ -260,6 +107,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
               </div>
             )}
 
+            <section className="space-y-3"><h3 className="font-bold">Chi tiết bài làm</h3>{sessionResult.details.map(detail => <div key={detail.question_index} className="rounded-xl border border-border p-3 text-sm"><p className="font-semibold">Câu {detail.question_index + 1}: {detail.question_text_en || session.questions[detail.question_index]?.question_text_en}</p><p>{detail.is_correct ? 'Đúng' : detail.user_answer ? 'Chưa đúng' : 'Bỏ qua'} · Đáp án của bạn: {detail.user_answer || '(Bỏ qua)'}</p><p>Đáp án đúng: {detail.correct_answer}</p>{(detail.explanation_vi || detail.explanation) && <p className="mt-2 text-text-secondary">{detail.explanation_vi || detail.explanation}</p>}</div>)}</section>
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 pt-2 sm:flex-row">
               <Button
@@ -304,6 +152,8 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-4 sm:py-6">
+      {(state.error || exitError) && <div role="alert" className="mb-3 rounded-lg border border-red-300 p-3 text-sm">{state.error || exitError}</div>}
+      {state.saveError && <div role="alert" className="mb-3 rounded-lg border border-amber-300 p-3 text-sm">{state.saveError} <button type="button" className="underline" onClick={() => void state.save().catch(() => {})}>Đồng bộ lại</button> <button type="button" className="underline" onClick={() => window.location.reload()}>Tải lại phiên</button></div>}
       <Card className="overflow-hidden border border-border shadow-xl">
         {/* Workspace Top Header */}
         <div className="flex items-center justify-between border-b border-border bg-surface-subtle px-5 py-3.5">
@@ -324,7 +174,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
 
             <button
               type="button"
-              onClick={handleInitiateExit}
+              aria-label="Tạm dừng và quay lại" disabled={!state.ready || state.checking || isSubmitting} onClick={handleInitiateExit}
               className="rounded-lg p-1 text-text-tertiary transition-colors hover:bg-surface-elevated hover:text-text-primary cursor-pointer"
             >
               <Icon name="x" size={18} />
@@ -366,7 +216,9 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
           </div>
 
           {/* Quick Vocab Popover for embedded words/phrases */}
-          <VocabQuickPopover vocabularies={currentQuestion.target_vocabularies} />
+          {currentQuestion.instruction_vi || currentQuestion.instruction_en ? <p className="text-sm text-text-secondary">{currentQuestion.instruction_vi || currentQuestion.instruction_en}</p> : null}
+          {currentQuestion.media_id && <GrammarMedia key={currentQuestion.media_id} id={currentQuestion.media_id} />}
+          {Boolean(currentQuestion.target_vocabularies?.length) && <div className="flex flex-wrap gap-2">{currentQuestion.target_vocabularies?.map(word => <Button key={word.word} variant="outline" size="sm" onClick={() => setLookupWord(word.word)}>{word.word}{word.pos ? ' (' + word.pos + ')' : ''}</Button>)}</div>}
 
           {/* INTERACTION TYPES */}
           {/* 1. MULTIPLE CHOICE */}
@@ -378,8 +230,8 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
                   <button
                     key={opt.key}
                     type="button"
-                    disabled={checkedState.isChecked}
-                    onClick={() => setCurrentAnswer(opt.key)}
+                    disabled={locked}
+                    onClick={() => state.change(opt.key)}
                     className={`flex items-center gap-3.5 rounded-xl border p-4 text-left font-medium transition-all ${
                       isSelected
                         ? 'border-primary bg-primary/10 text-primary shadow-sm ring-2 ring-primary/20'
@@ -408,11 +260,11 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
               </label>
               <input
                 type="text"
-                disabled={checkedState.isChecked}
+                disabled={locked}
                 value={currentAnswer}
-                onChange={(e) => setCurrentAnswer(e.target.value)}
+                onChange={(e) => state.change(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !checkedState.isChecked && currentAnswer.trim()) {
+                  if (e.key === 'Enter' && !locked && currentAnswer.trim()) {
                     handleCheckAnswer()
                   }
                 }}
@@ -436,7 +288,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
                     <button
                       key={idx}
                       type="button"
-                      disabled={checkedState.isChecked}
+                      disabled={locked}
                       onClick={() => handleRemoveWord(idx)}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-hover active:scale-95 transition-all"
                     >
@@ -456,7 +308,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
                   {reorderSelectedWords.length > 0 && !checkedState.isChecked && (
                     <button
                       type="button"
-                      onClick={handleResetReorder}
+                      disabled={locked} onClick={handleResetReorder}
                       className="text-xs font-medium text-text-secondary hover:text-primary transition-colors"
                     >
                       Đặt lại
@@ -474,7 +326,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
                       <button
                         key={idx}
                         type="button"
-                        disabled={isExhausted || checkedState.isChecked}
+                        disabled={isExhausted || locked}
                         onClick={() => handleSelectWord(word)}
                         className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition-all ${
                           isExhausted
@@ -512,7 +364,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
                   </p>
                   {!checkedState.isCorrect && (
                     <p className="text-xs text-text-secondary">
-                      Câu hỏi này đã được tự động lưu vào Sổ tay lỗi sai để bạn ôn tập.
+                      Câu sai sẽ được lưu vào Sổ tay lỗi sai khi bạn nộp cả bài.
                     </p>
                   )}
                 </div>
@@ -520,6 +372,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
             </div>
           )}
 
+          {state.checked && <div className="rounded-lg bg-surface-subtle p-3 text-sm"><p className="font-semibold">Đáp án đúng: {state.checked.correct_answer}</p>{(state.checked.explanation_vi || state.checked.explanation) && <p className="mt-2">{state.checked.explanation_vi || state.checked.explanation}</p>}</div>}
           {/* FOOTER ACTIONS */}
           <div className="flex items-center justify-between border-t border-border pt-5">
             <span className="text-xs text-text-tertiary">
@@ -527,23 +380,23 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
             </span>
 
             <div className="flex items-center gap-3">
-              {!checkedState.isChecked ? (
+              {!checkedState.isChecked && !state.pending ? (
                 <Button
                   variant="default"
-                  disabled={!currentAnswer.trim()}
+                  disabled={!currentAnswer.trim() || locked}
                   onClick={handleCheckAnswer}
                   className="min-w-[120px]"
                 >
-                  Kiểm tra
+                  {state.checking ? 'Đang kiểm tra…' : 'Kiểm tra'}
                 </Button>
               ) : (
                 <Button
                   variant="default"
-                  disabled={isSubmitting}
-                  onClick={handleNextOrFinish}
+                  disabled={isSubmitting || state.checking || !state.ready}
+                  onClick={state.pending ? () => void state.submit() : handleNextOrFinish}
                   className="min-w-[140px] gap-2"
                 >
-                  <span>{currentIndex < totalQuestions - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}</span>
+                  <span>{state.pending ? 'Thử nộp lại' : currentIndex < totalQuestions - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}</span>
                   <Icon name="arrowRight" size={16} />
                 </Button>
               )}
@@ -552,6 +405,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
         </CardContent>
       </Card>
 
+      <DictionaryModal open={Boolean(lookupWord)} initialQuery={lookupWord} onOpenChange={open => { if (!open) setLookupWord('') }} userId={userId} onAction={message => { if (/không thể|thất bại|cần đăng nhập|failed|please login/i.test(message)) toast.error(message); else toast.success(message) }} />
       {/* Hộp thoại xác nhận tạm dừng & thoát phiên */}
       <PracticeExitConfirmModal
         isOpen={showExitConfirm}
@@ -559,7 +413,7 @@ export function GrammarWorkspace({ session, userId, onClose, onRetry }: GrammarW
         onConfirmExit={handleConfirmExit}
         title="Tạm dừng bài luyện ngữ pháp?"
         description="Đồng hồ đếm thời gian đang được tạm ngưng. Bạn có chắc muốn dừng bài luyện tập ngữ pháp này?"
-        savedNotice="Phiên làm bài hiện tại sẽ dừng lại, bạn có thể quay lại luyện tập bất kỳ lúc nào."
+        savedNotice="Đáp án và thời gian được lưu để làm tiếp. Câu sai chưa được thêm vào Sổ tay lỗi sai; bạn cần mở lại phiên và nộp cả bài thành công."
       />
     </div>
   )

@@ -14,6 +14,30 @@ export interface ListeningGroup {
   start: number
   end?: number
   clipped: boolean
+  timeSeconds?: number
+  allowReplay?: boolean
+  replayLimit?: number
+  playCount?: number
+  playbackCompleted?: boolean
+  hasListened?: boolean
+  showImageBefore?: boolean
+  showQuestionsBefore?: boolean
+  completed?: boolean
+  dialogue?: {
+    start_time: number
+    end_time: number
+    text: string
+    text_vi?: string
+  }[]
+  checkedResult?: {
+    score_percent: number
+    answers?: {
+      blank_index: number
+      user_answer: string
+      correct_answer: string
+      is_correct: boolean
+    }[]
+  }
   preview?: string
   questions: ListeningQuestion[]
   blanks: {
@@ -32,6 +56,11 @@ export interface ListeningPracticeSession {
   totalSeconds: number
   groups: ListeningGroup[]
   status: string
+  settings?: {
+    show_answers_immediately?: boolean
+    show_transcript_after?: boolean
+    enable_hints?: boolean
+  }
 }
 export interface ListeningDraft {
   revision: number
@@ -40,6 +69,7 @@ export interface ListeningDraft {
   elapsed_seconds: number
   audio_position: number
   playback_speed: number
+  group_elapsed?: Record<string, number>
   status?: string
   result?: ListeningResult | null
 }

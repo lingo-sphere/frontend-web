@@ -6,6 +6,7 @@
  * Hỗ trợ hiển thị hạn mức Quota (100 từ), phân loại lỗi (SPELLING/DISTRACTOR), tiến độ phục hồi 2 lần liên tiếp, và ôn tập.
  */
 
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -42,17 +43,20 @@ export default function WrongWordsPage() {
   const [activeTab, setActiveTab] = useState<'ACTIVE' | 'RECOVERED' | 'ALL'>('ACTIVE')
   const [page, setPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
+  const userId = useAuthStore(state => state.user?.user_id)
   const PAGE_SIZE = 12
 
   // Query danh sách từ sai từ Backend
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['vocabulary', 'wrong-words', activeTab, page],
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['vocabulary', 'wrong-words', userId, activeTab, page, searchQuery],
+    enabled: Boolean(userId),
     queryFn: async () => {
       const statusParam = activeTab === 'ALL' ? undefined : activeTab
       return vocabularyService.getWrongWords({
         status: statusParam,
         page,
         limit: PAGE_SIZE,
+        search: searchQuery,
       })
     },
     staleTime: 30 * 1000,
@@ -72,14 +76,7 @@ export default function WrongWordsPage() {
   const maxQuota = pagination.max_quota || 100
   const quotaPercent = Math.min(Math.round((quotaUsed / maxQuota) * 100), 100)
 
-  // Lọc tìm kiếm phía client nếu có từ khóa
-  const filteredItems = items.filter((item) => {
-    if (!searchQuery.trim()) return true
-    const q = searchQuery.toLowerCase()
-    const word = String(item.word || '').toLowerCase()
-    const meaning = String(item.meaning_vi || '').toLowerCase()
-    return word.includes(q) || meaning.includes(q)
-  })
+  const filteredItems = items
 
   const handleStartReview = () => {
     if (quotaUsed === 0 && activeTab === 'ACTIVE') {
@@ -100,6 +97,7 @@ export default function WrongWordsPage() {
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 max-w-7xl mx-auto">
+      {isError && <div role="alert" className="mb-4 p-4 border border-error rounded-xl"><p>{isVietnamese ? 'Không tải được từ sai. Hãy thử lại.' : 'Unable to load wrong words.'}</p><Button onClick={() => refetch()}>{isVietnamese ? 'Thử lại' : 'Retry'}</Button></div>}
       {/* HEADER SECTION */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -263,7 +261,7 @@ export default function WrongWordsPage() {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             placeholder={isVietnamese ? 'Tìm từ vựng hoặc nghĩa...' : 'Search word or meaning...'}
             className="w-full rounded-xl border border-border bg-surface py-1.5 pl-8 pr-3 text-[12.5px] text-text-primary outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
           />
@@ -379,7 +377,7 @@ export default function WrongWordsPage() {
                     {/* Nghĩa Tiếng Việt */}
                     <div className="mt-3 rounded-xl bg-surface-subtle p-2.5">
                       <p className="text-[13px] font-semibold text-text-primary leading-snug">
-                        {item.meaning_vi || isVietnamese ? 'Chưa có bản dịch' : 'No translation'}
+                        {item.meaning_vi || (isVietnamese ? 'Chưa có bản dịch' : 'No translation')}
                       </p>
                       {item.example_en && (
                         <p className="mt-1.5 text-[11px] italic text-text-secondary leading-normal">

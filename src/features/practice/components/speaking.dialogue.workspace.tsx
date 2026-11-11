@@ -1,3 +1,6 @@
+import { useSpeakingSession, type RecordingSubmission } from '@/features/practice/hooks/use.speaking.session'
+import { resolveSpeakingPolicy } from '@/features/practice/lib/speaking-policy'
+import { toast } from '@/store/toast.store'
 /**
  * @file speaking.dialogue.workspace.tsx
  * @description Không gian luyện nói đối thoại tương tác (Structured Role-play) chuẩn hóa:
@@ -13,13 +16,11 @@ import {
   ArrowLeft,
   Volume2,
   Mic,
-  MicOff,
   CheckCircle2,
   RotateCcw,
   Sparkles,
   Play,
   Pause,
-  AlertCircle,
   HelpCircle,
   Users,
   Clock,
@@ -45,7 +46,8 @@ interface SpeakingDialogueWorkspaceProps {
     duration: number,
     audioBlob?: Blob,
     difficultyChosen?: DifficultyLevel,
-    dialogueTurnsResults?: DialogueTurnAttemptResult[]
+    dialogueTurnsResults?: DialogueTurnAttemptResult[],
+    recordingSubmission?: RecordingSubmission
   ) => void
   isSubmitting?: boolean
 }
@@ -63,6 +65,9 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 }
 
 type VadState = 'WAITING_FOR_SPEECH' | 'SPEAKING' | 'GRACE_PERIOD' | 'IDLE'
+type RecognitionEvent = { results: ArrayLike<ArrayLike<{ transcript: string }>> }
+type Recognition = { continuous: boolean; interimResults: boolean; lang: string; onresult?: (event: RecognitionEvent) => void; start: () => void; stop: () => void }
+type SpeechWindow = Window & { webkitAudioContext?: typeof AudioContext; SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition }
 
 export function SpeakingDialogueWorkspace({
   exercise,
@@ -75,7 +80,19 @@ export function SpeakingDialogueWorkspace({
   const turns = useMemo(() => scenario?.turns || [], [scenario])
 
   // 1. Cấu hình mức độ luyện tập (Scaffolding level)
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>('MEDIUM')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>(exercise.difficulty_level || 'MEDIUM')
+  const session = useSpeakingSession(exercise, selectedDifficulty)
+  const policy = resolveSpeakingPolicy(exercise, selectedDifficulty)
+  const recordingSubmissionRef = useRef<RecordingSubmission | undefined>(undefined)
+  const startingRef = useRef(false)
+  const mountedRef = useRef(true)
+  const [isStarting, setIsStarting] = useState(false)
+  const recordingStartedAtRef = useRef(0)
+  const retakingRef = useRef(false)
+  const completeRef = useRef<() => void>(() => {})
+  const [prepLeft, setPrepLeft] = useState<number | null>(null)
+  const [responseLeft, setResponseLeft] = useState<number | null>(null)
+  const [turnError, setTurnError] = useState('')
   const [isStarted, setIsStarted] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
@@ -83,6 +100,9 @@ export function SpeakingDialogueWorkspace({
 
   // 2. State tiến trình hội thoại
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0)
+  const currentTurnRef = useRef(0)
+  useEffect(() => { currentTurnRef.current = currentTurnIndex }, [currentTurnIndex])
+  const botFinishedRef = useRef<() => void>(() => {})
   const [isBotSpeaking, setIsBotSpeaking] = useState(false)
   const [vadState, setVadState] = useState<VadState>('IDLE')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -98,7 +118,7 @@ export function SpeakingDialogueWorkspace({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const recordedChunksRef = useRef<Blob[]>([])
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null)
-  const speechRecognitionRef = useRef<any>(null)
+  const speechRecognitionRef = useRef<Recognition | null>(null)
 
   // 3.1 Audio Replay & Playback state & refs
   const [playingAudioKey, setPlayingAudioKey] = useState<string | null>(null)
@@ -132,7 +152,9 @@ export function SpeakingDialogueWorkspace({
 
   // Dọn dẹp âm thanh khi unmount
   useEffect(() => {
+    mountedRef.current = true
     return () => {
+      mountedRef.current = false
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause()
         audioPlayerRef.current = null
@@ -147,6 +169,7 @@ export function SpeakingDialogueWorkspace({
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop())
       }
+      if (mediaRecorderRef.current) { mediaRecorderRef.current.onstop = null; if (mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop() }
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close()
       }
@@ -215,7 +238,7 @@ export function SpeakingDialogueWorkspace({
     [playingAudioKey, turnAudioUrls, turnAudioBlobs, stopAnyPlayback]
   )
 
-  const speakReplaySpeechSynthesis = useCallback((text: string, audioKey: string) => {
+  const speakReplaySpeechSynthesis = useCallback((text: string) => {
     if (!('speechSynthesis' in window)) {
       setPlayingAudioKey(null)
       return
@@ -264,7 +287,7 @@ export function SpeakingDialogueWorkspace({
             replayAudioRef.current = audio
             audio.onended = () => setPlayingAudioKey(null)
             audio.onerror = () => {
-              speakReplaySpeechSynthesis(turn.text_en, audioKey)
+              speakReplaySpeechSynthesis(turn.text_en)
             }
             await audio.play()
             return
@@ -275,7 +298,7 @@ export function SpeakingDialogueWorkspace({
       }
 
       // Ưu tiên 2: Fallback qua Web Speech API
-      speakReplaySpeechSynthesis(turn.text_en, audioKey)
+      speakReplaySpeechSynthesis(turn.text_en)
     },
     [playingAudioKey, stopAnyPlayback, speakReplaySpeechSynthesis]
   )
@@ -283,6 +306,12 @@ export function SpeakingDialogueWorkspace({
   // Cho phép thu âm lại lượt thoại (Retake turn)
   const handleRetakeTurn = useCallback(
     (turnIndex: number) => {
+      if ((session.counts['turn_' + turns[turnIndex]?.turn_number] || 0) >= policy.max_record_attempts) return
+      if (mediaRecorderRef.current?.state === 'recording' || startingRef.current) return
+      setPrepLeft(policy.preparation_time_seconds)
+      setResponseLeft(null)
+      setTurnError('')
+      retakingRef.current = true
       stopAnyPlayback()
 
       // Thu hồi audio URL của turn này
@@ -318,51 +347,17 @@ export function SpeakingDialogueWorkspace({
       setIsFinished(false)
       setIsReviewModalOpen(false)
     },
-    [stopAnyPlayback, turnAudioUrls, turns]
+    [stopAnyPlayback, turnAudioUrls, turns, session.counts, policy.max_record_attempts, policy.preparation_time_seconds]
   )
 
   // =========================================================================
   // BOT VOICE ENGINE: Phát âm thanh của Bot
   // =========================================================================
-  const playBotAudio = useCallback(async (turn: DialogueTurn) => {
-    setIsBotSpeaking(true)
-    setVadState('IDLE')
-
-    // Ưu tiên 1: Audio file từ R2 nếu có prompt_audio_id
-    if (turn.prompt_audio_id) {
-      try {
-        const resolvedUrl = await resolveMediaUrlAsync(turn.prompt_audio_id)
-        if (resolvedUrl) {
-          if (!audioPlayerRef.current) {
-            audioPlayerRef.current = new Audio()
-          }
-          audioPlayerRef.current.src = resolvedUrl
-          audioPlayerRef.current.onended = () => {
-            setIsBotSpeaking(false)
-            turnBotFinishedTimeRef.current = Date.now()
-            handleBotFinished()
-          }
-          audioPlayerRef.current.onerror = () => {
-            // Fallback sang SpeechSynthesis nếu phát audio lỗi
-            speakWithSpeechSynthesis(turn.text_en)
-          }
-          await audioPlayerRef.current.play()
-          return
-        }
-      } catch (err) {
-        console.warn('[Dialogue] Failed to play prompt_audio_id, fallback to Web Speech:', err)
-      }
-    }
-
-    // Ưu tiên 2: Fallback qua Web Speech API (speechSynthesis)
-    speakWithSpeechSynthesis(turn.text_en)
-  }, [])
-
-  const speakWithSpeechSynthesis = (text: string) => {
+  function speakWithSpeechSynthesis(text: string) {
     if (!('speechSynthesis' in window)) {
       setIsBotSpeaking(false)
       turnBotFinishedTimeRef.current = Date.now()
-      handleBotFinished()
+      botFinishedRef.current()
       return
     }
 
@@ -383,38 +378,94 @@ export function SpeakingDialogueWorkspace({
     utterance.onend = () => {
       setIsBotSpeaking(false)
       turnBotFinishedTimeRef.current = Date.now()
-      handleBotFinished()
+      botFinishedRef.current()
     }
     utterance.onerror = () => {
       setIsBotSpeaking(false)
       turnBotFinishedTimeRef.current = Date.now()
-      handleBotFinished()
+      botFinishedRef.current()
     }
 
     window.speechSynthesis.speak(utterance)
   }
 
+  const playBotAudio = useCallback(async (turn: DialogueTurn) => {
+    setIsBotSpeaking(true)
+    setVadState('IDLE')
+
+    // Ưu tiên 1: Audio file từ R2 nếu có prompt_audio_id
+    if (turn.prompt_audio_id) {
+      try {
+        const resolvedUrl = await resolveMediaUrlAsync(turn.prompt_audio_id)
+        if (turns[currentTurnRef.current]?.turn_number !== turn.turn_number) return
+        if (resolvedUrl) {
+          if (!audioPlayerRef.current) {
+            audioPlayerRef.current = new Audio()
+          }
+          audioPlayerRef.current.src = resolvedUrl
+          audioPlayerRef.current.onended = () => {
+            setIsBotSpeaking(false)
+            turnBotFinishedTimeRef.current = Date.now()
+            botFinishedRef.current()
+          }
+          audioPlayerRef.current.onerror = () => {
+            // Fallback sang SpeechSynthesis nếu phát audio lỗi
+            speakWithSpeechSynthesis(turn.text_en)
+          }
+          await audioPlayerRef.current.play()
+          return
+        }
+      } catch (err) {
+        console.warn('[Dialogue] Failed to play prompt_audio_id, fallback to Web Speech:', err)
+      }
+    }
+
+    // Ưu tiên 2: Fallback qua Web Speech API (speechSynthesis)
+    if (turns[currentTurnRef.current]?.turn_number !== turn.turn_number) return
+    speakWithSpeechSynthesis(turn.text_en)
+  }, [turns])
+
   // Khi Bot nói xong -> Chuyển sang lượt của User hoặc turn tiếp (CHỜ USER TỰ BẤM NÚT THU ÂM)
+  function finishDialogue() {
+    setIsFinished(true)
+    setIsReviewModalOpen(true)
+    setIsBotSpeaking(false)
+    setVadState('IDLE')
+    if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current)
+  }
+
   const handleBotFinished = useCallback(() => {
-    if (!turns || currentTurnIndex >= turns.length) return
-    const nextTurn = turns[currentTurnIndex + 1]
+    const index = currentTurnRef.current
+    if (turns[index]?.speaker !== 'AI') return
+    currentTurnRef.current = index + 1
+    setIsBotSpeaking(false)
+    audioPlayerRef.current?.pause()
+    window.speechSynthesis?.cancel()
+    const nextTurn = turns[index + 1]
 
     if (nextTurn && nextTurn.speaker === 'USER') {
-      setCurrentTurnIndex((prev) => prev + 1)
-      setVadState('IDLE') // Chờ user tự bấm nút ghi âm, không tự động thu
+      setCurrentTurnIndex(index + 1)
+      setPrepLeft(policy.preparation_time_seconds)
+      setTurnError('')
+      setVadState('IDLE')
     } else if (nextTurn && nextTurn.speaker === 'AI') {
-      setCurrentTurnIndex((prev) => prev + 1)
+      setCurrentTurnIndex(index + 1)
       setTimeout(() => playBotAudio(nextTurn), 600)
     } else {
       // Đã hết các turns
       finishDialogue()
     }
-  }, [turns, currentTurnIndex, playBotAudio])
+  }, [turns, playBotAudio, policy.preparation_time_seconds])
+  useEffect(() => { botFinishedRef.current = handleBotFinished }, [handleBotFinished])
 
   // =========================================================================
   // USER VAD & RECORDING: Thu âm & Phát hiện khoảng lặng thông minh
   // =========================================================================
-  const startUserTurnRecording = useCallback(async () => {
+  const startUserTurnRecording = async () => {
+    if (startingRef.current || mediaRecorderRef.current?.state === 'recording') return
+    startingRef.current = true
+    setIsStarting(true)
+    setTurnError('')
     try {
       recordedChunksRef.current = []
       turnSpeechDurationRef.current = 0
@@ -430,16 +481,21 @@ export function SpeakingDialogueWorkspace({
           },
         })
         mediaStreamRef.current = stream
+        if (!mountedRef.current) { stream.getTracks().forEach(track => track.stop()); return }
       }
 
       // Khởi tạo AudioContext cho VAD nếu chưa có
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const AudioCtx = window.AudioContext || (window as SpeechWindow).webkitAudioContext
+        if (!AudioCtx) throw new Error('Trình duyệt chưa hỗ trợ ghi âm')
+        audioContextRef.current = new AudioCtx()
       }
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume()
       }
 
+      recordingSubmissionRef.current = await session.reserve(activeTurn?.turn_number || 0)
+      if (!mountedRef.current) { mediaStreamRef.current?.getTracks().forEach(track => track.stop()); return }
       const audioCtx = audioContextRef.current
       const source = audioCtx.createMediaStreamSource(mediaStreamRef.current)
       const analyser = audioCtx.createAnalyser()
@@ -459,6 +515,9 @@ export function SpeakingDialogueWorkspace({
         }
       }
 
+      recorder.onstart = () => { recordingStartedAtRef.current = Date.now() }
+      setPrepLeft(null)
+      setResponseLeft(policy.response_time_seconds)
       recorder.start(100)
       setVadState('WAITING_FOR_SPEECH')
 
@@ -468,22 +527,25 @@ export function SpeakingDialogueWorkspace({
       // Khởi động VAD Loop
       startVadLoop()
     } catch (err) {
-      console.error('[Dialogue] Error accessing mic:', err)
+      setPrepLeft(null)
+      setTurnError(err instanceof Error ? err.message : 'Không thể bắt đầu thu âm')
+      mediaStreamRef.current?.getTracks().forEach(track => track.stop())
+      mediaStreamRef.current = null
       setVadState('IDLE')
-    }
-  }, [])
+    } finally { startingRef.current = false; setIsStarting(false) }
+  }
 
   // Web Speech Recognition
   const initSpeechRecognition = () => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      (window as SpeechWindow).SpeechRecognition || (window as SpeechWindow).webkitSpeechRecognition
     if (SpeechRecognition) {
       try {
         const rec = new SpeechRecognition()
         rec.continuous = true
         rec.interimResults = true
         rec.lang = 'en-US'
-        rec.onresult = (e: any) => {
+        rec.onresult = (e: RecognitionEvent) => {
           let text = ''
           for (let i = 0; i < e.results.length; i++) {
             text += e.results[i][0].transcript + ' '
@@ -536,7 +598,7 @@ export function SpeakingDialogueWorkspace({
             if (!graceTimerRef.current) {
               graceTimerRef.current = setTimeout(() => {
                 // Hết grace period mà vẫn im lặng -> Tự động chốt lượt!
-                handleCompleteUserTurn()
+                completeRef.current()
               }, GRACE_PERIOD_MS)
             }
             return 'GRACE_PERIOD'
@@ -581,13 +643,17 @@ export function SpeakingDialogueWorkspace({
       } catch {}
     }
 
+    setResponseLeft(null)
+    setPrepLeft(null)
     setVadState('IDLE')
     setAudioVolumeLevel(0)
 
     const recorder = mediaRecorderRef.current
     if (recorder && recorder.state !== 'inactive') {
       recorder.onstop = () => {
-        const audioBlob = new Blob(recordedChunksRef.current, { type: 'audio/webm' })
+        const audioBlob = new Blob(recordedChunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+        mediaStreamRef.current?.getTracks().forEach(track => track.stop())
+        mediaStreamRef.current = null
         const objectUrl = URL.createObjectURL(audioBlob)
         audioUrlsRef.current.push(objectUrl)
 
@@ -600,34 +666,22 @@ export function SpeakingDialogueWorkspace({
           [currentTurnIndex]: objectUrl,
         }))
 
-        // Đo đạc các metrics thời gian cho turn này
-        const botFinishedAt = turnBotFinishedTimeRef.current || Date.now() - 5000
-        const speechStartedAt = turnSpeechStartedTimeRef.current || Date.now() - 3000
-        const now = Date.now()
-
-        const responseLatencySeconds = Math.max(0, Math.round((speechStartedAt - botFinishedAt) / 100) / 10)
-        const speakingDurationSeconds = Math.max(1, Math.round((now - speechStartedAt) / 100) / 10)
-        const silenceDurationSeconds = 0.5
-
-        const turnTranscript = turnTranscripts[currentTurnIndex] || (turns[currentTurnIndex]?.text_en || '')
-
-        // Lưu kết quả turn vào turnsResults (kèm audio_url để replay)
+        const speakingDurationSeconds = Math.max(0, (Date.now() - recordingStartedAtRef.current) / 1000)
         const turnResult: DialogueTurnAttemptResult = {
           turn_number: turns[currentTurnIndex]?.turn_number || currentTurnIndex + 1,
-          user_transcription: turnTranscript,
+          user_transcription: turnTranscripts[currentTurnIndex] || '',
           audio_url: objectUrl,
-          response_latency_seconds: responseLatencySeconds,
+          recording_take_id: recordingSubmissionRef.current?.recording_take_id,
           speaking_duration_seconds: speakingDurationSeconds,
-          silence_duration_seconds: silenceDurationSeconds,
-          goal_accomplished: 'YES',
-          turn_fluency_score: 85,
         }
 
         setTurnsResults((prev) => [...prev, turnResult])
+        if (retakingRef.current) { retakingRef.current = false; finishDialogue(); return }
 
         // Chuyển sang turn tiếp theo hoặc kết thúc
         const nextIndex = currentTurnIndex + 1
         if (nextIndex < turns.length) {
+          currentTurnRef.current = nextIndex
           setCurrentTurnIndex(nextIndex)
           const nextTurn = turns[nextIndex]
           if (nextTurn.speaker === 'AI') {
@@ -644,16 +698,19 @@ export function SpeakingDialogueWorkspace({
   }, [currentTurnIndex, turns, turnTranscripts, playBotAudio])
 
   // Hoàn thành toàn bài đối thoại
-  const finishDialogue = () => {
-    setIsFinished(true)
-    setIsReviewModalOpen(true)
-    setIsBotSpeaking(false)
-    setVadState('IDLE')
-    if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current)
-  }
-
   // Bắt đầu phiên thực hành (User Gesture)
   const handleStartPractice = () => {
+    stopAnyPlayback()
+    session.reset()
+    retakingRef.current = false
+    audioUrlsRef.current.forEach(url => URL.revokeObjectURL(url))
+    audioUrlsRef.current = []
+    setTurnAudioBlobs({})
+    setTurnAudioUrls({})
+    setTurnTranscripts({})
+    setPrepLeft(null)
+    setResponseLeft(null)
+    setTurnError('')
     setIsStarted(true)
     setIsFinished(false)
     setIsReviewModalOpen(false)
@@ -663,8 +720,9 @@ export function SpeakingDialogueWorkspace({
     setVadState('IDLE')
 
     // Unlock AudioContext an toàn bằng User Gesture
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+    const AudioCtx = window.AudioContext || (window as SpeechWindow).webkitAudioContext
     if (AudioCtx) {
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') void audioContextRef.current.close()
       audioContextRef.current = new AudioCtx()
       audioContextRef.current.resume()
     }
@@ -682,9 +740,10 @@ export function SpeakingDialogueWorkspace({
 
   // Nộp bài lên hệ thống (Gửi kèm toàn bộ audio của các lượt đối thoại)
   const handleFinalSubmit = async () => {
+    if (turns.filter(t => t.speaker === 'USER').some(t => !turnAudioBlobs[turns.indexOf(t)] || !turnsResults.some(r => r.turn_number === t.turn_number))) { toast.error('Hãy thu âm đủ từng lượt trước khi nộp bài'); return }
     const fullTranscript = turns
       .filter((t) => t.speaker === 'USER')
-      .map((t, idx) => turnTranscripts[turns.indexOf(t)] || t.text_en)
+      .map((t) => turnTranscripts[turns.indexOf(t)] || '')
       .join('. ')
 
     // Tính tổng thời lượng user phát âm thực tế
@@ -697,7 +756,8 @@ export function SpeakingDialogueWorkspace({
     const enrichedTurnsResults = await Promise.all(
       turnsResults.map(async (r) => {
         const turnIdx = turns.findIndex((t) => t.turn_number === r.turn_number)
-        const blob = turnAudioBlobs[turnIdx] || Object.values(turnAudioBlobs)[0]
+        const blob = turnAudioBlobs[turnIdx]
+        if (!blob) throw new Error('Thiếu bản thu âm của lượt ' + r.turn_number)
         let audioBase64: string | undefined = undefined
         if (blob) {
           try {
@@ -722,9 +782,26 @@ export function SpeakingDialogueWorkspace({
       totalSpeakingDuration,
       firstBlob,
       selectedDifficulty,
-      enrichedTurnsResults
+      enrichedTurnsResults,
+      recordingSubmissionRef.current
     )
   }
+
+  useEffect(() => { completeRef.current = handleCompleteUserTurn }, [handleCompleteUserTurn])
+  const startRef = useRef<() => Promise<void>>(async () => {})
+  useEffect(() => { startRef.current = startUserTurnRecording })
+  useEffect(() => {
+    if (prepLeft === null) return
+    if (prepLeft === 0) { void startRef.current(); return }
+    const timer = setTimeout(() => setPrepLeft(value => value === null ? null : Math.max(0, value - 1)), 1000)
+    return () => clearTimeout(timer)
+  }, [prepLeft])
+  useEffect(() => {
+    if (responseLeft === null) return
+    if (responseLeft === 0) { completeRef.current(); return }
+    const timer = setTimeout(() => setResponseLeft(value => value === null ? null : Math.max(0, value - 1)), 1000)
+    return () => clearTimeout(timer)
+  }, [responseLeft])
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -1054,7 +1131,7 @@ export function SpeakingDialogueWorkspace({
                 ) : (
                   // Turn của USER: Phụ thuộc vào mức độ đã chọn
                   <div>
-                    {selectedDifficulty === 'EASY' ? (
+                    {policy.show_hints && selectedDifficulty === 'EASY' ? (
                       // DỄ: Hiện đầy đủ câu mẫu + dịch
                       <div>
                         <p className={isCurrent ? 'text-white font-medium' : 'text-text-primary'}>
@@ -1066,7 +1143,7 @@ export function SpeakingDialogueWorkspace({
                           </p>
                         )}
                       </div>
-                    ) : selectedDifficulty === 'MEDIUM' ? (
+                    ) : policy.show_hints ? (
                       // TRUNG BÌNH: Ẩn câu mẫu, chỉ hiện nhiệm vụ + gợi ý
                       <div>
                         <div className="flex items-center gap-1 font-semibold text-[12px] mb-1">
@@ -1100,7 +1177,7 @@ export function SpeakingDialogueWorkspace({
                     {isPassed && turnTranscripts[index] && (
                       <div className="mt-2 border-t border-primary/20 pt-1.5 text-[11px] text-text-secondary">
                         <span className="font-semibold">{isVietnamese ? 'Bạn đã nói: ' : 'You said: '}</span>
-                        <span>"{turnTranscripts[index]}"</span>
+                        <span>&quot;{turnTranscripts[index]}&quot;</span>
                       </div>
                     )}
 
@@ -1127,7 +1204,7 @@ export function SpeakingDialogueWorkspace({
 
                         <button
                           type="button"
-                          onClick={() => handleRetakeTurn(index)}
+                          onClick={() => handleRetakeTurn(index)} disabled={isSubmitting || isStarting || (session.counts['turn_' + turn.turn_number] || 0) >= policy.max_record_attempts}
                           className="inline-flex items-center gap-1 rounded-lg bg-black/15 hover:bg-black/25 text-white px-2 py-1 text-[11px] font-medium transition cursor-pointer"
                           title={isVietnamese ? 'Thu âm lại câu này' : 'Retake this turn'}
                         >
@@ -1144,6 +1221,11 @@ export function SpeakingDialogueWorkspace({
         })}
       </div>
 
+      {activeTurn?.speaker === 'USER' && !isFinished && <div role="status" className="my-3 text-sm">
+        {prepLeft !== null ? (isVietnamese ? 'Chuẩn bị: ' : 'Preparation: ') + prepLeft + 's' : responseLeft !== null ? (isVietnamese ? 'Còn lại: ' : 'Remaining: ') + responseLeft + 's' : ''}
+        {' · '}{isVietnamese ? 'Lượt thu: ' : 'Takes: '}{session.counts['turn_' + activeTurn.turn_number] || 0}/{policy.max_record_attempts}
+        {turnError && <p role="alert" className="text-red-600">{turnError}</p>}
+      </div>}
       {/* Controller Panel ở đáy màn hình */}
       {!isFinished ? (
         <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
@@ -1193,7 +1275,7 @@ export function SpeakingDialogueWorkspace({
 
               <button
                 type="button"
-                onClick={startUserTurnRecording}
+                onClick={() => void startUserTurnRecording()} disabled={isSubmitting || isStarting || (session.counts['turn_' + activeTurn?.turn_number] || 0) >= policy.max_record_attempts}
                 className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-xl bg-red-600 hover:bg-red-700 px-6 py-3 text-[14px] font-bold text-white shadow-md transition-all cursor-pointer active:scale-95"
               >
                 <Mic size={18} />
@@ -1339,7 +1421,7 @@ export function SpeakingDialogueWorkspace({
 
               {turns.map((turn, index) => {
                 const isUser = turn.speaker === 'USER'
-                const userTranscript = turnTranscripts[index] || turn.text_en
+                const userTranscript = turnTranscripts[index] || (isUser ? (isVietnamese ? 'Chưa có bản chép lời; AI sẽ nghe bản thu.' : 'No transcript yet; AI will assess the audio.') : turn.text_en)
                 const hasUserAudio = Boolean(turnAudioUrls[index] || turnAudioBlobs[index])
                 const isThisPlaying = isUser
                   ? playingAudioKey === `user-${index}`
@@ -1419,7 +1501,7 @@ export function SpeakingDialogueWorkspace({
 
                           <button
                             type="button"
-                            onClick={() => handleRetakeTurn(index)}
+                            onClick={() => handleRetakeTurn(index)} disabled={isSubmitting || isStarting || (session.counts['turn_' + turn.turn_number] || 0) >= policy.max_record_attempts}
                             className="flex items-center gap-1 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-[12px] font-medium text-text-secondary hover:text-red-600 hover:border-red-300 transition cursor-pointer"
                             title={isVietnamese ? 'Thu âm lại lượt này' : 'Retake this turn'}
                           >

@@ -1,6 +1,7 @@
 // Trang giao diện khám phá và quản lý các bộ thẻ từ vựng LingoSphere.
 "use client";
 
+import { VocabularyResumeSessions } from "@/features/vocabulary/components/vocabulary.resume.sessions";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@/lib/navigation";
 import { useTranslation } from "react-i18next";
@@ -55,6 +56,8 @@ export default function VocabularyAppPage() {
     communityDecks,
     myDecks,
     isLoading,
+    dataError,
+    retryData,
     activeTag,
     setActiveTag,
     activeBand,
@@ -246,6 +249,8 @@ export default function VocabularyAppPage() {
   return (
     <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+      <VocabularyResumeSessions />
+      {dataError && <div role="alert" className="mb-5 border border-error rounded-xl p-4"><p>{isVietnamese ? 'Một phần dữ liệu chưa tải được. Các số đếm có thể chưa đầy đủ.' : 'Some data could not load. Counts may be incomplete.'}</p><Button variant="outline" onClick={retryData}>{isVietnamese ? 'Thử lại' : 'Retry'}</Button></div>}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
@@ -477,7 +482,7 @@ export default function VocabularyAppPage() {
                     </span>
                     <span className="my-1 text-[18px] font-extrabold text-emerald-600 dark:text-emerald-400">
                       {masteryStats.totalReviews > 0
-                        ? `${masteryStats.reviewAccuracy}%`
+                        ? `${masteryStats.reviewAccuracy === null ? "—" : `${masteryStats.reviewAccuracy}%`}`
                         : "--%"}
                     </span>
                     <span className="text-[9.5px] text-text-tertiary">
@@ -1514,10 +1519,10 @@ export default function VocabularyAppPage() {
                     </span>{" "}
                     người đang lưu bộ thẻ{" "}
                     <span className="font-semibold">
-                      "
+                      &quot;
                       {pendingPrivacyDeck?.deck.name_vi ||
                         pendingPrivacyDeck?.deck.name}
-                      "
+                      &quot;
                     </span>{" "}
                     của bạn.
                   </>
@@ -1529,7 +1534,7 @@ export default function VocabularyAppPage() {
                     </span>{" "}
                     learners who have saved your deck{" "}
                     <span className="font-semibold">
-                      "{pendingPrivacyDeck?.deck.name}"
+                      &quot;{pendingPrivacyDeck?.deck.name}&quot;
                     </span>
                     .
                   </>
@@ -1537,8 +1542,8 @@ export default function VocabularyAppPage() {
               </p>
               <p className="mt-2 text-[12.5px] leading-relaxed text-text-secondary">
                 {isVietnamese
-                  ? "Nếu chuyển sang Riêng tư, bộ thẻ này sẽ không còn xuất hiện trên kho cộng đồng cho những người mới. Tuy nhiên, những học viên đã lưu trước đó vẫn có thể tiếp tục ôn luyện bộ thẻ này trong danh sách của họ."
-                  : "If switched to Private, this deck will no longer appear in the community repository for new learners. However, learners who already saved it will still keep it in their personal study list."}
+                  ? "Nếu chuyển sang Riêng tư, bộ thẻ sẽ rút khỏi kho cộng đồng. Những học viên đã lưu trước đó sẽ không còn xem hoặc học trực tiếp bộ thẻ này. Bản sao độc lập họ đã tạo trước đó vẫn được giữ."
+                  : "Making this deck private removes it from the community and revokes direct access for enrolled learners. Independent copies they previously created are retained."}
               </p>
               <p className="mt-2 text-[13px] font-medium text-text-primary">
                 {isVietnamese
@@ -1619,7 +1624,7 @@ export default function VocabularyAppPage() {
                             </span>{" "}
                             người đang lưu và học bộ thẻ{" "}
                             <span className="font-semibold text-text-primary">
-                              "{deckTitle}"
+                              &quot;{deckTitle}&quot;
                             </span>{" "}
                             của bạn.
                           </>
@@ -1630,7 +1635,7 @@ export default function VocabularyAppPage() {
                               {saversCount}
                             </span>{" "}
                             learners actively studying your deck{" "}
-                            <span className="font-semibold">"{deckTitle}"</span>.
+                            <span className="font-semibold">&quot;{deckTitle}&quot;</span>.
                           </>
                         )}
                       </p>
@@ -1689,14 +1694,14 @@ export default function VocabularyAppPage() {
                           <>
                             Bạn có chắc muốn xóa vĩnh viễn bộ thẻ{" "}
                             <span className="font-semibold text-text-primary">
-                              "{deckTitle}"
+                              &quot;{deckTitle}&quot;
                             </span>{" "}
                             không?
                           </>
                         ) : (
                           <>
                             Are you sure you want to permanently delete deck{" "}
-                            <span className="font-semibold">"{deckTitle}"</span>?
+                            <span className="font-semibold">&quot;{deckTitle}&quot;</span>?
                           </>
                         )}
                       </p>
@@ -1749,14 +1754,14 @@ export default function VocabularyAppPage() {
                         <>
                           Bạn có chắc muốn gỡ bộ thẻ{" "}
                           <span className="font-semibold text-text-primary">
-                            "{deckTitle}"
+                            &quot;{deckTitle}&quot;
                           </span>{" "}
                           khỏi danh sách học của bạn?
                         </>
                       ) : (
                         <>
                           Are you sure you want to remove{" "}
-                          <span className="font-semibold">"{deckTitle}"</span> from your study list?
+                          <span className="font-semibold">&quot;{deckTitle}&quot;</span> from your study list?
                         </>
                       )}
                     </p>

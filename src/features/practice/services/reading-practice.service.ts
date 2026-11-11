@@ -12,9 +12,17 @@ import type {
   ReadingAttemptResult,
   ReadingAttemptResultEnhanced,
   AIReadingExplanation,
+  ReadingSession,
+  TimerPresetMode,
 } from '../types/reading'
 
 export const readingPracticeService = {
+  startSession(payload: { passage_id: string; session_key: string; time_mode: TimerPresetMode }): Promise<ReadingSession> { return api.post('/practice/reading/sessions', payload) },
+  getSession(id: string): Promise<ReadingSession> { return api.get(`/practice/reading/sessions/${id}`) },
+  activeSessions(): Promise<Array<{ session_id: string; passage_title: string; deadline_at: string; reading_type: string }>> { return api.get('/practice/reading/sessions') },
+  saveDraft(id: string, payload: { expected_revision: number; answers: Record<string, string> }): Promise<{ revision: number }> { return api.put(`/practice/reading/sessions/${id}`, payload) },
+  reviewAttempt(id: string): Promise<{ passage: ReadingPassage; result: ReadingAttemptResultEnhanced }> { return api.get(`/practice/reading/attempts/${id}`) },
+  retryAIExplanation(id: string): Promise<unknown> { return api.post(`/practice/reading/ai-explanation/${id}/retry`, {}) },
   /**
    * Lấy danh sách bài đọc theo các bộ lọc
    */
@@ -63,9 +71,9 @@ export const readingPracticeService = {
   /**
    * Lấy lịch sử bài đọc đã làm
    */
-  async getAttemptHistory(userId: string, params?: { passage_id?: string; limit?: number }): Promise<ReadingAttemptResult[]> {
+  async getAttemptHistory(_userId?: string, params?: { passage_id?: string; limit?: number; page?: number }): Promise<ReadingAttemptResult[]> {
     return api.get<ReadingAttemptResult[]>(
-      `/practice/reading/attempts/${userId}`,
+      '/practice/reading/attempts',
       params as Record<string, unknown>
     )
   },
@@ -73,27 +81,29 @@ export const readingPracticeService = {
   /**
    * Lấy AI explanation cho một bài reading
    */
-  async getAIExplanation(attemptId: string, userId?: string): Promise<{
+  async getAIExplanation(attemptId: string): Promise<{
     status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null
     explanation?: AIReadingExplanation | null
     retry_after_seconds?: number
+    can_retry?: boolean
   }> {
-    const params = userId ? { userId } : {}
     const response = await api.get<{
       status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
       explanation?: {
         ai_result?: AIReadingExplanation
       }
       retry_after_seconds?: number
+      can_retry?: boolean
     }>(
       `/practice/reading/ai-explanation/${attemptId}`,
-      params
+      undefined
     )
     // Extract ai_result from explanation
     return {
       status: response?.status || null,
       explanation: response?.explanation?.ai_result || null,
       retry_after_seconds: response?.retry_after_seconds,
+      can_retry: response?.can_retry,
     }
   },
 
@@ -115,7 +125,7 @@ export const readingPracticeService = {
     total_pages: number
   }> {
     return api.get(
-      `/practice/reading/ai-explanations/${userId}`,
+      '/practice/reading/ai-explanations',
       params as Record<string, unknown>
     )
   },

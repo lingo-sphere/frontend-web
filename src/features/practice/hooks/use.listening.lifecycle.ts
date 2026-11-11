@@ -17,6 +17,7 @@ const emptyDraft = (): ListeningDraft => ({
   elapsed_seconds: 0,
   audio_position: 0,
   playback_speed: 1,
+  group_elapsed: {},
 })
 export function useListeningLifecycle(
   kind: ListeningKind,
@@ -59,16 +60,53 @@ export function useListeningLifecycle(
       /* Server persistence remains authoritative. */
     }
   }, [backupKey])
-  const elapsed = useCallback(
-    () =>
-      sessionRef.current
-        ? Math.min(
-            sessionRef.current.totalSeconds,
-            Math.max(0, Math.floor((Date.now() - started.current) / 1000)),
-          )
-        : 0,
-    [],
-  )
+  const elapsed = useCallback(() => {
+    const target = sessionRef.current
+    if (!target || finished.current) return draftRef.current.elapsed_seconds
+    const now = Date.now(),
+      delta = Math.max(0, (now - started.current) / 1000)
+    started.current = now
+    const index = draftRef.current.current_index,
+      group = target.groups[index]
+    const times = { ...(draftRef.current.group_elapsed || {}) }
+    const keys = [
+      ...(group?.questions || []).map((question) => question.key),
+      ...(group?.blanks || []).map((blank) => blank.key),
+    ]
+    const answering =
+      group?.hasListened ||
+      (times[index] || 0) > 0 ||
+      keys.some((key) =>
+        Object.prototype.hasOwnProperty.call(draftRef.current.answers, key),
+      )
+    // Do not consume the response budget while the first audio is loading/playing.
+    if (!group?.completed && answering)
+      times[index] = Math.min(
+        group?.timeSeconds || target.totalSeconds,
+        (times[index] || 0) + delta,
+      )
+    const total = Math.floor(
+      Object.values(times).reduce((sum, value) => sum + value, 0),
+    )
+    draftRef.current = {
+      ...draftRef.current,
+      group_elapsed: times,
+      elapsed_seconds: total,
+    }
+    return total
+  }, [])
+  const groupRemaining = useCallback(() => {
+    const current = draftRef.current,
+      target = sessionRef.current
+    return Math.max(
+      0,
+      Math.ceil(
+        (target?.groups[current.current_index]?.timeSeconds ||
+          target?.totalSeconds ||
+          0) - (current.group_elapsed?.[current.current_index] || 0),
+      ),
+    )
+  }, [])
 
   const save = useCallback(
     async (force = false) => {
@@ -79,7 +117,8 @@ export function useListeningLifecycle(
           if (!target || finished.current || (finalizing.current && !force))
             return
           const version = generation.current
-          const payload = { ...draftRef.current, elapsed_seconds: elapsed() }
+          const seconds = elapsed()
+          const payload = { ...draftRef.current, elapsed_seconds: seconds }
           if (mounted.current) setSaveStatus('saving')
           try {
             const next = await service.save(kind, target.id, payload)
@@ -155,16 +194,41 @@ export function useListeningLifecycle(
         Math.max(0, restored.current_index),
         next.groups.length - 1,
       )
-      restored = { ...restored, current_index: index }
+      const groupTimes = { ...(progress.group_elapsed || {}) }
+      for (const [key, value] of Object.entries(restored.group_elapsed || {})) {
+        if (
+          /^\d+$/.test(key) &&
+          Number(key) < next.groups.length &&
+          Number.isFinite(value) &&
+          value >= 0
+        )
+          groupTimes[key] = Math.max(groupTimes[key] || 0, value)
+      }
+      // Distribute legacy total elapsed time once; new sessions persist each group's budget.
+      if (!Object.keys(groupTimes).length && restored.elapsed_seconds)
+        groupTimes[index] = restored.elapsed_seconds
+      restored = {
+        ...restored,
+        group_elapsed: groupTimes,
+        current_index: index,
+      }
       sessionRef.current = next
       draftRef.current = restored
-      started.current = Date.now() - restored.elapsed_seconds * 1000
+      started.current = Date.now()
       finished.current = progress.status === 'COMPLETED'
       savedGeneration.current = -1
       setSession(next)
       setDraft(restored)
       setResult(progress.result || null)
-      setRemaining(Math.max(0, next.totalSeconds - restored.elapsed_seconds))
+      setRemaining(
+        Math.max(
+          0,
+          Math.ceil(
+            (next.groups[index].timeSeconds || next.totalSeconds) -
+              (restored.group_elapsed?.[index] || 0),
+          ),
+        ),
+      )
       setSaveStatus('idle')
     },
     [backupKey],
@@ -210,8 +274,13 @@ export function useListeningLifecycle(
   useEffect(() => {
     if (!session || result) return
     const timer = window.setInterval(() => {
-      setRemaining(Math.max(0, session.totalSeconds - elapsed()))
-      draftRef.current = { ...draftRef.current, elapsed_seconds: elapsed() }
+      elapsed()
+      setRemaining(groupRemaining())
+      setDraft((previous) => ({
+        ...previous,
+        group_elapsed: draftRef.current.group_elapsed,
+        elapsed_seconds: draftRef.current.elapsed_seconds,
+      }))
       backup()
     }, 1000)
     const autosave = window.setInterval(() => {
@@ -228,7 +297,7 @@ export function useListeningLifecycle(
       window.removeEventListener('beforeunload', unload)
       flushUnsaved()
     }
-  }, [session, result, save, elapsed, backup, flushUnsaved])
+  }, [session, result, save, elapsed, backup, flushUnsaved, groupRemaining])
   useEffect(() => {
     if (!session || result) return
     const timer = window.setTimeout(() => {
@@ -245,10 +314,12 @@ export function useListeningLifecycle(
   ])
 
   const update = (patch: Partial<ListeningDraft>) => {
-    const next = { ...draftRef.current, ...patch, elapsed_seconds: elapsed() }
+    elapsed()
+    const next = { ...draftRef.current, ...patch }
     generation.current++
     draftRef.current = next
     setDraft(next)
+    setRemaining(groupRemaining())
     setSaveStatus('idle')
     backup()
   }
@@ -354,6 +425,36 @@ export function useListeningLifecycle(
       setBusy(false)
     }
   }
+  const refreshSession = async () => {
+    const target = sessionRef.current
+    if (!target) return
+    const next = await service.get(kind, target.id)
+    sessionRef.current = next
+    setSession(next)
+  }
+  const check = async () => {
+    const target = sessionRef.current
+    if (!target || mutationLock.current) return
+    mutationLock.current = true
+    setBusy(true)
+    setError('')
+    try {
+      await save(true)
+      await service.check(
+        target.id,
+        target.groups[draftRef.current.current_index],
+        draftRef.current.answers,
+      )
+      await refreshSession()
+    } catch (failure) {
+      setError(
+        failure instanceof Error ? failure.message : 'Không kiểm tra được đoạn',
+      )
+    } finally {
+      mutationLock.current = false
+      setBusy(false)
+    }
+  }
   const position = (seconds: number) => {
     draftRef.current = { ...draftRef.current, audio_position: seconds }
   }
@@ -371,5 +472,7 @@ export function useListeningLifecycle(
     reload,
     update,
     position,
+    refreshSession,
+    check,
   }
 }

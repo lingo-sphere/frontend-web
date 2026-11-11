@@ -85,6 +85,7 @@ export function SpeakingResult({
     if (!src && mediaId) {
       src = (await resolveMediaUrlAsync(mediaId)) || undefined
     }
+    if (src) src = (await resolveMediaUrlAsync(src)) || undefined
 
     if (!src) return
 
@@ -165,9 +166,8 @@ export function SpeakingResult({
     if (!audioSrc) return
 
     if (!audioRef.current) {
-      if (submission.recording_media_id && !submission.audio_url) {
-        audioSrc = (await resolveMediaUrlAsync(submission.recording_media_id)) || audioSrc
-      }
+      audioSrc = (await resolveMediaUrlAsync(audioSrc)) || ''
+      if (!audioSrc) return
       const audio = new Audio(audioSrc)
       audioRef.current = audio
       audio.ontimeupdate = () => {
@@ -238,6 +238,7 @@ export function SpeakingResult({
                 {Math.round(overallScore100)}
               </span>
               <span className="text-[24px] text-text-tertiary">/100</span>
+              {evaluation?.raw_score !== undefined && evaluation.max_score !== undefined && <p className="mt-2 text-sm text-text-secondary">{isVietnamese ? 'Điểm bài: ' : 'Exercise points: '}{evaluation.raw_score}/{evaluation.max_score}</p>}
             </div>
             <div className="flex items-center gap-2">
               {submission.is_best_attempt && (
@@ -271,12 +272,13 @@ export function SpeakingResult({
             {isVietnamese ? 'Bản ghi & Phát lại' : 'Recording & Playback'}
           </h2>
 
-          <div className="mb-4 flex items-center gap-3 rounded-xl bg-surface-subtle p-4">
+          {exercise.exercise_type === 'SHORT_DIALOGUE' ? <p className="mb-4 text-sm text-text-secondary">{isVietnamese ? 'Nghe bản thu của từng lượt trong phần đánh giá hội thoại bên dưới.' : 'Play each recording in the turn-by-turn section below.'}</p> : <div className="mb-4 flex items-center gap-3 rounded-xl bg-surface-subtle p-4">
             <Button
               variant="outline"
               size="icon"
               className="h-12 w-12 shrink-0 rounded-full"
               onClick={handlePlayAudio}
+              aria-label={isPlaying ? (isVietnamese ? 'Tạm dừng bản thu' : 'Pause recording') : (isVietnamese ? 'Nghe bản thu' : 'Play recording')}
             >
               {isPlaying ? <Pause size={20} /> : <Play size={20} />}
             </Button>
@@ -292,10 +294,8 @@ export function SpeakingResult({
                 <span>{formatTime(submission.recording_duration_seconds || 0)}</span>
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="shrink-0">
-              <Volume2 size={18} />
-            </Button>
-          </div>
+            <Volume2 size={18} aria-hidden="true" className="shrink-0 text-text-secondary" />
+          </div>}
 
           {submission.transcription && (
             <div>
@@ -327,7 +327,11 @@ export function SpeakingResult({
             </div>
 
             <div className="space-y-3">
-              {submission.dialogue_turns_results.map((turnRes) => {
+              {submission.dialogue_turns_results.map((storedTurn) => {
+                const aiTurn = evaluation?.turn_evaluations?.find((row: { turn_number: number }) => row.turn_number === storedTurn.turn_number)
+                const savedAudio = storedTurn.audio_data?.startsWith('data:audio/') ? storedTurn.audio_data : undefined
+                const audioUrl = storedTurn.audio_url?.startsWith('blob:') ? savedAudio : storedTurn.audio_url || savedAudio
+                const turnRes = { ...storedTurn, audio_url: audioUrl, goal_accomplished: aiTurn?.goal_accomplished, user_transcription: aiTurn?.user_transcript, better_alternative: aiTurn?.better_alternative, feedback: aiTurn?.feedback }
                 const turnScenario = exercise.dialogue_scenario?.turns.find(
                   (t) => t.turn_number === turnRes.turn_number
                 )
@@ -353,7 +357,7 @@ export function SpeakingResult({
                         }`}>
                           {turnRes.goal_accomplished === 'YES'
                             ? isVietnamese ? '✓ Đạt mục tiêu' : '✓ Goal met'
-                            : isVietnamese ? '⚠️ Cần cải thiện' : '⚠️ Partial'}
+                            : turnRes.goal_accomplished ? (isVietnamese ? '⚠️ Cần cải thiện' : '⚠️ Needs improvement') : (isVietnamese ? 'Chưa có đánh giá lượt này' : 'Not assessed')}
                         </span>
                       </div>
                     </div>
@@ -366,7 +370,7 @@ export function SpeakingResult({
                     )}
 
                     <div className="rounded-lg bg-surface p-2.5 border border-border/50 text-[13px] text-text-primary">
-                      <p className="font-medium">"{turnRes.user_transcription || '[Không ghi nhận câu thoại]'}"</p>
+                      <p className="font-medium">&quot;{turnRes.user_transcription || '[Không ghi nhận câu thoại]'}&quot;</p>
                     </div>
 
                     {turnRes.better_alternative && (
@@ -375,6 +379,7 @@ export function SpeakingResult({
                         {turnRes.better_alternative}
                       </div>
                     )}
+                    {turnRes.feedback && <p className="mt-2 text-sm text-text-secondary">{turnRes.feedback}</p>}
 
                     {/* Nút phát lại audio của user và phát mẫu chuẩn */}
                     <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">

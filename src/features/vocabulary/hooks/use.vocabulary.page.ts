@@ -31,66 +31,52 @@ export function useVocabularyPage() {
   const { showAction } = useApp()
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
+  const { user: currentUser } = useAuthStore()
 
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 60000); return () => clearInterval(timer) }, [])
   const [activeTag, setActiveTag] = useState('all')
   const [activeBand, setActiveBand] = useState('all')
   const [activeTopic, setActiveTopic] = useState('all')
 
   // Query cài đặt học tập từ server (MongoDB + Redis Cache)
-  const { data: serverSettings } = useQuery({
-    queryKey: ['vocabulary', 'settings'],
+  const { data: serverSettings, isError: settingsError } = useQuery({
+    queryKey: ['vocabulary', 'settings', currentUser?.user_id],
+    enabled: Boolean(currentUser?.user_id),
     queryFn: () => vocabularyService.getLearningSettings(),
     staleTime: 5 * 60 * 1000,
   })
 
   // Query tiến độ học hôm nay từ Redis Real-time Counter
-  const { data: serverDailyProgress } = useQuery({
-    queryKey: ['vocabulary', 'daily-progress'],
+  const { data: serverDailyProgress, isError: dailyError } = useQuery({
+    queryKey: ['vocabulary', 'daily-progress', currentUser?.user_id],
+    enabled: Boolean(currentUser?.user_id),
     queryFn: () => vocabularyService.getDailyProgress(),
     staleTime: 20 * 1000,
   })
 
   // Mục tiêu từ vựng mỗi ngày do user chọn động (Mặc định 20, tối đa 20, lưu Cloud DB + Redis + localStorage)
-  const [dailyGoal, setDailyGoal] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lingosphere_vocab_daily_goal')
-      if (saved) {
-        const val = parseInt(saved, 10)
-        if (!isNaN(val) && val >= 5 && val <= 20) return val
-      }
-    }
-    return 20
-  })
+  const [dailyGoal, setDailyGoal] = useState(20)
+  useEffect(() => { setDailyGoal(20) }, [currentUser?.user_id])
 
   // Đồng bộ khi có dữ liệu từ server (MongoDB + Redis)
   useEffect(() => {
     const remoteGoal = serverSettings?.daily_new_cards_limit ?? serverSettings?.daily_goal
     if (typeof remoteGoal === 'number' && remoteGoal >= 5 && remoteGoal <= 20) {
       setDailyGoal(remoteGoal)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('lingosphere_vocab_daily_goal', String(remoteGoal))
-      }
     }
   }, [serverSettings])
 
   const handleUpdateDailyGoal = async (val: number) => {
     const safeVal = Math.min(Math.max(val, 5), 20) // Tối đa 20 từ/ngày
-    setDailyGoal(safeVal)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lingosphere_vocab_daily_goal', String(safeVal))
-    }
-
-    // Lưu vào Backend (MongoDB + Redis Cache O(1))
     try {
-      await vocabularyService.updateLearningSettings({
-        daily_goal: safeVal,
-        daily_new_cards_limit: safeVal,
-      })
-    } catch {
-      // Offline hoặc guest mode
-    }
+      await vocabularyService.updateLearningSettings({ daily_goal: safeVal });
+      setDailyGoal(safeVal);
+      await queryClient.invalidateQueries({ queryKey: ['vocabulary', 'settings', currentUser?.user_id] });
+      await queryClient.invalidateQueries({ queryKey: ['vocabulary', 'daily-progress', currentUser?.user_id] });
+      showAction(isVietnamese ? `Đã lưu mục tiêu ${safeVal} từ/ngày` : `Saved daily goal: ${safeVal}`);
+    } catch { showAction(isVietnamese ? 'Không lưu được mục tiêu. Thiết lập cũ vẫn được giữ.' : 'Goal was not saved. Previous setting is retained.'); }
 
-    showAction(isVietnamese ? `Đã lưu mục tiêu ${safeVal} từ/ngày vào hệ thống` : `Saved daily goal of ${safeVal} words/day to cloud`)
   }
 
   // Lắng nghe URL params (ví dụ: ?topic=... hoặc ?band=...)
@@ -103,9 +89,9 @@ export function useVocabularyPage() {
     if (paramPart) setActiveTag(paramPart)
   }, [searchParams])
 
-  const { user: currentUser } = useAuthStore()
-  const { data: publicDecks = [], isLoading: isPublicLoading } = usePublicDecksQuery()
-  const { data: myEnrollments = [], isLoading: isMyLoading } = useMyVocabularyEnrollmentsQuery()
+
+  const { data: publicDecks = [], isLoading: isPublicLoading, isError: publicError } = usePublicDecksQuery()
+  const { data: myEnrollments = [], isLoading: isMyLoading, isError: enrollmentsError } = useMyVocabularyEnrollmentsQuery()
   const { data: topics = [] } = useTopicsQuery()
   const isLoading = isPublicLoading || isMyLoading
 
@@ -152,23 +138,23 @@ export function useVocabularyPage() {
   }, [publicDecks, topics])
 
   // Query tổng số từ vựng người dùng đã lưu vào Sổ tay
-  const { data: savedVocabData } = useQuery({
-    queryKey: ['vocabulary', 'saved', 'count'],
+  const { data: savedVocabData, isError: savedError } = useQuery({
+    queryKey: ['vocabulary', 'saved', 'count', currentUser?.user_id],
+    enabled: Boolean(currentUser?.user_id),
     queryFn: async () => {
       try {
         const res = await vocabularyService.getSavedVocabulary({ page: 1, limit: 1 })
         return res?.pagination?.total ?? 0
-      } catch {
-        return 0
-      }
+      } catch (error) { throw error }
     },
     staleTime: 60 * 1000,
   })
   const savedCount = typeof savedVocabData === 'number' ? savedVocabData : 0
 
   // Query tóm tắt từ sai (Quota & Active count)
-  const { data: wrongWordsData } = useQuery({
-    queryKey: ['vocabulary', 'wrong-words', 'summary'],
+  const { data: wrongWordsData, isError: wrongError } = useQuery({
+    queryKey: ['vocabulary', 'wrong-words', 'summary', currentUser?.user_id],
+    enabled: Boolean(currentUser?.user_id),
     queryFn: async () => {
       try {
         const res = await vocabularyService.getWrongWords({ status: 'ACTIVE', page: 1, limit: 1 })
@@ -177,24 +163,21 @@ export function useVocabularyPage() {
           quotaUsed: res?.pagination?.quota_used ?? 0,
           maxQuota: res?.pagination?.max_quota ?? 100,
         }
-      } catch {
-        return { total: 0, quotaUsed: 0, maxQuota: 100 }
-      }
+      } catch (error) { throw error }
     },
     staleTime: 30 * 1000,
   })
   const wrongWordsSummary = wrongWordsData || { total: 0, quotaUsed: 0, maxQuota: 100 }
 
   // Query tiến độ học từ vựng cá nhân
-  const { data: vocabProgressData } = useQuery({
-    queryKey: ['vocabulary', 'progress', 'my'],
+  const { data: vocabProgressData, isError: progressError } = useQuery({
+    queryKey: ['vocabulary', 'progress', 'my', currentUser?.user_id],
+    enabled: Boolean(currentUser?.user_id),
     queryFn: async () => {
       try {
         const res = await vocabularyService.getMyVocabProgress()
         return Array.isArray(res) ? res : []
-      } catch {
-        return []
-      }
+      } catch (error) { throw error }
     },
     staleTime: 60 * 1000,
   })
@@ -208,19 +191,20 @@ export function useVocabularyPage() {
     let masteredCount = 0
     let totalReviews = 0
     let totalCorrectReviews = 0
+    let totalQuizAttempts = 0
 
-    const now = Date.now()
 
     for (const item of list) {
       const it = item as Record<string, unknown>
       const status = String(it.status || '').toUpperCase()
       const revCount = Number(it.review_count || it.total_reviews || 0)
-      const correctCount = Number(it.correct_count || 0)
+      const correctCount = Number(it.total_quiz_correct || 0)
       const rawDate = it.due_at || it.next_review_at
       const nextReviewAt = rawDate ? new Date(String(rawDate)).getTime() : 0
 
       totalReviews += revCount
       totalCorrectReviews += correctCount
+      totalQuizAttempts += Number(it.total_quiz_attempts || 0)
 
       // Kiểm tra xem từ có thực sự đến hạn cần ôn hay không
       const isDue = nextReviewAt > 0 && nextReviewAt <= now
@@ -250,11 +234,11 @@ export function useVocabularyPage() {
     const actualTotalReviews = Math.max(totalReviews, wordsReviewedToday)
 
     // Độ chính xác thật sự (%)
-    let reviewAccuracy = 0
+    let reviewAccuracy: number | null = null
     if (serverDailyProgress && serverDailyProgress.words_reviewed_today > 0) {
       reviewAccuracy = serverDailyProgress.accuracy_today
-    } else if (totalReviews > 0) {
-      reviewAccuracy = Math.round((totalCorrectReviews / totalReviews) * 100)
+    } else if (totalQuizAttempts > 0) {
+      reviewAccuracy = Math.round((totalCorrectReviews / totalQuizAttempts) * 100)
     }
 
     return {
@@ -316,6 +300,14 @@ export function useVocabularyPage() {
     0
   )
 
+  const queryClient = useQueryClient()
+
+  // Tập hợp ID các bộ thẻ đã lưu để kiểm tra nhanh O(1)
+  const enrolledDeckIdSet = useMemo(() => {
+    return new Set(myDecks.map((d: Deck) => String(d._id || d.id || (d as any).deck_id?._id || (d as any).deck_id)))
+  }, [myDecks])
+
+
   const handleDeckClick = (deck: Deck) => {
     const rawDeck = deck as any
     const deckId = deck._id || deck.id || rawDeck.deck_id?._id || rawDeck.deck_id
@@ -336,13 +328,6 @@ export function useVocabularyPage() {
         : `Starting study session for "${deck.name || rawDeck.title || ''}"`
     )
   }
-
-  const queryClient = useQueryClient()
-
-  // Tập hợp ID các bộ thẻ đã lưu để kiểm tra nhanh O(1)
-  const enrolledDeckIdSet = useMemo(() => {
-    return new Set(myDecks.map((d: Deck) => String(d._id || d.id || (d as any).deck_id?._id || (d as any).deck_id)))
-  }, [myDecks])
 
   // Trạng thái khi chính chủ muốn chuyển sang Riêng tư mà đã có người lưu
   const [pendingPrivacyDeck, setPendingPrivacyDeck] = useState<{
@@ -422,6 +407,7 @@ export function useVocabularyPage() {
         }
       } catch (err) {
         console.error('Lỗi kiểm tra số người lưu:', err)
+        showAction(isVietnamese ? 'Chưa kiểm tra được người đang học. Hãy thử đổi quyền sau.' : 'Unable to check learners. Please retry changing visibility.'); return
       }
     }
 
@@ -440,13 +426,13 @@ export function useVocabularyPage() {
     setPendingPrivacyDeck(null)
   }
 
-  const handleCopyShareLink = (deck: Deck) => {
+  const handleCopyShareLink = async (deck: Deck) => {
     const rawDeck = deck as any
     const deckId = deck._id || deck.id || rawDeck.deck_id?._id || rawDeck.deck_id
     if (!deckId) return
 
     const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/vocabulary/learn/${deckId}`
-    navigator.clipboard.writeText(url)
+    try { await navigator.clipboard.writeText(url) } catch { showAction(isVietnamese ? 'Không sao chép được liên kết. Hãy thử lại.' : 'Unable to copy link. Please retry.'); return }
     showAction(
       isVietnamese
         ? `Đã sao chép liên kết bộ thẻ "${deck.name || rawDeck.title}"! Bạn có thể gửi link cho mọi người để cùng học.`
@@ -460,6 +446,8 @@ export function useVocabularyPage() {
     communityDecks,
     myDecks,
     isLoading,
+    dataError: settingsError || dailyError || publicError || enrollmentsError || savedError || wrongError || progressError,
+    retryData: () => queryClient.refetchQueries({ queryKey: vocabularyKeys.all }),
     activeTag,
     setActiveTag,
     activeBand,

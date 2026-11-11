@@ -33,9 +33,9 @@ export function SpeakingHistory({
   }, {} as Record<string, SpeakingAttempt[]>)
 
   const getScoreBg = (value: number | undefined) => {
-    if (!value) return 'bg-surface-subtle text-text-secondary'
-    if (value >= 8) return 'bg-emerald-100 text-emerald-700'
-    if (value >= 6) return 'bg-amber-100 text-amber-700'
+    if (value === undefined || !Number.isFinite(value)) return 'bg-surface-subtle text-text-secondary'
+    if (value >= 80) return 'bg-emerald-100 text-emerald-700'
+    if (value >= 60) return 'bg-amber-100 text-amber-700'
     return 'bg-red-100 text-red-700'
   }
 

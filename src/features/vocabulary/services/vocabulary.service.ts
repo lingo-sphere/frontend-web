@@ -118,11 +118,7 @@ export const vocabularyService = {
   },
 
   async getLearningSettings(): Promise<{ daily_new_cards_limit?: number; daily_goal?: number } | null> {
-    try {
-      return await api.get(API_CONFIG.ENDPOINTS.VOCABULARY.SETTINGS)
-    } catch {
-      return null
-    }
+    return api.get(API_CONFIG.ENDPOINTS.VOCABULARY.SETTINGS)
   },
 
   async updateLearningSettings(data: { daily_goal?: number; daily_new_cards_limit?: number }): Promise<Record<string, unknown>> {
@@ -134,19 +130,14 @@ export const vocabularyService = {
     daily_goal: number
     words_reviewed_today: number
     correct_count_today: number
-    accuracy_today: number
+    accuracy_today: number | null
     total_sessions_today: number
     is_goal_met: boolean
   } | null> {
-    try {
-      return await api.get(API_CONFIG.ENDPOINTS.VOCABULARY.DAILY_PROGRESS)
-    } catch {
-      return null
-    }
+    return api.get(API_CONFIG.ENDPOINTS.VOCABULARY.DAILY_PROGRESS)
   },
 
   async getMyEnrollments(): Promise<Deck[]> {
-    try {
       const raw = await api.get<any[]>(
         API_CONFIG.ENDPOINTS.VOCABULARY.MY_ENROLLMENTS
       )
@@ -165,9 +156,6 @@ export const vocabularyService = {
         }
         return item
       })
-    } catch {
-      return []
-    }
   },
 
   async enrollDeck(deckId: string): Promise<{ message: string }> {
@@ -245,7 +233,7 @@ export const vocabularyService = {
     return api.delete(`${API_CONFIG.ENDPOINTS.VOCABULARY.SAVED}/${lexicalItemId}/${meaningIndex}?user_id=${userId}`)
   },
 
-  async getSavedVocabulary(params?: { page?: number; limit?: number }): Promise<{
+  async getSavedVocabulary(params?: { page?: number; limit?: number; search?: string }): Promise<{
     items: Array<{
       saved_id: string
       lexical_item_id: string
@@ -305,12 +293,18 @@ export const vocabularyService = {
     session_mode?: string
     session_type?: 'LEARN_NEW' | 'REVIEW'
     session_size?: number
+    session_key?: string
   }): Promise<{ session_id: string; total_items: number; session_type: string; session_mode: string }> {
     return api.post('/vocabulary/learning-sessions', data)
   },
 
   async getNextLearningQuestion(sessionId: string, mode?: string, vocabId?: string): Promise<{
     is_completed: boolean
+    question_id?: string
+    queue_item_id?: string
+    meaning_index?: number
+    revision?: number
+    notice?: string
     session_id?: string
     lexical_item_id?: string
     mode?: string
@@ -346,12 +340,15 @@ export const vocabularyService = {
   async submitLearningAnswer(
     sessionId: string,
     data: {
-      lexical_item_id: string
-      mode: string
+      lexical_item_id?: string
+      question_id: string
+      request_key: string
+      mode?: string
       answer_raw: string
       time_spent_seconds?: number
     }
   ): Promise<{
+    revision: number
     result: 'CORRECT' | 'NEAR_CORRECT' | 'INCORRECT'
     is_correct: boolean
     is_near_correct: boolean
@@ -372,15 +369,24 @@ export const vocabularyService = {
     total_words: number
     correct_count: number
     near_correct_count: number
-    accuracy_percent: number
+    accuracy_percent: number | null
+    total_items: number
+    assessment_type: 'TESTED' | 'SELF_REPORTED'
+    skill_breakdown: { meaning: number | null; spelling: number | null; listening: number | null; context: number | null }
+    weak_words: import('../types/vocabulary.learn').VocabularyItem[]
     xp_earned: number
   }> {
     return api.post(`/vocabulary/learning-sessions/${sessionId}/complete`, {})
   },
 
+  async listLearningSessions(): Promise<{ items: Array<{ session_id: string; title?: string; source_type: string; source_id?: string; status: string; total_items: number; resolved: number }> }> { return api.get('/vocabulary/learning-sessions') },
+  async readLearningSession(sessionId: string): Promise<any> { return api.get(`/vocabulary/learning-sessions/${sessionId}`) },
+  async saveLearningSession(sessionId: string, data: { action: 'SAVE' | 'PAUSE' | 'RESUME'; expected_revision: number; draft?: Record<string, unknown> }): Promise<{ revision: number; elapsed_seconds?: number }> { return api.put(`/vocabulary/learning-sessions/${sessionId}`, data) },
+  async packageSavedWords(data: { operation_id: string; deck_id?: string; name?: string; description?: string; visibility?: string; settings?: Record<string, unknown>; words: Array<{lexical_item_id: string; meaning_index: number}>; remove_after_add: boolean }): Promise<{ deck_id: string; removed_ids: string[] }> { return api.post('/vocabulary/flashcards/package', data) },
+
   // ==================== WRONG WORDS COLLECTION ====================
 
-  async getWrongWords(params?: { status?: string; page?: number; limit?: number }): Promise<{
+  async getWrongWords(params?: { status?: string; page?: number; limit?: number; search?: string }): Promise<{
     items: Array<any>
     pagination: {
       page: number

@@ -10,10 +10,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Icon } from '@/components/icon.map'
 import { Input } from '@/components/input'
 import { Button } from '@/components/button'
-import { Card, CardContent } from '@/components/card'
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { PracticeContext, ContextSearchResult } from '../types/context.types'
+import type { PracticeContext } from '../types/context.types'
 
 interface ReadingContextNavigationProps {
   isVietnamese?: boolean
@@ -29,7 +28,7 @@ export function ReadingContextNavigation({
   const [searchQuery, setSearchQuery] = useState('')
 
   // Fetch ALL practice contexts
-  const { data: allContexts, isLoading } = useQuery<PracticeContext[]>({
+  const { data: allContexts, isLoading, error, refetch } = useQuery<PracticeContext[]>({
     queryKey: ['contexts', 'reading'],
     queryFn: async () => {
       const res = await api.get<PracticeContext[]>(
@@ -102,6 +101,7 @@ export function ReadingContextNavigation({
         </div>
       </div>
 
+      {error && <div role="alert">Không tải được chủ đề. <Button onClick={() => void refetch()}>Thử lại</Button></div>}
       {/* Grid of Context Chips */}
       {isLoading ? (
         <div className="flex items-center justify-center py-6">
@@ -116,7 +116,7 @@ export function ReadingContextNavigation({
               <button
                 key={ctx._id || ctx.code}
                 type="button"
-                onClick={() => onSelectContext(isSelected ? null : ctx.code || ctx._id || null)}
+                onClick={() => onSelectContext(isSelected ? null : ctx._id || ctx.code || null)}
                 className={`flex items-center gap-2 rounded-xl p-2.5 text-left text-xs font-medium transition-all ${
                   isSelected
                     ? 'bg-primary text-white shadow-md ring-2 ring-primary/40'

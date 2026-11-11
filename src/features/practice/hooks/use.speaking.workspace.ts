@@ -1,3 +1,5 @@
+import type { RecordingSubmission } from '@/features/practice/hooks/use.speaking.session'
+import { longestSpeakingStreak } from '@/features/practice/lib/speaking-policy'
 import { api } from '@/services/api.client'
 import { readSkillDraft, writeSkillDraft } from '@/features/practice/lib/skill-draft';
 // Hook quản lý trạng thái bài tập luyện nói, quy trình thu âm và chấm điểm phát âm AI.
@@ -114,8 +116,8 @@ export function useSpeakingWorkspace() {
       domain: 'SPEAKING',
       exercise_type: toSpeakingExerciseType(item.exercise_type),
       toeic_part: item.toeic_part || 1,
-      preparation_time_seconds: item.preparation_time_seconds || 45,
-      response_time_seconds: item.response_time_seconds || 45,
+      preparation_time_seconds: item.preparation_time_seconds ?? 30,
+      response_time_seconds: item.response_time_seconds ?? 45,
       prompt_text_en: item.prompt_text_en || item.title,
       prompt_text_vi: (item.prompt_text_vi || item.title_vi) ?? undefined,
       context_path: (item as any).context_path || [],
@@ -127,6 +129,9 @@ export function useSpeakingWorkspace() {
       tiered_time_limits: (item as any).tiered_time_limits || null,
       expected_keywords: (item as any).expected_keywords || [],
       expected_structure: (item as any).expected_structure || [],
+      target_lexical_item_ids: (item.target_lexical_item_ids as string[]) || [],
+      target_grammar_knowledge_ids: (item.target_grammar_knowledge_ids as string[]) || [],
+      target_phonetics_labels: (item.target_phonetics_labels as string[]) || [],
       target_phonetics_knowledge_ids: (item as any).target_phonetics_knowledge_ids || [],
       difficulty_level: toDifficultyLevel(item.difficulty_level || 'MEDIUM'),
       cefr_level: item.cefr_level || 'B1',
@@ -196,14 +201,14 @@ export function useSpeakingWorkspace() {
         ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.vocabulary_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : avgScore)
 
-    const avgCoherence = radar?.task_achievement !== undefined
-      ? radar.task_achievement
+    const avgCoherence = radar?.naturalness !== undefined
+      ? radar.naturalness
       : (comparableAttempts.length > 0
         ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.coherence_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : avgScore)
 
-    const avgContent = radar?.naturalness !== undefined
-      ? radar.naturalness
+    const avgContent = radar?.task_achievement !== undefined
+      ? radar.task_achievement
       : (comparableAttempts.length > 0
         ? Math.round((comparableAttempts.reduce((sum, a) => sum + (a.content_score || 0), 0) / comparableAttempts.length) * 10) / 10
         : avgScore)
@@ -218,7 +223,7 @@ export function useSpeakingWorkspace() {
       average_coherence: avgCoherence,
       average_content: avgContent,
       total_practice_minutes: practiceMinutes,
-      best_streak: total > 0 ? 1 : 0,
+      best_streak: longestSpeakingStreak(comparableAttempts),
     }
   }, [userSpeakingProfile, historyAttempts])
 
@@ -285,8 +290,8 @@ export function useSpeakingWorkspace() {
     setView('workspace')
     setRecordingState({
       phase: 'idle',
-      preparationTimeLeft: exercise.preparation_time_seconds || 30,
-      speakingTimeLeft: exercise.response_time_seconds || 60,
+      preparationTimeLeft: exercise.preparation_time_seconds ?? 30,
+      speakingTimeLeft: exercise.response_time_seconds ?? 45,
       duration: 0,
       audioUrl: null,
       isPlaying: false,
@@ -315,7 +320,8 @@ export function useSpeakingWorkspace() {
       duration: number,
       audioBlob?: Blob,
       difficultyChosen?: DifficultyLevel,
-      dialogueTurnsResults?: DialogueTurnAttemptResult[]
+      dialogueTurnsResults?: DialogueTurnAttemptResult[],
+      recordingSubmission?: RecordingSubmission
     ) => {
       if (!selectedExercise) return
       const authUser = useAuthStore.getState().user
@@ -337,6 +343,7 @@ export function useSpeakingWorkspace() {
       let backendResponse: any = null
       try {
         const payload = {
+          ...recordingSubmission,
           exercise_id: selectedExercise.id, audio_data: audioBase64, mime_type: audioBlob?.type,
           transcription, recording_duration_seconds: duration,
           preparation_time_seconds: selectedExercise.preparation_time_seconds,
@@ -496,15 +503,15 @@ export function useSpeakingWorkspace() {
     if (!pendingSpeaking || isSubmitting) return
     const p = pendingSpeaking.payload
     const blob = p.audio_data ? await (await fetch(p.audio_data)).blob() : undefined
-    await handleSubmitRecording(p.transcription || '', p.recording_duration_seconds || 0, blob, p.difficulty_chosen, p.dialogue_turns_results)
+    await handleSubmitRecording(p.transcription || '', p.recording_duration_seconds || 0, blob, p.difficulty_chosen, p.dialogue_turns_results, { recording_session_id: p.recording_session_id, recording_take_id: p.recording_take_id })
   }, [pendingSpeaking, isSubmitting, handleSubmitRecording])
 
   const handlePracticeAgain = useCallback(() => {
     if (!selectedExercise) return
     setRecordingState({
       phase: 'idle',
-      preparationTimeLeft: selectedExercise.preparation_time_seconds || 30,
-      speakingTimeLeft: selectedExercise.response_time_seconds || 60,
+      preparationTimeLeft: selectedExercise.preparation_time_seconds ?? 30,
+      speakingTimeLeft: selectedExercise.response_time_seconds ?? 45,
       duration: 0,
       audioUrl: null,
       isPlaying: false,

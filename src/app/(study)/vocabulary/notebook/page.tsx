@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bookmark,
@@ -82,6 +82,11 @@ export default function NotebookAppPage() {
   // Lấy danh sách bộ thẻ của user để thêm vào
   const { data: myDecks = [] } = useMyVocabularyEnrollmentsQuery(isAuthenticated);
 
+  const [knownWords, setKnownWords] = useState(new Map<string, SavedMeaningItem>());
+  useEffect(() => { setKnownWords(new Map()); setSelectedWordIds(new Set()); }, [userId]);
+
+  const fetchSequence = useRef(0);
+
   // Fetch saved vocabulary
   const fetchSavedVocabulary = useCallback(
     async (pageNum: number) => {
@@ -92,17 +97,22 @@ export default function NotebookAppPage() {
         return;
       }
 
+      const sequence = ++fetchSequence.current;
       try {
         setIsLoading(true);
         const response = await vocabularyService.getSavedVocabulary({
           page: pageNum,
           limit: ITEMS_PER_PAGE,
+          search: searchQuery,
         });
 
+        if (sequence !== fetchSequence.current) return;
+        setKnownWords(previous => { const next = new Map(previous); for (const item of response.items || []) next.set(item.saved_id, item); return next; });
         setSavedItems(response.items || []);
         setTotalPages(response.pagination?.total_pages || 1);
         setTotalItems(response.pagination?.total || 0);
       } catch (err) {
+        if (sequence !== fetchSequence.current) return;
         console.error("Failed to fetch saved vocabulary:", err);
         showAction(
           isVietnamese
@@ -110,31 +120,21 @@ export default function NotebookAppPage() {
             : "Failed to load saved vocabulary"
         );
       } finally {
-        setIsLoading(false);
+        if (sequence === fetchSequence.current) setIsLoading(false);
       }
     },
-    [isAuthenticated, showAction, isVietnamese]
+    [isAuthenticated, userId, showAction, isVietnamese, searchQuery]
   );
 
   useEffect(() => {
     fetchSavedVocabulary(page);
   }, [fetchSavedVocabulary, page, isAuthenticated]);
 
-  // Filter by search
-  const filteredItems = useMemo(() => {
-    if (!searchQuery) return savedItems;
-    const query = searchQuery.toLowerCase();
-    return savedItems.filter(
-      (item) =>
-        item.word.toLowerCase().includes(query) ||
-        item.meaning.toLowerCase().includes(query) ||
-        item.part_of_speech.toLowerCase().includes(query)
-    );
-  }, [savedItems, searchQuery]);
+  const filteredItems = savedItems;
 
   // Danh sách các từ được chọn
   const selectedWords = useMemo<SavedWordItem[]>(() => {
-    return savedItems
+    return [...knownWords.values()]
       .filter((item) => selectedWordIds.has(item.saved_id))
       .map((item) => ({
         saved_id: item.saved_id,
@@ -145,7 +145,7 @@ export default function NotebookAppPage() {
         meaning: item.meaning,
         examples: item.examples,
       }));
-  }, [savedItems, selectedWordIds]);
+  }, [knownWords, selectedWordIds]);
 
   const selectedCount = selectedWordIds.size;
 
@@ -314,7 +314,7 @@ export default function NotebookAppPage() {
               isVietnamese ? "Tìm kiếm từ đã lưu..." : "Search saved words..."
             }
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             className="h-10 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-[13px] text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none"
           />
         </div>
@@ -649,7 +649,7 @@ function SavedMeaningCard({
               key={idx}
               className="rounded-lg border-l-2 border-primary/30 bg-surface-subtle px-2.5 py-1.5"
             >
-              <p className="text-[11px] italic text-text-primary">"{ex.en}"</p>
+              <p className="text-[11px] italic text-text-primary">&quot;{ex.en}&quot;</p>
               {ex.vi && (
                 <p className="mt-0.5 text-[11px] text-text-secondary">{ex.vi}</p>
               )}

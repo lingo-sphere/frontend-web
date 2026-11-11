@@ -19,7 +19,7 @@ export function getSavedReadingTimeModePreference(): TimerPresetMode {
     if (!saved) return 'STANDARD'
 
     const preference: ReadingTimeModePreference = JSON.parse(saved)
-    return preference.mode
+    return ['QUICK', 'STANDARD', 'INTENSIVE'].includes(preference.mode) ? preference.mode : 'STANDARD'
   } catch {
     return 'STANDARD'
   }

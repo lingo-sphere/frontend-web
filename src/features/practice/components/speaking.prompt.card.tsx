@@ -34,12 +34,14 @@ interface SpeakingPromptCardProps {
   exercise: SpeakingExercise
   isVietnamese: boolean
   typeLabels: Record<SpeakingExerciseType, string>
+  showHints?: boolean
 }
 
 export function SpeakingPromptCard({
   exercise,
   isVietnamese,
   typeLabels,
+  showHints = true,
 }: SpeakingPromptCardProps) {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false)
   const [isLoadingAudio, setIsLoadingAudio] = useState(false)
@@ -233,7 +235,7 @@ export function SpeakingPromptCard({
             )}
 
             {/* 4-Step Guided Outline Scaffolding for Describe Picture */}
-            <div className="rounded-xl border border-primary/20 bg-primary/[0.02] p-4">
+            {showHints && <div className="rounded-xl border border-primary/20 bg-primary/[0.02] p-4">
               <div className="mb-3 flex items-center justify-between border-b border-border/50 pb-2.5">
                 <div className="flex items-center gap-2">
                   <Compass className="h-4 w-4 text-primary" />
@@ -379,7 +381,7 @@ export function SpeakingPromptCard({
                   </div>
                 )}
               </div>
-            </div>
+            </div>}
           </div>
         )}
 
@@ -538,13 +540,13 @@ export function SpeakingPromptCard({
           )}
 
         {/* Target Phonetics / Keywords Pills */}
-        {exercise.target_phonetics_knowledge_ids && exercise.target_phonetics_knowledge_ids.length > 0 && (
+        {showHints && exercise.target_phonetics_labels && exercise.target_phonetics_labels.length > 0 && (
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span className="flex items-center gap-1 text-[12px] font-medium text-text-secondary">
               <Target size={14} className="text-primary" />
               {isVietnamese ? 'Âm mục tiêu:' : 'Target sounds:'}
             </span>
-            {exercise.target_phonetics_knowledge_ids.map((sound) => (
+            {exercise.target_phonetics_labels.map((sound) => (
               <span
                 key={sound}
                 className="rounded-lg border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[12px] font-bold text-primary"

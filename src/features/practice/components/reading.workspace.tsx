@@ -5,13 +5,18 @@
 
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState } from 'react'
+import { useReadingSession } from '../hooks/use.reading.session'
+import { DictionaryModal } from '@/features/vocabulary/components/dictionary.modal'
+import { useAuthStore } from '@/features/auth/store/auth.store'
+import { toast } from '@/store/toast.store'
+import { ReadingMedia } from './reading.media'
+import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
 import { Icon } from '@/components/icon.map'
 import { Button } from '@/components/button'
-import { VocabQuickPopover } from './vocab.quick.popover'
-import { WritingTimer } from '@/features/practice/components/writing.timer'
 import type {
   ReadingPassage,
+  ReadingSession,
   ReadingQuestion,
   ReadingType,
   ReadingAttemptResultEnhanced,
@@ -19,158 +24,41 @@ import type {
   SkillBreakdownItem,
   WrongAnswerItem,
 } from '../types/reading'
-import { readingPracticeService } from '../services/reading-practice.service'
 
 interface ReadingWorkspaceProps {
   passage: ReadingPassage
   timeLimitSeconds: number
+  session?: ReadingSession
+  initialResult?: ReadingAttemptResultEnhanced
   onBack: () => void
   onComplete?: () => void
 }
 
-export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete }: ReadingWorkspaceProps) {
+export function ReadingWorkspace({ passage, session, initialResult, onBack, onComplete }: ReadingWorkspaceProps) {
   const readingType: ReadingType = passage.reading_type || 'PART_7'
   const questions: ReadingQuestion[] = passage.questions || []
 
-  // Timer State
-  const [elapsedTime, setElapsedTime] = useState<number>(0)
-  const [isSubmitted, setIsSubmitted] = useState<boolean>(false)
-
-  // Question & Answers State
-  const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(0)
-  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-  const [attemptResult, setAttemptResult] = useState<ReadingAttemptResultEnhanced | null>(null)
-  const [showResultModal, setShowResultModal] = useState<boolean>(false)
-
-  // AI Explanation State
-  const [aiExplanation, setAiExplanation] = useState<AIReadingExplanation | null>(null)
-  const [aiExplanationStatus, setAiExplanationStatus] = useState<'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null>(null)
-  const [isLoadingAi, setIsLoadingAi] = useState<boolean>(false)
-  const aiPollIntervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Track elapsed time for submission
-  useEffect(() => {
-    if (showResultModal || isSubmitted) return
-    const interval = setInterval(() => {
-      setElapsedTime((prev) => prev + 1)
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [showResultModal, isSubmitted])
-
-  // Target Vocab State for interactive popover
+  const state = useReadingSession(passage, session, initialResult)
+  const { elapsedTime, remaining, userAnswers, isSubmitting, isSubmitted, attemptResult, showResultModal, setShowResultModal, aiExplanation, aiExplanationStatus } = state
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0)
+  const [showExit, setShowExit] = useState(false)
+  const [lookupWord, setLookupWord] = useState('')
+  const userId = useAuthStore(state => state.user?.user_id)
   const currentQuestion = questions[activeQuestionIndex]
-
-  // Callback khi hết giờ - auto submit
-  const handleTimeUp = useCallback(() => {
-    if (isSubmitted) return
-
-    setIsSubmitted(true)
-    handleSubmitAttempt()
-  }, [isSubmitted])
-
-  // Format time mm:ss
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60)
-    const s = secs % 60
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-  }
-
-  // Handle selecting answer for a question
-  const handleSelectOption = (questionId: string, optionKey: string) => {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionKey,
-    }))
-  }
-
-  // Submit attempt to backend
-  const handleSubmitAttempt = async () => {
-    if (isSubmitting || isSubmitted) return
-    setIsSubmitting(true)
-    setIsSubmitted(true)
-
-    try {
-      const answersPayload = questions.map((q) => ({
-        question_id: q._id || q.id || '',
-        user_answer: userAnswers[q._id || q.id || ''] || '',
-        time_spent_seconds: Math.round(elapsedTime / Math.max(1, questions.length)),
-      }))
-
-      const result = await readingPracticeService.submitAttempt({
-        passage_id: passage._id || passage.id || '',
-        answers: answersPayload,
-      })
-
-      setAttemptResult(result)
-      setShowResultModal(true)
-
-      // Start polling for AI explanation if there are wrong answers
-      if (result.wrong_count > 0) {
-        setAiExplanationStatus(result.ai_explanation_status || 'PENDING')
-        startPollingAIExplanation(result.attempt_id)
-      }
-    } catch (err) {
-      console.error('Lỗi nộp bài đọc:', err)
-      setIsSubmitted(false) // Reset on error để user thử lại
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // Poll AI explanation
-  const startPollingAIExplanation = useCallback((attemptId: string) => {
-    if (aiPollIntervalRef.current) {
-      clearInterval(aiPollIntervalRef.current)
-    }
-
-    const poll = async () => {
-      try {
-        const response = await readingPracticeService.getAIExplanation(attemptId)
-        setAiExplanationStatus(response.status)
-
-        const expl = (response.explanation as any)?.ai_result || response.explanation
-        if (response.status === 'COMPLETED' && expl) {
-          setAiExplanation(expl as AIReadingExplanation)
-          if (aiPollIntervalRef.current) {
-            clearInterval(aiPollIntervalRef.current)
-            aiPollIntervalRef.current = null
-          }
-        } else if (response.status === 'FAILED') {
-          if (aiPollIntervalRef.current) {
-            clearInterval(aiPollIntervalRef.current)
-            aiPollIntervalRef.current = null
-          }
-        }
-      } catch (err) {
-        console.error('Lỗi poll AI explanation:', err)
-      }
-    }
-
-    // Poll immediately and then every 5 seconds
-    poll()
-    aiPollIntervalRef.current = setInterval(poll, 5000)
-  }, [])
-
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (aiPollIntervalRef.current) {
-        clearInterval(aiPollIntervalRef.current)
-      }
-    }
-  }, [])
-
-  // Check if all questions are answered
-  const answeredCount = Object.keys(userAnswers).length
-  const isAllAnswered = questions.length > 0 && answeredCount === questions.length
+  const answeredCount = Object.values(userAnswers).filter(Boolean).length
+  const formatTime = (seconds: number) => { const safe = Math.max(0, seconds); return Math.floor(safe / 60).toString().padStart(2, '0') + ':' + (safe % 60).toString().padStart(2, '0') }
+  const renderText = (text: string) => text.split(/([A-Za-z][A-Za-z'-]+)/g).map((part, index) => index % 2 ? <button key={index} type="button" aria-label={'Tra từ ' + part} onClick={() => setLookupWord(part)} className="inline cursor-help rounded hover:bg-primary/10 hover:text-primary">{part}</button> : part)
+  const back = () => { if (isSubmitted) onBack(); else setShowExit(true) }
+  const exit = async () => { await state.save(); await state.persist(); onBack() }
+  const handleSubmitAttempt = () => { void state.submit() }
+  const handleSelectOption = state.select
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] w-full gap-3 overflow-hidden">
+    <div className="flex flex-col min-h-[calc(100dvh-5rem)] md:h-[calc(100dvh-5rem)] w-full gap-3 overflow-visible md:overflow-hidden">
       {/* Top Bar Navigation & Timer Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/50 bg-surface p-3 shadow-xs">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 text-xs">
+          <Button variant="ghost" size="sm" onClick={back} className="gap-1.5 text-xs">
             <Icon name="arrow-left" size={16} />
             <span>Quay lại</span>
           </Button>
@@ -193,26 +81,26 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
 
         {/* Timer & Controls */}
         <div className="flex items-center gap-3">
-          <WritingTimer
-            totalSeconds={timeLimitSeconds}
-            onTimeUp={handleTimeUp}
-          />
+          <span role="timer" className="rounded-lg border px-3 py-2 font-mono font-bold">{isSubmitted ? 'Đã hoàn tất' : formatTime(remaining)}</span>
 
           <Button
             variant="default"
             size="sm"
             onClick={handleSubmitAttempt}
-            disabled={isSubmitting || questions.length === 0 || isSubmitted}
+            disabled={isSubmitting || questions.length === 0 || isSubmitted || !state.ready}
             className="gap-1.5 text-xs font-semibold"
           >
             {isSubmitting ? <Icon name="loader" className="animate-spin" size={14} /> : <Icon name="check-circle" size={14} />}
-            <span>{isSubmitted ? 'Đã nộp' : `Nộp bài (${answeredCount}/${questions.length})`}</span>
+            <span>{isSubmitted ? 'Đã nộp' : state.pending ? 'Thử nộp lại' : `Nộp bài (${answeredCount}/${questions.length})`}</span>
           </Button>
         </div>
       </div>
 
+      {state.error && <div role="alert" className="rounded-lg border border-red-300 p-3 text-sm text-red-700">{state.error}</div>}
+      {state.saveError && <div role="alert" className="rounded-lg border border-amber-300 p-3 text-sm">{state.saveError} <button type="button" onClick={() => void state.save()} className="underline">Đồng bộ lại</button> <button type="button" onClick={() => window.location.reload()} className="underline">Tải lại phiên</button></div>}
+      {!isSubmitted && <p className="text-xs text-text-secondary">Đáp án được lưu tự động. Đồng hồ vẫn tiếp tục khi rời trang.</p>}
       {/* Main Split-Screen Workspace Container (50/50 Layout) */}
-      <div className="grid flex-1 grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden min-h-0">
+      <div className="grid flex-1 grid-cols-1 md:grid-cols-2 gap-4 overflow-visible md:overflow-hidden min-h-0">
         
         {/* LEFT PANEL: Passage / Document / Scenario / Info Cards */}
         <div className="flex flex-col rounded-2xl border border-border/50 bg-surface overflow-hidden shadow-xs">
@@ -222,16 +110,17 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
               <span>Nội dung bài đọc & Thông tin dữ liệu</span>
             </span>
             <span className="text-[11px] text-text-tertiary">
-              Click từ vựng để tra nghĩa
+              Chạm từ vựng để tra nghĩa và lưu từ
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
             
+            {passage.media_id && passage.media_type && <ReadingMedia id={passage.media_id} kind={passage.media_type} title={passage.title} />}
             {/* RENDER 1: TOEIC Part 6 (Text Completion) */}
             {readingType === 'PART_6' && (
               <div className="prose prose-sm dark:prose-invert max-w-none text-text-primary leading-relaxed whitespace-pre-line text-sm">
-                {renderPart6Content(passage.content, questions, userAnswers, (qIdx) => setActiveQuestionIndex(qIdx))}
+                {renderPart6Content(passage.content, questions, userAnswers, (qIdx) => setActiveQuestionIndex(qIdx), renderText)}
               </div>
             )}
 
@@ -243,7 +132,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
                   {passage.source && <p className="text-xs text-text-tertiary">Nguồn: {passage.source}</p>}
                 </div>
                 <div className="prose prose-sm dark:prose-invert max-w-none text-text-primary leading-relaxed text-sm whitespace-pre-line">
-                  {passage.content}
+                  {renderText(passage.content)}
                 </div>
               </div>
             )}
@@ -258,7 +147,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
                     <span>Nhiệm vụ của bạn (Mission Brief)</span>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed font-medium">
-                    {passage.passage_metadata?.scenario_description || passage.content}
+                    {renderText(passage.passage_metadata?.scenario_description || passage.content)}
                   </p>
 
                   {/* Requirements Checklist */}
@@ -287,7 +176,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
                           {Object.entries(card.details).map(([key, val]) => (
                             <div key={key} className="flex justify-between gap-1">
                               <span className="text-text-tertiary">{key}:</span>
-                              <span className="font-medium text-text-primary">{val}</span>
+                              <span className="font-medium text-text-primary">{renderText(String(val))}</span>
                             </div>
                           ))}
                         </div>
@@ -296,7 +185,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
                   </div>
                 ) : (
                   <div className="prose prose-sm text-text-primary leading-relaxed text-sm whitespace-pre-line">
-                    {passage.content}
+                    {renderText(passage.content)}
                   </div>
                 )}
               </div>
@@ -306,17 +195,17 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
             {readingType === 'INFO_MATCHING' && (
               <div className="space-y-3">
                 {passage.passage_metadata?.info_paragraphs ? (
-                  passage.passage_metadata.info_paragraphs.map((p) => (
-                    <div key={p.key} className="rounded-xl border border-border/60 bg-surface-elevated p-4 space-y-1.5">
+                  passage.passage_metadata.info_paragraphs.map((p, index) => (
+                    <div key={p.key} className={`rounded-xl border bg-surface-elevated p-4 space-y-1.5 ${currentQuestion?.paragraph_index === index ? 'border-primary ring-1 ring-primary' : 'border-border/60'}`}>
                       <div className="inline-flex items-center rounded-md bg-primary px-2 py-0.5 text-xs font-bold text-white">
                         Đoạn [{p.key}] - {p.title}
                       </div>
-                      <p className="text-xs text-text-secondary leading-relaxed">{p.text}</p>
+                      <p className="text-xs text-text-secondary leading-relaxed">{renderText(p.text)}</p>
                     </div>
                   ))
                 ) : (
                   <div className="prose prose-sm text-text-primary leading-relaxed text-sm whitespace-pre-line">
-                    {passage.content}
+                    {renderText(passage.content)}
                   </div>
                 )}
               </div>
@@ -369,7 +258,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
                   <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary uppercase tracking-wider">
                     {currentQuestion.exercise_type || 'READING_QUESTION'}
                   </span>
-                  {currentQuestion.line_start && (
+                  {currentQuestion.line_start !== undefined && (
                     <span className="text-[11px] text-text-tertiary">
                       dòng {currentQuestion.line_start} - {currentQuestion.line_end}
                     </span>
@@ -387,6 +276,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
                 )}
               </div>
 
+              {(currentQuestion.instruction_vi || currentQuestion.instruction_en) && <p className="text-sm text-text-secondary">{currentQuestion.instruction_vi || currentQuestion.instruction_en}</p>}
               {/* Options List (A, B, C, D) */}
               <div className="space-y-2.5">
                 {(currentQuestion.options || currentQuestion.question_data?.options || []).map((opt) => {
@@ -397,7 +287,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
                     <button
                       key={opt.key}
                       type="button"
-                      onClick={() => handleSelectOption(qId, opt.key)}
+                      onClick={() => handleSelectOption(qId, opt.key)} disabled={isSubmitted || isSubmitting || state.pending || !state.ready || remaining === 0}
                       className={`flex w-full items-start gap-3 rounded-xl border p-3.5 text-left text-xs transition-all ${
                         isSelected
                           ? 'border-primary bg-primary/10 ring-2 ring-primary/30 font-medium text-text-primary shadow-xs'
@@ -420,7 +310,7 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
               </div>
 
               {/* Target Vocab Popover */}
-              <VocabQuickPopover vocabularies={[]} />
+
 
               {/* Previous / Next Question Navigation */}
               <div className="flex items-center justify-between pt-4 border-t border-border/40">
@@ -457,6 +347,8 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
         </div>
       </div>
 
+      <DictionaryModal open={Boolean(lookupWord)} initialQuery={lookupWord} onOpenChange={open => { if (!open) setLookupWord('') }} onAction={message => { if (/không thể|thất bại|cần đăng nhập/i.test(message)) toast.error(message); else toast.success(message) }} userId={userId} />
+      <PracticeExitConfirmModal isOpen={showExit} onClose={() => setShowExit(false)} onConfirmExit={() => void exit()} title="Rời bài Reading?" description="Đáp án được giữ để tiếp tục. Đồng hồ vẫn chạy theo hạn giờ của phiên." savedNotice="Bạn có thể mở lại phiên từ danh sách bài đang làm." confirmText="Lưu & quay lại" />
       {/* RESULTS MODAL UPON SUBMISSION - ENHANCED */}
       {showResultModal && attemptResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
@@ -492,12 +384,13 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
               </div>
               <div>
                 <div className="text-2xl font-black text-text-primary">
-                  {formatTime(attemptResult.time_spent_seconds || elapsedTime)}
+                  {formatTime(attemptResult.time_spent_seconds ?? elapsedTime)}
                 </div>
                 <div className="text-[11px] text-text-tertiary">Thời gian</div>
               </div>
             </div>
 
+            {attemptResult.submitted_after_deadline && <p role="status" className="rounded bg-amber-50 p-3 text-sm text-amber-800">Phiên đã hết giờ. Kết quả sử dụng các đáp án đã lưu trên máy chủ.</p>}
             {/* Skill Breakdown */}
             {attemptResult.skill_breakdown && attemptResult.skill_breakdown.length > 0 && (
               <div className="space-y-3">
@@ -538,9 +431,9 @@ export function ReadingWorkspace({ passage, timeLimitSeconds, onBack, onComplete
             <AIExplanationSection
               status={aiExplanationStatus}
               explanation={aiExplanation}
-              isLoading={isLoadingAi}
             />
 
+            {aiExplanationStatus === 'FAILED' && state.canRetryAi && <Button onClick={() => void state.retryAi()}>Thử phân tích AI lại</Button>}
             {/* Actions */}
             <div className="flex flex-col gap-2">
               <Button
@@ -663,13 +556,11 @@ function WrongAnswerCard({ wrong }: { wrong: WrongAnswerItem }) {
 function AIExplanationSection({
   status,
   explanation,
-  isLoading,
 }: {
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | null
   explanation: AIReadingExplanation | null
-  isLoading: boolean
 }) {
-  if (status === null || !explanation) return null
+  if (status === null) return null
 
   if (status === 'PENDING' || status === 'PROCESSING') {
     return (
@@ -777,7 +668,8 @@ function renderPart6Content(
   text: string,
   questions: ReadingQuestion[],
   answers: Record<string, string>,
-  onSelectBlank: (qIndex: number) => void
+  onSelectBlank: (qIndex: number) => void,
+  renderText: (text: string) => React.ReactNode
 ) {
   if (!text) return null
   const regex = /\[(\d+)\]/g
@@ -796,7 +688,7 @@ function renderPart6Content(
 
     // Push preceding normal text
     if (match.index > lastIndex) {
-      parts.push(text.substring(lastIndex, match.index))
+      parts.push(renderText(text.substring(lastIndex, match.index)))
     }
 
     // Push Interactive Blank Badge
@@ -824,7 +716,7 @@ function renderPart6Content(
   }
 
   if (lastIndex < text.length) {
-    parts.push(text.substring(lastIndex))
+    parts.push(renderText(text.substring(lastIndex)))
   }
 
   return parts

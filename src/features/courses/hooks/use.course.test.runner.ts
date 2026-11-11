@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import type { Chapter } from '@/features/courses/types/course'
 import { courseService, type SpeakingSubmissionResponse } from '@/features/courses/services/course.service'
 import { mistakeService } from '@/features/practice/services/mistake.service'
+import { courseMistakeDomain } from '@/features/courses/lib/mistake-domain'
 import { toast } from '@/store/toast.store'
 import {
   CourseTestQuestion,
@@ -580,7 +581,7 @@ export function useCourseTestRunner({
           const rawQ = rawQuestions[qIdx]
           return {
             ...w,
-            domain: rawQ?.domain || rawQ?.skill_type || (rawQ?.media_url?.match(/\.(mp3|wav|ogg|m4a|aac)(\?.*)?$/i) ? 'LISTENING' : 'GRAMMAR'),
+            domain: courseMistakeDomain(rawQ, w),
             context_id: rawQ?.context_id,
             exercise_type: rawQ?.exercise_type,
             grammar_knowledge_id: rawQ?.grammar_knowledge_id,

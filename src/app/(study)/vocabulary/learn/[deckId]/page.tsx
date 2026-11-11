@@ -78,7 +78,7 @@ export default function VocabularyDeckLearnAppPage() {
       const populated = (c.lexical_item_id as Record<string, unknown>) || {};
       const formatted = (c.lexical_item as Record<string, unknown>) || {};
       const rawMeanings = (populated.m as Array<Record<string, unknown>>) || [];
-      const primaryRawMeaning = rawMeanings[0] || {};
+      const primaryRawMeaning = rawMeanings[Number(c.meaning_index) || 0] || {};
 
       const word = String(
         formatted.word ||

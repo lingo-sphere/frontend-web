@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/button'
+import { DictationWordDiff } from './dictation.word.diff'
 import { useListeningMedia } from '../hooks/use.listening.media'
 import { listeningLifecycleService } from '../services/listening-lifecycle.service'
 import { useListeningLifecycle } from '../hooks/use.listening.lifecycle'
@@ -12,13 +13,6 @@ import type {
   ListeningKind,
 } from '../types/listening-lifecycle'
 
-const presets = {
-  part1: [30, 48, 60],
-  part2: [200, 250, 375],
-  part3: [585, 780, 1170],
-  part4: [450, 600, 900],
-  dictation: [],
-}
 export function ListeningPracticeWorkspace({
   kind,
   exerciseId,
@@ -62,6 +56,7 @@ export function ListeningPracticeWorkspace({
     try {
       const next = await listeningLifecycleService.hint(session.id, key)
       setHints((previous) => ({ ...previous, [key]: next }))
+      await practice.refreshSession()
     } catch (failure) {
       setHintError(
         failure instanceof Error ? failure.message : 'Không lấy được gợi ý',
@@ -217,7 +212,7 @@ export function ListeningPracticeWorkspace({
                             ? ['Nhanh', 'Tiêu chuẩn', 'Luyện kỹ']
                             : ['Quick', 'Standard', 'Intensive'])[index]
                         }{' '}
-                        · {presets[kind][index]}s
+                        · {[0.75, 1, 1.5][index]}×
                       </option>
                     ))}
                   </select>
@@ -296,7 +291,8 @@ export function ListeningPracticeWorkspace({
                 </h3>
                 <p>{segment.text}</p>
                 {segment.answers.map((blank) => (
-                  <p key={blank.blank_index}>
+                  <div key={blank.blank_index} className="space-y-2">
+                  <p>
                     {blank.blank_index + 1}. {blank.user_answer || '—'} →{' '}
                     {blank.correct_answer} ·{' '}
                     {blank.is_correct
@@ -307,6 +303,8 @@ export function ListeningPracticeWorkspace({
                       ? 'Chưa đúng'
                       : 'Incorrect'}
                   </p>
+                  {!blank.is_correct && <DictationWordDiff answer={blank.user_answer || ''} expected={blank.correct_answer} vi={vi} />}
+                  </div>
                 ))}
               </article>
             ))}
@@ -333,18 +331,24 @@ export function ListeningPracticeWorkspace({
                   {draft.current_index + 1}/{session.groups.length}
                 </span>
                 <span role="timer">
-                  {vi ? 'Còn lại:' : 'Remaining:'} {Math.floor(remaining / 60)}:
+                  {vi ? 'Thời gian đoạn/câu còn lại:' : 'Time for this group:'}{' '}
+                  {Math.floor(remaining / 60)}:
                   {String(remaining % 60).padStart(2, '0')}
                 </span>
               </div>
+              <p className="text-xs text-text-secondary">
+                {vi
+                  ? 'Thời gian trả lời bắt đầu sau lần nghe đầu hoặc khi bạn nhập/chọn đáp án.'
+                  : 'Answer time starts after the first listen or when you enter/select an answer.'}
+              </p>
               {expired && (
                 <p role="status" className="text-amber-600 text-sm">
                   {vi
-                    ? 'Hết thời gian. Hãy nộp bài để lưu kết quả.'
+                    ? 'Đoạn/câu đã hết thời gian. Chuyển tiếp hoặc nộp bài.'
                     : 'Time is up. Submit to save your results.'}
                 </p>
               )}
-              {group.image && (
+              {group.image && (group.showImageBefore || group.hasListened) && (
                 <ListeningPracticeImage value={group.image} vi={vi} />
               )}
               {(kind === 'part3' || kind === 'part4') && (
@@ -358,6 +362,10 @@ export function ListeningPracticeWorkspace({
                 position={draft.audio_position}
                 speed={draft.playback_speed}
                 onPosition={practice.position}
+                kind={kind}
+                sessionId={session.id}
+                onRefresh={practice.refreshSession}
+                disabled={busy || expired}
               />
               <label className="flex items-center gap-3 text-sm text-text-secondary">
                 {vi ? 'Tốc độ:' : 'Speed:'}
@@ -379,6 +387,43 @@ export function ListeningPracticeWorkspace({
                   ))}
                 </select>
               </label>
+              {group.dialogue && group.dialogue.length > 0 && (
+                <div className="rounded-xl bg-surface-subtle p-4 space-y-2">
+                  {group.dialogue.map((line, index) => (
+                    <p key={index}>
+                      <span className="text-text-tertiary">
+                        {line.start_time}–{line.end_time}s{' '}
+                      </span>
+                      {line.text}
+                      {vi && line.text_vi ? (
+                        <span className="block text-sm text-text-secondary">
+                          {line.text_vi}
+                        </span>
+                      ) : null}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {group.completed && (
+                <p role="status">
+                  {vi
+                    ? 'Đoạn đã kiểm tra; đáp án được khóa.'
+                    : 'Segment checked; answers are locked.'}
+                </p>
+              )}
+              {group.checkedResult?.answers?.map((answer) => (
+                <p key={answer.blank_index}>
+                  {answer.blank_index + 1}. {answer.user_answer || '—'} →{' '}
+                  {answer.correct_answer} ·{' '}
+                  {answer.is_correct
+                    ? vi
+                      ? 'Đúng'
+                      : 'Correct'
+                    : vi
+                    ? 'Chưa đúng'
+                    : 'Incorrect'}
+                </p>
+              ))}
               {group.preview && (
                 <p className="rounded-xl bg-surface-subtle p-4 text-text-primary whitespace-pre-wrap">
                   {group.preview}
@@ -395,10 +440,15 @@ export function ListeningPracticeWorkspace({
                       {vi ? 'Bắt đầu bằng' : 'Starts with'} {blank.firstLetter}
                     </span>
                   )}
+                  {blank.length !== undefined && (
+                    <span className="text-text-tertiary">
+                      {blank.length} {vi ? 'ký tự' : 'characters'}
+                    </span>
+                  )}
                   <input
                     aria-label={`${vi ? 'Ô' : 'Blank'} ${blank.label}`}
                     value={draft.answers[blank.key] || ''}
-                    disabled={busy || expired}
+                    disabled={busy || expired || Boolean(group.completed)}
                     maxLength={3000}
                     onChange={(event) =>
                       practice.update({
@@ -416,17 +466,17 @@ export function ListeningPracticeWorkspace({
                     disabled={
                       busy ||
                       expired ||
+                      session.settings?.enable_hints === false ||
                       Boolean(hintBusy) ||
-                      (hints[blank.key]?.hints_remaining ??
-                        blank.hintsAvailable) <= 0
+                      Boolean(group.completed) ||
+                      blank.hintsAvailable <= 0
                     }
                     aria-label={`${vi ? 'Gợi ý ô' : 'Hint for blank'} ${
                       blank.label
                     }`}
                     onClick={() => void requestHint(blank.key)}
                   >
-                    {vi ? 'Gợi ý' : 'Hint'} ·{' '}
-                    {hints[blank.key]?.hints_remaining ?? blank.hintsAvailable}
+                    {vi ? 'Gợi ý' : 'Hint'} · {blank.hintsAvailable}
                   </Button>
                   {(hints[blank.key]?.hint || blank.hint) && (
                     <span role="status" className="text-primary">
@@ -435,7 +485,10 @@ export function ListeningPracticeWorkspace({
                   )}
                 </div>
               ))}
-              {group.questions.map((question, questionIndex) => (
+              {(group.showQuestionsBefore || group.hasListened
+                ? group.questions
+                : []
+              ).map((question, questionIndex) => (
                 <fieldset
                   key={question.key}
                   className="space-y-3 rounded-xl border border-border p-4"
@@ -451,7 +504,7 @@ export function ListeningPracticeWorkspace({
                   )}
                   <div
                     className={`grid gap-3 ${
-                        kind === 'part1'
+                      kind === 'part1'
                         ? 'grid-cols-2 sm:grid-cols-4'
                         : kind === 'part2'
                         ? 'grid-cols-3'
@@ -522,6 +575,17 @@ export function ListeningPracticeWorkspace({
                     {vi ? 'Câu tiếp' : 'Next'}
                   </Button>
                 )}
+                {kind === 'dictation' &&
+                  session.settings?.show_answers_immediately &&
+                  !group.completed && (
+                    <Button
+                      variant="outline"
+                      disabled={busy || expired}
+                      onClick={() => void practice.check()}
+                    >
+                      {vi ? 'Kiểm tra đoạn' : 'Check segment'}
+                    </Button>
+                  )}
                 <Button disabled={busy} onClick={() => void practice.submit()}>
                   {busy
                     ? vi
@@ -545,93 +609,250 @@ function ListeningSegmentAudio({
   position,
   speed,
   onPosition,
+  kind,
+  sessionId,
+  onRefresh,
+  disabled,
 }: {
   group: ListeningGroup
   position: number
   speed: number
   onPosition: (position: number) => void
+  kind: ListeningKind
+  sessionId: string
+  onRefresh: () => Promise<void>
+  disabled: boolean
 }) {
   const audio = useRef<HTMLAudioElement>(null)
   const media = useListeningMedia(group.audio)
-  const [failed, setFailed] = useState(false)
-  const { i18n } = useTranslation()
-  const vi = i18n.language === 'vi'
+  const { i18n } = useTranslation(),
+    vi = i18n.language === 'vi'
+  const [playing, setPlaying] = useState(false),
+    [pending, setPending] = useState(false),
+    [error, setError] = useState('')
+  const [state, setState] = useState({
+    starts: group.playCount || 0,
+    completed: group.playbackCompleted ?? Boolean(group.hasListened),
+  })
+  const completing = useRef(false)
+  const authorized = useRef(false)
+  const clip = useRef({ start: group.start, end: group.end })
+  const [mediaTime, setMediaTime] = useState(group.start)
+  const [duration, setDuration] = useState(group.end || 0)
+  const remaining =
+    group.allowReplay === false
+      ? 0
+      : Math.max(0, (group.replayLimit ?? 1) - Math.max(0, state.starts - 1))
+  const exhausted = state.completed && remaining <= 0
   useEffect(() => {
     if (audio.current) audio.current.playbackRate = speed
   }, [speed])
+  useEffect(() => {
+    if (disabled) {
+      audio.current?.pause()
+    }
+  }, [disabled])
+  const complete = async () => {
+    if (completing.current) return
+    completing.current = true
+    setPending(true)
+    audio.current?.pause()
+    setPlaying(false)
+    try {
+      const next = await listeningLifecycleService.playback(
+        kind,
+        sessionId,
+        group.index,
+        'complete',
+      )
+      setState(next)
+      authorized.current = false
+      await onRefresh()
+    } catch (failure) {
+      setError(
+        failure instanceof Error ? failure.message : 'Không lưu được lượt nghe',
+      )
+      completing.current = false
+    } finally {
+      setPending(false)
+    }
+  }
+  const play = async (selected?: { start_time: number; end_time: number }) => {
+    const element = audio.current
+    if (!element || pending || disabled) return
+    if (playing && !selected) {
+      element.pause()
+      return
+    }
+    if (exhausted) return
+    setPending(true)
+    setError('')
+    try {
+      if (selected && authorized.current) {
+        element.pause()
+        await listeningLifecycleService.playback(
+          kind,
+          sessionId,
+          group.index,
+          'complete',
+        )
+        authorized.current = false
+      }
+      if (selected)
+        clip.current = { start: selected.start_time, end: selected.end_time }
+      if (!authorized.current) {
+        const next = await listeningLifecycleService.playback(
+          kind,
+          sessionId,
+          group.index,
+          'start',
+        )
+        setState(next)
+        authorized.current = true
+        completing.current = false
+        if (
+          selected ||
+          state.completed ||
+          element.ended ||
+          (clip.current.end !== undefined &&
+            element.currentTime >= clip.current.end)
+        )
+          element.currentTime = clip.current.start
+      }
+      element.playbackRate = speed
+      await element.play()
+    } catch (failure) {
+      setError(
+        failure instanceof Error ? failure.message : 'Không phát được audio',
+      )
+    } finally {
+      setPending(false)
+    }
+  }
   if (!group.audio)
     return (
-      <p role="alert" className="text-sm text-text-secondary">
-        Audio chưa khả dụng / Audio unavailable
-      </p>
+      <p role="alert">{vi ? 'Audio chưa khả dụng' : 'Audio unavailable'}</p>
     )
-  const bound = (element: HTMLAudioElement) => {
-    if (element.currentTime < group.start) element.currentTime = group.start
-    if (group.end !== undefined && element.currentTime >= group.end) {
-      element.pause()
-      if (element.currentTime > group.end) element.currentTime = group.end
-    }
-    onPosition(element.currentTime)
-  }
   if (!media.url)
     return (
-      <div className="text-sm text-text-secondary">
-        {media.ready
-          ? vi
-            ? 'Không lấy được audio.'
-            : 'Could not resolve audio.'
-          : vi
-          ? 'Đang tải audio…'
-          : 'Loading audio…'}
-        {media.ready && (
-          <Button size="sm" variant="outline" onClick={media.retry}>
-            {vi ? 'Thử lại audio' : 'Retry audio'}
-          </Button>
-        )}
-      </div>
+      <Button disabled={!media.ready} onClick={media.retry}>
+        {vi ? 'Tải lại audio' : 'Retry audio'}
+      </Button>
     )
   return (
     <div className="space-y-2">
       <audio
         ref={audio}
-        controls
-        preload="metadata"
         src={media.url}
-        className="w-full"
-        onError={() => setFailed(true)}
+        preload="metadata"
         onLoadedMetadata={(event) => {
-          setFailed(false)
-          const element = event.currentTarget
-          element.playbackRate = speed
-          element.currentTime = Math.max(
+          setDuration(group.end ?? event.currentTarget.duration)
+          event.currentTarget.currentTime = Math.max(
             group.start,
-            Math.min(position || group.start, group.end ?? element.duration),
+            Math.min(
+              position || group.start,
+              group.end ?? event.currentTarget.duration,
+            ),
           )
+          event.currentTarget.playbackRate = speed
         }}
         onPlay={(event) => {
-          if (
-            group.end !== undefined &&
-            event.currentTarget.currentTime >= group.end
-          )
-            event.currentTarget.currentTime = group.start
+          if (!authorized.current || disabled) event.currentTarget.pause()
+          else setPlaying(true)
         }}
-        onTimeUpdate={(event) => bound(event.currentTarget)}
-        onSeeking={(event) => bound(event.currentTarget)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => void complete()}
+        onTimeUpdate={(event) => {
+          const element = event.currentTarget
+          const end = clip.current.end
+          if (end !== undefined && element.currentTime >= end) {
+            element.pause()
+            if (element.currentTime > end) element.currentTime = end
+            if (authorized.current) void complete()
+          }
+          setMediaTime(element.currentTime)
+          onPosition(element.currentTime)
+        }}
+        onSeeking={(event) => {
+          const element = event.currentTarget
+          if (element.currentTime < clip.current.start)
+            element.currentTime = clip.current.start
+          if (
+            clip.current.end !== undefined &&
+            element.currentTime > clip.current.end
+          )
+            element.currentTime = clip.current.end
+        }}
+        onError={() => {
+          setError(
+            vi
+              ? 'Không tải được audio. Thử phát lại.'
+              : 'Could not load audio. Try again.',
+          )
+          authorized.current = false
+        }}
       />
-      {failed && (
-        <div role="alert" className="text-sm text-red-500">
-          {vi ? 'Không tải được audio.' : 'Could not load audio.'}{' '}
+      <progress
+        className="block w-full accent-primary"
+        aria-label={vi ? 'Tiến độ audio' : 'Audio progress'}
+        value={Math.max(0, mediaTime - group.start)}
+        max={Math.max(1, duration - group.start)}
+      />
+      <Button
+        variant="outline"
+        disabled={pending || disabled || (!playing && exhausted)}
+        onClick={() => void play()}
+      >
+        {pending
+          ? vi
+            ? 'Đang xử lý…'
+            : 'Loading…'
+          : playing
+          ? vi
+            ? 'Tạm dừng'
+            : 'Pause'
+          : state.completed
+          ? vi
+            ? 'Nghe lại'
+            : 'Replay'
+          : vi
+          ? 'Phát audio'
+          : 'Play audio'}
+      </Button>
+      <span className="ml-3 text-sm text-text-secondary">
+        {vi ? 'Lượt nghe lại còn:' : 'Replays remaining:'} {remaining}
+      </span>
+      {group.dialogue && group.dialogue.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {group.dialogue.map((line, index) => (
+            <Button
+              key={index}
+              size="sm"
+              variant="outline"
+              disabled={disabled || pending || remaining <= 0}
+              onClick={() => void play(line)}
+            >
+              {vi ? 'Nghe đoạn' : 'Play segment'} {index + 1} ·{' '}
+              {line.start_time}–{line.end_time}s
+            </Button>
+          ))}
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-red-500">
+          {error}{' '}
           <Button
             size="sm"
-            variant="outline"
+            variant="ghost"
             onClick={() => {
-              setFailed(false)
               audio.current?.load()
+              media.retry()
+              setError('')
             }}
           >
             {vi ? 'Thử lại audio' : 'Retry audio'}
           </Button>
-        </div>
+        </p>
       )}
     </div>
   )

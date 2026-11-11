@@ -7,6 +7,7 @@ import { cartService } from '@/features/cart/services/cart.service'
 import { getQueryClient } from '@/config/query.config'
 import { cartKeys } from '@/features/cart/keys/cart.keys'
 import { courseKeys } from '@/features/courses/keys/course.keys'
+import { courseService } from '@/features/courses/services/course.service'
 import { subscriptionService, type PaymentOrderResponse } from '@/features/upgrade/services/subscription.service'
 import { toast } from '@/store/toast.store'
 
@@ -45,12 +46,14 @@ export function useCourseCheckout({
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const orderRef = useRef<PaymentOrderResponse | null>(null)
+  const initializationRef = useRef<{ key: string; promise: Promise<PaymentOrderResponse | null> } | null>(null)
 
   useEffect(() => {
     orderRef.current = order
   }, [order])
 
   const totalAmount = courses.reduce((acc, c) => acc + (c.price || 0), 0)
+  const checkoutKey = JSON.stringify(courses.map(({ id, price }) => ({ id, price })))
   const formattedTotal =
     totalAmount > 0 ? `₫${totalAmount.toLocaleString('vi-VN')}` : 'Miễn phí'
 
@@ -80,9 +83,12 @@ export function useCourseCheckout({
     setStep('SUCCESS')
 
     try {
-      getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
-      getQueryClient().invalidateQueries({ queryKey: courseKeys.all })
-      await cartService.clearCart().catch(() => null)
+      if (totalAmount > 0) {
+        getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
+        getQueryClient().invalidateQueries({ queryKey: courseKeys.all })
+      }
+      if (totalAmount > 0) await cartService.clearCart().catch(() => null)
+      else await Promise.all((JSON.parse(checkoutKey) as Array<{ id: string }>).map(course => cartService.removeFromCart(course.id).catch(() => null)))
       getQueryClient().invalidateQueries({ queryKey: cartKeys.all })
     } catch {}
 
@@ -90,7 +96,7 @@ export function useCourseCheckout({
       isVi
         ? 'Đã kích hoạt khóa học thành công! Chúc bạn học tốt!'
         : 'Course enrolled successfully!',
-      isVi ? 'Thanh toán thành công' : 'Payment Success'
+      totalAmount <= 0 ? (isVi ? 'Đăng ký thành công' : 'Enrollment successful') : (isVi ? 'Thanh toán thành công' : 'Payment Success')
     )
 
     setTimeout(() => {
@@ -98,8 +104,15 @@ export function useCourseCheckout({
       setOrder(null)
       onOpenChange(false)
       onSuccess?.()
+      if (totalAmount <= 0) {
+        getQueryClient().invalidateQueries({ queryKey: courseKeys.enrollments() })
+        getQueryClient().invalidateQueries({ queryKey: courseKeys.all })
+      }
     }, 2500)
-  }, [isVi, onOpenChange, onSuccess, stopAllTimers])
+  }, [isVi, onOpenChange, onSuccess, stopAllTimers, totalAmount, checkoutKey])
+
+  const successRef = useRef(handlePaymentSuccess)
+  useEffect(() => { successRef.current = handlePaymentSuccess }, [handlePaymentSuccess])
 
   const checkPaymentStatus = useCallback(async () => {
     const currentOrder = orderRef.current
@@ -130,7 +143,9 @@ export function useCourseCheckout({
   }, [handlePaymentSuccess])
 
   useEffect(() => {
-    if (!open || courses.length === 0) {
+    const selection: Array<{ id: string; price: number }> = JSON.parse(checkoutKey)
+    if (!open || selection.length === 0) {
+      initializationRef.current = null
       stopAllTimers()
       return
     }
@@ -151,15 +166,22 @@ export function useCourseCheckout({
       setErrorMessage(null)
 
       try {
-        const newOrder = await subscriptionService.createPaymentOrder({
-          plan_slug: 'course',
-          amount: totalAmount,
-          order_type: 'COURSE',
-          course_ids: courses.map((c) => c.id),
-          billing_cycle: 'ONCE',
-        })
+        const key = `${user.user_id}:${checkoutKey}`
+        if (initializationRef.current?.key !== key) {
+          // Reuse the pending operation during Strict Mode effect replay.
+          // The enrollment endpoint verifies the actual server-side price.
+          const promise = totalAmount <= 0
+            ? Promise.all(selection.map(course => courseService.enrollCourse(course.id))).then(() => null)
+            : subscriptionService.createPaymentOrder({
+                plan_slug: 'course', amount: totalAmount, order_type: 'COURSE',
+                course_ids: selection.map(course => course.id), billing_cycle: 'ONCE',
+              })
+          initializationRef.current = { key, promise }
+        }
+        const newOrder = await initializationRef.current.promise
 
         if (isMounted) {
+          if (!newOrder) { await successRef.current(); return }
           setOrder(newOrder)
           orderRef.current = newOrder
           setTimeLeftSeconds(900)
@@ -191,7 +213,7 @@ export function useCourseCheckout({
     }
   }, [
     open,
-    courses,
+    checkoutKey,
     totalAmount,
     isAuthenticated,
     user,

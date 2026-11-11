@@ -87,10 +87,10 @@ export function VocabularyDashboardView({ isEmbedded = false }: VocabularyDashbo
 
   const { summary, memory_strength, cefr_breakdown, activity_30d, top_weak_words } = data
 
-  const retentionStatus =
-    summary.retention_rate_30d >= 85
+  const retentionStatus = summary.retention_rate_30d === null ? { text: isVietnamese ? 'Chưa kiểm tra' : 'Not tested', color: 'text-text-tertiary bg-surface-subtle' } :
+    (summary.retention_rate_30d ?? 0) >= 85
       ? { text: isVietnamese ? 'Xuất sắc' : 'Excellent', color: 'text-emerald-500 bg-emerald-500/10' }
-      : summary.retention_rate_30d >= 70
+      : (summary.retention_rate_30d ?? 0) >= 70
       ? { text: isVietnamese ? 'Ổn định' : 'Good', color: 'text-blue-500 bg-blue-500/10' }
       : { text: isVietnamese ? 'Cần củng cố' : 'Needs Focus', color: 'text-amber-500 bg-amber-500/10' }
 
@@ -220,7 +220,7 @@ export function VocabularyDashboardView({ isEmbedded = false }: VocabularyDashbo
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-black text-text-primary">
-                {summary.retention_rate_30d}%
+                {summary.retention_rate_30d === null ? 'Chưa đủ dữ liệu' : `${summary.retention_rate_30d}%`}
               </span>
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${retentionStatus.color}`}>
                 {retentionStatus.text}
@@ -229,7 +229,7 @@ export function VocabularyDashboardView({ isEmbedded = false }: VocabularyDashbo
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-subtle">
               <div
                 className="h-full rounded-full bg-emerald-500 transition-all duration-700"
-                style={{ width: `${summary.retention_rate_30d}%` }}
+                style={{ width: `${summary.retention_rate_30d ?? 0}%` }}
               />
             </div>
             <p className="text-[11px] text-text-secondary pt-0.5">
@@ -657,7 +657,7 @@ export function VocabularyDashboardView({ isEmbedded = false }: VocabularyDashbo
                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center bg-gray-900 text-white text-[10px] py-1 px-2 rounded-md shadow-md whitespace-nowrap z-20 pointer-events-none">
                       <span className="font-bold">{day.date}</span>
                       <span>
-                        {day.reviews_count} {isVietnamese ? 'lượt ôn' : 'reviews'} ({day.accuracy}%)
+                        {day.reviews_count} {isVietnamese ? 'lượt ôn' : 'reviews'} ({day.accuracy === null ? (isVietnamese ? 'chưa kiểm tra' : 'not tested') : `${day.accuracy}%`})
                       </span>
                     </div>
 
