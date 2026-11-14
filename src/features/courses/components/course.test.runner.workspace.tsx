@@ -1,5 +1,6 @@
 // Giao diện không gian làm bài thi khóa học toàn màn hình.
 'use client'
+import { courseSkillPracticeUrl } from '@/features/courses/lib/mistake-domain'
 
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Clock, Send, BookOpen, Mic, PenTool } from 'lucide-react'
@@ -289,6 +290,7 @@ export function CourseTestRunnerWorkspace({
                   progressionNote={progressionNote}
                   growthDiff={growthDiff}
                   wrongQuestionsList={wrongQuestionsList}
+                  skillScores={skillScores}
                   isLoadingAi={isLoadingAi}
                   showAiDetails={showAiDetails}
                   aiExplanations={aiExplanations}
@@ -303,29 +305,7 @@ export function CourseTestRunnerWorkspace({
                     navigate(slugOrId.startsWith('/') ? slugOrId : `/course/${slugOrId}`)
                   }
                   onDrillTopic={(topic) => setDrillTopic(topic)}
-                  onPracticeTopic={(item) => {
-                    const domain = (item.domain || 'LISTENING').toUpperCase()
-                    const contextId = item.context_id || ''
-                    const exerciseType = item.exercise_type || ''
-
-                    let targetUrl = '/listening'
-                    if (domain === 'SPEAKING') {
-                      targetUrl = '/speaking'
-                    } else if (domain === 'WRITING') {
-                      targetUrl = '/writing'
-                    } else if (domain === 'GRAMMAR') {
-                      targetUrl = '/grammar'
-                    } else if (domain === 'VOCABULARY') {
-                      targetUrl = '/vocabulary'
-                    }
-
-                    const params = new URLSearchParams()
-                    if (contextId) params.set('context_id', contextId)
-                    if (exerciseType) params.set('exercise_type', exerciseType)
-
-                    const queryString = params.toString()
-                    navigate(queryString ? `${targetUrl}?${queryString}` : targetUrl)
-                  }}
+                  onPracticeTopic={(item) => navigate(courseSkillPracticeUrl(item))}
                   onOpenMistakeVault={() => navigate('/practice/mistakes')}
                 />
               )}

@@ -7,17 +7,19 @@ import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icon.map";
 import { Button } from "@/components/button";
+import { Pagination } from "@/components/pagination";
 import { Card, CardContent } from "@/components/card";
 import { ReadingContextNavigation } from "@/features/practice/components/reading.context.navigation";
 import { ReadingWorkspace } from "@/features/practice/components/reading.workspace";
 import { ReadingTimeModeSelector } from "@/features/practice/components/reading.time-mode-selector";
-import { ReadingPassageCard } from "@/features/practice/components/reading.passage.card";
 import { readingPracticeService } from "@/features/practice/services/reading-practice.service";
 import type {
   ReadingPassage,
   ReadingType,
   TimerPresetMode,
 } from "@/features/practice/types/reading";
+
+const ITEMS_PER_PAGE = 9;
 
 const TABS: Array<{
   id: ReadingType;
@@ -28,14 +30,14 @@ const TABS: Array<{
   {
     id: "PART_6",
     label: "TOEIC Part 6",
-    icon: "file-text",
+    icon: "fileText",
     description:
       "Điền từ, cụm từ hoặc cả câu hoàn chỉnh vào các vị trí đục lỗ [1], [2], [3] trong đoạn văn",
   },
   {
     id: "PART_7",
     label: "TOEIC Part 7",
-    icon: "book-open",
+    icon: "bookOpen",
     description:
       "Đọc hiểu tài liệu thực tế (Email, Notice, Article, Advertisement, Schedule...)",
   },
@@ -72,7 +74,8 @@ function ReadingPractice() {
     ? (params.get("tab") as ReadingType)
     : "PART_7";
   const selectedContextId = params.get("context_id") || null;
-  const currentPage = Math.max(1, Number(params.get("page")) || 1);
+  const pageParam = Number(params.get("page") || 1);
+  const currentPage = Number.isSafeInteger(pageParam) && pageParam > 0 ? pageParam : 1;
   const sessionId = params.get("session"),
     attemptId = params.get("attempt"),
     historyView = params.get("view") === "history";
@@ -83,24 +86,24 @@ function ReadingPractice() {
     [starting, setStarting] = useState(false);
   const startRef = useRef<{ key: string; id: string } | null>(null);
   const startingRef = useRef(false);
-  const navigate = (patch: Record<string, string | null>) => {
+  const navigate = (patch: Record<string, string | null>, options?: { scroll?: boolean }) => {
     const next = new URLSearchParams(params.toString());
     for (const [name, value] of Object.entries(patch)) {
       if (value === null) next.delete(name);
       else next.set(name, value);
     }
-    router.push("/reading?" + next.toString());
+    router.push("/reading?" + next.toString(), options);
   };
   const login = () =>
     window.dispatchEvent(new CustomEvent("lingosphere:open-auth-modal"));
   const catalog = useQuery({
-    queryKey: ["reading-passages", activeTab, selectedContextId, currentPage],
+    queryKey: ["reading-passages", activeTab, selectedContextId, currentPage, ITEMS_PER_PAGE],
     queryFn: () =>
       readingPracticeService.getPassages({
         reading_type: activeTab,
         context_id: selectedContextId || undefined,
         page: currentPage,
-        limit: 20,
+        limit: ITEMS_PER_PAGE,
       }),
     enabled: !sessionId && !attemptId && !historyView,
   });
@@ -382,32 +385,26 @@ function ReadingPractice() {
               ))}
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <Button
-              disabled={currentPage === 1 || catalog.isFetching}
-              onClick={() => navigate({ page: String(currentPage - 1) })}
-            >
-              Trang trước
-            </Button>
-            <span>
-              Trang {currentPage}/
-              {Math.max(1, catalog.data?.pagination.total_pages || 1)}
-            </span>
-            <Button
-              disabled={
-                catalog.isFetching ||
-                currentPage >= (catalog.data?.pagination.total_pages || 1)
-              }
-              onClick={() => navigate({ page: String(currentPage + 1) })}
-            >
-              Trang sau
-            </Button>
-          </div>
+          {!catalog.isPending && !catalog.error && catalog.data && catalog.data.pagination.total_pages > 1 && (
+            <nav aria-label="Phân trang bài đọc" className="mt-8 flex justify-center">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={catalog.data.pagination.total_pages}
+                itemsPerPage={ITEMS_PER_PAGE}
+                totalItems={catalog.data.pagination.total}
+                onPageChange={(newPage) => {
+                  navigate({ page: String(newPage) }, { scroll: false });
+                  window.scrollTo({ top: 120, behavior: "smooth" });
+                }}
+              />
+            </nav>
+          )}
         </>
       )}
       {pendingPassage && (
         <ReadingTimeModeSelector
           questionCount={pendingPassage.question_count || 0}
+          passageTitle={pendingPassage.title_vi || pendingPassage.title}
           onSelect={(mode) => {
             void begin(mode);
           }}

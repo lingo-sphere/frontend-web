@@ -21,6 +21,10 @@ import {
 import { Button } from '@/components/button'
 import { useSpeakingMistakesQuery } from '@/features/practice/hooks/use.mistake.query'
 import { useNavigate } from '@/lib/navigation'
+import { SpeakingLearningFeedback } from './speaking.learning.feedback'
+import { SpeakingVocabularySaving } from './speaking.vocabulary.saving'
+import { speakingIssueWordTarget } from '../lib/speaking-vocabulary'
+import { SpeakingGrammarActions } from './speaking.grammar.actions'
 
 type SpeakingSubTab = 'DUE' | 'WORDS' | 'PHONEMES' | 'GRAMMAR' | 'CONTEXT'
 
@@ -72,7 +76,8 @@ export function SpeakingMistakesView() {
   const displayedExercises = showAllScheduled ? allScheduledExercises : dueExercises
 
   return (
-    <div className="space-y-6">
+    <SpeakingVocabularySaving targets={[...(data?.learning_issues || []).filter(issue => issue.kind === 'PRONUNCIATION').map(issue => speakingIssueWordTarget(issue)), ...mispronouncedWords.map(word => ({ attempt_id: word.last_attempt_id || '', turn_number: word.last_turn_number ?? 0, word: word.word }))]}>{actions => <div className="space-y-6">
+      {!!data?.learning_issues?.length && <SpeakingLearningFeedback issues={data.learning_issues} renderSaveAction={issue => actions.renderSaveButton(speakingIssueWordTarget(issue))} onPractice={issue => navigate(`/speaking?exercise_id=${encodeURIComponent(issue.exercise_id || '')}&focus=${encodeURIComponent(issue.practice)}`)} />}
       {/* Banner SRS Speaking */}
       <div className="relative overflow-hidden flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-emerald-950/90 via-teal-900/90 to-slate-900 text-white shadow-xl">
         <div className="space-y-2 max-w-3xl">
@@ -382,6 +387,7 @@ export function SpeakingMistakesView() {
                         <span className="text-lg font-black text-text-primary tracking-tight">
                           {item.word}
                         </span>
+                        {actions.renderSaveButton({ attempt_id: item.last_attempt_id || '', turn_number: item.last_turn_number ?? 0, word: item.word })}
                         <button
                           type="button"
                           onClick={() => handlePlayWord(item.word)}
@@ -609,6 +615,7 @@ export function SpeakingMistakesView() {
                         <strong>Quy tắc cần nhớ:</strong> {ge.rule_violated_vi}
                       </p>
                     )}
+                    <SpeakingGrammarActions attemptId={ge.attempt_id} issue={{ turn_number: ge.turn_number ?? 0, category: ge.error_category, original: ge.original_phrase, corrected: ge.corrected_phrase }} />
                   </div>
                 ))}
               </div>
@@ -656,6 +663,6 @@ export function SpeakingMistakesView() {
           </div>
         )}
       </div>
-    </div>
+    </div>}</SpeakingVocabularySaving>
   )
 }

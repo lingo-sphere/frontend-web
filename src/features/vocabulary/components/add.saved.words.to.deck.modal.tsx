@@ -30,11 +30,13 @@ import { useNavigate } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
+import type { SpeakingVocabularySource } from '../types/vocabulary-source'
 
 export const MIN_DECK_WORDS = 5
 export const MAX_DECK_WORDS = 30
 
 export interface SavedWordItem {
+  speaking_sources?: SpeakingVocabularySource[]
   saved_id: string
   lexical_item_id: string
   word: string
@@ -73,7 +75,9 @@ export function AddSavedWordsToDeckModal({
   const [deckDescription, setDeckDescription] = useState('')
   const [targetBand, setTargetBand] = useState('500-650')
   const [visibility, setVisibility] = useState<'PRIVATE' | 'PUBLIC'>('PRIVATE') // Mặc định: Riêng tư
-  const [removeAfterAdd, setRemoveAfterAdd] = useState(true) // Mặc định: Xóa khỏi sổ tay
+  const [removeChoice, setRemoveChoice] = useState<boolean | null>(null)
+  const hasSpeakingSources = selectedWords.some(word => word.speaking_sources?.length)
+  const removeAfterAdd = removeChoice ?? !hasSpeakingSources
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [createdSuccess, setCreatedSuccess] = useState<{
@@ -107,6 +111,7 @@ export function AddSavedWordsToDeckModal({
     setVisibility('PRIVATE')
     setCreatedSuccess(null)
     setIsCopied(false)
+    setRemoveChoice(null)
     onClose()
   }
 
@@ -536,13 +541,14 @@ export function AddSavedWordsToDeckModal({
           </div>
         )}
 
-        {/* TÙY CHỌN: XÓA KHỎI SỔ TAY TỪ VỰNG (MẶC ĐỊNH BẬT THEO YÊU CẦU) */}
+        {/* Keep Speaking source links by default; the learner can still choose removal. */}
         <div className="rounded-2xl border border-border bg-surface-subtle p-3.5">
+          {hasSpeakingSources && <p className="mb-2 text-xs text-text-secondary">{isVietnamese ? 'Các từ này có nguồn từ bài Speaking. Mặc định giữ trong Sổ tay để bạn quay lại nghe lỗi gốc; chọn xóa sẽ gỡ các liên kết này khỏi Sổ tay.' : 'These words have Speaking sources. They stay in your notebook by default so you can replay the original mistakes; removal also removes those notebook links.'}</p>}
           <label className="flex cursor-pointer items-start gap-2.5">
             <input
               type="checkbox"
               checked={removeAfterAdd}
-              onChange={(e) => setRemoveAfterAdd(e.target.checked)}
+              onChange={(e) => setRemoveChoice(e.target.checked)}
               className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
             />
             <div className="text-[12px]">

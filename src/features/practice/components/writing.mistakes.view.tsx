@@ -1,5 +1,6 @@
 // Giao diện xem và ôn tập các câu sai Writing theo chu kỳ lặp lại ngắt quãng SRS.
 "use client";
+import { WritingCorrections } from './writing.corrections';
 import { useMounted } from "@/hooks/use.mounted";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -589,6 +590,11 @@ export function WritingMistakesView() {
                     {vi ? "Xem bài nộp nguồn" : "View source submission"}
                   </Button>
                 </section>
+                {detail.data.item.writing.original && detail.data.item.writing.corrected && ['GRAMMAR', 'VOCABULARY'].includes(detail.data.item.writing.kind) && (
+                  <WritingCorrections compact submissionId={detail.data.item.writing.last_error_submission_id || detail.data.item.writing.last_submission_id}
+                    errors={[{ type: detail.data.item.writing.kind === 'GRAMMAR' ? 'GRAMMAR' : 'VOCABULARY', original: detail.data.item.writing.original,
+                      correction: detail.data.item.writing.corrected, explanation: detail.data.item.writing.explanation }]} />
+                )}
                 <section className="space-y-3">
                   <h3 className="font-semibold">
                     {vi ? "Luyện lại có mục tiêu" : "Targeted practice"}

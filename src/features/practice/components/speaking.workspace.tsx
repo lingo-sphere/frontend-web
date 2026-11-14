@@ -1,3 +1,4 @@
+import { PracticeKeyboard } from './practice.keyboard'
 import { resolveSpeakingPolicy } from '@/features/practice/lib/speaking-policy'
 import { useSpeakingSession, type RecordingSubmission } from '@/features/practice/hooks/use.speaking.session'
 /**
@@ -17,6 +18,7 @@ import { PracticeExitConfirmModal } from '@/features/practice/components/practic
 
 interface SpeakingWorkspaceProps {
   exercise: SpeakingExercise
+  initialTier?: 'EASY' | 'MEDIUM' | 'HARD'
   recordingState: RecordingState
   onUpdateRecording: (
     state: RecordingState | ((prev: RecordingState) => RecordingState)
@@ -61,6 +63,7 @@ interface SpeechRecognitionConstructor {
 
 export function SpeakingWorkspace({
   exercise,
+  initialTier,
   recordingState,
   onUpdateRecording,
   onSubmit,
@@ -68,12 +71,14 @@ export function SpeakingWorkspace({
   isSubmitting = false,
 }: SpeakingWorkspaceProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const isVietnamese = i18n.language.toLowerCase().startsWith('vi')
 
   if (exercise.exercise_type === 'SHORT_DIALOGUE' && exercise.dialogue_scenario) {
     return (
       <SpeakingDialogueWorkspace
+        key={exercise.id}
         exercise={exercise}
+        initialTier={initialTier}
         isVietnamese={isVietnamese}
         onBack={onBack}
         onSubmit={onSubmit}
@@ -82,16 +87,28 @@ export function SpeakingWorkspace({
     )
   }
 
-  return <SpeakingMonologueWorkspace key={exercise.id} {...{ exercise, recordingState, onUpdateRecording, onSubmit, onBack, isSubmitting }} />
+  return (
+    <SpeakingMonologueWorkspace
+      key={exercise.id}
+      exercise={exercise}
+      initialTier={initialTier}
+      recordingState={recordingState}
+      onUpdateRecording={onUpdateRecording}
+      onSubmit={onSubmit}
+      onBack={onBack}
+      isSubmitting={isSubmitting}
+    />
+  )
 }
 
-function SpeakingMonologueWorkspace({ exercise, recordingState, onUpdateRecording, onSubmit, onBack, isSubmitting }: SpeakingWorkspaceProps) {
+function SpeakingMonologueWorkspace({ exercise, initialTier, recordingState, onUpdateRecording, onSubmit, onBack, isSubmitting }: SpeakingWorkspaceProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
-  const [selectedTier, setSelectedTier] = useState<'EASY' | 'MEDIUM' | 'HARD'>(exercise.difficulty_level || 'MEDIUM')
+  const isVietnamese = i18n.language.toLowerCase().startsWith('vi')
+  const [selectedTier, setSelectedTier] = useState<'EASY' | 'MEDIUM' | 'HARD'>(initialTier || exercise.difficulty_level || 'MEDIUM')
   const session = useSpeakingSession(exercise, selectedTier)
   const reserveTake = session.reserve
-  const policy = resolveSpeakingPolicy(exercise, selectedTier)
+  const getPolicy = session.getPolicy
+  const policy = session.policy ?? resolveSpeakingPolicy(exercise, selectedTier)
   const submissionRef = useRef<RecordingSubmission | undefined>(undefined)
   const startingRef = useRef(false)
   const mountedRef = useRef(true)
@@ -210,7 +227,7 @@ function SpeakingMonologueWorkspace({ exercise, recordingState, onUpdateRecordin
         phase: 'recording',
         duration: 0,
         preparationTimeLeft: 0,
-        speakingTimeLeft: policy.response_time_seconds,
+        speakingTimeLeft: getPolicy()?.response_time_seconds ?? policy.response_time_seconds,
       }))
     } catch (error) {
       streamRef.current?.getTracks().forEach(track => track.stop())
@@ -222,7 +239,7 @@ function SpeakingMonologueWorkspace({ exercise, recordingState, onUpdateRecordin
         isVietnamese ? 'Microphone' : 'Microphone error'
       )
     } finally { startingRef.current = false }
-  }, [onUpdateRecording, isVietnamese, reserveTake, policy.response_time_seconds])
+  }, [onUpdateRecording, isVietnamese, reserveTake, getPolicy, policy.response_time_seconds])
 
   const stopRecording = useCallback(() => {
     if (speechRecognitionRef.current) {
@@ -398,53 +415,62 @@ function SpeakingMonologueWorkspace({ exercise, recordingState, onUpdateRecordin
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <div className="mb-6 flex items-center gap-4">
+    <PracticeKeyboard as="main" features={['record','audio','submit']} data-speaking-workspace className="flex min-h-[calc(100dvh-4rem)] flex-col lg:h-[calc(100dvh-4rem)]">
+      <header className="flex shrink-0 flex-wrap items-center gap-4 border-b border-border bg-surface px-4 py-3 sm:px-6">
         <button
           type="button"
-          onClick={handleBackClick}
+          data-practice-action="exit" onClick={handleBackClick}
           className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary cursor-pointer"
         >
           <ArrowLeft size={18} />
           {isVietnamese ? 'Quay lại' : 'Back'}
         </button>
-        <div className="flex-1">
-          <h1 className="text-[20px] font-bold text-text-primary">{exercise.title}</h1>
-          <p className="text-[13px] text-text-secondary">{exercise.title_vi}</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="break-words text-base font-semibold text-text-primary">{isVietnamese ? exercise.title_vi || exercise.title : exercise.title}</h1>
+          <p className="text-xs text-text-secondary">{typeLabels[exercise.exercise_type]} · {exercise.cefr_level}</p>
         </div>
+      </header>
+
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <section aria-label={isVietnamese ? 'Đề bài và hướng dẫn' : 'Task and instructions'} className="min-w-0 bg-surface p-4 sm:p-6 lg:w-1/2 lg:overflow-y-auto lg:border-r lg:border-border">
+          <h2 className="mb-4 text-sm font-semibold text-text-primary">{isVietnamese ? 'Đề bài và hướng dẫn' : 'Task and instructions'}</h2>
+          <SpeakingPromptCard
+            exercise={exercise}
+            isVietnamese={isVietnamese}
+            typeLabels={typeLabels}
+            showHints={policy.show_hints}
+          />
+
+        </section>
+        <section aria-label={isVietnamese ? 'Bài nói của bạn' : 'Your recording'} className="min-w-0 border-t border-border bg-surface-subtle/50 p-4 sm:p-6 lg:w-1/2 lg:overflow-y-auto lg:border-t-0">
+          <h2 className="mb-4 text-sm font-semibold text-text-primary">{isVietnamese ? 'Bài nói của bạn' : 'Your recording'}</h2>
+          <SpeakingRecorderPanel
+            phase={phase}
+            exercise={exercise}
+            preparationTimeLeft={preparationTimeLeft}
+            speakingTimeLeft={speakingTimeLeft}
+            duration={duration}
+            audioUrl={audioUrl}
+            isPlaying={isPlaying}
+            isVietnamese={isVietnamese}
+            needsPreparation={policy.preparation_time_seconds > 0}
+            canRetake={(session.counts.turn_0 || 0) < policy.max_record_attempts}
+            takesUsed={session.counts.turn_0 || 0}
+            selectedTier={selectedTier}
+            onSelectTier={handleSelectTier}
+            onSkipPreparation={handleSkipPreparation}
+            audioRef={audioRef}
+            formatTime={formatTime}
+            onStartPractice={handleStartPractice}
+            onStopRecording={stopRecording}
+            onPlayPause={handlePlayPause}
+            onReset={handleReset}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+          />
+
+        </section>
       </div>
-
-      <SpeakingPromptCard
-        exercise={exercise}
-        isVietnamese={isVietnamese}
-        typeLabels={typeLabels}
-        showHints={policy.show_hints}
-      />
-
-      <SpeakingRecorderPanel
-        phase={phase}
-        exercise={exercise}
-        preparationTimeLeft={preparationTimeLeft}
-        speakingTimeLeft={speakingTimeLeft}
-        duration={duration}
-        audioUrl={audioUrl}
-        isPlaying={isPlaying}
-        isVietnamese={isVietnamese}
-        needsPreparation={Boolean(exercise.tiered_time_limits)}
-        canRetake={(session.counts.turn_0 || 0) < policy.max_record_attempts}
-        takesUsed={session.counts.turn_0 || 0}
-        selectedTier={selectedTier}
-        onSelectTier={handleSelectTier}
-        onSkipPreparation={handleSkipPreparation}
-        audioRef={audioRef}
-        formatTime={formatTime}
-        onStartPractice={handleStartPractice}
-        onStopRecording={stopRecording}
-        onPlayPause={handlePlayPause}
-        onReset={handleReset}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-      />
 
       {/* Modal xác nhận thoát bài tập Speaking */}
       <PracticeExitConfirmModal
@@ -465,6 +491,6 @@ function SpeakingMonologueWorkspace({ exercise, recordingState, onUpdateRecordin
         confirmText={isVietnamese ? 'Thoát bài tập' : 'Exit Practice'}
         cancelText={isVietnamese ? 'Tiếp tục luyện' : 'Resume Practice'}
       />
-    </main>
+    </PracticeKeyboard>
   )
 }

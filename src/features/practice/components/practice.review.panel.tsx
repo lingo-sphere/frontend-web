@@ -62,18 +62,19 @@ export function PracticeReviewPanel({
           <p>
             {vi ? "Điểm AI ban đầu" : "Original AI score"}:{" "}
             {data?.grading_standard === "TOEIC"
-              ? `${data.original_ai_raw_score}/${data.max_score}`
-              : `${data?.ai_score}/100`}
+              ? typeof data.original_ai_raw_score === 'number' ? `${data.original_ai_raw_score}/${data.max_score}` : vi ? 'Chưa có điểm AI' : 'No AI score'
+              : typeof data?.ai_score === 'number' ? `${data.ai_score}/100` : vi ? 'Chưa có điểm AI' : 'No AI score'}
           </p>
           <p>
             {review.reviewer_name}
             {review.reviewed_at
               ? ` · ${new Date(review.reviewed_at).toLocaleString(
-                  vi ? "vi-VN" : "en-US",
+                  vi ? "vi-VN" : "en-US", { timeZone: 'Asia/Ho_Chi_Minh', hour12: false },
                 )}`
               : ""}
           </p>
           <p className="whitespace-pre-wrap">{review.feedback}</p>
+          {review.teacher_grading && <details><summary>{vi ? 'Phiếu chấm của giáo viên' : 'Teacher grading sheet'}: {review.teacher_grading.raw_score}/{review.teacher_grading.max_score}</summary><ul className="mt-2 space-y-1">{Object.entries(review.teacher_grading.criteria_scores).map(([key, score]) => <li key={key}>{review.teacher_grading!.rubric_snapshot.criteria.find(c => c.key === key)?.label || key}: {score == null ? (vi ? 'Không áp dụng' : 'Not applicable') : `${score}/100`}</li>)}</ul></details>}
         </>
       )}
       {data?.can_request && !open && (

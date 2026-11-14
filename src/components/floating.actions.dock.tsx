@@ -8,7 +8,7 @@ import { AiTutorFloatingButton } from '@/features/ai-learning/components/ai.tuto
 import { CommunityChatFloatingButton } from '@/features/community/components/community.chat.floating.button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/tooltip'
 
-export function FloatingActionsDock() {
+export function FloatingActionsDock({ readingMode = false }: { readingMode?: boolean }) {
   const [bottomPx, setBottomPx] = useState(24)
   const [isDragging, setIsDragging] = useState(false)
 
@@ -62,7 +62,7 @@ export function FloatingActionsDock() {
     <div
       ref={dockRef}
       style={{ bottom: `${bottomPx}px` }}
-      className={`fixed right-6 z-50 flex flex-col items-center gap-2.5 ${
+      className={`fixed right-6 z-50 [body:has([data-speaking-workspace])_&]:hidden ${readingMode ? 'hidden xl:flex' : 'flex'} flex-col items-center gap-2.5 ${
         isDragging ? 'transition-none select-none' : 'transition-[bottom] duration-200 ease-out'
       }`}
     >

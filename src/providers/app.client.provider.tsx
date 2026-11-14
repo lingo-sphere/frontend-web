@@ -124,24 +124,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       if (useAuthStore.getState().isKickedOut) return
       authService.clearAuthStorage()
       setUser(null)
-      if (typeof window !== 'undefined') {
-        const path = window.location.pathname
-        const isProtected =
-          path.startsWith('/home') ||
-          path.startsWith('/profile') ||
-          path.startsWith('/settings') ||
-          path.startsWith('/cart') ||
-          path.startsWith('/ai-learning') ||
-          path.startsWith('/notes') ||
-          path.startsWith('/progress') ||
-          path.startsWith('/exam-history') ||
-          path.startsWith('/toeic/exam') ||
-          path.includes('/exam') ||
-          path.startsWith('/practice/mistakes')
-        if (isProtected) {
-          window.location.href = `/login?returnUrl=${encodeURIComponent(path + window.location.search)}`
-        }
-      }
+      // GlobalRouteGuard owns redirects after the auth state is cleared.
     }
 
     window.addEventListener('lingosphere:login_success', handleLoginSuccess)
