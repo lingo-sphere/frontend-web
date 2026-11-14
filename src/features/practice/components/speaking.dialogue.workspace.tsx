@@ -1,3 +1,4 @@
+import { PracticeKeyboard, PracticeRecordKey } from './practice.keyboard'
 import {
   useSpeakingSession,
   type RecordingSubmission,
@@ -10,6 +11,7 @@ import { toast } from "@/store/toast.store";
  * - Chọn 3 mức độ thích ứng: Dễ (Read-along), Trung bình (Guided), Khó (Independent)
  * - Tự động phát âm thanh của Bot trước (R2 audio / SpeechSynthesis)
  * - VAD ngắt mic thông minh có Grace Period + Nút hoàn thành thủ công
+ * - Nghe lại/thu lại và xác nhận từng bản thu trước khi chuyển lượt
  * - Bộ đếm giờ thực hành tăng dần (Elapsed Timer)
  * - Tách bạch audio và metrics từng lượt (Response Latency, Speaking Duration)
  */
@@ -49,6 +51,7 @@ import { PracticeExitConfirmModal } from "@/features/practice/components/practic
 interface SpeakingDialogueWorkspaceProps {
   exercise: SpeakingExercise;
   isVietnamese: boolean;
+  initialTier?: DifficultyLevel;
   onBack: () => void;
   onSubmit: (
     transcription: string,
@@ -57,7 +60,7 @@ interface SpeakingDialogueWorkspaceProps {
     difficultyChosen?: DifficultyLevel,
     dialogueTurnsResults?: DialogueTurnAttemptResult[],
     recordingSubmission?: RecordingSubmission
-  ) => void;
+  ) => void | Promise<void>;
   isSubmitting?: boolean;
 }
 
@@ -74,6 +77,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 };
 
 type VadState = "WAITING_FOR_SPEECH" | "SPEAKING" | "GRACE_PERIOD" | "IDLE";
+type RecordingStopReason = "manual" | "silence" | "timeout";
 type RecognitionEvent = {
   results: ArrayLike<ArrayLike<{ transcript: string }>>;
 };
@@ -94,6 +98,7 @@ type SpeechWindow = Window & {
 export function SpeakingDialogueWorkspace({
   exercise,
   isVietnamese,
+  initialTier,
   onBack,
   onSubmit,
   isSubmitting = false,
@@ -103,10 +108,10 @@ export function SpeakingDialogueWorkspace({
 
   // 1. Cấu hình mức độ luyện tập (Scaffolding level)
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>(
-    exercise.difficulty_level || "MEDIUM"
+    initialTier || exercise.difficulty_level || "MEDIUM"
   );
   const session = useSpeakingSession(exercise, selectedDifficulty);
-  const policy = resolveSpeakingPolicy(exercise, selectedDifficulty);
+  const policy = session.policy ?? resolveSpeakingPolicy(exercise, selectedDifficulty);
   const recordingSubmissionRef = useRef<RecordingSubmission | undefined>(
     undefined
   );
@@ -114,8 +119,24 @@ export function SpeakingDialogueWorkspace({
   const mountedRef = useRef(true);
   const [isStarting, setIsStarting] = useState(false);
   const recordingStartedAtRef = useRef(0);
+  const stoppingRef = useRef(false);
+  const [isStopping, setIsStopping] = useState(false);
+  const [isRetaking, setIsRetaking] = useState(false);
+  const [returningToFinalReview, setReturningToFinalReview] = useState(false);
+  const [isTurnReview, setIsTurnReview] = useState(false);
+  const awaitingReviewRef = useRef(false);
+  const [recordingStopReason, setRecordingStopReason] = useState<RecordingStopReason>("manual");
+  const reviewConfirmRef = useRef<HTMLButtonElement | null>(null);
+  const botRunRef = useRef(0);
+  const botSpeakingRef = useRef(false);
+  const botTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const submitLockRef = useRef(false);
+  const [preparingSubmission, setPreparingSubmission] = useState(false);
+  const recordingTurnRef = useRef<{ index: number; take?: RecordingSubmission; previousTranscript: string } | null>(null);
+  const transcriptsRef = useRef<Record<number, string>>({});
   const retakingRef = useRef(false);
-  const completeRef = useRef<() => void>(() => {});
+  const completeRef = useRef<(reason?: RecordingStopReason) => void>(() => {});
   const [prepLeft, setPrepLeft] = useState<number | null>(null);
   const [responseLeft, setResponseLeft] = useState<number | null>(null);
   const [turnError, setTurnError] = useState("");
@@ -123,6 +144,10 @@ export function SpeakingDialogueWorkspace({
   const [isFinished, setIsFinished] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const exitOpenRef = useRef(false);
+  const pausedAtRef = useRef(0);
+  const deferredBotEndRef = useRef(false);
+  const pendingBotRef = useRef<DialogueTurn | null>(null);
 
   // 2. State tiến trình hội thoại
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
@@ -172,9 +197,13 @@ export function SpeakingDialogueWorkspace({
 
   const activeTurn: DialogueTurn | undefined = turns[currentTurnIndex];
 
+  useEffect(() => {
+    if (isTurnReview && !showExitConfirm) reviewConfirmRef.current?.focus({ preventScroll: true });
+  }, [isTurnReview, showExitConfirm]);
+
   // Đếm thời gian thực hành (Elapsed Timer)
   useEffect(() => {
-    if (isStarted && !isFinished) {
+    if (isStarted && !isFinished && !showExitConfirm) {
       elapsedTimerRef.current = setInterval(() => {
         setElapsedSeconds((prev) => prev + 1);
       }, 1000);
@@ -184,13 +213,19 @@ export function SpeakingDialogueWorkspace({
     return () => {
       if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
     };
-  }, [isStarted, isFinished]);
+  }, [isStarted, isFinished, showExitConfirm]);
 
   // Dọn dẹp âm thanh khi unmount
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      // Invalidate the latest generation, including playback started after mounting.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      botRunRef.current++;
+      botSpeakingRef.current = false;
+      if (botTimerRef.current) clearTimeout(botTimerRef.current);
+      utteranceRef.current = null;
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
         audioPlayerRef.current = null;
@@ -207,6 +242,7 @@ export function SpeakingDialogueWorkspace({
       }
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.onstop = null;
+        mediaRecorderRef.current.onerror = null;
         if (mediaRecorderRef.current.state !== "inactive")
           mediaRecorderRef.current.stop();
       }
@@ -248,8 +284,27 @@ export function SpeakingDialogueWorkspace({
     setPlayingAudioKey(null);
   }, []);
 
+  const stopBotPlayback = useCallback(() => {
+    botRunRef.current++;
+    botSpeakingRef.current = false;
+    if (botTimerRef.current) clearTimeout(botTimerRef.current);
+    botTimerRef.current = null;
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.onended = null;
+      audioPlayerRef.current.onerror = null;
+      audioPlayerRef.current.pause();
+    }
+    window.speechSynthesis?.cancel();
+    utteranceRef.current = null;
+  }, []);
+  const isCurrentBot = useCallback((run: number, number: number) =>
+    mountedRef.current && run === botRunRef.current && turns[currentTurnRef.current]?.turn_number === number,
+  [turns]);
+
   const replayUserAudio = useCallback(
     (turnIndex: number) => {
+      if (isSubmitting || submitLockRef.current) return;
+      if (botSpeakingRef.current || startingRef.current || mediaRecorderRef.current?.state === "recording") return;
       const audioKey = `user-${turnIndex}`;
       if (playingAudioKey === audioKey) {
         stopAnyPlayback();
@@ -278,7 +333,7 @@ export function SpeakingDialogueWorkspace({
       };
       audio.play().catch(() => setPlayingAudioKey(null));
     },
-    [playingAudioKey, turnAudioUrls, turnAudioBlobs, stopAnyPlayback]
+    [playingAudioKey, turnAudioUrls, turnAudioBlobs, stopAnyPlayback, isSubmitting]
   );
 
   const speakReplaySpeechSynthesis = useCallback((text: string) => {
@@ -312,6 +367,7 @@ export function SpeakingDialogueWorkspace({
 
   const replayBotAudio = useCallback(
     async (turn: DialogueTurn, turnIndex: number) => {
+      if (botSpeakingRef.current || startingRef.current || mediaRecorderRef.current?.state === "recording") return;
       const audioKey = `bot-${turnIndex}`;
       if (playingAudioKey === audioKey) {
         stopAnyPlayback();
@@ -349,6 +405,7 @@ export function SpeakingDialogueWorkspace({
   // Cho phép thu âm lại lượt thoại (Retake turn)
   const handleRetakeTurn = useCallback(
     (turnIndex: number) => {
+      if ((!isFinished && !(awaitingReviewRef.current && turnIndex === currentTurnRef.current)) || isSubmitting || submitLockRef.current || stoppingRef.current) return;
       if (
         (session.counts["turn_" + turns[turnIndex]?.turn_number] || 0) >=
         policy.max_record_attempts
@@ -362,39 +419,17 @@ export function SpeakingDialogueWorkspace({
       setPrepLeft(policy.preparation_time_seconds);
       setResponseLeft(null);
       setTurnError("");
-      retakingRef.current = true;
+      // A retake started from the final review returns there after confirmation.
+      retakingRef.current = retakingRef.current || isFinished;
+      if (isFinished) setReturningToFinalReview(true);
+      awaitingReviewRef.current = false;
+      setIsTurnReview(false);
+      setIsRetaking(true);
       stopAnyPlayback();
 
-      // Thu hồi audio URL của turn này
-      if (turnAudioUrls[turnIndex]) {
-        try {
-          URL.revokeObjectURL(turnAudioUrls[turnIndex]);
-        } catch {}
-      }
-
-      setTurnAudioUrls((prev) => {
-        const next = { ...prev };
-        delete next[turnIndex];
-        return next;
-      });
-
-      setTurnAudioBlobs((prev) => {
-        const next = { ...prev };
-        delete next[turnIndex];
-        return next;
-      });
-
-      setTurnTranscripts((prev) => {
-        const next = { ...prev };
-        delete next[turnIndex];
-        return next;
-      });
-
-      const targetTurnNumber = turns[turnIndex]?.turn_number || turnIndex + 1;
-      setTurnsResults((prev) =>
-        prev.filter((r) => r.turn_number !== targetTurnNumber)
-      );
-
+      // Preserve the previous take until a valid replacement is available.
+      stopBotPlayback();
+      currentTurnRef.current = turnIndex;
       setCurrentTurnIndex(turnIndex);
       setVadState("IDLE");
       setIsFinished(false);
@@ -402,7 +437,9 @@ export function SpeakingDialogueWorkspace({
     },
     [
       stopAnyPlayback,
-      turnAudioUrls,
+      stopBotPlayback,
+      isFinished,
+      isSubmitting,
       turns,
       session.counts,
       policy.max_record_attempts,
@@ -413,108 +450,118 @@ export function SpeakingDialogueWorkspace({
   // =========================================================================
   // BOT VOICE ENGINE: Phát âm thanh của Bot
   // =========================================================================
-  function speakWithSpeechSynthesis(text: string) {
+  const speakWithSpeechSynthesis = useCallback((text: string, run: number, turnNumber: number) => {
+    if (!isCurrentBot(run, turnNumber)) return;
     if (!("speechSynthesis" in window)) {
+      botSpeakingRef.current = false;
       setIsBotSpeaking(false);
-      turnBotFinishedTimeRef.current = Date.now();
-      botFinishedRef.current();
+      setTurnError(isVietnamese ? 'Không phát được lời bot. Hãy đọc ngữ cảnh hoặc bấm bỏ qua audio.' : 'Bot audio unavailable. Read the context or skip the audio.');
       return;
     }
-
-    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 0.95;
-
-    // Chọn voice tiếng Anh chuẩn nếu có
-    const voices = window.speechSynthesis.getVoices();
-    const englishVoice =
-      voices.find(
-        (v) =>
-          v.lang.startsWith("en") &&
-          (v.name.includes("Natural") ||
-            v.name.includes("Google") ||
-            v.name.includes("Samantha") ||
-            v.name.includes("Jenny"))
-      ) || voices.find((v) => v.lang.startsWith("en"));
-    if (englishVoice) {
-      utterance.voice = englishVoice;
-    }
-
+    utteranceRef.current = utterance;
+    utterance.lang = 'en-US'; utterance.rate = 0.95;
+    utterance.voice = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('en')) || null;
     utterance.onend = () => {
+      if (!isCurrentBot(run, turnNumber)) return;
+      utteranceRef.current = null;
       setIsBotSpeaking(false);
       turnBotFinishedTimeRef.current = Date.now();
       botFinishedRef.current();
     };
     utterance.onerror = () => {
+      if (!isCurrentBot(run, turnNumber)) return;
+      botSpeakingRef.current = false;
       setIsBotSpeaking(false);
-      turnBotFinishedTimeRef.current = Date.now();
-      botFinishedRef.current();
+      setTurnError(isVietnamese ? 'Không phát được lời bot. Bạn có thể bỏ qua audio để tiếp tục.' : 'Bot playback failed. You can skip its audio to continue.');
     };
-
     window.speechSynthesis.speak(utterance);
-  }
+  }, [isCurrentBot, isVietnamese]);
 
-  const playBotAudio = useCallback(
-    async (turn: DialogueTurn) => {
-      setIsBotSpeaking(true);
-      setVadState("IDLE");
-
-      // Ưu tiên 1: Audio file từ R2 nếu có prompt_audio_id
-      if (turn.prompt_audio_id) {
-        try {
-          const resolvedUrl = await resolveMediaUrlAsync(turn.prompt_audio_id);
-          if (turns[currentTurnRef.current]?.turn_number !== turn.turn_number)
-            return;
-          if (resolvedUrl) {
-            if (!audioPlayerRef.current) {
-              audioPlayerRef.current = new Audio();
-            }
-            audioPlayerRef.current.src = resolvedUrl;
-            audioPlayerRef.current.onended = () => {
-              setIsBotSpeaking(false);
-              turnBotFinishedTimeRef.current = Date.now();
-              botFinishedRef.current();
-            };
-            audioPlayerRef.current.onerror = () => {
-              // Fallback sang SpeechSynthesis nếu phát audio lỗi
-              speakWithSpeechSynthesis(turn.text_en);
-            };
-            await audioPlayerRef.current.play();
-            return;
-          }
-        } catch (err) {
-          console.warn(
-            "[Dialogue] Failed to play prompt_audio_id, fallback to Web Speech:",
-            err
-          );
+  const playBotAudio = useCallback(async (turn: DialogueTurn) => {
+    if (exitOpenRef.current) { pendingBotRef.current = turn; return; }
+    if (!mountedRef.current || turns[currentTurnRef.current]?.turn_number !== turn.turn_number) return;
+    stopBotPlayback();
+    const run = botRunRef.current;
+    botSpeakingRef.current = true;
+    setIsBotSpeaking(true); setVadState('IDLE'); setTurnError('');
+    let fallbackStarted = false;
+    const fallback = () => {
+      if (fallbackStarted || !isCurrentBot(run, turn.turn_number)) return;
+      fallbackStarted = true;
+      speakWithSpeechSynthesis(turn.text_en, run, turn.turn_number);
+    };
+    if (turn.prompt_audio_id) {
+      try {
+        const url = await resolveMediaUrlAsync(turn.prompt_audio_id);
+        if (!isCurrentBot(run, turn.turn_number)) return;
+        if (url) {
+          const player = new Audio(url); audioPlayerRef.current = player;
+          player.onended = () => {
+            if (!isCurrentBot(run, turn.turn_number)) return;
+            turnBotFinishedTimeRef.current = Date.now(); botFinishedRef.current();
+          };
+          player.onerror = fallback;
+          await player.play();
+          return;
         }
-      }
+      } catch { /* Try TTS once when stored media cannot be played. */ }
+    }
+    fallback();
+  }, [turns, stopBotPlayback, isCurrentBot, speakWithSpeechSynthesis]);
 
-      // Ưu tiên 2: Fallback qua Web Speech API (speechSynthesis)
-      if (turns[currentTurnRef.current]?.turn_number !== turn.turn_number)
-        return;
-      speakWithSpeechSynthesis(turn.text_en);
-    },
-    [turns]
-  );
+  const scheduleBotAudio = useCallback((turn: DialogueTurn, delay: number) => {
+    if (botTimerRef.current) clearTimeout(botTimerRef.current);
+    const generation = botRunRef.current;
+    botTimerRef.current = setTimeout(() => {
+      botTimerRef.current = null;
+      if (mountedRef.current && generation === botRunRef.current) void playBotAudio(turn);
+    }, delay);
+  }, [playBotAudio]);
 
   // Khi Bot nói xong -> Chuyển sang lượt của User hoặc turn tiếp (CHỜ USER TỰ BẤM NÚT THU ÂM)
-  function finishDialogue() {
+  const finishDialogue = useCallback(() => {
+    stopBotPlayback();
+    awaitingReviewRef.current = false;
+    setIsTurnReview(false);
+    setPrepLeft(null); setResponseLeft(null);
     setIsFinished(true);
     setIsReviewModalOpen(true);
     setIsBotSpeaking(false);
     setVadState("IDLE");
     if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
-  }
+  }, [stopBotPlayback]);
+
+  const confirmUserTurn = useCallback(() => {
+    const index = currentTurnRef.current;
+    if (!awaitingReviewRef.current || exitOpenRef.current || startingRef.current || stoppingRef.current || isSubmitting || submitLockRef.current || !turnAudioBlobs[index]) return;
+    // Lock synchronously so double clicks cannot skip a turn or play bot twice.
+    awaitingReviewRef.current = false;
+    setIsTurnReview(false);
+    setIsRetaking(false);
+    setTurnError("");
+    stopAnyPlayback();
+    if (retakingRef.current) {
+      retakingRef.current = false;
+      setReturningToFinalReview(false);
+      finishDialogue();
+      return;
+    }
+    const nextIndex = index + 1;
+    if (nextIndex >= turns.length) { finishDialogue(); return; }
+    currentTurnRef.current = nextIndex;
+    setCurrentTurnIndex(nextIndex);
+    if (turns[nextIndex].speaker === "AI") scheduleBotAudio(turns[nextIndex], 300);
+    else { setPrepLeft(policy.preparation_time_seconds); setVadState("IDLE"); }
+  }, [isSubmitting, turnAudioBlobs, turns, stopAnyPlayback, finishDialogue, scheduleBotAudio, policy.preparation_time_seconds]);
 
   const handleBotFinished = useCallback(() => {
+    if (exitOpenRef.current) { deferredBotEndRef.current = true; return; }
     const index = currentTurnRef.current;
     if (turns[index]?.speaker !== "AI") return;
     currentTurnRef.current = index + 1;
     setIsBotSpeaking(false);
-    audioPlayerRef.current?.pause();
-    window.speechSynthesis?.cancel();
+    stopBotPlayback();
     const nextTurn = turns[index + 1];
 
     if (nextTurn && nextTurn.speaker === "USER") {
@@ -524,12 +571,12 @@ export function SpeakingDialogueWorkspace({
       setVadState("IDLE");
     } else if (nextTurn && nextTurn.speaker === "AI") {
       setCurrentTurnIndex(index + 1);
-      setTimeout(() => playBotAudio(nextTurn), 600);
+      scheduleBotAudio(nextTurn, 600);
     } else {
       // Đã hết các turns
       finishDialogue();
     }
-  }, [turns, playBotAudio, policy.preparation_time_seconds]);
+  }, [turns, scheduleBotAudio, stopBotPlayback, policy.preparation_time_seconds, finishDialogue]);
   useEffect(() => {
     botFinishedRef.current = handleBotFinished;
   }, [handleBotFinished]);
@@ -538,12 +585,14 @@ export function SpeakingDialogueWorkspace({
   // USER VAD & RECORDING: Thu âm & Phát hiện khoảng lặng thông minh
   // =========================================================================
   const startUserTurnRecording = async () => {
-    if (startingRef.current || mediaRecorderRef.current?.state === "recording")
+    if (!mountedRef.current || activeTurn?.speaker !== "USER" || isFinished || awaitingReviewRef.current || exitOpenRef.current || isSubmitting || submitLockRef.current || botSpeakingRef.current || stoppingRef.current || startingRef.current || mediaRecorderRef.current?.state === "recording")
       return;
     startingRef.current = true;
     setIsStarting(true);
     setTurnError("");
     try {
+      stopAnyPlayback();
+      if (typeof MediaRecorder === "undefined") throw new Error("Trình duyệt chưa hỗ trợ ghi âm");
       recordedChunksRef.current = [];
       turnSpeechDurationRef.current = 0;
       turnSpeechStartedTimeRef.current = 0;
@@ -565,7 +614,7 @@ export function SpeakingDialogueWorkspace({
       }
 
       // Khởi tạo AudioContext cho VAD nếu chưa có
-      if (!audioContextRef.current) {
+      if (!audioContextRef.current || audioContextRef.current.state === "closed") {
         const AudioCtx =
           window.AudioContext || (window as SpeechWindow).webkitAudioContext;
         if (!AudioCtx) throw new Error("Trình duyệt chưa hỗ trợ ghi âm");
@@ -582,6 +631,7 @@ export function SpeakingDialogueWorkspace({
         mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
         return;
       }
+      recordingTurnRef.current = { index: currentTurnRef.current, take: recordingSubmissionRef.current, previousTranscript: transcriptsRef.current[currentTurnRef.current] || "" };
       const audioCtx = audioContextRef.current;
       const source = audioCtx.createMediaStreamSource(mediaStreamRef.current);
       const analyser = audioCtx.createAnalyser();
@@ -590,11 +640,8 @@ export function SpeakingDialogueWorkspace({
       analyserRef.current = analyser;
 
       // Khởi tạo MediaRecorder
-      const recorder = new MediaRecorder(mediaStreamRef.current, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm")
-          ? "audio/webm"
-          : "audio/mp4",
-      });
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/ogg'].find(type => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(mediaStreamRef.current, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = (e) => {
@@ -607,8 +654,27 @@ export function SpeakingDialogueWorkspace({
         recordingStartedAtRef.current = Date.now();
       };
       setPrepLeft(null);
-      setResponseLeft(policy.response_time_seconds);
+      setResponseLeft(session.getPolicy()?.response_time_seconds ?? policy.response_time_seconds);
+      recorder.onerror = () => {
+        recorder.onstop = null;
+        if (recorder.state !== 'inactive') recorder.stop();
+        if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+        if (graceTimerRef.current) clearTimeout(graceTimerRef.current);
+        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
+        try { if (speechRecognitionRef.current) { speechRecognitionRef.current.onresult = undefined; speechRecognitionRef.current.stop(); } } catch {}
+        stoppingRef.current = false; setIsStopping(false);
+        const context = recordingTurnRef.current;
+        if (context) { transcriptsRef.current[context.index] = context.previousTranscript; setTurnTranscripts(prev => ({ ...prev, [context.index]: context.previousTranscript })); }
+        setVadState('IDLE'); setResponseLeft(null);
+        if (turnAudioBlobs[currentTurnRef.current]) {
+          awaitingReviewRef.current = true; setIsTurnReview(true); setIsRetaking(false);
+        }
+        setTurnError(isVietnamese ? 'Ghi âm bị gián đoạn. Bản thu trước vẫn được giữ nếu có.' : 'Recording interrupted. Any previous take is preserved.');
+      };
       recorder.start(100);
+      transcriptsRef.current[currentTurnRef.current] = "";
+      setTurnTranscripts(prev => ({ ...prev, [currentTurnRef.current]: "" }));
       setVadState("WAITING_FOR_SPEECH");
 
       // Khởi động Web Speech Recognition (nếu browser hỗ trợ) để lấy text thô
@@ -624,10 +690,23 @@ export function SpeakingDialogueWorkspace({
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
       setVadState("IDLE");
+      setResponseLeft(null);
+      if (turnAudioBlobs[currentTurnRef.current]) {
+        const previous = turnsResults.find(row => row.turn_number === activeTurn.turn_number)?.user_transcription || "";
+        transcriptsRef.current[currentTurnRef.current] = previous;
+        setTurnTranscripts(prev => ({ ...prev, [currentTurnRef.current]: previous }));
+        awaitingReviewRef.current = true; setIsTurnReview(true); setIsRetaking(false);
+      }
     } finally {
       startingRef.current = false;
       setIsStarting(false);
     }
+  };
+
+  const requestRetake = (turnIndex: number) => {
+    const recordImmediately = awaitingReviewRef.current && turnIndex === currentTurnRef.current;
+    handleRetakeTurn(turnIndex);
+    if (recordImmediately) void startUserTurnRecording();
   };
 
   // Web Speech Recognition
@@ -641,14 +720,16 @@ export function SpeakingDialogueWorkspace({
         rec.continuous = true;
         rec.interimResults = true;
         rec.lang = "en-US";
+        const index = recordingTurnRef.current?.index ?? currentTurnRef.current;
         rec.onresult = (e: RecognitionEvent) => {
           let text = "";
           for (let i = 0; i < e.results.length; i++) {
             text += e.results[i][0].transcript + " ";
           }
+          transcriptsRef.current[index] = text.trim();
           setTurnTranscripts((prev) => ({
             ...prev,
-            [currentTurnIndex]: text.trim(),
+            [index]: text.trim(),
           }));
         };
         speechRecognitionRef.current = rec;
@@ -668,6 +749,7 @@ export function SpeakingDialogueWorkspace({
     const GRACE_PERIOD_MS = 2000; // 2.0s Grace Period sau khi đã cất tiếng nói
 
     const checkVolume = () => {
+      if (exitOpenRef.current) { animationFrameRef.current = requestAnimationFrame(checkVolume); return; }
       analyser.getByteFrequencyData(dataArray);
       let sum = 0;
       for (let i = 0; i < bufferLength; i++) {
@@ -694,7 +776,7 @@ export function SpeakingDialogueWorkspace({
             if (!graceTimerRef.current) {
               graceTimerRef.current = setTimeout(() => {
                 // Hết grace period mà vẫn im lặng -> Tự động chốt lượt!
-                completeRef.current();
+                completeRef.current("silence");
               }, GRACE_PERIOD_MS);
             }
             return "GRACE_PERIOD";
@@ -724,7 +806,8 @@ export function SpeakingDialogueWorkspace({
   };
 
   // Kết thúc lượt nói của User (tự động qua VAD hoặc bấm nút thủ công)
-  const handleCompleteUserTurn = useCallback(() => {
+  const handleCompleteUserTurn = useCallback((reason: RecordingStopReason = "manual") => {
+    if (stoppingRef.current) return;
     if (graceTimerRef.current) {
       clearTimeout(graceTimerRef.current);
       graceTimerRef.current = null;
@@ -735,6 +818,7 @@ export function SpeakingDialogueWorkspace({
     }
     if (speechRecognitionRef.current) {
       try {
+        speechRecognitionRef.current.onresult = undefined;
         speechRecognitionRef.current.stop();
       } catch {}
     }
@@ -746,22 +830,42 @@ export function SpeakingDialogueWorkspace({
 
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
+      stoppingRef.current = true;
+      setIsStopping(true);
+      const context = recordingTurnRef.current;
+      const turnIndex = context?.index ?? currentTurnRef.current;
       recorder.onstop = () => {
         const audioBlob = new Blob(recordedChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
+        recorder.onstop = null;
+        recorder.onerror = null;
+        recorder.ondataavailable = null;
         mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
         mediaStreamRef.current = null;
+        stoppingRef.current = false;
+        if (!mountedRef.current) return;
+        setIsStopping(false);
+        if (audioBlob.size < 100) {
+          if (context) { transcriptsRef.current[turnIndex] = context.previousTranscript; setTurnTranscripts(prev => ({ ...prev, [turnIndex]: context.previousTranscript })); }
+          setTurnError(isVietnamese ? 'Bản thu trống. Hãy thu lại; bản thu trước vẫn được giữ nếu có.' : 'Empty recording. Record again; any previous take is preserved.');
+          if (turnAudioUrls[turnIndex]) {
+            awaitingReviewRef.current = true; setIsTurnReview(true); setIsRetaking(false);
+          }
+          return;
+        }
         const objectUrl = URL.createObjectURL(audioBlob);
+        const oldUrl = turnAudioUrls[turnIndex];
+        if (oldUrl) URL.revokeObjectURL(oldUrl);
         audioUrlsRef.current.push(objectUrl);
 
         setTurnAudioBlobs((prev) => ({
           ...prev,
-          [currentTurnIndex]: audioBlob,
+          [turnIndex]: audioBlob,
         }));
         setTurnAudioUrls((prev) => ({
           ...prev,
-          [currentTurnIndex]: objectUrl,
+          [turnIndex]: objectUrl,
         }));
 
         const speakingDurationSeconds = Math.max(
@@ -770,45 +874,40 @@ export function SpeakingDialogueWorkspace({
         );
         const turnResult: DialogueTurnAttemptResult = {
           turn_number:
-            turns[currentTurnIndex]?.turn_number || currentTurnIndex + 1,
-          user_transcription: turnTranscripts[currentTurnIndex] || "",
+            turns[turnIndex]?.turn_number || turnIndex + 1,
+          user_transcription: transcriptsRef.current[turnIndex] || "",
           audio_url: objectUrl,
-          recording_take_id: recordingSubmissionRef.current?.recording_take_id,
+          recording_take_id: context?.take?.recording_take_id,
           speaking_duration_seconds: speakingDurationSeconds,
         };
 
-        setTurnsResults((prev) => [...prev, turnResult]);
-        if (retakingRef.current) {
-          retakingRef.current = false;
-          finishDialogue();
-          return;
-        }
-
-        // Chuyển sang turn tiếp theo hoặc kết thúc
-        const nextIndex = currentTurnIndex + 1;
-        if (nextIndex < turns.length) {
-          currentTurnRef.current = nextIndex;
-          setCurrentTurnIndex(nextIndex);
-          const nextTurn = turns[nextIndex];
-          if (nextTurn.speaker === "AI") {
-            setTimeout(() => playBotAudio(nextTurn), 800);
-          } else {
-            setVadState("IDLE"); // Chờ user tự bấm nút ghi âm
-          }
-        } else {
-          finishDialogue();
-        }
+        setTurnsResults((prev) => [...prev.filter(row => row.turn_number !== turnResult.turn_number), turnResult]);
+        // Recording completion never advances the conversation. The learner
+        // can listen/retake and explicitly accept the audio, even on the last turn.
+        setRecordingStopReason(reason);
+        setIsRetaking(false);
+        awaitingReviewRef.current = true;
+        setIsTurnReview(true);
       };
       recorder.stop();
     }
-  }, [currentTurnIndex, turns, turnTranscripts, playBotAudio]);
+  }, [turns, turnAudioUrls, isVietnamese]);
 
   // Hoàn thành toàn bài đối thoại
   // Bắt đầu phiên thực hành (User Gesture)
   const handleStartPractice = () => {
+    if (isSubmitting || submitLockRef.current || startingRef.current || stoppingRef.current) return;
+    stopBotPlayback();
+    currentTurnRef.current = 0;
+    recordingSubmissionRef.current = undefined;
+    transcriptsRef.current = {};
     stopAnyPlayback();
     session.reset();
     retakingRef.current = false;
+    setReturningToFinalReview(false);
+    awaitingReviewRef.current = false;
+    setIsTurnReview(false);
+    setIsRetaking(false);
     audioUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     audioUrlsRef.current = [];
     setTurnAudioBlobs({});
@@ -837,74 +936,37 @@ export function SpeakingDialogueWorkspace({
 
     // Bot bắt đầu lượt 1 nếu lượt 1 là AI
     if (turns.length > 0 && turns[0].speaker === "AI") {
-      setTimeout(() => {
-        playBotAudio(turns[0]);
-      }, 500);
+      scheduleBotAudio(turns[0], 500);
     } else {
-      // Nếu lượt 1 là USER: chờ user tự bấm thu âm
+      // A learner-first dialogue uses the same preparation policy.
+      setPrepLeft(policy.preparation_time_seconds);
       setVadState("IDLE");
     }
   };
 
   // Nộp bài lên hệ thống (Gửi kèm toàn bộ audio của các lượt đối thoại)
   const handleFinalSubmit = async () => {
-    if (
-      turns
-        .filter((t) => t.speaker === "USER")
-        .some(
-          (t) =>
-            !turnAudioBlobs[turns.indexOf(t)] ||
-            !turnsResults.some((r) => r.turn_number === t.turn_number)
-        )
-    ) {
-      toast.error("Hãy thu âm đủ từng lượt trước khi nộp bài");
-      return;
+    if (!isFinished || awaitingReviewRef.current || startingRef.current || stoppingRef.current || isSubmitting || submitLockRef.current) return;
+    submitLockRef.current = true;
+    setPreparingSubmission(true);
+    try {
+      const userTurns = turns.filter(t => t.speaker === 'USER');
+      if (!userTurns.length) throw new Error('Hội thoại không có lượt của người học');
+      const packed = await Promise.all(userTurns.map(async turn => {
+        const index = turns.indexOf(turn), blob = turnAudioBlobs[index];
+        const result = turnsResults.find(r => r.turn_number === turn.turn_number);
+        if (!blob || blob.size < 100 || !result?.recording_take_id) throw new Error('Hãy thu âm đủ từng lượt trước khi nộp bài');
+        return { ...result, audio_url: undefined, audio_data: await blobToBase64(blob), mime_type: blob.type || 'audio/webm' };
+      }));
+      const duration = packed.reduce((sum, r) => sum + (r.speaking_duration_seconds ?? 0), 0);
+      const transcript = userTurns.map(turn => transcriptsRef.current[turns.indexOf(turn)] || '').filter(Boolean).join('. ');
+      if (mountedRef.current) await onSubmit(transcript, duration, undefined, selectedDifficulty, packed, recordingSubmissionRef.current);
+    } catch (error) {
+      if (mountedRef.current) toast.error(error instanceof Error ? error.message : 'Không thể chuẩn bị bản thu để nộp');
+    } finally {
+      submitLockRef.current = false;
+      if (mountedRef.current) setPreparingSubmission(false);
     }
-    const fullTranscript = turns
-      .filter((t) => t.speaker === "USER")
-      .map((t) => turnTranscripts[turns.indexOf(t)] || "")
-      .join(". ");
-
-    // Tính tổng thời lượng user phát âm thực tế
-    const totalSpeakingDuration = turnsResults.reduce(
-      (sum, r) => sum + (r.speaking_duration_seconds || 3),
-      0
-    );
-
-    // Đóng gói base64 audio cho từng lượt đối thoại để gửi sang AI chấm điểm trực tiếp
-    const enrichedTurnsResults = await Promise.all(
-      turnsResults.map(async (r) => {
-        const turnIdx = turns.findIndex((t) => t.turn_number === r.turn_number);
-        const blob = turnAudioBlobs[turnIdx];
-        if (!blob)
-          throw new Error("Thiếu bản thu âm của lượt " + r.turn_number);
-        let audioBase64: string | undefined = undefined;
-        if (blob) {
-          try {
-            audioBase64 = await blobToBase64(blob);
-          } catch (e) {
-            console.warn("Failed to convert turn blob to base64:", e);
-          }
-        }
-        return {
-          ...r,
-          audio_data: audioBase64,
-          mime_type: blob?.type || "audio/webm",
-        };
-      })
-    );
-
-    // Lấy 1 blob đại diện để upload R2 chính
-    const firstBlob = turnAudioBlobs[1] || Object.values(turnAudioBlobs)[0];
-
-    onSubmit(
-      fullTranscript,
-      totalSpeakingDuration,
-      firstBlob,
-      selectedDifficulty,
-      enrichedTurnsResults,
-      recordingSubmissionRef.current
-    );
   };
 
   useEffect(() => {
@@ -915,7 +977,7 @@ export function SpeakingDialogueWorkspace({
     startRef.current = startUserTurnRecording;
   });
   useEffect(() => {
-    if (prepLeft === null) return;
+    if (prepLeft === null || showExitConfirm) return;
     if (prepLeft === 0) {
       void startRef.current();
       return;
@@ -928,11 +990,11 @@ export function SpeakingDialogueWorkspace({
       1000
     );
     return () => clearTimeout(timer);
-  }, [prepLeft]);
+  }, [prepLeft, showExitConfirm]);
   useEffect(() => {
-    if (responseLeft === null) return;
+    if (responseLeft === null || showExitConfirm) return;
     if (responseLeft === 0) {
-      completeRef.current();
+      completeRef.current("timeout");
       return;
     }
     const timer = setTimeout(
@@ -943,7 +1005,7 @@ export function SpeakingDialogueWorkspace({
       1000
     );
     return () => clearTimeout(timer);
-  }, [responseLeft]);
+  }, [responseLeft, showExitConfirm]);
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -954,7 +1016,14 @@ export function SpeakingDialogueWorkspace({
   };
 
   const handleBackClick = () => {
+    if (isSubmitting || submitLockRef.current) return;
+    if (startingRef.current || stoppingRef.current) return;
     if (isStarted && !isFinished) {
+      stopAnyPlayback();
+      exitOpenRef.current = true; pausedAtRef.current = Date.now();
+      if (graceTimerRef.current) { clearTimeout(graceTimerRef.current); graceTimerRef.current = null; }
+      if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.pause();
+      audioPlayerRef.current?.pause(); window.speechSynthesis?.pause();
       setShowExitConfirm(true);
     } else {
       onBack();
@@ -962,6 +1031,7 @@ export function SpeakingDialogueWorkspace({
   };
 
   const handleConfirmExit = () => {
+    stopBotPlayback();
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
     }
@@ -979,6 +1049,17 @@ export function SpeakingDialogueWorkspace({
   };
 
   const handleResume = () => {
+    const pausedMs = pausedAtRef.current ? Date.now() - pausedAtRef.current : 0;
+    pausedAtRef.current = 0; exitOpenRef.current = false;
+    if (mediaRecorderRef.current?.state === 'paused') {
+      recordingStartedAtRef.current += pausedMs;
+      mediaRecorderRef.current.resume();
+      setVadState(state => state === 'GRACE_PERIOD' ? 'SPEAKING' : state);
+    }
+    window.speechSynthesis?.resume();
+    if (deferredBotEndRef.current) { deferredBotEndRef.current = false; handleBotFinished(); }
+    else if (pendingBotRef.current) { const turn = pendingBotRef.current; pendingBotRef.current = null; void playBotAudio(turn); }
+    else if (botSpeakingRef.current && audioPlayerRef.current?.paused) void audioPlayerRef.current.play().catch(() => { void playBotAudio(turns[currentTurnRef.current]); });
     setShowExitConfirm(false);
   };
 
@@ -987,11 +1068,11 @@ export function SpeakingDialogueWorkspace({
   // =========================================================================
   if (!isStarted) {
     return (
-      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 lg:px-8">
+      <PracticeKeyboard as="main" features={['record','submit']} data-speaking-workspace className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
         <div className="mb-6 flex items-center gap-4">
           <button
             type="button"
-            onClick={onBack}
+            data-practice-action="exit" onClick={onBack}
             className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary cursor-pointer"
           >
             <ArrowLeft size={18} />
@@ -1023,6 +1104,8 @@ export function SpeakingDialogueWorkspace({
             </div>
           </div>
 
+          <div className="grid min-w-0 gap-6 lg:grid-cols-2">
+          <section aria-label={isVietnamese ? "Đề bài và hướng dẫn" : "Task and instructions"}>
           {/* Bối cảnh tình huống cụ thể (Setting & Roles) */}
           <div className="mb-6 rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
             <h3 className="mb-2 flex items-center gap-2 text-[14px] font-bold text-text-primary">
@@ -1067,6 +1150,8 @@ export function SpeakingDialogueWorkspace({
               )}
           </div>
 
+          </section>
+          <section aria-label={isVietnamese ? "Chuẩn bị hội thoại" : "Conversation preparation"} className="min-w-0">
           {/* Bộ chọn 3 mức độ thích ứng (Scaffolding Levels) */}
           <div className="mb-6">
             <label className="mb-2.5 block text-[13px] font-bold text-text-primary">
@@ -1074,7 +1159,7 @@ export function SpeakingDialogueWorkspace({
                 ? "Chọn mức độ hỗ trợ luyện tập:"
                 : "Choose Practice Scaffolding Level:"}
             </label>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
               {/* Mức DỄ */}
               <button
                 type="button"
@@ -1156,16 +1241,20 @@ export function SpeakingDialogueWorkspace({
           {/* Nút Khởi động (User Gesture) */}
           <button
             type="button"
-            onClick={handleStartPractice}
+            data-practice-action="record" onClick={handleStartPractice}
+                disabled={isSubmitting || preparingSubmission}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-[15px] font-bold text-white shadow-md hover:bg-primary/90 transition cursor-pointer"
           >
             <Play size={18} fill="currentColor" />
             <span>
               {isVietnamese ? "Bắt đầu cuộc hội thoại" : "Start Conversation"}
             </span>
+            <PracticeRecordKey/>
           </button>
+          </section>
+          </div>
         </div>
-      </main>
+      </PracticeKeyboard>
     );
   }
 
@@ -1173,13 +1262,13 @@ export function SpeakingDialogueWorkspace({
   // GIAO DIỆN 2: MÀN HÌNH HỘI THOẠI TRỰC TIẾP (ACTIVE CHAT & TURN INTERACTION)
   // =========================================================================
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-6 lg:px-8">
+    <PracticeKeyboard as="main" features={['record','submit']} data-speaking-workspace className="flex min-h-[calc(100dvh-4rem)] flex-col lg:h-[calc(100dvh-4rem)]">
       {/* Top Bar: Back, Title & Elapsed Stopwatch */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={handleBackClick}
+            data-practice-action="exit" onClick={handleBackClick}
             className="flex items-center gap-1.5 text-[13px] text-text-secondary hover:text-primary cursor-pointer"
           >
             <ArrowLeft size={16} />
@@ -1217,8 +1306,22 @@ export function SpeakingDialogueWorkspace({
             <span>{formatTimer(elapsedSeconds)}</span>
           </div>
         </div>
-      </div>
-
+      </header>
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <section aria-label={isVietnamese ? "Đề bài và hướng dẫn" : "Task and instructions"} className="min-w-0 space-y-5 bg-surface p-4 sm:p-6 lg:w-1/2 lg:overflow-y-auto lg:border-r lg:border-border">
+          <h2 className="text-sm font-semibold text-text-primary">{isVietnamese ? "Đề bài và hướng dẫn" : "Task and instructions"}</h2>
+          <div className="rounded-xl border border-border p-4">
+            <h3 className="mb-2 font-semibold text-text-primary">{isVietnamese ? "Tình huống giao tiếp" : "Conversation scenario"}</h3>
+            <p className="text-sm leading-relaxed text-text-secondary">{isVietnamese ? scenario?.setting_vi || scenario?.setting : scenario?.setting}</p>
+            <dl className="mt-4 space-y-2 text-sm">
+              <div><dt className="inline text-text-secondary">{isVietnamese ? "Vai của bạn: " : "Your role: "}</dt><dd className="inline font-medium">{scenario?.user_role}</dd></div>
+              <div><dt className="inline text-text-secondary">{isVietnamese ? "Vai AI: " : "AI role: "}</dt><dd className="inline font-medium">{scenario?.ai_role}</dd></div>
+            </dl>
+          </div>
+          {isVietnamese && !!scenario?.overall_goals_vi?.length && <div className="rounded-xl border border-border p-4"><h3 className="mb-2 font-semibold">Mục tiêu giao tiếp</h3><ul className="list-disc space-y-2 pl-5 text-sm text-text-secondary">{scenario.overall_goals_vi.map((goal, index) => <li key={index}>{goal}</li>)}</ul></div>}
+        </section>
+        <section aria-label={isVietnamese ? "Hội thoại của bạn" : "Your conversation"} className="min-w-0 border-t border-border bg-surface-subtle/50 p-4 sm:p-6 lg:w-1/2 lg:overflow-y-auto lg:border-t-0">
+          <h2 className="mb-4 text-sm font-semibold text-text-primary">{isVietnamese ? "Hội thoại của bạn" : "Your conversation"}</h2>
       {/* Main Chat Stream / Turns Timeline */}
       <div className="space-y-6 sm:space-y-7 rounded-2xl border border-border bg-surface-subtle/50 p-4 sm:p-6 mb-5 min-h-[380px] max-h-[540px] overflow-y-auto">
         {turns.map((turn, index) => {
@@ -1255,9 +1358,9 @@ export function SpeakingDialogueWorkspace({
                 {isCurrent && isUserTurn && vadState === "IDLE" && (
                   <span className="flex items-center gap-1 text-primary font-semibold">
                     <span>👉</span>
-                    {isVietnamese
-                      ? "Lượt của bạn — Bấm micro bên dưới"
-                      : "Your turn — Click mic below"}
+                    {isTurnReview
+                      ? (isVietnamese ? "Bản thu đã sẵn sàng — Chờ bạn xác nhận" : "Recording ready — Waiting for your confirmation")
+                      : (isVietnamese ? "Lượt của bạn — Bấm micro bên dưới" : "Your turn — Click mic below")}
                   </span>
                 )}
               </div>
@@ -1445,9 +1548,9 @@ export function SpeakingDialogueWorkspace({
 
                         <button
                           type="button"
-                          onClick={() => handleRetakeTurn(index)}
+                          onClick={() => requestRetake(index)}
                           disabled={
-                            isSubmitting ||
+                            isSubmitting || preparingSubmission || isStopping || (!isFinished && !(isTurnReview && index === currentTurnIndex)) ||
                             isStarting ||
                             (session.counts["turn_" + turn.turn_number] || 0) >=
                               policy.max_record_attempts
@@ -1490,6 +1593,8 @@ export function SpeakingDialogueWorkspace({
           )}
         </div>
       )}
+      {activeTurn?.speaker === 'AI' && turnError && <p role="alert" className="my-3 text-sm text-red-600">{turnError}</p>}
+      {isRetaking && !isTurnReview && !isFinished && turnAudioBlobs[currentTurnIndex] && <button type="button" disabled={isStarting || isStopping || vadState !== 'IDLE'} onClick={() => { setPrepLeft(null); setTurnError(''); setIsRetaking(false); awaitingReviewRef.current = true; setIsTurnReview(true); }} className="my-3 min-h-11 rounded-lg border border-border px-4 py-2 text-sm">{isVietnamese ? 'Giữ bản thu trước' : 'Keep previous recording'}</button>}
       {/* Controller Panel ở đáy màn hình */}
       {!isFinished ? (
         <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
@@ -1521,6 +1626,40 @@ export function SpeakingDialogueWorkspace({
                 {isVietnamese ? "Bỏ qua audio bot" : "Skip bot audio"}
               </button>
             </div>
+          ) : isTurnReview ? (
+            <section aria-labelledby="dialogue-turn-review-title" data-practice-media className="space-y-4 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:p-5">
+              <div>
+                <h3 id="dialogue-turn-review-title" className="text-base font-semibold text-text-primary">
+                  {isVietnamese ? "Kiểm tra bản thu của bạn" : "Review your recording"}
+                </h3>
+                <p className="mt-1 text-sm text-text-secondary">
+                  {recordingStopReason === 'timeout'
+                    ? (isVietnamese ? 'Đã hết thời gian ghi âm. Bạn vẫn có thể nghe lại và thu lại nếu còn lượt.' : 'Recording time is up. You can still listen and retake if you have attempts left.')
+                    : recordingStopReason === 'silence'
+                    ? (isVietnamese ? 'Đã dừng ghi âm sau khoảng lặng. Hãy kiểm tra xem bạn đã nói đủ ý chưa.' : 'Recording stopped after a pause. Check that your response is complete.')
+                    : (isVietnamese ? 'Nghe lại để kiểm tra phát âm và ý trả lời. Hội thoại sẽ chờ bạn xác nhận.' : 'Listen to check your pronunciation and response. The conversation waits for your confirmation.')}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" data-practice-action="play" disabled={isSubmitting || preparingSubmission} onClick={() => replayUserAudio(currentTurnIndex)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary">
+                  {playingAudioKey === `user-${currentTurnIndex}` ? <Pause size={16} /> : <Play size={16} />}
+                  {playingAudioKey === `user-${currentTurnIndex}` ? (isVietnamese ? 'Tạm dừng nghe lại' : 'Pause replay') : (isVietnamese ? 'Nghe lại bản thu' : 'Listen to recording')}
+                </button>
+                <button type="button" data-practice-action="record" disabled={isSubmitting || preparingSubmission || isStarting || isStopping || (session.counts['turn_' + activeTurn?.turn_number] || 0) >= policy.max_record_attempts} onClick={() => requestRetake(currentTurnIndex)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50">
+                  <RotateCcw size={16} />
+                  {isVietnamese ? 'Thu lại' : 'Retake'}
+                  <span className="text-text-secondary">· {isVietnamese ? 'còn' : 'left'} {Math.max(0, policy.max_record_attempts - (session.counts['turn_' + activeTurn?.turn_number] || 0))}</span>
+                  <PracticeRecordKey />
+                </button>
+                <button ref={reviewConfirmRef} type="button" disabled={isSubmitting || preparingSubmission || isStarting || isStopping} onClick={confirmUserTurn} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 sm:ml-auto sm:w-auto">
+                  <CheckCircle2 size={17} />
+                  {returningToFinalReview || currentTurnIndex === turns.length - 1
+                    ? (isVietnamese ? 'Dùng bản thu này & Xem lại bài' : 'Use recording & Review dialogue')
+                    : (isVietnamese ? 'Dùng bản thu này & Tiếp tục' : 'Use recording & Continue')}
+                </button>
+              </div>
+              {(session.counts['turn_' + activeTurn?.turn_number] || 0) >= policy.max_record_attempts && <p role="status" className="text-sm text-text-secondary">{isVietnamese ? 'Đã hết lượt thu câu này. Bạn có thể nghe lại và dùng bản thu hiện tại để tiếp tục.' : 'No retakes left for this turn. You can listen and continue with the current recording.'}</p>}
+            </section>
           ) : vadState === "IDLE" ? (
             // Trạng thái 1: LƯỢT CỦA BẠN (CHƯA BẬT MICRO - CHỜ USER BẤM NÚT)
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
@@ -1544,9 +1683,9 @@ export function SpeakingDialogueWorkspace({
 
               <button
                 type="button"
-                onClick={() => void startUserTurnRecording()}
+                data-practice-action="record" onClick={() => void startUserTurnRecording()}
                 disabled={
-                  isSubmitting ||
+                  isSubmitting || preparingSubmission || isStopping ||
                   isStarting ||
                   (session.counts["turn_" + activeTurn?.turn_number] || 0) >=
                     policy.max_record_attempts
@@ -1556,9 +1695,10 @@ export function SpeakingDialogueWorkspace({
                 <Mic size={18} />
                 <span>
                   {isVietnamese
-                    ? "Bấm để nói (Bắt đầu thu âm)"
-                    : "Click to Speak"}
+                    ? "Bắt đầu ghi âm lượt trả lời"
+                    : "Record your response"}
                 </span>
+              <PracticeRecordKey/>
               </button>
             </div>
           ) : (
@@ -1581,9 +1721,9 @@ export function SpeakingDialogueWorkspace({
                         ? isVietnamese
                           ? "Đang ghi âm giọng nói..."
                           : "Recording your voice..."
-                        : isVietnamese
-                        ? "Phát hiện ngắt câu (Chờ 2s)..."
-                        : "Silence detected (Waiting)..."}
+                        : vadState === "WAITING_FOR_SPEECH"
+                        ? (isVietnamese ? "Micro đã sẵn sàng — Hãy bắt đầu nói" : "Microphone ready — Start speaking")
+                        : (isVietnamese ? "Khoảng lặng: sắp dừng để bạn nghe lại..." : "Pause detected: stopping soon for your review...")}
                     </p>
 
                     {/* Sóng âm Visualizer trực quan để user nhận biết mic đang bắt tiếng */}
@@ -1633,11 +1773,11 @@ export function SpeakingDialogueWorkspace({
                   <p className="text-[12px] text-text-secondary mt-0.5">
                     {vadState === "GRACE_PERIOD"
                       ? isVietnamese
-                        ? 'Bạn có thể nói tiếp hoặc bấm "Xong câu này"'
-                        : 'Keep speaking or click "Done"'
+                        ? 'Bạn có thể nói tiếp hoặc dừng ghi âm để nghe lại'
+                        : 'Keep speaking or stop recording to listen back'
                       : isVietnamese
-                      ? 'Nói xong câu, bạn bấm nút "Xong câu này"'
-                      : 'Click "Done" when you finish speaking'}
+                      ? 'Nói xong, bấm "Dừng ghi âm". Bạn sẽ được nghe lại trước khi tiếp tục.'
+                      : 'Click "Stop recording" when finished. You can listen before continuing.'}
                   </p>
                 </div>
               </div>
@@ -1647,12 +1787,14 @@ export function SpeakingDialogueWorkspace({
                 {/* NÚT CHỐT CÂU (DONE / NEXT TURN) */}
                 <button
                   type="button"
-                  onClick={handleCompleteUserTurn}
+                  data-practice-action="record" onClick={() => handleCompleteUserTurn()}
+                  disabled={isStopping}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-6 py-3 text-[14px] font-bold text-white shadow-md transition-all cursor-pointer active:scale-95"
                 >
                   <CheckCircle2 size={18} />
                   <span>
-                    {isVietnamese ? "Xong câu này (Next)" : "Done (Next)"}
+                    {isVietnamese ? "Dừng ghi âm" : "Stop recording"}
+                  <PracticeRecordKey/>
                   </span>
                 </button>
               </div>
@@ -1688,6 +1830,7 @@ export function SpeakingDialogueWorkspace({
             <button
               type="button"
               onClick={handleStartPractice}
+                disabled={isSubmitting || preparingSubmission}
               className="rounded-xl border border-border bg-surface px-3 py-2 text-[12px] font-semibold text-text-secondary hover:text-text-primary transition cursor-pointer"
             >
               <RotateCcw size={14} className="inline mr-1" />
@@ -1695,7 +1838,7 @@ export function SpeakingDialogueWorkspace({
             </button>
             <button
               type="button"
-              onClick={() => setIsReviewModalOpen(true)}
+              data-practice-action="submit-review" onClick={() => setIsReviewModalOpen(true)}
               className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-[13px] font-bold text-white shadow-md hover:bg-primary/90 transition cursor-pointer"
             >
               <Volume2 size={15} />
@@ -1711,7 +1854,7 @@ export function SpeakingDialogueWorkspace({
 
       {/* MODAL: NGHE LẠI & KIỂM TRA CÁC LƯỢT THOẠI RỒI NỘP BÀI */}
       {isReviewModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+        <div role="dialog" aria-modal="true" aria-label={isVietnamese ? "Xem lại hội thoại" : "Review dialogue"} className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div
             className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-border bg-surface shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
@@ -1744,7 +1887,7 @@ export function SpeakingDialogueWorkspace({
 
               <button
                 type="button"
-                onClick={() => setIsReviewModalOpen(false)}
+                data-practice-dismiss onClick={() => setIsReviewModalOpen(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary hover:bg-border/60 hover:text-text-primary transition cursor-pointer"
                 title={isVietnamese ? "Đóng" : "Close"}
               >
@@ -1866,9 +2009,9 @@ export function SpeakingDialogueWorkspace({
 
                           <button
                             type="button"
-                            onClick={() => handleRetakeTurn(index)}
+                            onClick={() => requestRetake(index)}
                             disabled={
-                              isSubmitting ||
+                              isSubmitting || preparingSubmission || !isFinished ||
                               isStarting ||
                               (session.counts["turn_" + turn.turn_number] ||
                                 0) >= policy.max_record_attempts
@@ -1896,6 +2039,7 @@ export function SpeakingDialogueWorkspace({
               <button
                 type="button"
                 onClick={handleStartPractice}
+                disabled={isSubmitting || preparingSubmission}
                 className="flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2 text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-subtle transition cursor-pointer"
               >
                 <RotateCcw size={14} />
@@ -1907,7 +2051,7 @@ export function SpeakingDialogueWorkspace({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsReviewModalOpen(false)}
+                  data-practice-dismiss onClick={() => setIsReviewModalOpen(false)}
                   className="rounded-xl border border-border bg-surface px-4 py-2 text-[13px] font-semibold text-text-secondary hover:text-text-primary transition cursor-pointer"
                 >
                   {isVietnamese ? "Đóng" : "Close"}
@@ -1916,7 +2060,7 @@ export function SpeakingDialogueWorkspace({
                 <button
                   type="button"
                   onClick={handleFinalSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || preparingSubmission}
                   className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2 text-[14px] font-bold text-white shadow-md hover:bg-primary/90 transition cursor-pointer disabled:opacity-50"
                 >
                   <Send size={15} />
@@ -1935,6 +2079,9 @@ export function SpeakingDialogueWorkspace({
           </div>
         </div>
       )}
+
+        </section>
+      </div>
 
       {/* Modal xác nhận thoát phòng hội thoại */}
       <PracticeExitConfirmModal
@@ -1957,6 +2104,6 @@ export function SpeakingDialogueWorkspace({
         confirmText={isVietnamese ? "Thoát hội thoại" : "Exit Session"}
         cancelText={isVietnamese ? "Tiếp tục hội thoại" : "Resume Dialogue"}
       />
-    </main>
+    </PracticeKeyboard>
   );
 }

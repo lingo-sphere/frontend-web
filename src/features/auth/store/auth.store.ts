@@ -97,7 +97,7 @@ const getInitialStoredUser = () => {
 export const useAuthStore = create<AuthState>((set) => ({
   user: getInitialStoredUser(),
   isAuthenticated: Boolean(getInitialStoredUser()) && authService.isAuthenticated(),
-  isLoading: false,
+  isLoading: true,
   error: null,
   isKickedOut: false,
   kickoutMessage: null,
@@ -327,8 +327,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   checkAuth: async () => {
+    set({ isLoading: true })
     if (!authService.isAuthenticated()) {
-      set({ user: null, isAuthenticated: false })
+      set({ user: null, isAuthenticated: false, isLoading: false })
       return
     }
 
@@ -364,14 +365,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       set({ user: finalUser, isAuthenticated: true })
     } catch {
-      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
-      storage.remove(STORAGE_KEYS.USER)
-      storage.session.remove(STORAGE_KEYS.ACCESS_TOKEN)
-      storage.session.remove(STORAGE_KEYS.USER)
+      // Clear cookies too: middleware must not revive a rejected session.
+      authService.clearAuthStorage()
+      set({ user: null, isAuthenticated: false })
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('lingosphere:unauthorized'))
       }
-      set({ user: null, isAuthenticated: false })
+    } finally {
+      set({ isLoading: false })
     }
   },
 }))

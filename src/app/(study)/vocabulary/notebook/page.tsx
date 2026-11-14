@@ -34,6 +34,8 @@ import { vocabularyService } from "@/features/vocabulary/services/vocabulary.ser
 import { useMyVocabularyEnrollmentsQuery } from "@/features/vocabulary/hooks/use.vocabulary.query";
 import { playAudio } from "@/utils/media.utils";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { SavedSpeakingSources } from '@/features/vocabulary/components/saved.speaking.sources';
+import type { SpeakingVocabularySource } from '@/features/vocabulary/types/vocabulary-source';
 import {
   AddSavedWordsToDeckModal,
   MIN_DECK_WORDS,
@@ -42,6 +44,7 @@ import {
 } from "@/features/vocabulary/components/add.saved.words.to.deck.modal";
 
 export interface SavedMeaningItem {
+  speaking_sources?: SpeakingVocabularySource[];
   saved_id: string;
   lexical_item_id: string;
   word: string;
@@ -157,6 +160,7 @@ export default function NotebookAppPage() {
         meaning_index: item.meaning_index,
         meaning: item.meaning,
         examples: item.examples,
+        speaking_sources: item.speaking_sources,
       }));
   }, [knownWords, selectedWordIds]);
 
@@ -670,6 +674,7 @@ function SavedMeaningCard({
         </p>
       </div>
 
+      <SavedSpeakingSources sources={item.speaking_sources} vi={isVietnamese} />
       {/* Examples */}
       {item.examples && item.examples.length > 0 && (
         <div className="mt-2.5 min-h-[3.2rem] space-y-1.5">

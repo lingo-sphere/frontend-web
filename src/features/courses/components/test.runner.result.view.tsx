@@ -10,6 +10,7 @@ import type {
 import { TestRunnerResultHeader } from '@/features/courses/components/test.runner.result.header'
 import { TestRunnerNextCourses } from '@/features/courses/components/test.runner.next.courses'
 import { TestRunnerAiTutor } from '@/features/courses/components/test.runner.ai.tutor'
+import { TestRunnerSkillReview } from '@/features/courses/components/test.runner.skill.review'
 
 interface TestRunnerResultViewProps {
   scoreResult: {
@@ -25,6 +26,7 @@ interface TestRunnerResultViewProps {
   progressionNote: string | null
   growthDiff: { scoreDiff: number; percent: number } | null
   wrongQuestionsList: WrongQuestionItem[]
+  skillScores?: Record<string, number>
   isLoadingAi: boolean
   showAiDetails: boolean
   aiExplanations: AiExplanationsData | null
@@ -50,6 +52,7 @@ export function TestRunnerResultView({
   progressionNote,
   growthDiff,
   wrongQuestionsList,
+  skillScores,
   isLoadingAi,
   showAiDetails,
   aiExplanations,
@@ -89,6 +92,8 @@ export function TestRunnerResultView({
         onBackToLessons={onBackToLessons}
         onRetry={onRetry}
       />
+
+      <TestRunnerSkillReview mistakes={wrongQuestionsList} scores={skillScores} targetScore={passingScore} onPractice={onPracticeTopic} />
 
       <TestRunnerAiTutor
         wrongQuestionsList={wrongQuestionsList}

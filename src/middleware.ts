@@ -46,20 +46,6 @@ function isPublicRoute(pathname: string): boolean {
   return false
 }
 
-function sanitizeReturnUrl(url: string | null): string {
-  if (!url) return '/home'
-  const decoded = decodeURIComponent(url).trim()
-  if (
-    decoded.startsWith('/') &&
-    !decoded.startsWith('//') &&
-    !decoded.includes('\\') &&
-    !decoded.startsWith('/login')
-  ) {
-    return decoded
-  }
-  return '/home'
-}
-
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
@@ -74,13 +60,8 @@ export function middleware(request: NextRequest) {
   const hasValidAuth = isTokenValid(accessToken) || isTokenValid(refreshToken)
 
   if (isPublicRoute(pathname)) {
-    if (pathname === '/login' && hasValidAuth) {
-      const rawReturnUrl =
-        request.nextUrl.searchParams.get('returnUrl') ||
-        request.nextUrl.searchParams.get('redirect')
-      const targetUrl = sanitizeReturnUrl(rawReturnUrl)
-      return NextResponse.redirect(new URL(targetUrl, request.url))
-    }
+    // Login verifies the session with the API before redirecting. A JWT's
+    // expiry alone cannot tell us whether the server has revoked the session.
     return NextResponse.next()
   }
 

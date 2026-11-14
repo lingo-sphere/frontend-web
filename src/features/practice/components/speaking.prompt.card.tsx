@@ -1,3 +1,4 @@
+import { practiceDifficultyLabel } from '../lib/practice-difficulty'
 /**
  * @file speaking.prompt.card.tsx
  * @description Card hiển thị đề bài, hình ảnh mô tả tranh, kịch bản hội thoại đa lượt,
@@ -704,7 +705,7 @@ export function SpeakingPromptCard({
           )}
           {exercise.difficulty_level && (
             <span className="rounded-full bg-surface-subtle px-3 py-1 font-medium text-text-secondary">
-              {exercise.difficulty_level}
+              {practiceDifficultyLabel(exercise.difficulty_level || 'MEDIUM', isVietnamese)}
             </span>
           )}
         </div>

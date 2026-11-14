@@ -603,6 +603,35 @@ export function useCourseTestRunner({
         if (isTimeout) toast.warning(isVietnamese ? 'Hết thời gian làm bài! Đã tự động nộp bài.' : 'Time is up! Exam auto-submitted.')
         else toast.success(isVietnamese ? `Nộp bài thành công! Điểm: ${finalScore}%` : `Submitted successfully! Score: ${finalScore}%`)
 
+        // Save skill classification immediately, independently of the AI response.
+        // AI enrichment must not record the same mistakes again or double-count profile stats.
+        if (enrichedWrongs.length > 0) {
+          const mistakes = enrichedWrongs.map((w, idx) => {
+            const qIdx = (w.question_number || idx + 1) - 1
+            const rawQ = rawQuestions[qIdx]
+            return {
+              question_id: rawQ?.id || rawQ?._id || `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`,
+              question_text: w.question_text,
+              options: rawQ?.options || [],
+              user_answer: w.user_selected_answer,
+              correct_answer: w.correct_answer,
+              explanation: w.explanation || '',
+              topic_name_vi: w.category || '',
+              source_context: `${testTitle} (${testType})`,
+              source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
+              source_id: courseId,
+              source_title: testTitle,
+              domain: w.domain,
+              context_id: w.context_id,
+              exercise_type: w.exercise_type,
+              grammar_knowledge_id: w.grammar_knowledge_id,
+            }
+          })
+          void mistakeService.recordBatchMistakes({ mistakes }).catch(() => {
+            toast.warning(isVietnamese ? 'Đã có kết quả, nhưng chưa lưu được câu sai để ôn tập. Vui lòng kiểm tra Sổ tay lỗi sai.' : 'Results are ready, but mistakes could not be saved for review. Please check your mistake notebook.')
+          })
+        }
+
         if (enrichedWrongs.length > 0) {
           setIsLoadingAi(true)
           setShowAiDetails(true)
@@ -616,72 +645,8 @@ export function useCourseTestRunner({
               const data = 'data' in res && res.data ? res.data : (res as AiExplanationsData)
               setAiExplanations(data)
 
-              const explanationMap = new Map<number, { topic?: string; focus?: string; why_wrong?: string }>()
-              if (Array.isArray(data?.explanations)) {
-                data.explanations.forEach((item) => {
-                  explanationMap.set(item.question_number, {
-                    topic: item.recommended_topic,
-                    focus: item.study_focus,
-                    why_wrong: item.why_wrong,
-                  })
-                })
-              }
-
-              const mistakePayloads = enrichedWrongs.map((w, idx) => {
-                const ex = explanationMap.get(w.question_number || idx + 1)
-                const qIdx = (w.question_number || idx + 1) - 1
-                const rawQ = rawQuestions[qIdx]
-                const stableId =
-                  rawQ?.id ||
-                  rawQ?._id ||
-                  `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
-                return {
-                  question_id: stableId,
-                  question_text: w.question_text,
-                  options: rawQ?.options || [],
-                  user_answer: w.user_selected_answer,
-                  correct_answer: w.correct_answer,
-                  explanation: ex?.why_wrong || w.explanation || '',
-                  topic_name_vi: ex?.topic || w.category || '',
-                  source_context: `${testTitle} (${testType})`,
-                  source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
-                  source_id: courseId,
-                  source_title: testTitle,
-                  domain: w.domain,
-                  context_id: w.context_id,
-                  exercise_type: w.exercise_type,
-                  grammar_knowledge_id: w.grammar_knowledge_id,
-                }
-              })
-
-              mistakeService.recordBatchMistakes({ mistakes: mistakePayloads }).catch(() => {})
             })
-            .catch(() => {
-              const fallbackMistakes = enrichedWrongs.map((w, idx) => {
-                const qIdx = (w.question_number || idx + 1) - 1
-                const rawQ = rawQuestions[qIdx]
-                const stableId =
-                  rawQ?.id ||
-                  rawQ?._id ||
-                  `${courseId}_${chapter?.id || testType}_q${qIdx + 1}`
-                return {
-                  question_id: stableId,
-                  question_text: w.question_text,
-                  options: rawQ?.options || [],
-                  user_answer: w.user_selected_answer,
-                  correct_answer: w.correct_answer,
-                  source_context: `${testTitle} (${testType})`,
-                  source_type: testType === 'final-test' ? 'COURSE_FINAL_TEST' : 'COURSE_CHAPTER_TEST',
-                  source_id: courseId,
-                  source_title: testTitle,
-                  domain: w.domain,
-                  context_id: w.context_id,
-                  exercise_type: w.exercise_type,
-                  grammar_knowledge_id: w.grammar_knowledge_id,
-                }
-              })
-              mistakeService.recordBatchMistakes({ mistakes: fallbackMistakes }).catch(() => {})
-            })
+            .catch(() => setAiExplanations(null))
             .finally(() => setIsLoadingAi(false))
         }
 
@@ -700,6 +665,7 @@ export function useCourseTestRunner({
       passingScore,
       courseId,
       chapter,
+      isVietnamese,
       testType,
       testTitle,
       onComplete, is4Skills, awaitingGrading, skillSubmissions,

@@ -46,10 +46,10 @@ export function useAuthModal({ onClose, initialMode = 'login' }: UseAuthModalOpt
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isLoading) {
       onClose()
     }
-  }, [isAuthenticated, onClose])
+  }, [isAuthenticated, isLoading, onClose])
 
   useEffect(() => {
     clearError()

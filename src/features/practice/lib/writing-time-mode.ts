@@ -52,16 +52,6 @@ export function saveTimeModePreference(mode: TimeMode, exerciseType: ExerciseTyp
 }
 
 /**
- * Lấy thời gian (seconds) cho exercise type và mode
- */
-export function getTimeSeconds(exerciseType: ExerciseType, mode: TimeMode): number {
-  const config = WRITING_TIME_CONFIGS[exerciseType]
-  if (!config) return 10 * 60 // Default 10 phút
-
-  return config[mode]
-}
-
-/**
  * Format seconds thành MM:SS
  */
 export function formatTime(seconds: number): string {
@@ -71,15 +61,54 @@ export function formatTime(seconds: number): string {
 }
 
 /**
- * Get time mode options với seconds được fill theo exercise type
+ * Get time mode options với seconds được tính:
+ * - Mốc Trung bình (normal): lấy theo mốc hiển thị ở danh sách writing (estimatedMinutes, mặc định 10 phút)
+ * - Mốc Nhanh (fast): luyện tốc độ, thời gian ngắn hơn
+ * - Mốc Chậm (slow): tập trung chất lượng, thời gian dài hơn
  */
-export function getTimeModeOptions(exerciseType: ExerciseType): TimeModeConfig[] {
-  const config = WRITING_TIME_CONFIGS[exerciseType]
+export function getTimeModeOptions(exerciseType: ExerciseType, estimatedMinutes?: number): TimeModeConfig[] {
+  const baseMinutes = estimatedMinutes && estimatedMinutes > 0
+    ? estimatedMinutes
+    : (WRITING_TIME_CONFIGS[exerciseType]?.normal ? Math.round(WRITING_TIME_CONFIGS[exerciseType].normal / 60) : 10)
+
+  // Tính mốc Nhanh và Chậm dựa trên mốc Trung bình
+  let fastMinutes: number
+  let slowMinutes: number
+
+  if (baseMinutes <= 8) {
+    fastMinutes = Math.max(3, baseMinutes - 3)
+    slowMinutes = baseMinutes + 4
+  } else if (baseMinutes <= 12) {
+    // Với mốc chuẩn 10 phút (ở danh sách): Nhanh = 5 phút, Trung bình = 10 phút, Chậm = 15 phút
+    fastMinutes = Math.max(5, baseMinutes - 5)
+    slowMinutes = baseMinutes + 5
+  } else if (baseMinutes <= 16) {
+    fastMinutes = baseMinutes - 5
+    slowMinutes = baseMinutes + 5
+  } else {
+    fastMinutes = Math.round(baseMinutes * 0.7)
+    slowMinutes = Math.round(baseMinutes * 1.4)
+  }
+
+  const secondsMap: Record<TimeMode, number> = {
+    fast: fastMinutes * 60,
+    normal: baseMinutes * 60,
+    slow: slowMinutes * 60,
+  }
 
   return TIME_MODE_OPTIONS.map((option) => ({
     ...option,
-    seconds: config ? config[option.mode] : 10 * 60,
+    seconds: secondsMap[option.mode],
   }))
+}
+
+/**
+ * Lấy thời gian (seconds) cho exercise type và mode
+ */
+export function getTimeSeconds(exerciseType: ExerciseType, mode: TimeMode, estimatedMinutes?: number): number {
+  const options = getTimeModeOptions(exerciseType, estimatedMinutes)
+  const found = options.find((o) => o.mode === mode)
+  return found ? found.seconds : 10 * 60
 }
 
 /**

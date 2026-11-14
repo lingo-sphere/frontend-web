@@ -109,3 +109,23 @@ export interface PendingListeningSession {
   total: number
   updated_at: string
 }
+
+export interface ListeningHistoryEntry {
+  kind: ListeningKind
+  session_id: string
+  title: string
+  score_percent: number
+  correct_count: number
+  total: number
+  total_time_seconds: number
+  completed_at: string
+  result_available: boolean
+}
+
+export interface ListeningHistoryPage {
+  items: ListeningHistoryEntry[]
+  total: number
+  page: number
+  limit: number
+  total_pages: number
+}

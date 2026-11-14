@@ -181,7 +181,12 @@ export interface SpeakingAttempt {
 }
 
 export interface AIEvaluationResult extends SkillEvaluation {
-  turn_evaluations?: Array<{ turn_number: number; goal_accomplished?: 'YES' | 'PARTIAL' | 'NO'; user_transcript?: string; better_alternative?: string; feedback?: string }>
+  learning_issues?: SpeakingLearningIssue[]
+  acoustic_provider_version?: string
+  azure_assessments?: Array<{ turn_number: number; assessment: { transcript: string; accuracy: number; fluency: number; prosody: number | null; completeness: number | null; duration_seconds: number; words: Array<{ word: string; accuracy: number | null; offset_seconds: number; duration_seconds: number; error_type: string; phonemes: Array<{ phoneme: string; accuracy: number | null }> }> } }>
+  dialogue_assessment_version?: string
+  applied_rubric?: Record<string, number>
+  turn_evaluations?: Array<{ turn_number: number; goal_accomplished?: 'YES' | 'PARTIAL' | 'NO'; user_transcript?: string; better_alternative?: string; feedback?: string; missing_content?: string[]; criteria_scores?: Record<string, number>; criteria_feedback?: Record<string, { comment: string; evidence: string[] }> }>
   overall_feedback: string
   pronunciation_analysis?: {
     score: number
@@ -216,6 +221,26 @@ export interface AIEvaluationResult extends SkillEvaluation {
   improvement_tips?: string[]
   ai_model?: string
   processing_time_ms?: number
+}
+
+export interface SpeakingLearningIssue {
+  attempt_id?: string
+  kind: 'PRONUNCIATION' | 'GRAMMAR' | 'VOCABULARY'
+  turn_number: number
+  original: string
+  corrected: string
+  category: string
+  explanation: string
+  practice: string
+  source: 'AZURE_SPEECH' | 'AI_LANGUAGE'
+  offset_seconds?: number
+  duration_seconds?: number
+  accuracy?: number
+  exercise_id?: string
+  exercise_title?: string
+  occurred_at?: string
+  review_due_at?: string
+  occurrences?: number
 }
 
 export interface SpeakingStats {

@@ -1,3 +1,4 @@
+import { PracticeKeyboard } from './practice.keyboard'
 import { useWritingReviewDraft } from '../hooks/use.writing.review.draft'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useWritingReviewSession, writingSrsKey } from '../hooks/use.writing.srs'
@@ -6,7 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 // Component giao diện React WritingWorkspace cho học viên
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Save, Send, AlertCircle, Lightbulb } from 'lucide-react'
+import { ArrowLeft, Save, Send, AlertCircle, Lightbulb, ZoomIn, X } from 'lucide-react'
 import { Button } from '@/components/button'
 import type { WritingExercise } from '@/features/practice/types/writing'
 import { resolveMediaUrlAsync } from '@/utils/media.utils'
@@ -54,6 +55,7 @@ export function WritingWorkspace({
   const submitLock = useRef(false)
   const elapsedSeconds = useRef(0)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -143,17 +145,22 @@ export function WritingWorkspace({
   }
 
   return (
-    <main className="flex h-[calc(100vh-4rem)] flex-col">
+    <PracticeKeyboard as="main" features={['save','submit']} className="flex h-[calc(100vh-4rem)] flex-col">
       <header className="sticky top-0 z-30 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs">
         <div className="flex items-center gap-4">
-          <button onClick={handleInitiateExit} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary cursor-pointer">
+          <button data-practice-action="exit" onClick={handleInitiateExit} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary cursor-pointer">
             <ArrowLeft size={18} />
             {isVietnamese ? 'Quay lại' : 'Back'}
           </button>
           <div className="h-6 w-px bg-border" />
           <div>
-            <h1 className="text-[16px] font-semibold text-text-primary">{exercise.title}</h1>
+            <h1 className="text-[16px] font-semibold text-text-primary">
+              {isVietnamese && exercise.title_vi ? exercise.title_vi : exercise.title}
+            </h1>
             <p className="text-[12px] text-text-tertiary">
+              {isVietnamese && exercise.title_vi && (
+                <span className="mr-2 text-text-secondary">{exercise.title} •</span>
+              )}
               Version {versionNumber} • {exercise.cefr_level}
             </p>
           </div>
@@ -165,11 +172,11 @@ export function WritingWorkspace({
             onTimeUp={handleTimeUp}
             isPaused={showExitConfirm || isSubmitted}
           />
-          <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || !content || isSubmitted}>
+          <Button variant="outline" size="sm" data-practice-action="save" onClick={handleSaveDraft} disabled={isSaving || !content || isSubmitted}>
             <Save size={16} className="mr-2" />
             {isSaving ? (isVietnamese ? 'Đang lưu...' : 'Saving...') : (isVietnamese ? 'Lưu nháp' : 'Save draft')}
           </Button>
-          <Button size="sm" className="bg-primary hover:bg-primary-hover" onClick={handleSubmit} disabled={!wordCount || !isWordCountValid || isSubmitted || !reviewReady}>
+          <Button size="sm" className="bg-primary hover:bg-primary-hover" data-practice-action="submit" onClick={handleSubmit} disabled={!wordCount || !isWordCountValid || isSubmitted || !reviewReady}>
             <Send size={16} className="mr-2" />
             {isSubmitted ? (isVietnamese ? 'Đang chấm…' : 'Grading…') : (isVietnamese ? 'Nộp bài' : 'Submit')}
           </Button>
@@ -195,14 +202,46 @@ export function WritingWorkspace({
           <div className="space-y-6">
             <section className="rounded-xl border border-border p-4"><p className="font-semibold">{exercise.grading_standard === 'TOEIC' ? 'TOEIC Writing' : isVietnamese ? 'Giao tiếp thực tế · 0–100' : 'Practical communication · 0–100'}</p>{!!exercise.task_requirements?.length && <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">{exercise.task_requirements.map((requirement, index) => <li key={index}>{requirement}</li>)}</ul>}</section>
             {imageUrl && (
-              <section className="overflow-hidden rounded-xl border border-border shadow-xs bg-surface-subtle">
-                <img
-                  src={imageUrl}
-                  alt={exercise.title}
-                  className="w-full max-h-[340px] object-cover rounded-xl"
-                  loading="lazy"
-                />
-              </section>
+              <>
+                <section className="relative group overflow-hidden rounded-xl border border-border shadow-xs bg-surface-subtle flex items-center justify-center">
+                  <img
+                    src={imageUrl}
+                    alt={exercise.title}
+                    className="w-full h-auto max-h-[460px] object-contain rounded-xl cursor-zoom-in transition-transform duration-200 group-hover:scale-[1.01]"
+                    loading="lazy"
+                    onClick={() => setIsImagePreviewOpen(true)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsImagePreviewOpen(true)}
+                    className="absolute bottom-2 right-2 flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[11px] font-medium text-white opacity-0 transition-opacity backdrop-blur-xs group-hover:opacity-100 hover:bg-black/80"
+                  >
+                    <ZoomIn className="h-3.5 w-3.5" />
+                    <span>{isVietnamese ? 'Xem ảnh lớn' : 'Zoom'}</span>
+                  </button>
+                </section>
+
+                {isImagePreviewOpen && (
+                  <div
+                    role="dialog" aria-modal="true" aria-label={isVietnamese ? "Xem ảnh đề bài" : "Task image"} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+                    onClick={() => setIsImagePreviewOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      data-practice-dismiss aria-label={isVietnamese ? "Đóng ảnh" : "Close image"} onClick={() => setIsImagePreviewOpen(false)}
+                      className="absolute top-4 right-4 rounded-full bg-white/20 p-2 text-white transition-colors hover:bg-white/40"
+                    >
+                      <X className="h-6 w-6" />
+                    </button>
+                    <img
+                      src={imageUrl}
+                      alt={exercise.title}
+                      className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             <section>
@@ -357,6 +396,6 @@ export function WritingWorkspace({
             : 'Your writing draft has been automatically saved.'
         }
       />
-    </main>
+    </PracticeKeyboard>
   )
 }

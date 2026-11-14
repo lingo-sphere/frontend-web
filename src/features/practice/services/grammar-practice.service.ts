@@ -7,6 +7,7 @@ import { api } from '@/services/api.client'
 import type {
   GrammarFeedback, GrammarDraft, GrammarSessionList, GrammarLevelSummary,
   GrammarTopicItem,
+  GrammarTheoryTargets,
   GrammarSession,
   GrammarSessionResult,
   CreateGrammarSessionParams,
@@ -15,15 +16,23 @@ import type {
 } from '../types/grammar-practice'
 
 export const grammarPracticeService = {
+  getTheoryTargets(slug: string): Promise<GrammarTheoryTargets> {
+    return api.get(`/practice/grammar/theory/${encodeURIComponent(slug)}/topics`)
+  },
+  startFromTheory(slug: string, topic_code: string, session_key: string): Promise<GrammarSession> {
+    return api.post(`/practice/grammar/theory/${encodeURIComponent(slug)}/sessions`, { topic_code, session_key })
+  },
   getSession(id: string): Promise<GrammarSession> { return api.get('/practice/grammar/sessions/' + id) },
-  getSessions(page = 1): Promise<GrammarSessionList> { return api.get('/practice/grammar/sessions', { page, limit: 10 }) },
+  getSessions(page = 1, filters?: { limit?: number; status?: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED'; level?: string }): Promise<GrammarSessionList> {
+    return api.get('/practice/grammar/sessions', { page, limit: 20, ...filters })
+  },
   saveDraft(id: string, payload: GrammarDraft): Promise<{ revision: number }> { return api.put('/practice/grammar/sessions/' + id, payload) },
   /**
    * Lấy danh sách 5 cấp độ ngữ pháp (A1 -> C1) cùng tiến độ
    */
   async getLevels(userId?: string): Promise<GrammarLevelSummary[]> {
-    const query = userId ? `?userId=${encodeURIComponent(userId)}` : ''
-    return api.get<GrammarLevelSummary[]>(`/practice/grammar/levels${query}`)
+    const path = userId ? '/practice/grammar/progress/levels' : '/practice/grammar/levels'
+    return api.get<GrammarLevelSummary[]>(path)
   },
 
   /**
@@ -32,9 +41,9 @@ export const grammarPracticeService = {
   async getTopics(level?: string, userId?: string): Promise<GrammarTopicItem[]> {
     const params = new URLSearchParams()
     if (level) params.append('level', level)
-    if (userId) params.append('userId', userId)
     const queryString = params.toString() ? `?${params.toString()}` : ''
-    return api.get<GrammarTopicItem[]>(`/practice/grammar/topics${queryString}`)
+    const path = userId ? '/practice/grammar/progress/topics' : '/practice/grammar/topics'
+    return api.get<GrammarTopicItem[]>(`${path}${queryString}`)
   },
 
   /**

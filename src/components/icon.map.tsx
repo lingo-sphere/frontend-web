@@ -27,6 +27,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   Clock3,
+  Compass,
   CreditCard,
   Crown,
   Diamond,
@@ -36,6 +37,7 @@ import {
   ExternalLink,
   FileText,
   Flame,
+  Folder,
   Gift,
   GraduationCap,
   Headphones,
@@ -46,10 +48,12 @@ import {
   Key,
   Languages,
   Layers3,
+  Layout,
   LayoutGrid,
   Library,
   Lightbulb,
   List,
+  Loader2,
   Lock,
   MapPin,
   Megaphone,
@@ -67,6 +71,7 @@ import {
   PlayCircle,
   Plus,
   PlusCircle,
+  Puzzle,
   RefreshCw,
   RotateCcw,
   Route,
@@ -94,6 +99,7 @@ import {
   Volume2,
   X,
   XCircle,
+  Zap,
   ZapOff,
   Bot,
   MessageSquare,
@@ -114,6 +120,7 @@ const iconMap: Record<string, LucideIcon> = {
   bell: Bell,
   bellOff: BellOff,
   book: BookOpen,
+  bookOpen: BookOpen,
   bookCheck: BookOpenCheck,
   bookmarkCheck: BookmarkCheck,
   brain: Brain,
@@ -131,6 +138,7 @@ const iconMap: Record<string, LucideIcon> = {
   chevronUp: ChevronDown,
   clipboardCheck: ClipboardCheck,
   clock: Clock3,
+  compass: Compass,
   creditCard: CreditCard,
   crown: Crown,
   diamond: Diamond,
@@ -141,6 +149,7 @@ const iconMap: Record<string, LucideIcon> = {
   eyeOff: EyeOff,
   fileText: FileText,
   flame: Flame,
+  folder: Folder,
   gem: Diamond,
   gift: Gift,
   graduation: GraduationCap,
@@ -152,9 +161,11 @@ const iconMap: Record<string, LucideIcon> = {
   home: Home,
   key: Key,
   languages: Languages,
+  layout: Layout,
   library: Library,
   lightbulb: Lightbulb,
   list: List,
+  loader: Loader2,
   lock: Lock,
   logIn: ArrowRight,
   logOut: LogOut,
@@ -178,6 +189,7 @@ const iconMap: Record<string, LucideIcon> = {
   playCircle: PlayCircle,
   plus: Plus,
   plusCircle: PlusCircle,
+  puzzle: Puzzle,
   refresh: RefreshCw,
   refreshCw: RefreshCw,
   rotateCcw: RotateCcw,
@@ -208,6 +220,7 @@ const iconMap: Record<string, LucideIcon> = {
   volume2: Volume2,
   x: X,
   xCircle: XCircle,
+  zap: Zap,
   zapOff: ZapOff,
   shoppingBag: ShoppingBag,
 };
@@ -219,13 +232,16 @@ interface IconProps {
   strokeWidth?: number;
 }
 
+const toCamelCase = (str: string) =>
+  str.replace(/-([a-z0-9])/g, (_, g) => g.toUpperCase());
+
 export function Icon({
   name,
   size = 18,
   className,
   strokeWidth = 1.8,
 }: IconProps) {
-  const IconComponent = iconMap[name];
+  const IconComponent = iconMap[name] || iconMap[toCamelCase(name)];
   if (!IconComponent) return null;
   return (
     <IconComponent

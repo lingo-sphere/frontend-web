@@ -92,10 +92,18 @@ export const practiceService = {
   },
 
   async submitSpeakingAttempt(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
-    return api.post(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_SUBMIT, payload)
+    let response = await api.post<Record<string, unknown>>(API_CONFIG.ENDPOINTS.PRACTICE.SPEAKING_SUBMIT, { ...payload, async_grading: true })
+    for (let poll = 0; poll < 400; poll++) {
+      if (response.attempt || response._id) return response
+      if (response.status === 'FAILED') throw new Error(String(response.error || 'Chưa chấm được bài. Bản thu đã lưu, bạn có thể thử lại.'))
+      if (!['PENDING', 'PROCESSING'].includes(String(response.status))) throw new Error('Trạng thái chấm bài không hợp lệ')
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      response = await api.get<Record<string, unknown>>(`/practice/speaking/grading/${encodeURIComponent(String(payload.request_id))}`)
+    }
+    throw new Error('Bài vẫn đang được chấm và bản thu đã lưu. Mở lại bài để kiểm tra kết quả.')
   },
 
-  async startSpeakingSession(payload: Record<string, unknown>): Promise<unknown> {
+  async startSpeakingSession(payload: Record<string, unknown>): Promise<{ recording_session_id: string; counts: Record<string, number>; policy: { preparation_time_seconds: number; response_time_seconds: number; show_hints: boolean; max_record_attempts: number } }> {
     return api.post('/practice/speaking/sessions', payload)
   },
 
@@ -143,11 +151,11 @@ export const practiceService = {
     return api.post(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_SUBMIT, payload)
   },
 
-  async getMyWritingSubmissions(exerciseId?: string): Promise<any> {
-    const url = exerciseId
-      ? `${API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS}?exercise_id=${exerciseId}`
-      : API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS;
-    return api.get<any>(url);
+  async getMyWritingSubmissions(exerciseId?: string, pagination?: { page: number; limit: number }): Promise<any> {
+    return api.get<any>(API_CONFIG.ENDPOINTS.PRACTICE.WRITING_MY_SUBMISSIONS, {
+      ...(exerciseId ? { exercise_id: exerciseId } : {}),
+      ...pagination,
+    });
   },
 
   async getWritingSubmissionById(id: string): Promise<any> {

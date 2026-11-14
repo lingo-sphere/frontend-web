@@ -21,6 +21,8 @@ export interface GrammarLevelSummary {
   total_topics: number
   completed_topics: number
   accuracy_rate: number
+  total_attempts?: number
+  total_correct?: number
   completion_rate: number
 }
 
@@ -45,6 +47,16 @@ export interface GrammarQuestionOption {
   text: string
 }
 
+export interface GrammarTheoryTargets {
+  theory_slug: string
+  links: Array<{
+    topic_code: string
+    scope_vi?: string
+    scope_en?: string
+    topic: GrammarTopicItem | null
+  }>
+}
+
 export interface GrammarQuestionItem {
   media_id?: string
   question_index: number
@@ -61,6 +73,7 @@ export interface GrammarQuestionItem {
 }
 
 export interface GrammarSession {
+  speaking_grammar_source?: import('./speaking-grammar').SpeakingGrammarSource | null
   revision?: number
   status?: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED'
   answers?: Record<string, string>
@@ -124,7 +137,11 @@ export interface GrammarDraft {
   time_spent_seconds: number
 }
 export interface GrammarSessionList {
-  items: Array<{ session_id: string; topic_name_vi: string; cefr_level: string; status: string; total_questions: number; answered_questions: number; score_percent: number }>
+  items: Array<{
+    session_id: string; topic_name_vi: string; topic_name_en?: string; cefr_level: string
+    status: string; total_questions: number; answered_questions: number; score_percent: number
+    correct_count?: number; total_time_seconds?: number; completed_at?: string; started_at?: string
+  }>
   page: number
   limit: number
   total: number

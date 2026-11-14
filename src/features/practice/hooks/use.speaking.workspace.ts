@@ -1,5 +1,6 @@
+import { resolvePracticeDifficulty } from '../lib/practice-difficulty'
 import type { RecordingSubmission } from '@/features/practice/hooks/use.speaking.session'
-import { longestSpeakingStreak } from '@/features/practice/lib/speaking-policy'
+import { longestSpeakingStreak, resolveSpeakingPolicy, getSavedSpeakingTimeModePreference } from '@/features/practice/lib/speaking-policy'
 import { api } from '@/services/api.client'
 import { readSkillDraft, writeSkillDraft } from '@/features/practice/lib/skill-draft';
 // Hook quản lý trạng thái bài tập luyện nói, quy trình thu âm và chấm điểm phát âm AI.
@@ -14,7 +15,7 @@ import {
 } from '@/features/practice/hooks/use.practice.query'
 import { practiceKeys } from '@/features/practice/keys/practice.keys'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useNavigate, useParams, useSearchParams } from '@/lib/navigation'
+import { useNavigate, useParams } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
 import type {
   SpeakingExercise,
@@ -26,7 +27,6 @@ import type {
   DifficultyLevel,
   DialogueTurnAttemptResult,
 } from '@/features/practice/types/speaking'
-import type { SpeechAssessmentResult } from '@/types/api.types'
 
 export type SpeakingView = 'home' | 'list' | 'workspace' | 'result' | 'history'
 
@@ -46,14 +46,6 @@ function toSpeakingExerciseType(val?: string): SpeakingExerciseType {
     return val as SpeakingExerciseType
   }
   return 'READ_ALOUD'
-}
-
-function toDifficultyLevel(val?: string): DifficultyLevel {
-  const valid: DifficultyLevel[] = ['EASY', 'MEDIUM', 'HARD']
-  if (val && (valid as string[]).includes(val)) {
-    return val as DifficultyLevel
-  }
-  return 'MEDIUM'
 }
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -78,11 +70,19 @@ export function useSpeakingWorkspace() {
     queryKey: ['speaking-result', resultId], enabled: !!resultId && /^[a-f\d]{24}$/i.test(resultId),
     queryFn: () => api.get<Record<string, any>>(`/practice/review-results/SPEAKING/${resultId}/submission`),
   })
-  const [view, setView] = useState<SpeakingView>('home')
+  const catalogRoute = params.slug?.[0]
+  const [view, setView] = useState<SpeakingView>(catalogRoute === 'history' ? 'history' : 'list')
+  const [previousRoute, setPreviousRoute] = useState(catalogRoute)
+  if (previousRoute !== catalogRoute) {
+    setPreviousRoute(catalogRoute)
+    if (!catalogRoute || catalogRoute === 'history') setView(catalogRoute === 'history' ? 'history' : 'list')
+  }
   const [selectedExercise, setSelectedExercise] = useState<SpeakingExercise | null>(null)
+  const [selectedTier, setSelectedTier] = useState<DifficultyLevel>('MEDIUM')
 
 
   const [pendingSpeaking, setPendingSpeaking] = useState<{ payload: Record<string, any> } | null>(null)
+  const submittingRef = useRef(false)
   const speakingRequestRef = useRef<{ hash: string; id: string } | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<SpeakingAttempt | null>(null)
   const [historyAttempts, setHistoryAttempts] = useState<SpeakingAttempt[]>([])
@@ -97,15 +97,15 @@ export function useSpeakingWorkspace() {
     playbackPosition: 0,
   })
 
-  const { data: rawSpeakingExercises = [] } = useSpeakingExercisesQuery()
+  const { data: rawSpeakingExercises = [], isLoading: isLoadingExercises, error: exercisesError, refetch: refetchExercises } = useSpeakingExercisesQuery()
   const { data: userSpeakingProfile } = useSpeakingProfileQuery()
-  const { data: remoteAttempts = [] } = useSpeakingAttemptsQuery(50)
+  const { data: remoteAttempts = [], isLoading: isLoadingHistory, error: historyError, refetch: refetchHistory } = useSpeakingAttemptsQuery(50)
 
   useEffect(() => {
-    if (remoteAttempts.length > 0) {
+    if (!isLoadingHistory && !historyError) {
       setHistoryAttempts(remoteAttempts)
     }
-  }, [remoteAttempts])
+  }, [remoteAttempts, isLoadingHistory, historyError])
 
   const exerciseList: SpeakingExercise[] = useMemo(() => {
     return rawSpeakingExercises.map((item: BackendSpeakingExercise) => ({
@@ -134,7 +134,7 @@ export function useSpeakingWorkspace() {
       target_grammar_knowledge_ids: (item.target_grammar_knowledge_ids as string[]) || [],
       target_phonetics_labels: (item.target_phonetics_labels as string[]) || [],
       target_phonetics_knowledge_ids: (item as any).target_phonetics_knowledge_ids || [],
-      difficulty_level: toDifficultyLevel(item.difficulty_level || 'MEDIUM'),
+      difficulty_level: resolvePracticeDifficulty(item.difficulty_level, undefined, item.cefr_level),
       cefr_level: item.cefr_level || 'B1',
       total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
       avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
@@ -154,7 +154,8 @@ export function useSpeakingWorkspace() {
   }, [resultQuery.data, exerciseList])
 
   const stats: SpeakingStats = useMemo(() => {
-    const comparableAttempts = historyAttempts.filter(item => item.grading_version === 'speaking-v2')
+    const currentVersion = historyAttempts.find(item => !item.grading_version?.startsWith('teacher:'))?.grading_version || 'speaking-v2'
+    const comparableAttempts = historyAttempts.filter(item => item.grading_version === currentVersion)
     const total = Math.max(userSpeakingProfile?.total_attempts || 0, comparableAttempts.length)
 
     // Average score: fallback to userSpeakingProfile.overall_proficiency_score if comparableAttempts is empty
@@ -277,22 +278,31 @@ export function useSpeakingWorkspace() {
     })
   }, [])
 
-  const handleGoList = useCallback(() => { setView('list'); navigate('/speaking') }, [navigate])
-  const handleGoHistory = useCallback(() => setView('history'), [])
+  const handleGoList = useCallback(() => {
+    if (catalogRoute) navigate('/speaking')
+    else setView('list')
+  }, [catalogRoute, navigate])
+  const handleGoHistory = useCallback(() => {
+    if (catalogRoute === 'history') setView('history')
+    else navigate('/speaking/history')
+  }, [catalogRoute, navigate])
 
-  const handleSelectExercise = useCallback((exercise: SpeakingExercise) => {
+  const handleSelectExercise = useCallback((exercise: SpeakingExercise, chosenTier?: DifficultyLevel) => {
     const { isAuthenticated } = useAuthStore.getState()
     if (!isAuthenticated) {
       toast.warning('Vui lòng đăng nhập để bắt đầu bài luyện nói!')
       window.dispatchEvent(new CustomEvent('lingosphere:open-auth-modal'))
       return
     }
+    const tier = chosenTier || getSavedSpeakingTimeModePreference() || exercise.difficulty_level || 'MEDIUM'
+    setSelectedTier(tier)
     setSelectedExercise(exercise)
     setView('workspace')
+    const policy = resolveSpeakingPolicy(exercise, tier)
     setRecordingState({
       phase: 'idle',
-      preparationTimeLeft: exercise.preparation_time_seconds ?? 30,
-      speakingTimeLeft: exercise.response_time_seconds ?? 45,
+      preparationTimeLeft: policy.preparation_time_seconds,
+      speakingTimeLeft: policy.response_time_seconds,
       duration: 0,
       audioUrl: null,
       isPlaying: false,
@@ -309,8 +319,8 @@ export function useSpeakingWorkspace() {
   }, [exerciseList, navigate])
 
   const handleStartPractice = useCallback(
-    (exercise: SpeakingExercise) => {
-      handleSelectExercise(exercise)
+    (exercise: SpeakingExercise, tier?: DifficultyLevel) => {
+      handleSelectExercise(exercise, tier)
     },
     [handleSelectExercise]
   )
@@ -322,7 +332,8 @@ export function useSpeakingWorkspace() {
       audioBlob?: Blob,
       difficultyChosen?: DifficultyLevel,
       dialogueTurnsResults?: DialogueTurnAttemptResult[],
-      recordingSubmission?: RecordingSubmission
+      recordingSubmission?: RecordingSubmission,
+      frozenRequest?: { hash: string; id: string; payload: Record<string, any> }
     ) => {
       if (!selectedExercise) return
       const authUser = useAuthStore.getState().user
@@ -330,20 +341,22 @@ export function useSpeakingWorkspace() {
         toast.error('Vui lòng đăng nhập để gửi bài thu âm và nhận đánh giá AI!')
         return
       }
+      if (submittingRef.current) return
+      submittingRef.current = true
       setIsSubmitting(true)
-
+      try {
       let audioBase64: string | undefined = undefined
       if (audioBlob) {
         try {
           audioBase64 = await blobToBase64(audioBlob)
         } catch (e) {
-          console.warn('Failed to convert audioBlob to base64:', e)
+          throw new Error('Không đọc được bản ghi âm. Bản thu chưa được gửi.')
         }
       }
 
       let backendResponse: any = null
       try {
-        const payload = {
+        const payload = frozenRequest?.payload ?? {
           ...recordingSubmission,
           exercise_id: selectedExercise.id, audio_data: audioBase64, mime_type: audioBlob?.type,
           transcription, recording_duration_seconds: duration,
@@ -351,15 +364,18 @@ export function useSpeakingWorkspace() {
           difficulty_chosen: difficultyChosen || selectedExercise.difficulty_level || 'MEDIUM',
           dialogue_turns_results: dialogueTurnsResults || [],
         }
+        if (payload.exercise_id !== selectedExercise.id) throw new Error('Bài chờ chấm không khớp bài đang mở')
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(payload)))
         const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
         const draftKey = `practice-speaking:${authUser.user_id}:${selectedExercise.id}`
         const draft = await readSkillDraft<{ hash: string; id: string; payload: Record<string, unknown> }>(draftKey).catch(() => undefined)
-        const request = draft?.hash === hash ? draft : speakingRequestRef.current?.hash === hash ? speakingRequestRef.current : { hash, id: crypto.randomUUID() }
+        const request = frozenRequest ?? (draft?.hash === hash ? draft : speakingRequestRef.current?.hash === hash ? speakingRequestRef.current : { hash, id: crypto.randomUUID() })
         speakingRequestRef.current = request
         await writeSkillDraft(draftKey, { ...request, payload }).catch(() => { })
         setPendingSpeaking({ payload })
         backendResponse = await practiceService.submitSpeakingAttempt({ ...payload, request_id: request.id })
+        const saved = backendResponse?.attempt || backendResponse
+        if (!saved?._id || !Number.isFinite(saved.overall_score)) throw new Error('Chưa nhận được kết quả hợp lệ; bài đã lưu để thử lại.')
         await writeSkillDraft(draftKey, undefined).catch(() => { })
         setPendingSpeaking(null)
 
@@ -435,12 +451,12 @@ export function useSpeakingWorkspace() {
         exercise_id: selectedExercise.id,
         attempt_number: attempt.attempt_number || 1,
         is_best_attempt: typeof attempt.is_best_attempt === 'boolean' ? attempt.is_best_attempt : true,
-        recording_duration_seconds: duration,
-        speaking_time_seconds: duration,
+        recording_duration_seconds: attempt.recording_duration_seconds ?? duration,
+        speaking_time_seconds: attempt.recording_duration_seconds ?? duration,
         audio_url: attempt.audio_url || recordingState.audioUrl || (audioBlob ? URL.createObjectURL(audioBlob) : undefined),
         transcription: finalTranscript,
         difficulty_chosen: difficultyChosen || selectedExercise.difficulty_level || 'MEDIUM',
-        dialogue_turns_results: attempt.dialogue_turns_results || dialogueTurnsResults,
+        dialogue_turns_results: Array.isArray(attempt.dialogue_turns_results) ? attempt.dialogue_turns_results : [],
         grading_version: attempt.grading_version,
         overall_score: overallScore,
         pronunciation_score: pronunciationScore,
@@ -449,7 +465,7 @@ export function useSpeakingWorkspace() {
         vocabulary_score: vocabularyScore,
         coherence_score: coherenceScore,
         content_score: contentScore,
-        ai_evaluation: {
+        ai_evaluation: attempt.grading_origin === 'TEACHER' ? undefined : {
           ...attempt.ai_evaluation,
           overall_feedback: feedback,
           pronunciation_analysis: {
@@ -496,16 +512,25 @@ export function useSpeakingWorkspace() {
       setRecordingState((prev) => ({ ...prev, phase: 'reviewing' }))
       setView('result')
       navigate(`/speaking/result/${attemptId}`)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Không thể gửi bản thu')
+      } finally {
+        submittingRef.current = false
+        setIsSubmitting(false)
+      }
     },
     [selectedExercise, queryClient, navigate]
   )
 
   const retryPendingSpeaking = useCallback(async () => {
     if (!pendingSpeaking || isSubmitting) return
-    const p = pendingSpeaking.payload
-    const blob = p.audio_data ? await (await fetch(p.audio_data)).blob() : undefined
-    await handleSubmitRecording(p.transcription || '', p.recording_duration_seconds || 0, blob, p.difficulty_chosen, p.dialogue_turns_results, { recording_session_id: p.recording_session_id, recording_take_id: p.recording_take_id })
-  }, [pendingSpeaking, isSubmitting, handleSubmitRecording])
+    const user = useAuthStore.getState().user
+    if (!user || !selectedExercise) return
+    const draft = await readSkillDraft<{ hash: string; id: string; payload: Record<string, any> }>(`practice-speaking:${user.user_id}:${selectedExercise.id}`).catch(() => undefined)
+    if (!draft?.id || !draft.payload) { toast.error('Chưa tải được bản nộp đã lưu. Vui lòng thử lại.'); return }
+    const p = draft.payload
+    await handleSubmitRecording(p.transcription || '', p.recording_duration_seconds ?? 0, undefined, p.difficulty_chosen, p.dialogue_turns_results, { recording_session_id: p.recording_session_id, recording_take_id: p.recording_take_id }, draft)
+  }, [pendingSpeaking, isSubmitting, selectedExercise, handleSubmitRecording])
 
   const handlePracticeAgain = useCallback(() => {
     if (!selectedExercise) return
@@ -535,6 +560,8 @@ export function useSpeakingWorkspace() {
     setView,
     exerciseList,
     selectedExercise,
+    selectedTier,
+    setSelectedTier,
     currentSubmission,
     historyAttempts,
     recordingState,
@@ -552,5 +579,7 @@ export function useSpeakingWorkspace() {
     handlePracticeAgain,
     handleNextExercise,
     isSubmitting,
+    isLoadingExercises, exercisesError, refetchExercises,
+    isLoadingHistory, historyError, refetchHistory,
   }
 }

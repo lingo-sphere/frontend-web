@@ -1,8 +1,10 @@
+import { resolvePracticeDifficulty } from '../lib/practice-difficulty'
 import { readSkillDraft, writeSkillDraft } from '../lib/skill-draft'
+import { getTimeSeconds, getSavedTimeModePreference } from '../lib/writing-time-mode'
 // Hook quản lý trạng thái bài tập luyện viết, lưu bản nháp và gửi chấm điểm bài luận AI.
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams, useSearchParams } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -16,7 +18,6 @@ import type {
   WritingStats,
   WritingProgress,
   WritingLevel,
-  DifficultyLevel,
   ExerciseType,
   WritingSkillType,
   WritingRecommendation,
@@ -32,14 +33,6 @@ function toWritingLevel(val?: string, difficulty?: string, cefr?: string): Writi
   if (difficulty === 'EASY' || cefr === 'A2') return 'BASIC'
   if (difficulty === 'HARD' || cefr === 'B2' || cefr === 'C1') return 'ADVANCED'
   return 'INTERMEDIATE'
-}
-
-function toDifficultyLevel(val?: string): DifficultyLevel {
-  const valid: DifficultyLevel[] = ['EASY', 'MEDIUM', 'HARD']
-  if (val && (valid as string[]).includes(val)) {
-    return val as DifficultyLevel
-  }
-  return 'MEDIUM'
 }
 
 function toExerciseType(val?: string): ExerciseType {
@@ -71,9 +64,10 @@ function mapBackendToWritingExercise(item: any): WritingExercise {
     description_vi: item.description_vi || item.description || '',
     domain: 'WRITING',
     exercise_type: toExerciseType(item.exercise_type),
+    estimated_minutes: item.estimated_minutes || 10,
     writing_level: toWritingLevel(item.writing_level, item.difficulty_level, item.cefr_level),
     toeic_part: item.toeic_part || 1,
-    prompt_en: item.prompt_en || item.prompt_text || item.title,
+    prompt_en: item.prompt_en || item.prompt_text || item.task_prompt || item.title,
     prompt_vi: item.prompt_vi || item.prompt_text_vi || item.title_vi,
     instructions: item.instruction_vi || item.instruction_en || item.instructions || item.description,
     prompt_image_id: item.prompt_image_id || item.image_media_id || item.media_id,
@@ -91,7 +85,7 @@ function mapBackendToWritingExercise(item: any): WritingExercise {
     keywords: item.keywords || [],
     min_words: item.min_words ?? 45,
     max_words: item.max_words ?? 85,
-    difficulty_level: toDifficultyLevel(item.difficulty_level),
+    difficulty_level: resolvePracticeDifficulty(item.difficulty_level, item.writing_level, item.cefr_level),
     cefr_level: item.cefr_level || 'B1',
     total_attempts: typeof item.total_attempts === 'number' ? item.total_attempts : 0,
     avg_score: typeof item.avg_score === 'number' ? item.avg_score : undefined,
@@ -103,12 +97,17 @@ function mapBackendToWritingExercise(item: any): WritingExercise {
 
 function mapBackendToSubmission(sub: any): WritingSubmission {
   const aiEval = sub.ai_evaluation || {}
+  const exerciseId = typeof sub.exercise_id === 'object' ? sub.exercise_id?._id : sub.exercise_id
+  const exercise = sub.exercise || (sub.task_snapshot
+    ? { ...sub.task_snapshot, _id: exerciseId, cefr_level: sub.task_snapshot.writing_level }
+    : typeof sub.exercise_id === 'object' ? sub.exercise_id : null)
   return {
+    exercise: exercise ? mapBackendToWritingExercise(exercise) : undefined,
     writing_srs_version: sub.writing_srs_version, writing_srs_summary: sub.writing_srs_summary,
     grading_standard: sub.grading_standard, grading_version: sub.grading_version, raw_score: sub.raw_score, max_score: sub.max_score, grading_model: sub.grading_model,
     id: sub._id || sub.id,
     user_id: sub.user_id,
-    exercise_id: typeof sub.exercise_id === 'object' ? sub.exercise_id?._id : sub.exercise_id,
+    exercise_id: exerciseId,
     content: sub.content || '',
     word_count: sub.word_count || 0,
     version_number: sub.version_number || 1,
@@ -136,6 +135,7 @@ function mapBackendToSubmission(sub: any): WritingSubmission {
         original: err.original || '',
         correction: err.corrected || err.correction || '',
         explanation: err.explanation || '',
+        rule_code: err.rule_code, target_phrase: err.target_phrase, position: err.position, validation_status: err.validation_status, locations: err.locations,
       })),
       suggested_version: aiEval.improved_version || aiEval.suggested_version || sub.content,
       overall_strengths: aiEval.strengths?.join(' ') || aiEval.overall_strengths,
@@ -151,6 +151,9 @@ export function useWritingWorkspace() {
   const navigate = useNavigate()
   const params = useParams()
   const searchParams = useSearchParams()
+  const userId = useAuthStore((state) => state.user?.user_id)
+  const pageParam = Number(searchParams.get('page') || 1)
+  const historyPage = Number.isSafeInteger(pageParam) && pageParam > 0 ? pageParam : 1
   const reviewSessionId = searchParams.get('review_session') || undefined
   const parentSubmissionId = searchParams.get('parent') || undefined
   const rawPath = params?.slug || params?.['*']
@@ -163,14 +166,32 @@ export function useWritingWorkspace() {
     if (path.startsWith('workspace/')) return 'workspace'
     if (path.startsWith('result/')) return 'result'
     if (path.startsWith('history')) return 'history'
-    return 'home'
+    return 'exercises'
   }, [path])
 
-  const [currentView, setCurrentView] = useState<WritingView>(initialView)
+  const currentView = initialView
   const [selectedExercise, setSelectedExercise] = useState<WritingExercise | null>(null)
   const [currentSubmission, setCurrentSubmission] = useState<WritingSubmission | null>(null)
-  const [scoreGroups, setScoreGroups] = useState<NonNullable<WritingStats['score_groups']>>([])
-  const [historySubmissions, setHistorySubmissions] = useState<WritingSubmission[]>([])
+  const historyQuery = useQuery({
+    queryKey: ['writing', 'history', userId, historyPage],
+    queryFn: async () => {
+      const response = await practiceService.getMyWritingSubmissions(undefined, { page: historyPage, limit: 20 })
+      return response?.data || response
+    },
+    enabled: Boolean(userId) && currentView === 'history',
+  })
+  const historySubmissions: WritingSubmission[] = useMemo(() => {
+    const items = historyQuery.data?.items || (Array.isArray(historyQuery.data) ? historyQuery.data : [])
+    return items.map(mapBackendToSubmission)
+  }, [historyQuery.data])
+  const scoreGroups: NonNullable<WritingStats['score_groups']> = historyQuery.data?.score_groups || []
+  useEffect(() => {
+    if (currentView !== 'history' || !historyQuery.data || historyQuery.isFetching) return
+    const lastPage = Math.max(1, Number(historyQuery.data.total_pages || 1))
+    if (historyPage > lastPage) {
+      navigate(`/writing/history${lastPage > 1 ? `?page=${lastPage}` : ''}`, { replace: true })
+    }
+  }, [currentView, historyQuery.data, historyQuery.isFetching, historyPage, navigate])
   const [isInitialized, setIsInitialized] = useState(false)
   const [initError, setInitError] = useState<string | null>(null)
 
@@ -203,6 +224,7 @@ export function useWritingWorkspace() {
   // Initialize: load exercise/submission từ URL params
   useEffect(() => {
     if (!isInitialized) return
+    let cancelled = false
 
     // Case 1: Direct access với exercise ID
     if (exerciseIdFromUrl && !selectedExercise) {
@@ -216,21 +238,25 @@ export function useWritingWorkspace() {
     }
 
     // Case 2: Direct access với submission ID (result view)
-    if (currentView === 'result' && submissionIdFromUrl && !currentSubmission) {
+    if (currentView === 'result' && submissionIdFromUrl && currentSubmission?.id !== submissionIdFromUrl) {
       // Fetch submission từ API
       practiceService.getWritingSubmissionById(submissionIdFromUrl)
         .then((res: any) => {
+          if (cancelled) return
           const sub = mapBackendToSubmission(res)
           setCurrentSubmission(sub)
           // Tìm exercise tương ứng
           const ex = res.exercise ? mapBackendToWritingExercise(res.exercise) : exerciseList.find((e) => e.id === sub.exercise_id)
           if (ex) setSelectedExercise(ex)
+          else setInitError('Không còn thông tin đề bài để xem kết quả')
         })
         .catch((err) => {
+          if (cancelled) return
           console.error('[useWritingWorkspace] Error fetching submission:', err)
           setInitError('Không thể tải kết quả bài làm')
         })
     }
+    return () => { cancelled = true }
   }, [isInitialized, exerciseIdFromUrl, submissionIdFromUrl, currentView, selectedExercise, currentSubmission, exerciseList])
 
   // Set selectedExercise khi fetchedExerciseById available
@@ -248,22 +274,6 @@ export function useWritingWorkspace() {
     }
   }, [exerciseError, exerciseIdFromUrl])
 
-  // Load submissions history
-  useEffect(() => {
-    practiceService.getMyWritingSubmissions()
-      .then((res: any) => {
-        setScoreGroups(res?.score_groups || [])
-        const items = res?.items || res?.data?.items || (Array.isArray(res) ? res : [])
-        if (Array.isArray(items) && items.length > 0) {
-          const mapped = items.map(mapBackendToSubmission)
-          setHistorySubmissions(mapped)
-        }
-      })
-      .catch((err: unknown) => {
-        console.warn('[useWritingWorkspace] Could not load submissions history:', err)
-      })
-  }, [])
-
   // Mark as initialized sau khi exercise list loaded
   useEffect(() => {
     if (!isLoadingExercises && !isInitialized) {
@@ -274,7 +284,47 @@ export function useWritingWorkspace() {
   // Draft state
   const [draftContent, setDraftContent] = useState<string>('')
   const [draftVersion, setDraftVersion] = useState<number>(1)
-  const [timeSeconds, setTimeSeconds] = useState<number>(10 * 60) // Default 10 phút
+
+  // Xác định thời gian làm bài chính xác (ưu tiên URL query param -> sessionStorage -> preference đã lưu -> normal mode)
+  const getInitialTimeSeconds = useCallback((ex: WritingExercise | null, querySeconds?: string | null): number => {
+    if (querySeconds && !isNaN(Number(querySeconds)) && Number(querySeconds) > 0) {
+      return Number(querySeconds)
+    }
+    if (typeof window !== 'undefined' && ex?.id) {
+      const stored = sessionStorage.getItem(`writing_time_${ex.id}`)
+      if (stored && !isNaN(Number(stored)) && Number(stored) > 0) {
+        return Number(stored)
+      }
+    }
+    if (ex) {
+      const savedPref = getSavedTimeModePreference(ex.exercise_type)
+      const estimatedMins = ex.estimated_minutes || 10
+      if (savedPref) {
+        return getTimeSeconds(ex.exercise_type, savedPref.mode, estimatedMins)
+      }
+      return getTimeSeconds(ex.exercise_type, 'normal', estimatedMins)
+    }
+    return 10 * 60
+  }, [])
+
+  const [timeSeconds, setTimeSeconds] = useState<number>(() => {
+    const timeParam = searchParams.get('time')
+    if (timeParam && !isNaN(Number(timeParam)) && Number(timeParam) > 0) {
+      return Number(timeParam)
+    }
+    return 10 * 60
+  })
+
+  // Đồng bộ timeSeconds khi query param hoặc selectedExercise thay đổi
+  useEffect(() => {
+    const timeParam = searchParams.get('time')
+    if (timeParam && !isNaN(Number(timeParam)) && Number(timeParam) > 0) {
+      setTimeSeconds(Number(timeParam))
+    } else if (selectedExercise && currentView === 'workspace') {
+      const resolved = getInitialTimeSeconds(selectedExercise, timeParam)
+      setTimeSeconds(resolved)
+    }
+  }, [searchParams, selectedExercise, currentView, getInitialTimeSeconds])
 
   // Sync selectedExercise khi exerciseList load xong
   useEffect(() => {
@@ -290,7 +340,7 @@ export function useWritingWorkspace() {
   const stats: WritingStats = useMemo(() => {
     const total = historySubmissions.length
 
-    const practical = historySubmissions.filter(submission => submission.grading_standard === 'PRACTICAL' && submission.grading_version === 'writing-v2')
+    const practical = historySubmissions.filter(submission => submission.grading_standard === 'PRACTICAL' && ['writing-v2', 'writing-v3'].includes(submission.grading_version || ''))
     const average = (selector: (s: WritingSubmission) => number | null | undefined) => {
       const values = practical.map(selector).filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
       if (!values.length) return null
@@ -336,7 +386,6 @@ export function useWritingWorkspace() {
   }, [historySubmissions, scoreGroups])
 
   // Get user ID from auth store
-  const userId = useAuthStore((state) => state.user?.user_id)
 
   // Fetch recommendations from API
   const { data: recommendationData } = useWritingRecommendationsQuery(userId || null, 4)
@@ -380,30 +429,38 @@ export function useWritingWorkspace() {
 
   // Navigation handlers
   const handleGoHome = useCallback(() => {
+    setInitError(null)
     setSelectedExercise(null)
     setCurrentSubmission(null)
-    setCurrentView('home')
     navigate('/writing')
   }, [navigate])
 
   const handleGoExercises = useCallback(() => {
+    setInitError(null)
     setSelectedExercise(null)
     setCurrentSubmission(null)
     setDraftContent('')
-    setCurrentView('exercises')
-    navigate('/writing/exercises')
+    navigate('/writing')
   }, [navigate])
 
   const handleGoHistory = useCallback(() => {
-    setCurrentView('history')
+    setInitError(null)
     navigate('/writing/history')
   }, [navigate])
+
+  const handleHistoryPage = useCallback((page: number) => {
+    navigate(`/writing/history${page > 1 ? `?page=${page}` : ''}`)
+  }, [navigate])
+
+  const handleBackFromResult = useCallback(() => {
+    if (searchParams.get('from') === 'history') handleHistoryPage(historyPage)
+    else handleGoExercises()
+  }, [searchParams, historyPage, handleHistoryPage, handleGoExercises])
 
   const handleSelectExercise = useCallback(
     (exercise: WritingExercise) => {
       setSelectedExercise(exercise)
       setCurrentSubmission(null)
-      setCurrentView('detail')
       navigate(`/writing/exercise/${exercise.id}`)
     },
     [navigate]
@@ -417,11 +474,12 @@ export function useWritingWorkspace() {
       }
       setDraftContent('')
       setDraftVersion(1)
-      if (timeSecondsParam) {
-        setTimeSeconds(timeSecondsParam)
+      const seconds = timeSecondsParam || getTimeSeconds(exercise.exercise_type, 'normal', exercise.estimated_minutes || 10)
+      setTimeSeconds(seconds)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`writing_time_${exercise.id}`, String(seconds))
       }
-      setCurrentView('workspace')
-      navigate(`/writing/workspace/${exercise.id}`)
+      navigate(`/writing/workspace/${exercise.id}?time=${seconds}`)
     },
     [navigate, selectedExercise]
   )
@@ -466,12 +524,10 @@ export function useWritingWorkspace() {
 
         await writeSkillDraft(draftKey, undefined).catch(() => {})
         submissionRequest.current = null
-        void practiceService.getMyWritingSubmissions().then((history: any) => setScoreGroups(history?.score_groups || [])).catch(() => undefined)
         setCurrentSubmission(newSubmission)
-        setHistorySubmissions((prev) => [newSubmission, ...prev.filter((p) => p.id !== newSubmission.id)])
+        void queryClient.invalidateQueries({ queryKey: ['writing', 'history'] })
         queryClient.invalidateQueries({ queryKey: practiceKeys.writing() })
         queryClient.invalidateQueries({ queryKey: ['writing-srs'] })
-        setCurrentView('result')
         navigate(`/writing/result/${newSubmission.id}`)
         return true
       } catch (submitErr) {
@@ -486,22 +542,18 @@ export function useWritingWorkspace() {
 
   const handleViewSubmission = useCallback(
     (submission: WritingSubmission) => {
-      const exercise = exerciseList.find((ex) => ex.id === submission.exercise_id)
-      if (exercise) {
-        setSelectedExercise(exercise)
-      }
-      setCurrentSubmission(submission)
-      setCurrentView('result')
-      navigate(`/writing/result/${submission.id}`)
+      setSelectedExercise(null)
+      setCurrentSubmission(null)
+      setInitError(null)
+      navigate(`/writing/result/${submission.id}?from=history&page=${historyPage}`)
     },
-    [exerciseList, navigate]
+    [historyPage, navigate]
   )
 
   const handlePracticeAgain = useCallback(() => {
     if (!selectedExercise) return
     setDraftContent('')
     setDraftVersion((currentSubmission?.version_number || 1) + 1)
-    setCurrentView('workspace')
     navigate(`/writing/workspace/${selectedExercise.id}${currentSubmission ? `?parent=${currentSubmission.id}` : ''}`)
   }, [selectedExercise, currentSubmission, navigate])
 
@@ -512,7 +564,6 @@ export function useWritingWorkspace() {
     setSelectedExercise(nextExercise)
     setDraftContent('')
     setDraftVersion(1)
-    setCurrentView('workspace')
     navigate(`/writing/workspace/${nextExercise.id}`)
   }, [selectedExercise, exerciseList, navigate])
 
@@ -524,19 +575,28 @@ export function useWritingWorkspace() {
     selectedExercise,
     currentSubmission,
     historySubmissions,
+    historyPage,
+    historyTotal: Number(historyQuery.data?.total || 0),
+    historyTotalPages: Number(historyQuery.data?.total_pages || 0),
+    isLoadingHistory: historyQuery.isPending,
+    historyError: historyQuery.error?.message || null,
+    refetchHistory: historyQuery.refetch,
     draftContent,
     draftVersion,
     timeSeconds,
     stats,
     progress,
     // Loading states
-    isLoading: !isInitialized || isLoadingExercises || (!!exerciseIdFromUrl && isLoadingExerciseById),
+    isLoading: currentView !== 'history' && (!isInitialized || isLoadingExercises || (!!exerciseIdFromUrl && isLoadingExerciseById) ||
+      (currentView === 'result' && (!currentSubmission || currentSubmission.id !== submissionIdFromUrl || !selectedExercise))),
     isLoadingExercise: isLoadingExerciseById,
     error: initError || (exerciseError ? 'Không thể tải bài tập' : null),
     // Handlers
     handleGoHome,
     handleGoExercises,
     handleGoHistory,
+    handleHistoryPage,
+    handleBackFromResult,
     handleSelectExercise,
     handleStartWriting,
     handleSaveDraft,

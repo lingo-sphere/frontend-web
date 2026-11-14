@@ -109,6 +109,16 @@ export const BackendIpaSymbolListSchema = z.array(BackendIpaSymbolSchema)
 export const BackendGrammarExampleSchema = z.object({
   sentence_en: z.string(),
   sentence_vi: z.string(),
+  highlight: z.string().optional(),
+  explanation: z.string().optional(),
+}).passthrough()
+
+export const BackendGrammarFormulaSchema = z.object({
+  form_type: z.string(),
+  form_label: z.string(),
+  pattern: z.string(),
+  explanation: z.string().optional(),
+  examples: z.array(BackendGrammarExampleSchema).default([]),
 }).passthrough()
 
 export const BackendGrammarPointSchema = z.object({
@@ -123,6 +133,13 @@ export const BackendGrammarPointSchema = z.object({
   rule_en: z.string().optional(),
   rule_vi: z.string().optional(),
   structure_form: z.string().optional(),
+  image_url: z.string().nullable().optional(),
+  formula_details: z.array(BackendGrammarFormulaSchema).default([]),
+  practice_links: z.array(z.object({
+    topic_code: z.string(),
+    scope_vi: z.string().optional(),
+    scope_en: z.string().optional(),
+  })).default([]),
   usage_notes: z.string().optional(),
   common_mistakes: z.string().optional(),
   examples: z.array(BackendGrammarExampleSchema).default([]),

@@ -1,5 +1,6 @@
 // Service xử lý các logic nghiệp vụ chính cho dịch vụ từ vựng.
 import { api } from '@/services/api.client'
+import type { SpeakingVocabularySource } from '../types/vocabulary-source'
 import { API_CONFIG } from '@/config/api.config'
 import { WrongWordSchema, type WrongWord } from '../schemas/wrong-word.schema'
 import {
@@ -248,6 +249,7 @@ export const vocabularyService = {
       audio_us?: string
       audio_uk?: string
       saved_at: string
+      speaking_sources?: SpeakingVocabularySource[]
     }>
     pagination: {
       page: number
@@ -356,7 +358,18 @@ export const vocabularyService = {
     correct_answer: string
     meaning_vi?: string
     message?: string
-    progress: { resolved: number; total: number }
+    is_recovery?: boolean
+    is_recovered?: boolean
+    bonus_xp?: number
+    progress: {
+      resolved: number
+      total: number
+      is_relearning?: boolean
+      is_recovery?: boolean
+      unresolved_count?: number
+      recovery_total?: number
+      recovery_resolved?: number
+    }
   }> {
     return api.post(`/vocabulary/learning-sessions/${sessionId}/answers`, data)
   },
@@ -369,6 +382,9 @@ export const vocabularyService = {
     review_time_seconds: number
     total_words: number
     correct_count: number
+    first_try_correct_count?: number
+    recovered_count?: number
+    recovery_bonus_xp?: number
     near_correct_count: number
     accuracy_percent: number | null
     total_items: number
