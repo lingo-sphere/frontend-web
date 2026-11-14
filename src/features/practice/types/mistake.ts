@@ -149,6 +149,8 @@ export interface SpeakingSrsDueExercise {
 }
 
 export interface SpeakingMispronouncedWord {
+  last_attempt_id?: string
+  last_turn_number?: number
   word: string
   phonetic_expected?: string
   phonetic_actual?: string
@@ -169,6 +171,8 @@ export interface SpeakingPhonemeError {
 }
 
 export interface SpeakingGrammarError {
+  attempt_id?: string
+  turn_number?: number
   error_category: string
   original_phrase: string
   corrected_phrase: string
@@ -187,6 +191,8 @@ export interface SpeakingContextImprovement {
 }
 
 export interface SpeakingMistakesResponse {
+  learning_issues?: import('./speaking').SpeakingLearningIssue[]
+  vocabulary_errors?: import('./speaking').SpeakingLearningIssue[]
   summary: {
     total_due_today: number
     total_scheduled: number

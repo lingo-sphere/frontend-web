@@ -1,10 +1,11 @@
+import { PracticeRecordKey } from './practice.keyboard'
 import { resolveSpeakingPolicy } from '@/features/practice/lib/speaking-policy'
 /**
  * @file speaking.recorder.panel.tsx
  * @description Bảng điều khiển ghi âm, đồng hồ đếm ngược và nghe lại bài nói của học viên
  */
 
-import { Loader2, Mic, Pause, Play, RotateCcw, Square } from 'lucide-react'
+import { Loader2, Mic, Pause, Play, RotateCcw, Square, Zap, Target, Trophy, Check } from 'lucide-react'
 import { Button } from '@/components/button'
 import { Card, CardContent } from '@/components/card'
 import type { SpeakingExercise, RecordingPhase } from '@/features/practice/types/speaking'
@@ -69,101 +70,140 @@ export function SpeakingRecorderPanel({
   return (
     <Card className="dashboard-card">
       <CardContent className="p-6">
+        <ol aria-label={isVietnamese ? 'Các bước làm bài nói' : 'Speaking steps'} className="mb-5 grid grid-cols-3 gap-2 border-b border-border pb-4 text-center text-xs">
+          {(isVietnamese ? ['Chuẩn bị', 'Thu âm', 'Nghe lại & nộp'] : ['Prepare', 'Record', 'Review & submit']).map((label, index) => {
+            const step = phase === 'reviewing' ? 2 : phase === 'recording' ? 1 : 0
+            return <li key={label} aria-current={index === step ? 'step' : undefined} className={index === step ? 'font-semibold text-primary' : 'text-text-secondary'}><span className="mb-1 block">{index + 1}</span>{label}</li>
+          })}
+        </ol>
         <p className="mb-3 text-center text-sm text-text-secondary">{isVietnamese ? 'Lượt thu âm' : 'Takes'}: {takesUsed}/{resolveSpeakingPolicy(exercise, selectedTier).max_record_attempts}</p>
         {phase === 'idle' && (
           <div className="text-center">
-            {/* Bộ chọn 3 mức độ thời gian chuẩn bị (Dễ - Trung bình - Nhanh) */}
+            {/* Bộ chọn 3 mức độ thời gian (Phản xạ - Tiêu chuẩn - Thư thả) đồng bộ Writing & Reading */}
             {needsPreparation && (
               <div className="mb-6 rounded-2xl border border-border/80 bg-surface-subtle p-4 text-left">
-                <div className="mb-2.5 flex items-center justify-between">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[13px] font-semibold text-text-primary">
-                    {isVietnamese ? 'Chọn mức thời gian chuẩn bị:' : 'Choose preparation pace:'}
+                    {isVietnamese ? 'Chế độ thời gian chuẩn bị & nói:' : 'Time Mode & Pace:'}
                   </span>
                   <span className="text-[11px] text-text-tertiary">
-                    {isVietnamese ? 'Tùy chỉnh theo trình độ của bạn' : 'Adjust to your level'}
+                    {isVietnamese ? 'Tùy chỉnh theo phong cách luyện tập của bạn' : 'Adjust to your training pace'}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                  {/* Mức 1: Dễ */}
+                  {/* Mức 1: Phản xạ (Hard) */}
                   <button
                     type="button"
-                    disabled={takesUsed > 0} onClick={() => onSelectTier('EASY')}
-                    className={`flex flex-col rounded-xl border p-3 text-left transition cursor-pointer ${
-                      selectedTier === 'EASY'
-                        ? 'border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500'
-                        : 'border-border/80 bg-surface hover:border-emerald-400/60'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[13px] font-bold text-emerald-700 dark:text-emerald-400">
-                        {isVietnamese ? 'Dễ (Thư thả)' : 'Relaxed (Easy)'}
-                      </span>
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                        {easyPrep}s
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-text-secondary">
-                      {isVietnamese
-                        ? `Chuẩn bị ${easyPrep}s • Nói ${easySpeak}s. Đọc kỹ tranh & từ vựng.`
-                        : `Prep ${easyPrep}s • Speak ${easySpeak}s. Ideal for beginners.`}
-                    </p>
-                  </button>
-
-                  {/* Mức 2: Trung bình */}
-                  <button
-                    type="button"
-                    disabled={takesUsed > 0} onClick={() => onSelectTier('MEDIUM')}
-                    className={`flex flex-col rounded-xl border p-3 text-left transition cursor-pointer ${
-                      selectedTier === 'MEDIUM'
-                        ? 'border-primary bg-primary/10 shadow-xs ring-1 ring-primary'
-                        : 'border-border/80 bg-surface hover:border-primary/60'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[13px] font-bold text-primary">
-                        {isVietnamese ? 'Trung bình (Chuẩn)' : 'Standard (Medium)'}
-                      </span>
-                      <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[11px] font-bold text-primary">
-                        {medPrep}s
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-text-secondary">
-                      {isVietnamese
-                        ? `Chuẩn bị ${medPrep}s • Nói ${medSpeak}s. Tiêu chuẩn thi TOEIC/IELTS.`
-                        : `Prep ${medPrep}s • Speak ${medSpeak}s. Standard exam pace.`}
-                    </p>
-                  </button>
-
-                  {/* Mức 3: Nhanh */}
-                  <button
-                    type="button"
-                    disabled={takesUsed > 0} onClick={() => onSelectTier('HARD')}
-                    className={`flex flex-col rounded-xl border p-3 text-left transition cursor-pointer ${
+                    disabled={takesUsed > 0}
+                    onClick={() => onSelectTier('HARD')}
+                    className={`relative flex flex-col rounded-xl border-2 p-3 text-left transition cursor-pointer ${
                       selectedTier === 'HARD'
-                        ? 'border-amber-600 bg-amber-500/10 shadow-xs ring-1 ring-amber-600'
-                        : 'border-border/80 bg-surface hover:border-amber-400/60'
+                        ? 'border-transparent bg-orange-500 text-white shadow-md'
+                        : 'border-orange-200 bg-orange-50 text-orange-950 hover:scale-[1.02] hover:shadow-xs dark:bg-orange-950/20 dark:border-orange-900/40 dark:text-orange-200'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[13px] font-bold text-amber-700 dark:text-amber-400">
-                        {isVietnamese ? 'Nhanh (Phản xạ)' : 'Fast (Challenge)'}
-                      </span>
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                        {hardPrep}s
+                    {selectedTier === 'HARD' && (
+                      <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-xs">
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-orange-500 text-white">
+                          <Check className="h-3 w-3 stroke-[3]" />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className={`rounded-full p-1.5 ${selectedTier === 'HARD' ? 'bg-white/20 text-white' : 'bg-orange-100 text-orange-600 dark:bg-orange-900/40'}`}>
+                        <Zap className="h-4 w-4" />
+                      </div>
+                      <span className={`text-[13px] font-bold ${selectedTier === 'HARD' ? 'text-white' : 'text-orange-900 dark:text-orange-300'}`}>
+                        {isVietnamese ? 'Phản xạ' : 'Reflex'}
                       </span>
                     </div>
-                    <p className="text-[11px] text-text-secondary">
+                    <div className={`text-[14px] font-bold tracking-tight mb-1 ${selectedTier === 'HARD' ? 'text-white' : 'text-text-primary'}`}>
+                      {hardPrep}s / {hardSpeak}s
+                    </div>
+                    <p className={`text-[11px] leading-tight ${selectedTier === 'HARD' ? 'text-white/80' : 'text-text-tertiary'}`}>
                       {isVietnamese
-                        ? `Chuẩn bị ${hardPrep}s • Nói ${hardSpeak}s. Rèn phản xạ tức thì.`
-                        : `Prep ${hardPrep}s • Speak ${hardSpeak}s. Quick reaction mode.`}
+                        ? `Chuẩn bị ${hardPrep}s · Nói ${hardSpeak}s`
+                        : `Prep ${hardPrep}s · Speak ${hardSpeak}s`}
+                    </p>
+                  </button>
+
+                  {/* Mức 2: Tiêu chuẩn (Medium) */}
+                  <button
+                    type="button"
+                    disabled={takesUsed > 0}
+                    onClick={() => onSelectTier('MEDIUM')}
+                    className={`relative flex flex-col rounded-xl border-2 p-3 text-left transition cursor-pointer ${
+                      selectedTier === 'MEDIUM'
+                        ? 'border-transparent bg-blue-500 text-white shadow-md'
+                        : 'border-blue-200 bg-blue-50 text-blue-950 hover:scale-[1.02] hover:shadow-xs dark:bg-blue-950/20 dark:border-blue-900/40 dark:text-blue-200'
+                    }`}
+                  >
+                    {selectedTier === 'MEDIUM' && (
+                      <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-xs">
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-blue-500 text-white">
+                          <Check className="h-3 w-3 stroke-[3]" />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className={`rounded-full p-1.5 ${selectedTier === 'MEDIUM' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/40'}`}>
+                        <Target className="h-4 w-4" />
+                      </div>
+                      <span className={`text-[13px] font-bold ${selectedTier === 'MEDIUM' ? 'text-white' : 'text-blue-900 dark:text-blue-300'}`}>
+                        {isVietnamese ? 'Tiêu chuẩn' : 'Standard'}
+                      </span>
+                    </div>
+                    <div className={`text-[14px] font-bold tracking-tight mb-1 ${selectedTier === 'MEDIUM' ? 'text-white' : 'text-text-primary'}`}>
+                      {medPrep}s / {medSpeak}s
+                    </div>
+                    <p className={`text-[11px] leading-tight ${selectedTier === 'MEDIUM' ? 'text-white/80' : 'text-text-tertiary'}`}>
+                      {isVietnamese
+                        ? `Chuẩn bị ${medPrep}s · Nói ${medSpeak}s`
+                        : `Prep ${medPrep}s · Speak ${medSpeak}s`}
+                    </p>
+                  </button>
+
+                  {/* Mức 3: Thư thả (Easy) */}
+                  <button
+                    type="button"
+                    disabled={takesUsed > 0}
+                    onClick={() => onSelectTier('EASY')}
+                    className={`relative flex flex-col rounded-xl border-2 p-3 text-left transition cursor-pointer ${
+                      selectedTier === 'EASY'
+                        ? 'border-transparent bg-green-500 text-white shadow-md'
+                        : 'border-green-200 bg-green-50 text-green-950 hover:scale-[1.02] hover:shadow-xs dark:bg-green-950/20 dark:border-green-900/40 dark:text-green-200'
+                    }`}
+                  >
+                    {selectedTier === 'EASY' && (
+                      <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-xs">
+                        <div className="flex h-full w-full items-center justify-center rounded-full bg-green-500 text-white">
+                          <Check className="h-3 w-3 stroke-[3]" />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className={`rounded-full p-1.5 ${selectedTier === 'EASY' ? 'bg-white/20 text-white' : 'bg-green-100 text-green-600 dark:bg-green-900/40'}`}>
+                        <Trophy className="h-4 w-4" />
+                      </div>
+                      <span className={`text-[13px] font-bold ${selectedTier === 'EASY' ? 'text-white' : 'text-green-900 dark:text-green-300'}`}>
+                        {isVietnamese ? 'Thư thả' : 'Relaxed'}
+                      </span>
+                    </div>
+                    <div className={`text-[14px] font-bold tracking-tight mb-1 ${selectedTier === 'EASY' ? 'text-white' : 'text-text-primary'}`}>
+                      {easyPrep}s / {easySpeak}s
+                    </div>
+                    <p className={`text-[11px] leading-tight ${selectedTier === 'EASY' ? 'text-white/80' : 'text-text-tertiary'}`}>
+                      {isVietnamese
+                        ? `Chuẩn bị ${easyPrep}s · Nói ${easySpeak}s`
+                        : `Prep ${easyPrep}s · Speak ${easySpeak}s`}
                     </p>
                   </button>
                 </div>
               </div>
             )}
 
-            <div className="mx-auto mb-5 flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/5">
+            <div className="mx-auto mb-5 flex h-28 w-28 items-center justify-center rounded-full bg-primary/10">
               <Mic className="h-14 w-14 text-primary" />
             </div>
 
@@ -182,13 +222,14 @@ export function SpeakingRecorderPanel({
 
             <Button
               size="lg"
-              className="h-13 gap-2 bg-primary px-8 text-base font-semibold hover:bg-primary-hover shadow-md cursor-pointer"
-              onClick={onStartPractice} disabled={!canRetake || isSubmitting}
+              className="h-13 gap-2 bg-primary px-8 text-base font-semibold hover:bg-primary-hover cursor-pointer"
+              data-practice-action="record" onClick={onStartPractice} disabled={!canRetake || isSubmitting}
             >
               <Mic size={20} />
               {needsPreparation
                 ? isVietnamese ? 'Bắt đầu chuẩn bị' : 'Start Preparation'
-                : isVietnamese ? 'Bắt đầu luyện' : 'Start Practice'}
+                : isVietnamese ? 'Bắt đầu ghi âm' : 'Start recording'}
+              <PracticeRecordKey/>
             </Button>
           </div>
         )}
@@ -202,7 +243,7 @@ export function SpeakingRecorderPanel({
                   ? (isVietnamese ? '🟢 Chế độ Dễ (Thư thả)' : '🟢 Relaxed Pace')
                   : selectedTier === 'MEDIUM'
                     ? (isVietnamese ? '🟡 Chế độ Trung bình (Tiêu chuẩn)' : '🟡 Standard Pace')
-                    : (isVietnamese ? '🔴 Chế độ Nhanh (Thử thách)' : '🔴 Fast Pace')}
+                    : (isVietnamese ? '🔴 Chế độ Khó (Thử thách)' : '🔴 Fast Pace')}
               </span>
             </div>
 
@@ -217,8 +258,8 @@ export function SpeakingRecorderPanel({
             </h2>
             <p className="mb-4 text-[13px] text-text-secondary max-w-md mx-auto">
               {isVietnamese
-                ? 'Hãy nhìn kỹ tranh, tham khảo dàn ý 4 bước và nhặt các từ vựng cần thiết. Micro sẽ tự động bật khi hết giờ.'
-                : 'Observe the picture carefully and review guided steps. Recording begins automatically.'}
+                ? 'Đọc kỹ đề bài và chuẩn bị ý chính. Micro sẽ tự động bật khi hết giờ.'
+                : 'Review the task and prepare your main ideas. Recording begins automatically.'}
             </p>
 
             {/* Skip Button: Cho phép nói ngay không cần chờ */}
@@ -226,10 +267,11 @@ export function SpeakingRecorderPanel({
               variant="outline"
               size="default"
               className="gap-2 border-primary/40 text-primary hover:bg-primary/10 cursor-pointer"
-              onClick={onSkipPreparation}
+              data-practice-action="record" onClick={onSkipPreparation}
             >
               <Mic size={16} />
-              <span>{isVietnamese ? 'Tôi đã sẵn sàng — Bắt đầu nói ngay' : 'I am ready — Start speaking now'}</span>
+              <span>{isVietnamese ? 'Bắt đầu ghi âm ngay · bỏ qua chuẩn bị' : 'Record now · skip preparation'}</span>
+              <PracticeRecordKey/>
             </Button>
           </div>
         )}
@@ -243,7 +285,7 @@ export function SpeakingRecorderPanel({
                   <Mic className="h-16 w-16 text-red-500" />
                 </div>
               </div>
-              <div className="h-32 w-32 animate-pulse rounded-full bg-red-500/10" />
+
             </div>
 
             <div className="mb-4">
@@ -257,7 +299,7 @@ export function SpeakingRecorderPanel({
             </h2>
             <p className="mb-6 text-[14px] text-text-secondary">
               {isVietnamese
-                ? 'Nói câu trả lời của bạn. Nhấn Stop khi xong.'
+                ? 'Nói câu trả lời của bạn. Dùng nút Dừng ghi âm khi xong.'
                 : 'Speak your response. Press Stop when done.'}
             </p>
 
@@ -265,17 +307,18 @@ export function SpeakingRecorderPanel({
               size="lg"
               variant="outline"
               className="h-14 gap-2 border-red-500 text-red-500 hover:bg-red-50"
-              onClick={onStopRecording}
+              data-practice-action="record" onClick={onStopRecording}
             >
               <Square size={20} />
-              {isVietnamese ? 'Dừng ghi' : 'Stop Recording'}
+              {isVietnamese ? 'Dừng ghi âm' : 'Stop Recording'}
+              <PracticeRecordKey/>
             </Button>
           </div>
         )}
 
         {phase === 'reviewing' && audioUrl && (
           <div className="text-center">
-            <div className="mb-6">
+            <div data-practice-media tabIndex={0} aria-label={isVietnamese ? "Nghe lại bản ghi · Space để phát/tạm dừng" : "Recording player · Space to play/pause"} className="mb-6 rounded-lg focus-visible:outline-2 focus-visible:outline-primary">
               <audio ref={audioRef} src={audioUrl} />
               <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100">
                 <Play className="h-12 w-12 text-emerald-600" />
@@ -286,7 +329,8 @@ export function SpeakingRecorderPanel({
                   variant="outline"
                   size="icon"
                   className="h-12 w-12 rounded-full"
-                  onClick={onPlayPause}
+                  aria-label={isPlaying ? (isVietnamese ? 'Tạm dừng nghe lại' : 'Pause recording') : (isVietnamese ? 'Nghe lại bản ghi' : 'Play recording')}
+                  data-practice-action="play" onClick={onPlayPause}
                 >
                   {isPlaying ? <Pause size={24} /> : <Play size={24} />}
                 </Button>
@@ -305,7 +349,7 @@ export function SpeakingRecorderPanel({
               </Button>
               <Button
                 className="gap-2 bg-primary hover:bg-primary-hover min-w-[130px]"
-                onClick={onSubmit}
+                data-practice-action="submit" onClick={onSubmit}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -314,7 +358,7 @@ export function SpeakingRecorderPanel({
                     {isVietnamese ? 'AI đang phân tích...' : 'Evaluating...'}
                   </>
                 ) : (
-                  isVietnamese ? 'Gửi kết quả' : 'Submit'
+                  isVietnamese ? 'Nộp bài' : 'Submit'
                 )}
               </Button>
             </div>

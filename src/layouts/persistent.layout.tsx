@@ -2,7 +2,7 @@
 'use client'
 
 import { Suspense, useEffect, type ReactNode } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Sheet, SheetContent } from '@/components/sheet'
 import { Sidebar } from '@/layouts/app.sidebar'
 import { UtilityHeader } from '@/layouts/app.header'
@@ -15,6 +15,9 @@ import { GlobalRouteGuard } from '@/components/auth/global.route.guard'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
+  const searchParams = useSearchParams()
+  const readingGrammar = pathname.startsWith('/grammar/handbook/') ||
+    (pathname === '/grammar' && searchParams.get('view') === 'handbook')
   const router = useRouter()
   const { showAction, mobileSidebarOpen, setMobileSidebarOpen, sidebarCollapsed } = useApp()
   const { celebration, closeCelebration } = useStreakNotification()
@@ -56,7 +59,7 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
             <UtilityHeader onAction={showAction} />
             {children}
           </div>
-          <FloatingActionsDock />
+          <FloatingActionsDock readingMode={readingGrammar} />
         </div>
       )}
       <StreakCelebrationModal

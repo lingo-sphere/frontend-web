@@ -1,7 +1,7 @@
 // Component chọn chế độ thời gian cho Reading Practice
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Clock, Zap, Target, Search } from 'lucide-react'
+import { Clock, Zap, Target, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TimerPresetMode } from '@/features/practice/types/reading'
 import {
@@ -16,6 +16,7 @@ interface ReadingTimeModeSelectorProps {
   isStarting?: boolean
   error?: string
   questionCount: number
+  passageTitle?: string
   onSelect: (mode: TimerPresetMode, totalSeconds: number) => void
   onCancel: () => void
 }
@@ -66,7 +67,7 @@ const modeConfig: Record<TimerPresetMode, {
     descriptionEn: 'Exam Standard',
   },
   INTENSIVE: {
-    icon: Search,
+    icon: Trophy,
     colors: {
       bg: 'bg-green-50',
       border: 'border-green-200',
@@ -86,6 +87,7 @@ const PRESET_MODES: TimerPresetMode[] = ['QUICK', 'STANDARD', 'INTENSIVE']
 
 export function ReadingTimeModeSelector({
   questionCount,
+  passageTitle,
   onSelect,
   onCancel,
   isStarting = false,
@@ -95,6 +97,17 @@ export function ReadingTimeModeSelector({
   const isVietnamese = i18n.language === 'vi'
   const [selectedMode, setSelectedMode] = useState<TimerPresetMode>(getSavedReadingTimeModePreference)
 
+  // Lắng nghe phím Escape để đóng modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isStarting) {
+        onCancel()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isStarting, onCancel])
+
   const handleStart = () => {
     saveReadingTimeModePreference(selectedMode)
     const totalSeconds = calculateTotalReadingTime(questionCount, selectedMode)
@@ -102,8 +115,14 @@ export function ReadingTimeModeSelector({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl border border-border animate-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl border border-border animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -114,9 +133,10 @@ export function ReadingTimeModeSelector({
               {isVietnamese ? 'Chọn chế độ thời gian' : 'Choose Time Mode'}
             </h3>
             <p className="text-xs text-text-tertiary">
+              {passageTitle ? `${passageTitle} · ` : ''}
               {isVietnamese
-                ? `${questionCount} câu hỏi - Thời gian sẽ được tính tự động`
-                : `${questionCount} questions - Time will be calculated automatically`}
+                ? `${questionCount} câu hỏi · Thời gian sẽ được tính tự động`
+                : `${questionCount} questions · Calculated automatically`}
             </p>
           </div>
         </div>

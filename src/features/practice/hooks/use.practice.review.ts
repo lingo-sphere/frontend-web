@@ -6,7 +6,7 @@ export interface PracticeReviewResult {
   id: string;
   skill: ReviewSkill;
   overall_score: number;
-  ai_score: number;
+  ai_score: number | null;
   raw_score: number | null;
   original_ai_raw_score: number | null;
   max_score: number;
@@ -20,6 +20,10 @@ export interface PracticeReviewResult {
     reviewer_name?: string;
     requested_at?: string;
     reviewed_at?: string;
+    teacher_grading?: {
+      raw_score: number; max_score: number; criteria_scores: Record<string, number | null>;
+      rubric_snapshot: { criteria: Array<{ key: string; label: string }> };
+    } | null;
   } | null;
 }
 export function usePracticeReview(

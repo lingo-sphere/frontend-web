@@ -15,6 +15,7 @@ import { AppSelect } from "@/components/select";
 import { ListeningContextFilter } from "@/features/practice/components/listening.context.filter";
 import { LISTENING_SUBTYPES, readListeningCatalog, listeningCatalogParams, type ListeningCatalogState } from "@/features/practice/utils/listening.catalog";
 import { ListeningPracticeWorkspace } from "@/features/practice/components/listening.practice.workspace";
+import { ListeningHistory } from "@/features/practice/components/listening.history";
 import { ListeningPart1Card } from "@/features/practice/components/listening.part1.card";
 import { ListeningPracticeCard } from "@/features/practice/components/listening.practice.card";
 import { listeningLifecycleService } from "@/features/practice/services/listening-lifecycle.service";
@@ -104,19 +105,28 @@ type ActiveWorkspace =
 export default function ListeningAppPage() {
   const { i18n } = useTranslation();
   const searchParams = useSearchParams();
+  const historyView = searchParams.get('view') === 'history';
   const isVietnamese = i18n.language === "vi";
 
   const catalog = readListeningCatalog(new URLSearchParams(searchParams.toString()));
   const { tab: activeTab, context: selectedContextId, page, difficulty: difficultyFilter, cefr: cefrFilter, subtype: subTypeFilter } = catalog;
   const [activeWorkspace, setActiveWorkspace] = useState<ActiveWorkspace>(null);
   const userId = useAuthStore(state => state.user?.user_id);
-  const pending = useQuery({ queryKey: ['listening-pending', userId], queryFn: listeningLifecycleService.pending, enabled: Boolean(userId) });
+  const pending = useQuery({ queryKey: ['listening-pending', userId], queryFn: listeningLifecycleService.pending, enabled: Boolean(userId) && !historyView });
   const resumeId = searchParams.get('session_id') || undefined;
   const [showAllPending, setShowAllPending] = useState(false);
   const isSetup = searchParams.get('practice') === '1';
   const setupExerciseId = searchParams.get('exercise_id') || undefined;
   const refetchPending = pending.refetch;
-  useEffect(() => { if (userId && !resumeId && !isSetup) void refetchPending(); }, [userId, resumeId, isSetup, refetchPending]);
+  useEffect(() => { if (userId && !resumeId && !isSetup && !historyView) void refetchPending(); }, [userId, resumeId, isSetup, historyView, refetchPending]);
+  const navigateHistory = (patch: Record<string, string | null>) => {
+    const params = new URLSearchParams(window.location.search);
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null) params.delete(key);
+      else params.set(key, value);
+    }
+    window.history.pushState(null, '', `${window.location.pathname}?${params}`);
+  };
   const openWorkspace = (workspace: NonNullable<ActiveWorkspace>) => {
     setActiveWorkspace(workspace);
     const params = new URLSearchParams(window.location.search);
@@ -173,7 +183,7 @@ export default function ListeningAppPage() {
   } = useQuery({
     queryKey: ["listening-part1", queryParams],
     queryFn: () => listeningPracticeService.getPart1Questions(queryParams),
-    enabled: activeTab === "PART_1",
+    enabled: activeTab === "PART_1" && !historyView,
     staleTime: 60 * 1000,
   });
 
@@ -185,7 +195,7 @@ export default function ListeningAppPage() {
   } = useQuery({
     queryKey: ["listening-part2", queryParams],
     queryFn: () => listeningPracticeService.getPart2Questions(queryParams),
-    enabled: activeTab === "PART_2",
+    enabled: activeTab === "PART_2" && !historyView,
     staleTime: 60 * 1000,
   });
 
@@ -197,7 +207,7 @@ export default function ListeningAppPage() {
   } = useQuery({
     queryKey: ["listening-part3", queryParams],
     queryFn: () => listeningPracticeService.getPart3Conversations(queryParams),
-    enabled: activeTab === "PART_3",
+    enabled: activeTab === "PART_3" && !historyView,
     staleTime: 60 * 1000,
   });
 
@@ -209,7 +219,7 @@ export default function ListeningAppPage() {
   } = useQuery({
     queryKey: ["listening-part4", queryParams],
     queryFn: () => listeningPracticeService.getPart4Talks(queryParams),
-    enabled: activeTab === "PART_4",
+    enabled: activeTab === "PART_4" && !historyView,
     staleTime: 60 * 1000,
   });
 
@@ -221,7 +231,7 @@ export default function ListeningAppPage() {
   } = useQuery({
     queryKey: ["listening-dictation", queryParams],
     queryFn: () => listeningPracticeService.getDictationExercises(queryParams),
-    enabled: activeTab === "DICTATION",
+    enabled: activeTab === "DICTATION" && !historyView,
     staleTime: 60 * 1000,
   });
 
@@ -261,7 +271,7 @@ export default function ListeningAppPage() {
   const handleClearFilters = () => updateCatalog({ context: "", difficulty: "ALL", cefr: "ALL", subtype: "ALL", page: 1 });
   const hasActiveFilters = difficultyFilter !== "ALL" || cefrFilter !== "ALL" || subTypeFilter !== "ALL" || Boolean(selectedContextId);
 
-  if (isSetup || resumeId) {
+  if (!historyView && (isSetup || resumeId)) {
     const tab = activeTab;
     const kind = tab === "DICTATION" ? "dictation" : tab.toLowerCase().replace('_', '') as ListeningKind;
     const item = !resumeId && activeWorkspace?.type === activeTab && activeWorkspace.item?._id === setupExerciseId ? activeWorkspace.item : undefined;
@@ -307,6 +317,11 @@ export default function ListeningAppPage() {
         }
       />
 
+      <nav aria-label={isVietnamese ? 'Điều hướng Listening' : 'Listening navigation'} className="flex flex-wrap gap-2">
+        <Button variant={historyView ? 'outline' : 'default'} aria-current={!historyView ? 'page' : undefined} onClick={() => navigateHistory({ view: null, result_id: null, result_kind: null })}>{isVietnamese ? 'Danh sách bài nghe' : 'Listening exercises'}</Button>
+        <Button variant={historyView ? 'default' : 'outline'} aria-current={historyView ? 'page' : undefined} onClick={() => navigateHistory({ view: 'history', result_id: null, result_kind: null })}>{isVietnamese ? 'Lịch sử làm bài' : 'Submission history'}</Button>
+      </nav>
+      {historyView ? <ListeningHistory navigate={navigateHistory} /> : <>
       {userId && pending.isError && <div role="alert" className="rounded-xl border border-border p-4 text-sm">{isVietnamese ? "Không tải được phiên đang làm." : "Could not load unfinished sessions."} <Button variant="ghost" size="sm" onClick={() => void pending.refetch()}>{isVietnamese ? "Thử lại phiên đang làm" : "Retry unfinished sessions"}</Button></div>}
       {Array.isArray(pending.data) && pending.data.length > 0 && <section aria-label={isVietnamese ? "Phiên đang làm" : "Unfinished sessions"} className="rounded-2xl border border-border bg-card p-4 space-y-3">
         <h2 className="font-semibold text-text-primary">{isVietnamese ? "Tiếp tục phiên đang làm" : "Continue unfinished practice"}</h2>
@@ -629,6 +644,7 @@ export default function ListeningAppPage() {
             </>
           )}
         </div>
+      </>}
     </main>
   );
 }

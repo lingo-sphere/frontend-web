@@ -6,6 +6,7 @@ import type {
   ListeningPracticeSession,
   ListeningResult,
   PendingListeningSession,
+  ListeningHistoryPage,
 } from '../types/listening-lifecycle'
 
 interface RawQuestion {
@@ -156,6 +157,11 @@ export function listeningSessionView(
   }
 }
 export const listeningLifecycleService = {
+  history(page: number, limit: number, kind?: ListeningKind) {
+    return api.get<ListeningHistoryPage>('/practice/listening/progress/history', {
+      page, limit, ...(kind ? { kind } : {}),
+    })
+  },
   playback(
     kind: ListeningKind,
     id: string,

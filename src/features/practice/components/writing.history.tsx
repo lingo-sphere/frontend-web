@@ -13,12 +13,13 @@ interface WritingHistoryProps {
   exercises: WritingExercise[]
   onBack: () => void
   onViewSubmission: (submission: WritingSubmission) => void
+  embedded?: boolean
 }
 
 type SortOption = 'recent' | 'highest_score' | 'lowest_score'
 type LevelFilter = 'all' | WritingLevel
 
-export function WritingHistory({ submissions, exercises, onBack, onViewSubmission }: WritingHistoryProps) {
+export function WritingHistory({ submissions, exercises, onBack, onViewSubmission, embedded = false }: WritingHistoryProps) {
   const { i18n } = useTranslation()
   const isVietnamese = i18n.language === 'vi'
 
@@ -35,7 +36,7 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
     .filter(sub => standardFilter === 'all' || (sub.grading_standard || 'PRACTICAL') === standardFilter)
     .filter((sub) => {
       if (levelFilter === 'all') return true
-      const exercise = getExercise(sub.exercise_id)
+      const exercise = sub.exercise || getExercise(sub.exercise_id)
       if (exercise && exercise.writing_level === levelFilter) return true
       return false
     })
@@ -58,14 +59,14 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
   }
 
   const getScoreColor = (score?: number) => {
-    if (!score) return 'text-text-secondary'
+    if (score == null) return 'text-text-secondary'
     if (score >= 80) return 'text-emerald-600'
     if (score >= 60) return 'text-amber-600'
     return 'text-red-600'
   }
 
   const getScoreBg = (score?: number) => {
-    if (!score) return 'bg-surface-subtle'
+    if (score == null) return 'bg-surface-subtle'
     if (score >= 80) return 'bg-emerald-100'
     if (score >= 60) return 'bg-amber-100'
     return 'bg-red-100'
@@ -85,7 +86,7 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
   ]
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+    <section className={embedded ? 'w-full' : 'mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8'}>
       <div className="mb-4 flex items-center gap-3 text-sm">
         <span className="font-medium text-text-secondary">{isVietnamese ? 'Chuẩn chấm:' : 'Grading standard:'}</span>
         <AppSelect
@@ -102,20 +103,20 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
       </div>
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
+          {!embedded && <button onClick={onBack} className="flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
             <ArrowLeft size={18} />
             {isVietnamese ? 'Quay lại' : 'Back'}
-          </button>
-          <div className="h-6 w-px bg-border" />
-          <h1 className="text-[24px] font-bold text-text-primary">
+          </button>}
+          {!embedded && <div className="h-6 w-px bg-border" />}
+          <h2 className="text-[24px] font-bold text-text-primary">
             {isVietnamese ? 'Lịch sử Writing' : 'Writing History'}
-          </h1>
+          </h2>
         </div>
       </div>
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] text-text-secondary">{isVietnamese ? 'Sắp xếp:' : 'Sort:'}</span>
+          <span className="text-[13px] text-text-secondary">{isVietnamese ? 'Sắp xếp trang này:' : 'Sort this page:'}</span>
           <div className="flex rounded-lg border border-border bg-surface p-1">
             {sortOptions.map((option) => (
               <button key={option.value} onClick={() => setSortBy(option.value as SortOption)}
@@ -156,17 +157,21 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
       ) : (
         <div className="space-y-4">
           {filteredSubmissions.map((submission) => {
-            const exercise = getExercise(submission.exercise_id)
+            const exercise = submission.exercise || getExercise(submission.exercise_id)
             const isExpanded = expandedSubmission === submission.id
 
             return (
               <Card key={submission.id} className={`dashboard-card transition-all ${isExpanded ? 'ring-2 ring-primary' : 'hover:shadow-md cursor-pointer'}`}>
                 <CardContent className="p-0">
-                  <div className="flex items-center justify-between p-4" onClick={() => toggleExpand(submission.id)}>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                  <button type="button" aria-expanded={isExpanded} aria-controls={`writing-submission-${submission.id}`} className="flex w-full items-center justify-between p-4 text-left" onClick={() => toggleExpand(submission.id)}>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-[15px] font-semibold text-text-primary">
-                          {exercise?.title || submission.exercise_id}
+                          {exercise
+                            ? isVietnamese && exercise.title_vi
+                              ? exercise.title_vi
+                              : exercise.title
+                            : submission.exercise_id}
                         </h3>
                         {exercise?.cefr_level && (
                           <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-[10px] font-medium text-text-secondary">
@@ -175,6 +180,9 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
                         )}
                         <span className="text-[12px] text-text-tertiary">v{submission.version_number}</span>
                       </div>
+                      {isVietnamese && exercise?.title_vi && exercise?.title && (
+                        <p className="mt-0.5 text-[12px] text-text-secondary">{exercise.title}</p>
+                      )}
 
                       <div className="mt-2 flex flex-wrap items-center gap-4 text-[13px] text-text-secondary">
                         <span className="flex items-center gap-1">
@@ -185,7 +193,7 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
                           <Trophy size={14} />
                           {submission.word_count} {isVietnamese ? 'từ' : 'words'}
                         </span>
-                        {submission.writing_time_seconds && (
+                        {!!submission.writing_time_seconds && (
                           <span className="flex items-center gap-1">
                             <Clock size={14} />
                             {formatTimeShort(submission.writing_time_seconds)}
@@ -200,9 +208,9 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
                       </div>
                     </div>
 
-                    <div className="ml-4 flex items-center gap-4">
+                    <div className="ml-3 flex shrink-0 items-center gap-2 sm:gap-4">
                       {submission.overall_score !== undefined ? (
-                        <div className={`flex h-12 w-12 flex-col items-center justify-center rounded-full ${getScoreBg(submission.overall_score)}`}>
+                        <div className={`flex h-12 min-w-20 flex-col items-center justify-center rounded-xl px-2 ${getScoreBg(submission.overall_score)}`}>
                           <span className={`text-[18px] font-bold ${getScoreColor(submission.overall_score)}`}>
                             {writingScoreLabel(submission)}
                           </span>
@@ -221,10 +229,10 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
 
                       <ChevronRight size={20} className={`text-text-tertiary transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                     </div>
-                  </div>
+                  </button>
 
                   {isExpanded && (
-                    <div className="border-t border-border bg-surface-subtle/30">
+                    <div id={`writing-submission-${submission.id}`} className="border-t border-border bg-surface-subtle/30">
                       <div className="p-4">
                         <h4 className="mb-2 text-[13px] font-medium text-text-secondary">
                           {isVietnamese ? 'Bài viết của bạn:' : 'Your writing:'}
@@ -246,14 +254,14 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
                               <span className="mt-0.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-white">
                                 v{submission.version_number}
                               </span>
-                              <p className="line-clamp-2 text-[13px] italic text-text-primary">"{submission.content}"</p>
+                              <p className="line-clamp-2 text-[13px] italic text-text-primary">&quot;{submission.content}&quot;</p>
                             </div>
                             {submission.drafts.map((draft, index) => (
                               <div key={index} className="flex items-start gap-2">
                                 <span className="mt-0.5 rounded-full bg-surface-subtle px-2 py-0.5 text-[10px] font-medium text-text-secondary">
                                   v{draft.version_number}
                                 </span>
-                                <p className="line-clamp-2 text-[13px] italic text-text-tertiary">"{draft.content}"</p>
+                                <p className="line-clamp-2 text-[13px] italic text-text-tertiary">&quot;{draft.content}&quot;</p>
                               </div>
                             ))}
                           </div>
@@ -289,7 +297,7 @@ export function WritingHistory({ submissions, exercises, onBack, onViewSubmissio
           })}
         </div>
       )}
-    </main>
+    </section>
   )
 }
 

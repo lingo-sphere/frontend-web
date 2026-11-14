@@ -42,6 +42,7 @@ function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isCheckingAuth = useAuthStore((s) => s.isLoading)
   const kickoutMessage = useAuthStore((s) => s.kickoutMessage)
   const isNavigatingRef = useRef(false)
 
@@ -60,10 +61,10 @@ function LoginPageContent() {
   }
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isCheckingAuth) {
       navigateToDestination(returnUrl)
     }
-  }, [isAuthenticated, returnUrl])
+  }, [isAuthenticated, isCheckingAuth, returnUrl])
 
   const {
     mode,

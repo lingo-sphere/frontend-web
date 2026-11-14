@@ -19,6 +19,8 @@ export interface CourseTestQuestion {
 }
 
 export interface GradedQuestionItem {
+  skill_type?: string
+  domain?: string
   question_index: number
   question_id?: string
   is_correct: boolean
@@ -42,6 +44,7 @@ export interface TestAttemptItem {
 }
 
 export interface WrongQuestionItem {
+  skill_type?: string
   question_number: number
   question_text: string
   user_selected_answer: string

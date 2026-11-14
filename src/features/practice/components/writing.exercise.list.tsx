@@ -14,26 +14,33 @@ import {
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { AppSelect } from '@/components/select'
-import type { WritingExercise, WritingLevel } from '@/features/practice/types/writing'
+import { Pagination } from '@/components/pagination'
+import { PracticeDifficultyFilter } from './practice.difficulty.filter'
+import { resolvePracticeDifficulty, practiceDifficultyLabel, PRACTICE_DIFFICULTY_COLORS, type PracticeDifficulty } from '../lib/practice-difficulty'
+import type { WritingExercise } from '@/features/practice/types/writing'
+
+const ITEMS_PER_PAGE = 9
 
 interface WritingExerciseListProps {
   exercises: WritingExercise[]
   onSelectExercise: (exercise: WritingExercise) => void
   onBack: () => void
+  embedded?: boolean
 }
 
-export function WritingExerciseList({ exercises, onSelectExercise, onBack }: WritingExerciseListProps) {
+export function WritingExerciseList({ exercises, onSelectExercise, onBack, embedded = false }: WritingExerciseListProps) {
   const { i18n } = useTranslation()
-  const isVietnamese = i18n.language === 'vi'
+  const isVietnamese = i18n.language.toLowerCase().startsWith('vi')
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [levelFilter, setLevelFilter] = useState<WritingLevel | 'all'>('all')
+  const [levelFilter, setLevelFilter] = useState<PracticeDifficulty | 'all'>('all')
   const [typeFilter, setTypeFilter] = useState<string | 'all'>('all')
+  const [page, setPage] = useState(1)
 
-  const filteredExercises = useMemo(() => {
+  const matchingExercises = useMemo(() => {
     return exercises.filter((ex) => {
       if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase()
+        const query = searchQuery.trim().toLowerCase()
         const matchesSearch =
           ex.title.toLowerCase().includes(query) ||
           ex.title_vi?.toLowerCase().includes(query) ||
@@ -41,37 +48,24 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
           ex.topic_name?.toLowerCase().includes(query)
         if (!matchesSearch) return false
       }
-      if (levelFilter !== 'all' && ex.writing_level !== levelFilter) return false
       if (typeFilter !== 'all' && ex.exercise_type !== typeFilter) return false
       return true
     })
-  }, [exercises, searchQuery, levelFilter, typeFilter])
+  }, [exercises, searchQuery, typeFilter])
 
-  const groupedExercises = useMemo(() => {
-    const groups: Record<WritingLevel, WritingExercise[]> = {
-      BASIC: [],
-      INTERMEDIATE: [],
-      ADVANCED: [],
-    }
-    filteredExercises.forEach((ex) => {
-      if (groups[ex.writing_level]) {
-        groups[ex.writing_level].push(ex)
-      }
-    })
-    return groups
-  }, [filteredExercises])
+  const filteredExercises = useMemo(() => matchingExercises.filter(exercise => levelFilter === 'all' || resolvePracticeDifficulty(exercise.difficulty_level, exercise.writing_level, exercise.cefr_level) === levelFilter), [matchingExercises, levelFilter])
 
-  const levelColors = {
-    BASIC: 'bg-emerald-100 text-emerald-700',
-    INTERMEDIATE: 'bg-amber-100 text-amber-700',
-    ADVANCED: 'bg-red-100 text-red-700',
-  }
+  const totalPages = Math.max(1, Math.ceil(filteredExercises.length / ITEMS_PER_PAGE))
+  const currentPage = Math.min(page, totalPages)
+  const visibleExercises = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return filteredExercises.slice(start, start + ITEMS_PER_PAGE)
+  }, [filteredExercises, currentPage])
 
-  const levelLabels = {
-    BASIC: isVietnamese ? 'Cơ bản' : 'Basic',
-    INTERMEDIATE: isVietnamese ? 'Trung bình' : 'Intermediate',
-    ADVANCED: isVietnamese ? 'Nâng cao' : 'Advanced',
-  }
+  const difficultyCounts = useMemo(() => matchingExercises.reduce((counts, exercise) => {
+    counts[resolvePracticeDifficulty(exercise.difficulty_level, exercise.writing_level, exercise.cefr_level)]++
+    return counts
+  }, { EASY: 0, MEDIUM: 0, HARD: 0 }), [matchingExercises])
 
   const typeLabels: Record<string, { en: string; vi: string }> = {
     DESCRIBE_PICTURE: { en: 'Part 1: Write a Sentence Based on a Picture', vi: 'Part 1: Viết câu mô tả hình ảnh' },
@@ -88,16 +82,16 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
   }, [exercises]);
 
   return (
-    <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <button onClick={onBack} className="mb-6 flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
+    <section className={embedded ? 'w-full' : 'w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8'}>
+      {!embedded && <button onClick={onBack} className="mb-6 flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary">
         <ArrowLeft size={18} />
         {isVietnamese ? 'Quay lại' : 'Back'}
-      </button>
+      </button>}
 
       <div className="mb-6">
-        <h1 className="text-[24px] font-bold text-text-primary">
-          {isVietnamese ? 'Bài tập Writing' : 'Writing Exercises'}
-        </h1>
+        <h2 className="text-[24px] font-bold text-text-primary">
+          {isVietnamese ? 'Danh sách bài viết' : 'Writing exercises'}
+        </h2>
         <p className="mt-1 text-[14px] text-text-secondary">
           {isVietnamese ? 'Luyện viết với các bài tập từ cơ bản đến nâng cao' : 'Practice writing with exercises from basic to advanced'}
         </p>
@@ -107,39 +101,23 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
           <input
-            type="text"
+            aria-label={isVietnamese ? 'Tìm kiếm bài tập' : 'Search exercises'}
+            type="search"
             placeholder={isVietnamese ? 'Tìm kiếm bài tập...' : 'Search exercises...'}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1) }}
             className="h-11 w-full rounded-xl border border-border bg-surface pl-10 pr-4 text-[14px] text-text-primary placeholder:text-text-tertiary focus:border-primary focus:outline-none"
           />
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Cấp độ:' : 'Level:'}</span>
-            <div className="flex rounded-lg border border-border bg-surface p-1">
-              <button onClick={() => setLevelFilter('all')}
-                className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${levelFilter === 'all' ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}>
-                {isVietnamese ? 'Tất cả' : 'All'}
-              </button>
-              {(['BASIC', 'INTERMEDIATE', 'ADVANCED'] as WritingLevel[]).map((level) => {
-                const count = exercises.filter((e) => e.writing_level === level).length;
-                return (
-                  <button key={level} onClick={() => setLevelFilter(level)}
-                    className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors cursor-pointer ${levelFilter === level ? 'bg-primary text-white' : 'text-text-secondary hover:text-text-primary'}`}>
-                    {levelLabels[level]} ({count})
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <PracticeDifficultyFilter value={levelFilter} counts={difficultyCounts} isVietnamese={isVietnamese} onChange={value => { setLevelFilter(value); setPage(1) }} />
 
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium text-text-tertiary">{isVietnamese ? 'Dạng bài:' : 'Type:'}</span>
             <AppSelect
               value={typeFilter}
-              onChange={(val) => setTypeFilter(val as any)}
+              onChange={(val) => { setTypeFilter(val); setPage(1) }}
               options={[
                 { value: 'all', label: `${isVietnamese ? 'Tất cả dạng bài' : 'All Types'} (${exercises.length})` },
                 ...availableTypes.map((key) => {
@@ -160,6 +138,7 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
 
       <p className="mb-4 text-[13px] text-text-secondary">
         {isVietnamese ? 'Tìm thấy' : 'Found'} {filteredExercises.length} {isVietnamese ? 'bài tập' : 'exercises'}
+        {filteredExercises.length > 0 && <span> · {isVietnamese ? 'Hiển thị' : 'Showing'} {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredExercises.length)} / {filteredExercises.length}</span>}
       </p>
 
       {filteredExercises.length === 0 ? (
@@ -169,34 +148,27 @@ export function WritingExerciseList({ exercises, onSelectExercise, onBack }: Wri
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {(['BASIC', 'INTERMEDIATE', 'ADVANCED'] as WritingLevel[]).map((level) => {
-            const levelExercises = groupedExercises[level]
-            if (levelExercises.length === 0) return null
-            if (levelFilter !== 'all' && levelFilter !== level) return null
-
-            return (
-              <section key={level}>
-                <h2 className="mb-3 flex items-center gap-2 text-[16px] font-semibold text-text-primary">
-                  <span className={`rounded-full px-3 py-1 text-[12px] font-medium ${levelColors[level]}`}>
-                    {levelLabels[level]}
-                  </span>
-                  <span className="text-[13px] font-normal text-text-tertiary">
-                    {levelExercises.length} {isVietnamese ? 'bài tập' : 'exercises'}
-                  </span>
-                </h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {levelExercises.map((exercise) => (
-                    <ExerciseCard key={exercise.id} exercise={exercise} onClick={() => onSelectExercise(exercise)}
-                      typeLabels={typeLabels} isVietnamese={isVietnamese} levelLabels={levelLabels} />
-                  ))}
-                </div>
-              </section>
-            )
-          })}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleExercises.map(exercise => (
+            <ExerciseCard key={exercise.id} exercise={exercise} onClick={() => onSelectExercise(exercise)} typeLabels={typeLabels} isVietnamese={isVietnamese} />
+          ))}
         </div>
       )}
-    </main>
+      {totalPages > 1 && (
+        <nav aria-label={isVietnamese ? 'Phân trang bài viết' : 'Writing exercise pagination'} className="mt-8 flex justify-center">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={ITEMS_PER_PAGE}
+            totalItems={filteredExercises.length}
+            onPageChange={(newPage) => {
+              setPage(newPage)
+              window.scrollTo({ top: 120, behavior: 'smooth' })
+            }}
+          />
+        </nav>
+      )}
+    </section>
   )
 }
 
@@ -205,41 +177,33 @@ interface ExerciseCardProps {
   onClick: () => void
   typeLabels: Record<string, { en: string; vi: string }>
   isVietnamese: boolean
-  levelLabels: Record<string, string>
+}
+
+const exerciseIcons: Record<string, typeof FileText> = {
+  DESCRIBE_PICTURE: Image,
+  WRITE_EMAIL: Mail,
+  EXPRESS_OPINION: PenTool,
 }
 
 function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese }: ExerciseCardProps) {
-  const levelColors = {
-    BASIC: 'bg-emerald-100 text-emerald-700',
-    INTERMEDIATE: 'bg-amber-100 text-amber-700',
-    ADVANCED: 'bg-red-100 text-red-700',
-  }
-
-  const getExerciseIcon = (type: string) => {
-    switch (type) {
-      case 'DESCRIBE_PICTURE': return Image
-      case 'WRITE_EMAIL': return Mail
-      case 'EXPRESS_OPINION': return PenTool
-      default: return FileText
-    }
-  }
+  const difficulty = resolvePracticeDifficulty(exercise.difficulty_level, exercise.writing_level, exercise.cefr_level)
+  const ExerciseIcon = exerciseIcons[exercise.exercise_type] || FileText
+  const mainTitle = isVietnamese && exercise.title_vi ? exercise.title_vi : exercise.title
+  const subTitle = isVietnamese && exercise.title_vi ? exercise.title : (exercise.title_vi || null)
 
   return (
-    <Card className="dashboard-card cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5" onClick={onClick}>
-      <CardContent className="p-4">
-        <div className="mb-3 flex items-start justify-between">
+    <Card className="dashboard-card flex h-full flex-col transition-colors hover:border-primary/40">
+      <CardContent className="flex flex-1 flex-col p-4">
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            {(() => {
-              const ExerciseIcon = getExerciseIcon(exercise.exercise_type)
-              return <ExerciseIcon className="w-5 h-5 text-primary shrink-0" />
-            })()}
+            <ExerciseIcon className="w-5 h-5 text-primary shrink-0" />
             <div>
-              <h3 className="text-[15px] font-semibold text-text-primary">{exercise.title}</h3>
-              {exercise.title_vi && <p className="text-[12px] text-text-secondary">{exercise.title_vi}</p>}
+              <h3 className="text-[15px] font-semibold text-text-primary">{mainTitle}</h3>
+              {subTitle && <p className="text-[12px] text-text-secondary">{subTitle}</p>}
             </div>
           </div>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${levelColors[exercise.writing_level]}`}>
-            {exercise.cefr_level}
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${PRACTICE_DIFFICULTY_COLORS[difficulty]}`}>
+            {practiceDifficultyLabel(difficulty, isVietnamese)} · {exercise.cefr_level}
           </span>
         </div>
 
@@ -270,7 +234,7 @@ function ExerciseCard({ exercise, onClick, typeLabels, isVietnamese }: ExerciseC
           )}
         </div>
 
-        <Button size="sm" className="w-full bg-primary hover:bg-primary-hover" onClick={(e) => { e.stopPropagation(); onClick() }}>
+        <Button aria-label={`${isVietnamese ? 'Bắt đầu' : 'Start'}: ${mainTitle}`} size="sm" className="mt-auto w-full bg-primary hover:bg-primary-hover" onClick={(e) => { e.stopPropagation(); onClick() }}>
           {isVietnamese ? 'Bắt đầu' : 'Start'}
           <ChevronRight size={16} />
         </Button>

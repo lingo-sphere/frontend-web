@@ -46,7 +46,7 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const isPremiumUser = Boolean(user?.is_premium || quota?.is_premium)
-  const chatRemaining = quota ? (isPremiumUser ? 999999 : quota.chat.remaining) : (isAuthenticated ? 5 : 0)
+  const chatRemaining = isPremiumUser ? 999999 : (quota?.chat?.remaining ?? (isAuthenticated ? 5 : 0))
   const isOutOfQuota = isMounted && isAuthenticated && !isPremiumUser && chatRemaining <= 0
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
                 chat: {
                   ...prev.chat,
                   remaining: res.quota!.remaining,
-                  used: (prev.chat.used || 0) + 1,
+                  used: (prev.chat?.used || 0) + 1,
                 },
               }
             : prev

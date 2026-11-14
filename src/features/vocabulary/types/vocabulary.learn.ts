@@ -223,6 +223,8 @@ export interface VocabularyItem {
   synonyms?: string[]
   collocations?: string[]
   isNew?: boolean
+  recovered?: boolean
+  incorrect_count?: number
 }
 
 export interface VocabularyDeck {
@@ -274,6 +276,9 @@ export interface LearningResult {
   totalWords: number
   correctAnswers: number
   totalItems?: number
+  firstTryCorrectCount?: number
+  recoveredCount?: number
+  recoveryBonusXp?: number
   assessmentType?: 'TESTED' | 'SELF_REPORTED' | 'LEGACY'
   accuracy: number | null
   skillBreakdown: {

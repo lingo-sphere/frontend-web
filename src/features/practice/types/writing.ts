@@ -244,7 +244,9 @@ export interface WritingSubmission {
 }
 
 export interface AIEvaluation {
-  rubric_snapshot?: { standard: string; max_score: number; bands: string[]; weights: Record<string, number>; version: string }
+  feedback_metadata_status?: 'VALID' | 'SANITIZED'
+  feedback_metadata_issues?: string[]
+  rubric_snapshot?: { standard: string; max_score: number; bands: string[]; weights: Record<string, number>; version: string; rubric_policy?: string }
   score_reason?: string
   grading_version?: string
   grading_standard?: 'PRACTICAL' | 'TOEIC'
@@ -312,8 +314,12 @@ export interface ScoreDetail {
 
 export interface GrammarError {
   type: 'GRAMMAR' | 'SPELLING' | 'PUNCTUATION' | 'VOCABULARY' | 'STYLE' | 'FORMAT'
-  severity: 'LOW' | 'MEDIUM' | 'HIGH'
-  position: {
+  severity?: 'LOW' | 'MEDIUM' | 'HIGH'
+  rule_code?: string | null
+  target_phrase?: string | null
+  validation_status?: 'EXACT' | 'NORMALIZED' | 'AMBIGUOUS'
+  locations?: Array<{ start: number; end: number }>
+  position?: {
     start: number
     end: number
   }

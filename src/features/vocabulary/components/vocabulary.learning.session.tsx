@@ -80,6 +80,9 @@ interface FeedbackState {
   correct_answer: string;
   meaning_vi?: string;
   message?: string;
+  is_recovery?: boolean;
+  is_recovered?: boolean;
+  bonus_xp?: number;
 }
 
 export function VocabularyLearningSession({
@@ -116,7 +119,10 @@ export function VocabularyLearningSession({
       total: number;
       current_index?: number;
       is_relearning?: boolean;
+      is_recovery?: boolean;
       unresolved_count?: number;
+      recovery_total?: number;
+      recovery_resolved?: number;
     };
   } | null>(null);
 
@@ -496,6 +502,10 @@ export function VocabularyLearningSession({
         totalWords: summary.total_words,
         correctAnswers: summary.correct_count,
         totalItems: summary.total_items,
+        firstTryCorrectCount:
+          summary.first_try_correct_count ?? summary.correct_count,
+        recoveredCount: summary.recovered_count ?? 0,
+        recoveryBonusXp: summary.recovery_bonus_xp ?? 0,
         assessmentType: summary.assessment_type,
         accuracy: summary.accuracy_percent,
         skillBreakdown: summary.skill_breakdown,
@@ -551,6 +561,9 @@ export function VocabularyLearningSession({
 
       if (result.progress) {
         setResolvedCount(result.progress.resolved);
+        if (result.progress.is_relearning !== undefined) {
+          setIsRelearning(Boolean(result.progress.is_relearning));
+        }
       }
     } catch (err: unknown) {
       setError(
@@ -1083,6 +1096,44 @@ export function VocabularyLearningSession({
         />
       </div>
 
+      {/* CHẶNG PHỤC HỒI LỖI SAI (RECOVERY STAGE BANNER) */}
+      {isRelearning && (
+        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent p-4 sm:p-5 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white font-black shadow-md shadow-amber-500/25">
+              <RotateCcw size={20} className="animate-spin-slow" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-extrabold text-text-primary tracking-tight">
+                  {isVietnamese
+                    ? "Chặng Phục Hồi Lỗi Sai"
+                    : "Mistake Recovery Round"}
+                </h3>
+                <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-amber-700 dark:text-amber-300 tracking-wider">
+                  {isVietnamese ? "Thử thách lại" : "Active Re-test"}
+                </span>
+              </div>
+              <p className="text-xs text-text-secondary mt-0.5">
+                {isVietnamese
+                  ? "Vượt qua các câu hỏi để hoàn tất phiên và nhận thêm +3 XP Kiên trì 🛡️"
+                  : "Solve questions to master these words and earn +3 Grit Bonus XP 🛡️"}
+              </p>
+            </div>
+          </div>
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-xs font-bold text-amber-700 dark:text-amber-300">
+              {isVietnamese ? "Còn lại" : "Remaining"}:{" "}
+              {currentQuestion?.progress?.unresolved_count ?? 1}{" "}
+              {isVietnamese ? "từ" : "words"}
+            </span>
+            <span className="text-[11px] text-text-tertiary mt-0.5">
+              {isVietnamese ? "Cần đạt kết quả chính xác" : "Accuracy required"}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* CARD MAIN WORKSPACE */}
       <Card className="dashboard-card border-border/80 shadow-md">
         <CardContent className="p-6 sm:p-8">
@@ -1327,15 +1378,23 @@ export function VocabularyLearningSession({
           {(mode === "MULTIPLE_CHOICE" || mode === "REVERSE") && (
             <div className="flex flex-col items-center">
               <div className="mb-6 text-center">
-                <span className="rounded-full bg-surface-subtle px-3 py-1 text-[11px] font-bold text-text-secondary uppercase">
-                  {mode === "REVERSE"
-                    ? isVietnamese
-                      ? "Chọn từ tiếng Anh phù hợp"
-                      : "Select matching English word"
-                    : isVietnamese
-                    ? "Chọn nghĩa tiếng Việt chính xác"
-                    : "Select correct Vietnamese meaning"}
-                </span>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="rounded-full bg-surface-subtle px-3 py-1 text-[11px] font-bold text-text-secondary uppercase">
+                    {mode === "REVERSE"
+                      ? isVietnamese
+                        ? "Chọn từ tiếng Anh phù hợp"
+                        : "Select matching English word"
+                      : isVietnamese
+                      ? "Chọn nghĩa tiếng Việt chính xác"
+                      : "Select correct Vietnamese meaning"}
+                  </span>
+                  {isRelearning && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                      <RotateCcw size={11} className="stroke-[2.5]" />
+                      <span>{isVietnamese ? "Lượt phục hồi" : "Recovery"}</span>
+                    </span>
+                  )}
+                </div>
                 <h2 className="mt-3 text-[30px] font-extrabold text-text-primary">
                   {mode === "REVERSE" ? prompt.meaning_vi : prompt.word}
                 </h2>
@@ -1721,7 +1780,11 @@ export function VocabularyLearningSession({
                           ? "Sẽ ôn lại thẻ này ở cuối phiên! 🔁"
                           : "Will review this card again!"
                         : feedback.result === "CORRECT"
-                        ? isVietnamese
+                        ? feedback.bonus_xp || isRelearning
+                          ? isVietnamese
+                            ? "Phục hồi thành công! +3 XP Kiên trì 🎯"
+                            : "Recovered Successfully! +3 Grit XP 🎯"
+                          : isVietnamese
                           ? "Chính xác! Xuất sắc 🎉"
                           : "Correct!"
                         : feedback.result === "NEAR_CORRECT"
