@@ -45,7 +45,7 @@ export function SpeakingHistory({ embedded = false, attempts, exercises, onBack,
               const title = vi ? exercise?.title_vi || exercise?.title : exercise?.title
               const score = attempt.overall_score
               const graded = typeof score === 'number' && Number.isFinite(score)
-              const scoreColor = !graded || attempt.grading_version !== 'speaking-v2' ? 'bg-surface-subtle text-text-secondary' : score >= 80 ? 'bg-primary/10 text-primary' : score >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-700'
+              const scoreColor = !graded || !['speaking-v2', 'azure-speaking-v1', 'speaking-v3'].includes(attempt.grading_version || '') ? 'bg-surface-subtle text-text-secondary' : score >= 80 ? 'bg-primary/10 text-primary' : score >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-700'
               const date = new Date(attempt.created_at)
               const duration = attempt.recording_duration_seconds ?? attempt.speaking_time_seconds
               return (
@@ -59,7 +59,7 @@ export function SpeakingHistory({ embedded = false, attempts, exercises, onBack,
                         {attempt.is_best_attempt && <span className="text-primary">{vi ? 'Kết quả tốt nhất' : 'Best attempt'}</span>}
                       </div>
                     </div>
-                    <span className={`shrink-0 rounded-xl px-3 py-2 text-sm font-semibold ${scoreColor}`}>{graded ? `${score.toFixed(1)}${attempt.grading_version === 'speaking-v2' ? ' / 100' : (vi ? ' · thang điểm cũ' : ' · legacy scale')}` : (vi ? 'Chưa có điểm' : 'Not graded')}</span>
+                    <span className={`shrink-0 rounded-xl px-3 py-2 text-sm font-semibold ${scoreColor}`}>{graded ? `${score.toFixed(1)}${['speaking-v2', 'azure-speaking-v1', 'speaking-v3'].includes(attempt.grading_version || '') ? ' / 100' : (vi ? ' · thang điểm cũ' : ' · legacy scale')}` : (vi ? 'Chưa có điểm' : 'Not graded')}</span>
                   </div>
                   <div className="mt-4 flex justify-end border-t border-border pt-3">
                     <Button variant="outline" size="sm" aria-label={`${vi ? 'Xem chi tiết' : 'View details'}: ${title || attempt.id}`} onClick={() => onViewAttempt(attempt)}>{vi ? 'Xem chi tiết' : 'View details'}<ChevronRight size={16} /></Button>

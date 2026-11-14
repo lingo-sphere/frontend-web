@@ -2,6 +2,7 @@
 
 import { useTranslation } from "react-i18next";
 import type { WritingSubmission } from "../types/writing";
+import { WritingTaskAssessmentView } from './writing.task.assessment';
 
 const labels = {
   task_achievement: ["Đáp ứng yêu cầu", "Task achievement"],
@@ -26,6 +27,7 @@ export function WritingScoreExplanation({
   const sum = weights.reduce((total, [, weight]) => total + weight, 0);
   return (
     <div className="space-y-3">
+      <WritingTaskAssessmentView assessment={evaluation?.task_assessment} policy={evaluation?.score_policy} source={vi ? 'Đánh giá AI ban đầu' : 'Original AI assessment'} />
       {submission.grading_standard !== "TOEIC" && sum > 0 && (
         <details className="rounded-xl border border-border bg-surface p-4 text-sm">
           <summary className="min-h-11 cursor-pointer font-medium text-text-primary">
@@ -35,8 +37,8 @@ export function WritingScoreExplanation({
           </summary>
           <p className="mb-3 text-text-secondary">
             {vi
-              ? "Điểm tổng là trung bình có trọng số, làm tròn ở bước cuối. Các tiêu chí không có trọng số vẫn giúp bạn hiểu bài viết nhưng không cộng vào điểm tổng."
-              : "The overall score is a weighted average, rounded once at the end. Criteria without a weight provide feedback but do not contribute to the overall score."}
+              ? `Điểm được tính theo trọng số, làm tròn ở bước cuối.${evaluation?.score_policy ? ' Bài hoàn toàn lệch đề hoặc không có nội dung có thể chấm nhận điểm cuối 0, dù điểm ngôn ngữ cao.' : ''} Các tiêu chí không có trọng số dùng để giải thích bài làm.`
+              : `Scores use a weighted average, rounded once at the end.${evaluation?.score_policy ? ' Off-topic or ungradable responses receive a final score of 0 regardless of language diagnostics.' : ''} Unweighted criteria provide feedback.`}
           </p>
           <ul className="space-y-1">
             {weights.map(([key, weight]) => (
