@@ -1,6 +1,7 @@
 // Handles course-related API requests for frontend-web.
 
 import { api } from '@/services/api.client'
+import type { WritingTaskAssessment, WritingScorePolicy } from '@/features/practice/types/writing'
 import { API_CONFIG } from '@/config/api.config'
 import type { Course, CourseModule, Chapter, Lesson, CourseEnrollment, PaginatedResult, CourseCurriculumResponse } from '@/types/api.types'
 import { CourseSchema, LessonSchema, PaginatedCoursesSchema } from '@/features/courses/schemas/course.schema'
@@ -13,6 +14,9 @@ import type {
 import type { GradedQuestionItem, TestAttemptItem, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
 
 export interface SkillEvaluation {
+  task_policy_version?: string
+  task_assessment?: WritingTaskAssessment
+  score_policy?: WritingScorePolicy
   grading_standard?: string
   grading_version?: string
   raw_score?: number

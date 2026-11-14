@@ -1,6 +1,7 @@
 "use client";
 
 import type { SkillEvaluation } from "@/features/courses/services/course.service";
+import { WritingTaskAssessmentView } from './writing.task.assessment';
 
 const labels: Record<string, string> = {
   pronunciation: "Phát âm",
@@ -21,6 +22,7 @@ export function SkillEvaluationFeedback({
   if (!evaluation) return null;
   return (
     <div className="space-y-4">
+      <WritingTaskAssessmentView assessment={evaluation.task_assessment} policy={evaluation.score_policy} skill={evaluation.task_policy_version === 'speaking-task-gate-v1' ? 'SPEAKING' : 'WRITING'} />
       <p className="text-sm text-text-secondary">
         {evaluation.detailed_feedback}
       </p>

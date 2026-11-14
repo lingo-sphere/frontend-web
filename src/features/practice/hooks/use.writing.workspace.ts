@@ -113,7 +113,7 @@ function mapBackendToSubmission(sub: any): WritingSubmission {
     version_number: sub.version_number || 1,
     drafts: [],
     is_draft: sub.is_draft || false,
-    overall_score: sub.overall_score ?? 0,
+    overall_score: sub.overall_score ?? undefined,
     task_achievement_score: sub.task_achievement_score,
     coherence_score: sub.coherence_score,
     lexical_resource_score: sub.lexical_resource_score,
@@ -340,7 +340,7 @@ export function useWritingWorkspace() {
   const stats: WritingStats = useMemo(() => {
     const total = historySubmissions.length
 
-    const practical = historySubmissions.filter(submission => submission.grading_standard === 'PRACTICAL' && ['writing-v2', 'writing-v3'].includes(submission.grading_version || ''))
+    const practical = historySubmissions.filter(submission => submission.grading_standard === 'PRACTICAL' && ['writing-v2', 'writing-v3', 'writing-v4'].includes(submission.grading_version || ''))
     const average = (selector: (s: WritingSubmission) => number | null | undefined) => {
       const values = practical.map(selector).filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
       if (!values.length) return null

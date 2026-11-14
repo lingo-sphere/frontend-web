@@ -30,6 +30,7 @@ import type { WritingSubmission, WritingExercise } from "../types/writing";
 import { writingScoreLabel } from "../lib/writing-score";
 import { WritingCorrections } from "./writing.corrections";
 import { WritingEvaluationCard } from "./writing.evaluation.card";
+import { WritingTaskAssessmentView } from './writing.task.assessment';
 
 interface WritingResultProps {
   submission: WritingSubmission;
@@ -130,6 +131,7 @@ export function WritingResult({
 
       {/* Teacher Review Status Panel */}
       <PracticeReviewPanel state={reviewState} />
+      <WritingTaskAssessmentView assessment={reviewState.query.data?.review?.teacher_grading?.task_assessment || evaluation?.task_assessment} policy={reviewState.query.data?.review?.teacher_grading?.score_policy || evaluation?.score_policy} source={reviewState.query.data?.review?.teacher_grading ? (vi ? 'Đánh giá giáo viên hiện tại' : 'Current teacher assessment') : (vi ? 'Đánh giá AI' : 'AI assessment')} />
 
       {/* Hero Score & Overview Card (Promax) */}
       <section className="relative overflow-hidden rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
@@ -250,7 +252,7 @@ export function WritingResult({
       </section>
 
       {/* SRS Spaced Repetition Flashcard Sync Banner */}
-      {["writing-v2", "writing-v3"].includes(submission.grading_version || "") && (
+      {["writing-v2", "writing-v3", "writing-v4"].includes(submission.grading_version || "") && (
         <section
           className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 p-3.5 text-xs sm:text-sm"
           aria-label={vi ? "Theo dõi ôn Writing" : "Writing review tracking"}

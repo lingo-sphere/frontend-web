@@ -1,5 +1,6 @@
 import { usePracticeReview } from '../hooks/use.practice.review'
 import { PracticeReviewPanel } from './practice.review.panel'
+import { WritingTaskAssessmentView } from './writing.task.assessment'
 import { SkillEvaluationFeedback } from './skill.evaluation.feedback'
 import { SpeakingLearningFeedback } from './speaking.learning.feedback'
 import { SpeakingVocabularySaving } from './speaking.vocabulary.saving'
@@ -187,9 +188,9 @@ export function SpeakingResult({
   const toScore100 = (val: number) => {
     const num = val || 0
     if (
-      submission.grading_version === 'speaking-v2' ||
+      ['speaking-v2', 'azure-speaking-v1', 'speaking-v3'].includes(submission.grading_version || '') ||
       submission.grading_version?.startsWith('teacher:') ||
-      evaluation?.grading_version === 'speaking-v2'
+      ['speaking-v2', 'azure-speaking-v1', 'speaking-v3'].includes(evaluation?.grading_version || '')
     )
       return num
     return num <= 10 && num > 0 ? num * 10 : num
@@ -323,6 +324,7 @@ export function SpeakingResult({
 
       {/* Teacher Review Panel */}
       <PracticeReviewPanel state={reviewState} />
+      <WritingTaskAssessmentView skill="SPEAKING" assessment={reviewState.query.data?.review?.teacher_grading?.task_assessment || evaluation?.task_assessment} policy={reviewState.query.data?.review?.teacher_grading?.score_policy || evaluation?.score_policy} source={reviewState.query.data?.review?.teacher_grading ? (isVietnamese ? 'Đánh giá giáo viên hiện tại' : 'Current teacher assessment') : (isVietnamese ? 'Đánh giá AI' : 'AI assessment')} />
 
       {/* Hero Score & Overview Card (Promax, đồng bộ với Writing) */}
       <section className="relative overflow-hidden rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
