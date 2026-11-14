@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api.client";
+import type { WritingTaskAssessment, WritingScorePolicy } from '../types/writing';
 
 export type ReviewSkill = "SPEAKING" | "WRITING";
 export interface PracticeReviewResult {
@@ -21,6 +22,7 @@ export interface PracticeReviewResult {
     requested_at?: string;
     reviewed_at?: string;
     teacher_grading?: {
+      task_assessment?: WritingTaskAssessment; score_policy?: WritingScorePolicy;
       raw_score: number; max_score: number; criteria_scores: Record<string, number | null>;
       rubric_snapshot: { criteria: Array<{ key: string; label: string }> };
     } | null;

@@ -244,6 +244,8 @@ export interface WritingSubmission {
 }
 
 export interface AIEvaluation {
+  task_assessment?: WritingTaskAssessment
+  score_policy?: WritingScorePolicy
   feedback_metadata_status?: 'VALID' | 'SANITIZED'
   feedback_metadata_issues?: string[]
   rubric_snapshot?: { standard: string; max_score: number; bands: string[]; weights: Record<string, number>; version: string; rubric_policy?: string }
@@ -304,6 +306,19 @@ export interface AIEvaluation {
   ai_model?: string
   ai_version?: string
   processing_time_ms?: number
+}
+
+export interface WritingTaskAssessment {
+  outcome: 'ON_TASK' | 'PARTIAL' | 'OFF_TOPIC' | 'UNGRADABLE' | 'UNCERTAIN'
+  reason: string
+  requirements: Array<{ requirement_id: string; text?: string; status: 'MET' | 'PARTIAL' | 'MISSING' | 'UNKNOWN'; evidence: string[] }>
+}
+export interface WritingScorePolicy {
+  version: string
+  pre_policy_score: number
+  final_score: number
+  applied_cap: number | null
+  reason_code: string
 }
 
 export interface ScoreDetail {
