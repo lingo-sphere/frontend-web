@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Icon } from "@/components/icon.map";
 import { Button } from "@/components/button";
 import { Pagination } from "@/components/pagination";
-import { Card, CardContent } from "@/components/card";
+import { ReadingPassageCard } from "@/features/practice/components/reading.passage.card";
 import { ReadingContextNavigation } from "@/features/practice/components/reading.context.navigation";
 import { ReadingWorkspace } from "@/features/practice/components/reading.workspace";
 import { ReadingTimeModeSelector } from "@/features/practice/components/reading.time-mode-selector";
@@ -354,34 +354,19 @@ function ReadingPractice() {
           ) : !catalog.data?.passages.length ? (
             <p>Chưa có bài đọc nào phù hợp bộ lọc.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
               {catalog.data.passages.map((passage) => (
-                <Card key={passage._id}>
-                  <CardContent className="space-y-3 p-5">
-                    <h3 className="font-bold">
-                      {passage.title_vi || passage.title}
-                    </h3>
-                    <p className="line-clamp-2 text-sm text-text-secondary">
-                      {passage.content_summary || passage.content}
-                    </p>
-                    <p className="text-xs">
-                      {passage.cefr_level} · {passage.word_count || 0} từ ·{" "}
-                      {passage.question_count || 0} câu hỏi
-                    </p>
-                    <Button
-                      disabled={!passage.question_count}
-                      onClick={() => {
-                        if (!userId) login();
-                        else {
-                          setPendingPassage(passage);
-                          setError("");
-                        }
-                      }}
-                    >
-                      Luyện tập ngay
-                    </Button>
-                  </CardContent>
-                </Card>
+                <ReadingPassageCard
+                  key={passage._id}
+                  passage={passage}
+                  onStartPractice={(selected) => {
+                    if (!userId) login();
+                    else {
+                      setPendingPassage(selected);
+                      setError("");
+                    }
+                  }}
+                />
               ))}
             </div>
           )}

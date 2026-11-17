@@ -477,7 +477,7 @@ export default function ListeningAppPage() {
               <Button variant="outline" onClick={retryCurrent}>{isVietnamese ? "Thử lại" : "Retry"}</Button>
             </div>
           ) : currentLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {Array.from({ length: 6 }).map((_, idx) => (
                 <Card key={idx} className="dashboard-card animate-pulse">
                   <div className="h-44 bg-surface-subtle rounded-t-xl" />
@@ -501,7 +501,7 @@ export default function ListeningAppPage() {
                       onReset={handleClearFilters}
                     />
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                       {part1Data.items.map((item) => (
                         <ListeningPart1Card
                           key={item._id}
@@ -527,7 +527,7 @@ export default function ListeningAppPage() {
                       onReset={handleClearFilters}
                     />
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                       {part2Data.items.map((item) => (
                         <ListeningPracticeCard
                           key={item._id}
@@ -554,7 +554,7 @@ export default function ListeningAppPage() {
                       onReset={handleClearFilters}
                     />
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                       {part3Data.items.map((item) => (
                         <ListeningPracticeCard
                           key={item._id}
@@ -581,7 +581,7 @@ export default function ListeningAppPage() {
                       onReset={handleClearFilters}
                     />
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                       {part4Data.items.map((item) => (
                         <ListeningPracticeCard
                           key={item._id}
@@ -608,7 +608,7 @@ export default function ListeningAppPage() {
                       onReset={handleClearFilters}
                     />
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                       {dictationData.items.map((item) => (
                         <ListeningPracticeCard
                           key={item._id}
