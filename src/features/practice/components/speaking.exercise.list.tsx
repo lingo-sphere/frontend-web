@@ -1,14 +1,13 @@
-import { PracticeDifficultyFilter } from './practice.difficulty.filter'
-import { practiceDifficultyLabel, PRACTICE_DIFFICULTY_COLORS } from '../lib/practice-difficulty'
-// Component giao diện React SpeakingExerciseList cho học viên.
+// Danh sách bài tập luyện nói Speaking theo dạng bài và cấp độ.
+'use client'
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeft, Search, Clock, ChevronRight } from 'lucide-react'
-import { Card, CardContent } from '@/components/card'
-import { Button } from '@/components/button'
+import { ArrowLeft, Search, Clock, ArrowRight, Mic, Volume2, Play } from 'lucide-react'
 import { AppSelect } from '@/components/select'
 import { Pagination } from '@/components/pagination'
+import { PracticeDifficultyFilter } from '@/features/practice/components/practice.difficulty.filter'
+import { practiceDifficultyLabel } from '@/features/practice/lib/practice-difficulty'
 import type { SpeakingExercise, SpeakingExerciseType, DifficultyLevel } from '@/features/practice/types/speaking'
 
 interface SpeakingExerciseListProps {
@@ -31,7 +30,6 @@ export function SpeakingExerciseList({
   const [typeFilter, setTypeFilter] = useState<SpeakingExerciseType | 'all'>('all')
   const [levelFilter, setLevelFilter] = useState<DifficultyLevel | 'all'>('all')
 
-  // Pagination
   const PAGE_SIZE = 9
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -62,10 +60,8 @@ export function SpeakingExerciseList({
     })
   }, [exercises, searchQuery, typeFilter])
 
-
   const filteredExercises = useMemo(() => matchingExercises.filter(exercise => levelFilter === 'all' || (exercise.difficulty_level || 'MEDIUM') === levelFilter), [matchingExercises, levelFilter])
 
-  // Pagination calculations
   const totalPages = Math.max(1, Math.ceil(filteredExercises.length / PAGE_SIZE))
   const page = Math.min(currentPage, totalPages)
 
@@ -81,14 +77,15 @@ export function SpeakingExerciseList({
 
   return (
     <section className={embedded ? '' : 'w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8'}>
-
-      {!embedded && <button
-        onClick={onBack}
-        className="mb-6 flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary"
-      >
-        <ArrowLeft size={18} />
-        {isVietnamese ? 'Quay lại' : 'Back'}
-      </button>}
+      {!embedded && (
+        <button
+          onClick={onBack}
+          className="mb-6 flex items-center gap-2 text-[14px] text-text-secondary hover:text-primary"
+        >
+          <ArrowLeft size={18} />
+          {isVietnamese ? 'Quay lại' : 'Back'}
+        </button>
+      )}
 
       <div className="mb-6">
         <h2 className="text-[24px] font-bold text-text-primary">
@@ -100,7 +97,6 @@ export function SpeakingExerciseList({
       </div>
 
       <div className="mb-6 space-y-4">
-
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
           <input
@@ -117,9 +113,13 @@ export function SpeakingExerciseList({
           <PracticeDifficultyFilter value={levelFilter} counts={difficultyCounts} isVietnamese={isVietnamese} onChange={value => { setLevelFilter(value); setCurrentPage(1) }} />
           <div className="flex min-w-0 items-center gap-2">
             <span className="shrink-0 text-xs font-medium text-text-tertiary">{isVietnamese ? 'Dạng bài:' : 'Type:'}</span>
-            <AppSelect value={typeFilter} onChange={value => { setTypeFilter(value as SpeakingExerciseType | 'all'); setCurrentPage(1) }}
+            <AppSelect
+              value={typeFilter}
+              onChange={value => { setTypeFilter(value as SpeakingExerciseType | 'all'); setCurrentPage(1) }}
               options={[{ value: 'all', label: isVietnamese ? 'Tất cả dạng bài' : 'All types' }, ...Object.entries(typeLabels).filter(([type]) => exercises.some(ex => ex.exercise_type === type)).map(([value, label]) => ({ value, label }))]}
-              size="sm" ariaLabel={isVietnamese ? 'Dạng bài' : 'Exercise type'} />
+              size="sm"
+              ariaLabel={isVietnamese ? 'Dạng bài' : 'Exercise type'}
+            />
           </div>
         </div>
       </div>
@@ -144,9 +144,15 @@ export function SpeakingExerciseList({
         </div>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {paginatedExercises.map(exercise => (
-              <ExerciseCard key={exercise.id} exercise={exercise} onClick={() => onSelectExercise(exercise)} typeLabels={typeLabels} isVietnamese={isVietnamese} />
+              <ExerciseCard
+                key={exercise.id}
+                exercise={exercise}
+                onClick={() => onSelectExercise(exercise)}
+                typeLabels={typeLabels}
+                isVietnamese={isVietnamese}
+              />
             ))}
           </div>
 
@@ -178,20 +184,17 @@ function ExerciseCard({
   typeLabels: Record<string, string>
   isVietnamese: boolean
 }) {
-  const typeColors: Record<SpeakingExerciseType, string> = {
-    READ_ALOUD: 'bg-emerald-100 text-emerald-700',
-    DESCRIBE_PICTURE: 'bg-cyan-100 text-cyan-700',
-    SHORT_DIALOGUE: 'bg-indigo-100 text-indigo-700',
-    ANSWER_QUESTION: 'bg-amber-100 text-amber-700',
-    OPINION_RESPONSE: 'bg-rose-100 text-rose-700',
-    TOPIC: 'bg-blue-100 text-blue-700',
-    RESPOND_SITUATION: 'bg-purple-100 text-purple-700',
-    PRONUNCIATION: 'bg-teal-100 text-teal-700',
-    SHADOWING: 'bg-pink-100 text-pink-700',
-  }
+  const estimatedMinutes = exercise.estimated_minutes ?? Math.max(1, Math.ceil(((exercise.preparation_time_seconds ?? 0) + (exercise.response_time_seconds ?? 0)) / 60))
+  const displayTitle = isVietnamese ? (exercise.title_vi || exercise.title) : exercise.title
+  const displayDescription = (isVietnamese ? (exercise.description_vi || exercise.description) : exercise.description) || (exercise.topic_name ? `Chủ đề: ${exercise.topic_name}` : 'Luyện kỹ năng nói tiếng Anh giao tiếp chuẩn quốc tế.')
+  const cefrLevel = exercise.cefr_level || 'B1'
+  const typeLabel = typeLabels[exercise.exercise_type] || exercise.exercise_type
+  const prepTime = exercise.preparation_time_seconds || 30
+  const respTime = exercise.response_time_seconds || 60
+  const exerciseCode = `#SP-${String(exercise.id).slice(-3).toUpperCase()}`
 
   return (
-    <Card
+    <div
       role="button"
       tabIndex={0}
       onClick={onClick}
@@ -201,60 +204,88 @@ function ExerciseCard({
           onClick()
         }
       }}
-      className="dashboard-card flex h-full flex-col transition-all cursor-pointer hover:border-primary/50 hover:shadow-md"
+      className="group relative h-[270px] w-full cursor-pointer select-none overflow-hidden rounded-[26px] border border-border/80 bg-surface dark:bg-card shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/50 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/40 hover:shadow-emerald-500/10"
     >
-      <CardContent className="flex flex-1 flex-col p-4">
+      <div className="absolute top-0 left-0 z-20 flex flex-col justify-center rounded-br-[36px] bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 px-4 py-2.5 pr-7 shadow-xs">
+        <span className="text-xs font-black tracking-wider uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] sm:text-sm">
+          BÀI NÓI {cefrLevel}
+        </span>
+        <span className="text-[10px] font-extrabold uppercase tracking-wide text-emerald-100 sm:text-[11px] max-w-[130px] truncate">
+          {typeLabel}
+        </span>
+      </div>
 
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-[15px] font-semibold text-text-primary">{isVietnamese ? exercise.title_vi || exercise.title : exercise.title}</h3>
-            {isVietnamese && exercise.title_vi && exercise.title_vi !== exercise.title && (
-              <p className="text-[12px] text-text-secondary">{exercise.title}</p>
-            )}
-          </div>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${PRACTICE_DIFFICULTY_COLORS[exercise.difficulty_level || 'MEDIUM']}`}>
-            {practiceDifficultyLabel(exercise.difficulty_level || 'MEDIUM', isVietnamese)} · {exercise.cefr_level}
-          </span>
-        </div>
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface-subtle/80 px-2.5 py-1 text-[10.5px] font-bold text-text-secondary backdrop-blur-xs shadow-2xs">
+          <Clock size={11} className="text-emerald-600 dark:text-emerald-400" />
+          <span>{estimatedMinutes} {isVietnamese ? 'phút' : 'min'}</span>
+        </span>
+      </div>
 
-        <p className="mb-3 text-[13px] text-text-secondary line-clamp-2">
-          {isVietnamese ? exercise.description_vi || exercise.description : exercise.description}
+      <div className="relative z-10 space-y-1.5 pt-16 pr-16 pl-4 sm:pt-17 sm:pr-20 sm:pl-4.5">
+        <h3 className="line-clamp-2 text-sm font-black leading-snug text-text-primary transition-colors duration-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 sm:text-[15px]">
+          {displayTitle}
+        </h3>
+        <p className="line-clamp-2 text-[11px] leading-relaxed text-text-tertiary">
+          {displayDescription}
         </p>
+      </div>
 
-        <div className="mb-3 flex flex-wrap gap-2">
-          <span className={`inline-flex items-center rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] ${typeColors[exercise.exercise_type]}`}>
-            {typeLabels[exercise.exercise_type]}
-          </span>
-          {exercise.topic_name && (
-            <span className="inline-flex items-center rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] text-text-secondary">
-              {exercise.topic_name}
-            </span>
-          )}
+      <svg
+        className="pointer-events-none absolute right-0 bottom-0 z-10 h-[125px] w-[80%]"
+        viewBox="0 0 300 120"
+        preserveAspectRatio="none"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M 0 120 C 35 120 45 75 90 48 C 135 22 185 0 300 0 L 300 120 Z"
+          className="fill-[#0c192c] dark:fill-[#07111e]"
+        />
+      </svg>
+
+      <div className="absolute right-3.5 bottom-9 z-20 flex max-w-[70%] items-center justify-end gap-2.5">
+        <div className="space-y-0.5 text-right text-[10px] font-semibold leading-tight text-slate-200/95 sm:text-[11px]">
+          <div className="flex items-center justify-end gap-1.5">
+            <span>{prepTime}s chuẩn bị</span>
+          </div>
+          <div className="flex items-center justify-end gap-1.5">
+            <span>{respTime}s phản xạ</span>
+          </div>
+          <div className="flex items-center justify-end gap-1.5">
+            <span>{exercise.total_attempts !== undefined ? `${exercise.total_attempts} lượt làm` : 'Phòng thu AI'}</span>
+          </div>
+          <div className="flex items-center justify-end gap-1.5 text-emerald-400 font-bold">
+            <span>{practiceDifficultyLabel(exercise.difficulty_level || 'MEDIUM', isVietnamese)} · {cefrLevel}</span>
+          </div>
         </div>
 
-        <div className="mb-4 flex items-center justify-between text-[12px] text-text-tertiary">
-          <span className="flex items-center gap-1">
-            <Clock size={14} />
-            {exercise.estimated_minutes ?? Math.max(1, Math.ceil(((exercise.preparation_time_seconds ?? 0) + (exercise.response_time_seconds ?? 0)) / 60))} {isVietnamese ? 'phút' : 'min'}
-          </span>
-          {exercise.total_attempts !== undefined && (
-            <span>{exercise.total_attempts.toLocaleString()} {isVietnamese ? 'lượt làm' : 'attempts'}</span>
-          )}
+        <div className="my-auto flex w-7 shrink-0 flex-col items-center justify-between gap-1.5 rounded-full bg-white py-2 shadow-md transition-all duration-300 group-hover:shadow-emerald-500/25 sm:w-7.5 dark:bg-slate-100">
+          <Mic size={11} className="text-slate-900" />
+          <Volume2 size={11} className="text-slate-900" />
+          <Clock size={11} className="text-slate-900" />
+          <Play size={11} className="fill-emerald-600 text-emerald-600 transition-transform duration-200 group-hover:scale-115" />
         </div>
+      </div>
 
-        <Button
-          aria-label={`${isVietnamese ? 'Bắt đầu' : 'Start'}: ${isVietnamese ? exercise.title_vi || exercise.title : exercise.title}`}
-          size="sm"
-          className="mt-auto w-full bg-primary hover:bg-primary-hover"
-          onClick={(e) => {
-            e.stopPropagation()
-            onClick()
-          }}
-        >
-          {isVietnamese ? 'Bắt đầu' : 'Start'}
-          <ChevronRight size={16} />
-        </Button>
-      </CardContent>
-    </Card>
+      <div className="absolute bottom-2 left-4 z-10">
+        <span className="font-mono text-[10px] font-bold text-text-tertiary">
+          {exerciseCode}
+        </span>
+      </div>
+
+      <div className="absolute right-0 bottom-0 left-[20%] z-30 flex h-7 items-center justify-between rounded-tl-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 px-3.5 shadow-xs">
+        <div className="flex w-full items-center justify-between text-[10px] font-black uppercase tracking-wider text-white sm:text-[11px]">
+          <span className="truncate max-w-[85px]">{exercise.topic_name || typeLabel}</span>
+          <span className="text-emerald-100/60">|</span>
+          <span>AI CHẤM ĐIỂM</span>
+          <span className="text-emerald-100/60">|</span>
+          <span className="flex items-center gap-1 font-black">
+            <span>{isVietnamese ? 'LUYỆN TẬP' : 'PRACTICE'}</span>
+            <ArrowRight size={11} className="transition-transform duration-200 group-hover:translate-x-1" />
+          </span>
+        </div>
+      </div>
+    </div>
   )
 }

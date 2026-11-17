@@ -81,7 +81,6 @@ export default function WritingAppPage() {
   const { i18n } = useTranslation()
   const vi = i18n.language.toLowerCase().startsWith('vi')
 
-  // Show error state if there's an error
   if (error) {
     return <ErrorState message={error} onRetry={handleGoHome} />
   }
@@ -138,7 +137,6 @@ export default function WritingAppPage() {
   switch (currentView) {
 
     case 'detail':
-      // Nếu selectedExercise null (direct URL access), hiển thị loading hoặc redirect
       if (!selectedExercise) {
         return <LoadingState />
       }
@@ -151,7 +149,6 @@ export default function WritingAppPage() {
       )
 
     case 'workspace':
-      // Nếu selectedExercise null (direct URL access), hiển thị loading hoặc redirect
       if (!selectedExercise) {
         return <LoadingState />
       }
