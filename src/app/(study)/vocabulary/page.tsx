@@ -256,7 +256,6 @@ export default function VocabularyAppPage() {
   return (
     <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-        <VocabularyResumeSessions />
         {dataError && (
           <div role="alert" className="mb-5 border border-error rounded-xl p-4">
             <p>
@@ -777,7 +776,9 @@ export default function VocabularyAppPage() {
                   index={idx}
                   currentUser={currentUser}
                   isVietnamese={isVietnamese}
-                  isDeleting={checkingDeleteDeckId === (deck._id || deck.id) && isDeleting}
+                  isDeleting={
+                    checkingDeleteDeckId === (deck._id || deck.id) && isDeleting
+                  }
                   onDeckClick={handleDeckClick}
                   onToggleVisibility={handleToggleVisibility}
                   onCopyShareLink={handleCopyShareLink}

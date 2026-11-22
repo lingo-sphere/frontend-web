@@ -121,7 +121,9 @@ export function GogoStatsGrid({
       textColor: 'text-sky-600 dark:text-sky-400',
       iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
       badge: getCefrBadge(listeningAcc),
-      sub: `${skillsSummary?.skills?.listening?.total_questions ?? 0} câu đã làm`,
+      sub: (skillsSummary?.skills?.listening?.dictation_words ?? 0) > 0
+        ? `${(skillsSummary?.skills?.listening?.total_questions ?? 0) + (skillsSummary?.skills?.listening?.dictation_words ?? 0)} câu & ô đã làm`
+        : `${skillsSummary?.skills?.listening?.total_questions ?? 0} câu đã làm`,
       cardHover: 'hover:border-sky-400/60 dark:hover:border-sky-600/60',
     },
     {
@@ -147,7 +149,9 @@ export function GogoStatsGrid({
       textColor: 'text-indigo-600 dark:text-indigo-400',
       iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       badge: { label: `${masteredVocab}/${totalCards}`, bg: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' },
-      sub: `${masteredVocab} từ đã thuộc`,
+      sub: totalCards > 0
+        ? (masteredVocab > 0 ? `${masteredVocab}/${totalCards} từ đã thuộc` : `${totalCards} từ đang nạp SRS`)
+        : '0 từ đã thuộc',
       cardHover: 'hover:border-indigo-400/60 dark:hover:border-indigo-600/60',
     },
     {

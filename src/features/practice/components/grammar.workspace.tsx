@@ -35,6 +35,7 @@ import {
   ChevronUp,
   FileText,
   Zap,
+  Volume2,
 } from "lucide-react";
 import { useNavigate } from "@/lib/navigation";
 import { PracticeExitConfirmModal } from "./practice.exit-confirm.modal";
@@ -562,12 +563,14 @@ function GrammarResultView({
   backLabel,
 }: GrammarResultViewProps) {
   const navigate = useNavigate();
-  const isPassed = result.accuracy_rate >= 80;
+  const score = result.accuracy_rate ?? 0;
+  const isPassed = score >= 80;
+  const isGood = score >= 50 && score < 80;
   const wrongCount = result.incorrect_count + result.skipped_count;
 
+  const [playingKey, setPlayingKey] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"ALL" | "WRONG" | "CORRECT">("ALL");
   const [expandedIndices, setExpandedIndices] = useState<Set<number>>(() => {
-    // Default open first 3 mistakes
     const initial = new Set<number>();
     result.details
       .filter((d) => !d.is_correct)
@@ -575,6 +578,24 @@ function GrammarResultView({
       .forEach((d) => initial.add(d.question_index));
     return initial;
   });
+
+  const speakText = (text?: string, key?: string) => {
+    if (!text || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 0.95;
+    if (key) setPlayingKey(key);
+    utterance.onend = () => setPlayingKey(null);
+    utterance.onerror = () => setPlayingKey(null);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const scoreColor = isPassed
+    ? "text-emerald-600 dark:text-emerald-400"
+    : isGood
+    ? "text-amber-600 dark:text-amber-400"
+    : "text-rose-600 dark:text-rose-400";
 
   const toggleExpand = (idx: number) => {
     setExpandedIndices((prev) => {
@@ -635,31 +656,48 @@ function GrammarResultView({
         </div>
       </div>
 
-      {/* Hero Score Card (Promax) */}
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
+      {/* Hero Score Card (Promax Redesigned) */}
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-surface p-6 shadow-sm">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          {/* Left: Score Badge & Title */}
-          <div className="flex items-center gap-4 sm:gap-5">
-            <div
-              className={`relative flex h-22 w-22 sm:h-24 sm:w-24 shrink-0 flex-col items-center justify-center rounded-2xl border p-2 shadow-xs ${
-                isPassed
-                  ? "border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
-                  : result.accuracy_rate >= 60
-                  ? "border-amber-200 dark:border-amber-900/60 bg-amber-50/40 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400"
-                  : "border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400"
-              }`}
-            >
-              <span className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                {result.accuracy_rate}%
-              </span>
-              <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
-                Chính xác
-              </span>
+          {/* Left: Score Ring & Title */}
+          <div className="flex items-center gap-5 sm:gap-6">
+            <div className="relative flex h-24 w-24 sm:h-28 sm:w-28 shrink-0 items-center justify-center">
+              <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  className="stroke-surface-subtle"
+                  strokeWidth="8"
+                  fill="transparent"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  className={`${
+                    isPassed ? "stroke-emerald-500" : isGood ? "stroke-amber-500" : "stroke-rose-500"
+                  } transition-all duration-1000 ease-out`}
+                  strokeWidth="8"
+                  strokeDasharray={2 * Math.PI * 40}
+                  strokeDashoffset={2 * Math.PI * 40 * (1 - score / 100)}
+                  strokeLinecap="round"
+                  fill="transparent"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${scoreColor}`}>
+                  {score}%
+                </span>
+                <span className="text-[10px] font-semibold text-text-tertiary uppercase">
+                  Chính xác
+                </span>
+              </div>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
                   Luyện tập Ngữ pháp
                 </span>
                 {session.total_questions && (
@@ -669,35 +707,34 @@ function GrammarResultView({
                 )}
               </div>
 
-              <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate">
+              <h1 className="text-lg sm:text-2xl font-bold text-text-primary truncate">
                 {session.topic_name_vi || session.topic_name_en}
               </h1>
 
               {session.topic_name_en && session.topic_name_vi && (
-                <p className="text-xs text-text-secondary truncate">{session.topic_name_en}</p>
+                <p className="text-xs sm:text-sm text-text-secondary truncate">{session.topic_name_en}</p>
               )}
 
-              {/* Quick Metrics Chips */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-text-secondary">
-                <span className="inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-0.5">
-                  <CheckCircle2 size={12} className="text-emerald-500" />
-                  <strong className="text-text-primary">{result.correct_count}/{result.total_questions}</strong> câu đúng
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-0.5">
-                  <Clock size={12} className="text-primary" />
-                  <strong className="text-text-primary">{formattedTime}</strong>
-                </span>
-                {wrongCount > 0 ? (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 border border-rose-200 dark:border-rose-900/50">
-                    <AlertTriangle size={12} className="text-rose-500" />
-                    <strong>{wrongCount}</strong> câu cần ôn
+              {/* Achievement Badge */}
+              <div className="pt-0.5">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                    isPassed
+                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                      : isGood
+                      ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                      : "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
+                  }`}
+                >
+                  <Sparkles size={13} />
+                  <span>
+                    {isPassed
+                      ? "Xuất sắc • Nắm vững ngữ pháp"
+                      : isGood
+                      ? "Khá tốt • Cần rà soát một số bẫy"
+                      : "Cần nỗ lực • Xem kỹ lại quy tắc"}
                   </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 border border-emerald-200 dark:border-emerald-900/50">
-                    <Sparkles size={12} className="text-emerald-500" />
-                    Chính xác 100%
-                  </span>
-                )}
+                </span>
               </div>
             </div>
           </div>
@@ -707,7 +744,7 @@ function GrammarResultView({
             <Button
               variant="outline"
               onClick={onRetry}
-              className="flex-1 sm:flex-initial flex items-center gap-1.5 cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center gap-1.5 font-semibold text-xs sm:text-sm cursor-pointer"
             >
               <RotateCcw size={15} />
               Luyện lại
@@ -716,7 +753,7 @@ function GrammarResultView({
               <Button
                 variant="outline"
                 onClick={() => navigate("/practice/mistakes")}
-                className="flex-1 sm:flex-initial flex items-center gap-1.5 text-warning border-warning/40 hover:bg-warning/10 cursor-pointer"
+                className="flex-1 sm:flex-initial flex items-center gap-1.5 text-warning border-warning/40 hover:bg-warning/10 font-semibold text-xs sm:text-sm cursor-pointer"
               >
                 <BookOpen size={15} />
                 Ôn lỗi sai (SRS)
@@ -724,7 +761,7 @@ function GrammarResultView({
             )}
             <Button
               onClick={onClose}
-              className="flex-1 sm:flex-initial flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white shadow-sm cursor-pointer"
+              className="flex-1 sm:flex-initial flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white shadow-sm font-bold text-xs sm:text-sm cursor-pointer"
             >
               Hoàn tất
               <ChevronRight size={16} />
@@ -733,17 +770,62 @@ function GrammarResultView({
         </div>
 
         {/* Motivational / Performance Feedback Snippet */}
-        <div className="mt-4 rounded-xl border border-border/80 bg-surface-subtle/40 p-3.5 text-xs sm:text-sm text-text-secondary">
+        <div className="mt-5 rounded-2xl border border-border/80 bg-surface-subtle/50 p-4 text-xs sm:text-sm text-text-secondary">
           <p className="leading-relaxed">
-            <span className="font-semibold text-text-primary mr-1">
+            <span className="font-bold text-text-primary mr-1">
               {isPassed ? "🎉 Đánh giá:" : "💡 Lời khuyên:"}
             </span>
             {isPassed
               ? "Bạn đã nắm rất vững cấu trúc và cách áp dụng chủ điểm ngữ pháp này! Hãy duy trì phong độ và chuyển sang các bài nâng cao."
-              : result.accuracy_rate >= 60
+              : isGood
               ? "Kết quả khá tốt! Bạn chỉ nhầm lẫn ở một số câu đặc biệt hoặc ngoại lệ. Hãy xem lại giải thích câu sai ở tab bên dưới."
               : "Chủ điểm này còn một số điểm bạn chưa nắm chắc. Hãy dành thời gian xem kỹ giải thích và luyện tập lại để nâng cao độ chính xác."}
           </p>
+        </div>
+
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 mt-5 border-t border-border/60">
+          <div className="rounded-2xl bg-surface border border-border/80 p-3.5 text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-text-secondary font-semibold">
+              <CheckCircle2 size={15} className="text-emerald-500" />
+              <span>Số câu đúng</span>
+            </div>
+            <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              {result.correct_count}
+              <span className="text-xs font-normal text-text-tertiary"> / {result.total_questions}</span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-surface border border-border/80 p-3.5 text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-text-secondary font-semibold">
+              <XCircle size={15} className="text-rose-500" />
+              <span>Chưa đúng</span>
+            </div>
+            <div className="text-xl font-bold text-rose-600 dark:text-rose-400 mt-1">
+              {wrongCount}
+              <span className="text-xs font-normal text-text-tertiary"> câu</span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-surface border border-border/80 p-3.5 text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-text-secondary font-semibold">
+              <Clock size={15} className="text-indigo-500" />
+              <span>Thời gian</span>
+            </div>
+            <div className="text-xl font-bold text-text-primary mt-1">
+              {formattedTime}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-surface border border-border/80 p-3.5 text-center sm:text-left">
+            <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-text-secondary font-semibold">
+              <Award size={15} className="text-amber-500" />
+              <span>Độ chính xác</span>
+            </div>
+            <div className="text-xl font-bold text-text-primary mt-1">
+              {score}%
+            </div>
+          </div>
         </div>
       </section>
 
@@ -850,71 +932,84 @@ function GrammarResultView({
 
               {mistakesList.map((detail) => {
                 const isExpanded = expandedIndices.has(detail.question_index);
+                const qText = detail.question_text_en || session.questions[detail.question_index]?.question_text_en || "";
+                const qKey = `gm_${detail.question_index}`;
+
                 return (
-                  <div
+                  <article
                     key={detail.question_index}
-                    className={`rounded-xl border transition-all duration-200 overflow-hidden ${
+                    className={`rounded-2xl border transition-all duration-200 overflow-hidden shadow-2xs ${
                       isExpanded
-                        ? "border-rose-200 dark:border-rose-900/50 bg-surface shadow-xs"
+                        ? "border-rose-200/90 dark:border-rose-900/50 bg-surface"
                         : "border-border/80 bg-surface hover:border-border"
                     }`}
                   >
                     {/* Header Row */}
                     <div
                       onClick={() => toggleExpand(detail.question_index)}
-                      className="flex cursor-pointer items-start justify-between gap-3 p-3.5 sm:items-center"
+                      className="flex cursor-pointer items-center justify-between px-5 py-3.5 bg-rose-50/50 dark:bg-rose-950/20 border-b border-rose-100 dark:border-rose-900/30"
                     >
-                      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-                        <span className="inline-flex shrink-0 items-center rounded-md border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 px-2 py-0.5 text-xs font-semibold">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-text-primary">
                           Câu {detail.question_index + 1}
-                        </span>
-
-                        <span className="text-sm font-semibold text-text-primary truncate">
-                          {detail.question_text_en ||
-                            session.questions[detail.question_index]?.question_text_en}
                         </span>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-2">
-                        <button
-                          type="button"
-                          aria-label={isExpanded ? "Collapse" : "Expand"}
-                          className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary hover:bg-surface-subtle"
-                        >
-                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </button>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200">
+                          <XCircle size={13} strokeWidth={2.5} />
+                          <span>Chưa đúng</span>
+                        </span>
+                        <span className="text-text-secondary ml-1">
+                          {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Diff & Explanation */}
-                    {isExpanded && (
-                      <div className="border-t border-border/60 bg-surface-subtle/30 px-4 py-3.5 space-y-3 text-xs sm:text-sm">
-                        {/* Inline diff comparison */}
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-text-secondary">Đáp án của bạn:</span>
-                          <span className="line-through decoration-rose-400 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded font-medium">
-                            {detail.user_answer || "(Bỏ qua)"}
-                          </span>
-                          <span className="text-text-secondary">➔ Đáp án đúng:</span>
-                          <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded font-bold">
-                            {detail.correct_answer}
-                          </span>
-                        </div>
-
-                        {/* Explanation */}
-                        {(detail.explanation_vi || detail.explanation) && (
-                          <div className="rounded-lg border border-border/60 bg-surface p-3 text-text-secondary space-y-1">
-                            <span className="text-xs font-bold text-text-primary flex items-center gap-1">
-                              💡 Giải thích chi tiết:
-                            </span>
-                            <p className="leading-relaxed">
-                              {detail.explanation_vi || detail.explanation}
-                            </p>
-                          </div>
-                        )}
+                    {/* Card Body */}
+                    <div className="p-5 space-y-4">
+                      {/* Question Text + Speak Button */}
+                      <div className="flex items-start justify-between gap-3">
+                        <h4 className="text-sm sm:text-base font-bold text-text-primary leading-snug">
+                          {qText}
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => speakText(qText, qKey)}
+                          className="p-1.5 rounded-lg text-text-tertiary hover:text-primary hover:bg-surface-subtle transition-colors shrink-0 cursor-pointer"
+                          title="Nghe phát âm câu hỏi"
+                        >
+                          <Volume2 size={16} className={playingKey === qKey ? "text-primary animate-pulse" : ""} />
+                        </button>
                       </div>
-                    )}
-                  </div>
+
+                      {/* Answers Comparison - Old compact inline UI as requested */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1 text-xs sm:text-sm">
+                        <span className="text-text-secondary font-medium">Đáp án của bạn:</span>
+                        <span className="line-through decoration-rose-400 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded font-medium">
+                          {detail.user_answer || "(Bỏ qua)"}
+                        </span>
+                        <span className="text-text-secondary">➔</span>
+                        <span className="text-text-secondary font-medium">Đáp án đúng:</span>
+                        <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded font-bold">
+                          {detail.correct_answer}
+                        </span>
+                      </div>
+
+                      {/* Explanation Callout */}
+                      {(detail.explanation_vi || detail.explanation) && (
+                        <div className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 p-3.5 space-y-1">
+                          <span className="text-xs font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                            <BookOpen size={14} className="text-blue-600 dark:text-blue-400" />
+                            <span>Quy tắc ngữ pháp & Giải thích chi tiết:</span>
+                          </span>
+                          <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+                            {detail.explanation_vi || detail.explanation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </article>
                 );
               })}
             </div>
@@ -984,83 +1079,107 @@ function GrammarResultView({
           </div>
 
           {/* Questions List */}
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {filteredQuestions.map((detail) => {
               const isExpanded = expandedIndices.has(detail.question_index);
+              const qText = detail.question_text_en || session.questions[detail.question_index]?.question_text_en || "";
+              const qKey = `ga_${detail.question_index}`;
+
               return (
-                <div
+                <article
                   key={detail.question_index}
-                  className={`rounded-xl border transition-all duration-200 overflow-hidden ${
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden shadow-2xs ${
                     detail.is_correct
-                      ? "border-border/80 bg-surface"
-                      : "border-rose-200 dark:border-rose-900/50 bg-surface"
+                      ? "border-emerald-200/80 dark:border-emerald-900/40 bg-surface"
+                      : "border-rose-200/90 dark:border-rose-900/50 bg-surface"
                   }`}
                 >
                   <div
                     onClick={() => toggleExpand(detail.question_index)}
-                    className="flex cursor-pointer items-start justify-between gap-3 p-3.5 sm:items-center"
+                    className={`flex cursor-pointer items-center justify-between px-5 py-3.5 border-b ${
+                      detail.is_correct
+                        ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30"
+                        : "bg-rose-50/50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30"
+                    }`}
                   >
-                    <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                      <span
-                        className={`inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-semibold border ${
-                          detail.is_correct
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60"
-                            : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60"
-                        }`}
-                      >
-                        Câu {detail.question_index + 1}: {detail.is_correct ? "✓ Đúng" : "✗ Sai"}
-                      </span>
-                      <span className="text-sm font-semibold text-text-primary truncate">
-                        {detail.question_text_en ||
-                          session.questions[detail.question_index]?.question_text_en}
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-text-primary">
+                        Câu {detail.question_index + 1}
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      aria-label="Toggle details"
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-text-secondary hover:bg-surface-subtle"
-                    >
-                      {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {detail.is_correct ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
+                          <Check size={13} strokeWidth={3} />
+                          <span>Đúng</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200">
+                          <XCircle size={13} strokeWidth={2.5} />
+                          <span>Chưa đúng</span>
+                        </span>
+                      )}
+                      <span className="text-text-secondary ml-1">
+                        {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                      </span>
+                    </div>
                   </div>
 
-                  {isExpanded && (
-                    <div className="border-t border-border/60 bg-surface-subtle/30 px-4 py-3 text-xs sm:text-sm space-y-2.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-text-secondary">Đáp án của bạn:</span>
-                        <span
-                          className={`px-2 py-0.5 rounded font-medium ${
-                            detail.is_correct
-                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                              : "line-through text-rose-600 bg-rose-50 dark:bg-rose-950/40"
-                          }`}
-                        >
-                          {detail.user_answer || "(Bỏ qua)"}
-                        </span>
-                        {!detail.is_correct && (
-                          <>
-                            <span className="text-text-secondary">➔ Đáp án đúng:</span>
-                            <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded font-bold">
-                              {detail.correct_answer}
-                            </span>
-                          </>
-                        )}
-                      </div>
+                  {/* Card Body */}
+                  <div className="p-5 space-y-4">
+                    {/* Question Text + Speak Button */}
+                    <div className="flex items-start justify-between gap-3">
+                      <h4 className="text-sm sm:text-base font-bold text-text-primary leading-snug">
+                        {qText}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => speakText(qText, qKey)}
+                        className="p-1.5 rounded-lg text-text-tertiary hover:text-primary hover:bg-surface-subtle transition-colors shrink-0 cursor-pointer"
+                        title="Nghe phát âm câu hỏi"
+                      >
+                        <Volume2 size={16} className={playingKey === qKey ? "text-primary animate-pulse" : ""} />
+                      </button>
+                    </div>
 
-                      {(detail.explanation_vi || detail.explanation) && (
-                        <div className="rounded-lg border border-border/60 bg-surface p-2.5 text-text-secondary">
-                          <span className="text-xs font-bold text-text-primary block mb-0.5">
-                            💡 Giải thích:
+                    {/* Answers Comparison - Old compact inline UI as requested */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs sm:text-sm">
+                      <span className="text-text-secondary font-medium">Đáp án của bạn:</span>
+                      <span
+                        className={`px-2 py-0.5 rounded font-medium ${
+                          detail.is_correct
+                            ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
+                            : "line-through decoration-rose-400 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40"
+                        }`}
+                      >
+                        {detail.user_answer || "(Bỏ qua)"}
+                      </span>
+                      {!detail.is_correct && (
+                        <>
+                          <span className="text-text-secondary">➔</span>
+                          <span className="text-text-secondary font-medium">Đáp án đúng:</span>
+                          <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded font-bold">
+                            {detail.correct_answer}
                           </span>
-                          <p className="leading-relaxed">
-                            {detail.explanation_vi || detail.explanation}
-                          </p>
-                        </div>
+                        </>
                       )}
                     </div>
-                  )}
-                </div>
+
+                    {/* Explanation */}
+                    {(detail.explanation_vi || detail.explanation) && (
+                      <div className="rounded-xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 p-3.5 space-y-1">
+                        <span className="text-xs font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                          <BookOpen size={14} className="text-blue-600 dark:text-blue-400" />
+                          <span>Quy tắc ngữ pháp & Giải thích:</span>
+                        </span>
+                        <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+                          {detail.explanation_vi || detail.explanation}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </article>
               );
             })}
           </div>

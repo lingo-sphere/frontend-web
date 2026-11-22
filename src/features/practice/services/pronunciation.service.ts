@@ -157,9 +157,9 @@ export const pronunciationService = {
     }>(API_CONFIG.ENDPOINTS.PRACTICE.PRONUNCIATION_RECOMMENDATIONS(userId))
   },
 
-  async getPhonemeAnalytics(userId: string): Promise<PronunciationAnalyticsResponse> {
+  async getPhonemeAnalytics(userId: string, period = 'all'): Promise<PronunciationAnalyticsResponse> {
     return api.get<PronunciationAnalyticsResponse>(
-      API_CONFIG.ENDPOINTS.PRACTICE.PRONUNCIATION_ANALYTICS(userId)
+      API_CONFIG.ENDPOINTS.PRACTICE.PRONUNCIATION_ANALYTICS(userId), { period }
     )
   },
 

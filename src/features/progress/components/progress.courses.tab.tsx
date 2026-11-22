@@ -122,13 +122,13 @@ export function ProgressCoursesTab({
                 <div className="p-2.5 rounded-xl bg-surface-subtle/60 border border-border/50">
                   <span className="block text-[10px] text-text-tertiary">{isVietnamese ? 'Bài học:' : 'Lessons:'}</span>
                   <span className="font-bold text-text-primary">
-                    {c.completed_lessons_count}/{c.total_lessons_count > 0 ? c.total_lessons_count : 1} {isVietnamese ? 'bài' : 'lessons'}
+                    {c.completed_lessons_count}/{c.total_lessons_count > 0 ? c.total_lessons_count : '—'} {isVietnamese ? 'bài' : 'lessons'}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-surface-subtle/60 border border-border/50">
                   <span className="block text-[10px] text-text-tertiary">{isVietnamese ? 'Chương học:' : 'Modules:'}</span>
                   <span className="font-bold text-text-primary">
-                    {c.completed_modules_count}/{c.total_modules_count > 0 ? c.total_modules_count : 1} {isVietnamese ? 'chương' : 'modules'}
+                    {c.completed_modules_count}/{c.total_modules_count > 0 ? c.total_modules_count : '—'} {isVietnamese ? 'chương' : 'modules'}
                   </span>
                 </div>
               </div>

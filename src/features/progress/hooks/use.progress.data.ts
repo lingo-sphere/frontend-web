@@ -118,6 +118,23 @@ export function useProgressData(navigate: (path: string) => void) {
     if (!rawVocab) {
       return { learned_words: 0, review_due: 0, total_cards: 0 }
     }
+    if (Array.isArray(rawVocab)) {
+      const now = new Date()
+      let mastered = 0
+      let due = 0
+      for (const item of rawVocab) {
+        const it = item as Record<string, any>
+        const interval = Number(it.interval_days || it.interval || 0)
+        const isMastered = it.status === 'MASTERED' || interval >= 21
+        if (isMastered) mastered++
+        if (it.due_at && new Date(it.due_at) <= now) due++
+      }
+      return {
+        learned_words: mastered,
+        review_due: due,
+        total_cards: rawVocab.length,
+      }
+    }
     const raw = rawVocab as unknown as Record<string, unknown>
     return {
       learned_words: Number(raw.learned_words || raw.total_learned || 0),
@@ -172,9 +189,9 @@ export function useProgressData(navigate: (path: string) => void) {
       const category = catalogCourse?.category || 'TOEIC'
 
       const completedLessons = progress?.completed_lessons_count ?? 0
-      const totalLessons = progress?.total_lessons_count || catalogCourse?.total_lessons || 1
+      const totalLessons = progress?.total_lessons_count ?? catalogCourse?.total_lessons ?? 0
       const completedModules = progress?.completed_modules_count ?? 0
-      const totalModules = progress?.total_modules_count || 1
+      const totalModules = progress?.total_modules_count ?? 0
       const progressPercent = progress?.progress_percentage ?? (enrollment?.progress_percent ?? 0)
 
       return {
@@ -189,7 +206,7 @@ export function useProgressData(navigate: (path: string) => void) {
         completed_modules_count: completedModules,
         total_modules_count: totalModules,
         status: (progressPercent >= 100 || enrollment?.status === 'COMPLETED' || progress?.status === 'COMPLETED' || (totalLessons > 0 && completedLessons >= totalLessons)) ? 'COMPLETED' : (enrollment?.status || 'STUDYING'),
-        enrolled_at: enrollment?.enrolled_at || new Date().toISOString(),
+        enrolled_at: enrollment?.enrolled_at || '',
         final_test_passing_score: catalogCourse?.final_test_passing_score,
       }
     })
