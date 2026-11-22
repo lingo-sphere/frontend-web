@@ -3,7 +3,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent } from "@/components/card";
+import { GrammarTopicCard } from "@/features/practice/components/grammar.topic.card";
 import { Button } from "@/components/button";
 import { SectionHeading } from "@/features/dashboard/components/section.heading";
 import { Icon } from "@/components/icon.map";
@@ -21,9 +21,6 @@ import { handbookReturnUrl } from "@/features/vocabulary/lib/grammar-handbook";
 import { SpeakingGrammarSourceBanner } from "@/features/practice/components/speaking.grammar.source";
 import { speakingGrammarService } from "@/features/practice/services/speaking-grammar.service";
 
-// ============================================================================
-// MAIN PAGE COMPONENT
-// ============================================================================
 export default function GrammarAppPage() {
   const { i18n } = useTranslation();
   const isVietnamese = i18n.language === "vi";
@@ -160,7 +157,6 @@ export default function GrammarAppPage() {
     }
   };
 
-  // Current Level Meta
   const currentLevelSummary = levels.find((l) => l.level === selectedLevel);
 
   if (sessionId) {
@@ -206,7 +202,6 @@ export default function GrammarAppPage() {
 
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <SectionHeading
           eyebrow={isVietnamese ? "Luyện tập Ngữ Pháp" : "Grammar Practice"}
@@ -226,9 +221,6 @@ export default function GrammarAppPage() {
       </nav>
       {activeTab === "history" && <GrammarHistory navigate={navigateView} onOpenSession={navigateSession} />}
 
-      {/* ==================================================================== */}
-      {/* TAB 1: LUYỆN TẬP THEO CẤP ĐỘ (A1 - C1) */}
-      {/* ==================================================================== */}
       {activeTab === "practice" && (
         <div className="mt-8 space-y-6">
           {levelsQuery.error && <div role="alert">Không tải được tiến độ cấp độ. <Button onClick={() => void levelsQuery.refetch()}>Thử lại</Button></div>}
@@ -246,7 +238,6 @@ export default function GrammarAppPage() {
             {sessionsQuery.data.items.length > 5 && <Button size="sm" variant="ghost" aria-expanded={showAllPending} aria-controls="grammar-pending-sessions" onClick={() => setShowAllPending(value => !value)}>{showAllPending ? (isVietnamese ? "Thu gọn" : "Show fewer") : (isVietnamese ? `Xem thêm ${sessionsQuery.data.items.length - 5} phiên` : `Show ${sessionsQuery.data.items.length - 5} more sessions`)}</Button>}
             {showAllPending && sessionsQuery.data.total > sessionsQuery.data.items.length && <Button size="sm" variant="ghost" onClick={() => navigateView({ view: "history", history_status: "IN_PROGRESS", history_page: null })}>{isVietnamese ? `Xem tất cả ${sessionsQuery.data.total} phiên đang làm` : `View all ${sessionsQuery.data.total} unfinished sessions`}</Button>}
           </section>}
-          {/* 5 CEFR LEVEL SELECTOR */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
             {[
               { level: "A1", name: "Beginner", desc: "Nền tảng" },
@@ -311,7 +302,6 @@ export default function GrammarAppPage() {
             })}
           </div>
 
-          {/* Level Summary Header Banner */}
           {currentLevelSummary && (
             <div className="flex flex-col gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -350,7 +340,6 @@ export default function GrammarAppPage() {
             </div>
           )}
 
-          {/* Topic Cards Grid */}
           {topicsQuery.error ? (
             <div role="alert">
               Không tải được chủ điểm.{" "}
@@ -376,84 +365,20 @@ export default function GrammarAppPage() {
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {topics.map((topic) => {
-                const isStarting = startingSessionTopicId === topic._id;
-
-                return (
-                  <Card
-                    key={topic._id}
-                    className="flex flex-col justify-between border border-border bg-surface-subtle transition-all hover:border-primary/40 hover:shadow-md"
-                  >
-                    <CardContent className="p-5 space-y-4">
-                      {/* Meta badge */}
-                      <div className="flex items-center justify-between">
-                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
-                          {topic.category}
-                        </span>
-                        <span className="text-xs text-text-tertiary">
-                          {topic.total_questions} bài tập
-                        </span>
-                      </div>
-
-                      {/* Title & Description */}
-                      <div>
-                        <h4 className="text-base font-bold text-text-primary line-clamp-1">
-                          {topic.name_vi || topic.name_en}
-                        </h4>
-                        <p className="text-xs text-text-secondary line-clamp-1">
-                          {topic.name_en}
-                        </p>
-                      </div>
-
-                      {/* Formula pattern box */}
-                      {topic.structure_pattern && (
-                        <div className="rounded-lg bg-surface-elevated p-2.5 border border-border">
-                          <span className="text-[10px] font-semibold uppercase text-text-tertiary block">
-                            Cấu trúc:
-                          </span>
-                          <span className="font-mono text-xs font-bold text-primary block mt-0.5 line-clamp-1">
-                            {topic.structure_pattern}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Primary Button */}
-                      <Button
-                        variant="default"
-                        disabled={
-                          Boolean(startingSessionTopicId) ||
-                          !topic.is_unlocked ||
-                          topic.total_questions < 6 ||
-                          levelsQuery.isPending ||
-                          Boolean(levelsQuery.error)
-                        }
-                        onClick={() => handleStartPractice(topic)}
-                        className="w-full gap-2 mt-2 shadow-sm font-semibold"
-                      >
-                        <Icon name="play" size={14} />
-                        <span>
-                          {isStarting
-                            ? "Đang tạo phiên..."
-                            : !topic.is_unlocked
-                            ? "Chưa mở khóa"
-                            : topic.total_questions < 6
-                            ? "Chưa đủ 6 câu"
-                            : "Luyện tập ngay"}
-                        </span>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {topics.map((topic) => (
+                <GrammarTopicCard
+                  key={topic._id}
+                  topic={topic}
+                  isStarting={startingSessionTopicId === topic._id}
+                  onStartPractice={handleStartPractice}
+                />
+              ))}
             </div>
           )}
         </div>
       )}
 
-      {/* ==================================================================== */}
-      {/* TAB 2: TRA CỨU LÝ THUYẾT (HANDBOOK) */}
-      {/* ==================================================================== */}
       {activeTab === "handbook" && <GrammarHandbook vi={isVietnamese} />}
     </main>
   );

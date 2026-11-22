@@ -1,6 +1,9 @@
 // Trang giao diện khám phá và quản lý các bộ thẻ từ vựng LingoSphere.
 "use client";
 
+import { VocabularyResumeSessions } from "@/features/vocabulary/components/vocabulary.resume.sessions";
+import { VocabularyDeckCard } from "@/features/vocabulary/components/vocabulary.deck.card";
+import { VocabularyMyDeckCard } from "@/features/vocabulary/components/vocabulary.my-deck.card";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@/lib/navigation";
 import { useTranslation } from "react-i18next";
@@ -202,7 +205,6 @@ export default function VocabularyAppPage() {
     }
   };
 
-  // Số từ đã hoàn thành hôm nay: Lấy từ Redis counter thật (0 nếu chưa học từ nào)
   const completedToday = dailyProgress?.words_reviewed_today ?? 0;
   const isGoalReached = completedToday >= dailyGoal;
   const overflowWords = Math.max(0, completedToday - dailyGoal);
@@ -211,7 +213,6 @@ export default function VocabularyAppPage() {
     100
   );
 
-  // Thời gian học Flashcard thực tế trong ngày hôm nay: 100% Active Time từ Redis Counter
   const activeStudySeconds = masteryStats.activeStudySeconds || 0;
   const activeStudyMinutes = Math.floor(activeStudySeconds / 60);
   const activeStudyDisplay =
@@ -223,8 +224,6 @@ export default function VocabularyAppPage() {
       ? "0 phút"
       : "0 min";
 
-  // 3 cột phân bố trạng thái ghi nhớ theo thuật toán SRS: Mới học - Đang nhớ - Thành thạo
-  // (Phần "Cần ôn" được hiển thị riêng thành banner Spaced Repetition SRS nhắc nhở)
   const srsStageColumns = [
     {
       key: "new",
@@ -296,7 +295,6 @@ export default function VocabularyAppPage() {
           </div>
         </div>
 
-        {/* NHẮC NHỞ SPACED REPETITION (SRS) TỪ VỰNG ĐẾN HẠN (RIÊNG BIỆT) */}
         {masteryStats.dueCount > 0 && (
           <div className="mt-5 relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-indigo-500/10 p-4 sm:p-5 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -351,13 +349,10 @@ export default function VocabularyAppPage() {
           </div>
         )}
 
-        {/* SECTION 1: TODAY'S MISSION & SRS MEMORY VAULT */}
         <section className="mt-6 grid gap-5 lg:grid-cols-2">
-          {/* CARD 1: MỤC TIÊU HỌC HÔM NAY (ACTIVE STUDY TIME + PROGRESS + ACTION) */}
           <Card className="dashboard-card border-border/80 shadow-sm flex flex-col justify-between">
             <CardContent className="flex h-full flex-col justify-between p-5 sm:p-6">
               <div>
-                {/* Header card với nút đổi mục tiêu động */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -390,7 +385,6 @@ export default function VocabularyAppPage() {
                       </span>
                     </button>
 
-                    {/* Popover setup mục tiêu động (5, 10, 15, tối đa 20 từ) */}
                     {isEditingGoal && (
                       <div className="absolute right-0 top-9 z-20 w-56 rounded-2xl border border-border bg-surface p-3 shadow-xl">
                         <div className="mb-2 flex items-center justify-between">
@@ -431,7 +425,6 @@ export default function VocabularyAppPage() {
                   </div>
                 </div>
 
-                {/* Progress Bar & Trạng thái hoàn thành */}
                 <div className="mt-4 rounded-2xl bg-surface-subtle p-3.5">
                   <div className="flex items-center justify-between text-[13px]">
                     <span className="font-semibold text-text-secondary">
@@ -472,7 +465,6 @@ export default function VocabularyAppPage() {
                   )}
                 </div>
 
-                {/* 3 SUB-METRICS: Đã học hôm nay, Độ chính xác, Thời gian học thực tế */}
                 <div className="mt-4 grid grid-cols-3 gap-2.5">
                   <div className="flex flex-col justify-between rounded-xl border border-border/70 bg-surface p-2.5 text-center">
                     <span className="text-[10px] font-medium text-text-tertiary flex items-center justify-center gap-1">
@@ -537,7 +529,6 @@ export default function VocabularyAppPage() {
                 </div>
               </div>
 
-              {/* ACTION BUTTONS */}
               <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-4">
                 <Button
                   className="gap-2 bg-primary hover:bg-primary-hover shadow-sm font-semibold"
@@ -574,11 +565,9 @@ export default function VocabularyAppPage() {
             </CardContent>
           </Card>
 
-          {/* CARD 2: KHO TỪ VỰNG & SRS (FIXED-HEIGHT BAR CHART + DYNAMIC ACTION BOX) */}
           <Card className="dashboard-card border-border/80 shadow-sm flex flex-col justify-between">
             <CardContent className="flex h-full flex-col justify-between p-5 sm:p-6">
               <div>
-                {/* Header card: Tổng từ vựng tách biệt khỏi các trạng thái */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-info/10 text-info">
@@ -598,7 +587,6 @@ export default function VocabularyAppPage() {
                     </div>
                   </div>
 
-                  {/* TỔNG TỪ VỰNG: ĐƯA LÊN BADGE RIÊNG BIỆT TRÊN CÙNG */}
                   <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
                     <Layers3 size={12} />
                     <span>
@@ -608,7 +596,6 @@ export default function VocabularyAppPage() {
                   </div>
                 </div>
 
-                {/* BIỂU ĐỒ CỘT 3 TRẠNG THÁI SRS VỚI CHIỀU CAO CỐ ĐỊNH (MỚI HỌC - ĐANG NHỚ - THÀNH THẠO) */}
                 <div className="mt-4 pt-1">
                   <div className="mb-2 flex items-center justify-between text-[11px] text-text-tertiary">
                     <span className="font-semibold text-text-secondary">
@@ -636,7 +623,6 @@ export default function VocabularyAppPage() {
                           key={col.key}
                           className="flex flex-col items-center justify-between rounded-2xl border border-border/70 bg-surface p-2 sm:p-2.5 transition hover:border-primary/40"
                         >
-                          {/* Số lượng cố định h-6 */}
                           <div className="flex h-6 items-center justify-center">
                             <span
                               className={`text-[15px] font-extrabold ${col.textColor}`}
@@ -645,7 +631,6 @@ export default function VocabularyAppPage() {
                             </span>
                           </div>
 
-                          {/* Khung track cố định h-20 (80px), thanh fill tô phẳng bám sát từ chân đáy lên */}
                           <div className="my-2 flex h-20 w-8 items-end justify-center rounded-xl bg-surface-subtle border border-border/50 overflow-hidden">
                             {col.count > 0 ? (
                               <div
@@ -655,7 +640,6 @@ export default function VocabularyAppPage() {
                             ) : null}
                           </div>
 
-                          {/* Nhãn cố định */}
                           <div className="text-center">
                             <span className="block text-[11px] font-bold text-text-primary">
                               {col.label}
@@ -671,7 +655,6 @@ export default function VocabularyAppPage() {
                 </div>
               </div>
 
-              {/* Dải thông tin bổ trợ: Tổng lượt ôn tập tích lũy */}
               <div className="mt-4 flex items-center justify-between rounded-xl bg-surface-subtle px-3.5 py-2 text-[11px] text-text-secondary border border-border/50">
                 <span className="flex items-center gap-1.5">
                   <RotateCcw size={13} className="text-info" />
@@ -690,7 +673,6 @@ export default function VocabularyAppPage() {
           </Card>
         </section>
 
-        {/* BANNER BỰ: BỘ ÔN LẠI TỪ SAI (WRONG WORDS VAULT BANNER) */}
         <div className="mt-6 relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-yellow-500/10 p-5 sm:p-6 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="flex items-start gap-4">
@@ -760,7 +742,6 @@ export default function VocabularyAppPage() {
           </div>
         </div>
 
-        {/* SECTION 2: BỘ THẺ CỦA TÔI (MY DECKS) */}
         <section className="mt-10">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -787,248 +768,23 @@ export default function VocabularyAppPage() {
           </div>
 
           {myDecks.length > 0 ? (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {myDecks.map((deck: Deck, idx) => {
-                const targetBand = deck.settings?.target_band;
-                const examPart = deck.settings?.exam_part;
-                const isPublic = deck.visibility?.toUpperCase() === "PUBLIC";
-                const isUserDeck = deck.creator_type === "USER";
-                const currentUserId =
-                  (currentUser as any)?.user_id || (currentUser as any)?.id;
-                const isOwnDeck =
-                  isUserDeck &&
-                  Boolean(currentUserId) &&
-                  ((deck as any).creator_id === currentUserId ||
-                    (deck as any).user_id === currentUserId);
-                const isSystemDeck =
-                  deck.creator_type === "SYSTEM" || !deck.creator_type;
-                const progressPercent =
-                  typeof (deck as any).progress_percent === "number"
-                    ? (deck as any).progress_percent
-                    : 0;
-
-                return (
-                  <Card
-                    key={deck._id || idx}
-                    className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                    onClick={() => handleDeckClick(deck)}
-                  >
-                    <div
-                      className="relative flex h-20 w-full items-center justify-center"
-                      style={{
-                        backgroundColor: [
-                          "#00b894",
-                          "#6c5ce7",
-                          "#0984e3",
-                          "#fdcb6e",
-                        ][idx % 4],
-                      }}
-                    >
-                      <Layers3 className="text-white/60" size={30} />
-                      <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1">
-                        {targetBand && (
-                          <span className="rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
-                            Band {targetBand}
-                          </span>
-                        )}
-                        {examPart && (
-                          <span className="rounded-md bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
-                            {examPart.replace("_", " ")}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* PHÂN LOẠI: NÚT CHỌN CÔNG KHAI (NẾU CỦA MÌNH) HOẶC BADGE HỆ THỐNG / CỘNG ĐỒNG */}
-                      <div className="absolute right-2.5 top-2.5 flex items-center gap-1">
-                        {isOwnDeck ? (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleVisibility(deck);
-                            }}
-                            title={
-                              isVietnamese
-                                ? isPublic
-                                  ? "Đang Công khai - Bấm để chuyển sang Riêng tư"
-                                  : "Đang Riêng tư - Bấm để chuyển sang Công khai"
-                                : "Toggle Public / Private"
-                            }
-                            className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold backdrop-blur-md transition shadow-sm ${
-                              isPublic
-                                ? "bg-emerald-600/90 text-white hover:bg-emerald-600 ring-1 ring-white/30"
-                                : "bg-black/60 text-white hover:bg-black/80 ring-1 ring-white/20"
-                            }`}
-                          >
-                            {isPublic ? (
-                              <Globe size={11} />
-                            ) : (
-                              <Lock size={11} />
-                            )}
-                            <span>
-                              {isPublic
-                                ? isVietnamese
-                                  ? "Công khai"
-                                  : "Public"
-                                : isVietnamese
-                                ? "Riêng tư"
-                                : "Private"}
-                            </span>
-                          </button>
-                        ) : isSystemDeck ? (
-                          <span className="flex items-center gap-1 rounded-md bg-black/50 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/20">
-                            <GraduationCap
-                              size={11}
-                              className="text-amber-400"
-                            />
-                            <span>
-                              {isVietnamese ? "Hệ thống" : "Official"}
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1 rounded-md bg-info/70 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm ring-1 ring-white/20">
-                            <Users size={11} />
-                            <span>
-                              {isVietnamese ? "Cộng đồng" : "Community"}
-                            </span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <CardContent className="p-3.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="text-[14px] font-semibold text-text-primary line-clamp-1">
-                          {isVietnamese && deck.name_vi
-                            ? deck.name_vi
-                            : deck.name || deck.title}
-                        </h4>
-                      </div>
-
-                      {/* NGUỒN GỐC & TÁC GIẢ BỘ THẺ */}
-                      <div className="mt-1 flex items-center gap-1.5 text-[11px]">
-                        {isSystemDeck ? (
-                          <span className="flex items-center gap-1 text-text-tertiary">
-                            <Sparkles size={11} className="text-amber-500" />
-                            <span>
-                              {isVietnamese
-                                ? "Bộ thẻ TOEIC chuẩn hóa"
-                                : "Standard TOEIC Pack"}
-                            </span>
-                          </span>
-                        ) : isOwnDeck ? (
-                          <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                            {isVietnamese
-                              ? "• Bộ thẻ do bạn tạo"
-                              : "• Created by you"}
-                          </span>
-                        ) : (
-                          <span className="text-text-secondary line-clamp-1">
-                            {isVietnamese ? "• Tác giả: " : "• By: "}
-                            {(deck as any).creator_name ||
-                              (deck as any).author ||
-                              (isVietnamese
-                                ? "Học viên chia sẻ"
-                                : "Community Learner")}
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="mt-1.5 text-[12px] text-text-secondary line-clamp-2">
-                        {isVietnamese && deck.description_vi
-                          ? deck.description_vi
-                          : deck.description ||
-                            deck.description_vi ||
-                            (isVietnamese
-                              ? "Bộ thẻ đang học"
-                              : "Enrolled deck")}
-                      </p>
-
-                      {/* THANH TIẾN ĐỘ HỌC TẬP (NẾU ĐÃ BẮT ĐẦU HỌC) */}
-                      {progressPercent > 0 && (
-                        <div className="mt-2.5 space-y-1">
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-text-tertiary">
-                              {isVietnamese ? "Tiến độ học" : "Progress"}
-                            </span>
-                            <span className="font-semibold text-primary">
-                              {progressPercent}%
-                            </span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-subtle">
-                            <div
-                              className="h-full rounded-full bg-primary transition-all"
-                              style={{
-                                width: `${Math.max(5, progressPercent)}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2 text-[12px] text-text-secondary">
-                        <span className="font-medium text-text-primary">
-                          {deck.card_count ?? 0} {isVietnamese ? "từ" : "words"}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            title={
-                              isVietnamese
-                                ? "Sao chép liên kết bộ thẻ"
-                                : "Copy share link"
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopyShareLink(deck);
-                            }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition hover:bg-surface-hover hover:text-primary hover:border-primary/50"
-                          >
-                            <Share2 size={13} />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={
-                              checkingDeleteDeckId === (deck._id || deck.id)
-                            }
-                            title={
-                              isOwnDeck
-                                ? isVietnamese
-                                  ? "Xóa bộ thẻ"
-                                  : "Delete Deck"
-                                : isVietnamese
-                                ? "Xóa khỏi Bộ thẻ của tôi"
-                                : "Remove from My Decks"
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRequestDeleteDeck(deck);
-                            }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 disabled:opacity-50"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                          <Button
-                            size="sm"
-                            className="bg-primary hover:bg-primary-hover"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeckClick(deck);
-                            }}
-                          >
-                            {progressPercent > 0
-                              ? isVietnamese
-                                ? "Học tiếp"
-                                : "Continue"
-                              : isVietnamese
-                              ? "Luyện tập"
-                              : "Practice"}
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {myDecks.map((deck: Deck, idx) => (
+                <VocabularyMyDeckCard
+                  key={deck._id || idx}
+                  deck={deck}
+                  index={idx}
+                  currentUser={currentUser}
+                  isVietnamese={isVietnamese}
+                  isDeleting={
+                    checkingDeleteDeckId === (deck._id || deck.id) && isDeleting
+                  }
+                  onDeckClick={handleDeckClick}
+                  onToggleVisibility={handleToggleVisibility}
+                  onCopyShareLink={handleCopyShareLink}
+                  onRequestDelete={handleRequestDeleteDeck}
+                />
+              ))}
             </div>
           ) : (
             <div className="mt-4 rounded-2xl border border-dashed border-border/80 bg-surface p-6 text-center">
@@ -1049,7 +805,6 @@ export default function VocabularyAppPage() {
           )}
         </section>
 
-        {/* SECTION 3: BỘ THẺ CỘNG ĐỒNG (USER PUBLIC DECKS) */}
         <section id="community-decks-section" className="mt-10 scroll-mt-6">
           <Card className="overflow-hidden border-border/80 bg-gradient-to-br from-info/5 via-surface to-primary/5 shadow-sm">
             <CardContent className="p-6">
@@ -1096,7 +851,6 @@ export default function VocabularyAppPage() {
                 </div>
               </div>
 
-              {/* Danh sách xem nhanh 3 bộ thẻ cộng đồng mới nhất hoặc thông báo nếu chưa có */}
               {communityDecks.length > 0 ? (
                 <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {communityDecks.slice(0, 3).map((deck) => {
@@ -1208,7 +962,6 @@ export default function VocabularyAppPage() {
           </Card>
         </section>
 
-        {/* SECTION 4: DANH SÁCH BỘ THẺ VỚI BỘ LỌC ĐA CHIỀU: TARGET BAND, CHỦ ĐỀ & DẠNG BÀI */}
         <section className="mt-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -1245,9 +998,7 @@ export default function VocabularyAppPage() {
             </div>
           </div>
 
-          {/* KHUNG BỘ LỌC ĐA CHIỀU */}
           <div className="mt-4 space-y-3 rounded-2xl border border-border/80 bg-surface/80 p-4 shadow-sm backdrop-blur-sm">
-            {/* HÀNG 1: LỌC THEO TARGET BAND */}
             <div>
               <div className="mb-2 flex items-center gap-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
@@ -1278,7 +1029,6 @@ export default function VocabularyAppPage() {
               </div>
             </div>
 
-            {/* HÀNG 2: LỌC THEO CHỦ ĐỀ TỪ VỰNG (TOPIC) */}
             <div className="border-t border-border/60 pt-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
@@ -1351,7 +1101,6 @@ export default function VocabularyAppPage() {
               </div>
             </div>
 
-            {/* HÀNG 3: LỌC NHANH THEO DẠNG BÀI THI (EXAM PART) */}
             <div className="border-t border-border/60 pt-3">
               <div className="mb-2 flex items-center gap-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
@@ -1395,128 +1144,25 @@ export default function VocabularyAppPage() {
             </div>
           ) : filteredPacks.length > 0 ? (
             <>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {paginatedPacks.map((pack: Deck, idx) => {
                   const packTopic = pack.topic_id
                     ? topicMap.get(String(pack.topic_id))
                     : null;
-                  const targetBand = pack.settings?.target_band;
-                  const examPart = pack.settings?.exam_part;
-
                   const isEnrolled = enrolledDeckIdSet.has(
                     String(pack._id || pack.id)
                   );
 
                   return (
-                    <Card
+                    <VocabularyDeckCard
                       key={pack._id || idx}
-                      className="dashboard-card cursor-pointer overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
-                      onClick={() => handleDeckClick(pack)}
-                    >
-                      <div
-                        className="relative flex h-24 w-full items-center justify-center"
-                        style={{
-                          backgroundColor: [
-                            "#6b5ce7",
-                            "#00b894",
-                            "#0984e3",
-                            "#fdcb6e",
-                          ][idx % 4],
-                        }}
-                      >
-                        <Layers3 className="text-white/60" size={36} />
-                        <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1">
-                          {targetBand && (
-                            <span className="rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
-                              Band {targetBand}
-                            </span>
-                          )}
-                          {examPart && (
-                            <span className="rounded-md bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
-                              {examPart.replace("_", " ")}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* NHÃN ĐÃ LƯU / ĐANG TRONG BỘ THẺ CỦA TÔI */}
-                        <div className="absolute right-2.5 top-2.5 flex items-center gap-1">
-                          {isEnrolled ? (
-                            <span className="flex items-center gap-1 rounded-md bg-emerald-600/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm shadow-sm ring-1 ring-white/30">
-                              <Check size={11} />
-                              <span>
-                                {isVietnamese ? "Đang học" : "Enrolled"}
-                              </span>
-                            </span>
-                          ) : (
-                            <span className="rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm flex items-center gap-1">
-                              <GraduationCap
-                                size={11}
-                                className="text-amber-400"
-                              />
-                              <span>Official</span>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <CardContent className="p-3.5">
-                        {packTopic && (
-                          <div className="mb-1.5">
-                            <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                              {isVietnamese
-                                ? packTopic.name_vi || packTopic.name_en
-                                : packTopic.name_en}
-                            </span>
-                          </div>
-                        )}
-                        <h4 className="text-[14px] font-semibold text-text-primary line-clamp-1">
-                          {isVietnamese && pack.name_vi
-                            ? pack.name_vi
-                            : pack.name || pack.title}
-                        </h4>
-                        <p className="mt-1 text-[12px] text-text-secondary line-clamp-2">
-                          {isVietnamese && pack.description_vi
-                            ? pack.description_vi
-                            : pack.description || pack.description_vi}
-                        </p>
-                        <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-2 text-[12px] text-text-secondary">
-                          <span className="font-medium text-text-primary">
-                            {pack.card_count ?? 0}{" "}
-                            {isVietnamese ? "từ" : "words"}
-                          </span>
-                          <span className="flex items-center gap-1 text-[12px] text-text-secondary">
-                            <Users size={12} />
-                            {(pack.total_users || 0).toLocaleString()}
-                          </span>
-                        </div>
-                        <Button
-                          size="sm"
-                          className={`mt-3 w-full font-medium ${
-                            isEnrolled
-                              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                              : "bg-primary hover:bg-primary-hover"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeckClick(pack);
-                          }}
-                        >
-                          {isEnrolled ? (
-                            <span className="flex items-center justify-center gap-1.5">
-                              <Check size={14} />
-                              <span>
-                                {isVietnamese
-                                  ? "Học tiếp (Bộ thẻ của tôi)"
-                                  : "Continue (In My Decks)"}
-                              </span>
-                            </span>
-                          ) : isVietnamese ? (
-                            "Bắt đầu học"
-                          ) : (
-                            "Start Learning"
-                          )}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                      pack={pack}
+                      index={idx}
+                      packTopic={packTopic}
+                      isEnrolled={isEnrolled}
+                      isVietnamese={isVietnamese}
+                      onDeckClick={handleDeckClick}
+                    />
                   );
                 })}
               </div>
@@ -1557,7 +1203,6 @@ export default function VocabularyAppPage() {
         </section>
       </main>
 
-      {/* MODAL CẢNH BÁO XÁC NHẬN CHUYỂN SANG RIÊNG TƯ KHI CÓ NGƯỜI ĐANG LƯU */}
       <Modal
         open={Boolean(pendingPrivacyDeck)}
         onClose={cancelSwitchToPrivate}
@@ -1631,7 +1276,6 @@ export default function VocabularyAppPage() {
         </div>
       </Modal>
 
-      {/* MODAL XÁC NHẬN XÓA BỘ THẺ */}
       <Modal
         open={Boolean(pendingDeleteDeck)}
         onClose={() => {
@@ -1672,7 +1316,6 @@ export default function VocabularyAppPage() {
                 ? deck.name_vi
                 : deck.name || (deck as any).title;
 
-            // Ngữ cảnh 1: Bộ thẻ do mình tạo VÀ đang có học viên khác lưu học
             if (isOwn && saversCount > 0) {
               return (
                 <div className="p-1">
@@ -1749,7 +1392,6 @@ export default function VocabularyAppPage() {
               );
             }
 
-            // Ngữ cảnh 2: Bộ thẻ do mình tạo NHƯNG chưa có ai khác lưu (xóa vĩnh viễn)
             if (isOwn) {
               return (
                 <div className="p-1">
@@ -1813,7 +1455,6 @@ export default function VocabularyAppPage() {
               );
             }
 
-            // Ngữ cảnh 3: Bộ thẻ hệ thống hoặc bộ thẻ người khác lưu về (Gỡ khỏi danh sách học)
             return (
               <div className="p-1">
                 <div className="flex items-start gap-3.5">
