@@ -14,6 +14,7 @@ export const TREND_VN_MAP: Record<string, string> = {
   improving: "Tiến bộ ↗",
   declining: "Cần chú ý ↘",
   stable: "Ổn định →",
+  insufficient_data: "Chưa đủ dữ liệu",
   accelerating: "Bứt phá ⚡",
 };
 
@@ -53,10 +54,20 @@ export const EXERCISE_AND_DIMENSION_MAP: Record<string, string> = {
   task_constraints: "Yêu cầu nhiệm vụ",
 
   // Listening
+  part1: "Mô tả tranh (Part 1)",
   part_1: "Mô tả tranh (Part 1)",
+  picture_description: "Mô tả tranh (Part 1)",
+  part2: "Hỏi & Đáp (Part 2)",
   part_2: "Hỏi & Đáp (Part 2)",
+  question_response: "Hỏi & Đáp (Part 2)",
+  part3: "Hội thoại ngắn (Part 3)",
   part_3: "Hội thoại ngắn (Part 3)",
+  short_conversation: "Hội thoại ngắn (Part 3)",
+  conversations: "Hội thoại ngắn (Part 3)",
+  part4: "Bài nói ngắn (Part 4)",
   part_4: "Bài nói ngắn (Part 4)",
+  short_talk: "Bài nói ngắn (Part 4)",
+  talks: "Bài nói ngắn (Part 4)",
   listening_part_1: "Mô tả tranh (Part 1)",
   listening_part_2: "Hỏi & Đáp (Part 2)",
   listening_part_3: "Hội thoại ngắn (Part 3)",
@@ -65,6 +76,7 @@ export const EXERCISE_AND_DIMENSION_MAP: Record<string, string> = {
   dictation_blank: "Điền từ bài nghe",
   dictation_blanks: "Điền từ bài nghe",
   dictation_sentence: "Chép chính tả cả câu",
+  listening_dictation: "Chép chính tả",
   listening_comprehension: "Nghe hiểu hội thoại",
 
   // Speaking
@@ -132,9 +144,9 @@ export function formatSkillName(skill?: string): string {
 }
 
 export function formatTrendName(trend?: string): string {
-  if (!trend) return "Ổn định →";
+  if (!trend) return "Chưa đủ dữ liệu";
   const clean = trend.trim().toLowerCase();
-  return TREND_VN_MAP[clean] || "Ổn định →";
+  return TREND_VN_MAP[clean] || "Chưa đủ dữ liệu";
 }
 
 export function formatDimensionName(key?: string): string {

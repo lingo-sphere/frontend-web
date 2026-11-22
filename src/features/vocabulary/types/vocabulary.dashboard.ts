@@ -55,6 +55,9 @@ export interface DashboardWeakWord {
 }
 
 export interface VocabularyDashboardOverview {
+  selected_period?: string;
+  period_summary?: { attempts: number; tested: number; correct: number; accuracy: number | null };
+  activity_period?: DailyActivityItem[];
   summary: DashboardSummary;
   memory_strength: MemoryStrengthBreakdown;
   cefr_breakdown: Record<string, CefrLevelData>;

@@ -13,7 +13,7 @@ export type { UserCourseProgressItem }
 export type TimePeriod = '7d' | '30d' | '90d' | 'all'
 export type SkillType = 'grammar' | 'reading' | 'listening' | 'speaking' | 'writing' | 'pronunciation'
 export type EvidenceLevel = 'LOW' | 'MEDIUM' | 'HIGH'
-export type TrendDirection = 'IMPROVING' | 'STABLE' | 'DECLINING'
+export type TrendDirection = 'IMPROVING' | 'STABLE' | 'DECLINING' | 'INSUFFICIENT_DATA'
 
 export interface EvidenceWeight {
   total_attempts: number
@@ -27,6 +27,8 @@ export interface EvidenceWeight {
 }
 
 export interface SkillStats {
+  dictation_words?: number
+  graded_attempts?: number
   skill: SkillType
   accuracy: number
   total_attempts: number
@@ -430,6 +432,7 @@ export interface TimeGrowth {
   activity_growth_pct: number
   study_velocity: number
   overall_delta_accuracy: number
+  has_accuracy_comparison?: boolean
   trend_direction: 'UP' | 'STEADY' | 'DOWN'
   trend_label: string
   skills_delta: {

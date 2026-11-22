@@ -56,6 +56,7 @@ export function MistakeVaultCard({
   const isDueToday = new Date(mistake.next_due_at).getTime() <= Date.now()
   const displayTopic = mistake.topic_name_vi || mistake.topic_tags[0] || 'Tổng hợp'
   const hasOptions = Array.isArray(mistake.options) && mistake.options.length > 0
+  const listeningReview = mistake.question_data?.listening_review
 
   const userOptionIndex = hasOptions
     ? mistake.options.findIndex((opt, idx) => isMatchingAnswer(opt, idx, mistake.user_answer))
@@ -239,7 +240,16 @@ export function MistakeVaultCard({
 
         {showAnswers && (
           <div className="space-y-2.5 pt-1 border-t border-border/40 animate-in fade-in duration-150">
-            {hasOptions ? (
+            {listeningReview ? (
+              <div className="space-y-2 text-xs">
+                {(listeningReview.questions || []).map((q: { question_text: string; correct_answer: string; user_answer?: string; was_incorrect?: boolean }, index: number) => (
+                  <div key={index} className="rounded-lg border border-border p-2">
+                    <p>{q.question_text} {q.was_incorrect && <span className="text-rose-600">· Đã sai</span>}</p>
+                    <p className="text-emerald-700">Đáp án: {q.correct_answer}</p>
+                  </div>
+                ))}
+              </div>
+            ) : hasOptions ? (
               <div className="space-y-1.5">
                 <div className="grid grid-cols-1 gap-1.5">
                   {mistake.options.map((opt, idx) => {

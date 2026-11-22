@@ -326,29 +326,77 @@ export function SpeakingResult({
       <PracticeReviewPanel state={reviewState} />
       <WritingTaskAssessmentView skill="SPEAKING" assessment={reviewState.query.data?.review?.teacher_grading?.task_assessment || evaluation?.task_assessment} policy={reviewState.query.data?.review?.teacher_grading?.score_policy || evaluation?.score_policy} source={reviewState.query.data?.review?.teacher_grading ? (isVietnamese ? 'Đánh giá giáo viên hiện tại' : 'Current teacher assessment') : (isVietnamese ? 'Đánh giá AI' : 'AI assessment')} />
 
-      {/* Hero Score & Overview Card (Promax, đồng bộ với Writing) */}
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
+      {/* Hero Score & Overview Card (Lingo-sphere Design System) */}
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-surface to-surface-subtle/40 p-5 sm:p-6 shadow-xs">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          {/* Left: Score Badge & Title */}
-          <div className="flex items-center gap-4 sm:gap-5">
-            <div className="relative flex h-22 w-22 sm:h-24 sm:w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-surface-subtle p-2 border border-primary/20 shadow-xs">
-              <span className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${getScoreColor(overallScore100)}`}>
-                {Math.round(overallScore100)}
-              </span>
-              <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
-                / 100
-              </span>
+          {/* Left: Circular SVG Gauge & Exercise Metadata */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+            {/* SVG Circular Score Ring */}
+            <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 96 96">
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="40"
+                  className="stroke-border/70 fill-none"
+                  strokeWidth="7"
+                />
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="40"
+                  className={`${
+                    overallScore100 >= 80
+                      ? 'stroke-emerald-500'
+                      : overallScore100 >= 60
+                      ? 'stroke-blue-500'
+                      : 'stroke-amber-500'
+                  } fill-none transition-all duration-1000 ease-out`}
+                  strokeWidth="7"
+                  strokeDasharray={2 * Math.PI * 40}
+                  strokeDashoffset={
+                    2 * Math.PI * 40 * (1 - Math.min(100, Math.max(0, overallScore100)) / 100)
+                  }
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-2xl sm:text-3xl font-black tracking-tight ${getScoreColor(overallScore100)}`}>
+                  {Math.round(overallScore100)}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
+                  / 100
+                </span>
+              </div>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                  <Mic size={13} />
                   {exercise.exercise_type ? exercise.exercise_type.replace(/_/g, ' ') : 'Speaking'}
                 </span>
                 {exercise.cefr_level && (
                   <Badge variant="secondary" className="text-[11px] font-medium">
                     CEFR {exercise.cefr_level}
                   </Badge>
+                )}
+                {/* Dynamic Motivational Badge */}
+                {overallScore100 >= 80 ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 size={12} className="text-emerald-500" />
+                    {isVietnamese ? 'Xuất sắc' : 'Excellent'}
+                  </span>
+                ) : overallScore100 >= 60 ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                    <Sparkles size={12} className="text-blue-500" />
+                    {isVietnamese ? 'Làm tốt lắm' : 'Good Job'}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                    <Target size={12} className="text-amber-500" />
+                    {isVietnamese ? 'Cần luyện thêm' : 'Keep Practicing'}
+                  </span>
                 )}
                 {evaluation?.raw_score !== undefined && evaluation.max_score !== undefined && (
                   <span className="text-xs text-text-secondary">
@@ -357,40 +405,33 @@ export function SpeakingResult({
                 )}
               </div>
 
-              <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate">
+              <h1 className="text-lg sm:text-xl font-extrabold text-text-primary">
                 {isVietnamese && exercise.title_vi ? exercise.title_vi : exercise.title}
               </h1>
 
               {isVietnamese && exercise.title_vi && (
-                <p className="text-xs text-text-secondary truncate">{exercise.title}</p>
+                <p className="text-xs text-text-secondary">{exercise.title}</p>
               )}
 
-              {/* Quick Metrics Chips */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-text-secondary">
-                {submission.recording_duration_seconds !== undefined && submission.recording_duration_seconds > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-0.5">
-                    <Clock size={12} className="text-primary" />
-                    <strong className="text-text-primary">
-                      {formatTime(submission.recording_duration_seconds)}
-                    </strong>
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-0.5">
-                  <Mic size={12} className="text-primary" />
-                  <strong className="text-text-primary">{scores.length}</strong> {isVietnamese ? 'kỹ năng' : 'subskills'}
-                </span>
-                {learningIssuesCount > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-0.5">
-                    <Sparkles size={12} className="text-primary" />
-                    <strong className="text-text-primary">{learningIssuesCount}</strong> {isVietnamese ? 'góp ý cải thiện' : 'targets'}
-                  </span>
-                )}
-              </div>
+              {/* Motivational Quote */}
+              <p className="text-xs italic text-text-secondary">
+                {overallScore100 >= 80
+                  ? isVietnamese
+                    ? '“Phát âm chuẩn xác, ngữ điệu tự nhiên và độ trôi chảy rất ấn tượng!”'
+                    : '“Accurate pronunciation, natural intonation, and great fluency!”'
+                  : overallScore100 >= 60
+                  ? isVietnamese
+                    ? '“Phản xạ và diễn đạt khá tốt. Hãy chú ý nhấn trọng âm và nối âm để tự nhiên hơn!”'
+                    : '“Good response and delivery. Pay attention to word stress and linking sounds!”'
+                  : isVietnamese
+                  ? '“Hãy nghe lại bản ghi âm mẫu và luyện tập lại từng âm tiết nhé!”'
+                  : '“Listen to the native model and practice the target phonemes again!”'}
+              </p>
             </div>
           </div>
 
           {/* Right: Quick Action Buttons */}
-          <div className="flex items-center gap-2.5 sm:self-center">
+          <div className="flex items-center gap-2.5 sm:self-center shrink-0">
             <Button
               variant="outline"
               onClick={onPracticeAgain}
@@ -409,19 +450,77 @@ export function SpeakingResult({
           </div>
         </div>
 
-        {/* Compact Sub-score Metrics Strip */}
+        {/* 4 Productive Quick Stat Cards */}
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-border/80 bg-surface/90 p-3 shadow-2xs">
+            <div className="flex items-center justify-between text-text-secondary">
+              <span className="text-xs font-medium">{isVietnamese ? 'Thời lượng ghi âm' : 'Duration'}</span>
+              <Clock size={15} className="text-primary" />
+            </div>
+            <p className="mt-1 text-xl font-bold text-text-primary">
+              {formatTime(submission.recording_duration_seconds || 0)}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/80 bg-surface/90 p-3 shadow-2xs">
+            <div className="flex items-center justify-between text-text-secondary">
+              <span className="text-xs font-medium">{isVietnamese ? 'Kỹ năng đánh giá' : 'Sub-skills'}</span>
+              <Mic size={15} className="text-blue-500" />
+            </div>
+            <p className="mt-1 text-xl font-bold text-text-primary">
+              {scores.length}
+              <span className="ml-1 text-xs font-normal text-text-secondary">
+                {isVietnamese ? 'tiêu chí' : 'metrics'}
+              </span>
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/80 bg-surface/90 p-3 shadow-2xs">
+            <div className="flex items-center justify-between text-text-secondary">
+              <span className="text-xs font-medium">{isVietnamese ? 'Điểm phát âm' : 'Pronunciation'}</span>
+              <Target size={15} className="text-purple-500" />
+            </div>
+            <p className={`mt-1 text-xl font-bold ${getScoreColor(submission.pronunciation_score || 0)}`}>
+              {Math.round(toScore100(submission.pronunciation_score || 0))}
+              <span className="ml-1 text-xs font-normal text-text-secondary">/ 100</span>
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/80 bg-surface/90 p-3 shadow-2xs">
+            <div className="flex items-center justify-between text-text-secondary">
+              <span className="text-xs font-medium">{isVietnamese ? 'Mục tiêu cải thiện' : 'Targets'}</span>
+              <Sparkles size={15} className="text-amber-500" />
+            </div>
+            <p className="mt-1 text-xl font-bold text-text-primary">
+              {learningIssuesCount}
+              <span className="ml-1 text-xs font-normal text-text-secondary">
+                {isVietnamese ? 'điểm lưu ý' : 'points'}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        {/* Compact Sub-score Metrics Strip with Progress Bars */}
         {scores.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border/80">
-            <div className={`grid gap-2 ${scores.length <= 2 ? 'grid-cols-2 max-w-sm' : scores.length <= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3 sm:grid-cols-6'}`}>
+            <div className={`grid gap-2.5 ${scores.length <= 2 ? 'grid-cols-2 max-w-sm' : scores.length <= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3 sm:grid-cols-6'}`}>
               {scores.map((score) => (
                 <div
                   key={score.label}
-                  className="rounded-xl border border-border/70 bg-surface-subtle/50 px-2.5 py-2 text-center transition hover:border-border"
+                  className="rounded-xl border border-border/70 bg-surface/80 p-2.5 space-y-1.5 transition hover:border-border"
                 >
-                  <p className="text-[11px] font-medium text-text-secondary truncate">{score.label}</p>
-                  <p className={`text-base sm:text-lg font-bold ${getScoreColor(score.value)}`}>
-                    {Math.round(score.value)}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold text-text-secondary truncate">{score.label}</p>
+                    <span className={`text-xs font-bold ${getScoreColor(score.value)}`}>
+                      {Math.round(score.value)}
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-subtle">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${score.color}`}
+                      style={{ width: `${Math.min(100, Math.max(0, score.value))}%` }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -430,10 +529,10 @@ export function SpeakingResult({
 
         {/* AI Overall Feedback Quote */}
         {evaluation && (evaluation.overall_feedback || evaluation.detailed_feedback) && (
-          <div className="mt-4 rounded-xl border border-border/80 bg-surface-subtle/40 p-3.5 text-xs sm:text-sm text-text-secondary">
+          <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs sm:text-sm text-text-secondary">
             <p className="whitespace-pre-wrap leading-relaxed">
-              <span className="font-semibold text-text-primary mr-1">
-                💬 {isVietnamese ? 'Nhận xét tổng thể:' : 'Overall feedback:'}
+              <span className="font-bold text-primary mr-1">
+                💬 {isVietnamese ? 'Nhận xét tổng thể từ AI:' : 'AI Overall Feedback:'}
               </span>
               {evaluation.overall_feedback || evaluation.detailed_feedback}
             </p>

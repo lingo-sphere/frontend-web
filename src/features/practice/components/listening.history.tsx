@@ -57,11 +57,10 @@ export function ListeningHistory({ navigate }: {
   if (!userId) return <p>{vi ? 'Đăng nhập để xem lịch sử làm bài của bạn.' : 'Sign in to see your practice history.'}</p>
   if (resultId) return (
     <section className="space-y-4" aria-label={vi ? 'Kết quả bài nghe' : 'Listening result'}>
-      <Button variant="outline" onClick={back}>{vi ? 'Về lịch sử làm bài' : 'Back to history'}</Button>
       {!validResultKind ? <p role="alert">{vi ? 'Đường dẫn kết quả không hợp lệ.' : 'Invalid result link.'}</p>
         : review.isPending ? <p role="status">{vi ? 'Đang tải kết quả…' : 'Loading result…'}</p>
         : review.error ? <div role="alert" className="space-y-3"><p>{review.error.message}</p><Button variant="outline" onClick={() => void review.refetch()}>{vi ? 'Thử lại' : 'Retry'}</Button></div>
-        : review.data && <ListeningSavedResult result={review.data} vi={vi} onBack={back} backLabel={vi ? 'Về lịch sử làm bài' : 'Back to history'} />}
+        : review.data && <ListeningSavedResult result={review.data} vi={vi} onBack={back} backLabel={vi ? 'Về lịch sử làm bài' : 'Back to history'} kind={validResultKind || undefined} />}
     </section>
   )
 

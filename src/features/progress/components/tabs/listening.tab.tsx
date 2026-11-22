@@ -17,14 +17,14 @@ import type {
   SkillStats,
   PracticeDashboardData,
   WeaknessAnalysis,
+  TimePeriod,
 } from "@/features/progress/services/progress.service";
 import { progressService } from "@/features/progress/services/progress.service";
-import { SkillRadarChart } from "../skill-radar-chart";
-import type { RadarDataPoint } from "../skill-radar-chart";
 import { formatTrendName, formatDimensionName } from "../progress.helpers";
 import { EvidenceBadge } from "../shared";
 
 export interface ListeningDetailTabProps {
+  period?: TimePeriod;
   stats?: SkillStats;
   userId?: string;
   dashboardData?: PracticeDashboardData | null;
@@ -33,6 +33,7 @@ export interface ListeningDetailTabProps {
 
 export function ListeningDetailTab({
   stats,
+  period = '7d',
   userId,
   dashboardData,
   onNavigate,
@@ -53,7 +54,7 @@ export function ListeningDetailTab({
     let isMounted = true;
     Promise.all([
       progressService.getSkillCEFR(userId, "listening"),
-      progressService.getSkillWeaknesses(userId, "listening", "30d"),
+      progressService.getSkillWeaknesses(userId, "listening", period),
       progressService.getListeningSessions(userId, 5),
     ])
       .then(([cefr, weakList, sessionsRes]) => {
@@ -70,13 +71,9 @@ export function ListeningDetailTab({
     return () => {
       isMounted = false;
     };
-  }, [userId]);
+  }, [userId, period]);
 
-  const overallListening = stats?.accuracy
-    ? Math.round(stats.accuracy)
-    : dashboardData?.skills?.listening?.accuracy_rate ||
-      dashboardData?.skills?.listening?.avg_overall_score ||
-      0;
+  const overallListening = stats ? Math.round(stats.accuracy ?? 0) : 0;
 
   const weeklyListening = dashboardData?.weekly_comparison?.this_week?.listening;
   const lastWeekListening = dashboardData?.weekly_comparison?.last_week?.listening;
@@ -84,73 +81,6 @@ export function ListeningDetailTab({
 
   const listeningBehavior =
     dashboardData?.growth_analytics?.advanced_insights?.behavioral_metrics?.listening;
-
-  // Helper tính điểm từng trục radar từ stats.by_dimension
-  const getScoreForKeys = (keys: string[], fallback: number) => {
-    if (!stats?.by_dimension) return fallback;
-    for (const [k, v] of Object.entries(stats.by_dimension)) {
-      const lowerKey = k.toLowerCase();
-      const lowerName = (v.name || "").toLowerCase();
-      if (keys.some((target) => lowerKey.includes(target) || lowerName.includes(target))) {
-        return Math.round(v.accuracy);
-      }
-    }
-    return fallback;
-  };
-
-  const defaultListeningRadar: RadarDataPoint[] = [
-    {
-      axis: "Mô tả tranh (Part 1)",
-      key: "part_1",
-      value: getScoreForKeys(["part_1", "picture", "part1"], overallListening),
-      fullMark: 100,
-    },
-    {
-      axis: "Hỏi & Đáp (Part 2)",
-      key: "part_2",
-      value: getScoreForKeys(
-        ["part_2", "question_response", "part2"],
-        overallListening ? Math.min(overallListening + 3, 100) : 0
-      ),
-      fullMark: 100,
-    },
-    {
-      axis: "Hội thoại ngắn (Part 3)",
-      key: "part_3",
-      value: getScoreForKeys(
-        ["part_3", "conversation", "part3"],
-        overallListening ? Math.max(overallListening - 5, 0) : 0
-      ),
-      fullMark: 100,
-    },
-    {
-      axis: "Bài nói ngắn (Part 4)",
-      key: "part_4",
-      value: getScoreForKeys(
-        ["part_4", "short_talk", "part4"],
-        overallListening ? Math.max(overallListening - 7, 0) : 0
-      ),
-      fullMark: 100,
-    },
-    {
-      axis: "Chép chính tả (Dictation)",
-      key: "dictation",
-      value: getScoreForKeys(
-        ["dictation", "blank", "spelling"],
-        overallListening ? Math.min(overallListening + 2, 100) : 0
-      ),
-      fullMark: 100,
-    },
-    {
-      axis: "Nghe hiểu bối cảnh",
-      key: "comprehension",
-      value: getScoreForKeys(
-        ["comprehension", "context", "inference"],
-        overallListening ? Math.max(overallListening - 2, 0) : 0
-      ),
-      fullMark: 100,
-    },
-  ];
 
   return (
     <div className="space-y-4">
@@ -184,10 +114,10 @@ export function ListeningDetailTab({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
           <div className="p-3 rounded-xl bg-surface-subtle/50 border border-border text-center">
             <span className="text-[10px] text-text-tertiary block font-medium">
-              Độ chính xác trung bình
+              Độ chính xác theo câu và ô
             </span>
             <span className="text-lg font-black text-indigo-600">
-              {overallListening > 0 ? `${overallListening}%` : "--"}
+              {(stats?.total_questions || stats?.dictation_words) ? `${overallListening}%` : "--"}
             </span>
           </div>
 
@@ -196,10 +126,10 @@ export function ListeningDetailTab({
               Số câu đã luyện
             </span>
             <span className="text-lg font-black text-text-primary">
-              {stats?.total_questions || stats?.total_attempts || 0} câu
+              {stats?.total_questions ?? 0} câu
             </span>
             <span className="text-[10px] text-text-tertiary block">
-              ({stats?.total_attempts || 0} bài làm)
+              {stats?.dictation_words || 0} ô chép chính tả · {stats?.total_attempts || 0} bài làm
             </span>
           </div>
 
@@ -217,9 +147,7 @@ export function ListeningDetailTab({
               Ước tính CEFR
             </span>
             <span className="text-lg font-black text-primary">
-              {cefrData?.estimated_level ||
-                dashboardData?.skills?.listening?.estimated_cefr ||
-                "A2 - B1"}
+              {cefrData?.confidence && cefrData.confidence !== 'LOW' ? cefrData.estimated_level : 'Chưa đủ dữ liệu'}
             </span>
             {cefrData?.confidence && (
               <span className="text-[9px] text-text-tertiary block">
@@ -228,17 +156,6 @@ export function ListeningDetailTab({
             )}
           </div>
         </div>
-      </Card>
-
-      {/* 2. RADAR CHART - LISTENING RADAR (6 TRỤC) */}
-      <Card className="dashboard-card p-5 space-y-4">
-        <SkillRadarChart
-          data={defaultListeningRadar}
-          title="Đánh giá 6 Trụ cột Năng lực Nghe hiểu (Listening Rubric)"
-          subtitle="Biểu đồ mạng nhện đa giác thể hiện toàn diện phản xạ nghe từ Part 1-4 đến chép chính tả"
-          themeColor="blue"
-          overallScore={overallListening}
-        />
       </Card>
 
       {/* 3. SO SÁNH TUẦN NÀY VS TUẦN TRƯỚC (WEEKLY VELOCITY) */}
@@ -251,7 +168,7 @@ export function ListeningDetailTab({
                 So sánh Tiến độ Theo Tuần (Weekly Velocity)
               </h4>
             </div>
-            {listeningImprovement !== 0 && (
+            {listeningImprovement !== 0 && (weeklyListening?.attempts ?? 0) > 0 && (lastWeekListening?.attempts ?? 0) > 0 && (weeklyListening?.attempts ?? 0) > 0 && (lastWeekListening?.attempts ?? 0) > 0 && (
               <span
                 className={`text-xs font-black px-2 py-0.5 rounded-lg border ${
                   listeningImprovement > 0
@@ -273,7 +190,7 @@ export function ListeningDetailTab({
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-base font-black text-indigo-600">
-                  {weeklyListening.accuracy ?? 0}%
+                  {(weeklyListening.attempts ?? 0) > 0 ? `${weeklyListening.accuracy ?? 0}%` : "--"}
                 </span>
                 <span className="text-[11px] text-text-secondary">
                   ({weeklyListening.correct ?? 0}/{weeklyListening.attempts ?? 0} câu đúng)
@@ -287,7 +204,7 @@ export function ListeningDetailTab({
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-base font-black text-text-primary">
-                  {lastWeekListening?.accuracy ?? 0}%
+                  {(lastWeekListening?.attempts ?? 0) > 0 ? `${lastWeekListening?.accuracy ?? 0}%` : "--"}
                 </span>
                 <span className="text-[11px] text-text-secondary">
                   ({lastWeekListening?.correct ?? 0}/{lastWeekListening?.attempts ?? 0} câu đúng)
@@ -313,7 +230,7 @@ export function ListeningDetailTab({
               Số lần nghe lại trung bình
             </span>
             <span className="text-lg font-black text-indigo-600">
-              {listeningBehavior?.avg_replays ?? 1.4} lần
+              Chưa có dữ liệu
             </span>
             <span className="text-[10px] text-text-tertiary block">
               Mức độ phụ thuộc âm thanh
@@ -322,10 +239,10 @@ export function ListeningDetailTab({
 
           <div className="p-3 rounded-xl bg-surface-subtle/40 border border-border/50 text-center">
             <span className="text-[11px] text-text-tertiary block font-medium">
-              Thời gian xử lý mỗi câu
+              Thời gian trung bình mỗi bài
             </span>
             <span className="text-lg font-black text-primary">
-              {listeningBehavior?.avg_time_seconds ?? 28} giây
+              {listeningBehavior?.avg_time_seconds ? `${listeningBehavior.avg_time_seconds} giây` : '--'}
             </span>
             <span className="text-[10px] text-text-tertiary block">
               Tốc độ phản xạ nhận thức
@@ -337,10 +254,10 @@ export function ListeningDetailTab({
               Tổng lượt nghe hoàn thành
             </span>
             <span className="text-lg font-black text-emerald-600">
-              {listeningBehavior?.total_completed ?? stats?.total_attempts ?? 0} bài
+              {stats?.total_attempts ?? 0} bài
             </span>
             <span className="text-[10px] text-text-tertiary block">
-              Dữ liệu tích lũy tai nghe
+              Theo khoảng thời gian đã chọn
             </span>
           </div>
         </div>
@@ -498,7 +415,7 @@ export function ListeningDetailTab({
                       {partName}
                     </span>
                     <span className="text-[10px] text-text-tertiary">
-                      {dimStats.correct || 0}/{dimStats.total || 0} câu đúng
+                      {dimStats.correct || 0}/{dimStats.total || 0} {part.toLowerCase().includes('dictation') ? 'ô' : 'câu'} đúng
                     </span>
                   </div>
                   <div className="text-right">

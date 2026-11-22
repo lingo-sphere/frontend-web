@@ -6,8 +6,6 @@ import type {
   SkillStats,
   PracticeDashboardData,
 } from "@/features/progress/services/progress.service";
-import { SkillRadarChart } from "../skill-radar-chart";
-import type { RadarDataPoint } from "../skill-radar-chart";
 import { formatTrendName } from "../progress.helpers";
 
 export interface WritingDetailTabProps {
@@ -23,34 +21,10 @@ export function WritingDetailTab({
   dashboardData,
   onNavigate,
 }: WritingDetailTabProps) {
-  const writingRadar = dashboardData?.skills?.writing?.radar_data;
   const writingBehavior =
     dashboardData?.growth_analytics?.advanced_insights?.behavioral_metrics
       ?.writing;
-  const overallWriting = stats?.accuracy
-    ? Math.round(stats.accuracy)
-    : dashboardData?.skills?.writing?.avg_overall_score || 0;
-
-  const defaultWritingRadar: RadarDataPoint[] = [
-    {
-      axis: "Đáp ứng đề",
-      value: overallWriting,
-      fullMark: 100,
-    },
-    { axis: "Mạch lạc", value: overallWriting, fullMark: 100 },
-    {
-      axis: "Từ vựng",
-      value: overallWriting ? Math.min(overallWriting + 5, 100) : 0,
-      fullMark: 100,
-    },
-    {
-      axis: "Ngữ pháp",
-      value: overallWriting ? Math.max(overallWriting - 5, 0) : 0,
-      fullMark: 100,
-    },
-    { axis: "Cấu trúc câu", value: overallWriting, fullMark: 100 },
-    { axis: "Sắc thái học thuật", value: overallWriting, fullMark: 100 },
-  ];
+  const overallWriting = Math.round(stats?.accuracy ?? 0);
 
   return (
     <div className="space-y-4">
@@ -81,7 +55,7 @@ export function WritingDetailTab({
               Điểm trung bình AI
             </span>
             <span className="text-lg font-black text-purple-600">
-              {overallWriting > 0 ? `${overallWriting}/100` : "--"}
+              {(stats?.graded_attempts ?? 0) > 0 ? `${overallWriting}/100` : "--"}
             </span>
           </div>
           <div className="p-3 rounded-xl bg-surface-subtle/50 border border-border text-center">
@@ -89,11 +63,10 @@ export function WritingDetailTab({
               Bài đã nộp
             </span>
             <span className="text-lg font-black text-text-primary">
-              {stats?.total_attempts ||
-                dashboardData?.skills?.writing?.total_submissions ||
-                0}{" "}
+              {stats?.total_attempts ?? 0}{" "}
               bài
             </span>
+            <span className="text-[10px] text-text-tertiary block">{stats?.graded_attempts ?? 0} bài có điểm</span>
           </div>
           <div className="p-3 rounded-xl bg-surface-subtle/50 border border-border text-center">
             <span className="text-[10px] text-text-tertiary block">
@@ -108,33 +81,18 @@ export function WritingDetailTab({
               Ước tính CEFR
             </span>
             <span className="text-lg font-black text-primary">
-              {dashboardData?.skills?.writing?.estimated_cefr || "B1"}
+              Chưa đủ dữ liệu
             </span>
           </div>
         </div>
       </Card>
 
-      {/* BIỂU ĐỒ MẠNG NHỆN: 6 TIÊU CHUẨN KHẢO THÍ VIẾT (WRITING RADAR) */}
-      <Card className="dashboard-card p-5 space-y-4">
-        <SkillRadarChart
-          data={
-            writingRadar && writingRadar.length > 0
-              ? writingRadar
-              : defaultWritingRadar
-          }
-          title="Đánh giá 6 Tiêu chuẩn Khảo thí Viết (Writing Rubric)"
-          subtitle="Biểu đồ mạng nhện đa giác thể hiện chi tiết năng lực triển khai bài viết"
-          themeColor="violet"
-          overallScore={overallWriting}
-        />
-      </Card>
-
-      {/* CHỈ SỐ HÀNH VI VIẾT (BEHAVIORAL METRICS) */}
+      {/* CHỈ SỐ HÀNH VI (TOÀN BỘ LỊCH SỬ) VIẾT (BEHAVIORAL METRICS) */}
       <Card className="dashboard-card p-5 space-y-3">
         <div className="flex items-center gap-2">
           <span className="text-base">⏱️</span>
           <h4 className="text-xs font-bold text-text-primary">
-            Chỉ số Hành vi Viết (Writing Behavior)
+            Chỉ số Hành vi Viết · Toàn bộ lịch sử
           </h4>
         </div>
 

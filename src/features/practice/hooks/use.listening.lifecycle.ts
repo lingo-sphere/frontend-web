@@ -81,7 +81,7 @@ export function useListeningLifecycle(
       )
     // Do not consume the response budget while the first audio is loading/playing.
     if (!group?.completed && answering)
-      times[index] = Math.min(
+      times[index] = group?.untimed ? (times[index] || 0) + delta : Math.min(
         group?.timeSeconds || target.totalSeconds,
         (times[index] || 0) + delta,
       )
@@ -98,6 +98,7 @@ export function useListeningLifecycle(
   const groupRemaining = useCallback(() => {
     const current = draftRef.current,
       target = sessionRef.current
+    if (target?.groups[current.current_index]?.untimed) return 0
     return Math.max(
       0,
       Math.ceil(

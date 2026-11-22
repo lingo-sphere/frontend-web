@@ -133,23 +133,48 @@ export function WritingResult({
       <PracticeReviewPanel state={reviewState} />
       <WritingTaskAssessmentView assessment={reviewState.query.data?.review?.teacher_grading?.task_assessment || evaluation?.task_assessment} policy={reviewState.query.data?.review?.teacher_grading?.score_policy || evaluation?.score_policy} source={reviewState.query.data?.review?.teacher_grading ? (vi ? 'Đánh giá giáo viên hiện tại' : 'Current teacher assessment') : (vi ? 'Đánh giá AI' : 'AI assessment')} />
 
-      {/* Hero Score & Overview Card (Promax) */}
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
+      {/* Hero Score & Overview Card (Lingo-sphere Design System) */}
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-surface to-surface-subtle/40 p-5 sm:p-6 shadow-xs">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          {/* Left: Score Badge & Classification */}
-          <div className="flex items-center gap-4 sm:gap-5">
-            <div className="relative flex h-22 w-22 sm:h-24 sm:w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-surface-subtle p-2 border border-primary/20 shadow-xs">
-              <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary">
-                {writingScoreLabel(reviewState.query.data || submission)}
-              </span>
-              <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
-                {toeic ? "Band Score" : "Overall"}
-              </span>
+          {/* Left: Circular SVG Gauge & Exercise Metadata */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+            {/* SVG Circular Score Ring */}
+            <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 96 96">
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="40"
+                  className="stroke-border/70 fill-none"
+                  strokeWidth="7"
+                />
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="40"
+                  className="stroke-primary fill-none transition-all duration-1000 ease-out"
+                  strokeWidth="7"
+                  strokeDasharray={2 * Math.PI * 40}
+                  strokeDashoffset={
+                    2 * Math.PI * 40 * (1 - Math.min(100, Math.max(15, (submission.overall_score || (submission.raw_score ? submission.raw_score * 12.5 : 80)))) / 100)
+                  }
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
+                  {writingScoreLabel(reviewState.query.data || submission)}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
+                  {toeic ? "Band" : "Overall"}
+                </span>
+              </div>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                  <Award size={13} />
                   {toeic
                     ? vi
                       ? "Nhiệm vụ TOEIC Writing"
@@ -163,39 +188,66 @@ export function WritingResult({
                     CEFR {exercise.cefr_level}
                   </Badge>
                 )}
+                {/* Dynamic Motivational Badge */}
+                {(() => {
+                  const score = submission.overall_score || (submission.raw_score ? submission.raw_score * 12.5 : 75);
+                  if (score >= 80) {
+                    return (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 size={12} className="text-emerald-500" />
+                        {vi ? "Xuất sắc" : "Excellent"}
+                      </span>
+                    );
+                  }
+                  if (score >= 60) {
+                    return (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                        <Sparkles size={12} className="text-blue-500" />
+                        {vi ? "Làm tốt lắm" : "Good Job"}
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                      <AlertTriangle size={12} className="text-amber-500" />
+                      {vi ? "Cần rèn luyện thêm" : "Keep Practicing"}
+                    </span>
+                  );
+                })()}
               </div>
 
-              <h1 className="text-lg sm:text-xl font-bold text-text-primary truncate">
+              <h1 className="text-lg sm:text-xl font-extrabold text-text-primary">
                 {vi && exercise.title_vi ? exercise.title_vi : exercise.title}
               </h1>
 
               {vi && exercise.title_vi && (
-                <p className="text-xs text-text-secondary truncate">{exercise.title}</p>
+                <p className="text-xs text-text-secondary">{exercise.title}</p>
               )}
 
-              {/* Quick Metrics Chips */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-text-secondary">
-                <span className="inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-0.5">
-                  <Type size={12} className="text-primary" />
-                  <strong className="text-text-primary">{submission.word_count}</strong> {vi ? "từ" : "words"}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-0.5">
-                  <Clock size={12} className="text-primary" />
-                  <strong className="text-text-primary">
-                    {Math.round((submission.writing_time_seconds || 0) / 60)}
-                  </strong>{" "}
-                  {vi ? "phút" : "mins"}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-surface-subtle px-2 py-0.5">
-                  <Sparkles size={12} className="text-primary" />
-                  <strong className="text-text-primary">{errors.length}</strong> {vi ? "gợi ý sửa" : "corrections"}
-                </span>
-              </div>
+              {/* Motivational Quote */}
+              <p className="text-xs italic text-text-secondary">
+                {(() => {
+                  const score = submission.overall_score || (submission.raw_score ? submission.raw_score * 12.5 : 75);
+                  if (score >= 80) {
+                    return vi
+                      ? "“Văn phong tự nhiên, bố cục mạch lạc và cấu trúc ngữ pháp rất chuẩn xác!”"
+                      : "“Natural phrasing, coherent structure, and highly accurate grammar!”";
+                  }
+                  if (score >= 60) {
+                    return vi
+                      ? "“Ý tưởng truyền đạt rõ ràng. Chú ý thêm một vài chi tiết để nâng band điểm!”"
+                      : "“Clear message and expression. Polish a few details to boost your band score!”";
+                  }
+                  return vi
+                    ? "“Hãy xem kỹ phần sửa lỗi và bản hoàn thiện tham khảo bên dưới để cải thiện nhé!”"
+                    : "“Review the corrections and AI polished version below to improve further!”";
+                })()}
+              </p>
             </div>
           </div>
 
           {/* Right: Quick Action Buttons */}
-          <div className="flex items-center gap-2.5 sm:self-center">
+          <div className="flex items-center gap-2.5 sm:self-center shrink-0">
             <Button
               variant="outline"
               onClick={onTryAgain}
@@ -214,12 +266,64 @@ export function WritingResult({
           </div>
         </div>
 
+        {/* 4 Productive Quick Stat Cards */}
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-border/80 bg-surface/90 p-3 shadow-2xs">
+            <div className="flex items-center justify-between text-text-secondary">
+              <span className="text-xs font-medium">{vi ? "Số từ bài viết" : "Word Count"}</span>
+              <Type size={15} className="text-primary" />
+            </div>
+            <p className="mt-1 text-xl font-bold text-text-primary">
+              {submission.word_count || 0}
+              <span className="ml-1 text-xs font-normal text-text-secondary">
+                {vi ? "từ" : "words"}
+              </span>
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/80 bg-surface/90 p-3 shadow-2xs">
+            <div className="flex items-center justify-between text-text-secondary">
+              <span className="text-xs font-medium">{vi ? "Thời gian viết" : "Writing Time"}</span>
+              <Clock size={15} className="text-blue-500" />
+            </div>
+            <p className="mt-1 text-xl font-bold text-text-primary">
+              {Math.round((submission.writing_time_seconds || 0) / 60)}
+              <span className="ml-1 text-xs font-normal text-text-secondary">
+                {vi ? "phút" : "mins"}
+              </span>
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/80 bg-surface/90 p-3 shadow-2xs">
+            <div className="flex items-center justify-between text-text-secondary">
+              <span className="text-xs font-medium">{vi ? "Góp ý sửa lỗi" : "Corrections"}</span>
+              <Sparkles size={15} className="text-amber-500" />
+            </div>
+            <p className="mt-1 text-xl font-bold text-text-primary">
+              {errors.length}
+              <span className="ml-1 text-xs font-normal text-text-secondary">
+                {vi ? "vị trí" : "points"}
+              </span>
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/80 bg-surface/90 p-3 shadow-2xs">
+            <div className="flex items-center justify-between text-text-secondary">
+              <span className="text-xs font-medium">{vi ? "Đánh giá đạt" : "Rating Level"}</span>
+              <Award size={15} className="text-emerald-500" />
+            </div>
+            <p className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-400">
+              {toeic ? `Band ${submission.raw_score ?? writingScoreLabel(reviewState.query.data || submission)}` : writingScoreLabel(reviewState.query.data || submission)}
+            </p>
+          </div>
+        </div>
+
         {/* AI Overall Feedback Quote */}
         {(evaluation?.score_reason || evaluation?.overall_feedback) && (
-          <div className="mt-4 rounded-xl border border-border/80 bg-surface-subtle/40 p-3.5 text-xs sm:text-sm text-text-secondary">
+          <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs sm:text-sm text-text-secondary">
             <p className="whitespace-pre-wrap leading-relaxed">
-              <span className="font-semibold text-text-primary mr-1">
-                💬 {vi ? "Nhận xét tổng thể:" : "Overall feedback:"}
+              <span className="font-bold text-primary mr-1">
+                💬 {vi ? "Nhận xét tổng thể từ AI:" : "AI Overall Feedback:"}
               </span>
               {evaluation?.score_reason || evaluation?.overall_feedback}
             </p>

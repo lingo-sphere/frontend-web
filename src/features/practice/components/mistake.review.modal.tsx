@@ -46,7 +46,44 @@ function isMatchingAnswer(opt: string, optIndex: number, targetAnswer: string): 
   return opt.trim().toLowerCase() === trimmedTarget.toLowerCase()
 }
 
-export function MistakeReviewModal({ open, onClose, mistake, onSuccess }: MistakeReviewModalProps) {
+export function MistakeReviewModal(props: MistakeReviewModalProps) {
+  if (props.mistake?.question_data?.listening_review) return <ListeningMistakeReview {...props} />
+  return <StandardMistakeReviewModal {...props} />
+}
+
+function ListeningMistakeReview({ open, onClose, mistake, onSuccess }: MistakeReviewModalProps) {
+  const [answers, setAnswers] = useState<Record<number, string>>({})
+  const [revealed, setRevealed] = useState(false)
+  const [error, setError] = useState('')
+  const mutation = useReviewMistakeMutation()
+  useEffect(() => { setAnswers({}); setRevealed(false); setError('') }, [mistake?._id, open])
+  if (!open || !mistake) return null
+  const review = mistake.question_data?.listening_review
+  const questions: Array<{ question_text: string; options?: Array<{ key: string; text: string }>; correct_answer: string; was_incorrect?: boolean }> = review.questions || []
+  const submit = async () => {
+    const correct = questions.every((q, i) => normalizePunctuation(answers[i] || '') === normalizePunctuation(q.correct_answer))
+    try {
+      await mutation.mutateAsync({ mistakeId: mistake._id, payload: { is_correct: correct, user_answer: JSON.stringify(answers) } })
+      setRevealed(true); onSuccess?.()
+    } catch { setError('Không thể lưu kết quả ôn tập. Vui lòng thử lại.') }
+  }
+  return <div role="dialog" aria-modal="true" aria-label="Ôn tập nghe" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+    <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-surface p-6 space-y-5">
+      <div className="flex justify-between gap-3"><h3 className="font-bold">Ôn tập nghe · {mistake.question_text}</h3><button type="button" aria-label="Đóng" onClick={onClose}><X size={20} /></button></div>
+      {review.image_url && <img src={review.image_url} alt="Hình minh họa bài nghe" className="max-h-64 mx-auto rounded-xl" />}
+      {review.audio_url ? <audio controls src={review.audio_url} className="w-full" onLoadedMetadata={e => { if (review.start_time) e.currentTarget.currentTime = review.start_time }} onPlay={e => { if (review.end_time && (e.currentTarget.currentTime < (review.start_time || 0) || e.currentTarget.currentTime >= review.end_time)) e.currentTarget.currentTime = review.start_time || 0 }} onTimeUpdate={e => { if (review.end_time && e.currentTarget.currentTime >= review.end_time) e.currentTarget.pause() }} /> : <p>Audio của bài nghe hiện không khả dụng.</p>}
+      {questions.map((q, i) => <fieldset key={i} className="rounded-xl border border-border p-4 space-y-2"><legend className="px-1 font-semibold">Câu {i + 1}{q.was_incorrect ? ' · Đã sai lần trước' : ''}</legend><p>{q.question_text}</p>
+        {q.options?.length ? q.options.map(o => <label key={o.key} className="flex gap-2 p-2"><input type="radio" name={`review-${i}`} value={o.key} checked={answers[i] === o.key} disabled={revealed} onChange={() => setAnswers(v => ({ ...v, [i]: o.key }))} />{o.key}. {o.text}</label>) : <input className="w-full rounded-xl border border-border p-2" value={answers[i] || ''} disabled={revealed} onChange={e => setAnswers(v => ({ ...v, [i]: e.target.value }))} placeholder="Nhập từ nghe được" />}
+        {revealed && <p className="text-sm text-emerald-600">Đáp án: {q.correct_answer}</p>}
+      </fieldset>)}
+      {error && <p role="alert" className="text-red-600">{error}</p>}
+      {!revealed && <Button onClick={submit} disabled={mutation.isPending || questions.length === 0 || questions.some((_, i) => !answers[i]?.trim())}>Kiểm tra và lưu kết quả</Button>}
+      {revealed && <Button onClick={onClose}>Hoàn tất</Button>}
+    </div>
+  </div>
+}
+
+function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: MistakeReviewModalProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [fillBlankInput, setFillBlankInput] = useState<string>('')
   const [reorderSelectedWords, setReorderSelectedWords] = useState<string[]>([])

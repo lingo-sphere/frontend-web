@@ -16,12 +16,15 @@ interface RawQuestion {
   options: { key: string; text: string }[]
 }
 interface RawGroup {
-  time_limit_seconds?: number
+  time_limit_seconds?: number | null
   play_count?: number
   playback_completed?: boolean
+  replay_remaining?: number | null
   has_listened?: boolean
   is_completed?: boolean
   settings?: {
+    untimed?: boolean
+    unlimited_replay?: boolean
     allow_replay?: boolean
     replay_limit?: number
     show_image_before?: boolean
@@ -49,6 +52,7 @@ interface RawGroup {
     is_hidden: boolean
     first_letter?: string
     length?: number
+    input_length?: number
     hints_available?: number
     last_hint?: string
   }[]
@@ -79,6 +83,8 @@ export function listeningSessionView(
     raw.questions || raw.conversations || raw.talks || raw.segments || []
   const groups: ListeningGroup[] = rows.map((row, index) => {
     const clipAudio = row.audio_url || row.audio_media_id || row.media_id
+    const untimed = kind === 'dictation' && Boolean(row.settings?.untimed ?? raw.settings?.untimed)
+    const unlimitedReplay = kind === 'dictation' && Boolean(row.settings?.unlimited_replay ?? raw.settings?.unlimited_replay)
     return {
       id:
         row.question_id ||
@@ -86,8 +92,10 @@ export function listeningSessionView(
         row.talk_id ||
         String(row.segment_index),
       index,
+      untimed,
+      unlimitedReplay,
       timeSeconds:
-        row.time_limit_seconds ??
+        untimed ? undefined : row.time_limit_seconds ??
         Math.ceil(raw.total_time_seconds / rows.length),
       allowReplay: row.settings?.allow_replay ?? true,
       replayLimit: row.settings?.replay_limit ?? 1,
@@ -95,6 +103,7 @@ export function listeningSessionView(
       showQuestionsBefore: row.settings?.show_questions_before_audio ?? true,
       playCount: row.play_count || 0,
       playbackCompleted: row.playback_completed,
+      replaysRemaining: row.play_count === undefined ? undefined : row.replay_remaining,
       hasListened: row.has_listened || false,
       completed: row.is_completed || false,
       checkedResult: row.checked_result,
@@ -135,6 +144,7 @@ export function listeningSessionView(
           label: String(blank.blank_index + 1),
           firstLetter: blank.first_letter,
           length: blank.length,
+          inputLength: blank.input_length,
           hintsAvailable: blank.hints_available || 0,
           hint: blank.last_hint,
         })),
@@ -143,7 +153,8 @@ export function listeningSessionView(
   if (
     !groups.length ||
     !Number.isFinite(raw.total_time_seconds) ||
-    raw.total_time_seconds <= 0
+    raw.total_time_seconds < 0 ||
+    (raw.total_time_seconds === 0 && !(kind === 'dictation' && raw.settings?.untimed))
   )
     throw new Error('Phiên luyện thiếu nội dung hoặc thời gian hợp lệ')
   return {
@@ -157,6 +168,10 @@ export function listeningSessionView(
   }
 }
 export const listeningLifecycleService = {
+  checkBlank(id: string, key: string, answer: string) {
+    const [segment_index, blank_index] = key.split('_').map(Number)
+    return api.post<{ is_correct: boolean }>(`/practice/dictation/sessions/${encodeURIComponent(id.replace(/^dict_/, ''))}/blank-check`, { segment_index, blank_index, answer })
+  },
   history(page: number, limit: number, kind?: ListeningKind) {
     return api.get<ListeningHistoryPage>('/practice/listening/progress/history', {
       page, limit, ...(kind ? { kind } : {}),
@@ -168,7 +183,7 @@ export const listeningLifecycleService = {
     index: number,
     action: 'start' | 'complete',
   ) {
-    return api.post<{ starts: number; completed: boolean; remaining: number }>(
+    return api.post<{ starts: number; completed: boolean; remaining: number | null; unlimited_replay?: boolean }>(
       `/practice/listening/progress/${kind}/${encodeURIComponent(id)}/playback`,
       { group_index: index, action },
     )
