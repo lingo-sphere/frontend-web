@@ -10,7 +10,7 @@ import {
 import * as Dialog from '@radix-ui/react-dialog'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/button'
-import { practiceKeyAction } from '../lib/practice-keyboard'
+import { practiceKeyAction } from '@/features/practice/lib/practice-keyboard'
 
 type Feature =
   'answers' | 'navigate' | 'check' | 'save' | 'submit' | 'record' | 'audio'

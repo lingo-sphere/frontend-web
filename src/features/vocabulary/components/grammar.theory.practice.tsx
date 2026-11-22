@@ -2,7 +2,7 @@
 
 import { ArrowRight, LockKeyhole } from 'lucide-react'
 import { Button } from '@/components/button'
-import type { TheoryPracticeState } from '../hooks/use.grammar.theory.practice'
+import type { TheoryPracticeState } from '@/features/vocabulary/hooks/use.grammar.theory.practice'
 
 export function GrammarTheoryPractice({ state, hasLinks, vi, compact = false }: {
   state: TheoryPracticeState; hasLinks: boolean; vi: boolean; compact?: boolean

@@ -4,8 +4,8 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { BookOpen } from 'lucide-react'
 import { resolveImageUrl } from '@/utils/media.utils'
-import type { BackendGrammarPoint } from '../schemas/vocabulary.schema'
-import { grammarFormula, grammarTitle } from '../lib/grammar-handbook'
+import type { BackendGrammarPoint } from '@/features/vocabulary/schemas/vocabulary.schema'
+import { grammarFormula, grammarTitle } from '@/features/vocabulary/lib/grammar-handbook'
 
 export function GrammarPhoto({ point, vi, className = '', eager = false }: { point: BackendGrammarPoint; vi: boolean; className?: string; eager?: boolean }) {
   const [failed, setFailed] = useState(false)

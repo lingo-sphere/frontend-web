@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/services/api.client'
 import { AppSelect } from '@/components/select'
-import type { CourseMeasurementReport } from '../types/measurement'
+import type { CourseMeasurementReport } from '@/features/courses/types/measurement'
 
 const names: Record<string, string> = { INTERNAL: 'Điểm nội bộ', LISTENING: 'Listening', READING: 'Reading', SPEAKING: 'Speaking', WRITING: 'Writing', LISTENING_READING: 'TOEIC Listening & Reading' }
 const deltaLabel = (value: number) => `${value >= 0 ? '+' : ''}${value}`

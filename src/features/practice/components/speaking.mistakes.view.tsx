@@ -21,10 +21,10 @@ import {
 import { Button } from '@/components/button'
 import { useSpeakingMistakesQuery } from '@/features/practice/hooks/use.mistake.query'
 import { useNavigate } from '@/lib/navigation'
-import { SpeakingLearningFeedback } from './speaking.learning.feedback'
-import { SpeakingVocabularySaving } from './speaking.vocabulary.saving'
-import { speakingIssueWordTarget } from '../lib/speaking-vocabulary'
-import { SpeakingGrammarActions } from './speaking.grammar.actions'
+import { SpeakingLearningFeedback } from '@/features/practice/components/speaking.learning.feedback'
+import { SpeakingVocabularySaving } from '@/features/practice/components/speaking.vocabulary.saving'
+import { speakingIssueWordTarget } from '@/features/practice/lib/speaking-vocabulary'
+import { SpeakingGrammarActions } from '@/features/practice/components/speaking.grammar.actions'
 
 type SpeakingSubTab = 'DUE' | 'WORDS' | 'PHONEMES' | 'GRAMMAR' | 'CONTEXT'
 

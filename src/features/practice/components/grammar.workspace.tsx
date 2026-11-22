@@ -5,12 +5,12 @@
 
 "use client";
 
-import { PracticeKeyboard, PracticeOptionKey } from './practice.keyboard'
+import { PracticeKeyboard, PracticeOptionKey } from '@/features/practice/components/practice.keyboard'
 
 
 import { useState, useMemo } from "react";
-import { useGrammarSession } from "../hooks/use.grammar.session";
-import { GrammarMedia } from "./grammar.media";
+import { useGrammarSession } from "@/features/practice/hooks/use.grammar.session";
+import { GrammarMedia } from "@/features/practice/components/grammar.media";
 import { DictionaryModal } from "@/features/vocabulary/components/dictionary.modal";
 import { toast } from "@/store/toast.store";
 import { Card, CardContent } from "@/components/card";
@@ -38,13 +38,13 @@ import {
   Volume2,
 } from "lucide-react";
 import { useNavigate } from "@/lib/navigation";
-import { PracticeExitConfirmModal } from "./practice.exit-confirm.modal";
+import { PracticeExitConfirmModal } from "@/features/practice/components/practice.exit-confirm.modal";
 import type {
   GrammarSession,
   GrammarQuestionItem,
   GrammarSessionResult,
   GrammarSessionResultDetail,
-} from "../types/grammar-practice";
+} from "@/features/practice/types/grammar-practice";
 
 interface GrammarWorkspaceProps {
   session: GrammarSession;

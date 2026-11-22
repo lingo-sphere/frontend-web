@@ -1,4 +1,4 @@
-import { resolvePracticeDifficulty } from '../lib/practice-difficulty'
+import { resolvePracticeDifficulty } from '@/features/practice/lib/practice-difficulty'
 import type { RecordingSubmission } from '@/features/practice/hooks/use.speaking.session'
 import { longestSpeakingStreak, resolveSpeakingPolicy, getSavedSpeakingTimeModePreference } from '@/features/practice/lib/speaking-policy'
 import { api } from '@/services/api.client'

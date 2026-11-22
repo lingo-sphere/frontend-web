@@ -5,7 +5,7 @@ import { Button } from "@/components/button";
 import {
   courseService,
   type WritingSubmissionResponse,
-} from "../services/course.service";
+} from "@/features/courses/services/course.service";
 import {
   readSkillDraft,
   writeSkillDraft,

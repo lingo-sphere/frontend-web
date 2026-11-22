@@ -1,4 +1,4 @@
-import { dictationWordDiff } from '../lib/dictation-word-diff'
+import { dictationWordDiff } from '@/features/practice/lib/dictation-word-diff'
 
 export function DictationWordDiff({ answer, expected, vi }: { answer: string; expected: string; vi: boolean }) {
   const changes = dictationWordDiff(answer, expected)

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { usePracticeReview } from "../hooks/use.practice.review";
-import { PracticeReviewPanel } from "./practice.review.panel";
+import { usePracticeReview } from "@/features/practice/hooks/use.practice.review";
+import { PracticeReviewPanel } from "@/features/practice/components/practice.review.panel";
 import { useNavigate } from "@/lib/navigation";
 import { useTranslation } from "react-i18next";
 import {
@@ -26,11 +26,11 @@ import { Button } from "@/components/button";
 import { Card, CardContent } from "@/components/card";
 import { Badge } from "@/components/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/tabs";
-import type { WritingSubmission, WritingExercise } from "../types/writing";
-import { writingScoreLabel } from "../lib/writing-score";
-import { WritingCorrections } from "./writing.corrections";
-import { WritingEvaluationCard } from "./writing.evaluation.card";
-import { WritingTaskAssessmentView } from './writing.task.assessment';
+import type { WritingSubmission, WritingExercise } from "@/features/practice/types/writing";
+import { writingScoreLabel } from "@/features/practice/lib/writing-score";
+import { WritingCorrections } from "@/features/practice/components/writing.corrections";
+import { WritingEvaluationCard } from "@/features/practice/components/writing.evaluation.card";
+import { WritingTaskAssessmentView } from '@/features/practice/components/writing.task.assessment';
 
 interface WritingResultProps {
   submission: WritingSubmission;

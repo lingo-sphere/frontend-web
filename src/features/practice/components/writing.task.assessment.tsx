@@ -1,6 +1,6 @@
 "use client";
 import { useTranslation } from 'react-i18next';
-import type { WritingTaskAssessment, WritingScorePolicy } from '../types/writing';
+import type { WritingTaskAssessment, WritingScorePolicy } from '@/features/practice/types/writing';
 
 export function WritingTaskAssessmentView({ assessment, policy, source, skill = 'WRITING' }: { assessment?: WritingTaskAssessment; policy?: WritingScorePolicy; source?: string; skill?: 'WRITING' | 'SPEAKING' }) {
   const { i18n } = useTranslation();

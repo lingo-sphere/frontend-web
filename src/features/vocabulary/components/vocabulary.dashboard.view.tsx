@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/card";
 import { Button } from "@/components/button";
-import { useVocabularyDashboard } from "../hooks/use.vocabulary.dashboard";
+import { useVocabularyDashboard } from "@/features/vocabulary/hooks/use.vocabulary.dashboard";
 
 export interface VocabularyDashboardViewProps {
   isEmbedded?: boolean;

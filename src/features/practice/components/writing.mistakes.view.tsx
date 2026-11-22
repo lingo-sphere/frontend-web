@@ -1,6 +1,6 @@
 // Giao diện xem và ôn tập các câu sai Writing theo chu kỳ lặp lại ngắt quãng SRS.
 "use client";
-import { WritingCorrections } from './writing.corrections';
+import { WritingCorrections } from '@/features/practice/components/writing.corrections';
 import { useMounted } from "@/hooks/use.mounted";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -29,9 +29,9 @@ import {
   useWritingSrsQuery,
   useWritingSrsDetail,
   writingSrsKey,
-} from "../hooks/use.writing.srs";
-import { writingSrsService } from "../services/writing-srs.service";
-import type { WritingSrsFilter, WritingSrsItem } from "../types/writing-srs";
+} from "@/features/practice/hooks/use.writing.srs";
+import { writingSrsService } from "@/features/practice/services/writing-srs.service";
+import type { WritingSrsFilter, WritingSrsItem } from "@/features/practice/types/writing-srs";
 const field =
   "rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary";
 export function WritingMistakesView() {

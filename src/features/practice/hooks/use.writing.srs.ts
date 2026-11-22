@@ -3,8 +3,8 @@
 import { useMounted } from "@/hooks/use.mounted";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useQuery } from "@tanstack/react-query";
-import { writingSrsService } from "../services/writing-srs.service";
-import type { WritingSrsFilter } from "../types/writing-srs";
+import { writingSrsService } from "@/features/practice/services/writing-srs.service";
+import type { WritingSrsFilter } from "@/features/practice/types/writing-srs";
 export const writingSrsKey = ["writing-srs"] as const;
 export function useWritingSrsQuery(filters: WritingSrsFilter, enabled = true) {
   const mounted = useMounted();

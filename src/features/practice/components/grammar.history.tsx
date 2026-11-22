@@ -8,7 +8,7 @@ import { Button } from '@/components/button'
 import { AppSelect } from '@/components/select'
 import { Pagination } from '@/components/pagination'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { grammarPracticeService } from '../services/grammar-practice.service'
+import { grammarPracticeService } from '@/features/practice/services/grammar-practice.service'
 
 const PAGE_SIZE = 20
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']

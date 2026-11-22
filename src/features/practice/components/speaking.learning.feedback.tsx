@@ -2,8 +2,8 @@
 
 import { useTranslation } from 'react-i18next'
 import { useState, type ReactNode } from 'react'
-import type { SpeakingLearningIssue, AIEvaluationResult } from '../types/speaking'
-import { SpeakingGrammarActions } from './speaking.grammar.actions'
+import type { SpeakingLearningIssue, AIEvaluationResult } from '@/features/practice/types/speaking'
+import { SpeakingGrammarActions } from '@/features/practice/components/speaking.grammar.actions'
 import { Volume2, RotateCcw, Sparkles } from 'lucide-react'
 
 export function SpeakingLearningFeedback({

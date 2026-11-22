@@ -3,8 +3,8 @@
  * @description Hàm chuyển đổi dữ liệu DictationItem sang ListeningExercise cho VideoDictationView
  */
 
-import type { DictationItem } from '../types/listening-practice';
-import type { ListeningExercise } from '../types/listening';
+import type { DictationItem } from '@/features/practice/types/listening-practice';
+import type { ListeningExercise } from '@/features/practice/types/listening';
 
 export function convertDictationToExercise(item: DictationItem): ListeningExercise {
   return {

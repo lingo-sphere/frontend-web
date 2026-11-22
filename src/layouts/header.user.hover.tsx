@@ -10,7 +10,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
 import { useWishlistQuery } from '@/features/cart/hooks/use.wishlist.query'
 import { Icon } from '@/components/icon.map'
-import { getRemainingSubscriptionText } from '@/layouts/app.header'
+import { getRemainingSubscriptionText } from '@/layouts/header.utils'
 import { resolveMediaUrl } from '@/utils/media.utils'
 import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 

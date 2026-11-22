@@ -8,13 +8,13 @@ import { Button } from '@/components/button'
 import { AppSelect } from '@/components/select'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { resolveAudioUrl, resolveImageUrl } from '@/utils/media.utils'
-import { part1SessionService } from '../services/listening-part1-session.service'
+import { part1SessionService } from '@/features/practice/services/listening-part1-session.service'
 import type {
   Part1Session,
   Part1SessionFilters,
   Part1SessionResult,
-} from '../types/listening-part1-session'
-import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
+} from '@/features/practice/types/listening-part1-session'
+import { PracticeExitConfirmModal } from '@/features/practice/components/practice.exit-confirm.modal'
 
 export function ListeningPart1SessionWorkspace({
   exerciseId,

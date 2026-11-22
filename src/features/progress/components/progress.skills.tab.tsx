@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/hooks/use.language";
-import { PronunciationDetailTab } from "./pronunciation.detail.tab";
+import { PronunciationDetailTab } from "@/features/progress/components/pronunciation.detail.tab";
 import type { VocabStatsSummary } from "@/features/progress/hooks/use.progress.data";
 import type {
   SkillsSummary,
@@ -23,7 +23,7 @@ import {
   SpeakingDetailTab,
   VocabularyDetailTab,
   type SkillTabType,
-} from "./tabs";
+} from "@/features/progress/components/tabs";
 
 // Re-export helpers for backwards compatibility
 export {
@@ -33,7 +33,7 @@ export {
   formatSkillName,
   formatTrendName,
   formatDimensionName,
-} from "./progress.helpers";
+} from "@/features/progress/components/progress.helpers";
 
 export type { SkillTabType };
 

@@ -73,7 +73,7 @@ export interface GrammarQuestionItem {
 }
 
 export interface GrammarSession {
-  speaking_grammar_source?: import('./speaking-grammar').SpeakingGrammarSource | null
+  speaking_grammar_source?: import('@/features/practice/types/speaking-grammar').SpeakingGrammarSource | null
   revision?: number
   status?: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED'
   answers?: Record<string, string>

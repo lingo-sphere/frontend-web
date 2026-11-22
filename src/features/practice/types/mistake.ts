@@ -191,8 +191,8 @@ export interface SpeakingContextImprovement {
 }
 
 export interface SpeakingMistakesResponse {
-  learning_issues?: import('./speaking').SpeakingLearningIssue[]
-  vocabulary_errors?: import('./speaking').SpeakingLearningIssue[]
+  learning_issues?: import('@/features/practice/types/speaking').SpeakingLearningIssue[]
+  vocabulary_errors?: import('@/features/practice/types/speaking').SpeakingLearningIssue[]
   summary: {
     total_due_today: number
     total_scheduled: number

@@ -1,4 +1,4 @@
-import type { ListeningTabType } from '../types/listening-practice'
+import type { ListeningTabType } from '@/features/practice/types/listening-practice'
 
 export const LISTENING_SUBTYPES: Record<
   ListeningTabType,

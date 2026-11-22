@@ -1,4 +1,4 @@
-import { resolvePracticeDifficulty, practiceDifficultyLabel, PRACTICE_DIFFICULTY_COLORS } from '../lib/practice-difficulty'
+import { resolvePracticeDifficulty, practiceDifficultyLabel, PRACTICE_DIFFICULTY_COLORS } from '@/features/practice/lib/practice-difficulty'
 // Component giao diện React WritingExerciseDetail cho học viên
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";

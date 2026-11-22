@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { usePracticeReview } from "../hooks/use.practice.review";
+import type { usePracticeReview } from "@/features/practice/hooks/use.practice.review";
 
 export function PracticeReviewPanel({
   state,

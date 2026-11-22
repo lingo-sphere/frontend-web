@@ -14,7 +14,7 @@ import type {
   AIReadingExplanation,
   ReadingSession,
   TimerPresetMode,
-} from '../types/reading'
+} from '@/features/practice/types/reading'
 
 export const readingPracticeService = {
   startSession(payload: { passage_id: string; session_key: string; time_mode: TimerPresetMode }): Promise<ReadingSession> { return api.post('/practice/reading/sessions', payload) },

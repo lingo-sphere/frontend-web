@@ -5,8 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { Button } from '@/components/button'
-import type { SaveSpeakingWordResult } from '../types/speaking-vocabulary'
-import { speakingVocabularyService } from '../services/speaking-vocabulary.service'
+import type { SaveSpeakingWordResult } from '@/features/practice/types/speaking-vocabulary'
+import { speakingVocabularyService } from '@/features/practice/services/speaking-vocabulary.service'
 
 export function SpeakingVocabularySavedActions({
   saved,

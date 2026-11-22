@@ -1,8 +1,8 @@
-import { PracticeKeyboard } from './practice.keyboard'
-import { useWritingReviewDraft } from '../hooks/use.writing.review.draft'
+import { PracticeKeyboard } from '@/features/practice/components/practice.keyboard'
+import { useWritingReviewDraft } from '@/features/practice/hooks/use.writing.review.draft'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { useWritingReviewSession, writingSrsKey } from '../hooks/use.writing.srs'
-import { writingSrsService } from '../services/writing-srs.service'
+import { useWritingReviewSession, writingSrsKey } from '@/features/practice/hooks/use.writing.srs'
+import { writingSrsService } from '@/features/practice/services/writing-srs.service'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 // Component giao diện React WritingWorkspace cho học viên
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -13,7 +13,7 @@ import type { WritingExercise } from '@/features/practice/types/writing'
 import { resolveMediaUrlAsync } from '@/utils/media.utils'
 import { toast } from '@/store/toast.store'
 import { WritingTimer } from '@/features/practice/components/writing.timer'
-import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
+import { PracticeExitConfirmModal } from '@/features/practice/components/practice.exit-confirm.modal'
 
 interface WritingWorkspaceProps {
   reviewSessionId?: string

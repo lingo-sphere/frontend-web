@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { progressKeys } from "@/features/progress/keys/progress.keys";
-import { PracticeExitConfirmModal } from "./practice.exit-confirm.modal";
+import { PracticeExitConfirmModal } from "@/features/practice/components/practice.exit-confirm.modal";
 
 interface IpaPracticeModalProps {
   isOpen: boolean;

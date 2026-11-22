@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/card';
 import { Button } from '@/components/button';
 import { Icon } from '@/components/icon.map';
 import { getOrGeneratePracticeAudio, resolveAudioUrl } from '@/utils/media.utils';
-import type { Part4Item } from '../types/listening-practice';
+import type { Part4Item } from '@/features/practice/types/listening-practice';
 
 interface ListeningPart4WorkspaceProps {
   talk: Part4Item;

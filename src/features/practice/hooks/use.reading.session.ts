@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { readingPracticeService } from '../services/reading-practice.service'
-import { readSkillDraft, writeSkillDraft } from '../lib/skill-draft'
+import { readingPracticeService } from '@/features/practice/services/reading-practice.service'
+import { readSkillDraft, writeSkillDraft } from '@/features/practice/lib/skill-draft'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import type { AIReadingExplanation, ReadingAttemptResultEnhanced, ReadingPassage, ReadingSession, SubmitReadingAttemptPayload } from '../types/reading'
+import type { AIReadingExplanation, ReadingAttemptResultEnhanced, ReadingPassage, ReadingSession, SubmitReadingAttemptPayload } from '@/features/practice/types/reading'
 
 interface Draft { answers: Record<string, string>; revision: number; pending?: SubmitReadingAttemptPayload }
 const message = (error: unknown) => error instanceof Error ? error.message : 'Không kết nối được máy chủ'

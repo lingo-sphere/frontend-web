@@ -6,7 +6,7 @@ import { useSpeakingRecorder } from "@/features/practice/hooks/use.speaking.reco
 import {
   courseService,
   type SpeakingSubmissionResponse,
-} from "../services/course.service";
+} from "@/features/courses/services/course.service";
 import {
   readSkillDraft,
   writeSkillDraft,
