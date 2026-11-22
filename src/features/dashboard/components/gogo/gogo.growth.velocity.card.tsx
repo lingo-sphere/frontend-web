@@ -1,8 +1,9 @@
-// Component biểu đồ cột phân tích tốc độ tăng trưởng và nhịp độ luyện tập 7 ngày gần nhất của học viên.
+// Component biểu đồ cột phân tích tốc độ tăng trưởng và nhịp độ luyện tập 7 ngày gần nhất của học viên hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { useState } from 'react'
 import { ArrowRight, Activity, Clock, Award, CheckCircle2 } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 import type { TimeGrowth, ActivityOverview } from '@/features/progress/services/progress.service'
 
 interface GogoGrowthVelocityCardProps {
@@ -16,13 +17,15 @@ export function GogoGrowthVelocityCard({
   activityOverview,
   onViewDetails,
 }: GogoGrowthVelocityCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const [hoveredDayIdx, setHoveredDayIdx] = useState<number | null>(null)
 
   const thisWeekTotal = timeGrowth?.this_week_total ?? activityOverview?.this_week_questions ?? 0
   const activityGrowthPct = timeGrowth?.activity_growth_pct ?? 0
   const studyVelocity = timeGrowth?.study_velocity ?? 0
   const deltaAccuracy = timeGrowth?.overall_delta_accuracy ?? 0
-  const trendLabel = timeGrowth?.trend_label || (deltaAccuracy > 0 ? 'Tăng trưởng tốt' : deltaAccuracy < 0 ? 'Nhịp học chững lại' : 'Nhịp học ổn định')
+  const trendLabel = timeGrowth?.trend_label || (deltaAccuracy > 0 ? (isVi ? 'Tăng trưởng tốt' : 'Growing Well') : deltaAccuracy < 0 ? (isVi ? 'Nhịp học chững lại' : 'Pace Slowing') : (isVi ? 'Nhịp học ổn định' : 'Steady Pace'))
 
   const dailyBreakdown = timeGrowth?.daily_breakdown_7d || []
   const maxDayQuestions = Math.max(20, ...dailyBreakdown.map((d) => d.questions_attempted || d.attempts || 0))
@@ -36,7 +39,7 @@ export function GogoGrowthVelocityCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-            Tốc độ Tăng trưởng & Nhịp học (Growth Velocity)
+            {isVi ? 'Tốc độ Tăng trưởng & Nhịp học (Growth Velocity)' : 'Growth Velocity & Study Rhythm'}
           </h2>
           <span
             className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
@@ -56,7 +59,7 @@ export function GogoGrowthVelocityCard({
             onClick={onViewDetails}
             className="text-xs font-semibold text-text-tertiary hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <span>Chi tiết</span>
+            <span>{isVi ? 'Chi tiết' : 'Details'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
@@ -70,10 +73,10 @@ export function GogoGrowthVelocityCard({
             </span>
             <div>
               <div className="text-sm font-extrabold text-text-primary">
-                {thisWeekTotal} câu / 7 ngày
+                {thisWeekTotal} {isVi ? 'câu / 7 ngày' : 'questions / 7 days'}
               </div>
               <span className="text-[10px] text-text-tertiary">
-                Nhịp học: {studyVelocity} lượt/ngày
+                {isVi ? 'Nhịp học: ' : 'Study rhythm: '}{studyVelocity} {isVi ? 'lượt/ngày' : 'sessions/day'}
               </span>
             </div>
           </div>
@@ -88,7 +91,7 @@ export function GogoGrowthVelocityCard({
                   : 'bg-surface-subtle text-text-tertiary border-border'
               }`}
             >
-              {activityGrowthPct > 0 ? `+${activityGrowthPct}% số lượt` : `${activityGrowthPct}% số lượt`}
+              {activityGrowthPct > 0 ? `+${activityGrowthPct}% ${isVi ? 'số lượt' : 'attempts'}` : `${activityGrowthPct}% ${isVi ? 'số lượt' : 'attempts'}`}
             </span>
             <span
               className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border ${
@@ -99,22 +102,22 @@ export function GogoGrowthVelocityCard({
                   : 'bg-surface-subtle text-text-tertiary border-border'
               }`}
             >
-              {deltaAccuracy > 0 ? `+${deltaAccuracy}% chính xác` : `${deltaAccuracy}% chính xác`}
+              {deltaAccuracy > 0 ? `+${deltaAccuracy}% ${isVi ? 'chính xác' : 'accuracy'}` : `${deltaAccuracy}% ${isVi ? 'chính xác' : 'accuracy'}`}
             </span>
           </div>
         </div>
 
         <div className="relative pt-4 pb-1">
           <div className="flex items-center justify-between text-[11px] text-text-tertiary mb-3">
-            <span>Biểu đồ cột tần suất câu hỏi 7 ngày:</span>
+            <span>{isVi ? 'Biểu đồ cột tần suất câu hỏi 7 ngày:' : '7-day question frequency bar chart:'}</span>
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                Đạt chuẩn ≥70%
+                {isVi ? 'Đạt chuẩn ≥70%' : 'Benchmark ≥70%'}
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-sky-500/60" />
-                Luyện tập
+                {isVi ? 'Luyện tập' : 'Practice'}
               </span>
             </div>
           </div>
@@ -136,9 +139,9 @@ export function GogoGrowthVelocityCard({
                 >
                   {isHovered && (
                     <div className="absolute -top-12 z-20 px-2.5 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-semibold whitespace-nowrap shadow-md pointer-events-none text-center">
-                      <div>{d.day_name || d.date}: {questions} câu</div>
+                      <div>{d.day_name || d.date}: {questions} {isVi ? 'câu' : 'Qs'}</div>
                       <div className="text-[10px] text-emerald-300">
-                        {acc}% chính xác • {d.time_spent_formatted || '0m'}
+                        {acc}% {isVi ? 'chính xác' : 'accuracy'} • {d.time_spent_formatted || '0m'}
                       </div>
                     </div>
                   )}
@@ -171,7 +174,7 @@ export function GogoGrowthVelocityCard({
           <div className="p-2.5 rounded-2xl border border-border/60 bg-surface-subtle/40 flex flex-col items-center gap-1">
             <span className="text-[10px] text-text-tertiary font-semibold uppercase tracking-wider flex items-center gap-1">
               <Clock className="w-3 h-3 text-text-tertiary" />
-              Thời gian học
+              {isVi ? 'Thời gian học' : 'Study Time'}
             </span>
             <span className="text-sm font-extrabold text-text-primary">
               {totalTimeFormatted}
@@ -181,17 +184,17 @@ export function GogoGrowthVelocityCard({
           <div className="p-2.5 rounded-2xl border border-border/60 bg-surface-subtle/40 flex flex-col items-center gap-1">
             <span className="text-[10px] text-text-tertiary font-semibold uppercase tracking-wider flex items-center gap-1">
               <Award className="w-3 h-3 text-text-tertiary" />
-              Bài hoàn thành
+              {isVi ? 'Bài hoàn thành' : 'Completed'}
             </span>
             <span className="text-sm font-extrabold text-text-primary">
-              {totalExercises} bài
+              {totalExercises} {isVi ? 'bài' : 'lessons'}
             </span>
           </div>
 
           <div className="p-2.5 rounded-2xl border border-border/60 bg-surface-subtle/40 flex flex-col items-center gap-1">
             <span className="text-[10px] text-text-tertiary font-semibold uppercase tracking-wider flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-text-tertiary" />
-              Tỉ lệ chính xác
+              {isVi ? 'Tỉ lệ chính xác' : 'Accuracy Rate'}
             </span>
             <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
               {accuracyRate > 0 ? `${accuracyRate}%` : '0%'}

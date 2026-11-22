@@ -1,7 +1,8 @@
-// Component thẻ mục tiêu cá nhân hóa dạng đồng hồ đo tiến độ theo phong cách thiết kế Cuba Monthly Target Widget.
+// Component thẻ mục tiêu cá nhân hóa dạng đồng hồ đo tiến độ theo phong cách thiết kế Cuba Monthly Target Widget hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { Rocket, BookOpen, Target, Sparkles, Flame } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 
 interface GogoConfigurationCardProps {
   targetScore?: number
@@ -17,10 +18,12 @@ function SemiCircleTargetGauge({
   percent,
   size = 200,
   strokeWidth = 12,
+  isVi = true,
 }: {
   percent: number
   size?: number
   strokeWidth?: number
+  isVi?: boolean
 }) {
   const width = size
   const height = size / 2 + strokeWidth + 8
@@ -98,7 +101,7 @@ function SemiCircleTargetGauge({
           {clamped}%
         </span>
         <span className="text-[11px] font-bold text-text-tertiary block">
-          Tiến độ chạm đích
+          {isVi ? 'Tiến độ chạm đích' : 'Goal Completion'}
         </span>
       </div>
     </div>
@@ -114,6 +117,8 @@ export function GogoConfigurationCard({
   onPractice,
   onVocab,
 }: GogoConfigurationCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const percent = targetScore > 0 ? Math.min(100, Math.round((currentScore / targetScore) * 100)) : 0
 
   return (
@@ -125,42 +130,48 @@ export function GogoConfigurationCard({
           </span>
           <div>
             <h3 className="text-sm font-extrabold text-text-primary uppercase tracking-wider">
-              Mục Tiêu Cá Nhân Hóa
+              {isVi ? 'Mục Tiêu Cá Nhân Hóa' : 'Personalized Target'}
             </h3>
             <p className="text-[11px] text-text-tertiary">
-              Tiến trình cán đích điểm số TOEIC chuẩn
+              {isVi ? 'Tiến trình cán đích điểm số TOEIC chuẩn' : 'Progress towards benchmark TOEIC score'}
             </p>
           </div>
         </div>
 
         <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-          {targetScore > 0 ? `Target: ${targetScore}đ` : 'Chưa đặt mục tiêu'}
+          {targetScore > 0 ? (isVi ? `Mục tiêu: ${targetScore}đ` : `Target: ${targetScore} pts`) : (isVi ? 'Chưa đặt mục tiêu' : 'No target set')}
         </span>
       </div>
 
       <div className="flex flex-col items-center justify-center py-2">
-        <SemiCircleTargetGauge percent={percent} />
+        <SemiCircleTargetGauge percent={percent} isVi={isVi} />
       </div>
 
       <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-surface-subtle/60 border border-border/80 text-center">
         <div className="space-y-0.5">
-          <span className="text-[10px] font-semibold text-text-tertiary uppercase">Khởi điểm</span>
+          <span className="text-[10px] font-semibold text-text-tertiary uppercase">
+            {isVi ? 'Khởi điểm' : 'Baseline'}
+          </span>
           <span className="text-sm font-black text-text-secondary block">
-            {baselineScore > 0 ? `${baselineScore}đ` : '--'}
+            {baselineScore > 0 ? `${baselineScore}${isVi ? 'đ' : ' pts'}` : '--'}
           </span>
         </div>
 
         <div className="space-y-0.5 border-x border-border/60">
-          <span className="text-[10px] font-semibold text-text-tertiary uppercase">Hiện tại</span>
+          <span className="text-[10px] font-semibold text-text-tertiary uppercase">
+            {isVi ? 'Hiện tại' : 'Current'}
+          </span>
           <span className="text-sm font-black text-primary block">
-            {currentScore > 0 ? `${currentScore}đ` : '--'}
+            {currentScore > 0 ? `${currentScore}${isVi ? 'đ' : ' pts'}` : '--'}
           </span>
         </div>
 
         <div className="space-y-0.5">
-          <span className="text-[10px] font-semibold text-text-tertiary uppercase">Mục tiêu</span>
+          <span className="text-[10px] font-semibold text-text-tertiary uppercase">
+            {isVi ? 'Mục tiêu' : 'Target'}
+          </span>
           <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 block">
-            {targetScore > 0 ? `${targetScore}đ` : '--'}
+            {targetScore > 0 ? `${targetScore}${isVi ? 'đ' : ' pts'}` : '--'}
           </span>
         </div>
       </div>
@@ -169,11 +180,11 @@ export function GogoConfigurationCard({
         <div className="flex items-center justify-between text-xs text-text-secondary px-1">
           <span className="flex items-center gap-1.5 font-medium">
             <Flame className="w-3.5 h-3.5 text-amber-500" />
-            <span>Chuỗi học: {currentStreak} ngày</span>
+            <span>{isVi ? 'Chuỗi học: ' : 'Streak: '}{currentStreak} {isVi ? 'ngày' : 'days'}</span>
           </span>
           <span className="flex items-center gap-1 font-semibold text-text-primary">
             <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
-            <span>{xp.toLocaleString('vi-VN')} XP</span>
+            <span>{xp.toLocaleString(isVi ? 'vi-VN' : 'en-US')} XP</span>
           </span>
         </div>
 
@@ -185,7 +196,7 @@ export function GogoConfigurationCard({
               className="flex-1 px-3 py-2 rounded-2xl bg-primary text-white hover:bg-primary-hover text-xs font-bold shadow-xs transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 hover:scale-[1.02]"
             >
               <Rocket className="w-3.5 h-3.5" />
-              <span>Luyện Đề</span>
+              <span>{isVi ? 'Luyện Đề' : 'Practice Exam'}</span>
             </button>
           )}
 
@@ -196,7 +207,7 @@ export function GogoConfigurationCard({
               className="flex-1 px-3 py-2 rounded-2xl bg-surface hover:bg-surface-subtle text-text-secondary hover:text-text-primary border border-border text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5"
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Ôn Từ Vựng</span>
+              <span>{isVi ? 'Ôn Từ Vựng' : 'Review Vocab'}</span>
             </button>
           )}
         </div>

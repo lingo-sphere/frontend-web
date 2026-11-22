@@ -1,7 +1,8 @@
-// Component phân tích kỹ năng TOEIC và tiến độ từ vựng sử dụng TanStack Query tối ưu hiệu năng.
+// Component phân tích kỹ năng TOEIC và tiến độ từ vựng sử dụng TanStack Query tối ưu hiệu năng hỗ trợ đa ngôn ngữ.
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/hooks/use.language";
 import { PronunciationDetailTab } from "./pronunciation.detail.tab";
 import type { VocabStatsSummary } from "@/features/progress/hooks/use.progress.data";
 import type {
@@ -56,6 +57,8 @@ export function ProgressSkillsTab({
   onNavigate,
   userId,
 }: ProgressSkillsTabProps) {
+  const { isVietnamese } = useLanguage();
+  const isVi = isVietnamese;
   const [activeSkillTab, setActiveSkillTab] =
     useState<SkillTabType>("overview");
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("7d");
@@ -88,7 +91,7 @@ export function ProgressSkillsTab({
       {/* Bộ lọc thời gian */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-text-secondary">Thời gian:</span>
+          <span className="text-xs text-text-secondary">{isVi ? "Thời gian:" : "Period:"}</span>
           {(["7d", "30d", "90d", "all"] as TimePeriod[]).map((period) => (
             <button
               key={period}
@@ -101,12 +104,12 @@ export function ProgressSkillsTab({
               }`}
             >
               {period === "7d"
-                ? "7 ngày"
+                ? (isVi ? "7 ngày" : "7 days")
                 : period === "30d"
-                ? "30 ngày"
+                ? (isVi ? "30 ngày" : "30 days")
                 : period === "90d"
-                ? "90 ngày"
-                : "Tất cả"}
+                ? (isVi ? "90 ngày" : "90 days")
+                : (isVi ? "Tất cả" : "All time")}
             </button>
           ))}
         </div>
@@ -123,7 +126,7 @@ export function ProgressSkillsTab({
               : "bg-surface-subtle text-text-secondary hover:text-text-primary"
           }`}
         >
-          Tổng quan
+          {isVi ? "Tổng quan" : "Overview"}
         </button>
         <button
           type="button"
@@ -134,7 +137,7 @@ export function ProgressSkillsTab({
               : "bg-surface-subtle text-text-secondary hover:text-text-primary"
           }`}
         >
-          📖 Đọc hiểu
+          {isVi ? "📖 Đọc hiểu" : "📖 Reading"}
         </button>
         <button
           type="button"
@@ -145,7 +148,7 @@ export function ProgressSkillsTab({
               : "bg-surface-subtle text-text-secondary hover:text-text-primary"
           }`}
         >
-          🎧 Nghe hiểu
+          {isVi ? "🎧 Nghe hiểu" : "🎧 Listening"}
         </button>
         <button
           type="button"
@@ -156,7 +159,7 @@ export function ProgressSkillsTab({
               : "bg-surface-subtle text-text-secondary hover:text-text-primary"
           }`}
         >
-          📚 Ngữ pháp
+          {isVi ? "📚 Ngữ pháp" : "📚 Grammar"}
         </button>
         <button
           type="button"
@@ -167,7 +170,7 @@ export function ProgressSkillsTab({
               : "bg-surface-subtle text-text-secondary hover:text-text-primary"
           }`}
         >
-          ✍️ Viết
+          {isVi ? "✍️ Viết" : "✍️ Writing"}
         </button>
         <button
           type="button"
@@ -178,7 +181,7 @@ export function ProgressSkillsTab({
               : "bg-surface-subtle text-text-secondary hover:text-text-primary"
           }`}
         >
-          🎤 Nói
+          {isVi ? "🎤 Nói" : "🎤 Speaking"}
         </button>
         <button
           type="button"
@@ -189,7 +192,7 @@ export function ProgressSkillsTab({
               : "bg-surface-subtle text-text-secondary hover:text-text-primary"
           }`}
         >
-          📝 Từ vựng
+          {isVi ? "📝 Từ vựng" : "📝 Vocabulary"}
         </button>
         <button
           type="button"
@@ -200,7 +203,7 @@ export function ProgressSkillsTab({
               : "bg-surface-subtle text-text-secondary hover:text-text-primary"
           }`}
         >
-          🗣️ Ngữ âm
+          {isVi ? "🗣️ Ngữ âm" : "🗣️ Pronunciation"}
         </button>
       </div>
 

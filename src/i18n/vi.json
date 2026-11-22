@@ -121,7 +121,22 @@
     "verifyEmailInvalidLink": "Đường liên kết kích hoạt không hợp lệ hoặc thiếu thông tin xác thực.",
     "verifyEmailExpiredToken": "Mã xác thực email đã hết hạn hoặc không tồn tại.",
     "verifyEmailErrorHelp": "Đường link có thể đã được sử dụng hoặc quá hạn. Bạn có thể đăng nhập hoặc yêu cầu gửi lại mã xác thực mới.",
-    "verifyEmailLoadingFallback": "Đang xác thực email..."
+    "verifyEmailLoadingFallback": "Đang xác thực email...",
+    "heroBadge": "Nền tảng học ngoại ngữ thế hệ mới",
+    "heroTitle1": "Bứt phá trình độ,",
+    "heroTitle2": "Chinh phục ngoại ngữ cùng AI",
+    "heroDesc": "Học tiếng Anh thông minh hơn với lộ trình cá nhân hóa cho từng mục tiêu TOEIC, IELTS và giao tiếp thực chiến. Hệ thống AI theo sát từng bước tiến bộ của bạn.",
+    "heroFeaturePronunciation": "Luyện phát âm chuẩn với AI nhận diện âm vị thời gian thực",
+    "heroFeatureRoadmap": "Lộ trình tối ưu hóa mục tiêu TOEIC 800+ và IELTS 7.5+",
+    "heroFeatureSync": "Lưu trữ tiến độ và đồng bộ bài học trên mọi thiết bị",
+    "trustedLearners": "50,000+ Học viên tin tưởng",
+    "ratingNationwide": "Đánh giá 4.9 / 5.0 ⭐ trên toàn quốc",
+    "commitmentOutput": "Cam kết chuẩn đầu ra",
+    "loginWelcome": "Chào mừng bạn quay lại hành trình rèn luyện tiếng Anh!",
+    "registerWelcome": "Bắt đầu trải nghiệm học tập cùng trợ lý AI cá nhân hóa.",
+    "verifyWelcome": "Vui lòng hoàn tất bước xác thực để tiếp tục.",
+    "registerWithGoogle": "Đăng ký với Google",
+    "securityBadge": "Bảo mật SSL 256-bit • Dữ liệu mã hóa an toàn"
   },
   "nav": {
     "home": "Trang chủ",

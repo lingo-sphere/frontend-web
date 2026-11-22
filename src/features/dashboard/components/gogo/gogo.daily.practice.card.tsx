@@ -1,7 +1,8 @@
-// Component trực quan hóa nhật ký luyện tập ngày của học viên với biểu đồ vòng tròn mục tiêu và các thanh đo chỉ số.
+// Component trực quan hóa nhật ký luyện tập ngày của học viên với biểu đồ vòng tròn mục tiêu và các thanh đo chỉ số hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { Calendar, ArrowRight, CheckCircle2, Clock, CheckSquare, Target, Flame } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 import type { TimeGrowth } from '@/features/progress/services/progress.service'
 
 interface GogoDailyPracticeCardProps {
@@ -13,10 +14,12 @@ function DailyGoalRadial({
   percent,
   size = 96,
   strokeWidth = 8,
+  isVi = true,
 }: {
   percent: number
   size?: number
   strokeWidth?: number
+  isVi?: boolean
 }) {
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
@@ -61,7 +64,7 @@ function DailyGoalRadial({
           {clamped}%
         </span>
         <span className="text-[9px] font-bold text-text-tertiary uppercase tracking-wider">
-          Mục tiêu
+          {isVi ? 'Mục tiêu' : 'Goal'}
         </span>
       </div>
     </div>
@@ -72,6 +75,9 @@ export function GogoDailyPracticeCard({
   dailyBreakdown = [],
   onViewAll,
 }: GogoDailyPracticeCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
+
   const todayStr = new Date().toISOString().slice(0, 10)
   const todayData = dailyBreakdown.find((d) => d.date === todayStr) || dailyBreakdown[dailyBreakdown.length - 1]
 
@@ -91,7 +97,7 @@ export function GogoDailyPracticeCard({
 
   const overallDailyGoal = Math.round((timePct * 0.4) + (exercisePct * 0.4) + (accuracyPct * 0.2))
 
-  const todayDateFormatted = new Intl.DateTimeFormat('vi-VN', {
+  const todayDateFormatted = new Intl.DateTimeFormat(isVi ? 'vi-VN' : 'en-US', {
     weekday: 'long',
     day: 'numeric',
     month: 'numeric',
@@ -101,7 +107,7 @@ export function GogoDailyPracticeCard({
     <div className="space-y-3 h-full flex flex-col">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-          Nhật ký luyện tập hôm nay
+          {isVi ? 'Nhật ký luyện tập hôm nay' : "Today's Practice Log"}
         </h2>
         {onViewAll && (
           <button
@@ -109,7 +115,7 @@ export function GogoDailyPracticeCard({
             onClick={onViewAll}
             className="text-xs font-semibold text-text-tertiary hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <span>Báo cáo kỹ năng</span>
+            <span>{isVi ? 'Báo cáo kỹ năng' : 'Skills Report'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
@@ -127,7 +133,7 @@ export function GogoDailyPracticeCard({
                   {todayDateFormatted}
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/10 text-primary border border-primary/20">
-                  Hôm nay
+                  {isVi ? 'Hôm nay' : 'Today'}
                 </span>
                 <span
                   className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
@@ -136,13 +142,13 @@ export function GogoDailyPracticeCard({
                       : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
                   }`}
                 >
-                  {hasPracticed ? 'Đã rèn luyện' : 'Chưa luyện tập'}
+                  {hasPracticed ? (isVi ? 'Đã rèn luyện' : 'Practiced') : (isVi ? 'Chưa luyện tập' : 'Not practiced')}
                 </span>
               </div>
               <p className="text-[11px] text-text-tertiary mt-0.5">
                 {hasPracticed
-                  ? 'Tuyệt vời! Bạn đã duy trì nhịp độ học tập hàng ngày.'
-                  : 'Hãy làm ít nhất 1 bài tập hoặc ôn từ vựng để giữ chuỗi phong độ.'}
+                  ? (isVi ? 'Tuyệt vời! Bạn đã duy trì nhịp độ học tập hàng ngày.' : 'Great job! You maintained your daily study momentum.')
+                  : (isVi ? 'Hãy làm ít nhất 1 bài tập hoặc ôn từ vựng để giữ chuỗi phong độ.' : 'Complete at least 1 exercise or review vocabulary to keep your streak.')}
               </p>
             </div>
           </div>
@@ -153,7 +159,7 @@ export function GogoDailyPracticeCard({
               onClick={onViewAll}
               className="text-xs font-bold text-primary hover:underline flex items-center gap-1 self-start sm:self-auto cursor-pointer"
             >
-              <span>Xem danh sách bài ngày này</span>
+              <span>{isVi ? 'Xem danh sách bài ngày này' : 'View sessions for this day'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -161,9 +167,9 @@ export function GogoDailyPracticeCard({
 
         <div className="flex flex-col md:flex-row items-center gap-6 p-4 rounded-2xl bg-surface-subtle/50 border border-border/70">
           <div className="flex flex-col items-center justify-center gap-2 shrink-0 pr-0 md:pr-4 md:border-r md:border-border/60">
-            <DailyGoalRadial percent={overallDailyGoal} />
+            <DailyGoalRadial percent={overallDailyGoal} isVi={isVi} />
             <span className="text-[11px] font-bold text-text-secondary">
-              Hoàn thành chỉ tiêu ngày
+              {isVi ? 'Hoàn thành chỉ tiêu ngày' : 'Daily Goal Progress'}
             </span>
           </div>
 
@@ -172,7 +178,7 @@ export function GogoDailyPracticeCard({
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 text-text-secondary font-semibold">
                   <Clock className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Thời gian học</span>
+                  <span>{isVi ? 'Thời gian học' : 'Study Time'}</span>
                 </div>
                 <span className="font-extrabold text-text-primary">
                   {timeSpent} <span className="text-[10px] text-text-tertiary font-normal">/ {TARGET_MINUTES}m</span>
@@ -190,10 +196,10 @@ export function GogoDailyPracticeCard({
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 text-text-secondary font-semibold">
                   <CheckSquare className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Bài hoàn thành</span>
+                  <span>{isVi ? 'Bài hoàn thành' : 'Completed'}</span>
                 </div>
                 <span className="font-extrabold text-text-primary">
-                  {exercises} <span className="text-[10px] text-text-tertiary font-normal">/ {TARGET_EXERCISES} bài</span>
+                  {exercises} <span className="text-[10px] text-text-tertiary font-normal">/ {TARGET_EXERCISES} {isVi ? 'bài' : 'lessons'}</span>
                 </span>
               </div>
               <div className="w-full h-2 rounded-full bg-surface-subtle overflow-hidden border border-border/40">
@@ -208,11 +214,11 @@ export function GogoDailyPracticeCard({
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 text-text-secondary font-semibold">
                   <Target className="w-3.5 h-3.5 text-teal-500" />
-                  <span>Độ chính xác</span>
+                  <span>{isVi ? 'Độ chính xác' : 'Accuracy'}</span>
                 </div>
                 <span className="font-extrabold text-text-primary">
                   {accuracy !== null ? `${accuracy}%` : '--'}
-                  <span className="text-[10px] text-text-tertiary font-normal"> (chuẩn ≥80%)</span>
+                  <span className="text-[10px] text-text-tertiary font-normal"> ({isVi ? 'chuẩn ≥80%' : 'target ≥80%'})</span>
                 </span>
               </div>
               <div className="w-full h-2 rounded-full bg-surface-subtle overflow-hidden border border-border/40">
@@ -229,10 +235,10 @@ export function GogoDailyPracticeCard({
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 text-text-secondary font-semibold">
                   <Flame className="w-3.5 h-3.5 text-orange-500" />
-                  <span>Lượt làm & Ôn lỗi</span>
+                  <span>{isVi ? 'Lượt làm & Ôn lỗi' : 'Attempts & Mistakes'}</span>
                 </div>
                 <span className="font-extrabold text-text-primary">
-                  {attempts} <span className="text-[10px] text-text-tertiary font-normal">lượt</span>
+                  {attempts} <span className="text-[10px] text-text-tertiary font-normal">{isVi ? 'lượt' : 'attempts'}</span>
                 </span>
               </div>
               <div className="w-full h-2 rounded-full bg-surface-subtle overflow-hidden border border-border/40">
@@ -247,7 +253,9 @@ export function GogoDailyPracticeCard({
 
         {todayData?.skills_practiced && todayData.skills_practiced.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap pt-1 text-xs">
-            <span className="text-text-tertiary text-[11px] font-medium">Kỹ năng đã luyện:</span>
+            <span className="text-text-tertiary text-[11px] font-medium">
+              {isVi ? 'Kỹ năng đã luyện:' : 'Skills practiced:'}
+            </span>
             {todayData.skills_practiced.map((s, idx) => (
               <span
                 key={`${s.skill}-${idx}`}
