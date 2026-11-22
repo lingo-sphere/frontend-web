@@ -15,10 +15,13 @@ export interface ListeningGroup {
   end?: number
   clipped: boolean
   timeSeconds?: number
+  untimed?: boolean
+  unlimitedReplay?: boolean
   allowReplay?: boolean
   replayLimit?: number
   playCount?: number
   playbackCompleted?: boolean
+  replaysRemaining?: number | null
   hasListened?: boolean
   showImageBefore?: boolean
   showQuestionsBefore?: boolean
@@ -45,6 +48,7 @@ export interface ListeningGroup {
     label: string
     firstLetter?: string
     length?: number
+    inputLength?: number
     hintsAvailable: number
     hint?: string
   }[]
@@ -57,6 +61,8 @@ export interface ListeningPracticeSession {
   groups: ListeningGroup[]
   status: string
   settings?: {
+    untimed?: boolean
+    unlimited_replay?: boolean
     show_answers_immediately?: boolean
     show_transcript_after?: boolean
     enable_hints?: boolean

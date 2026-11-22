@@ -17,14 +17,14 @@ import type {
   SkillStats,
   PracticeDashboardData,
   WeaknessAnalysis,
+  TimePeriod,
 } from "@/features/progress/services/progress.service";
 import { progressService } from "@/features/progress/services/progress.service";
-import { SkillRadarChart } from "../skill-radar-chart";
-import type { RadarDataPoint } from "../skill-radar-chart";
 import { formatTrendName, formatDimensionName } from "../progress.helpers";
 import { EvidenceBadge } from "../shared";
 
 export interface GrammarDetailTabProps {
+  period?: TimePeriod;
   stats?: SkillStats;
   userId?: string;
   dashboardData?: PracticeDashboardData | null;
@@ -33,6 +33,7 @@ export interface GrammarDetailTabProps {
 
 export function GrammarDetailTab({
   stats,
+  period = '7d',
   userId,
   dashboardData,
   onNavigate,
@@ -62,13 +63,13 @@ export function GrammarDetailTab({
         })
         .catch(() => {}),
       progressService
-        .getSkillWeaknesses(userId, "grammar", "30d")
+        .getSkillWeaknesses(userId, "grammar", period)
         .then((weakList) => {
           if (isMounted) setWeaknesses(weakList || []);
         })
         .catch(() => {}),
       progressService
-        .getGrammarContextBreakdown(userId, "30d")
+        .getGrammarContextBreakdown(userId, period)
         .then((ctxBreakdown) => {
           if (isMounted) setContextBreakdown(ctxBreakdown);
         })
@@ -86,82 +87,13 @@ export function GrammarDetailTab({
     return () => {
       isMounted = false;
     };
-  }, [userId]);
+  }, [userId, period]);
 
-  const overallGrammar = stats?.accuracy
-    ? Math.round(stats.accuracy)
-    : dashboardData?.skills?.grammar?.accuracy_rate || 0;
+  const overallGrammar = Math.round(stats?.accuracy ?? 0);
 
   const weeklyGrammar = dashboardData?.weekly_comparison?.this_week?.grammar;
   const lastWeekGrammar = dashboardData?.weekly_comparison?.last_week?.grammar;
   const grammarImprovement = dashboardData?.weekly_comparison?.grammar_improvement ?? 0;
-
-  // Helper tính điểm từng trục radar từ stats.by_dimension
-  const getScoreForKeys = (keys: string[], fallback: number) => {
-    if (!stats?.by_dimension) return fallback;
-    for (const [k, v] of Object.entries(stats.by_dimension)) {
-      const lowerKey = k.toLowerCase();
-      const lowerName = (v.name || "").toLowerCase();
-      if (keys.some((target) => lowerKey.includes(target) || lowerName.includes(target))) {
-        return Math.round(v.accuracy);
-      }
-    }
-    return fallback;
-  };
-
-  const defaultGrammarRadar: RadarDataPoint[] = [
-    {
-      axis: "Các thì & Động từ",
-      key: "tenses",
-      value: getScoreForKeys(["tenses", "present", "past", "future", "verb"], overallGrammar),
-      fullMark: 100,
-    },
-    {
-      axis: "Cấu trúc & Mệnh đề",
-      key: "sentence_structure",
-      value: getScoreForKeys(
-        ["sentence_structure", "clauses", "relative", "order"],
-        overallGrammar ? Math.max(overallGrammar - 3, 0) : 0
-      ),
-      fullMark: 100,
-    },
-    {
-      axis: "Mạo từ & Danh từ",
-      key: "articles",
-      value: getScoreForKeys(
-        ["articles", "nouns", "pronouns"],
-        overallGrammar ? Math.min(overallGrammar + 4, 100) : 0
-      ),
-      fullMark: 100,
-    },
-    {
-      axis: "Giới từ & Liên từ",
-      key: "prepositions",
-      value: getScoreForKeys(
-        ["prepositions", "conjunctions"],
-        overallGrammar ? Math.max(overallGrammar - 5, 0) : 0
-      ),
-      fullMark: 100,
-    },
-    {
-      axis: "Điều kiện & Bị động",
-      key: "conditionals",
-      value: getScoreForKeys(
-        ["conditionals", "passive"],
-        overallGrammar ? Math.max(overallGrammar - 4, 0) : 0
-      ),
-      fullMark: 100,
-    },
-    {
-      axis: "Từ loại & Bổ ngữ",
-      key: "word_classes",
-      value: getScoreForKeys(
-        ["word_classes", "adjectives", "adverbs", "modal", "comparisons"],
-        overallGrammar ? Math.min(overallGrammar + 2, 100) : 0
-      ),
-      fullMark: 100,
-    },
-  ];
 
   return (
     <div className="space-y-4">
@@ -198,7 +130,7 @@ export function GrammarDetailTab({
               Độ chính xác trung bình
             </span>
             <span className="text-lg font-black text-amber-600">
-              {overallGrammar > 0 ? `${overallGrammar}%` : "--"}
+              {(stats?.total_questions ?? 0) > 0 ? `${overallGrammar}%` : "--"}
             </span>
           </div>
 
@@ -228,7 +160,7 @@ export function GrammarDetailTab({
               Ước tính CEFR
             </span>
             <span className="text-lg font-black text-primary">
-              {cefrData?.estimated_level || "A2 - B1"}
+              {cefrData?.confidence && cefrData.confidence !== "LOW" ? cefrData.estimated_level : "Chưa đủ dữ liệu"}
             </span>
             {cefrData?.confidence && (
               <span className="text-[9px] text-text-tertiary block">
@@ -237,17 +169,6 @@ export function GrammarDetailTab({
             )}
           </div>
         </div>
-      </Card>
-
-      {/* 2. BIỂU ĐỒ MẠNG NHỆN: 6 TRỤ CỘT NĂNG LỰC NGỮ PHÁP (GRAMMAR RADAR) */}
-      <Card className="dashboard-card p-5 space-y-4">
-        <SkillRadarChart
-          data={defaultGrammarRadar}
-          title="Đánh giá 6 Trụ cột Năng lực Ngữ pháp (Grammar Rubric)"
-          subtitle="Biểu đồ mạng nhện đa giác thể hiện toàn diện hình thái kiến thức ngữ pháp"
-          themeColor="amber"
-          overallScore={overallGrammar}
-        />
       </Card>
 
       {/* 3. SO SÁNH TUẦN NÀY VS TUẦN TRƯỚC (WEEKLY COMPARISON) */}
@@ -260,7 +181,7 @@ export function GrammarDetailTab({
                 So sánh Tiến độ Theo Tuần (Weekly Velocity)
               </h4>
             </div>
-            {grammarImprovement !== 0 && (
+            {grammarImprovement !== 0 && (weeklyGrammar?.attempts ?? 0) > 0 && (lastWeekGrammar?.attempts ?? 0) > 0 && (weeklyGrammar?.attempts ?? 0) > 0 && (lastWeekGrammar?.attempts ?? 0) > 0 && (
               <span
                 className={`text-xs font-black px-2 py-0.5 rounded-lg border ${
                   grammarImprovement > 0
@@ -282,7 +203,7 @@ export function GrammarDetailTab({
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-base font-black text-amber-600">
-                  {weeklyGrammar.accuracy ?? 0}%
+                  {(weeklyGrammar.attempts ?? 0) > 0 ? `${weeklyGrammar.accuracy ?? 0}%` : "--"}
                 </span>
                 <span className="text-[11px] text-text-secondary">
                   ({weeklyGrammar.correct ?? 0}/{weeklyGrammar.attempts ?? 0} câu đúng)
@@ -296,7 +217,7 @@ export function GrammarDetailTab({
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-base font-black text-text-primary">
-                  {lastWeekGrammar?.accuracy ?? 0}%
+                  {(lastWeekGrammar?.attempts ?? 0) > 0 ? `${lastWeekGrammar?.accuracy ?? 0}%` : "--"}
                 </span>
                 <span className="text-[11px] text-text-secondary">
                   ({lastWeekGrammar?.correct ?? 0}/{lastWeekGrammar?.attempts ?? 0} câu đúng)

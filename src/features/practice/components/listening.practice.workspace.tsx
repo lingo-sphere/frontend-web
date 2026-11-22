@@ -5,6 +5,7 @@ import { PracticeKeyboard, PracticeOptionKey } from './practice.keyboard'
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslation } from 'react-i18next'
+import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw, Play, Pause } from 'lucide-react'
 import { Button } from '@/components/button'
 import { AppSelect } from '@/components/select'
 import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
@@ -16,6 +17,34 @@ import type {
   ListeningGroup,
   ListeningKind,
 } from '../types/listening-lifecycle'
+
+function LiveDictationInput({ sessionId, blankKey, label, value, limit, disabled, onChange }: {
+  sessionId: string; blankKey: string; label: string; value: string; limit?: number; disabled: boolean; onChange: (value: string) => void
+}) {
+  const [feedback, setFeedback] = useState<{ answer: string; correct: boolean } | null>(null)
+  const [unavailable, setUnavailable] = useState(false)
+  const composing = useRef(false)
+  const normalized = value.normalize('NFC')
+  useEffect(() => {
+    if (!limit || normalized.length !== limit || disabled) return
+    let active = true
+    const timer = window.setTimeout(() => {
+      void listeningLifecycleService.checkBlank(sessionId, blankKey, normalized).then(result => {
+        if (active) { setFeedback({ answer: normalized, correct: result.is_correct }); setUnavailable(false) }
+      }).catch(() => { if (active) setUnavailable(true) })
+    }, 350)
+    return () => { active = false; clearTimeout(timer) }
+  }, [sessionId, blankKey, normalized, limit, disabled])
+  const current = feedback?.answer === normalized && limit === normalized.length ? feedback : null
+  const update = (text: string) => onChange(limit ? text.normalize('NFC').slice(0, limit) : text)
+  return <div className="min-w-0 w-full sm:w-72">
+    <input aria-label={label} aria-invalid={current ? !current.correct : undefined} value={value} disabled={disabled} maxLength={3000}
+      onCompositionStart={() => { composing.current = true }} onCompositionEnd={event => { composing.current = false; update(event.currentTarget.value) }}
+      onChange={event => { setUnavailable(false); if (composing.current) onChange(event.target.value); else update(event.target.value) }}
+      className={`w-full rounded-lg border bg-surface-subtle p-3 ${current ? current.correct ? 'border-success text-success' : 'border-red-500' : 'border-border'}`} />
+    {unavailable && !current && <span className="text-xs text-text-secondary" role="status">Chưa kiểm tra được, hãy thử sửa lại.</span>}
+  </div>
+}
 
 export function ListeningPracticeWorkspace({
   kind,
@@ -49,7 +78,7 @@ export function ListeningPracticeWorkspace({
   const [showExit,setShowExit]=useState(false)
   const multiQuestionGroup = kind === 'part3' || kind === 'part4'
   const group = session?.groups[draft.current_index]
-  const expired = Boolean(session && remaining <= 0)
+  const expired = Boolean(session && !group?.untimed && remaining <= 0)
   const [hints, setHints] = useState<
     Record<string, { hint: string; hints_remaining: number }>
   >({})
@@ -83,17 +112,25 @@ export function ListeningPracticeWorkspace({
     onBack()
   }
   return (
-    <PracticeKeyboard as="main" withinGroup={multiQuestionGroup} enterMode={kind === 'dictation'} features={['answers','navigate','save','submit','audio',...(kind === 'dictation' ? ['check' as const] : [])]} className="mx-auto max-w-5xl px-4 py-6 space-y-5">
-      <Button data-practice-action="exit" variant="ghost" disabled={busy} onClick={() => session && !result ? setShowExit(true) : void leave()}>
-        {session && !result
-          ? vi
-            ? 'Lưu và quay lại'
-            : 'Save and go back'
-          : vi
-          ? 'Quay lại'
-          : 'Back'}
-      </Button>
-      {session && !result && <Button size="sm" variant="outline" data-practice-action="save" disabled={busy} onClick={() => void practice.save().catch(() => undefined)}>{vi ? 'Lưu tiến độ' : 'Save progress'}</Button>}
+    <PracticeKeyboard as="main" withinGroup={multiQuestionGroup} enterMode={kind === 'dictation'} features={['answers','navigate','submit','audio',...(kind === 'dictation' ? ['check' as const] : [])]} className="mx-auto max-w-5xl px-4 py-6 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button
+          data-practice-action="exit"
+          variant="outline"
+          disabled={busy}
+          onClick={() => session && !result ? setShowExit(true) : void leave()}
+          className="h-10 gap-2 rounded-xl bg-surface px-4 text-text-secondary shadow-none hover:text-text-primary"
+        >
+          <ArrowLeft aria-hidden="true" />
+          {session && !result
+            ? vi
+              ? 'Lưu và quay lại'
+              : 'Save and go back'
+            : vi
+            ? 'Quay lại'
+            : 'Back'}
+        </Button>
+      </div>
       <section className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-5">
         <h1 className="text-xl font-bold text-text-primary">
           {title ||
@@ -181,7 +218,11 @@ export function ListeningPracticeWorkspace({
           ) : (
             <>
               <p className="text-sm text-text-secondary">
-                {vi
+                {kind === 'dictation' && difficulty === 'EASY'
+                  ? vi
+                    ? 'Mức Dễ không giới hạn thời gian và lượt nghe. Tiến độ được tự động lưu để bạn tiếp tục sau.'
+                    : 'Easy mode has no time or replay limits. Progress saves automatically so you can continue later.'
+                  : vi
                   ? 'Phiên luyện có bấm giờ và tự lưu tiến độ. Có thể tiếp tục sau khi tải lại trang hoặc quay lại danh sách.'
                   : 'Timed practice with saved progress. Resume after reloading or returning to the catalog.'}
               </p>
@@ -244,7 +285,14 @@ export function ListeningPracticeWorkspace({
             </>
           )
         ) : result ? (
-          <ListeningSavedResult result={result} vi={vi} onBack={onBack} />
+          <ListeningSavedResult
+            result={result}
+            vi={vi}
+            onBack={onBack}
+            onRetry={() => void practice.start(exerciseId, filters, preset, difficulty)}
+            kind={kind}
+            title={title}
+          />
         ) : (
           group && (
             <>
@@ -263,14 +311,16 @@ export function ListeningPracticeWorkspace({
                     : 'Question'}{' '}
                   {draft.current_index + 1}/{session.groups.length}
                 </span>
-                <span role="timer">
+                {!group.untimed && <span role="timer">
                   {vi ? 'Thời gian đoạn/câu còn lại:' : 'Time for this group:'}{' '}
                   {Math.floor(remaining / 60)}:
                   {String(remaining % 60).padStart(2, '0')}
-                </span>
+                </span>}
               </div>
               <p className="text-xs text-text-secondary">
-                {vi
+                {group.untimed
+                  ? vi ? 'Luyện theo nhịp của bạn, nghe lại tùy nhu cầu.' : 'Practice at your own pace and listen again whenever you need.'
+                  : vi
                   ? 'Thời gian trả lời bắt đầu sau lần nghe đầu hoặc khi bạn nhập/chọn đáp án.'
                   : 'Answer time starts after the first listen or when you enter/select an answer.'}
               </p>
@@ -290,6 +340,7 @@ export function ListeningPracticeWorkspace({
                   {group.title}
                 </h2>
               )}
+              <div className="rounded-2xl border border-border bg-surface-subtle/60 p-4 space-y-3">
               <ListeningSegmentAudio
                 key={group.id}
                 group={group}
@@ -300,6 +351,8 @@ export function ListeningPracticeWorkspace({
                 sessionId={session.id}
                 onRefresh={practice.refreshSession}
                 disabled={busy || expired}
+                onPrevious={draft.current_index > 0 ? () => practice.update({ current_index: draft.current_index - 1, audio_position: session.groups[draft.current_index - 1].start }) : undefined}
+                onNext={draft.current_index < session.groups.length - 1 ? () => practice.update({ current_index: draft.current_index + 1, audio_position: session.groups[draft.current_index + 1].start }) : undefined}
               />
               <div className="flex items-center gap-3 text-sm text-text-secondary">
                 <span className="font-medium">{vi ? 'Tốc độ:' : 'Speed:'}</span>
@@ -318,6 +371,7 @@ export function ListeningPracticeWorkspace({
                   }))}
                   size="sm"
                 />
+              </div>
               </div>
               {group.dialogue && group.dialogue.length > 0 && (
                 <div className="rounded-xl bg-surface-subtle p-4 space-y-2">
@@ -343,26 +397,15 @@ export function ListeningPracticeWorkspace({
                     : 'Segment checked; answers are locked.'}
                 </p>
               )}
-              {group.checkedResult?.answers?.map((answer) => (
-                <p key={answer.blank_index}>
-                  {answer.blank_index + 1}. {answer.user_answer || '—'} →{' '}
-                  {answer.correct_answer} ·{' '}
-                  {answer.is_correct
-                    ? vi
-                      ? 'Đúng'
-                      : 'Correct'
-                    : vi
-                    ? 'Chưa đúng'
-                    : 'Incorrect'}
-                </p>
-              ))}
+              {kind === 'dictation' && <div className="border-t border-border pt-5"><p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{vi ? 'Điền những gì bạn nghe được' : 'Fill in what you hear'}</p></div>}
               {group.preview && (
-                <p className="rounded-xl bg-surface-subtle p-4 text-text-primary whitespace-pre-wrap">
+                <p className="rounded-xl border border-border bg-surface p-4 leading-7 text-text-primary whitespace-pre-wrap">
                   {group.preview}
                 </p>
               )}
-              {group.blanks.map((blank) => (
-                <div
+              {group.blanks.map((blank) => {
+                const checked = group.checkedResult?.answers?.find(answer => answer.blank_index === Number(blank.key.split('_')[1]))
+                return <div
                   key={blank.key}
                   className="flex flex-wrap items-center gap-3 text-sm text-text-primary"
                 >
@@ -377,22 +420,35 @@ export function ListeningPracticeWorkspace({
                       {blank.length} {vi ? 'ký tự' : 'characters'}
                     </span>
                   )}
-                  <input
-                    aria-label={`${vi ? 'Ô' : 'Blank'} ${blank.label}`}
+                  {checked ? (
+                    <div
+                      role="group"
+                      aria-label={`${vi ? 'Kết quả ô' : 'Result for blank'} ${blank.label}`}
+                      className={`flex min-h-12 min-w-0 w-full sm:w-72 flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border bg-surface-subtle px-3 py-2 ${checked.is_correct ? 'border-success' : 'border-red-500'}`}
+                    >
+                      {checked.is_correct ? (
+                        <span className="font-medium text-success">{checked.user_answer}</span>
+                      ) : (
+                        <>
+                          <span className="text-red-600 line-through decoration-2">{checked.user_answer || (vi ? 'Bỏ trống' : 'No answer')}</span>
+                          <span aria-label={vi ? 'Đáp án đúng' : 'Correct answer'} className="font-semibold text-success">{checked.correct_answer}</span>
+                        </>
+                      )}
+                    </div>
+                  ) : <LiveDictationInput
+                    sessionId={session.id} blankKey={blank.key} label={`${vi ? 'Ô' : 'Blank'} ${blank.label}`} limit={blank.inputLength}
                     value={draft.answers[blank.key] || ''}
                     disabled={busy || expired || Boolean(group.completed)}
-                    maxLength={3000}
-                    onChange={(event) =>
+                    onChange={(value) =>
                       practice.update({
                         answers: {
                           ...draft.answers,
-                          [blank.key]: event.target.value,
+                          [blank.key]: value,
                         },
                       })
                     }
-                    className="min-w-0 w-full sm:w-72 rounded-lg border border-border bg-surface-subtle p-3"
-                  />
-                  <Button
+                  />}
+                  {!group.completed && <Button
                     size="sm"
                     variant="outline"
                     disabled={
@@ -409,21 +465,21 @@ export function ListeningPracticeWorkspace({
                     onClick={() => void requestHint(blank.key)}
                   >
                     {vi ? 'Gợi ý' : 'Hint'} · {blank.hintsAvailable}
-                  </Button>
+                  </Button>}
                   {(hints[blank.key]?.hint || blank.hint) && (
                     <span role="status" className="text-primary">
                       {hints[blank.key]?.hint || blank.hint}
                     </span>
                   )}
                 </div>
-              ))}
+              })}
               {(group.showQuestionsBefore || group.hasListened
                 ? group.questions
                 : []
               ).map((question, questionIndex) => (
                 <fieldset
                   data-practice-question tabIndex={-1} key={question.key}
-                  className="space-y-3 rounded-xl border border-border p-4 data-[keyboard-current]:ring-2 data-[keyboard-current]:ring-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
+                  className="space-y-4 rounded-2xl border border-border bg-surface p-4 sm:p-5 focus-visible:outline-2 focus-visible:outline-primary data-[keyboard-current]:border-primary/50"
                 >
                   <legend className="px-2 font-semibold text-text-primary">
                     {vi ? 'Câu' : 'Question'} {questionIndex + 1}
@@ -434,6 +490,8 @@ export function ListeningPracticeWorkspace({
                       {question.textVi}
                     </p>
                   )}
+                  {kind === 'part1' && <p className="text-sm text-text-secondary">{vi ? 'Nghe và chọn mô tả phù hợp nhất với bức ảnh.' : 'Listen and choose the description that best matches the photograph.'}</p>}
+                  {kind === 'part2' && <p className="text-sm text-text-secondary">{vi ? 'Nghe và chọn câu trả lời phù hợp nhất.' : 'Listen and choose the best response.'}</p>}
                   <div
                     className={`grid gap-3 ${
                       kind === 'part1'
@@ -463,10 +521,10 @@ export function ListeningPracticeWorkspace({
                             },
                           })
                         }
-                        className={`rounded-xl border p-4 text-left ${
+                        className={`${kind === 'part1' || kind === 'part2' ? 'flex min-h-14 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-center font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2' : 'min-h-14 rounded-xl border px-4 py-3 text-left leading-relaxed transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2'} ${
                           draft.answers[question.key] === option.key
-                            ? 'border-primary bg-primary/10 text-primary'
-                            : 'border-border text-text-primary'
+                            ? 'border-primary bg-primary-soft text-primary ring-1 ring-primary'
+                            : 'border-border bg-surface text-text-primary hover:border-primary/50 hover:bg-primary-soft'
                         }`}
                       >
                         {option.key}
@@ -479,8 +537,8 @@ export function ListeningPracticeWorkspace({
                   </div>
                 </fieldset>
               ))}
-              <div className="flex flex-wrap justify-between gap-3">
-                <Button
+              <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
+                {multiQuestionGroup && <Button
                   variant="outline"
                   data-practice-action={multiQuestionGroup ? "previous-group" : "previous"} disabled={draft.current_index === 0 || busy}
                   onClick={() =>
@@ -491,10 +549,10 @@ export function ListeningPracticeWorkspace({
                     })
                   }
                 >
-                  {multiQuestionGroup ? (vi ? 'Nhóm trước' : 'Previous group') : kind === 'dictation' ? (vi ? 'Đoạn trước' : 'Previous segment') : (vi ? 'Câu trước' : 'Previous question')}
+                  {multiQuestionGroup ? (vi ? 'Nhóm trước' : 'Previous group') : (vi ? 'Câu trước' : 'Previous question')}
                   {multiQuestionGroup && <kbd aria-hidden="true" className="ml-2 rounded border border-current/25 px-1 font-mono text-[11px]">Shift + ←</kbd>}
-                </Button>
-                {draft.current_index < session.groups.length - 1 && (
+                </Button>}
+                {multiQuestionGroup && draft.current_index < session.groups.length - 1 && (
                   <Button
                     variant="outline"
                     data-practice-action={multiQuestionGroup ? "next-group" : "next"} disabled={busy}
@@ -506,7 +564,7 @@ export function ListeningPracticeWorkspace({
                       })
                     }
                   >
-                    {multiQuestionGroup ? (vi ? 'Nhóm tiếp theo' : 'Next group') : kind === 'dictation' ? (vi ? 'Đoạn tiếp' : 'Next segment') : (vi ? 'Câu tiếp' : 'Next question')}
+                    {multiQuestionGroup ? (vi ? 'Nhóm tiếp theo' : 'Next group') : (vi ? 'Câu tiếp' : 'Next question')}
                     {multiQuestionGroup && <kbd aria-hidden="true" className="ml-2 rounded border border-current/25 px-1 font-mono text-[11px]">Shift + →</kbd>}
                   </Button>
                 )}
@@ -516,12 +574,12 @@ export function ListeningPracticeWorkspace({
                     <Button
                       variant="outline"
                       disabled={busy || expired}
-                      data-practice-action="check" onClick={() => void practice.check()}
+                      className="min-h-10 px-5" data-practice-action="check" onClick={() => void practice.check()}
                     >
                       {vi ? 'Kiểm tra đoạn' : 'Check segment'}
                     </Button>
                   )}
-                <Button data-practice-action="submit" disabled={busy} onClick={() => void practice.submit()}>
+                <Button className="ml-auto min-h-10 px-5" data-practice-action="submit" disabled={busy} onClick={() => void practice.submit()}>
                   {busy
                     ? vi
                       ? 'Đang lưu…'
@@ -549,6 +607,8 @@ function ListeningSegmentAudio({
   sessionId,
   onRefresh,
   disabled,
+  onPrevious,
+  onNext,
 }: {
   group: ListeningGroup
   position: number
@@ -558,6 +618,8 @@ function ListeningSegmentAudio({
   sessionId: string
   onRefresh: () => Promise<void>
   disabled: boolean
+  onPrevious?: () => void
+  onNext?: () => void
 }) {
   const audio = useRef<HTMLAudioElement>(null)
   const media = useListeningMedia(group.audio)
@@ -566,20 +628,37 @@ function ListeningSegmentAudio({
   const [playing, setPlaying] = useState(false),
     [pending, setPending] = useState(false),
     [error, setError] = useState('')
-  const [state, setState] = useState({
+  const [state, setState] = useState<{ starts: number; completed: boolean; remaining?: number | null }>({
     starts: group.playCount || 0,
     completed: group.playbackCompleted ?? Boolean(group.hasListened),
+    remaining: group.replaysRemaining,
   })
   const completing = useRef(false)
+  const requestLock = useRef(false)
+  const mounted = useRef(true)
   const authorized = useRef(false)
+  const [completionFailed, setCompletionFailed] = useState(false)
   const clip = useRef({ start: group.start, end: group.end })
   const [mediaTime, setMediaTime] = useState(group.start)
   const [duration, setDuration] = useState(group.end || 0)
   const remaining =
     group.allowReplay === false
       ? 0
-      : Math.max(0, (group.replayLimit ?? 1) - Math.max(0, state.starts - 1))
-  const exhausted = state.completed && remaining <= 0
+      : state.remaining ?? Math.max(0, (group.replayLimit ?? 1) - Math.max(0, state.starts - 1))
+  const exhausted = !group.unlimitedReplay && state.completed && remaining <= 0
+  useEffect(() => {
+    mounted.current = true
+    const element = audio.current
+    return () => { mounted.current = false; element?.pause() }
+  }, [media.url])
+  useEffect(() => {
+    if (authorized.current || requestLock.current) return
+    setState(previous => {
+      const next = { starts: group.playCount || 0, completed: group.playbackCompleted ?? Boolean(group.hasListened), remaining: group.replaysRemaining }
+      if (next.starts < previous.starts || (next.starts === previous.starts && previous.completed && !next.completed)) return previous
+      return { ...next, remaining: next.remaining ?? (next.starts === previous.starts ? previous.remaining : undefined) }
+    })
+  }, [group.playCount, group.playbackCompleted, group.hasListened, group.replaysRemaining, pending])
   useEffect(() => {
     if (audio.current) audio.current.playbackRate = speed
   }, [speed])
@@ -589,8 +668,11 @@ function ListeningSegmentAudio({
     }
   }, [disabled])
   const complete = async () => {
-    if (completing.current) return
+    if (!authorized.current || completing.current || requestLock.current) return
     completing.current = true
+    requestLock.current = true
+    setCompletionFailed(false)
+    setError('')
     setPending(true)
     audio.current?.pause()
     setPlaying(false)
@@ -603,39 +685,46 @@ function ListeningSegmentAudio({
       )
       setState(next)
       authorized.current = false
-      await onRefresh()
     } catch (failure) {
       setError(
         failure instanceof Error ? failure.message : 'Không lưu được lượt nghe',
       )
       completing.current = false
+      setCompletionFailed(true)
     } finally {
+      try { await onRefresh() } catch { /* A refresh failure must not discard the acknowledged playback state. */ }
+      requestLock.current = false
       setPending(false)
     }
   }
   const play = async (selected?: { start_time: number; end_time: number }) => {
     const element = audio.current
-    if (!element || pending || disabled) return
+    if (!element || requestLock.current || pending || disabled || completionFailed) return
     if (playing && !selected) {
       element.pause()
       return
     }
     if (exhausted) return
+    if (selected && !group.unlimitedReplay && state.starts > 0 && remaining <= 0) return
+    requestLock.current = true
     setPending(true)
     setError('')
     try {
       if (selected && authorized.current) {
         element.pause()
-        await listeningLifecycleService.playback(
+        const completed = await listeningLifecycleService.playback(
           kind,
           sessionId,
           group.index,
           'complete',
         )
+        setState(completed)
         authorized.current = false
       }
       if (selected)
         clip.current = { start: selected.start_time, end: selected.end_time }
+      else if (!authorized.current)
+        clip.current = { start: group.start, end: group.end }
       if (!authorized.current) {
         const next = await listeningLifecycleService.playback(
           kind,
@@ -649,19 +738,23 @@ function ListeningSegmentAudio({
         if (
           selected ||
           state.completed ||
+          next.starts > state.starts ||
           element.ended ||
           (clip.current.end !== undefined &&
             element.currentTime >= clip.current.end)
         )
           element.currentTime = clip.current.start
       }
+      if (!mounted.current) return
       element.playbackRate = speed
       await element.play()
     } catch (failure) {
       setError(
         failure instanceof Error ? failure.message : 'Không phát được audio',
       )
+      try { await onRefresh() } catch { /* Keep the previous state visible until synchronization succeeds. */ }
     } finally {
+      requestLock.current = false
       setPending(false)
     }
   }
@@ -725,39 +818,22 @@ function ListeningSegmentAudio({
               ? 'Không tải được audio. Thử phát lại.'
               : 'Could not load audio. Try again.',
           )
-          authorized.current = false
+          // Keep an already granted listen so loading/retrying the same audio does not spend another replay.
         }}
       />
       <progress
-        className="block w-full accent-primary"
+        className="block h-1.5 w-full overflow-hidden rounded-full accent-primary"
         aria-label={vi ? 'Tiến độ audio' : 'Audio progress'}
         value={Math.max(0, mediaTime - group.start)}
         max={Math.max(1, duration - group.start)}
       />
-      <Button
-        variant="outline"
-        disabled={pending || disabled || (!playing && exhausted)}
-        data-practice-action="play" onClick={() => void play()}
-      >
-        {pending
-          ? vi
-            ? 'Đang xử lý…'
-            : 'Loading…'
-          : playing
-          ? vi
-            ? 'Tạm dừng'
-            : 'Pause'
-          : state.completed
-          ? vi
-            ? 'Nghe lại'
-            : 'Replay'
-          : vi
-          ? 'Phát audio'
-          : 'Play audio'}
-      </Button>
-      <span className="ml-3 text-sm text-text-secondary">
-        {vi ? 'Lượt nghe lại còn:' : 'Replays remaining:'} {remaining}
-      </span>
+      <div className="flex flex-wrap items-center gap-1">
+        <Button variant="ghost" size="icon" data-practice-action={kind === 'part3' || kind === 'part4' ? undefined : 'previous'} aria-label={kind === 'dictation' ? (vi ? 'Đoạn trước' : 'Previous segment') : kind === 'part3' || kind === 'part4' ? (vi ? 'Audio: nhóm trước' : 'Audio: previous group') : (vi ? 'Câu trước' : 'Previous question')} title={vi ? 'Trước' : 'Previous'} disabled={disabled || pending || !onPrevious} onClick={onPrevious}><ChevronLeft aria-hidden="true" /></Button>
+        <Button variant="ghost" size="icon" aria-label={vi ? 'Nghe lại từ đầu' : 'Replay from beginning'} title={vi ? 'Nghe lại từ đầu' : 'Replay from beginning'} disabled={disabled || pending || completionFailed || (!group.unlimitedReplay && state.starts > 0 && remaining <= 0)} onClick={() => void play({ start_time: group.start, end_time: group.end ?? duration })}><RotateCcw aria-hidden="true" /></Button>
+        <Button variant="ghost" size="icon" aria-label={playing ? (vi ? 'Tạm dừng' : 'Pause') : kind !== 'dictation' && state.completed ? (vi ? 'Nghe lại' : 'Replay') : (vi ? 'Phát audio' : 'Play audio')} title={playing ? (vi ? 'Tạm dừng' : 'Pause') : kind !== 'dictation' && state.completed ? (vi ? 'Nghe lại' : 'Replay') : (vi ? 'Phát audio' : 'Play audio')} disabled={pending || disabled || completionFailed || (!playing && exhausted)} data-practice-action="play" onClick={() => void play()}>{playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}</Button>
+        <Button variant="ghost" size="icon" data-practice-action={kind === 'part3' || kind === 'part4' ? undefined : 'next'} aria-label={kind === 'dictation' ? (vi ? 'Đoạn tiếp' : 'Next segment') : kind === 'part3' || kind === 'part4' ? (vi ? 'Audio: nhóm tiếp theo' : 'Audio: next group') : (vi ? 'Câu tiếp' : 'Next question')} title={vi ? 'Tiếp theo' : 'Next'} disabled={disabled || pending || !onNext} onClick={onNext}><ChevronRight aria-hidden="true" /></Button>
+        {!group.unlimitedReplay && <span className="ml-2 text-xs text-text-secondary">{vi ? 'Lượt nghe lại còn:' : 'Replays remaining:'} {remaining}</span>}
+      </div>
       {group.dialogue && group.dialogue.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {group.dialogue.map((line, index) => (
@@ -765,7 +841,7 @@ function ListeningSegmentAudio({
               key={index}
               size="sm"
               variant="outline"
-              disabled={disabled || pending || remaining <= 0}
+              disabled={disabled || pending || completionFailed || (!group.unlimitedReplay && state.starts > 0 && remaining <= 0)}
               onClick={() => void play(line)}
             >
               {vi ? 'Nghe đoạn' : 'Play segment'} {index + 1} ·{' '}
@@ -777,10 +853,12 @@ function ListeningSegmentAudio({
       {error && (
         <p role="alert" className="text-sm text-red-500">
           {error}{' '}
+          {((!exhausted && !disabled) || completionFailed) && (
           <Button
             size="sm"
             variant="ghost"
             onClick={() => {
+              if (completionFailed) { void complete(); return }
               audio.current?.load()
               media.retry()
               setError('')
@@ -788,6 +866,7 @@ function ListeningSegmentAudio({
           >
             {vi ? 'Thử lại audio' : 'Retry audio'}
           </Button>
+          )}
         </p>
       )}
     </div>
@@ -805,13 +884,15 @@ function ListeningPracticeImage({ value, vi }: { value: string; vi: boolean }) {
       </p>
     )
   return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface-subtle p-2 sm:p-3">
     <Image
       unoptimized
       width={960}
       height={540}
       src={media.url}
       alt={vi ? 'Ảnh câu hỏi Listening' : 'Listening photograph'}
-      className="max-h-80 w-full object-contain rounded-xl"
+      className="mx-auto max-h-[26rem] w-full rounded-xl object-contain"
     />
+    </div>
   )
 }

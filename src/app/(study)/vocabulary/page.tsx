@@ -1,7 +1,6 @@
 // Trang giao diện khám phá và quản lý các bộ thẻ từ vựng LingoSphere.
 "use client";
 
-import { VocabularyResumeSessions } from "@/features/vocabulary/components/vocabulary.resume.sessions";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@/lib/navigation";
 import { useTranslation } from "react-i18next";
@@ -258,7 +257,6 @@ export default function VocabularyAppPage() {
   return (
     <>
       <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-        <VocabularyResumeSessions />
         {dataError && (
           <div role="alert" className="mb-5 border border-error rounded-xl p-4">
             <p>

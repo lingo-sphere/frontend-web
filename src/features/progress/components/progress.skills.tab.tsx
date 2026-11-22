@@ -11,6 +11,7 @@ import type {
 import {
   useWeaknessesQuery,
   usePracticeDashboardQuery,
+  useSkillsSummaryQuery,
 } from "@/features/progress/hooks/use.progress.query";
 import {
   OverviewTab,
@@ -58,6 +59,8 @@ export function ProgressSkillsTab({
   const [activeSkillTab, setActiveSkillTab] =
     useState<SkillTabType>("overview");
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("7d");
+  const { data: selectedSummary } = useSkillsSummaryQuery(userId, selectedPeriod, Boolean(userId));
+  const currentSummary = selectedSummary ?? (selectedPeriod === '7d' ? skillsSummary : null);
   const { data: allWeaknessesData, isLoading: loadingWeaknesses } = useWeaknessesQuery(
     userId,
     10,
@@ -72,24 +75,13 @@ export function ProgressSkillsTab({
   );
   const dashboardData = dashboardDataRes || null;
 
-  const readingStats = skillsSummary?.skills?.reading;
-  const listeningStats = skillsSummary?.skills?.listening;
-  const grammarStats = skillsSummary?.skills?.grammar;
-  const writingStats = skillsSummary?.skills?.writing;
-  const speakingStats = skillsSummary?.skills?.speaking;
-  const rawPronStats =
-    skillsSummary?.skills?.pronunciation ||
-    (dashboardData?.skills as any)?.pronunciation;
-  const pronunciationStats = rawPronStats
-    ? {
-        ...rawPronStats,
-        accuracy:
-          rawPronStats.accuracy !== undefined
-            ? rawPronStats.accuracy
-            : rawPronStats.accuracy_rate ?? 0,
-        total_attempts: rawPronStats.total_attempts || 0,
-      }
-    : undefined;
+  const readingStats = currentSummary?.skills?.reading;
+  const listeningStats = currentSummary?.skills?.listening;
+  const grammarStats = currentSummary?.skills?.grammar;
+  const writingStats = currentSummary?.skills?.writing;
+  const speakingStats = currentSummary?.skills?.speaking;
+  const rawPronStats = currentSummary?.skills?.pronunciation;
+  const pronunciationStats = rawPronStats;
 
   return (
     <div className="space-y-4">
@@ -215,6 +207,7 @@ export function ProgressSkillsTab({
       {/* Nội dung theo Tab đang chọn */}
       {activeSkillTab === "overview" && (
         <OverviewTab
+          period={selectedPeriod}
           readingStats={readingStats}
           listeningStats={listeningStats}
           grammarStats={grammarStats}
@@ -245,6 +238,7 @@ export function ProgressSkillsTab({
       {activeSkillTab === "listening" && (
         <ListeningDetailTab
           stats={listeningStats}
+          period={selectedPeriod}
           userId={userId}
           dashboardData={dashboardData}
           onNavigate={onNavigate}
@@ -254,6 +248,7 @@ export function ProgressSkillsTab({
       {activeSkillTab === "grammar" && (
         <GrammarDetailTab
           stats={grammarStats}
+          period={selectedPeriod}
           userId={userId}
           dashboardData={dashboardData}
           onNavigate={onNavigate}
@@ -279,11 +274,11 @@ export function ProgressSkillsTab({
       )}
 
       {activeSkillTab === "vocabulary" && (
-        <VocabularyDetailTab stats={vocabStats} onNavigate={onNavigate} />
+        <><p className="text-xs text-text-secondary">Trạng thái SRS là số liệu hiện tại; hoạt động và độ chính xác được tính theo ngày lịch Việt Nam trong khoảng đã chọn.</p><VocabularyDetailTab period={selectedPeriod} stats={vocabStats} onNavigate={onNavigate} /></>
       )}
 
       {activeSkillTab === "pronunciation" && (
-        <PronunciationDetailTab userId={userId} onNavigate={onNavigate} />
+        <><p className="text-xs text-text-secondary">Ma trận làm chủ âm vị là tiến độ tích lũy; lượt luyện, lịch sử và hành vi theo khoảng thời gian đã chọn.</p><PronunciationDetailTab userId={userId} period={selectedPeriod} onNavigate={onNavigate} /></>
       )}
     </div>
   );

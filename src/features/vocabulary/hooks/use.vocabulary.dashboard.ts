@@ -11,12 +11,12 @@ import { vocabularyService } from '../services/vocabulary.service'
 import { vocabularyKeys } from '../keys/vocabulary.keys'
 import type { VocabularyDashboardOverview } from '../types/vocabulary.dashboard'
 
-export function useVocabularyDashboard() {
+export function useVocabularyDashboard(period = '30d') {
   const userId = useAuthStore(state => state.user?.user_id)
   const query = useQuery<VocabularyDashboardOverview>({
-    queryKey: [...vocabularyKeys.dashboardOverview(), userId],
+    queryKey: [...vocabularyKeys.dashboardOverview(), userId, period],
     enabled: Boolean(userId),
-    queryFn: () => vocabularyService.getDashboardOverview(),
+    queryFn: () => vocabularyService.getDashboardOverview(period),
     staleTime: 60 * 1000, // 1 phút
     refetchOnWindowFocus: false,
   })

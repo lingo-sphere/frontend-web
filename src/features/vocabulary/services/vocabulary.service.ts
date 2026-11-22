@@ -423,7 +423,7 @@ export const vocabularyService = {
 
   // ==================== DASHBOARD & LEARNING ANALYTICS ====================
 
-  async getDashboardOverview(): Promise<import('../types/vocabulary.dashboard').VocabularyDashboardOverview> {
-    return api.get<import('../types/vocabulary.dashboard').VocabularyDashboardOverview>('/vocabulary/dashboard/overview')
+  async getDashboardOverview(period = '30d'): Promise<import('../types/vocabulary.dashboard').VocabularyDashboardOverview> {
+    return api.get<import('../types/vocabulary.dashboard').VocabularyDashboardOverview>('/vocabulary/dashboard/overview', { period })
   },
 }

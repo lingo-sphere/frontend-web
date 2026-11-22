@@ -34,15 +34,17 @@ import { useVocabularyDashboard } from "../hooks/use.vocabulary.dashboard";
 
 export interface VocabularyDashboardViewProps {
   isEmbedded?: boolean;
+  period?: '7d' | '30d' | '90d' | 'all';
 }
 
 export function VocabularyDashboardView({
   isEmbedded = false,
+  period = '30d',
 }: VocabularyDashboardViewProps) {
   const { t, i18n } = useTranslation();
   const isVietnamese = i18n.language === "vi";
   const navigate = useNavigate();
-  const { data, isLoading, isError, refetch } = useVocabularyDashboard();
+  const { data, isLoading, isError, refetch } = useVocabularyDashboard(period);
 
   const [playingWord, setPlayingWord] = useState<string | null>(null);
 
@@ -105,19 +107,22 @@ export function VocabularyDashboardView({
     activity_30d,
     top_weak_words,
   } = data;
+  const activity = data.activity_period || (period === '30d' ? activity_30d : []);
+  const periodLabel = period === 'all' ? (isVietnamese ? 'toàn bộ thời gian' : 'all time') : (isVietnamese ? `${period.replace('d', '')} ngày` : `${period.replace('d', '')} days`);
+  const periodAccuracy = data.period_summary?.accuracy ?? (period === '30d' ? summary.retention_rate_30d : null);
 
   const retentionStatus =
-    summary.retention_rate_30d === null
+    periodAccuracy === null
       ? {
           text: isVietnamese ? "Chưa kiểm tra" : "Not tested",
           color: "text-text-tertiary bg-surface-subtle",
         }
-      : (summary.retention_rate_30d ?? 0) >= 85
+      : (periodAccuracy ?? 0) >= 85
       ? {
           text: isVietnamese ? "Xuất sắc" : "Excellent",
           color: "text-emerald-500 bg-emerald-500/10",
         }
-      : (summary.retention_rate_30d ?? 0) >= 70
+      : (periodAccuracy ?? 0) >= 70
       ? {
           text: isVietnamese ? "Ổn định" : "Good",
           color: "text-blue-500 bg-blue-500/10",
@@ -259,15 +264,15 @@ export function VocabularyDashboardView({
           <CardContent className="p-5 space-y-2">
             <div className="flex items-center justify-between text-text-tertiary">
               <span className="text-xs font-bold uppercase tracking-wider">
-                {isVietnamese ? "Độ lưu giữ 30 ngày" : "30-Day Retention"}
+                {isVietnamese ? `Độ chính xác ôn tập · ${periodLabel}` : `Review accuracy · ${periodLabel}`}
               </span>
               <Award size={18} className="text-emerald-500" />
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-black text-text-primary">
-                {summary.retention_rate_30d === null
+                {periodAccuracy === null
                   ? "Chưa đủ dữ liệu"
-                  : `${summary.retention_rate_30d}%`}
+                  : `${periodAccuracy}%`}
               </span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${retentionStatus.color}`}
@@ -278,7 +283,7 @@ export function VocabularyDashboardView({
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-subtle">
               <div
                 className="h-full rounded-full bg-emerald-500 transition-all duration-700"
-                style={{ width: `${summary.retention_rate_30d ?? 0}%` }}
+                style={{ width: `${periodAccuracy ?? 0}%` }}
               />
             </div>
             <p className="text-[11px] text-text-secondary pt-0.5">
@@ -748,8 +753,8 @@ export function VocabularyDashboardView({
                 <Activity size={18} className="text-primary" />
                 <span>
                   {isVietnamese
-                    ? "Hoạt động Ôn tập 30 ngày qua"
-                    : "30-Day Vocabulary Review Activity"}
+                    ? `Hoạt động ôn tập · ${periodLabel}`
+                    : `Vocabulary review activity · ${periodLabel}`}
                 </span>
               </h3>
               <p className="text-xs text-text-secondary">
@@ -762,9 +767,9 @@ export function VocabularyDashboardView({
 
           <div className="pt-2">
             <div className="flex items-end gap-1.5 sm:gap-2 h-24 overflow-x-auto pb-2">
-              {activity_30d.map((day) => {
+              {activity.map((day) => {
                 const maxCount = Math.max(
-                  ...activity_30d.map((d) => d.reviews_count),
+                  ...activity.map((d) => d.reviews_count),
                   20
                 );
                 const heightPercent =
@@ -810,7 +815,7 @@ export function VocabularyDashboardView({
             </div>
 
             <div className="flex items-center justify-between text-[11px] text-text-tertiary pt-2 border-t border-border/60">
-              <span>{activity_30d[0]?.date || "30 days ago"}</span>
+              <span>{activity[0]?.date || "--"}</span>
               <span className="font-semibold text-text-secondary">
                 {isVietnamese ? "Hôm nay" : "Today"}
               </span>

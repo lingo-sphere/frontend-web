@@ -79,10 +79,11 @@ const ALL_44_PHONEMES = [
 
 interface PronunciationDetailTabProps {
   userId?: string
+  period?: '7d' | '30d' | '90d' | 'all'
   onNavigate: (path: string) => void
 }
 
-export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDetailTabProps) {
+export function PronunciationDetailTab({ userId, onNavigate, period = 'all' }: PronunciationDetailTabProps) {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<PhonemeMasteryResponse | null>(null)
   const [analytics, setAnalytics] = useState<PronunciationAnalyticsResponse | null>(null)
@@ -93,18 +94,22 @@ export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDeta
       return
     }
 
+    let active = true
+    setLoading(true)
     Promise.all([
       pronunciationService.getPhonemeMastery(userId).catch(() => null),
-      pronunciationService.getPhonemeAnalytics(userId).catch(() => null),
+      pronunciationService.getPhonemeAnalytics(userId, period).catch(() => null),
     ])
       .then(([masteryRes, analyticsRes]) => {
+        if (!active) return
         if (masteryRes) setData(masteryRes)
-        if (analyticsRes) setAnalytics(analyticsRes)
+        setAnalytics(analyticsRes)
       })
       .finally(() => {
-        setLoading(false)
+        if (active) setLoading(false)
       })
-  }, [userId])
+    return () => { active = false }
+  }, [userId, period])
 
   if (loading) {
     return (
@@ -123,7 +128,6 @@ export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDeta
   let strongCount = 0
   let developingCount = 0
   let weakCount = 0
-  let totalAttemptsCount = 0
   let perceptionSum = 0
   let recognitionSum = 0
   let ratedCount = 0
@@ -134,9 +138,6 @@ export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDeta
     else if (item.mastery_score >= 30 || item.status === 'DEVELOPING') developingCount++
     else if (item.mastery_score > 0) weakCount++
 
-    if (item.evidence_stats?.total_attempts) {
-      totalAttemptsCount += item.evidence_stats.total_attempts
-    }
     if (item.mastery_score > 0) {
       perceptionSum += item.perception_score || 0
       recognitionSum += item.recognition_score || 0
@@ -150,7 +151,7 @@ export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDeta
   const masteredPercent = Math.round(((masteredCount + strongCount) / 44) * 100)
 
   // Filter chronic confusion pairs
-  const chronicErrors = data?.top_chronic_phonemes || []
+  const chronicErrors: NonNullable<PhonemeMasteryResponse['top_chronic_phonemes']> = []
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -229,13 +230,13 @@ export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDeta
         <Card className="p-4 bg-surface border-border">
           <div className="flex items-center gap-2 text-xs font-semibold text-text-tertiary">
             <TrendingUp size={15} className="text-emerald-500" />
-            <span>Lượt câu hỏi tích lũy</span>
+            <span>Lượt luyện trong khoảng đã chọn</span>
           </div>
           <p className="mt-2 text-2xl font-black text-text-primary">
-            {totalAttemptsCount} <span className="text-sm font-normal text-text-tertiary">câu</span>
+            {analytics?.behavior_stats?.total_attempts ?? 0} <span className="text-sm font-normal text-text-tertiary">lượt</span>
           </p>
           <p className="mt-2 text-[11px] text-text-tertiary">
-            Bằng chứng thực hành không thể farming
+            Các lượt luyện ngữ âm đã hoàn thành
           </p>
         </Card>
       </div>
@@ -467,11 +468,11 @@ export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDeta
               <Volume2 size={15} className="text-blue-500" />
             </div>
             <p className="mt-2 text-2xl font-black text-text-primary">
-              {analytics?.behavior_stats?.avg_replays_per_question ?? 1.0}{' '}
+              {(analytics?.behavior_stats?.total_attempts ?? 0) > 0 ? analytics?.behavior_stats?.avg_replays_per_question : '--'}{' '}
               <span className="text-xs font-normal text-text-tertiary">lần / câu</span>
             </p>
             <p className="mt-1 text-[11px] text-text-tertiary">
-              {(analytics?.behavior_stats?.avg_replays_per_question ?? 1) <= 1.3
+              {!(analytics?.behavior_stats?.total_attempts) ? 'Chưa có lượt luyện trong khoảng này' : (analytics?.behavior_stats?.avg_replays_per_question ?? 0) <= 1.3
                 ? '⚡ Phản xạ nghe tức thì, độ tự tin cao'
                 : (analytics?.behavior_stats?.avg_replays_per_question ?? 1) <= 2.2
                   ? '👍 Nghe kiểm tra cẩn thận trước khi chọn'
@@ -485,7 +486,7 @@ export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDeta
               <Zap size={15} className="text-amber-500" />
             </div>
             <p className="mt-2 text-2xl font-black text-text-primary">
-              {analytics?.behavior_stats?.avg_time_spent_seconds ?? 4}{' '}
+              {(analytics?.behavior_stats?.total_attempts ?? 0) > 0 ? analytics?.behavior_stats?.avg_time_spent_seconds : '--'}{' '}
               <span className="text-xs font-normal text-text-tertiary">giây / câu</span>
             </p>
             <p className="mt-1 text-[11px] text-text-tertiary">
@@ -499,7 +500,7 @@ export function PronunciationDetailTab({ userId, onNavigate }: PronunciationDeta
               <Award size={15} className="text-emerald-500" />
             </div>
             <p className="mt-2 text-2xl font-black text-text-primary">
-              {analytics?.behavior_stats?.first_listen_accuracy ?? 0}%
+              {(analytics?.behavior_stats?.total_attempts ?? 0) > 0 ? `${analytics?.behavior_stats?.first_listen_accuracy ?? 0}%` : '--'}
             </p>
             <p className="mt-1 text-[11px] text-text-tertiary">
               Tỷ lệ trả lời chính xác mà chỉ cần nghe duy nhất 1 lần
