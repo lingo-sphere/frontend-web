@@ -1,4 +1,7 @@
 // Định nghĩa các kiểu dữ liệu và giao diện TypeScript cho module khóa học.
+import type { CourseTestQuestion } from '@/features/courses/types/test.runner.types'
+import type { CourseStudySchedule, CourseChapterLockState } from '@/features/courses/types/schedule.types'
+import type { GrowthPoint } from '@/features/courses/components/course.growth.chart'
 
 export type LessonStatus = 'locked' | 'available' | 'in-progress' | 'completed'
 export type ChapterStatus = 'locked' | 'available' | 'in-progress' | 'completed'
@@ -262,7 +265,7 @@ export interface Course {
   notes?: NoteItem[]
   reviews?: CourseReviewItem[]
   announcements?: CourseAnnouncement[]
-  final_test_questions?: import('@/features/courses/types/test.runner.types').CourseTestQuestion[]
+  final_test_questions?: CourseTestQuestion[]
   final_test_duration_minutes?: number
   final_test_audio_url?: string
   final_test_speaking_prompt?: string
@@ -336,15 +339,15 @@ export interface ModuleProgressInfo {
 
 export interface CourseProgressDetailInfo {
   course_progress?: {
-    schedule?: import('@/features/courses/types/schedule.types').CourseStudySchedule
-    lock_state?: import('@/features/courses/types/schedule.types').CourseChapterLockState
+    schedule?: CourseStudySchedule
+    lock_state?: CourseChapterLockState
     last_video_watched_at?: string
     is_baseline_established?: boolean
     baseline_score?: number
     baseline_source?: string
     total_score_growth?: number
     total_growth_percentage?: number
-    growth_chart_data?: import('@/features/courses/components/course.growth.chart').GrowthPoint[]
+    growth_chart_data?: GrowthPoint[]
     final_test_score?: number
     final_test_attempts?: FinalTestAttemptItem[]
   }

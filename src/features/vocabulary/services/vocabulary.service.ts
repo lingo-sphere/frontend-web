@@ -1,6 +1,8 @@
 // Service xử lý các logic nghiệp vụ chính cho dịch vụ từ vựng.
 import { api } from '@/services/api.client'
 import type { SpeakingVocabularySource } from '@/features/vocabulary/types/vocabulary-source'
+import type { VocabularyItem } from '@/features/vocabulary/types/vocabulary.learn'
+import type { VocabularyDashboardOverview } from '@/features/vocabulary/types/vocabulary.dashboard'
 import { API_CONFIG } from '@/config/api.config'
 import { WrongWordSchema, type WrongWord } from '@/features/vocabulary/schemas/wrong-word.schema'
 import {
@@ -390,7 +392,7 @@ export const vocabularyService = {
     total_items: number
     assessment_type: 'TESTED' | 'SELF_REPORTED'
     skill_breakdown: { meaning: number | null; spelling: number | null; listening: number | null; context: number | null }
-    weak_words: import('@/features/vocabulary/types/vocabulary.learn').VocabularyItem[]
+    weak_words: VocabularyItem[]
     xp_earned: number
   }> {
     return api.post(`/vocabulary/learning-sessions/${sessionId}/complete`, {})
@@ -419,7 +421,7 @@ export const vocabularyService = {
     return { ...response, items: response.items.map(item => WrongWordSchema.parse(item)) }
   },
 
-  async getDashboardOverview(period = '30d'): Promise<import('@/features/vocabulary/types/vocabulary.dashboard').VocabularyDashboardOverview> {
-    return api.get<import('@/features/vocabulary/types/vocabulary.dashboard').VocabularyDashboardOverview>('/vocabulary/dashboard/overview', { period })
+  async getDashboardOverview(period = '30d'): Promise<VocabularyDashboardOverview> {
+    return api.get<VocabularyDashboardOverview>('/vocabulary/dashboard/overview', { period })
   },
 }
