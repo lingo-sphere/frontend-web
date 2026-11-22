@@ -1,7 +1,8 @@
-// Component hiển thị danh sách các điểm yếu và chuyên đề cần cải thiện theo phân tích dữ liệu thực tế.
+// Component hiển thị danh sách các điểm yếu và chuyên đề cần cải thiện theo phân tích dữ liệu thực tế hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { ChevronRight, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 import type { WeaknessAnalysis } from '@/features/progress/services/progress.service'
 
 interface GogoWeaknessStatusCardProps {
@@ -15,13 +16,15 @@ export function GogoWeaknessStatusCard({
   onViewAll,
   onPractice,
 }: GogoWeaknessStatusCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const topItems = weaknesses.slice(0, 5)
 
   return (
     <div className="space-y-3 h-full flex flex-col">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-          Trọng tâm Cần Cải thiện (Điểm yếu)
+          {isVi ? 'Trọng tâm Cần Cải thiện (Điểm yếu)' : 'Areas for Improvement (Weaknesses)'}
         </h2>
         {onViewAll && (
           <button
@@ -29,7 +32,7 @@ export function GogoWeaknessStatusCard({
             onClick={onViewAll}
             className="text-xs font-semibold text-text-tertiary hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <span>Phân tích chi tiết</span>
+            <span>{isVi ? 'Phân tích chi tiết' : 'Detailed Analysis'}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         )}
@@ -41,7 +44,9 @@ export function GogoWeaknessStatusCard({
             {topItems.map((w, idx) => {
               const accuracy = Math.round(w.accuracy || 0)
               const errorRate = Math.max(0, 100 - accuracy)
-              const title = w.dimension_name || w.grammar_knowledge?.name_vi || w.skill
+              const title = isVi
+                ? (w.dimension_name || w.grammar_knowledge?.name_vi || w.skill)
+                : (w.dimension_name || w.grammar_knowledge?.name_en || w.skill)
 
               return (
                 <div key={`${w.dimension_id || w.skill}-${idx}`} className="space-y-1.5">
@@ -51,10 +56,10 @@ export function GogoWeaknessStatusCard({
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-rose-500 font-bold text-[11px]">
-                        Lỗi: {errorRate}%
+                        {isVi ? 'Lỗi: ' : 'Error: '}{errorRate}%
                       </span>
                       <span className="text-[10px] text-text-tertiary">
-                        ({w.questions} câu)
+                        ({w.questions} {isVi ? 'câu' : 'Qs'})
                       </span>
                     </div>
                   </div>
@@ -77,10 +82,12 @@ export function GogoWeaknessStatusCard({
             </div>
             <div className="space-y-1 max-w-xs">
               <h3 className="text-sm font-bold text-text-primary">
-                Chưa ghi nhận điểm yếu đáng kể
+                {isVi ? 'Chưa ghi nhận điểm yếu đáng kể' : 'No significant weaknesses recorded'}
               </h3>
               <p className="text-xs text-text-tertiary leading-relaxed">
-                Hệ thống AI chưa phát hiện lỗ hổng kiến thức nghiêm trọng. Hãy tiếp tục luyện đề và làm bài tập để ghi nhận năng lực!
+                {isVi
+                  ? 'Hệ thống AI chưa phát hiện lỗ hổng kiến thức nghiêm trọng. Hãy tiếp tục luyện đề và làm bài tập để ghi nhận năng lực!'
+                  : 'AI has not detected significant knowledge gaps. Keep practicing to record your skill analytics!'}
               </p>
             </div>
             {onPractice && (
@@ -89,7 +96,7 @@ export function GogoWeaknessStatusCard({
                 onClick={onPractice}
                 className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
-                <span>Luyện tập ngay</span>
+                <span>{isVi ? 'Luyện tập ngay' : 'Practice Now'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             )}
@@ -100,7 +107,7 @@ export function GogoWeaknessStatusCard({
           <div className="pt-2 border-t border-border/60 flex items-center justify-between text-xs text-text-tertiary">
             <span className="flex items-center gap-1">
               <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-              <span>Gợi ý: Ưu tiên ôn tập dạng bài có tỷ lệ lỗi cao.</span>
+              <span>{isVi ? 'Gợi ý: Ưu tiên ôn tập dạng bài có tỷ lệ lỗi cao.' : 'Tip: Prioritize reviewing question types with high error rates.'}</span>
             </span>
           </div>
         )}

@@ -1,4 +1,4 @@
-import type { BackendGrammarPoint } from '../schemas/vocabulary.schema'
+import type { BackendGrammarPoint } from '@/features/vocabulary/schemas/vocabulary.schema'
 
 const categories: Record<string, [string, string]> = {
   TENSES: ['Các thì', 'Tenses'],

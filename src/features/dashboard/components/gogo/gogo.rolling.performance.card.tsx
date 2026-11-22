@@ -1,8 +1,9 @@
-// Component biểu đồ đồng hồ bán nguyệt đo phong độ học tập kết hợp chuỗi sóng trả lời tương tác.
+// Component biểu đồ đồng hồ bán nguyệt đo phong độ học tập kết hợp chuỗi sóng trả lời tương tác hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { useState } from 'react'
 import { Sparkles, ArrowRight, HelpCircle, TrendingUp, TrendingDown, Target, History } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 import type { RollingPerformance } from '@/features/progress/services/progress.service'
 
 interface GogoRollingPerformanceCardProps {
@@ -13,9 +14,11 @@ interface GogoRollingPerformanceCardProps {
 function SemiCircleGauge({
   recentAcc,
   lifetimeAcc,
+  isVi = true,
 }: {
   recentAcc: number
   lifetimeAcc: number
+  isVi?: boolean
 }) {
   const width = 220
   const height = 115
@@ -111,7 +114,7 @@ function SemiCircleGauge({
           {Math.round(safeRecent)}%
         </span>
         <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
-          Độ chính xác gần đây
+          {isVi ? 'Độ chính xác gần đây' : 'Recent Accuracy'}
         </span>
       </div>
     </div>
@@ -122,6 +125,8 @@ export function GogoRollingPerformanceCard({
   rolling,
   onViewDetails,
 }: GogoRollingPerformanceCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const sparkline = rolling?.recent_scores_sparkline || []
@@ -130,7 +135,7 @@ export function GogoRollingPerformanceCard({
   const recentAcc = rolling?.recent_accuracy ?? 0
   const lifetimeAcc = rolling?.lifetime_accuracy ?? 0
   const momentum = rolling?.momentum_delta ?? 0
-  const statusLabel = rolling?.status_label || (momentum > 0 ? 'Đang bứt phá' : momentum < 0 ? 'Cần phục hồi' : 'Phong độ ổn định')
+  const statusLabel = rolling?.status_label || (momentum > 0 ? (isVi ? 'Đang bứt phá' : 'Surging') : momentum < 0 ? (isVi ? 'Cần phục hồi' : 'Needs Recovery') : (isVi ? 'Phong độ ổn định' : 'Stable'))
   const correctCount = sparkline.filter((s) => s === 100).length
 
   return (
@@ -138,7 +143,7 @@ export function GogoRollingPerformanceCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-            Thước đo Phong độ (Rolling Performance)
+            {isVi ? 'Thước đo Phong độ (Rolling Performance)' : 'Rolling Performance Meter'}
           </h2>
           <span
             className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
@@ -158,7 +163,7 @@ export function GogoRollingPerformanceCard({
             onClick={onViewDetails}
             className="text-xs font-semibold text-text-tertiary hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <span>Chi tiết</span>
+            <span>{isVi ? 'Chi tiết' : 'Details'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
@@ -167,7 +172,7 @@ export function GogoRollingPerformanceCard({
       <div className="rounded-3xl bg-surface border border-border p-5 sm:p-6 shadow-xs flex-1 flex flex-col justify-between space-y-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-1">
           <div className="flex-1 flex justify-center py-1">
-            <SemiCircleGauge recentAcc={recentAcc} lifetimeAcc={lifetimeAcc} />
+            <SemiCircleGauge recentAcc={recentAcc} lifetimeAcc={lifetimeAcc} isVi={isVi} />
           </div>
 
           <div className="w-full sm:w-56 space-y-3 shrink-0">
@@ -175,7 +180,7 @@ export function GogoRollingPerformanceCard({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-text-tertiary flex items-center gap-1 font-medium">
                   <Target className="w-3.5 h-3.5 text-primary" />
-                  Gần đây ({windowSize} câu)
+                  {isVi ? `Gần đây (${windowSize} câu)` : `Recent (${windowSize} Qs)`}
                 </span>
                 <span className="font-extrabold text-text-primary">{Math.round(recentAcc)}%</span>
               </div>
@@ -191,7 +196,7 @@ export function GogoRollingPerformanceCard({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-text-tertiary flex items-center gap-1 font-medium">
                   <History className="w-3.5 h-3.5 text-text-tertiary" />
-                  Trung bình lịch sử
+                  {isVi ? 'Trung bình lịch sử' : 'Historical Avg'}
                 </span>
                 <span className="font-extrabold text-text-secondary">{Math.round(lifetimeAcc)}%</span>
               </div>
@@ -204,7 +209,9 @@ export function GogoRollingPerformanceCard({
             </div>
 
             <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-surface-subtle/40 border border-border/60 text-xs">
-              <span className="text-text-tertiary font-medium">Chỉ số Momentum:</span>
+              <span className="text-text-tertiary font-medium">
+                {isVi ? 'Chỉ số Momentum:' : 'Momentum Index:'}
+              </span>
               <span
                 className={`font-black flex items-center gap-1 ${
                   momentum > 0
@@ -229,10 +236,10 @@ export function GogoRollingPerformanceCard({
           <div className="space-y-2.5 p-3.5 rounded-2xl bg-surface-subtle/40 border border-border/70">
             <div className="flex items-center justify-between text-xs">
               <span className="text-text-tertiary font-medium">
-                Chuỗi câu trả lời gần nhất:
+                {isVi ? 'Chuỗi câu trả lời gần nhất:' : 'Recent answer streak:'}
               </span>
               <span className="text-text-primary font-bold">
-                {correctCount}/{sparkline.length} đúng
+                {correctCount}/{sparkline.length} {isVi ? 'đúng' : 'correct'}
               </span>
             </div>
 
@@ -252,7 +259,7 @@ export function GogoRollingPerformanceCard({
                         ? 'bg-emerald-500 hover:brightness-110'
                         : 'bg-rose-400 dark:bg-rose-500 hover:brightness-110'
                     }`}
-                    title={`Câu ${idx + 1}: ${isCorrect ? 'Đúng' : 'Sai'}`}
+                    title={`${isVi ? 'Câu' : 'Q'} ${idx + 1}: ${isCorrect ? (isVi ? 'Đúng' : 'Correct') : (isVi ? 'Sai' : 'Incorrect')}`}
                   />
                 )
               })}
@@ -261,7 +268,7 @@ export function GogoRollingPerformanceCard({
             {hoveredIndex === null ? (
               <p className="text-[11px] text-text-tertiary text-center pt-0.5 flex items-center justify-center gap-1">
                 <Sparkles className="w-3 h-3 text-amber-500" />
-                <span>Rê chuột vào từng vạch để xem chi tiết câu hỏi & kỹ năng</span>
+                <span>{isVi ? 'Rê chuột vào từng vạch để xem chi tiết câu hỏi & kỹ năng' : 'Hover over bars to inspect question and skill details'}</span>
               </p>
             ) : (
               <div className="p-2.5 rounded-xl bg-surface border border-border shadow-xs space-y-1 animate-in fade-in duration-150 text-xs">
@@ -281,7 +288,7 @@ export function GogoRollingPerformanceCard({
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <span className="font-extrabold text-text-primary">
-                            Câu {hoveredIndex + 1}
+                            {isVi ? 'Câu ' : 'Question '}{hoveredIndex + 1}
                           </span>
                           <span
                             className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
@@ -290,7 +297,7 @@ export function GogoRollingPerformanceCard({
                                 : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
                             }`}
                           >
-                            {isCorrect ? '✓ Chính xác' : '✕ Chưa chính xác'}
+                            {isCorrect ? (isVi ? '✓ Chính xác' : '✓ Correct') : (isVi ? '✕ Chưa chính xác' : '✕ Incorrect')}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-[11px] text-text-tertiary font-medium">
@@ -303,7 +310,7 @@ export function GogoRollingPerformanceCard({
 
                       <div className="flex items-center justify-between text-[11px] pt-1 border-t border-border/50">
                         <span className="text-text-secondary truncate max-w-[75%] font-medium">
-                          <span className="mr-1">{detail?.skill_label || '📚 Bài luyện'}</span>
+                          <span className="mr-1">{detail?.skill_label || (isVi ? '📚 Bài luyện' : '📚 Practice')}</span>
                           {displayTopic ? `• ${displayTopic}` : ''}
                         </span>
                         {detail?.cefr_level && (
@@ -321,8 +328,14 @@ export function GogoRollingPerformanceCard({
         ) : (
           <div className="p-4 rounded-2xl bg-surface-subtle/30 border border-border/60 text-center text-xs text-text-tertiary flex flex-col items-center justify-center gap-1.5 py-6">
             <HelpCircle className="w-5 h-5 text-text-tertiary" />
-            <p className="font-medium text-text-secondary">Chưa có đủ lượt làm bài gần đây</p>
-            <p className="text-[11px]">Luyện tập đề thi hoặc bài tập kỹ năng để hệ thống bắt đầu vẽ chuỗi phong độ.</p>
+            <p className="font-medium text-text-secondary">
+              {isVi ? 'Chưa có đủ lượt làm bài gần đây' : 'Not enough recent attempts'}
+            </p>
+            <p className="text-[11px]">
+              {isVi
+                ? 'Luyện tập đề thi hoặc bài tập kỹ năng để hệ thống bắt đầu vẽ chuỗi phong độ.'
+                : 'Practice exams or skills exercises to start visualizing performance momentum.'}
+            </p>
           </div>
         )}
       </div>

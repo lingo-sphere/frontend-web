@@ -1,8 +1,4 @@
-/**
- * @file listening.dictation.workspace.tsx
- * @description Không gian làm việc luyện nghe chép chính tả tương tác theo phân đoạn (Video/Audio Dictation Workspace)
- */
-
+// Không gian làm việc luyện nghe chép chính tả tương tác theo phân đoạn video và âm thanh.
 'use client'
 
 import { useState } from 'react'
@@ -13,7 +9,7 @@ import { DictationPlayerPanel } from '@/features/practice/components/dictation.p
 import { DictationInputBox } from '@/features/practice/components/dictation.input.box'
 import { DictationResultCard } from '@/features/practice/components/dictation.result.card'
 import { DictationWorkspaceHeader } from '@/features/practice/components/dictation.workspace.header'
-import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
+import { PracticeExitConfirmModal } from '@/features/practice/components/practice.exit-confirm.modal'
 import {
   useDictationWorkspace,
   formatDuration,
@@ -117,7 +113,7 @@ export function VideoDictationView({
         <div className="flex-1 flex flex-col min-w-0">
           <Card className="flex-1 flex flex-col overflow-hidden">
             <CardContent className="flex-1 overflow-y-auto p-4">
-              <div className="flex items-center gap-2 mb-4 sticky top-0 bg-white pb-2">
+              <div className="flex items-center gap-2 mb-4 sticky top-0 bg-surface z-10 pb-2">
                 <span className="text-xs px-2 py-1 bg-primary-soft text-primary rounded-full font-medium">
                   {isVietnamese ? 'Câu' : 'Question'} {activeSegmentIndex + 1}
                 </span>
@@ -157,7 +153,6 @@ export function VideoDictationView({
         </div>
       </div>
 
-      {/* Hộp thoại xác nhận tạm dừng & thoát phiên */}
       <PracticeExitConfirmModal
         isOpen={showExitConfirm}
         onClose={handleResume}

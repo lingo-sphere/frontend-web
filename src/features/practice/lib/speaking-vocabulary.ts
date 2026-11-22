@@ -1,5 +1,5 @@
-import type { SpeakingWordTarget } from '../types/speaking-vocabulary'
-import type { SpeakingLearningIssue } from '../types/speaking'
+import type { SpeakingWordTarget } from '@/features/practice/types/speaking-vocabulary'
+import type { SpeakingLearningIssue } from '@/features/practice/types/speaking'
 export const normalizeSpeakingWord = (word: string) =>
   word.normalize('NFKC').trim().toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, ' ')
 export const speakingWordSourceKey = (target: SpeakingWordTarget) =>

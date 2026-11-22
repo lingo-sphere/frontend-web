@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api.client";
-import type { WritingTaskAssessment, WritingScorePolicy } from '../types/writing';
+import type { WritingTaskAssessment, WritingScorePolicy } from '@/features/practice/types/writing';
 
 export type ReviewSkill = "SPEAKING" | "WRITING";
 export interface PracticeReviewResult {

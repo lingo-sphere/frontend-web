@@ -9,9 +9,9 @@ import { Input } from '@/components/input'
 import { Badge } from '@/components/badge'
 import { Pagination } from '@/components/pagination'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/select'
-import { useGrammarPointsQuery } from '../hooks/use.vocabulary.query'
-import { grammarCategoryLabel, grammarFormula, grammarTitle, handbookReturnUrl, normalizeGrammarSearch } from '../lib/grammar-handbook'
-import { GrammarPhoto } from './grammar.illustration'
+import { useGrammarPointsQuery } from '@/features/vocabulary/hooks/use.vocabulary.query'
+import { grammarCategoryLabel, grammarFormula, grammarTitle, handbookReturnUrl, normalizeGrammarSearch } from '@/features/vocabulary/lib/grammar-handbook'
+import { GrammarPhoto } from '@/features/vocabulary/components/grammar.illustration'
 
 const PAGE_SIZE = 12
 

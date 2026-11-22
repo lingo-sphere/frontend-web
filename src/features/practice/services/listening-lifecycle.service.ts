@@ -7,7 +7,7 @@ import type {
   ListeningResult,
   PendingListeningSession,
   ListeningHistoryPage,
-} from '../types/listening-lifecycle'
+} from '@/features/practice/types/listening-lifecycle'
 
 interface RawQuestion {
   question_index: number

@@ -8,15 +8,15 @@ import { Button } from '@/components/button'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import { vocabularySourceTime } from '@/features/vocabulary/lib/vocabulary-source'
 import { playAudio } from '@/utils/media.utils'
-import { speakWord } from '../lib/audio.utils'
-import { normalizeSpeakingWord } from '../lib/speaking-vocabulary'
-import { speakingVocabularyService } from '../services/speaking-vocabulary.service'
+import { speakWord } from '@/features/practice/lib/audio.utils'
+import { normalizeSpeakingWord } from '@/features/practice/lib/speaking-vocabulary'
+import { speakingVocabularyService } from '@/features/practice/services/speaking-vocabulary.service'
 import type {
   SpeakingWordTarget,
   SaveSpeakingWordResult,
   SpeakingSavedWord,
-} from '../types/speaking-vocabulary'
-import { SpeakingVocabularySavedActions } from './speaking.vocabulary.saved.actions'
+} from '@/features/practice/types/speaking-vocabulary'
+import { SpeakingVocabularySavedActions } from '@/features/practice/components/speaking.vocabulary.saved.actions'
 
 export function SpeakingVocabularySaveDialog({
   target,

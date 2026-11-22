@@ -1,5 +1,5 @@
 // Component giao diện WritingHistory hiển thị lịch sử bài làm cho học viên.
-import { writingScoreLabel } from '../lib/writing-score'
+import { writingScoreLabel } from '@/features/practice/lib/writing-score'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Calendar, Trophy, Clock, ChevronRight, Layers } from 'lucide-react'

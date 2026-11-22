@@ -1,4 +1,5 @@
 // Định nghĩa các kiểu dữ liệu cho Sổ tay câu sai (Mistake Vault), SRS và Luyện tập chuyên sâu theo chủ đề.
+import type { SpeakingLearningIssue } from '@/features/practice/types/speaking'
 
 export enum MistakeStatus {
   NEED_PRACTICE = 'NEED_PRACTICE',
@@ -191,8 +192,8 @@ export interface SpeakingContextImprovement {
 }
 
 export interface SpeakingMistakesResponse {
-  learning_issues?: import('./speaking').SpeakingLearningIssue[]
-  vocabulary_errors?: import('./speaking').SpeakingLearningIssue[]
+  learning_issues?: SpeakingLearningIssue[]
+  vocabulary_errors?: SpeakingLearningIssue[]
   summary: {
     total_due_today: number
     total_scheduled: number

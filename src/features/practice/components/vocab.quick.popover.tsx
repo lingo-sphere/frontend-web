@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { Icon } from '@/components/icon.map'
-import type { TargetVocabularyRef } from '../types/grammar-practice'
+import type { TargetVocabularyRef } from '@/features/practice/types/grammar-practice'
 
 interface VocabQuickPopoverProps {
   vocabularies?: TargetVocabularyRef[]

@@ -1,8 +1,9 @@
-// Component thẻ nhật ký khảo thí và bài nộp gần đây theo phong cách Gogo Application Status Card.
+// Component thẻ nhật ký khảo thí và bài nộp gần đây theo phong cách Gogo Application Status Card hỗ trợ đa ngôn ngữ.
 'use client'
 
 import Link from 'next/link'
 import { Award, ChevronRight, CheckCircle2, AlertCircle, FileText } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 import type { ProgressRecentActivity } from '@/features/progress/hooks/use.progress.data'
 
 interface GogoRecentAssessmentsCardProps {
@@ -10,6 +11,8 @@ interface GogoRecentAssessmentsCardProps {
 }
 
 export function GogoRecentAssessmentsCard({ activities }: GogoRecentAssessmentsCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const displayList = activities.slice(0, 5)
 
   return (
@@ -21,10 +24,10 @@ export function GogoRecentAssessmentsCard({ activities }: GogoRecentAssessmentsC
           </span>
           <div>
             <h3 className="text-base font-bold text-text-primary">
-              Khảo Thí & Đánh Giá Gần Đây
+              {isVi ? 'Khảo Thí & Đánh Giá Gần Đây' : 'Recent Assessments & Tests'}
             </h3>
             <p className="text-xs text-text-secondary">
-              Kết quả các bài kiểm tra chương và đề thi thực hiện gần nhất
+              {isVi ? 'Kết quả các bài kiểm tra chương và đề thi thực hiện gần nhất' : 'Results of latest chapter tests and practice exams'}
             </p>
           </div>
         </div>
@@ -33,7 +36,7 @@ export function GogoRecentAssessmentsCard({ activities }: GogoRecentAssessmentsC
           href="/progress"
           className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
         >
-          <span>Xem chi tiết</span>
+          <span>{isVi ? 'Xem chi tiết' : 'View details'}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
@@ -41,7 +44,9 @@ export function GogoRecentAssessmentsCard({ activities }: GogoRecentAssessmentsC
       <div className="space-y-3 my-auto">
         {displayList.length === 0 ? (
           <div className="py-8 text-center text-text-secondary text-xs">
-            Chưa có bài kiểm tra nào được ghi nhận. Hãy bắt đầu luyện đề để theo dõi tiến độ!
+            {isVi
+              ? 'Chưa có bài kiểm tra nào được ghi nhận. Hãy bắt đầu luyện đề để theo dõi tiến độ!'
+              : 'No test attempts recorded yet. Start practicing exams to track progress!'}
           </div>
         ) : (
           displayList.map((item) => {
@@ -76,12 +81,12 @@ export function GogoRecentAssessmentsCard({ activities }: GogoRecentAssessmentsC
                       {isPassed ? (
                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
                           <CheckCircle2 className="w-3 h-3" />
-                          <span>Đạt</span>
+                          <span>{isVi ? 'Đạt' : 'Passed'}</span>
                         </span>
                       ) : (
                         <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                           <AlertCircle className="w-3 h-3" />
-                          <span>Cần ôn</span>
+                          <span>{isVi ? 'Cần ôn' : 'Review'}</span>
                         </span>
                       )}
                     </div>
@@ -95,4 +100,3 @@ export function GogoRecentAssessmentsCard({ activities }: GogoRecentAssessmentsC
     </div>
   )
 }
-

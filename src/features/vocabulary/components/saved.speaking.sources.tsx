@@ -1,7 +1,7 @@
 'use client'
 
-import type { SpeakingVocabularySource } from '../types/vocabulary-source'
-import { vocabularySourceTime } from '../lib/vocabulary-source'
+import type { SpeakingVocabularySource } from '@/features/vocabulary/types/vocabulary-source'
+import { vocabularySourceTime } from '@/features/vocabulary/lib/vocabulary-source'
 
 export function SavedSpeakingSources({
   sources,

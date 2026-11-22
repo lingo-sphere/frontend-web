@@ -7,7 +7,7 @@ import { ArrowRight, BookOpen, Layers3, RotateCcw, Clock3 } from 'lucide-react'
 import { Button } from '@/components/button'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useNavigate } from '@/lib/navigation'
-import { vocabularyService } from '../services/vocabulary.service'
+import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 
 export function VocabularyResumeSessions() {
   const userId = useAuthStore(state => state.user?.user_id)

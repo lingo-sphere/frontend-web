@@ -1,8 +1,8 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-import type { WritingSubmission } from "../types/writing";
-import { WritingTaskAssessmentView } from './writing.task.assessment';
+import type { WritingSubmission } from "@/features/practice/types/writing";
+import { WritingTaskAssessmentView } from '@/features/practice/components/writing.task.assessment';
 
 const labels = {
   task_achievement: ["Đáp ứng yêu cầu", "Task achievement"],

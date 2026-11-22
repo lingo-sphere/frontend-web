@@ -16,11 +16,11 @@ import { Card, CardContent } from "@/components/card";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 import { useAuthStore } from "@/features/auth/store/auth.store";
-import { speakingGrammarService } from "../services/speaking-grammar.service";
-import type { GrammarError } from "../types/writing";
-import type { SpeakingWordTarget } from "../types/speaking-vocabulary";
-import { SpeakingGrammarActions } from "./speaking.grammar.actions";
-import { SpeakingVocabularySaving } from "./speaking.vocabulary.saving";
+import { speakingGrammarService } from "@/features/practice/services/speaking-grammar.service";
+import type { GrammarError } from "@/features/practice/types/writing";
+import type { SpeakingWordTarget } from "@/features/practice/types/speaking-vocabulary";
+import { SpeakingGrammarActions } from "@/features/practice/components/speaking.grammar.actions";
+import { SpeakingVocabularySaving } from "@/features/practice/components/speaking.vocabulary.saving";
 
 const categoryStyles: Record<
   string,

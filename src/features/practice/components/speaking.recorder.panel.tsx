@@ -1,4 +1,4 @@
-import { PracticeRecordKey } from './practice.keyboard'
+import { PracticeRecordKey } from '@/features/practice/components/practice.keyboard'
 import { resolveSpeakingPolicy } from '@/features/practice/lib/speaking-policy'
 /**
  * @file speaking.recorder.panel.tsx

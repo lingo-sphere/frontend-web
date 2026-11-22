@@ -1,4 +1,4 @@
-import { practiceDifficultyLabel } from '../lib/practice-difficulty'
+import { practiceDifficultyLabel } from '@/features/practice/lib/practice-difficulty'
 /**
  * @file speaking.prompt.card.tsx
  * @description Card hiển thị đề bài, hình ảnh mô tả tranh, kịch bản hội thoại đa lượt,

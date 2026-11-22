@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/card';
 import { Button } from '@/components/button';
 import { Icon } from '@/components/icon.map';
-import { useContextById } from '../hooks/use.context';
+import { useContextById } from '@/features/practice/hooks/use.context';
 
 export type PracticePartType = 'PART_1' | 'PART_2' | 'PART_3' | 'PART_4' | 'DICTATION';
 

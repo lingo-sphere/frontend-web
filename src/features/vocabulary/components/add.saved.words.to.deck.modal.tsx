@@ -30,7 +30,7 @@ import { useNavigate } from '@/lib/navigation'
 import { useApp } from '@/contexts/app.context'
 import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
 import type { Deck } from '@/features/vocabulary/schemas/vocabulary.schema'
-import type { SpeakingVocabularySource } from '../types/vocabulary-source'
+import type { SpeakingVocabularySource } from '@/features/vocabulary/types/vocabulary-source'
 
 export const MIN_DECK_WORDS = 5
 export const MAX_DECK_WORDS = 30

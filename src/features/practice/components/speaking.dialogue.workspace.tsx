@@ -1,4 +1,4 @@
-import { PracticeKeyboard, PracticeRecordKey } from './practice.keyboard'
+import { PracticeKeyboard, PracticeRecordKey } from '@/features/practice/components/practice.keyboard'
 import {
   useSpeakingSession,
   type RecordingSubmission,

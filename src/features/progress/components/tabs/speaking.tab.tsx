@@ -6,7 +6,7 @@ import type {
   SkillStats,
   PracticeDashboardData,
 } from "@/features/progress/services/progress.service";
-import { formatTrendName } from "../progress.helpers";
+import { formatTrendName } from "@/features/progress/components/progress.helpers";
 
 export interface SpeakingDetailTabProps {
   stats?: SkillStats;

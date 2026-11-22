@@ -1,4 +1,4 @@
-// Shared helpers and constants for Progress Skills Tabs
+// Hàm tiện ích định dạng tên kỹ năng, xu hướng và chiều năng lực hỗ trợ đa ngôn ngữ.
 
 export const SKILL_VN_MAP: Record<string, string> = {
   reading: "Đọc hiểu",
@@ -10,12 +10,30 @@ export const SKILL_VN_MAP: Record<string, string> = {
   pronunciation: "Ngữ âm (IPA)",
 };
 
+export const SKILL_EN_MAP: Record<string, string> = {
+  reading: "Reading Comprehension",
+  listening: "Listening Comprehension",
+  grammar: "Grammar",
+  writing: "Writing Skills",
+  speaking: "Speaking Skills",
+  vocabulary: "Vocabulary",
+  pronunciation: "Pronunciation (IPA)",
+};
+
 export const TREND_VN_MAP: Record<string, string> = {
   improving: "Tiến bộ ↗",
   declining: "Cần chú ý ↘",
   stable: "Ổn định →",
   insufficient_data: "Chưa đủ dữ liệu",
   accelerating: "Bứt phá ⚡",
+};
+
+export const TREND_EN_MAP: Record<string, string> = {
+  improving: "Improving ↗",
+  declining: "Needs Attention ↘",
+  stable: "Stable →",
+  insufficient_data: "Insufficient Data",
+  accelerating: "Accelerating ⚡",
 };
 
 export const EXERCISE_AND_DIMENSION_MAP: Record<string, string> = {
@@ -137,20 +155,26 @@ export const EXERCISE_AND_DIMENSION_MAP: Record<string, string> = {
   word_order: "Trật tự từ trong câu",
 };
 
-export function formatSkillName(skill?: string): string {
-  if (!skill) return "Kỹ năng";
+export function formatSkillName(skill?: string, isVi: boolean = true): string {
+  if (!skill) return isVi ? "Kỹ năng" : "Skill";
   const clean = skill.trim().toLowerCase();
+  if (!isVi) {
+    return SKILL_EN_MAP[clean] || skill;
+  }
   return SKILL_VN_MAP[clean] || skill;
 }
 
-export function formatTrendName(trend?: string): string {
-  if (!trend) return "Chưa đủ dữ liệu";
+export function formatTrendName(trend?: string, isVi: boolean = true): string {
+  if (!trend) return isVi ? "Chưa đủ dữ liệu" : "Insufficient Data";
   const clean = trend.trim().toLowerCase();
+  if (!isVi) {
+    return TREND_EN_MAP[clean] || "Insufficient Data";
+  }
   return TREND_VN_MAP[clean] || "Chưa đủ dữ liệu";
 }
 
-export function formatDimensionName(key?: string): string {
-  if (!key) return "Luyện tập trọng tâm";
+export function formatDimensionName(key?: string, isVi: boolean = true): string {
+  if (!key) return isVi ? "Luyện tập trọng tâm" : "Target Practice";
   const clean = key.trim();
   if (
     /^[0-9a-fA-F]{24}$/.test(clean) ||
@@ -158,9 +182,19 @@ export function formatDimensionName(key?: string): string {
     clean.startsWith("ctx_") ||
     clean.startsWith("item_")
   ) {
-    return "Luyện tập trọng tâm";
+    return isVi ? "Luyện tập trọng tâm" : "Target Practice";
   }
   const cleanKey = clean.toLowerCase().replace(/[\s-]+/g, "_");
+  if (!isVi) {
+    if (cleanKey.startsWith("part_")) {
+      const pNum = cleanKey.replace("part_", "");
+      return `Part ${pNum}`;
+    }
+    return cleanKey
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
   if (EXERCISE_AND_DIMENSION_MAP[cleanKey]) {
     return EXERCISE_AND_DIMENSION_MAP[cleanKey];
   }

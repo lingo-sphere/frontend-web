@@ -11,7 +11,7 @@ import type {
   CourseScheduleResponse,
   UpdateCourseSchedulePayload,
 } from '@/features/courses/types/schedule.types'
-import type { GradedQuestionItem, TestAttemptItem, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
+import type { CourseTestQuestion, GradedQuestionItem, TestAttemptItem, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
 
 export interface SkillEvaluation {
   task_policy_version?: string
@@ -387,7 +387,7 @@ export const courseService = {
   ): Promise<{
     skill_submissions?: SpeakingSubmissionResponse[]
     skill_profiles?: { speaking?: { task_prompt?: string; exercise_type?: string }; writing?: { task_prompt?: string; exercise_type?: string } }
-    questions?: import('@/features/courses/types/test.runner.types').CourseTestQuestion[]
+    questions?: CourseTestQuestion[]
     session_id: string
     started_at: string
     expires_at: string

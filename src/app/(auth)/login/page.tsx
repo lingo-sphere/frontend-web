@@ -148,18 +148,18 @@ function LoginPageContent() {
         <div className="py-10 lg:py-16 space-y-6 max-w-xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold backdrop-blur-md">
             <Sparkles size={15} className="text-emerald-400" />
-            <span>Nền tảng học ngoại ngữ thế hệ mới</span>
+            <span>{t('auth.heroBadge')}</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.2]">
-            Bứt phá trình độ, <br />
+            {t('auth.heroTitle1')} <br />
             <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-              Chinh phục ngoại ngữ cùng AI
+              {t('auth.heroTitle2')}
             </span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-            Học tiếng Anh thông minh hơn với lộ trình cá nhân hóa cho từng mục tiêu TOEIC, IELTS và giao tiếp thực chiến. Hệ thống AI theo sát từng bước tiến bộ của bạn.
+            {t('auth.heroDesc')}
           </p>
 
           <div className="space-y-3.5 pt-2">
@@ -167,19 +167,19 @@ function LoginPageContent() {
               <div className="h-7 w-7 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
                 <CheckCircle2 size={16} />
               </div>
-              <span>Luyện phát âm chuẩn với AI nhận diện âm vị thời gian thực</span>
+              <span>{t('auth.heroFeaturePronunciation')}</span>
             </div>
             <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-200">
               <div className="h-7 w-7 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
                 <CheckCircle2 size={16} />
               </div>
-              <span>Lộ trình tối ưu hóa mục tiêu TOEIC 800+ và IELTS 7.5+</span>
+              <span>{t('auth.heroFeatureRoadmap')}</span>
             </div>
             <div className="flex items-center gap-3 text-xs sm:text-sm text-slate-200">
               <div className="h-7 w-7 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
                 <CheckCircle2 size={16} />
               </div>
-              <span>Lưu trữ tiến độ và đồng bộ bài học trên mọi thiết bị</span>
+              <span>{t('auth.heroFeatureSync')}</span>
             </div>
           </div>
         </div>
@@ -201,14 +201,14 @@ function LoginPageContent() {
               </span>
             </div>
             <div>
-              <span className="block text-xs font-bold text-white">50,000+ Học viên tin tưởng</span>
-              <span className="block text-[11px] text-slate-400">Đánh giá 4.9 / 5.0 ⭐ trên toàn quốc</span>
+              <span className="block text-xs font-bold text-white">{t('auth.trustedLearners')}</span>
+              <span className="block text-[11px] text-slate-400">{t('auth.ratingNationwide')}</span>
             </div>
           </div>
 
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-300 text-xs font-semibold">
             <Award size={15} />
-            <span>Cam kết chuẩn đầu ra</span>
+            <span>{t('auth.commitmentOutput')}</span>
           </div>
         </div>
       </div>
@@ -225,19 +225,19 @@ function LoginPageContent() {
           <div className="space-y-1.5 mb-6">
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
               {mode === 'login'
-                ? 'Đăng nhập tài khoản'
+                ? t('auth.loginTitle')
                 : mode === 'register'
-                ? 'Tạo tài khoản học viên'
+                ? t('auth.registerTitle')
                 : mode === 'verify_email_otp'
-                ? 'Xác thực tài khoản'
-                : 'Khôi phục mật khẩu'}
+                ? t('auth.verifyOtpTitle')
+                : t('auth.resetPasswordTitle')}
             </h2>
             <p className="text-xs text-slate-400">
               {mode === 'login'
-                ? 'Chào mừng bạn quay lại hành trình rèn luyện tiếng Anh!'
+                ? t('auth.loginWelcome')
                 : mode === 'register'
-                ? 'Bắt đầu trải nghiệm học tập cùng trợ lý AI cá nhân hóa.'
-                : 'Vui lòng hoàn tất bước xác thực để tiếp tục.'}
+                ? t('auth.registerWelcome')
+                : t('auth.verifyWelcome')}
             </p>
           </div>
 
@@ -407,7 +407,7 @@ function LoginPageContent() {
                     />
                   </svg>
                   <span>
-                    {mode === 'login' ? 'Đăng nhập bằng Google' : 'Đăng ký bằng Google'}
+                    {mode === 'login' ? t('auth.loginWithGoogle') : t('auth.registerWithGoogle')}
                   </span>
                 </button>
               </>
@@ -427,7 +427,7 @@ function LoginPageContent() {
           <div className="pt-5 mt-5 border-t border-slate-800/80 text-center space-y-1.5">
             <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
               <ShieldCheck size={13} className="text-emerald-400" />
-              <span>Bảo mật SSL 256-bit • Dữ liệu mã hóa an toàn</span>
+              <span>{t('auth.securityBadge')}</span>
             </div>
             <p className="text-[10px] text-slate-500 leading-relaxed">
               {t('auth.agreeTerms')}

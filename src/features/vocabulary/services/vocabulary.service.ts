@@ -1,8 +1,10 @@
 // Service xử lý các logic nghiệp vụ chính cho dịch vụ từ vựng.
 import { api } from '@/services/api.client'
-import type { SpeakingVocabularySource } from '../types/vocabulary-source'
+import type { SpeakingVocabularySource } from '@/features/vocabulary/types/vocabulary-source'
+import type { VocabularyItem } from '@/features/vocabulary/types/vocabulary.learn'
+import type { VocabularyDashboardOverview } from '@/features/vocabulary/types/vocabulary.dashboard'
 import { API_CONFIG } from '@/config/api.config'
-import { WrongWordSchema, type WrongWord } from '../schemas/wrong-word.schema'
+import { WrongWordSchema, type WrongWord } from '@/features/vocabulary/schemas/wrong-word.schema'
 import {
   DeckSchema,
   DeckListSchema,
@@ -390,7 +392,7 @@ export const vocabularyService = {
     total_items: number
     assessment_type: 'TESTED' | 'SELF_REPORTED'
     skill_breakdown: { meaning: number | null; spelling: number | null; listening: number | null; context: number | null }
-    weak_words: import('../types/vocabulary.learn').VocabularyItem[]
+    weak_words: VocabularyItem[]
     xp_earned: number
   }> {
     return api.post(`/vocabulary/learning-sessions/${sessionId}/complete`, {})
@@ -400,8 +402,6 @@ export const vocabularyService = {
   async readLearningSession(sessionId: string): Promise<any> { return api.get(`/vocabulary/learning-sessions/${sessionId}`) },
   async saveLearningSession(sessionId: string, data: { action: 'SAVE' | 'PAUSE' | 'RESUME'; expected_revision: number; draft?: Record<string, unknown> }): Promise<{ revision: number; elapsed_seconds?: number }> { return api.put(`/vocabulary/learning-sessions/${sessionId}`, data) },
   async packageSavedWords(data: { operation_id: string; deck_id?: string; name?: string; description?: string; visibility?: string; settings?: Record<string, unknown>; words: Array<{lexical_item_id: string; meaning_index: number}>; remove_after_add: boolean }): Promise<{ deck_id: string; removed_ids: string[] }> { return api.post('/vocabulary/flashcards/package', data) },
-
-  // ==================== WRONG WORDS COLLECTION ====================
 
   async getWrongWords(params?: { status?: string; page?: number; limit?: number; search?: string }): Promise<{
     items: WrongWord[]
@@ -421,9 +421,7 @@ export const vocabularyService = {
     return { ...response, items: response.items.map(item => WrongWordSchema.parse(item)) }
   },
 
-  // ==================== DASHBOARD & LEARNING ANALYTICS ====================
-
-  async getDashboardOverview(period = '30d'): Promise<import('../types/vocabulary.dashboard').VocabularyDashboardOverview> {
-    return api.get<import('../types/vocabulary.dashboard').VocabularyDashboardOverview>('/vocabulary/dashboard/overview', { period })
+  async getDashboardOverview(period = '30d'): Promise<VocabularyDashboardOverview> {
+    return api.get<VocabularyDashboardOverview>('/vocabulary/dashboard/overview', { period })
   },
 }

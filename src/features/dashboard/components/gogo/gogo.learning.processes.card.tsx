@@ -1,6 +1,7 @@
-// Component hiển thị tiến trình hoàn thành khóa học, từ vựng và bài thi TOEIC kèm vòng tròn tiến độ.
+// Component hiển thị tiến trình hoàn thành khóa học, từ vựng và bài thi TOEIC kèm vòng tròn tiến độ hỗ trợ đa ngôn ngữ.
 'use client'
 
+import { useLanguage } from '@/hooks/use.language'
 import type { ProgressMetrics, VocabStatsSummary, UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
 
 interface GogoProcessesCardProps {
@@ -64,6 +65,9 @@ export function GogoLearningProcessesCard({
   vocabStats,
   toeicAttemptsCount = 0,
 }: GogoProcessesCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
+
   const masteredVocab = vocabStats?.learned_words ?? 0
   const totalVocab = vocabStats?.total_cards ?? 0
   const vocabPct = totalVocab > 0 ? Math.round((masteredVocab / totalVocab) * 100) : 0
@@ -79,30 +83,30 @@ export function GogoLearningProcessesCard({
   const items: ProcessItem[] = [
     {
       id: 'courses',
-      title: 'Khóa học chính khóa',
-      subText: 'Tiến độ hoàn thành bài học',
-      countText: `${completedCourses} / ${totalCourses} khóa`,
+      title: isVi ? 'Khóa học chính khóa' : 'Main Curriculum Courses',
+      subText: isVi ? 'Tiến độ hoàn thành bài học' : 'Lesson completion progress',
+      countText: `${completedCourses} / ${totalCourses} ${isVi ? 'khóa' : 'courses'}`,
       percentage: Math.min(100, coursePct),
     },
     {
       id: 'vocab',
-      title: 'Từ vựng ghi nhớ SRS',
-      subText: 'Từ đã đạt cấp độ thành thạo',
-      countText: `${masteredVocab} / ${totalVocab} từ`,
+      title: isVi ? 'Từ vựng ghi nhớ SRS' : 'SRS Memorized Vocabulary',
+      subText: isVi ? 'Từ đã đạt cấp độ thành thạo' : 'Words reaching mastery level',
+      countText: `${masteredVocab} / ${totalVocab} ${isVi ? 'từ' : 'words'}`,
       percentage: Math.min(100, vocabPct),
     },
     {
       id: 'toeic',
-      title: 'Đề thi TOEIC đã làm',
-      subText: 'Bài thi thử Full Test & Mini Test',
-      countText: `${toeicDone} đề hoàn thành`,
+      title: isVi ? 'Đề thi TOEIC đã làm' : 'Attempted TOEIC Tests',
+      subText: isVi ? 'Bài thi thử Full Test & Mini Test' : 'Full Test & Mini Test practice attempts',
+      countText: `${toeicDone} ${isVi ? 'đề hoàn thành' : 'tests completed'}`,
       percentage: Math.min(100, toeicDone > 0 ? Math.min(100, toeicDone * 10) : 0),
     },
     {
       id: 'tests',
-      title: 'Tỷ lệ đạt bài kiểm tra',
-      subText: `${totalTests} lượt thi chương & tốt nghiệp`,
-      countText: `${passRate}% tỷ lệ đỗ`,
+      title: isVi ? 'Tỷ lệ đạt bài kiểm tra' : 'Test Passing Rate',
+      subText: `${totalTests} ${isVi ? 'lượt thi chương & tốt nghiệp' : 'chapter & final test attempts'}`,
+      countText: `${passRate}% ${isVi ? 'tỷ lệ đỗ' : 'pass rate'}`,
       percentage: Math.min(100, passRate),
     },
   ]
@@ -110,7 +114,7 @@ export function GogoLearningProcessesCard({
   return (
     <div className="space-y-3 h-full flex flex-col">
       <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-        Tiến độ Rèn luyện & Khóa học
+        {isVi ? 'Tiến độ Rèn luyện & Khóa học' : 'Practice & Course Progress'}
       </h2>
       <div className="rounded-3xl bg-surface border border-border p-5 sm:p-6 shadow-xs flex-1 flex flex-col justify-between space-y-3">
         {items.map((item, index) => (

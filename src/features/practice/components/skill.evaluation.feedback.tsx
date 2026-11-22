@@ -1,7 +1,7 @@
 "use client";
 
 import type { SkillEvaluation } from "@/features/courses/services/course.service";
-import { WritingTaskAssessmentView } from './writing.task.assessment';
+import { WritingTaskAssessmentView } from '@/features/practice/components/writing.task.assessment';
 
 const labels: Record<string, string> = {
   pronunciation: "Phát âm",

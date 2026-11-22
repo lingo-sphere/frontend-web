@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import type { SpeakingGrammarSource } from "../types/speaking-grammar";
+import type { SpeakingGrammarSource } from "@/features/practice/types/speaking-grammar";
 
 export function SpeakingGrammarSourceBanner({
   source,

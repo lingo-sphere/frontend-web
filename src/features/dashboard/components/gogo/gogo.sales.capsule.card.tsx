@@ -1,7 +1,8 @@
-// Component biểu đồ cột viên nang thể hiện tần suất và tỷ lệ đúng của bài tập theo từng ngày trong tuần.
+// Component biểu đồ cột viên nang thể hiện tần suất và tỷ lệ đúng của bài tập theo từng ngày trong tuần hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { useState } from 'react'
+import { useLanguage } from '@/hooks/use.language'
 
 interface DailyBarData {
   dayLabel: string
@@ -26,6 +27,8 @@ interface GogoSalesCapsuleCardProps {
 }
 
 export function GogoSalesCapsuleCard({ dailyBreakdown = [] }: GogoSalesCapsuleCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -56,20 +59,20 @@ export function GogoSalesCapsuleCard({ dailyBreakdown = [] }: GogoSalesCapsuleCa
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-            Hoạt động Luyện tập Theo Ngày
+            {isVi ? 'Hoạt động Luyện tập Theo Ngày' : 'Daily Practice Activity'}
           </h2>
           <p className="text-xs text-text-tertiary mt-0.5">
-            Tần suất câu hỏi & bài tập theo ngày trong tuần
+            {isVi ? 'Tần suất câu hỏi & bài tập theo ngày trong tuần' : 'Question and exercise volume across days of the week'}
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5 text-text-secondary">
             <span className="w-2.5 h-2.5 rounded-full border border-emerald-500 bg-emerald-500/80" />
-            <span>Câu đúng</span>
+            <span>{isVi ? 'Câu đúng' : 'Correct'}</span>
           </div>
           <div className="flex items-center gap-1.5 text-text-secondary">
             <span className="w-2.5 h-2.5 rounded-full border border-teal-500 bg-teal-500/25" />
-            <span>Chưa chính xác / Cần ôn</span>
+            <span>{isVi ? 'Chưa chính xác / Cần ôn' : 'Incorrect / Review'}</span>
           </div>
         </div>
       </div>
@@ -101,9 +104,9 @@ export function GogoSalesCapsuleCard({ dailyBreakdown = [] }: GogoSalesCapsuleCa
               >
                 {isHovered && (
                   <div className="absolute -top-12 z-20 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-[11px] font-semibold whitespace-nowrap shadow-md pointer-events-none text-center">
-                    <div>{d.dayLabel}: {d.totalValue} câu hỏi</div>
+                    <div>{d.dayLabel}: {d.totalValue} {isVi ? 'câu hỏi' : 'questions'}</div>
                     <div className="text-[10px] text-emerald-300">
-                      {d.correctValue} đúng • {d.accuracy}% chính xác
+                      {d.correctValue} {isVi ? 'đúng' : 'correct'} • {d.accuracy}% {isVi ? 'chính xác' : 'accuracy'}
                     </div>
                   </div>
                 )}

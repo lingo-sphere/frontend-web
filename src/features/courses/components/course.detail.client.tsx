@@ -279,7 +279,7 @@ export function CourseDetailClient({
                   <button
                     type="button"
                     onClick={handleInitiateEnrollOrBuy}
-                    className="px-3 py-1 rounded-lg bg-white text-emerald-800 hover:bg-emerald-50 text-[11px] font-extrabold shadow-xs transition-all cursor-pointer"
+                    className="px-3 py-1 rounded-lg bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-slate-800 text-[11px] font-extrabold shadow-xs transition-all cursor-pointer"
                   >
                     {t('courses.buyToUnlockAll')}
                   </button>

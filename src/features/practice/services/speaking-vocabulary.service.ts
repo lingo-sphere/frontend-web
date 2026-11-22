@@ -6,7 +6,7 @@ import type {
   SpeakingSavedWord,
   SaveSpeakingWordResult,
   SpeakingWordDetail,
-} from '../types/speaking-vocabulary'
+} from '@/features/practice/types/speaking-vocabulary'
 
 const sourcePath = (target: SpeakingWordTarget) =>
   `/practice/${target.source_kind === 'WRITING' ? 'writing/submissions' : 'speaking/attempts'}/${encodeURIComponent(target.attempt_id)}`

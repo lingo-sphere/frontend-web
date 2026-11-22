@@ -13,7 +13,7 @@ import type {
   CreateGrammarSessionParams,
   SubmitGrammarAnswerParams,
   SubmitGrammarSessionParams,
-} from '../types/grammar-practice'
+} from '@/features/practice/types/grammar-practice'
 
 export const grammarPracticeService = {
   getTheoryTargets(slug: string): Promise<GrammarTheoryTargets> {

@@ -1,8 +1,8 @@
 'use client'
 
 import { Button } from '@/components/button'
-import { courseMistakeDomain } from '../lib/mistake-domain'
-import type { WrongQuestionItem } from '../types/test.runner.types'
+import { courseMistakeDomain } from '@/features/courses/lib/mistake-domain'
+import type { WrongQuestionItem } from '@/features/courses/types/test.runner.types'
 
 const names: Record<string, string> = { LISTENING: 'Nghe (Listening)', READING: 'Đọc (Reading)', SPEAKING: 'Nói (Speaking)', WRITING: 'Viết (Writing)', GRAMMAR: 'Ngữ pháp', VOCABULARY: 'Từ vựng' }
 

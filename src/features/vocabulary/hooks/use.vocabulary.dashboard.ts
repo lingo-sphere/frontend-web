@@ -7,9 +7,9 @@
 
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useQuery } from '@tanstack/react-query'
-import { vocabularyService } from '../services/vocabulary.service'
-import { vocabularyKeys } from '../keys/vocabulary.keys'
-import type { VocabularyDashboardOverview } from '../types/vocabulary.dashboard'
+import { vocabularyService } from '@/features/vocabulary/services/vocabulary.service'
+import { vocabularyKeys } from '@/features/vocabulary/keys/vocabulary.keys'
+import type { VocabularyDashboardOverview } from '@/features/vocabulary/types/vocabulary.dashboard'
 
 export function useVocabularyDashboard(period = '30d') {
   const userId = useAuthStore(state => state.user?.user_id)

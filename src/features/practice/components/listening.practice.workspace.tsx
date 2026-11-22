@@ -1,22 +1,22 @@
 // Không gian làm bài luyện nghe thực hành với điều khiển tốc độ và lưu tiến độ.
 'use client'
 
-import { PracticeKeyboard, PracticeOptionKey } from './practice.keyboard'
+import { PracticeKeyboard, PracticeOptionKey } from '@/features/practice/components/practice.keyboard'
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw, Play, Pause } from 'lucide-react'
 import { Button } from '@/components/button'
 import { AppSelect } from '@/components/select'
-import { PracticeExitConfirmModal } from './practice.exit-confirm.modal'
-import { ListeningSavedResult } from './listening.saved.result'
-import { useListeningMedia } from '../hooks/use.listening.media'
-import { listeningLifecycleService } from '../services/listening-lifecycle.service'
-import { useListeningLifecycle } from '../hooks/use.listening.lifecycle'
+import { PracticeExitConfirmModal } from '@/features/practice/components/practice.exit-confirm.modal'
+import { ListeningSavedResult } from '@/features/practice/components/listening.saved.result'
+import { useListeningMedia } from '@/features/practice/hooks/use.listening.media'
+import { listeningLifecycleService } from '@/features/practice/services/listening-lifecycle.service'
+import { useListeningLifecycle } from '@/features/practice/hooks/use.listening.lifecycle'
 import type {
   ListeningGroup,
   ListeningKind,
-} from '../types/listening-lifecycle'
+} from '@/features/practice/types/listening-lifecycle'
 
 function LiveDictationInput({ sessionId, blankKey, label, value, limit, disabled, onChange }: {
   sessionId: string; blankKey: string; label: string; value: string; limit?: number; disabled: boolean; onChange: (value: string) => void

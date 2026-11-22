@@ -12,7 +12,7 @@ import type {
   Part4Item,
   DictationItem,
   PaginatedResponse,
-} from '../types/listening-practice';
+} from '@/features/practice/types/listening-practice';
 
 export const listeningPracticeService = {
   // ---------------------------------------------------------------------------

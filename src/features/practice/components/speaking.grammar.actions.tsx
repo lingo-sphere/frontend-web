@@ -7,8 +7,8 @@ import { useTranslation } from "react-i18next";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { useNavigate } from "@/lib/navigation";
-import { speakingGrammarService } from "../services/speaking-grammar.service";
-import type { SpeakingLearningIssue } from "../types/speaking";
+import { speakingGrammarService } from "@/features/practice/services/speaking-grammar.service";
+import type { SpeakingLearningIssue } from "@/features/practice/types/speaking";
 
 const normalized = (text: string) =>
   text

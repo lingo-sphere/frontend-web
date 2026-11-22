@@ -1,6 +1,6 @@
 'use client'
 
-import { writingScoreLabel } from '../lib/writing-score'
+import { writingScoreLabel } from '@/features/practice/lib/writing-score'
 /**
  * @file writing.recent.submissions.tsx
  * @description Thành phần hiển thị danh sách các bài viết đã nộp gần đây kèm điểm số và trạng thái chấm bài

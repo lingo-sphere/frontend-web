@@ -10,7 +10,7 @@ import type {
   SkillStats,
   PracticeDashboardData,
 } from "@/features/progress/services/progress.service";
-import { formatTrendName, formatDimensionName } from "../progress.helpers";
+import { formatTrendName, formatDimensionName } from "@/features/progress/components/progress.helpers";
 
 export interface ReadingDetailTabProps {
   stats?: SkillStats;

@@ -12,7 +12,7 @@ import { Input } from "@/components/input";
 import { Button } from "@/components/button";
 import { api } from "@/services/api.client";
 import { API_CONFIG } from "@/config/api.config";
-import type { PracticeContext } from "../types/context.types";
+import type { PracticeContext } from "@/features/practice/types/context.types";
 
 interface ReadingContextNavigationProps {
   isVietnamese?: boolean;

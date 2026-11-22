@@ -1,7 +1,8 @@
-// Component phân tích trí nhớ và phân bổ các cấp độ từ vựng theo thuật toán ngắt quãng SRS.
+// Component phân tích trí nhớ và phân bổ các cấp độ từ vựng theo thuật toán ngắt quãng SRS hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { Brain, ArrowRight, BookOpen, RotateCcw } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 import type { VocabStatsSummary } from '@/features/progress/hooks/use.progress.data'
 import type { VocabularyDashboardOverview } from '@/features/vocabulary/types/vocabulary.dashboard'
 
@@ -16,6 +17,9 @@ export function GogoVocabularyDonutCard({
   dashboardData,
   onNavigate,
 }: GogoVocabularyDonutCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
+
   const summary = dashboardData?.summary
   const memory = dashboardData?.memory_strength
 
@@ -42,7 +46,7 @@ export function GogoVocabularyDonutCard({
     <div className="space-y-3 h-full flex flex-col">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-          Trí nhớ & Phân bổ Từ vựng SRS
+          {isVi ? 'Trí nhớ & Phân bổ Từ vựng SRS' : 'SRS Memory & Vocabulary Distribution'}
         </h2>
         {onNavigate && (
           <button
@@ -50,7 +54,7 @@ export function GogoVocabularyDonutCard({
             onClick={() => onNavigate('/vocabulary')}
             className="text-xs font-semibold text-text-tertiary hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
           >
-            <span>Sổ từ vựng</span>
+            <span>{isVi ? 'Sổ từ vựng' : 'Vocabulary Book'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
@@ -114,7 +118,7 @@ export function GogoVocabularyDonutCard({
                 {totalWords}
               </span>
               <span className="text-[10px] text-text-tertiary font-semibold uppercase tracking-wider">
-                Tổng từ
+                {isVi ? 'Tổng từ' : 'Total'}
               </span>
             </div>
           </div>
@@ -123,33 +127,41 @@ export function GogoVocabularyDonutCard({
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                <span className="font-semibold text-text-primary">Trí nhớ sâu (≥30d)</span>
+                <span className="font-semibold text-text-primary">
+                  {isVi ? 'Trí nhớ sâu (≥30d)' : 'Deep Memory (≥30d)'}
+                </span>
               </div>
-              <span className="font-bold text-text-secondary">{deepMemCount} từ ({deepPct}%)</span>
+              <span className="font-bold text-text-secondary">{deepMemCount} {isVi ? 'từ' : 'words'} ({deepPct}%)</span>
             </div>
 
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 shrink-0" />
-                <span className="font-semibold text-text-primary">Vững vàng (7-30d)</span>
+                <span className="font-semibold text-text-primary">
+                  {isVi ? 'Vững vàng (7-30d)' : 'Stable (7-30d)'}
+                </span>
               </div>
-              <span className="font-bold text-text-secondary">{stableCount} từ ({stablePct}%)</span>
+              <span className="font-bold text-text-secondary">{stableCount} {isVi ? 'từ' : 'words'} ({stablePct}%)</span>
             </div>
 
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
-                <span className="font-semibold text-text-primary">Đang ghi nhớ (1-7d)</span>
+                <span className="font-semibold text-text-primary">
+                  {isVi ? 'Đang ghi nhớ (1-7d)' : 'Learning (1-7d)'}
+                </span>
               </div>
-              <span className="font-bold text-text-secondary">{learningCount} từ ({learningPct}%)</span>
+              <span className="font-bold text-text-secondary">{learningCount} {isVi ? 'từ' : 'words'} ({learningPct}%)</span>
             </div>
 
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
-                <span className="font-semibold text-text-primary">Mới học / Cần ôn</span>
+                <span className="font-semibold text-text-primary">
+                  {isVi ? 'Mới học / Cần ôn' : 'Fragile / Review'}
+                </span>
               </div>
-              <span className="font-bold text-text-secondary">{fragileCount} từ ({fragilePct}%)</span>
+              <span className="font-bold text-text-secondary">{fragileCount} {isVi ? 'từ' : 'words'} ({fragilePct}%)</span>
             </div>
           </div>
         </div>
@@ -158,11 +170,11 @@ export function GogoVocabularyDonutCard({
           <div className="flex items-center gap-3 text-xs w-full sm:w-auto">
             <div className="flex items-center gap-1.5 text-text-secondary">
               <Brain className="w-4 h-4 text-emerald-500" />
-              <span>Duy trì 30 ngày: <strong className="text-text-primary">{retentionRate > 0 ? `${retentionRate}%` : '--'}</strong></span>
+              <span>{isVi ? 'Duy trì 30 ngày: ' : '30-day retention: '}<strong className="text-text-primary">{retentionRate > 0 ? `${retentionRate}%` : '--'}</strong></span>
             </div>
             <div className="flex items-center gap-1.5 text-text-secondary">
               <RotateCcw className="w-3.5 h-3.5 text-cyan-500" />
-              <span>Cần ôn hôm nay: <strong className="text-text-primary">{dueToday}</strong></span>
+              <span>{isVi ? 'Cần ôn hôm nay: ' : 'Due today: '}<strong className="text-text-primary">{dueToday}</strong></span>
             </div>
           </div>
 
@@ -174,7 +186,7 @@ export function GogoVocabularyDonutCard({
                 className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Ôn tập ngay ({dueToday})</span>
+                <span>{isVi ? 'Ôn tập ngay' : 'Review Now'} ({dueToday})</span>
               </button>
             ) : (
               <button
@@ -183,7 +195,7 @@ export function GogoVocabularyDonutCard({
                 className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl border border-primary/40 text-primary text-xs font-bold hover:bg-primary/10 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Học từ mới</span>
+                <span>{isVi ? 'Học từ mới' : 'Learn New Words'}</span>
               </button>
             )}
           </div>

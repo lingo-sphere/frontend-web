@@ -1,9 +1,10 @@
-// Component thẻ nhiệm vụ học tập hàng ngày và phần thưởng chuỗi chuyên cần theo phong cách Gogo Tasks Card.
+// Component thẻ nhiệm vụ học tập hàng ngày và phần thưởng chuỗi chuyên cần theo phong cách Gogo Tasks Card hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
 import { CheckSquare, Flame, Gift, Check } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 
 interface GogoTasksRewardsCardProps {
   currentStreak: number
@@ -11,6 +12,9 @@ interface GogoTasksRewardsCardProps {
 }
 
 export function GogoTasksRewardsCard({ currentStreak = 0, onAction }: GogoTasksRewardsCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
+
   const [completedTasks, setCompletedTasks] = useState<Record<string, boolean>>({
     'task-vocab': false,
     'task-dictation': false,
@@ -21,21 +25,36 @@ export function GogoTasksRewardsCard({ currentStreak = 0, onAction }: GogoTasksR
     const next = !completedTasks[id]
     setCompletedTasks((prev) => ({ ...prev, [id]: next }))
     if (next && onAction) {
-      onAction('Đã ghi nhận hoàn thành mục tiêu học tập!')
+      onAction(isVi ? 'Đã ghi nhận hoàn thành mục tiêu học tập!' : 'Recorded daily study objective completion!')
     }
   }
 
   const tasks = [
-    { id: 'task-vocab', label: 'Ôn 10 từ vựng Spaced Repetition', time: '5 phút', href: '/vocabulary' },
-    { id: 'task-dictation', label: 'Luyện 1 bài nghe chép chính tả', time: '10 phút', href: '/listening' },
-    { id: 'task-speaking', label: 'Luyện phát âm AI Whisper', time: '10 phút', href: '/speaking' },
+    {
+      id: 'task-vocab',
+      label: isVi ? 'Ôn 10 từ vựng Spaced Repetition' : 'Review 10 SRS vocabulary cards',
+      time: isVi ? '5 phút' : '5 mins',
+      href: '/vocabulary',
+    },
+    {
+      id: 'task-dictation',
+      label: isVi ? 'Luyện 1 bài nghe chép chính tả' : 'Complete 1 dictation exercise',
+      time: isVi ? '10 phút' : '10 mins',
+      href: '/listening',
+    },
+    {
+      id: 'task-speaking',
+      label: isVi ? 'Luyện phát âm AI Whisper' : 'Practice AI pronunciation with Whisper',
+      time: isVi ? '10 phút' : '10 mins',
+      href: '/speaking',
+    },
   ]
 
   const milestones = [
     { days: 3, reward: '+50 XP', isDone: currentStreak >= 3 },
     { days: 7, reward: '+150 XP', isDone: currentStreak >= 7 },
-    { days: 14, reward: 'Huy hiệu Chiến Binh', isDone: currentStreak >= 14 },
-    { days: 30, reward: 'Gói VIP 7 ngày', isDone: currentStreak >= 30 },
+    { days: 14, reward: isVi ? 'Huy hiệu Chiến Binh' : 'Warrior Badge', isDone: currentStreak >= 14 },
+    { days: 30, reward: isVi ? 'Gói VIP 7 ngày' : '7-Day VIP Access', isDone: currentStreak >= 30 },
   ]
 
   return (
@@ -47,17 +66,17 @@ export function GogoTasksRewardsCard({ currentStreak = 0, onAction }: GogoTasksR
           </span>
           <div>
             <h3 className="text-base font-bold text-text-primary">
-              Nhiệm Vụ & Thưởng Streak
+              {isVi ? 'Nhiệm Vụ & Thưởng Streak' : 'Daily Tasks & Streak Rewards'}
             </h3>
             <p className="text-xs text-text-secondary">
-              Mục tiêu học tập duy trì chuỗi mỗi ngày
+              {isVi ? 'Mục tiêu học tập duy trì chuỗi mỗi ngày' : 'Daily goals to maintain your streak'}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/15 px-2.5 py-1 rounded-xl">
           <Flame className="w-3.5 h-3.5" />
-          <span>{currentStreak} ngày</span>
+          <span>{currentStreak} {isVi ? 'ngày' : 'days'}</span>
         </div>
       </div>
 
@@ -94,7 +113,7 @@ export function GogoTasksRewardsCard({ currentStreak = 0, onAction }: GogoTasksR
                 onClick={(e) => e.stopPropagation()}
                 className="text-[11px] text-primary hover:underline font-bold shrink-0"
               >
-                Vào học
+                {isVi ? 'Vào học' : 'Start'}
               </Link>
             </div>
           )
@@ -105,9 +124,9 @@ export function GogoTasksRewardsCard({ currentStreak = 0, onAction }: GogoTasksR
         <div className="flex items-center justify-between text-xs font-bold text-text-secondary mb-2.5">
           <span className="flex items-center gap-1.5">
             <Gift className="w-3.5 h-3.5 text-amber-500" />
-            <span>Cột mốc chuỗi chuyên cần</span>
+            <span>{isVi ? 'Cột mốc chuỗi chuyên cần' : 'Streak Milestones'}</span>
           </span>
-          <span className="text-[11px] text-text-tertiary">Mở khóa quà</span>
+          <span className="text-[11px] text-text-tertiary">{isVi ? 'Mở khóa quà' : 'Unlock Gifts'}</span>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
@@ -120,7 +139,7 @@ export function GogoTasksRewardsCard({ currentStreak = 0, onAction }: GogoTasksR
                   : 'bg-surface-subtle border-border/60 text-text-tertiary opacity-70'
               }`}
             >
-              <div className="text-[10px] font-bold uppercase">{m.days} ngày</div>
+              <div className="text-[10px] font-bold uppercase">{m.days} {isVi ? 'ngày' : 'days'}</div>
               <div className="text-[11px] font-extrabold truncate mt-0.5">{m.reward}</div>
             </div>
           ))}
@@ -129,4 +148,3 @@ export function GogoTasksRewardsCard({ currentStreak = 0, onAction }: GogoTasksR
     </div>
   )
 }
-

@@ -20,8 +20,8 @@ import type {
   TimePeriod,
 } from "@/features/progress/services/progress.service";
 import { progressService } from "@/features/progress/services/progress.service";
-import { formatTrendName, formatDimensionName } from "../progress.helpers";
-import { EvidenceBadge } from "../shared";
+import { formatTrendName, formatDimensionName } from "@/features/progress/components/progress.helpers";
+import { EvidenceBadge } from "@/features/progress/components/shared";
 
 export interface ListeningDetailTabProps {
   period?: TimePeriod;

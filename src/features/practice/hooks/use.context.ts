@@ -8,7 +8,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { PracticeContext, ContextSearchResult, ListeningContextStats } from '../types/context.types'
+import type { PracticeContext, ContextSearchResult, ListeningContextStats } from '@/features/practice/types/context.types'
 
 /**
  * Lấy danh sách contexts với filter

@@ -1,6 +1,7 @@
-// Component biểu đồ mạng nhện đa giác đánh giá toàn diện năng lực các kỹ năng tiếng Anh của học viên.
+// Component biểu đồ mạng nhện đa giác đánh giá toàn diện năng lực các kỹ năng tiếng Anh của học viên hỗ trợ đa ngôn ngữ.
 'use client'
 
+import { useLanguage } from '@/hooks/use.language'
 
 interface GogoSkillsRadarCardProps {
   listeningScore: number
@@ -19,13 +20,16 @@ export function GogoSkillsRadarCard({
   grammarScore = 0,
   pronunciationScore = 0,
 }: GogoSkillsRadarCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
+
   const axes = [
-    { label: 'Nghe', value: Math.max(0, Math.min(100, listeningScore)), target: 90 },
-    { label: 'Nói', value: Math.max(0, Math.min(100, speakingScore)), target: 85 },
-    { label: 'Đọc', value: Math.max(0, Math.min(100, readingScore)), target: 90 },
-    { label: 'Viết', value: Math.max(0, Math.min(100, writingScore)), target: 85 },
-    { label: 'Ngữ pháp', value: Math.max(0, Math.min(100, grammarScore)), target: 95 },
-    { label: 'Phát âm', value: Math.max(0, Math.min(100, pronunciationScore)), target: 85 },
+    { label: isVi ? 'Nghe' : 'Listening', value: Math.max(0, Math.min(100, listeningScore)), target: 90 },
+    { label: isVi ? 'Nói' : 'Speaking', value: Math.max(0, Math.min(100, speakingScore)), target: 85 },
+    { label: isVi ? 'Đọc' : 'Reading', value: Math.max(0, Math.min(100, readingScore)), target: 90 },
+    { label: isVi ? 'Viết' : 'Writing', value: Math.max(0, Math.min(100, writingScore)), target: 85 },
+    { label: isVi ? 'Ngữ pháp' : 'Grammar', value: Math.max(0, Math.min(100, grammarScore)), target: 95 },
+    { label: isVi ? 'Phát âm' : 'Pronunciation', value: Math.max(0, Math.min(100, pronunciationScore)), target: 85 },
   ]
 
   const center = 100
@@ -57,7 +61,7 @@ export function GogoSkillsRadarCard({
   return (
     <div className="space-y-3 h-full flex flex-col">
       <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-        Mạng nhện Năng lực Đa Kỹ năng
+        {isVi ? 'Mạng nhện Năng lực Đa Kỹ năng' : 'Multi-Skill Competency Radar'}
       </h2>
       <div className="rounded-3xl bg-surface border border-border p-5 sm:p-6 shadow-xs flex-1 flex flex-col items-center justify-between">
         <div className="w-full flex items-center justify-center py-1">
@@ -148,11 +152,11 @@ export function GogoSkillsRadarCard({
         <div className="flex items-center justify-center gap-4 text-xs font-semibold text-text-secondary pt-3">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span>Năng lực hiện tại</span>
+            <span>{isVi ? 'Năng lực hiện tại' : 'Current Level'}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full border border-dashed border-cyan-500" />
-            <span>Mục tiêu chuẩn</span>
+            <span>{isVi ? 'Mục tiêu chuẩn' : 'Target Benchmark'}</span>
           </div>
         </div>
       </div>

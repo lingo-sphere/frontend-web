@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { useNavigate } from '@/lib/navigation'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { grammarPracticeService } from '@/features/practice/services/grammar-practice.service'
-import { handbookReturnUrl } from '../lib/grammar-handbook'
+import { handbookReturnUrl } from '@/features/vocabulary/lib/grammar-handbook'
 import { toast } from '@/store/toast.store'
 import { speakingGrammarService } from '@/features/practice/services/speaking-grammar.service'
 

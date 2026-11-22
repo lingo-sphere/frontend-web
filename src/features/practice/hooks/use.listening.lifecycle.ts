@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { listeningLifecycleService as service } from '../services/listening-lifecycle.service'
+import { listeningLifecycleService as service } from '@/features/practice/services/listening-lifecycle.service'
 import type {
   ListeningDraft,
   ListeningKind,
   ListeningPracticeSession,
   ListeningResult,
-} from '../types/listening-lifecycle'
+} from '@/features/practice/types/listening-lifecycle'
 
 const emptyDraft = (): ListeningDraft => ({
   revision: 0,

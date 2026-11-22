@@ -11,7 +11,7 @@ import { Clock, Zap, Target, BookOpen } from 'lucide-react'
 import {
   TimePreset,
   TIME_PRESET_CONFIG,
-} from '../types/listening-session'
+} from '@/features/practice/types/listening-session'
 
 interface TimePresetSelectorProps {
   onSelect: (preset: TimePreset) => void

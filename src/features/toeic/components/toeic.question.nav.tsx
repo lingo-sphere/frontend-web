@@ -50,9 +50,9 @@ export function ToeicQuestionNav({
                     isCurrent
                       ? 'bg-primary text-white'
                       : isFlagged
-                        ? 'bg-amber-100 text-amber-700'
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
                         : isAnswered
-                          ? 'bg-emerald-100 text-emerald-700'
+                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
                           : 'bg-surface-subtle text-text-secondary hover:bg-surface-hover'
                   }`}
                 >
@@ -64,7 +64,7 @@ export function ToeicQuestionNav({
 
           <div className="mt-4 flex flex-wrap gap-3 text-[11px]">
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded bg-emerald-100" />
+              <div className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-950/60" />
               <span>{isVietnamese ? 'Đã trả lời' : 'Answered'}</span>
             </div>
             <div className="flex items-center gap-1">
@@ -72,7 +72,7 @@ export function ToeicQuestionNav({
               <span>{isVietnamese ? 'Chưa trả lời' : 'Unanswered'}</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded bg-amber-100" />
+              <div className="h-3 w-3 rounded bg-amber-100 dark:bg-amber-950/60" />
               <span>{isVietnamese ? 'Đánh dấu' : 'Flagged'}</span>
             </div>
           </div>

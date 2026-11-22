@@ -5,10 +5,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, BookmarkCheck } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { speakingVocabularyService } from '../services/speaking-vocabulary.service'
-import { speakingWordSourceKey, validSpeakingWordTarget } from '../lib/speaking-vocabulary'
-import type { SpeakingWordTarget, SpeakingSavedWord } from '../types/speaking-vocabulary'
-import { SpeakingVocabularySaveDialog } from './speaking.vocabulary.save.dialog'
+import { speakingVocabularyService } from '@/features/practice/services/speaking-vocabulary.service'
+import { speakingWordSourceKey, validSpeakingWordTarget } from '@/features/practice/lib/speaking-vocabulary'
+import type { SpeakingWordTarget, SpeakingSavedWord } from '@/features/practice/types/speaking-vocabulary'
+import { SpeakingVocabularySaveDialog } from '@/features/practice/components/speaking.vocabulary.save.dialog'
 
 export interface SpeakingVocabularyActions {
   renderSaveButton: (target: SpeakingWordTarget) => ReactNode

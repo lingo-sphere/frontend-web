@@ -1,4 +1,4 @@
-import type { ListeningSessionResult } from './listening-session'
+import type { ListeningSessionResult } from '@/features/practice/types/listening-session'
 
 export interface Part1Session {
   session_id: string

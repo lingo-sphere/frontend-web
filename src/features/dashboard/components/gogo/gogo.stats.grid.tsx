@@ -1,7 +1,8 @@
-// Component lưới 6 thẻ trực quan hóa năng lực kỹ năng học viên dạng biểu đồ vòng đo tiến độ tròn mini theo phong cách Cuba Admin.
+// Component lưới 6 thẻ trực quan hóa năng lực kỹ năng học viên dạng biểu đồ vòng đo tiến độ tròn mini theo phong cách Cuba Admin hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { BookOpen, Headphones, FileText, Layers, Mic, PenTool } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 import type { ProgressMetrics, VocabStatsSummary } from '@/features/progress/hooks/use.progress.data'
 import type { SkillsSummary } from '@/features/progress/services/progress.service'
 
@@ -88,6 +89,9 @@ export function GogoStatsGrid({
   speakingScore = 0,
   writingScore = 0,
 }: GogoStatsGridProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
+
   const readingAcc = skillsSummary?.skills?.reading?.accuracy ?? readingScore
   const listeningAcc = skillsSummary?.skills?.listening?.accuracy ?? listeningScore
   const grammarAcc = skillsSummary?.skills?.grammar?.accuracy ?? 0
@@ -100,7 +104,7 @@ export function GogoStatsGrid({
   const statItems = [
     {
       id: 'reading',
-      label: 'Đọc hiểu',
+      label: isVi ? 'Đọc hiểu' : 'Reading',
       value: readingAcc,
       displayValue: readingAcc > 0 ? `${Math.round(readingAcc)}%` : '0%',
       icon: BookOpen,
@@ -108,12 +112,12 @@ export function GogoStatsGrid({
       textColor: 'text-emerald-600 dark:text-emerald-400',
       iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
       badge: getCefrBadge(readingAcc),
-      sub: `${skillsSummary?.skills?.reading?.total_questions ?? 0} câu đã làm`,
+      sub: isVi ? `${skillsSummary?.skills?.reading?.total_questions ?? 0} câu đã làm` : `${skillsSummary?.skills?.reading?.total_questions ?? 0} questions completed`,
       cardHover: 'hover:border-emerald-400/60 dark:hover:border-emerald-600/60',
     },
     {
       id: 'listening',
-      label: 'Nghe hiểu',
+      label: isVi ? 'Nghe hiểu' : 'Listening',
       value: listeningAcc,
       displayValue: listeningAcc > 0 ? `${Math.round(listeningAcc)}%` : '0%',
       icon: Headphones,
@@ -122,13 +126,17 @@ export function GogoStatsGrid({
       iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
       badge: getCefrBadge(listeningAcc),
       sub: (skillsSummary?.skills?.listening?.dictation_words ?? 0) > 0
-        ? `${(skillsSummary?.skills?.listening?.total_questions ?? 0) + (skillsSummary?.skills?.listening?.dictation_words ?? 0)} câu & ô đã làm`
-        : `${skillsSummary?.skills?.listening?.total_questions ?? 0} câu đã làm`,
+        ? (isVi
+            ? `${(skillsSummary?.skills?.listening?.total_questions ?? 0) + (skillsSummary?.skills?.listening?.dictation_words ?? 0)} câu & ô đã làm`
+            : `${(skillsSummary?.skills?.listening?.total_questions ?? 0) + (skillsSummary?.skills?.listening?.dictation_words ?? 0)} questions & blanks completed`)
+        : (isVi
+            ? `${skillsSummary?.skills?.listening?.total_questions ?? 0} câu đã làm`
+            : `${skillsSummary?.skills?.listening?.total_questions ?? 0} questions completed`),
       cardHover: 'hover:border-sky-400/60 dark:hover:border-sky-600/60',
     },
     {
       id: 'grammar',
-      label: 'Ngữ pháp',
+      label: isVi ? 'Ngữ pháp' : 'Grammar',
       value: grammarAcc,
       displayValue: grammarAcc > 0 ? `${Math.round(grammarAcc)}%` : '0%',
       icon: FileText,
@@ -136,12 +144,12 @@ export function GogoStatsGrid({
       textColor: 'text-lime-600 dark:text-lime-400',
       iconBg: 'bg-lime-500/10 text-lime-600 dark:text-lime-400',
       badge: getCefrBadge(grammarAcc),
-      sub: `${skillsSummary?.skills?.grammar?.total_questions ?? 0} câu đã làm`,
+      sub: isVi ? `${skillsSummary?.skills?.grammar?.total_questions ?? 0} câu đã làm` : `${skillsSummary?.skills?.grammar?.total_questions ?? 0} questions completed`,
       cardHover: 'hover:border-lime-400/60 dark:hover:border-lime-600/60',
     },
     {
       id: 'vocab',
-      label: 'Từ vựng SRS',
+      label: isVi ? 'Từ vựng SRS' : 'SRS Vocabulary',
       value: vocabPct,
       displayValue: `${masteredVocab}`,
       icon: Layers,
@@ -150,13 +158,13 @@ export function GogoStatsGrid({
       iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       badge: { label: `${masteredVocab}/${totalCards}`, bg: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' },
       sub: totalCards > 0
-        ? (masteredVocab > 0 ? `${masteredVocab}/${totalCards} từ đã thuộc` : `${totalCards} từ đang nạp SRS`)
-        : '0 từ đã thuộc',
+        ? (masteredVocab > 0 ? (isVi ? `${masteredVocab}/${totalCards} từ đã thuộc` : `${masteredVocab}/${totalCards} mastered`) : (isVi ? `${totalCards} từ đang nạp SRS` : `${totalCards} in SRS cycle`))
+        : (isVi ? '0 từ đã thuộc' : '0 words mastered'),
       cardHover: 'hover:border-indigo-400/60 dark:hover:border-indigo-600/60',
     },
     {
       id: 'speaking',
-      label: 'Luyện nói',
+      label: isVi ? 'Luyện nói' : 'Speaking',
       value: speakingPts,
       displayValue: speakingPts > 0 ? `${Math.round(speakingPts)}` : '0',
       icon: Mic,
@@ -164,12 +172,12 @@ export function GogoStatsGrid({
       textColor: 'text-amber-600 dark:text-amber-400',
       iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
       badge: getCefrBadge(speakingPts),
-      sub: `${skillsSummary?.skills?.speaking?.total_attempts ?? 0} bài ghi âm`,
+      sub: isVi ? `${skillsSummary?.skills?.speaking?.total_attempts ?? 0} bài ghi âm` : `${skillsSummary?.skills?.speaking?.total_attempts ?? 0} recordings`,
       cardHover: 'hover:border-amber-400/60 dark:hover:border-amber-600/60',
     },
     {
       id: 'writing',
-      label: 'Luyện viết',
+      label: isVi ? 'Luyện viết' : 'Writing',
       value: writingPts,
       displayValue: writingPts > 0 ? `${Math.round(writingPts)}` : '0',
       icon: PenTool,
@@ -177,7 +185,7 @@ export function GogoStatsGrid({
       textColor: 'text-teal-600 dark:text-teal-400',
       iconBg: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
       badge: getCefrBadge(writingPts),
-      sub: `${skillsSummary?.skills?.writing?.total_attempts ?? 0} bài luận`,
+      sub: isVi ? `${skillsSummary?.skills?.writing?.total_attempts ?? 0} bài luận` : `${skillsSummary?.skills?.writing?.total_attempts ?? 0} essays written`,
       cardHover: 'hover:border-teal-400/60 dark:hover:border-teal-600/60',
     },
   ]
@@ -186,10 +194,10 @@ export function GogoStatsGrid({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-          Chỉ Số Năng Lực Trọng Tâm
+          {isVi ? 'Chỉ Số Năng Lực Trọng Tâm' : 'Core Competency Indicators'}
         </h2>
         <span className="text-xs text-text-tertiary">
-          Khung năng lực CEFR & Tỉ lệ chính xác
+          {isVi ? 'Khung năng lực CEFR & Tỉ lệ chính xác' : 'CEFR Framework & Accuracy Rates'}
         </span>
       </div>
 

@@ -1,7 +1,8 @@
-// Component hiển thị chỉ số chính xác và xu hướng phát triển của các kỹ năng trọng tâm.
+// Component hiển thị chỉ số chính xác và xu hướng phát triển của các kỹ năng trọng tâm hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
+import { useLanguage } from '@/hooks/use.language'
 import type { SkillsSummary, TimeGrowth } from '@/features/progress/services/progress.service'
 
 interface GogoCurrenciesCardProps {
@@ -21,6 +22,9 @@ export function GogoCurrenciesCard({
   skillsSummary,
   skillsDelta,
 }: GogoCurrenciesCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
+
   const listeningAcc = skillsSummary?.skills?.listening?.accuracy ?? listeningScore
   const readingAcc = skillsSummary?.skills?.reading?.accuracy ?? readingScore
   const grammarAcc = skillsSummary?.skills?.grammar?.accuracy ?? 0
@@ -30,7 +34,7 @@ export function GogoCurrenciesCard({
   const items = [
     {
       id: 'listening',
-      name: 'Nghe hiểu (Listening)',
+      name: isVi ? 'Nghe hiểu (Listening)' : 'Listening Comprehension',
       sub: 'TOEIC Part 1 - Part 4',
       val: Math.round(listeningAcc),
       attempts: skillsSummary?.skills?.listening?.total_attempts ?? 0,
@@ -39,7 +43,7 @@ export function GogoCurrenciesCard({
     },
     {
       id: 'reading',
-      name: 'Đọc hiểu (Reading)',
+      name: isVi ? 'Đọc hiểu (Reading)' : 'Reading Comprehension',
       sub: 'TOEIC Part 5 - Part 7',
       val: Math.round(readingAcc),
       attempts: skillsSummary?.skills?.reading?.total_attempts ?? 0,
@@ -48,8 +52,8 @@ export function GogoCurrenciesCard({
     },
     {
       id: 'grammar',
-      name: 'Ngữ pháp & Cấu trúc',
-      sub: 'Ngữ pháp thực hành & Nhận diện lỗi',
+      name: isVi ? 'Ngữ pháp & Cấu trúc' : 'Grammar & Syntax',
+      sub: isVi ? 'Ngữ pháp thực hành & Nhận diện lỗi' : 'Applied Grammar & Error Identification',
       val: Math.round(grammarAcc),
       attempts: skillsSummary?.skills?.grammar?.total_attempts ?? 0,
       delta: skillsDelta?.grammar,
@@ -57,7 +61,7 @@ export function GogoCurrenciesCard({
     },
     {
       id: 'speaking',
-      name: 'Luyện nói & Phát âm AI',
+      name: isVi ? 'Luyện nói & Phát âm AI' : 'Speaking & AI Pronunciation',
       sub: 'Fluency, Pronunciation & Intonation',
       val: Math.round(speakingAcc),
       attempts: skillsSummary?.skills?.speaking?.total_attempts ?? 0,
@@ -66,7 +70,7 @@ export function GogoCurrenciesCard({
     },
     {
       id: 'writing',
-      name: 'Luyện viết câu & Đoạn văn',
+      name: isVi ? 'Luyện viết câu & Đoạn văn' : 'Writing & Paragraph Formation',
       sub: 'Grammar Accuracy & Coherence',
       val: Math.round(writingAcc),
       attempts: skillsSummary?.skills?.writing?.total_attempts ?? 0,
@@ -78,7 +82,7 @@ export function GogoCurrenciesCard({
   return (
     <div className="space-y-3 h-full flex flex-col">
       <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-        Năng lực 4 Kỹ năng & Ngữ pháp
+        {isVi ? 'Năng lực 4 Kỹ năng & Ngữ pháp' : '4 Skills & Grammar Competency'}
       </h2>
       <div className="rounded-3xl bg-surface border border-border p-5 sm:p-6 shadow-xs flex-1 flex flex-col justify-between space-y-3">
         {items.map((item, index) => {
@@ -116,7 +120,7 @@ export function GogoCurrenciesCard({
                   ) : item.trend ? (
                     <span className="flex items-center text-[10px] font-medium text-text-tertiary">
                       <Minus className="w-3 h-3 mr-0.5" />
-                      <span>Ổn định</span>
+                      <span>{isVi ? 'Ổn định' : 'Steady'}</span>
                     </span>
                   ) : null}
                 </div>

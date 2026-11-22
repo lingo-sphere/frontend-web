@@ -1,4 +1,4 @@
-import type { CourseTestQuestion, WrongQuestionItem } from '../types/test.runner.types'
+import type { CourseTestQuestion, WrongQuestionItem } from '@/features/courses/types/test.runner.types'
 
 const domains = new Set(['LISTENING', 'READING', 'GRAMMAR', 'VOCABULARY', 'SPEAKING', 'WRITING'])
 const normalized = (value?: string) => {

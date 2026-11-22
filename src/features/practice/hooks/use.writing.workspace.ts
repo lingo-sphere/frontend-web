@@ -1,6 +1,6 @@
-import { resolvePracticeDifficulty } from '../lib/practice-difficulty'
-import { readSkillDraft, writeSkillDraft } from '../lib/skill-draft'
-import { getTimeSeconds, getSavedTimeModePreference } from '../lib/writing-time-mode'
+import { resolvePracticeDifficulty } from '@/features/practice/lib/practice-difficulty'
+import { readSkillDraft, writeSkillDraft } from '@/features/practice/lib/skill-draft'
+import { getTimeSeconds, getSavedTimeModePreference } from '@/features/practice/lib/writing-time-mode'
 // Hook quản lý trạng thái bài tập luyện viết, lưu bản nháp và gửi chấm điểm bài luận AI.
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'

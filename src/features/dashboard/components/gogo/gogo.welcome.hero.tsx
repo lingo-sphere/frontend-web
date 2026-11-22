@@ -1,8 +1,9 @@
-// Component biểu ngữ chào mừng học viên và bộ lọc thời gian theo phong cách thiết kế Cuba Dashboard.
+// Component biểu ngữ chào mừng học viên và bộ lọc thời gian theo phong cách thiết kế Cuba Dashboard hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { ChevronRight, Flame, Target, Sparkles, Rocket, BookOpen } from 'lucide-react'
 import { AppSelect } from '@/components/select'
+import { useLanguage } from '@/hooks/use.language'
 import type { User } from '@/types/api.types'
 
 interface GogoWelcomeHeroProps {
@@ -26,21 +27,23 @@ export function GogoWelcomeHero({
   onPractice,
   onVocab,
 }: GogoWelcomeHeroProps) {
-  const displayName = user?.full_name || 'Học viên LingoSphere'
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
+  const displayName = user?.full_name || (isVi ? 'Học viên LingoSphere' : 'LingoSphere Learner')
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-text-primary">
-            Bảng Phân Tích Năng Lực Học Tập
+            {isVi ? 'Bảng Phân Tích Năng Lực Học Tập' : 'Learning Competency Analytics'}
           </h1>
           <p className="text-xs text-text-secondary mt-0.5 flex items-center gap-1.5">
-            <span>Trang chủ</span>
+            <span>{isVi ? 'Trang chủ' : 'Home'}</span>
             <ChevronRight className="w-3 h-3 text-text-tertiary" />
-            <span>Học tập</span>
+            <span>{isVi ? 'Học tập' : 'Learning'}</span>
             <ChevronRight className="w-3 h-3 text-text-tertiary" />
-            <span className="font-semibold text-primary">Phân tích học viên</span>
+            <span className="font-semibold text-primary">{isVi ? 'Phân tích học viên' : 'Learner Analytics'}</span>
           </p>
         </div>
 
@@ -49,13 +52,13 @@ export function GogoWelcomeHero({
             value={selectedPeriod}
             onChange={(val) => onPeriodChange?.(val)}
             options={[
-              { value: '7d', label: 'Tuần này (7 ngày)' },
-              { value: '30d', label: 'Tháng này (30 ngày)' },
-              { value: '90d', label: '90 ngày qua' },
-              { value: 'all', label: 'Toàn thời gian' },
+              { value: '7d', label: isVi ? 'Tuần này (7 ngày)' : 'This week (7 days)' },
+              { value: '30d', label: isVi ? 'Tháng này (30 ngày)' : 'This month (30 days)' },
+              { value: '90d', label: isVi ? '90 ngày qua' : 'Last 90 days' },
+              { value: 'all', label: isVi ? 'Toàn thời gian' : 'All time' },
             ]}
             size="sm"
-            ariaLabel="Chọn khoảng thời gian phân tích"
+            ariaLabel={isVi ? 'Chọn khoảng thời gian phân tích' : 'Select analysis period'}
             triggerClassName="rounded-2xl border-border bg-surface px-3.5 py-1.5 shadow-2xs font-semibold"
           />
         </div>
@@ -69,33 +72,35 @@ export function GogoWelcomeHero({
           <div className="space-y-3 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-emerald-100 text-xs font-bold border border-white/20">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Chào mừng trở lại!</span>
+              <span>{isVi ? 'Chào mừng trở lại!' : 'Welcome back!'}</span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Xin chào, {displayName}!
+              {isVi ? `Xin chào, ${displayName}!` : `Hello, ${displayName}!`}
             </h2>
 
             <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-medium">
-              Theo dõi chi tiết các cột mốc bứt phá điểm số, độ chuẩn xác 4 kỹ năng và chuỗi phong độ luyện thi tiếng Anh của bạn.
+              {isVi
+                ? 'Theo dõi chi tiết các cột mốc bứt phá điểm số, độ chuẩn xác 4 kỹ năng và chuỗi phong độ luyện thi tiếng Anh của bạn.'
+                : 'Track detailed score milestones, 4-skill accuracy, and your English exam prep momentum streak.'}
             </p>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-1">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/15 backdrop-blur-xs text-white text-xs font-bold border border-white/20">
                 <Flame className="w-3.5 h-3.5 text-amber-300" />
-                <span>Chuỗi {currentStreak} ngày</span>
+                <span>{isVi ? `Chuỗi ${currentStreak} ngày` : `${currentStreak}-day streak`}</span>
               </span>
 
               {targetScore > 0 && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/15 backdrop-blur-xs text-white text-xs font-bold border border-white/20">
                   <Target className="w-3.5 h-3.5 text-sky-300" />
-                  <span>Mục tiêu: {targetScore}đ TOEIC</span>
+                  <span>{isVi ? `Mục tiêu: ${targetScore}đ TOEIC` : `Target: ${targetScore} pts TOEIC`}</span>
                 </span>
               )}
 
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/15 backdrop-blur-xs text-white text-xs font-bold border border-white/20">
                 <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                <span>{xp.toLocaleString('vi-VN')} XP</span>
+                <span>{xp.toLocaleString(isVi ? 'vi-VN' : 'en-US')} XP</span>
               </span>
             </div>
           </div>
@@ -108,7 +113,7 @@ export function GogoWelcomeHero({
                 className="w-full sm:w-auto lg:w-44 px-4 py-2.5 rounded-2xl bg-white text-emerald-700 hover:bg-emerald-50 text-xs font-extrabold shadow-md transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.02]"
               >
                 <Rocket className="w-4 h-4 text-emerald-600" />
-                <span>Luyện Đề Ngay</span>
+                <span>{isVi ? 'Luyện Đề Ngay' : 'Practice Now'}</span>
               </button>
             )}
 
@@ -119,7 +124,7 @@ export function GogoWelcomeHero({
                 className="w-full sm:w-auto lg:w-44 px-4 py-2.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white border border-white/30 text-xs font-extrabold backdrop-blur-xs transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.02]"
               >
                 <BookOpen className="w-4 h-4 text-white" />
-                <span>Ôn Từ Vựng SRS</span>
+                <span>{isVi ? 'Ôn Từ Vựng SRS' : 'Review SRS Vocab'}</span>
               </button>
             )}
           </div>

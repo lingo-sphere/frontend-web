@@ -1,7 +1,5 @@
-/**
- * @file grammar-practice.ts
- * @description Types cho tính năng Luyện tập Ngữ Pháp (Grammar Practice)
- */
+// Types cho tính năng Luyện tập Ngữ Pháp (Grammar Practice)
+import type { SpeakingGrammarSource } from '@/features/practice/types/speaking-grammar'
 
 export interface TargetVocabularyRef {
   vocabulary_id?: string
@@ -73,7 +71,7 @@ export interface GrammarQuestionItem {
 }
 
 export interface GrammarSession {
-  speaking_grammar_source?: import('./speaking-grammar').SpeakingGrammarSource | null
+  speaking_grammar_source?: SpeakingGrammarSource | null
   revision?: number
   status?: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED'
   answers?: Record<string, string>

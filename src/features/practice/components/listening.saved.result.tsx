@@ -21,8 +21,8 @@ import {
 import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
 import { resolveImageUrl } from '@/utils/media.utils'
-import { DictationWordDiff } from './dictation.word.diff'
-import type { ListeningResult } from '../types/listening-lifecycle'
+import { DictationWordDiff } from '@/features/practice/components/dictation.word.diff'
+import type { ListeningResult } from '@/features/practice/types/listening-lifecycle'
 
 export interface ListeningSavedResultProps {
   result: ListeningResult

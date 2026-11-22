@@ -1,8 +1,4 @@
-/**
- * @file listening.context.navigation.tsx
- * @description Topic-based Listening Practice - Grid layout với direct CTA
- */
-
+// Điều hướng chủ đề luyện nghe và các thẻ hành động luyện tập nhanh.
 'use client'
 
 import { useState, useMemo } from 'react'
@@ -14,7 +10,7 @@ import { Button } from '@/components/button'
 import { Card, CardContent } from '@/components/card'
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { PracticeContext, ContextSearchResult } from '../types/context.types'
+import type { PracticeContext, ContextSearchResult } from '@/features/practice/types/context.types'
 
 interface ListeningContextNavigationProps {
   isVietnamese: boolean
@@ -29,11 +25,9 @@ export function ListeningContextNavigation({
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
 
-  // State
   const [searchQuery, setSearchQuery] = useState('')
   const [showAll, setShowAll] = useState(false)
 
-  // Fetch ALL contexts
   const { data: allContexts, isLoading } = useQuery<PracticeContext[]>({
     queryKey: ['contexts', 'all'],
     queryFn: () => api.get<PracticeContext[]>(
@@ -44,7 +38,6 @@ export function ListeningContextNavigation({
     staleTime: 10 * 60 * 1000,
   })
 
-  // Filter Level 0 contexts
   const level0Contexts = useMemo(() => {
     if (!allContexts) return []
     return allContexts
@@ -52,7 +45,6 @@ export function ListeningContextNavigation({
       .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
   }, [allContexts])
 
-  // Search contexts
   const { data: searchResults } = useQuery<ContextSearchResult[]>({
     queryKey: ['contexts', 'search', searchQuery],
     queryFn: () => api.get<ContextSearchResult[]>(
@@ -64,16 +56,13 @@ export function ListeningContextNavigation({
     staleTime: 5 * 60 * 1000,
   })
 
-  // Get context name
   const getContextName = (ctx: PracticeContext) => isVi ? (ctx.name_vi || ctx.name_en) : ctx.name_en
 
-  // Display topics (limited or all)
   const displayTopics = useMemo(() => {
     if (showAll) return level0Contexts
-    return level0Contexts.slice(0, 6) // Show first 6 by default
+    return level0Contexts.slice(0, 6)
   }, [level0Contexts, showAll])
 
-  // Search result handler
   const handleSearchResultClick = (result: ContextSearchResult) => {
     onSelectContext(result._id)
     setSearchQuery('')
@@ -81,7 +70,6 @@ export function ListeningContextNavigation({
 
   return (
     <div className="space-y-6">
-      {/* Search */}
       <div className="relative max-w-md">
         <div className="relative">
           <Icon
@@ -105,11 +93,9 @@ export function ListeningContextNavigation({
           )}
         </div>
 
-        {/* Search Results Dropdown */}
         {searchQuery && searchResults && searchResults.length > 0 && (
-          <div className="absolute z-50 w-full mt-2 bg-white border border-border rounded-xl shadow-xl max-h-80 overflow-y-auto">
+          <div className="absolute z-50 w-full mt-2 bg-surface border border-border rounded-xl shadow-xl max-h-80 overflow-y-auto">
             {searchResults.map((result) => {
-              // Calculate total exercises for this context including descendants
               const totalItems = (() => {
                 let total = result.total_questions || result.total_exercises || 0
                 if (allContexts) {
@@ -165,19 +151,17 @@ export function ListeningContextNavigation({
         )}
 
         {searchQuery && searchResults && searchResults.length === 0 && (
-          <div className="absolute z-50 w-full mt-2 bg-white border border-border rounded-xl shadow-xl p-4 text-center text-text-secondary text-sm">
+          <div className="absolute z-50 w-full mt-2 bg-surface border border-border rounded-xl shadow-xl p-4 text-center text-text-secondary text-sm">
             {isVi ? 'Không tìm thấy chủ đề nào' : 'No topics found'}
           </div>
         )}
       </div>
 
-      {/* Mistake Review & Quick Actions */}
       <QuickActionsCard
         isVietnamese={isVi}
         onSelectRandom={onSelectRandom}
       />
 
-      {/* Topics Grid */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h3 className="flex items-center gap-2 text-lg font-semibold text-text-primary">
@@ -194,7 +178,6 @@ export function ListeningContextNavigation({
           )}
         </div>
 
-        {/* Topics Grid */}
         {isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -219,7 +202,6 @@ export function ListeningContextNavigation({
           </div>
         )}
 
-        {/* Collapse if expanded */}
         {showAll && level0Contexts.length > 6 && (
           <div className="mt-4 text-center">
             <button
@@ -235,10 +217,6 @@ export function ListeningContextNavigation({
   )
 }
 
-// ============================================================================
-// TOPIC CARD
-// ============================================================================
-
 interface TopicCardProps {
   topic: PracticeContext
   allContexts: PracticeContext[]
@@ -249,10 +227,8 @@ interface TopicCardProps {
 function TopicCard({ topic, allContexts, isVietnamese, onPractice }: TopicCardProps) {
   const isVi = isVietnamese
 
-  // Get context name
   const getContextName = (ctx: PracticeContext) => isVi ? (ctx.name_vi || ctx.name_en) : ctx.name_en
 
-  // Get icon name
   const getIconName = (ctx: PracticeContext) => {
     if (ctx.icon) return ctx.icon
     const code = ctx.code?.toLowerCase() || ''
@@ -267,16 +243,13 @@ function TopicCard({ topic, allContexts, isVietnamese, onPractice }: TopicCardPr
     return 'book'
   }
 
-  // Calculate total exercises including descendants
   const getTotalExercises = (ctx: PracticeContext): number => {
     const ctxIdStr = ctx._id?.toString()
     let total = ctx.total_questions || ctx.total_exercises || 0
-    // Add from Level 1 children
     for (const child of allContexts) {
       if (child.level === 1 && (child.parent_id === ctxIdStr || child.parent_id === ctx.code)) {
         total += child.total_questions || child.total_exercises || 0
         const childIdStr = child._id?.toString()
-        // Add from Level 2 grandchildren
         for (const grandchild of allContexts) {
           if (grandchild.level === 2 && (grandchild.parent_id === childIdStr || grandchild.parent_id === child.code)) {
             total += grandchild.total_questions || grandchild.total_exercises || 0
@@ -294,17 +267,14 @@ function TopicCard({ topic, allContexts, isVietnamese, onPractice }: TopicCardPr
   return (
     <Card className={`group transition-all duration-200 ${hasEnoughExercises ? 'hover:border-primary/30' : 'opacity-80 bg-surface-subtle border-border'}`}>
       <CardContent className="p-4 flex flex-col h-full">
-        {/* Icon */}
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${hasEnoughExercises ? 'bg-primary/10' : 'bg-slate-200 dark:bg-slate-800'}`}>
           <Icon name={iconName} className={hasEnoughExercises ? 'text-primary' : 'text-slate-400'} size={24} />
         </div>
 
-        {/* Title */}
         <h4 className="font-semibold text-text-primary mb-1 line-clamp-2">
           {getContextName(topic)}
         </h4>
 
-        {/* Stats */}
         {hasEnoughExercises ? (
           <p className="text-xs text-text-secondary mb-3">
             {totalItems} {isVietnamese ? 'bài luyện' : 'exercises'}
@@ -322,10 +292,8 @@ function TopicCard({ topic, allContexts, isVietnamese, onPractice }: TopicCardPr
           </p>
         )}
 
-        {/* Spacer */}
         <div className="flex-1" />
 
-        {/* CTA */}
         <Button
           variant={hasEnoughExercises ? 'default' : 'outline'}
           size="sm"
@@ -343,22 +311,16 @@ function TopicCard({ topic, allContexts, isVietnamese, onPractice }: TopicCardPr
   )
 }
 
-// ============================================================================
-// QUICK ACTIONS CARD (Mistake Review + Random)
-// ============================================================================
-
 interface QuickActionsCardProps {
   isVietnamese: boolean
   onSelectRandom: () => void
 }
 
 function QuickActionsCard({ isVietnamese, onSelectRandom }: QuickActionsCardProps) {
-  // TODO: Fetch mistake count from API
   const mistakeCount = 0
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {/* Random Practice */}
       <Card className="border-dashed border-2 border-primary/30 bg-primary/5 hover:border-primary/50 transition-all">
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
@@ -388,7 +350,6 @@ function QuickActionsCard({ isVietnamese, onSelectRandom }: QuickActionsCardProp
         </CardContent>
       </Card>
 
-      {/* Mistake Review */}
       <Card className={`border-dashed border-2 ${mistakeCount > 0 ? 'border-amber-500/30 bg-amber-500/5' : 'border-border bg-surface-subtle'}`}>
         <CardContent className="p-4">
           <div className="flex items-start gap-4">

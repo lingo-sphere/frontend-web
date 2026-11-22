@@ -121,7 +121,22 @@
     "verifyEmailInvalidLink": "Invalid activation link or missing authentication parameters.",
     "verifyEmailExpiredToken": "Email verification code expired or does not exist.",
     "verifyEmailErrorHelp": "The link may have already been used or expired. You can log in or request a new verification code.",
-    "verifyEmailLoadingFallback": "Verifying email..."
+    "verifyEmailLoadingFallback": "Verifying email...",
+    "heroBadge": "Next-generation language learning platform",
+    "heroTitle1": "Break through limits,",
+    "heroTitle2": "Master languages with AI",
+    "heroDesc": "Learn English smarter with personalized paths for TOEIC, IELTS, and real-world communication. The AI system tracks every step of your progress.",
+    "heroFeaturePronunciation": "Master pronunciation with real-time phoneme recognition AI",
+    "heroFeatureRoadmap": "Optimized learning paths for TOEIC 800+ and IELTS 7.5+",
+    "heroFeatureSync": "Save progress and sync lessons seamlessly across all devices",
+    "trustedLearners": "50,000+ Trusted learners",
+    "ratingNationwide": "Rated 4.9 / 5.0 ⭐ nationwide",
+    "commitmentOutput": "Committed target outcome",
+    "loginWelcome": "Welcome back to your English learning journey!",
+    "registerWelcome": "Start your learning journey with a personalized AI assistant.",
+    "verifyWelcome": "Please complete the verification step to continue.",
+    "registerWithGoogle": "Sign up with Google",
+    "securityBadge": "256-bit SSL Security • Encrypted & Safe Data"
   },
   "nav": {
     "home": "Home",

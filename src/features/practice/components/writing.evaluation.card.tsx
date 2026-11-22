@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { WritingScoreExplanation } from "./writing.score.explanation";
+import { WritingScoreExplanation } from "@/features/practice/components/writing.score.explanation";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp, Layers, CheckCircle2, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/card";
-import type { WritingSubmission } from "../types/writing";
+import type { WritingSubmission } from "@/features/practice/types/writing";
 
 const criteria = [
   [

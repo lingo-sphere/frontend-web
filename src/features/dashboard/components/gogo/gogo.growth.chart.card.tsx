@@ -1,9 +1,10 @@
-// Component thẻ biểu đồ tăng trưởng điểm số học tập theo phong cách Gogo Analytics.
+// Component thẻ biểu đồ tăng trưởng điểm số học tập theo phong cách Gogo Analytics hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { useState } from 'react'
 import { TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react'
 import { GrowthAreaChart } from '@/components/growth.area.chart'
+import { useLanguage } from '@/hooks/use.language'
 import type { GrowthChartDataPoint, GrowthChartSeries } from '@/components/growth.area.chart'
 
 export interface GrowthCardStats {
@@ -31,6 +32,8 @@ export function GogoGrowthChartCard({
   toeicStats,
   toeicSeries = [],
 }: GogoGrowthChartCardProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const [activeTab, setActiveTab] = useState<'2KN' | '4KN' | 'TOEIC'>('2KN')
 
   const currentStats = activeTab === '2KN' ? stats2K : activeTab === '4KN' ? stats4K : (toeicStats || stats2K)
@@ -45,11 +48,13 @@ export function GogoGrowthChartCard({
               <TrendingUp className="w-4 h-4" />
             </span>
             <h3 className="text-base font-bold text-text-primary">
-              Biểu Đồ Phát Triển Năng Lực Học Tập
+              {isVi ? 'Biểu Đồ Phát Triển Năng Lực Học Tập' : 'Competency Growth Chart'}
             </h3>
           </div>
           <p className="text-xs text-text-secondary">
-            Theo dõi sự bứt phá điểm số qua các bài kiểm tra chương và đề thi thực tế
+            {isVi
+              ? 'Theo dõi sự bứt phá điểm số qua các bài kiểm tra chương và đề thi thực tế'
+              : 'Track score progression across chapter tests and practice exams'}
           </p>
         </div>
 
@@ -63,7 +68,7 @@ export function GogoGrowthChartCard({
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            Khóa 2KN
+            {isVi ? 'Khóa 2KN' : '2-Skill Course'}
           </button>
           <button
             type="button"
@@ -74,7 +79,7 @@ export function GogoGrowthChartCard({
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            Khóa 4KN
+            {isVi ? 'Khóa 4KN' : '4-Skill Course'}
           </button>
           <button
             type="button"
@@ -85,48 +90,58 @@ export function GogoGrowthChartCard({
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            Đề TOEIC
+            {isVi ? 'Đề TOEIC' : 'TOEIC Tests'}
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 p-3 rounded-2xl bg-surface-subtle/60 border border-border/80">
         <div className="space-y-0.5">
-          <span className="text-[11px] font-medium text-text-secondary">Điểm gần nhất</span>
+          <span className="text-[11px] font-medium text-text-secondary">
+            {isVi ? 'Điểm gần nhất' : 'Latest Score'}
+          </span>
           <div className="text-base font-extrabold text-text-primary">
             {currentStats.latestScore !== null ? `${currentStats.latestScore}${isToeic ? 'đ' : '%'}` : '---'}
           </div>
         </div>
 
         <div className="space-y-0.5">
-          <span className="text-[11px] font-medium text-text-secondary">Trung bình</span>
+          <span className="text-[11px] font-medium text-text-secondary">
+            {isVi ? 'Trung bình' : 'Average'}
+          </span>
           <div className="text-base font-extrabold text-teal-600 dark:text-teal-400">
             {currentStats.avgScore !== null ? `${currentStats.avgScore}${isToeic ? 'đ' : '%'}` : '---'}
           </div>
         </div>
 
         <div className="space-y-0.5">
-          <span className="text-[11px] font-medium text-text-secondary">Chuẩn đạt</span>
+          <span className="text-[11px] font-medium text-text-secondary">
+            {isVi ? 'Chuẩn đạt' : 'Benchmark'}
+          </span>
           <div className="text-base font-extrabold text-text-primary">
-            {isToeic ? '450+ TOEIC' : '70% Bài thi'}
+            {isToeic ? '450+ TOEIC' : (isVi ? '70% Bài thi' : '70% Chapter Exam')}
           </div>
         </div>
 
         <div className="space-y-0.5">
-          <span className="text-[11px] font-medium text-text-secondary">Đánh giá chung</span>
+          <span className="text-[11px] font-medium text-text-secondary">
+            {isVi ? 'Đánh giá chung' : 'Overall Status'}
+          </span>
           <div className="flex items-center gap-1.5">
             {currentStats.passed ? (
               <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Đạt chuẩn</span>
+                <span>{isVi ? 'Đạt chuẩn' : 'Passed'}</span>
               </span>
             ) : currentStats.passed === false ? (
               <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400">
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span>Cần ôn thêm</span>
+                <span>{isVi ? 'Cần ôn thêm' : 'Needs Review'}</span>
               </span>
             ) : (
-              <span className="text-xs text-text-tertiary">Chưa thi</span>
+              <span className="text-xs text-text-tertiary">
+                {isVi ? 'Chưa thi' : 'Not Attempted'}
+              </span>
             )}
           </div>
         </div>
@@ -140,10 +155,10 @@ export function GogoGrowthChartCard({
             minVal={0}
             maxVal={100}
             targetValue={70}
-            targetLabel="Chuẩn đạt (70%)"
+            targetLabel={isVi ? 'Chuẩn đạt (70%)' : 'Benchmark (70%)'}
             colorTheme="teal"
             valueSuffix="%"
-            emptyMessage="Chưa có dữ liệu bài kiểm tra chương Khóa 2 Kỹ Năng"
+            emptyMessage={isVi ? 'Chưa có dữ liệu bài kiểm tra chương Khóa 2 Kỹ Năng' : 'No chapter test data for 2-Skill Course'}
           />
         ) : activeTab === '4KN' ? (
           <GrowthAreaChart
@@ -152,10 +167,10 @@ export function GogoGrowthChartCard({
             minVal={0}
             maxVal={100}
             targetValue={70}
-            targetLabel="Chuẩn đạt (70%)"
+            targetLabel={isVi ? 'Chuẩn đạt (70%)' : 'Benchmark (70%)'}
             colorTheme="emerald"
             valueSuffix="%"
-            emptyMessage="Chưa có dữ liệu bài kiểm tra chương Khóa 4 Kỹ Năng"
+            emptyMessage={isVi ? 'Chưa có dữ liệu bài kiểm tra chương Khóa 4 Kỹ Năng' : 'No chapter test data for 4-Skill Course'}
           />
         ) : (
           <GrowthAreaChart
@@ -165,14 +180,13 @@ export function GogoGrowthChartCard({
             minVal={0}
             maxVal={990}
             targetValue={650}
-            targetLabel="Mục tiêu (650)"
+            targetLabel={isVi ? 'Mục tiêu (650)' : 'Target (650)'}
             colorTheme="purple"
             valueSuffix="đ"
-            emptyMessage="Chưa có dữ liệu làm bài thi thử TOEIC"
+            emptyMessage={isVi ? 'Chưa có dữ liệu làm bài thi thử TOEIC' : 'No TOEIC practice exam data yet'}
           />
         )}
       </div>
     </div>
   )
 }
-

@@ -1,4 +1,4 @@
-import { PRACTICE_DIFFICULTIES, practiceDifficultyLabel, type PracticeDifficulty } from '../lib/practice-difficulty'
+import { PRACTICE_DIFFICULTIES, practiceDifficultyLabel, type PracticeDifficulty } from '@/features/practice/lib/practice-difficulty'
 
 interface Props {
   value: PracticeDifficulty | 'all'

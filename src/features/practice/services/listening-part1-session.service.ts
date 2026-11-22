@@ -1,6 +1,6 @@
 import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
-import type { Part1Session, Part1SessionFilters, Part1SessionResult } from '../types/listening-part1-session'
+import type { Part1Session, Part1SessionFilters, Part1SessionResult } from '@/features/practice/types/listening-part1-session'
 
 export const part1SessionService = {
   create: (params: Part1SessionFilters & { exercise_ids?: string[]; limit: number; random: boolean; time_preset: string }) =>

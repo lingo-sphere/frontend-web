@@ -1,4 +1,4 @@
-// Trang hiển thị lịch sử làm bài kiểm tra và biểu đồ miền phát triển năng lực của học viên
+// Trang hiển thị lịch sử làm bài kiểm tra và biểu đồ miền phát triển năng lực của học viên hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
@@ -14,21 +14,24 @@ import { Pagination } from '@/components/pagination'
 import { ProgressGrowthAnalyticsTab } from '@/features/progress/components/progress.growth.analytics.tab'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useCoursesProgressQuery } from '@/features/progress/hooks/use.progress.query'
+import { useLanguage } from '@/hooks/use.language'
 import type { ProgressRecentActivity, UnifiedCourseCardItem } from '@/features/progress/hooks/use.progress.data'
 import { toast } from '@/store/toast.store'
 
 export default function ExamHistoryPage() {
   const navigate = useNavigate()
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore()
   const [viewMode, setViewMode] = useState<'LIST' | 'CHART'>('LIST')
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
       if (useAuthStore.getState().isKickedOut) return
-      toast.warning('Vui lòng đăng nhập để xem lịch sử thi!')
+      toast.warning(isVi ? 'Vui lòng đăng nhập để xem lịch sử thi!' : 'Please sign in to view test history!')
       navigate('/login?returnUrl=/exam-history')
     }
-  }, [isAuthLoading, isAuthenticated, navigate])
+  }, [isAuthLoading, isAuthenticated, navigate, isVi])
 
   const {
     isLoading,
@@ -90,7 +93,7 @@ export default function ExamHistoryPage() {
       const matched = allCourses.find(
         (c) => String(c._id) === String(cp.course_id) || String(c.id) === String(cp.course_id)
       )
-      const courseTitle = matched?.title || courseTitleMap[cp.course_id] || 'Khóa học'
+      const courseTitle = matched?.title || courseTitleMap[cp.course_id] || (isVi ? 'Khóa học' : 'Course')
 
       return {
         course_id: cp.course_id,
@@ -106,7 +109,7 @@ export default function ExamHistoryPage() {
         enrolled_at: new Date().toISOString(),
       }
     })
-  }, [coursesProgress, allCourses, courseTitleMap])
+  }, [coursesProgress, allCourses, courseTitleMap, isVi])
 
   const handleNavigateDetail = (item: UnifiedTestAttempt) => {
     const query = new URLSearchParams()
@@ -159,9 +162,13 @@ export default function ExamHistoryPage() {
     <main className="w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
         <SectionHeading
-          eyebrow="Đánh Giá Năng Lực"
-          title="Lịch Sử Bài Kiểm Tra & Thi Thử"
-          description="Tổng hợp toàn diện kết quả các bài test đầu vào, bài thi thử TOEIC và biểu đồ miền tăng trưởng năng lực."
+          eyebrow={isVi ? 'Đánh Giá Năng Lực' : 'Competency Evaluation'}
+          title={isVi ? 'Lịch Sử Bài Kiểm Tra & Thi Thử' : 'Test & Exam History'}
+          description={
+            isVi
+              ? 'Tổng hợp toàn diện kết quả các bài test đầu vào, bài thi thử TOEIC và biểu đồ miền tăng trưởng năng lực.'
+              : 'Comprehensive summary of diagnostic placement tests, TOEIC practice exams, and score growth charts.'
+          }
         />
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <Button
@@ -169,15 +176,15 @@ export default function ExamHistoryPage() {
             className="bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl gap-1.5 shadow-xs cursor-pointer"
           >
             <BookOpen size={14} />
-            <span>Luyện đề TOEIC mới</span>
+            <span>{isVi ? 'Luyện đề TOEIC mới' : 'New TOEIC Test'}</span>
           </Button>
           <Button
             variant="outline"
             onClick={() => loadAllHistory()}
             className="text-xs font-semibold rounded-xl cursor-pointer"
-            title="Tải lại dữ liệu"
+            title={isVi ? 'Tải lại dữ liệu' : 'Reload Data'}
           >
-            Làm mới
+            {isVi ? 'Làm mới' : 'Refresh'}
           </Button>
         </div>
       </div>
@@ -187,9 +194,13 @@ export default function ExamHistoryPage() {
       {!isAuthenticated && (
         <div className="rounded-2xl border border-dashed border-border bg-surface/50 p-8 text-center flex flex-col items-center justify-center gap-3">
           <BookOpen size={40} className="text-text-tertiary" />
-          <h3 className="text-base font-bold text-text-primary">Đăng nhập để theo dõi lịch sử làm bài thi</h3>
+          <h3 className="text-base font-bold text-text-primary">
+            {isVi ? 'Đăng nhập để theo dõi lịch sử làm bài thi' : 'Sign in to track exam history'}
+          </h3>
           <p className="text-xs text-text-secondary max-w-md">
-            Lưu lại toàn bộ kết quả thi thử, điểm Listening/Reading, và biểu đồ phát triển năng lực chuẩn xác nhất.
+            {isVi
+              ? 'Lưu lại toàn bộ kết quả thi thử, điểm Listening/Reading, và biểu đồ phát triển năng lực chuẩn xác nhất.'
+              : 'Save all practice exam results, Listening/Reading scores, and accurate competency growth charts.'}
           </p>
           <Button
             onClick={() => {
@@ -199,7 +210,7 @@ export default function ExamHistoryPage() {
             }}
             className="mt-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs cursor-pointer"
           >
-            Đăng nhập ngay
+            {isVi ? 'Đăng nhập ngay' : 'Sign in now'}
           </Button>
         </div>
       )}
@@ -215,7 +226,7 @@ export default function ExamHistoryPage() {
           }`}
         >
           <ListFilter size={14} />
-          <span>Danh sách bài thi ({counts.all})</span>
+          <span>{isVi ? 'Danh sách bài thi' : 'Exam List'} ({counts.all})</span>
         </button>
         <button
           type="button"
@@ -227,7 +238,7 @@ export default function ExamHistoryPage() {
           }`}
         >
           <TrendingUp size={14} />
-          <span>Biểu đồ miền phát triển năng lực</span>
+          <span>{isVi ? 'Biểu đồ miền phát triển năng lực' : 'Growth Analytics Chart'}</span>
         </button>
       </div>
 
@@ -254,7 +265,7 @@ export default function ExamHistoryPage() {
           {isLoading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3 text-text-secondary">
               <Loader2 size={32} className="animate-spin text-primary" />
-              <p className="text-sm font-semibold">Đang tổng hợp lịch sử làm bài...</p>
+              <p className="text-sm font-semibold">{isVi ? 'Đang tổng hợp lịch sử làm bài...' : 'Aggregating test history...'}</p>
             </div>
           ) : (
             <div className="space-y-4">

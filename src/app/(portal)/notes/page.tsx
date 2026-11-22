@@ -1,4 +1,4 @@
-// Trang quản lý sổ tay ghi chú bài giảng video khóa học của học viên.
+// Trang quản lý sổ tay ghi chú bài giảng video khóa học của học viên hỗ trợ đa ngôn ngữ.
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
@@ -13,6 +13,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { useNavigate } from '@/lib/navigation'
 import { toast } from '@/store/toast.store'
 import { useMounted } from '@/hooks/use.mounted'
+import { useLanguage } from '@/hooks/use.language'
 import type { UserCourseNoteItem } from '@/features/courses/services/course.service'
 import { useMyNotesQuery, useDeleteCourseNoteMutation } from '@/features/notes/hooks/use.my.notes'
 import { CourseNoteItemCard } from '@/features/notes/components/course.note.item.card'
@@ -22,16 +23,18 @@ const ITEMS_PER_PAGE = 9
 export default function NotesAppPage() {
   const navigate = useNavigate()
   const isMounted = useMounted()
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const isAuthLoading = useAuthStore((state) => state.isLoading)
 
   useEffect(() => {
     if (isMounted && !isAuthLoading && !isAuthenticated) {
       if (useAuthStore.getState().isKickedOut) return
-      toast.warning('Vui lòng đăng nhập để xem sổ tay ghi chú khóa học!')
+      toast.warning(isVi ? 'Vui lòng đăng nhập để xem sổ tay ghi chú khóa học!' : 'Please sign in to view course notes!')
       navigate('/login?returnUrl=/notes')
     }
-  }, [isMounted, isAuthLoading, isAuthenticated, navigate])
+  }, [isMounted, isAuthLoading, isAuthenticated, navigate, isVi])
 
   const { data: notes = [], isLoading, isError, error } = useMyNotesQuery()
   const deleteMutation = useDeleteCourseNoteMutation()
@@ -51,13 +54,13 @@ export default function NotesAppPage() {
       } else {
         map.set(cId, {
           id: cId,
-          title: note.course_title || 'Khóa học',
+          title: note.course_title || (isVi ? 'Khóa học' : 'Course'),
           count: 1,
         })
       }
     }
     return Array.from(map.values())
-  }, [notes])
+  }, [notes, isVi])
 
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
@@ -105,9 +108,13 @@ export default function NotesAppPage() {
   return (
     <main className="w-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8 space-y-6">
       <SectionHeading
-        eyebrow="Ghi chú bài học"
-        title="Sổ tay ghi chú học tập"
-        description="Tổng hợp toàn bộ ghi chú theo từng mốc thời gian bài giảng video trong các khóa học của bạn."
+        eyebrow={isVi ? 'Ghi chú bài học' : 'Lesson Notes'}
+        title={isVi ? 'Sổ tay ghi chú học tập' : 'Study Notes Notebook'}
+        description={
+          isVi
+            ? 'Tổng hợp toàn bộ ghi chú theo từng mốc thời gian bài giảng video trong các khóa học của bạn.'
+            : 'All your timestamped notes across video lessons in enrolled courses.'
+        }
       />
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface/80 p-3 sm:p-4 rounded-2xl border border-border/70 backdrop-blur-md">
@@ -116,7 +123,7 @@ export default function NotesAppPage() {
           <Input
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Tìm kiếm nội dung ghi chú, tên bài học, khóa học..."
+            placeholder={isVi ? 'Tìm kiếm nội dung ghi chú, tên bài học, khóa học...' : 'Search note contents, lesson title, course title...'}
             className="pl-9 h-10 rounded-xl bg-surface border-border text-xs sm:text-sm focus-visible:ring-primary"
           />
         </div>
@@ -132,7 +139,7 @@ export default function NotesAppPage() {
                   : 'bg-surface-subtle text-text-secondary hover:text-text-primary border border-border/60'
               }`}
             >
-              Tất cả ({notes.length})
+              {isVi ? 'Tất cả' : 'All'} ({notes.length})
             </button>
             {courseFilters.map((c) => (
               <button
@@ -172,7 +179,7 @@ export default function NotesAppPage() {
         <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/30 flex items-center gap-3 text-destructive">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span className="text-sm font-semibold">
-            {error instanceof Error ? error.message : 'Không thể tải danh sách ghi chú khóa học. Vui lòng thử lại sau.'}
+            {error instanceof Error ? error.message : (isVi ? 'Không thể tải danh sách ghi chú khóa học. Vui lòng thử lại sau.' : 'Failed to load course notes. Please try again later.')}
           </span>
         </div>
       )}
@@ -182,13 +189,17 @@ export default function NotesAppPage() {
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
             <BookOpen className="h-8 w-8" />
           </div>
-          <h3 className="text-base sm:text-lg font-bold text-text-primary mb-2">Chưa có ghi chú bài học nào</h3>
+          <h3 className="text-base sm:text-lg font-bold text-text-primary mb-2">
+            {isVi ? 'Chưa có ghi chú bài học nào' : 'No lesson notes yet'}
+          </h3>
           <p className="text-xs sm:text-sm text-text-secondary max-w-md mb-6 leading-relaxed">
-            Trong quá trình học các khóa học, hãy sử dụng tính năng Ghi chú trong video bài giảng để lưu lại những điểm kiến thức quan trọng tại mốc thời gian đó nhé!
+            {isVi
+              ? 'Trong quá trình học các khóa học, hãy sử dụng tính năng Ghi chú trong video bài giảng để lưu lại những điểm kiến thức quan trọng tại mốc thời gian đó nhé!'
+              : 'While watching video lessons, use the Notes feature to bookmark important knowledge points at specific timestamps!'}
           </p>
           <Link href="/courses?tab=my-courses">
             <Button className="rounded-xl px-5 h-10 bg-primary hover:bg-primary/90 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-xs cursor-pointer">
-              <span>Đến Khóa học của tôi</span>
+              <span>{isVi ? 'Đến Khóa học của tôi' : 'Go to My Courses'}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
@@ -198,8 +209,12 @@ export default function NotesAppPage() {
       {!showSkeleton && !isError && notes.length > 0 && filteredNotes.length === 0 && (
         <div className="flex flex-col items-center justify-center p-8 text-center rounded-2xl border border-border bg-surface/50">
           <Search className="h-8 w-8 text-text-tertiary mb-2" />
-          <h4 className="text-sm font-bold text-text-primary mb-1">Không tìm thấy ghi chú phù hợp</h4>
-          <p className="text-xs text-text-tertiary">Vui lòng thử lại với từ khóa tìm kiếm hoặc chọn bộ lọc khóa học khác.</p>
+          <h4 className="text-sm font-bold text-text-primary mb-1">
+            {isVi ? 'Không tìm thấy ghi chú phù hợp' : 'No matching notes found'}
+          </h4>
+          <p className="text-xs text-text-tertiary">
+            {isVi ? 'Vui lòng thử lại với từ khóa tìm kiếm hoặc chọn bộ lọc khóa học khác.' : 'Try adjusting your search query or choosing another course filter.'}
+          </p>
         </div>
       )}
 
@@ -231,13 +246,15 @@ export default function NotesAppPage() {
       <Modal
         open={Boolean(noteToDelete)}
         onClose={() => setNoteToDelete(null)}
-        title="Xác nhận xóa ghi chú"
+        title={isVi ? 'Xác nhận xóa ghi chú' : 'Confirm Note Deletion'}
       >
         <div className="space-y-4 pt-1">
           <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-            Bạn có chắc chắn muốn xóa ghi chú tại bài học{' '}
-            <strong className="text-text-primary">{noteToDelete?.lesson_title || 'này'}</strong> (mốc{' '}
-            <span className="font-mono text-primary font-bold">{noteToDelete?.formatted_time || '00:00'}</span>)? Hành động này không thể hoàn tác.
+            {isVi ? 'Bạn có chắc chắn muốn xóa ghi chú tại bài học ' : 'Are you sure you want to delete the note at lesson '}
+            <strong className="text-text-primary">{noteToDelete?.lesson_title || (isVi ? 'này' : 'this')}</strong>{' '}
+            ({isVi ? 'mốc ' : 'timestamp '}
+            <span className="font-mono text-primary font-bold">{noteToDelete?.formatted_time || '00:00'}</span>)?{' '}
+            {isVi ? 'Hành động này không thể hoàn tác.' : 'This action cannot be undone.'}
           </p>
 
           <div className="flex items-center justify-end gap-2 pt-2">
@@ -249,7 +266,7 @@ export default function NotesAppPage() {
               disabled={deleteMutation.isPending}
               className="rounded-xl text-xs h-9"
             >
-              Hủy
+              {isVi ? 'Hủy' : 'Cancel'}
             </Button>
             <Button
               type="button"
@@ -259,7 +276,7 @@ export default function NotesAppPage() {
               disabled={deleteMutation.isPending}
               className="rounded-xl text-xs h-9"
             >
-              {deleteMutation.isPending ? 'Đang xóa...' : 'Xóa vĩnh viễn'}
+              {deleteMutation.isPending ? (isVi ? 'Đang xóa...' : 'Deleting...') : (isVi ? 'Xóa vĩnh viễn' : 'Delete Permanently')}
             </Button>
           </div>
         </div>

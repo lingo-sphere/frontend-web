@@ -1,4 +1,4 @@
-import { PracticeKeyboard } from './practice.keyboard'
+import { PracticeKeyboard } from '@/features/practice/components/practice.keyboard'
 import { resolveSpeakingPolicy } from '@/features/practice/lib/speaking-policy'
 import { useSpeakingSession, type RecordingSubmission } from '@/features/practice/hooks/use.speaking.session'
 /**

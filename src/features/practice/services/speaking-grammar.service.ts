@@ -1,6 +1,6 @@
 import { api } from "@/services/api.client";
-import type { GrammarSession } from "../types/grammar-practice";
-import type { SpeakingGrammarRemediation } from "../types/speaking-grammar";
+import type { GrammarSession } from "@/features/practice/types/grammar-practice";
+import type { SpeakingGrammarRemediation } from "@/features/practice/types/speaking-grammar";
 
 const base = (kind: "SPEAKING" | "WRITING") =>
   kind === "WRITING" ? "writing/submissions" : "speaking/attempts";

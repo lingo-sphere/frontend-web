@@ -4,7 +4,7 @@ import type {
   WritingSrsDetail,
   WritingSrsFilter,
   WritingReviewSession,
-} from "../types/writing-srs";
+} from "@/features/practice/types/writing-srs";
 const base = "/practice/writing/srs";
 export const writingSrsService = {
   list: (filters: WritingSrsFilter) => api.get<WritingSrsList>(base, filters),

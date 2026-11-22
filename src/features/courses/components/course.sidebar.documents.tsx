@@ -1,4 +1,4 @@
-// Quản lý hiển thị toàn bộ đề lý thuyết, bài tập luyện tập và tài liệu khóa học trong thanh bên.
+// Quản lý hiển thị toàn bộ đề lý thuyết, bài tập luyện tập và tài liệu khóa học trong thanh bên hỗ trợ đa ngôn ngữ.
 
 'use client'
 
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import type { Course, Chapter, Lesson } from '@/features/courses/types/course'
 import { toast } from '@/store/toast.store'
+import { useLanguage } from '@/hooks/use.language'
 
 interface CourseSidebarDocumentsProps {
   course: Course
@@ -39,18 +40,23 @@ export function CourseSidebarDocuments({
   onOpenPracticeQuiz,
   onOpenCheckout,
 }: CourseSidebarDocumentsProps) {
+  const { isVietnamese } = useLanguage()
+  const isVi = isVietnamese
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<DocFilterType>('all')
 
   const handleDownload = (url: string, fileName?: string, isFreeAllowed?: boolean) => {
     if (!isEnrolled && !isFreeAllowed) {
-      toast.warning('Vui lòng đăng ký khóa học để tải tài liệu!', 'Yêu cầu mở khóa')
+      toast.warning(
+        isVi ? 'Vui lòng đăng ký khóa học để tải tài liệu!' : 'Please enroll in the course to download documents!',
+        isVi ? 'Yêu cầu mở khóa' : 'Unlock Required'
+      )
       onOpenCheckout?.()
       return
     }
     const a = document.createElement('a')
     a.href = url
-    a.download = fileName || 'tai-lieu-khoa-hoc'
+    a.download = fileName || (isVi ? 'tai-lieu-khoa-hoc' : 'course-document')
     a.target = '_blank'
     a.rel = 'noopener noreferrer'
     document.body.appendChild(a)
@@ -109,7 +115,7 @@ export function CourseSidebarDocuments({
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
           <input
             type="text"
-            placeholder="Tìm đề lý thuyết, bài tập, tài liệu..."
+            placeholder={isVi ? 'Tìm đề lý thuyết, bài tập, tài liệu...' : 'Search theory, quizzes, documents...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-surface border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-text-tertiary"
@@ -126,7 +132,7 @@ export function CourseSidebarDocuments({
                 : 'bg-surface border border-border text-text-secondary hover:text-text-primary'
             }`}
           >
-            Tất cả
+            {isVi ? 'Tất cả' : 'All'}
           </button>
           <button
             type="button"
@@ -138,7 +144,7 @@ export function CourseSidebarDocuments({
             }`}
           >
             <FileText size={11} />
-            <span>Đề lý thuyết PDF</span>
+            <span>{isVi ? 'Đề lý thuyết PDF' : 'Theory PDF'}</span>
           </button>
           <button
             type="button"
@@ -150,7 +156,7 @@ export function CourseSidebarDocuments({
             }`}
           >
             <HelpCircle size={11} />
-            <span>Bài tập trắc nghiệm</span>
+            <span>{isVi ? 'Bài tập trắc nghiệm' : 'Practice Quizzes'}</span>
           </button>
           <button
             type="button"
@@ -162,7 +168,7 @@ export function CourseSidebarDocuments({
             }`}
           >
             <FolderDown size={11} />
-            <span>Tài liệu đính kèm</span>
+            <span>{isVi ? 'Tài liệu đính kèm' : 'Attachments'}</span>
           </button>
         </div>
       </div>
@@ -173,11 +179,11 @@ export function CourseSidebarDocuments({
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-primary">
-                Tài liệu video đang xem
+                {isVi ? 'Tài liệu video đang xem' : 'Current Lesson Resources'}
               </span>
             </div>
             <span className="text-[10px] font-bold text-text-tertiary">
-              Bài {currentLesson.order || 1}
+              {isVi ? `Bài ${currentLesson.order || 1}` : `Lesson ${currentLesson.order || 1}`}
             </span>
           </div>
 
@@ -194,10 +200,10 @@ export function CourseSidebarDocuments({
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-bold truncate">
-                      {currentLesson.theory_file_name || 'Đề lý thuyết & Tóm tắt bài học (PDF)'}
+                      {currentLesson.theory_file_name || (isVi ? 'Đề lý thuyết & Tóm tắt bài học (PDF)' : 'Lesson Theory & Summary (PDF)')}
                     </div>
                     <div className="text-[10.5px] text-blue-700 dark:text-blue-300 opacity-90">
-                      Tài liệu lý thuyết chính thức
+                      {isVi ? 'Tài liệu lý thuyết chính thức' : 'Official theory document'}
                     </div>
                   </div>
                 </div>
@@ -207,7 +213,7 @@ export function CourseSidebarDocuments({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-800 text-blue-700 dark:text-blue-300 hover:bg-white shadow-2xs cursor-pointer"
-                    title="Mở xem trực tiếp"
+                    title={isVi ? 'Mở xem trực tiếp' : 'Open in new tab'}
                   >
                     <ExternalLink size={13} />
                   </a>
@@ -215,7 +221,7 @@ export function CourseSidebarDocuments({
                     type="button"
                     onClick={() => handleDownload(currentLesson.theory_file_url!, currentLesson.theory_file_name, Boolean(currentLesson.is_free_preview))}
                     className="p-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-2xs cursor-pointer"
-                    title="Tải về máy"
+                    title={isVi ? 'Tải về máy' : 'Download file'}
                   >
                     <Download size={13} />
                   </button>
@@ -223,7 +229,7 @@ export function CourseSidebarDocuments({
               </div>
             ) : (
               <div className="text-[11px] text-text-tertiary italic p-2 rounded-lg bg-surface border border-border/60">
-                Video này chưa đính kèm file đề lý thuyết riêng.
+                {isVi ? 'Video này chưa đính kèm file đề lý thuyết riêng.' : 'No theory file attached to this video.'}
               </div>
             )}
 
@@ -235,10 +241,10 @@ export function CourseSidebarDocuments({
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-bold truncate">
-                      Đề bài luyện tập củng cố
+                      {isVi ? 'Đề bài luyện tập củng cố' : 'Reinforcement Practice Quiz'}
                     </div>
                     <div className="text-[10.5px] text-emerald-700 dark:text-emerald-300 opacity-90">
-                      Gồm {currentLesson.questions.length} câu trắc nghiệm ôn tập
+                      {isVi ? `Gồm ${currentLesson.questions.length} câu trắc nghiệm ôn tập` : `Includes ${currentLesson.questions.length} review questions`}
                     </div>
                   </div>
                 </div>
@@ -249,13 +255,13 @@ export function CourseSidebarDocuments({
                     className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer flex items-center gap-1 shrink-0"
                   >
                     <BookOpen size={12} />
-                    <span>Làm ngay</span>
+                    <span>{isVi ? 'Làm ngay' : 'Start now'}</span>
                   </button>
                 )}
               </div>
             ) : (
               <div className="text-[11px] text-text-tertiary italic p-2 rounded-lg bg-surface border border-border/60">
-                Video này chưa có bộ câu hỏi trắc nghiệm ôn tập.
+                {isVi ? 'Video này chưa có bộ câu hỏi trắc nghiệm ôn tập.' : 'No practice quiz available for this video.'}
               </div>
             )}
           </div>
@@ -266,7 +272,7 @@ export function CourseSidebarDocuments({
         <div className="p-4 space-y-2">
           <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400">
             <Folder size={12} />
-            <span>Giáo trình & Tài liệu toàn khóa học</span>
+            <span>{isVi ? 'Giáo trình & Tài liệu toàn khóa học' : 'Full Course Curriculum & Documents'}</span>
           </div>
           <div className="p-3 rounded-xl border border-border bg-surface hover:border-purple-400 transition-all flex items-center justify-between gap-2 shadow-xs">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -275,10 +281,10 @@ export function CourseSidebarDocuments({
               </div>
               <div className="min-w-0">
                 <div className="text-xs font-bold truncate text-text-primary">
-                  {course.document_name || 'Giáo trình cẩm nang khóa học'}
+                  {course.document_name || (isVi ? 'Giáo trình cẩm nang khóa học' : 'Course Handbook & Curriculum')}
                 </div>
                 <div className="text-[10.5px] text-text-secondary">
-                  Tài liệu tổng quan dùng chung
+                  {isVi ? 'Tài liệu tổng quan dùng chung' : 'General overview materials'}
                 </div>
               </div>
             </div>
@@ -288,7 +294,7 @@ export function CourseSidebarDocuments({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1.5 rounded-lg bg-surface border border-border text-text-secondary hover:text-text-primary cursor-pointer"
-                title="Mở xem trực tiếp"
+                title={isVi ? 'Mở xem trực tiếp' : 'Open in new tab'}
               >
                 <ExternalLink size={13} />
               </a>
@@ -296,7 +302,7 @@ export function CourseSidebarDocuments({
                 type="button"
                 onClick={() => handleDownload(course.document_url!, course.document_name, true)}
                 className="p-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-2xs cursor-pointer"
-                title="Tải về máy"
+                title={isVi ? 'Tải về máy' : 'Download file'}
               >
                 <Download size={13} />
               </button>
@@ -308,17 +314,17 @@ export function CourseSidebarDocuments({
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-black uppercase tracking-wider text-text-primary">
-            Tài liệu theo từng chương & bài giảng
+            {isVi ? 'Tài liệu theo từng chương & bài giảng' : 'Documents by Chapter & Lesson'}
           </span>
           <span className="text-[11px] text-text-tertiary font-bold">
-            {filteredChapters.length} chương
+            {isVi ? `${filteredChapters.length} chương` : `${filteredChapters.length} chapters`}
           </span>
         </div>
 
         {filteredChapters.length === 0 ? (
           <div className="py-8 text-center text-text-tertiary text-xs space-y-2">
             <Search size={24} className="mx-auto opacity-40" />
-            <p>Không tìm thấy tài liệu phù hợp với bộ lọc hiện tại.</p>
+            <p>{isVi ? 'Không tìm thấy tài liệu phù hợp với bộ lọc hiện tại.' : 'No documents match the current filter.'}</p>
           </div>
         ) : (
           filteredChapters.map(({ chapter: ch, lessons: lesList }) => {
@@ -342,7 +348,7 @@ export function CourseSidebarDocuments({
                           : 'bg-primary/10 text-primary'
                       }`}
                     >
-                      Chương {ch.order || 1}
+                      {isVi ? `Chương ${ch.order || 1}` : `Chapter ${ch.order || 1}`}
                     </span>
                     <h5
                       className={`font-bold text-xs truncate ${
@@ -355,7 +361,7 @@ export function CourseSidebarDocuments({
                   {isChapterLocked && (
                     <span className="px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-extrabold flex items-center gap-1 shrink-0">
                       <Lock size={10} />
-                      Đang khóa
+                      {isVi ? 'Đang khóa' : 'Locked'}
                     </span>
                   )}
                 </div>
@@ -366,11 +372,11 @@ export function CourseSidebarDocuments({
                       <div className="flex items-center gap-2 min-w-0">
                         <Lock size={13} className="text-text-tertiary shrink-0" />
                         <span className="truncate text-[11px] font-bold text-text-secondary">
-                          {ch.theory_file_name || `Lý thuyết tổng quan: Chương ${ch.order || 1}`}
+                          {ch.theory_file_name || (isVi ? `Lý thuyết tổng quan: Chương ${ch.order || 1}` : `Overview Theory: Chapter ${ch.order || 1}`)}
                         </span>
                       </div>
                       <span className="text-[10px] font-bold text-text-tertiary px-1.5 py-0.5 rounded bg-surface border border-border/40">
-                        Đang khóa
+                        {isVi ? 'Đang khóa' : 'Locked'}
                       </span>
                     </div>
                   ) : (
@@ -378,7 +384,7 @@ export function CourseSidebarDocuments({
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText size={13} className="text-blue-600 shrink-0" />
                         <span className="truncate text-[11px] font-bold text-blue-900 dark:text-blue-200">
-                          {ch.theory_file_name || `Lý thuyết tổng quan: Chương ${ch.order || 1}`}
+                          {ch.theory_file_name || (isVi ? `Lý thuyết tổng quan: Chương ${ch.order || 1}` : `Overview Theory: Chapter ${ch.order || 1}`)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
@@ -386,16 +392,16 @@ export function CourseSidebarDocuments({
                           href={ch.theory_file_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1 text-blue-600 hover:text-blue-700"
-                          title="Mở xem"
+                          className="p-1 text-blue-600 hover:text-blue-700 cursor-pointer"
+                          title={isVi ? 'Mở xem' : 'Open in new tab'}
                         >
                           <ExternalLink size={12} />
                         </a>
                         <button
                           type="button"
                           onClick={() => handleDownload(ch.theory_file_url!, ch.theory_file_name)}
-                          className="p-1 text-blue-600 hover:text-blue-700"
-                          title="Tải về"
+                          className="p-1 text-blue-600 hover:text-blue-700 cursor-pointer"
+                          title={isVi ? 'Tải về' : 'Download'}
                         >
                           <Download size={12} />
                         </button>
@@ -409,15 +415,15 @@ export function CourseSidebarDocuments({
                     <div className="flex items-center gap-2 min-w-0">
                       <Volume2 size={13} className="text-primary shrink-0" />
                       <span className="truncate text-[11px] font-medium text-text-primary">
-                        Audio bài nghe Chương {ch.order || 1}
+                        {isVi ? `Audio bài nghe Chương ${ch.order || 1}` : `Audio track Chapter ${ch.order || 1}`}
                       </span>
                     </div>
                     <a
                       href={ch.audio_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1 text-primary hover:text-primary-focus"
-                      title="Mở nghe"
+                      className="p-1 text-primary hover:text-primary-focus cursor-pointer"
+                      title={isVi ? 'Mở nghe' : 'Listen'}
                     >
                       <ExternalLink size={12} />
                     </a>
@@ -446,18 +452,23 @@ export function CourseSidebarDocuments({
                             type="button"
                             onClick={() => {
                               if (isChapterLocked) {
-                                toast.warning('Chương này đang bị khóa! Vui lòng hoàn thành bài test chương trước để mở khóa nhé.', 'Chương đang khóa')
+                                toast.warning(
+                                  isVi
+                                    ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test chương trước để mở khóa nhé.'
+                                    : 'This chapter is locked! Please complete the previous chapter test to unlock.',
+                                  isVi ? 'Chương đang khóa' : 'Chapter Locked'
+                                )
                                 return
                               }
                               onSelectLesson(ch, les)
                             }}
                             className="font-bold text-[11.5px] text-left text-text-primary hover:text-primary truncate flex-1 cursor-pointer"
                           >
-                            Bài {les.order || 1}. {les.title}
+                            {isVi ? `Bài ${les.order || 1}. ${les.title}` : `Lesson ${les.order || 1}. ${les.title}`}
                           </button>
                           {isCurrent && (
                             <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-primary text-white shrink-0">
-                              Đang mở
+                              {isVi ? 'Đang mở' : 'Current'}
                             </span>
                           )}
                         </div>
@@ -469,39 +480,43 @@ export function CourseSidebarDocuments({
                                 onClick={() => {
                                   toast.warning(
                                     isChapterLocked
-                                      ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa tài liệu lý thuyết.'
-                                      : 'Vui lòng đăng ký khóa học để tải tài liệu lý thuyết!',
-                                    'Chương đang khóa'
+                                      ? (isVi
+                                          ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa tài liệu lý thuyết.'
+                                          : 'This chapter is locked! Complete the previous chapter test to unlock theory materials.')
+                                      : (isVi
+                                          ? 'Vui lòng đăng ký khóa học để tải tài liệu lý thuyết!'
+                                          : 'Please enroll in the course to download theory materials!'),
+                                    isVi ? 'Chương đang khóa' : 'Chapter Locked'
                                   )
                                 }}
                                 className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-text-tertiary border border-border/40 text-[10.5px] font-bold cursor-not-allowed opacity-70"
-                                title="Tài liệu lý thuyết bị khóa"
+                                title={isVi ? 'Tài liệu lý thuyết bị khóa' : 'Theory document locked'}
                               >
                                 <Lock size={11} className="text-text-tertiary" />
                                 <span className="truncate max-w-[130px]">
-                                  {les.theory_file_name || 'Đề lý thuyết PDF'}
+                                  {les.theory_file_name || (isVi ? 'Đề lý thuyết PDF' : 'Theory PDF')}
                                 </span>
                               </div>
                             ) : (
                               <div className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 text-[10.5px] font-bold">
                                 <FileText size={11} className="text-blue-600 dark:text-blue-400" />
                                 <span className="truncate max-w-[130px]">
-                                  {les.theory_file_name || 'Đề lý thuyết PDF'}
+                                  {les.theory_file_name || (isVi ? 'Đề lý thuyết PDF' : 'Theory PDF')}
                                 </span>
                                 <a
                                   href={les.theory_file_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="p-0.5 hover:text-blue-800"
-                                  title="Xem PDF"
+                                  className="p-0.5 hover:text-blue-800 cursor-pointer"
+                                  title={isVi ? 'Xem PDF' : 'View PDF'}
                                 >
                                   <ExternalLink size={10} />
                                 </a>
                                 <button
                                   type="button"
                                   onClick={() => handleDownload(les.theory_file_url!, les.theory_file_name, Boolean(les.is_free_preview))}
-                                  className="p-0.5 hover:text-blue-800"
-                                  title="Tải về"
+                                  className="p-0.5 hover:text-blue-800 cursor-pointer"
+                                  title={isVi ? 'Tải về' : 'Download'}
                                 >
                                   <Download size={10} />
                                 </button>
@@ -516,16 +531,20 @@ export function CourseSidebarDocuments({
                                 onClick={() => {
                                   toast.warning(
                                     isChapterLocked
-                                      ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa bài luyện tập.'
-                                      : 'Vui lòng đăng ký khóa học để làm bài luyện tập!',
-                                    'Chương đang khóa'
+                                      ? (isVi
+                                          ? 'Chương này đang bị khóa! Vui lòng hoàn thành bài test của chương trước để mở khóa bài luyện tập.'
+                                          : 'This chapter is locked! Complete the previous chapter test to unlock practice quizzes.')
+                                      : (isVi
+                                          ? 'Vui lòng đăng ký khóa học để làm bài luyện tập!'
+                                          : 'Please enroll in the course to take practice quizzes!'),
+                                    isVi ? 'Chương đang khóa' : 'Chapter Locked'
                                   )
                                 }}
                                 className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800 text-text-tertiary border border-border/40 text-[10.5px] font-bold cursor-not-allowed opacity-70"
-                                title="Bài luyện tập bị khóa"
+                                title={isVi ? 'Bài luyện tập bị khóa' : 'Practice quiz locked'}
                               >
                                 <Lock size={11} className="text-text-tertiary" />
-                                <span>Đề luyện tập ({les.questions!.length} câu)</span>
+                                <span>{isVi ? `Đề luyện tập (${les.questions!.length} câu)` : `Quiz (${les.questions!.length} questions)`}</span>
                               </button>
                             ) : (
                               <button
@@ -535,10 +554,10 @@ export function CourseSidebarDocuments({
                                   onOpenPracticeQuiz?.(ch, les)
                                 }}
                                 className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-[10.5px] font-bold cursor-pointer transition-all"
-                                title={`Làm bài tập trắc nghiệm củng cố: ${les.questions!.length} câu`}
+                                title={isVi ? `Làm bài tập trắc nghiệm củng cố: ${les.questions!.length} câu` : `Take reinforcement quiz: ${les.questions!.length} questions`}
                               >
                                 <HelpCircle size={11} className="text-emerald-600 dark:text-emerald-400" />
-                                <span>Đề luyện tập ({les.questions!.length} câu)</span>
+                                <span>{isVi ? `Đề luyện tập (${les.questions!.length} câu)` : `Quiz (${les.questions!.length} questions)`}</span>
                               </button>
                             )
                           )}

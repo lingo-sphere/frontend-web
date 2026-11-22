@@ -8,9 +8,9 @@ import { Button } from '@/components/button'
 import { AppSelect } from '@/components/select'
 import { Pagination } from '@/components/pagination'
 import { useAuthStore } from '@/features/auth/store/auth.store'
-import { listeningLifecycleService } from '../services/listening-lifecycle.service'
-import type { ListeningKind } from '../types/listening-lifecycle'
-import { ListeningSavedResult } from './listening.saved.result'
+import { listeningLifecycleService } from '@/features/practice/services/listening-lifecycle.service'
+import type { ListeningKind } from '@/features/practice/types/listening-lifecycle'
+import { ListeningSavedResult } from '@/features/practice/components/listening.saved.result'
 
 const KINDS: ListeningKind[] = ['part1', 'part2', 'part3', 'part4', 'dictation']
 const PAGE_SIZE = 20

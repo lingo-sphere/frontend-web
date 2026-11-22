@@ -5,16 +5,16 @@
 
 "use client";
 
-import { PracticeKeyboard, PracticeOptionKey } from './practice.keyboard'
+import { PracticeKeyboard, PracticeOptionKey } from '@/features/practice/components/practice.keyboard'
 
 
 import { useState, useMemo } from "react";
-import { useReadingSession } from "../hooks/use.reading.session";
+import { useReadingSession } from "@/features/practice/hooks/use.reading.session";
 import { DictionaryModal } from "@/features/vocabulary/components/dictionary.modal";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { toast } from "@/store/toast.store";
-import { ReadingMedia } from "./reading.media";
-import { PracticeExitConfirmModal } from "./practice.exit-confirm.modal";
+import { ReadingMedia } from "@/features/practice/components/reading.media";
+import { PracticeExitConfirmModal } from "@/features/practice/components/practice.exit-confirm.modal";
 import { Icon } from "@/components/icon.map";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
@@ -49,7 +49,7 @@ import type {
   AIReadingExplanation,
   SkillBreakdownItem,
   WrongAnswerItem,
-} from "../types/reading";
+} from "@/features/practice/types/reading";
 
 interface ReadingWorkspaceProps {
   passage: ReadingPassage;

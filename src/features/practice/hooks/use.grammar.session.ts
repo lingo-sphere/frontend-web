@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { practiceKeys } from '../keys/practice.keys'
-import { grammarPracticeService } from '../services/grammar-practice.service'
-import { readSkillDraft, writeSkillDraft } from '../lib/skill-draft'
-import type { GrammarFeedback, GrammarSession, SubmitGrammarSessionParams } from '../types/grammar-practice'
+import { practiceKeys } from '@/features/practice/keys/practice.keys'
+import { grammarPracticeService } from '@/features/practice/services/grammar-practice.service'
+import { readSkillDraft, writeSkillDraft } from '@/features/practice/lib/skill-draft'
+import type { GrammarFeedback, GrammarSession, SubmitGrammarSessionParams } from '@/features/practice/types/grammar-practice'
 
 interface LocalDraft { answers: Record<string, string>; index: number; seconds: number; revision: number; pending?: SubmitGrammarSessionParams }
 const errorText = (e: unknown) => e instanceof Error ? e.message : 'Không kết nối được máy chủ'

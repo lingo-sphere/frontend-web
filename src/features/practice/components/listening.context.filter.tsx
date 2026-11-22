@@ -6,7 +6,7 @@ import { api } from '@/services/api.client'
 import { API_CONFIG } from '@/config/api.config'
 import { Button } from '@/components/button'
 import { AppSelect } from '@/components/select'
-import type { PracticeContext } from '../types/context.types'
+import type { PracticeContext } from '@/features/practice/types/context.types'
 
 interface Props {
   value: string

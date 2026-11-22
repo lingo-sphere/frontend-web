@@ -1,10 +1,10 @@
 // Component cung cấp context tổng thể, xác thực và cấu hình giao diện cho toàn bộ web app
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useTranslation } from 'react-i18next'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, theme as antdTheme } from 'antd'
 import viVN from 'antd/locale/vi_VN'
 import enUS from 'antd/locale/en_US'
 import dayjs from 'dayjs'
@@ -12,7 +12,7 @@ import 'dayjs/locale/vi'
 import 'dayjs/locale/en'
 import { initClientLanguage } from '@/i18n/i18n.config'
 import { TooltipProvider } from '@/components/tooltip'
-import { AppProvider } from '@/contexts/app.context'
+import { AppProvider, useApp } from '@/contexts/app.context'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { authService } from '@/features/auth/services/auth.service'
 import { API_CONFIG } from '@/config/api.config'
@@ -124,7 +124,6 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
       if (useAuthStore.getState().isKickedOut) return
       authService.clearAuthStorage()
       setUser(null)
-      // GlobalRouteGuard owns redirects after the auth state is cleared.
     }
 
     window.addEventListener('lingosphere:login_success', handleLoginSuccess)
@@ -185,18 +184,70 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
     )
   }
 
+interface AntdWebThemeWrapperProps {
+  currentLanguage: 'vi' | 'en'
+  children: ReactNode
+}
+
+function AntdWebThemeWrapper({ currentLanguage, children }: AntdWebThemeWrapperProps) {
+  const { theme } = useApp()
+  const isDark = theme === 'dark'
+
+  const themeConfig = useMemo(
+    () => ({
+      algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+      token: {
+        colorPrimary: '#10b981',
+        borderRadius: 12,
+        colorBgContainer: isDark ? '#0b1329' : '#ffffff',
+        colorBgElevated: isDark ? '#131f37' : '#ffffff',
+        colorBorder: isDark ? '#1e293b' : '#e2e8f0',
+        colorText: isDark ? '#f8fafc' : '#0f172a',
+      },
+      components: {
+        Table: {
+          headerBg: isDark ? '#131f37' : '#f8fafc',
+          headerColor: isDark ? '#f8fafc' : '#0f172a',
+          rowHoverBg: isDark ? '#1e293b' : '#f1f5f9',
+          borderColor: isDark ? '#1e293b' : '#e2e8f0',
+        },
+        Modal: {
+          contentBg: isDark ? '#0b1329' : '#ffffff',
+          headerBg: isDark ? '#0b1329' : '#ffffff',
+        },
+        Select: {
+          colorBgContainer: isDark ? '#0b1329' : '#ffffff',
+          colorBgElevated: isDark ? '#131f37' : '#ffffff',
+          optionSelectedBg: isDark ? '#064e3b' : '#ecfdf5',
+        },
+        Dropdown: {
+          colorBgElevated: isDark ? '#131f37' : '#ffffff',
+        },
+        Popover: {
+          colorBgElevated: isDark ? '#131f37' : '#ffffff',
+        },
+        DatePicker: {
+          colorBgElevated: isDark ? '#131f37' : '#ffffff',
+        },
+      },
+    }),
+    [isDark]
+  )
+
   return (
     <ConfigProvider
       locale={currentLanguage === 'vi' ? viVN : enUS}
-      theme={{
-        token: {
-          colorPrimary: '#10b981',
-          borderRadius: 12,
-        },
-      }}
+      theme={themeConfig}
     >
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <AppProvider>
+      {children}
+    </ConfigProvider>
+  )
+}
+
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <AppProvider>
+        <AntdWebThemeWrapper currentLanguage={currentLanguage}>
           <TooltipProvider>
             <PersistentLayout>{children}</PersistentLayout>
             <ToastContainer />
@@ -235,8 +286,8 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
               </div>
             </Modal>
           </TooltipProvider>
-        </AppProvider>
-      </GoogleOAuthProvider>
-    </ConfigProvider>
+        </AntdWebThemeWrapper>
+      </AppProvider>
+    </GoogleOAuthProvider>
   )
 }
