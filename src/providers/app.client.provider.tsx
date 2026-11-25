@@ -21,6 +21,8 @@ import { Modal } from '@/components/modal'
 import { Button } from '@/components/button'
 import { PersistentLayout } from '@/layouts/persistent.layout'
 import { ToastContainer } from '@/components/toast.container'
+import { StreakCelebrationModal } from '@/components/streak-celebration-modal'
+import { useStreakNotification } from '@/hooks/use-streak-notification'
 
 const GOOGLE_CLIENT_ID = API_CONFIG.GOOGLE_CLIENT_ID ?? ''
 
@@ -36,6 +38,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
   const setUser = useAuthStore((s) => s.setUser)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [kickoutMessage, setKickoutMessage] = useState<string | null>(null)
+  const { celebration, closeCelebration } = useStreakNotification()
   const lastVerifiedAt = useRef<number>(0)
   const isAdmin = user?.role === 'ADMIN'
 
@@ -251,6 +254,13 @@ function AntdWebThemeWrapper({ currentLanguage, children }: AntdWebThemeWrapperP
           <TooltipProvider>
             <PersistentLayout>{children}</PersistentLayout>
             <ToastContainer />
+            <StreakCelebrationModal
+              open={celebration.open}
+              streak={celebration.streak}
+              isNewRecord={celebration.isNewRecord}
+              streakFreezesLeft={celebration.streakFreezesLeft}
+              onClose={closeCelebration}
+            />
 
             <Modal
               open={Boolean(kickoutMessage)}
