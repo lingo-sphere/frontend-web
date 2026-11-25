@@ -33,7 +33,7 @@ export function useStreakNotification() {
     pathname.startsWith('/verify-email') ||
     pathname === '/'
 
-  const isEnabled = isAuthenticated && !isCheckingAuth && !isAuthPage
+  const isEnabled = isAuthenticated && !isAuthPage
 
   const { data: notifications } = useMyNotifications(
     { is_read: false, category: 'GAMIFICATION' },
@@ -52,19 +52,19 @@ export function useStreakNotification() {
     const isPendingLogin = typeof window !== 'undefined' && sessionStorage.getItem('lingo_streak_pending_login') === 'true'
 
     if (isPendingLogin) {
-      if (gamification !== undefined || user !== null) {
-        sessionStorage.removeItem('lingo_streak_pending_login')
-        const displayStreak = (gamification?.current_streak && gamification.current_streak > 0)
-          ? gamification.current_streak
-          : 1
-        setCelebration({
+      const displayStreak = (gamification?.current_streak && gamification.current_streak > 0)
+        ? gamification.current_streak
+        : 1
+      setCelebration((prev) => {
+        if (prev.open && prev.streak === displayStreak) return prev
+        return {
           open: true,
           streak: displayStreak,
           isNewRecord: false,
           streakFreezesLeft: freezesLeft,
-        })
-        return
-      }
+        }
+      })
+      return
     }
 
     if (notifications && notifications.length > 0) {
@@ -92,7 +92,7 @@ export function useStreakNotification() {
         }
       }
     }
-  }, [isEnabled, notifications, streakCount, freezesLeft, userId, gamification, user])
+  }, [isEnabled, notifications, streakCount, freezesLeft, userId, gamification])
 
   useEffect(() => {
     const handleClientStreakEvent = (e: Event) => {
@@ -119,6 +119,9 @@ export function useStreakNotification() {
   }, [isAuthPage])
 
   const closeCelebration = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('lingo_streak_pending_login')
+    }
     if (celebration.notificationId) {
       sessionStorage.setItem(`streak_seen_${celebration.notificationId}`, 'true')
       markAsReadMutation.mutate(celebration.notificationId)

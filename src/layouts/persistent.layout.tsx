@@ -9,8 +9,6 @@ import { UtilityHeader } from '@/layouts/app.header'
 import { useApp } from '@/contexts/app.context'
 import { FloatingActionsDock } from '@/components/floating.actions.dock'
 import { ScrollToTopButton } from '@/components/scroll.to.top.button'
-import { StreakCelebrationModal } from '@/components/streak-celebration-modal'
-import { useStreakNotification } from '@/hooks/use-streak-notification'
 import { GlobalRouteGuard } from '@/components/auth/global.route.guard'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
@@ -20,7 +18,6 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
     (pathname === '/grammar' && searchParams.get('view') === 'handbook')
   const router = useRouter()
   const { showAction, mobileSidebarOpen, setMobileSidebarOpen, sidebarCollapsed } = useApp()
-  const { celebration, closeCelebration } = useStreakNotification()
 
   useEffect(() => {
     const handleOpenAuth = () => {
@@ -62,13 +59,6 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
           <FloatingActionsDock readingMode={readingGrammar} />
         </div>
       )}
-      <StreakCelebrationModal
-        open={celebration.open}
-        streak={celebration.streak}
-        isNewRecord={celebration.isNewRecord}
-        streakFreezesLeft={celebration.streakFreezesLeft}
-        onClose={closeCelebration}
-      />
     </>
   )
 }
