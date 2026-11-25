@@ -38,7 +38,6 @@ export default function ProfileAppPage() {
     setIsEditing,
     activeTab,
     setActiveTab,
-    leaderboard,
     userScores,
     setUserScores,
     handleSaveProfile,
@@ -68,16 +67,16 @@ export default function ProfileAppPage() {
               color="error"
             />
             <StatCard
-              icon="zap"
-              label="Tổng kinh nghiệm"
-              value={`${formatNumber(user.stats?.totalXP || 0)} XP`}
-              color="warning"
+              icon="target"
+              label="Mục tiêu TOEIC"
+              value={userScores.targetScore ? `${userScores.targetScore}+` : 'Chưa đặt'}
+              color="primary"
             />
             <StatCard
               icon="award"
-              label="Cấp độ"
-              value={`Level ${user.stats?.level || 1}`}
-              color="primary"
+              label="Điểm khảo sát"
+              value={userScores.totalScore ? `${userScores.totalScore} PTS` : 'Chưa thi'}
+              color="warning"
             />
             <StatCard
               icon="book-open"
@@ -129,7 +128,6 @@ export default function ProfileAppPage() {
         <ProfileOverviewTab
           user={user}
           userScores={userScores}
-          leaderboard={leaderboard}
           setUserScores={setUserScores}
         />
       )}

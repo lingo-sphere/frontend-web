@@ -1,7 +1,6 @@
 // Custom hook tải và đồng bộ dữ liệu hồ sơ cá nhân và bảng xếp hạng bằng TanStack Query.
 import { useState, useEffect } from 'react'
 import { userService } from '@/features/user/services/user.service'
-import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
 import type { User, EditProfileForm } from '@/features/user/types/user'
 import type { UserScoreData } from '@/features/user/utils/user.score.utils'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -84,7 +83,6 @@ export function useProfileData() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'activity'>('overview')
-  const { data: leaderboard = [] } = useLeaderboardQuery('weekly')
 
   const [userScores, setUserScores] = useState<UserScoreData>(defaultUserScores)
 
@@ -243,7 +241,6 @@ export function useProfileData() {
     setIsEditing,
     activeTab,
     setActiveTab,
-    leaderboard,
     userScores,
     setUserScores,
     handleSaveProfile,

@@ -81,8 +81,7 @@ export function LandingFooter({ t }: LandingFooterProps) {
             <div className="text-[11px] uppercase tracking-[0.25em] text-[#48c9b0] font-bold">{t.footer.colSystem}</div>
             <ul className="space-y-2.5 text-xs text-white/60">
               <li><Link href="/about" className="hover:text-white transition-colors">{t.footer.sys1}</Link></li>
-              <li><Link href="/leaderboard" className="hover:text-white transition-colors">{t.footer.sys2}</Link></li>
-              <li><Link href="/leaderboard" className="hover:text-white transition-colors">{t.footer.sys3}</Link></li>
+              <li><Link href="/profile?tab=achievements" className="hover:text-white transition-colors">{t.footer.sys3}</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition-colors">{t.footer.sys4}</Link></li>
             </ul>
           </div>

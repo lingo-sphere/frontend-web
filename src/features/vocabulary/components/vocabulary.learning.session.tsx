@@ -519,8 +519,8 @@ export function VocabularyLearningSession({
       window.history.replaceState(null, "", url);
       onAction?.(
         isVietnamese
-          ? `Đã hoàn thành phiên (+${summary.xp_earned} XP).`
-          : `Session completed (+${summary.xp_earned} XP).`
+          ? `Đã hoàn thành phiên học.`
+          : `Session completed.`
       );
       onComplete(learningResult);
     } catch (err: unknown) {
@@ -1116,8 +1116,8 @@ export function VocabularyLearningSession({
               </div>
               <p className="text-xs text-text-secondary mt-0.5">
                 {isVietnamese
-                  ? "Vượt qua các câu hỏi để hoàn tất phiên và nhận thêm +3 XP Kiên trì 🛡️"
-                  : "Solve questions to master these words and earn +3 Grit Bonus XP 🛡️"}
+                  ? "Vượt qua các câu hỏi để hoàn tất phiên và củng cố từ vựng 🛡️"
+                  : "Solve questions to master these words and complete the session 🛡️"}
               </p>
             </div>
           </div>
@@ -1782,8 +1782,8 @@ export function VocabularyLearningSession({
                         : feedback.result === "CORRECT"
                         ? feedback.bonus_xp || isRelearning
                           ? isVietnamese
-                            ? "Phục hồi thành công! +3 XP Kiên trì 🎯"
-                            : "Recovered Successfully! +3 Grit XP 🎯"
+                            ? "Phục hồi thành công! 🎯"
+                            : "Recovered Successfully! 🎯"
                           : isVietnamese
                           ? "Chính xác! Xuất sắc 🎉"
                           : "Correct!"

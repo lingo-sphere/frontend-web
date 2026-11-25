@@ -157,13 +157,13 @@ function VerifyEmailContent() {
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => navigate('/home')}
+                onClick={() => navigate('/')}
                 className="flex-1 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
               >
                 {t('nav.home')}
               </Button>
               <Button
-                onClick={() => navigate('/home')}
+                onClick={() => navigate('/login')}
                 className="flex-1 bg-primary hover:bg-primary/90 text-white py-2.5 rounded-xl text-xs font-semibold shadow-md cursor-pointer"
               >
                 {t('auth.login')}

@@ -41,8 +41,8 @@ export function SettingsPrivacyTab({
               </div>
               <div className="text-xs text-text-tertiary mt-0.5">
                 {isVi
-                  ? 'Cho phép xếp hạng điểm kinh nghiệm (XP) và chuỗi ngày học của bạn cùng cộng đồng.'
-                  : 'Compete and show your weekly rank to peers.'}
+                  ? 'Cho phép hiển thị hồ sơ và chuỗi ngày học của bạn cùng cộng đồng.'
+                  : 'Display your public learning profile and study streak to peers.'}
               </div>
             </div>
             <button

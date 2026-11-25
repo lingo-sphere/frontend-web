@@ -61,7 +61,6 @@ export const NAV_GROUPS: NavGroup[] = [
     titleEn: 'AI & Tools',
     items: [
       { id: 'translate', labelVi: 'Dịch Thuật AI', labelEn: 'AI Translation', icon: 'volume2', path: '/translate' },
-      { id: 'leaderboard', labelVi: 'Bảng xếp hạng', labelEn: 'Leaderboard', icon: 'trophy', path: '/leaderboard' },
     ],
   },
 ]
