@@ -1,13 +1,13 @@
 // Trình phát video bài học phong cách YouTube cao cấp cho học viên LingoSphere.
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Play, Pause, Rewind, FastForward, Tv, Maximize2 } from 'lucide-react'
 import type { Lesson } from '@/features/courses/types/course'
 import { PlayerControlsBar } from '@/features/courses/components/player.controls.bar'
 import { PlayerEndscreen } from '@/features/courses/components/player.endscreen'
 import { PlayerShortcutsModal } from '@/features/courses/components/player.shortcuts.modal'
-import { CourseMiniPlayer } from '@/features/courses/components/course.mini.player'
+import { useCourseMiniPlayerStore, courseMiniPlayerStore } from '@/features/courses/store/course.mini.player.store'
 import { useLessonVideoPlayer } from '@/features/courses/hooks/use.lesson.video.player'
 
 interface LessonPlayerProps {
@@ -16,6 +16,8 @@ interface LessonPlayerProps {
   courseTitle?: string
   courseThumbnail?: string
   isTrial?: boolean
+  activeTab?: string
+  activeSidebarTab?: string
   onOpenCheckout?: () => void
   onProgress?: (lessonId: string, progress: number) => void
   onLessonComplete?: (lessonId: string) => void
@@ -34,6 +36,8 @@ export function LessonPlayer({
   courseTitle,
   courseThumbnail,
   isTrial = false,
+  activeTab,
+  activeSidebarTab,
   onOpenCheckout,
   onProgress,
   onLessonComplete,
@@ -45,7 +49,20 @@ export function LessonPlayer({
   onAddNoteAtTimestamp,
   onDurationChange,
 }: LessonPlayerProps) {
-  const [isMiniPlayer, setIsMiniPlayer] = useState(false)
+  const isMiniPlayer = useCourseMiniPlayerStore(
+    (s) => s.isOpen && s.lesson?.id === lesson.id && s.courseId === (courseId || '')
+  )
+
+  useEffect(() => {
+    const handleNext = () => onNextLesson?.()
+    const handlePrev = () => onPrevLesson?.()
+    window.addEventListener('lingosphere:course-next-lesson', handleNext)
+    window.addEventListener('lingosphere:course-prev-lesson', handlePrev)
+    return () => {
+      window.removeEventListener('lingosphere:course-next-lesson', handleNext)
+      window.removeEventListener('lingosphere:course-prev-lesson', handlePrev)
+    }
+  }, [onNextLesson, onPrevLesson])
   const {
     containerRef,
     videoRef,
@@ -122,7 +139,21 @@ export function LessonPlayer({
           </p>
           <button
             type="button"
-            onClick={() => setIsMiniPlayer(false)}
+            onClick={() => {
+              const currentMiniTime = courseMiniPlayerStore.getState().currentTime
+              const wasPlaying = courseMiniPlayerStore.getState().isPlaying
+              courseMiniPlayerStore.getState().closeMiniPlayer()
+              seekToTime(currentMiniTime)
+              if (wasPlaying) {
+                videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {})
+              } else {
+                videoRef.current?.pause()
+                setIsPlaying(false)
+              }
+              if (typeof window !== 'undefined') {
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }
+            }}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover shadow-lg cursor-pointer transition-all active:scale-95"
           >
             <Maximize2 size={14} />
@@ -278,7 +309,38 @@ export function LessonPlayer({
           onToggleTheater={() => setIsTheater(!isTheater)}
           onToggleFullscreen={toggleFullscreen}
           onTogglePip={togglePip}
-          onToggleMiniPlayer={() => setIsMiniPlayer(true)}
+          onToggleMiniPlayer={() => {
+            if (isMiniPlayer) {
+              const currentMiniTime = courseMiniPlayerStore.getState().currentTime
+              const wasPlaying = courseMiniPlayerStore.getState().isPlaying
+              courseMiniPlayerStore.getState().closeMiniPlayer()
+              seekToTime(currentMiniTime)
+              if (wasPlaying) {
+                videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {})
+              } else {
+                videoRef.current?.pause()
+                setIsPlaying(false)
+              }
+            } else {
+              const wasPlaying = Boolean(videoRef.current && !videoRef.current.paused && isPlaying)
+              videoRef.current?.pause()
+              setIsPlaying(false)
+              courseMiniPlayerStore.getState().openMiniPlayer({
+                lesson,
+                courseId: courseId || '',
+                courseTitle: courseTitle || '',
+                courseThumbnail: courseThumbnail || '',
+                effectiveVideoUrl: effectiveVideoUrl || '',
+                currentTime,
+                duration,
+                isPlaying: wasPlaying,
+                volume,
+                isMuted,
+                hasNextLesson,
+                hasPrevLesson,
+              })
+            }
+          }}
           onNextLesson={onNextLesson}
           onPrevLesson={onPrevLesson}
           onOpenShortcutsModal={() => setShowShortcutsModal(true)}
@@ -292,29 +354,6 @@ export function LessonPlayer({
         onClose={() => setShowShortcutsModal(false)}
       />
     </div>
-
-    {isMiniPlayer && (
-      <CourseMiniPlayer
-        lesson={lesson}
-        courseTitle={courseTitle}
-        courseThumbnail={courseThumbnail}
-        isPlaying={isPlaying}
-        currentTime={currentTime}
-        duration={duration}
-        volume={volume}
-        isMuted={isMuted}
-        hasNextLesson={hasNextLesson}
-        hasPrevLesson={hasPrevLesson}
-        onTogglePlay={togglePlay}
-        onToggleMute={toggleMute}
-        onVolumeChange={handleVolumeChange}
-        onSeek={(val) => seekToTime(val)}
-        onNextLesson={onNextLesson}
-        onPrevLesson={onPrevLesson}
-        onMaximize={() => setIsMiniPlayer(false)}
-        onClose={() => setIsMiniPlayer(false)}
-      />
-    )}
   </>
   )
 }

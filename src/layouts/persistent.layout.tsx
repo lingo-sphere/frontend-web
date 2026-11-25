@@ -10,6 +10,7 @@ import { useApp } from '@/contexts/app.context'
 import { FloatingActionsDock } from '@/components/floating.actions.dock'
 import { ScrollToTopButton } from '@/components/scroll.to.top.button'
 import { GlobalRouteGuard } from '@/components/auth/global.route.guard'
+import { GlobalCourseMiniPlayer } from '@/features/courses/components/global.course.mini.player'
 
 function PersistentLayoutContent({ children }: { children: ReactNode }) {
   const pathname = usePathname() || '/'
@@ -59,6 +60,7 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
           <FloatingActionsDock readingMode={readingGrammar} />
         </div>
       )}
+      <GlobalCourseMiniPlayer />
     </>
   )
 }

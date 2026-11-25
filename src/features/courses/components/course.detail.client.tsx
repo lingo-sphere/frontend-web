@@ -25,6 +25,7 @@ import { CourseScheduleModal } from '@/features/courses/components/course.schedu
 import { CourseLandingView } from '@/features/courses/components/course.landing.view'
 import { CourseLandingLoadingState } from '@/features/courses/components/course.landing.loading.state'
 import { courseService } from '@/features/courses/services/course.service'
+import { courseMiniPlayerStore } from '@/features/courses/store/course.mini.player.store'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
 import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
 import type { Chapter, Lesson } from '@/features/courses/types/course'
@@ -129,16 +130,8 @@ export function CourseDetailClient({
   )
 
   const handleBack = () => {
-    if (
-      typeof window !== 'undefined' &&
-      window.history.state &&
-      typeof window.history.state.idx === 'number' &&
-      window.history.state.idx > 0
-    ) {
-      navigate(-1)
-    } else {
-      navigate('/courses')
-    }
+    courseMiniPlayerStore.getState().setIsPlaying(false)
+    navigate(isEnrolled ? '/courses?tab=my-courses' : '/courses')
   }
 
   const handleInitiateEnrollOrBuy = () => {
@@ -291,6 +284,8 @@ export function CourseDetailClient({
                 courseTitle={course.title}
                 courseThumbnail={course.thumbnail}
                 isTrial={!isEnrolled}
+                activeTab={activeBottomTab}
+                activeSidebarTab={activeSidebarTab}
                 onOpenCheckout={handleInitiateEnrollOrBuy}
                 onProgress={handleLessonProgress}
                 onTimeUpdate={(t) => setPlayerCurrentTime(t)}
