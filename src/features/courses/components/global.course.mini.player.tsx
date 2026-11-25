@@ -1,4 +1,4 @@
-// Trinh phat bai giang thu nho toan cuc luu trang thai khi quay lai danh sach khoa hoc.
+// Trình phát bài giảng thu nhỏ toàn cục lưu trạng thái khi chuyển trang hoặc quay lại.
 'use client'
 
 import { useEffect, useRef, useMemo, useCallback } from 'react'
@@ -11,6 +11,8 @@ import { resolveMediaUrl } from '@/utils/media.utils'
 export function GlobalCourseMiniPlayer() {
   const router = useRouter()
   const videoRef = useRef<HTMLVideoElement | null>(null)
+  const currentUrlRef = useRef<string>('')
+  const pendingSeekRef = useRef<number>(0)
 
   const {
     isOpen,
@@ -51,11 +53,13 @@ export function GlobalCourseMiniPlayer() {
   useEffect(() => {
     const video = videoRef.current
     if (!video || !resolvedUrl || !isDirect) return
-    if (video.src !== resolvedUrl) {
+    if (currentUrlRef.current !== resolvedUrl) {
+      currentUrlRef.current = resolvedUrl
+      pendingSeekRef.current = currentTime
       video.src = resolvedUrl
-      video.currentTime = currentTime
+      video.load()
     }
-  }, [resolvedUrl, isDirect, currentTime])
+  }, [resolvedUrl, isDirect])
 
   useEffect(() => {
     const video = videoRef.current
@@ -83,15 +87,52 @@ export function GlobalCourseMiniPlayer() {
       video.pause()
       setIsPlaying(false)
     }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lingosphere:toggle-play'))
+    }
   }, [setIsPlaying])
 
   const handleSeek = useCallback((time: number) => {
-    const video = videoRef.current
-    if (!video) return
     const target = Math.max(0, Math.min(duration || 1000, time))
-    video.currentTime = target
     setCurrentTime(target)
+    const video = videoRef.current
+    if (video) {
+      if (video.readyState >= 1) {
+        video.currentTime = target
+      } else {
+        pendingSeekRef.current = target
+      }
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lingosphere:seek-video', { detail: { time: target } }))
+    }
   }, [duration, setCurrentTime])
+
+  const handleVolumeChange = useCallback((newVol: number) => {
+    const clamped = Math.max(0, Math.min(1, newVol))
+    setVolume(clamped)
+    setIsMuted(clamped === 0)
+    const video = videoRef.current
+    if (video) {
+      video.volume = clamped
+      video.muted = clamped === 0
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lingosphere:set-volume', { detail: { volume: clamped } }))
+    }
+  }, [setVolume, setIsMuted])
+
+  const handleToggleMute = useCallback(() => {
+    const nextMuted = !isMuted
+    setIsMuted(nextMuted)
+    const video = videoRef.current
+    if (video) {
+      video.muted = nextMuted
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lingosphere:set-volume', { detail: { volume: nextMuted ? 0 : volume || 1 } }))
+    }
+  }, [isMuted, volume, setIsMuted])
 
   const handleMaximize = useCallback(() => {
     if (!lesson || !courseId) return
@@ -124,14 +165,26 @@ export function GlobalCourseMiniPlayer() {
           ref={videoRef}
           playsInline
           className="absolute -top-[9999px] -left-[9999px] w-1 h-1 opacity-0 pointer-events-none"
-          onTimeUpdate={() => {
-            if (videoRef.current) {
-              setCurrentTime(videoRef.current.currentTime)
+          onLoadedMetadata={() => {
+            const video = videoRef.current
+            if (video?.duration && !isNaN(video.duration)) {
+              setDuration(video.duration)
+            }
+            if (pendingSeekRef.current > 0 && video) {
+              video.currentTime = pendingSeekRef.current
+              pendingSeekRef.current = 0
             }
           }}
-          onDurationChange={() => {
-            if (videoRef.current?.duration) {
-              setDuration(videoRef.current.duration)
+          onCanPlay={() => {
+            const video = videoRef.current
+            if (pendingSeekRef.current > 0 && video) {
+              video.currentTime = pendingSeekRef.current
+              pendingSeekRef.current = 0
+            }
+          }}
+          onTimeUpdate={() => {
+            if (videoRef.current && !videoRef.current.seeking) {
+              setCurrentTime(videoRef.current.currentTime)
             }
           }}
           onPlay={() => setIsPlaying(true)}
@@ -151,12 +204,8 @@ export function GlobalCourseMiniPlayer() {
         hasNextLesson={hasNextLesson}
         hasPrevLesson={hasPrevLesson}
         onTogglePlay={handleTogglePlay}
-        onToggleMute={() => {
-          setIsMuted(!isMuted)
-        }}
-        onVolumeChange={(val) => {
-          setVolume(val)
-        }}
+        onToggleMute={handleToggleMute}
+        onVolumeChange={handleVolumeChange}
         onSeek={handleSeek}
         onNextLesson={handleNextLesson}
         onPrevLesson={handlePrevLesson}

@@ -265,7 +265,16 @@ export function ElasticSlider({
     track.style.width = s.vertical ? `${thick.toFixed(2)}px` : ''
     track.style.height = s.vertical ? '' : `${thick.toFixed(2)}px`
     track.style.setProperty('--elastic-slider-reveal', clamp((thick - 14) / 10, 0, 1).toFixed(3))
-    const length = Math.max(1, m.length)
+    let length = m.length
+    if (length <= 1 && hitRef.current) {
+      const rect = hitRef.current.getBoundingClientRect()
+      const rectLen = s.vertical ? rect.height : rect.width
+      if (rectLen > 1) {
+        length = rectLen
+        m.length = rectLen
+      }
+    }
+    length = Math.max(1, length)
     const along = 1 + m.s / length
     const across = 1 - 0.22 * clamp(m.s / Math.max(1, s.maxStretch), -1, 1)
     const atEnd = m.side > 0
@@ -449,7 +458,13 @@ export function ElasticSlider({
     const hit = hitRef.current
     if (!hit) return undefined
     const measure = () => {
-      motion.current.length = settingsRef.current.vertical ? hit.clientHeight : hit.clientWidth
+      const rect = hit.getBoundingClientRect()
+      const rectLen = settingsRef.current.vertical ? rect.height : rect.width
+      const clientLen = settingsRef.current.vertical ? hit.clientHeight : hit.clientWidth
+      const finalLen = Math.max(rectLen, clientLen)
+      if (finalLen > 0) {
+        motion.current.length = finalLen
+      }
       paint()
     }
     measure()
@@ -499,10 +514,19 @@ export function ElasticSlider({
     return () => cancelAnimationFrame(m.raf)
   }, [])
 
-  const along = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const getMetrics = (event: ReactPointerEvent<HTMLDivElement>) => {
     const rect = hitRef.current?.getBoundingClientRect()
-    if (!rect) return 0
-    return settingsRef.current.vertical ? rect.bottom - event.clientY : event.clientX - rect.left
+    if (!rect) {
+      return { pos: 0, len: Math.max(1, motion.current.length) }
+    }
+    const len = Math.max(1, settingsRef.current.vertical ? rect.height : rect.width)
+    motion.current.length = len
+    const pos = settingsRef.current.vertical ? rect.bottom - event.clientY : event.clientX - rect.left
+    return { pos, len }
+  }
+
+  const along = (event: ReactPointerEvent<HTMLDivElement>) => {
+    return getMetrics(event).pos
   }
 
   const follow = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -510,10 +534,9 @@ export function ElasticSlider({
     if (!d) return
     const m = motion.current
     const s = settingsRef.current
-    const length = Math.max(1, m.length)
-    const position = along(event)
-    const fraction = d.from === null ? position / length : d.from + (position - d.origin) / length
-    const over = fraction < 0 ? -fraction * length : fraction > 1 ? (fraction - 1) * length : 0
+    const { pos, len } = getMetrics(event)
+    const fraction = d.from === null ? pos / len : d.from + (pos - d.origin) / len
+    const over = fraction < 0 ? -fraction * len : fraction > 1 ? (fraction - 1) * len : 0
     if (over > 0 && s.maxStretch > 0) {
       const side = fraction < 0 ? -1 : 1
       if (!m.held || m.side !== side) pulse(side)
@@ -533,15 +556,18 @@ export function ElasticSlider({
     hit.setPointerCapture(event.pointerId)
     const m = motion.current
     const s = settingsRef.current
+    const { pos, len } = getMetrics(event)
     drag.current = {
       id: event.pointerId,
-      origin: along(event),
+      origin: pos,
       from: s.jumpToClick ? null : m.target,
     }
     m.dragging = true
     hit.setAttribute('data-dragging', '')
     refreshGoal()
-    if (s.jumpToClick) commit(snap(s.lo + clamp(along(event) / Math.max(1, m.length), 0, 1) * s.span))
+    if (s.jumpToClick) {
+      commit(snap(s.lo + clamp(pos / len, 0, 1) * s.span))
+    }
   }
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -623,10 +649,12 @@ export function ElasticSlider({
     ) : null
   const thumbSize = clamp(activeThickness + 6, 16, 28)
 
+  const rootBase = className && className.includes('w-') ? ROOT.replace(/\bw-48\b/, '') : ROOT
+
   return (
     <div
       ref={rootRef}
-      className={[ROOT, className].filter(Boolean).join(' ')}
+      className={[rootBase, className].filter(Boolean).join(' ')}
       style={
         {
           '--elastic-slider-track': trackColor,
@@ -661,7 +689,7 @@ export function ElasticSlider({
         </span>
       )}
       <div className={BODY} ref={bodyRef}>
-        {!inside && leftIcon && (
+        {!inside && leftIcon != null && (
           <span className={ICON} ref={startIconRef} aria-hidden="true">
             <span className={ICON_INNER}>{leftIcon}</span>
           </span>
@@ -708,7 +736,7 @@ export function ElasticSlider({
             </span>
           )}
         </div>
-        {!inside && rightIcon && (
+        {!inside && rightIcon != null && (
           <span className={ICON} ref={endIconRef} aria-hidden="true">
             <span className={ICON_INNER}>{rightIcon}</span>
           </span>

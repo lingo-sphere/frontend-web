@@ -9,8 +9,6 @@ import {
   SkipForward,
   Maximize2,
   X,
-  Volume2,
-  VolumeX,
 } from 'lucide-react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { VolumeHighIcon, VolumeLowIcon } from '@hugeicons/core-free-icons'
@@ -68,14 +66,30 @@ export function CourseMiniPlayer({
 
   const remaining = Math.max(0, duration - currentTime)
 
+  const handlePrev = () => {
+    if (hasPrevLesson && onPrevLesson) {
+      onPrevLesson()
+    } else {
+      onSeek(Math.max(0, currentTime - 10))
+    }
+  }
+
+  const handleNext = () => {
+    if (hasNextLesson && onNextLesson) {
+      onNextLesson()
+    } else {
+      onSeek(Math.min(duration || 1000, currentTime + 10))
+    }
+  }
+
   return (
     <div
       role="region"
       aria-label="Mini course audio player"
-      className="fixed bottom-6 right-6 z-50 w-[420px] max-w-[calc(100vw-2rem)] rounded-3xl bg-[#14121a]/95 text-white p-4 sm:p-5 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-2xl select-none animate-in fade-in slide-in-from-bottom-8 duration-300 transition-all font-sans"
+      className="fixed bottom-6 right-6 z-50 w-[470px] max-w-[calc(100vw-2rem)] rounded-[28px] bg-[#14121c]/95 text-white p-5 border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.75)] backdrop-blur-2xl select-none animate-in fade-in slide-in-from-bottom-8 duration-300 transition-all font-sans"
     >
-      <div className="flex items-stretch gap-3.5">
-        <div className="relative w-20 h-20 sm:w-22 sm:h-22 rounded-2xl overflow-hidden shrink-0 shadow-lg border border-white/10 bg-black/60">
+      <div className="flex items-stretch gap-4">
+        <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden shrink-0 shadow-lg border border-white/10 bg-black/60">
           <img
             src={thumbnail}
             alt={lesson.title}
@@ -85,20 +99,20 @@ export function CourseMiniPlayer({
             }}
           />
           {isPlaying && (
-            <div className="absolute bottom-1 right-1 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-black/80 backdrop-blur-xs text-[9px] font-bold text-emerald-400 border border-emerald-500/40">
+            <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-black/80 backdrop-blur-xs text-[9px] font-bold text-emerald-400 border border-emerald-500/40">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               <span>LIVE</span>
             </div>
           )}
         </div>
 
-        <div className="flex-1 min-w-0 flex flex-col justify-between">
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 pr-2">
-              <h4 className="text-sm font-bold text-white truncate leading-snug">
+              <h4 className="text-base font-bold text-white truncate leading-snug tracking-tight">
                 {lesson.title}
               </h4>
-              <p className="text-[11px] text-white/60 truncate mt-0.5 font-medium">
+              <p className="text-xs text-neutral-400 truncate mt-0.5 font-normal">
                 {courseTitle}
               </p>
             </div>
@@ -107,7 +121,7 @@ export function CourseMiniPlayer({
               <button
                 type="button"
                 onClick={onMaximize}
-                className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title="Phóng to trình phát"
               >
                 <Maximize2 size={15} />
@@ -115,7 +129,7 @@ export function CourseMiniPlayer({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title="Đóng mini player"
               >
                 <X size={15} />
@@ -123,90 +137,112 @@ export function CourseMiniPlayer({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full my-1.5">
-            <span className="text-[10px] font-mono text-white/60 w-8 shrink-0 text-left tabular-nums">
-              {formatTime(currentTime)}
-            </span>
-            <div className="flex-1 min-w-0">
-              <ElasticSlider
-                value={currentTime}
-                defaultValue={0}
-                maxValue={duration || 100}
-                startingValue={0}
-                onChange={(val) => onSeek(val)}
-                formatValue={(val) => formatTime(val)}
-                valuePosition="none"
-                thickness={4}
-                activeThickness={8}
-                radius={20}
-                trackColor="rgba(255,255,255,0.2)"
-                rangeColor="#ffffff"
-                growOnHover
-                wheel={false}
-                className="w-full"
-              />
+          <div className="w-full my-1">
+            <ElasticSlider
+              value={currentTime}
+              defaultValue={0}
+              maxValue={duration > 0 ? duration : 100}
+              startingValue={0}
+              leftIcon={null}
+              rightIcon={null}
+              onChange={(val) => onSeek(val)}
+              formatValue={(val) => formatTime(val)}
+              valuePosition="none"
+              thickness={4.5}
+              activeThickness={8}
+              radius={999}
+              trackColor="rgba(255,255,255,0.18)"
+              rangeColor="#ffffff"
+              thumb={false}
+              growOnHover
+              wheel={false}
+              jumpToClick
+              className="w-full"
+            />
+            <div className="flex items-center justify-between text-[11px] text-neutral-400 font-mono tabular-nums mt-1 px-0.5">
+              <span>{formatTime(currentTime)}</span>
+              <span>{duration > 0 ? `-${formatTime(remaining)}` : '0:00'}</span>
             </div>
-            <span className="text-[10px] font-mono text-white/60 w-9 shrink-0 text-right tabular-nums">
-              {duration > 0 ? `-${formatTime(remaining)}` : '0:00'}
-            </span>
           </div>
 
           <div className="flex items-center justify-between gap-2 pt-0.5">
-            <div className="flex items-center gap-1">
-              {hasPrevLesson && (
-                <button
-                  type="button"
-                  onClick={onPrevLesson}
-                  className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Bài trước"
-                >
-                  <SkipBack size={16} />
-                </button>
-              )}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handlePrev}
+                className="p-1.5 rounded-lg text-neutral-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer active:scale-95"
+                title="Bài trước / Lùi 10 giây"
+              >
+                <SkipBack size={18} strokeWidth={2} />
+              </button>
 
               <button
                 type="button"
                 onClick={onTogglePlay}
-                className="h-9 w-11 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95 text-white"
+                className="h-11 w-13 rounded-2xl bg-[#282438] hover:bg-[#342f47] border border-white/10 flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95 text-white"
                 title={isPlaying ? 'Tạm dừng' : 'Phát bài học'}
               >
                 {isPlaying ? (
-                  <Pause size={18} className="fill-white" />
+                  <Pause size={19} className="fill-white text-white" strokeWidth={2.5} />
                 ) : (
-                  <Play size={18} className="fill-white ml-0.5" />
+                  <Play size={19} className="fill-white text-white ml-0.5" strokeWidth={2.5} />
                 )}
               </button>
 
-              {hasNextLesson && (
-                <button
-                  type="button"
-                  onClick={onNextLesson}
-                  className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  title="Bài tiếp theo"
-                >
-                  <SkipForward size={16} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={onToggleMute}
-                className="p-1 text-white/70 hover:text-white transition-colors cursor-pointer"
-                title={isMuted ? 'Bật âm thanh' : 'Tắt tiếng'}
+                onClick={handleNext}
+                className="p-1.5 rounded-lg text-neutral-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer active:scale-95"
+                title="Bài tiếp theo / Tiến 10 giây"
               >
-                {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                <SkipForward size={18} strokeWidth={2} />
               </button>
+            </div>
+
+            <div className="flex items-center">
               <ElasticSlider
                 value={isMuted ? 0 : Math.round(volume * 100)}
                 defaultValue={100}
                 maxValue={100}
                 startingValue={0}
-                leftIcon={<HugeiconsIcon icon={VolumeLowIcon} size={15} strokeWidth={2} />}
-                rightIcon={<HugeiconsIcon icon={VolumeHighIcon} size={15} strokeWidth={2} />}
+                leftIcon={
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onToggleMute()
+                    }}
+                    className="grid place-items-center cursor-pointer text-neutral-400 hover:text-white transition-colors"
+                    title={isMuted ? 'Bật âm thanh' : 'Tắt tiếng'}
+                  >
+                    <HugeiconsIcon
+                      icon={VolumeLowIcon}
+                      size={16}
+                      strokeWidth={1.75}
+                      className={isMuted ? 'opacity-30' : 'opacity-80'}
+                    />
+                  </button>
+                }
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onVolumeChange(1)
+                    }}
+                    className="grid place-items-center cursor-pointer text-neutral-400 hover:text-white transition-colors"
+                    title="Âm lượng tối đa"
+                  >
+                    <HugeiconsIcon
+                      icon={VolumeHighIcon}
+                      size={16}
+                      strokeWidth={1.75}
+                      className={isMuted ? 'opacity-30' : 'opacity-80'}
+                    />
+                  </button>
+                }
                 onChange={(val) => onVolumeChange(val / 100)}
-                maxStretch={24}
+                maxStretch={20}
                 bounce={0.5}
                 growOnHover
                 wheel={false}
@@ -215,11 +251,12 @@ export function CourseMiniPlayer({
                 valuePosition="none"
                 thickness={3.5}
                 activeThickness={7}
-                radius={20}
-                trackColor="rgba(255,255,255,0.22)"
+                radius={999}
+                trackColor="rgba(255,255,255,0.18)"
                 rangeColor="#ffffff"
                 iconColor="rgba(255,255,255,0.7)"
                 thumbColor="#ffffff"
+                jumpToClick
                 className="w-24 sm:w-28"
               />
             </div>
