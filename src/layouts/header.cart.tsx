@@ -3,8 +3,10 @@
 
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Trash2 } from 'lucide-react'
 import { useNavigate } from '@/lib/navigation'
-import { useCartQuery } from '@/features/cart/hooks/use.cart.query'
+import { useCart } from '@/features/cart/hooks/use.cart.query'
+import { toast } from '@/store/toast.store'
 import { formatCurrency } from '@/lib/format'
 import { resolveMediaUrl } from '@/utils/media.utils'
 import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
@@ -18,15 +20,9 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
   const { i18n } = useTranslation()
   const isVi = i18n.language === 'vi'
   const navigate = useNavigate()
-  const { data: cart } = useCartQuery()
+  const { items, totalAmount, removeFromCart } = useCart()
 
   usePreventScrollChain(containerRef, isOpen)
-
-  const items = cart?.items || []
-  const totalAmount = items.reduce(
-    (acc, it) => acc + (it.discount_price && it.discount_price > 0 ? it.discount_price : it.price || 0),
-    0
-  )
 
   return (
     <div
@@ -63,7 +59,7 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
                 <div
                   key={item.course_id}
                   onClick={() => navigate('/cart')}
-                  className="flex items-start gap-3 p-3 hover:bg-surface-subtle transition-colors cursor-pointer group"
+                  className="relative flex items-start gap-3 p-3 hover:bg-surface-subtle transition-colors cursor-pointer group"
                 >
                   <img
                     src={
@@ -73,7 +69,7 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
                     alt={item.title}
                     className="h-12 w-12 rounded-xl object-cover shrink-0 border border-border/60"
                   />
-                  <div className="flex-1 space-y-1 min-w-0">
+                  <div className="flex-1 space-y-1 min-w-0 pr-6">
                     <h4 className="text-xs font-bold text-text-primary line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                       {item.title}
                     </h4>
@@ -81,6 +77,31 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
                       {formatCurrency(itemPrice)}
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    title={isVi ? 'Xóa khỏi giỏ hàng' : 'Remove from cart'}
+                    onClick={async (e) => {
+                      e.stopPropagation()
+                      try {
+                        await removeFromCart(item.course_id)
+                        toast.info(
+                          isVi ? 'Đã xóa khóa học khỏi giỏ hàng' : 'Removed course from cart',
+                          isVi ? 'Giỏ hàng' : 'Cart'
+                        )
+                      } catch (err: unknown) {
+                        const msg =
+                          err instanceof Error
+                            ? err.message
+                            : isVi
+                            ? 'Không thể xóa khỏi giỏ hàng'
+                            : 'Failed to remove from cart'
+                        toast.error(msg, isVi ? 'Lỗi' : 'Error')
+                      }
+                    }}
+                    className="opacity-70 group-hover:opacity-100 transition-all p-1.5 rounded-lg text-text-tertiary hover:text-red-500 hover:bg-red-500/10 cursor-pointer absolute top-2.5 right-2.5"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               )
             })}

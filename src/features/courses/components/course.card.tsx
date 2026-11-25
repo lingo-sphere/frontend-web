@@ -18,6 +18,7 @@ import {
   Users,
   Gem,
   Flame,
+  ShoppingCart,
 } from 'lucide-react'
 import type { CourseCardData } from '@/features/courses/types/course'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -485,12 +486,18 @@ export function CourseCard({
               type="button"
               onClick={handleAddToCart}
               disabled={isAdding}
-              className="rounded-xl border border-[#5b4df2] text-[#5b4df2] hover:bg-[#5b4df2] hover:text-white dark:border-[#7562fa] dark:text-[#8b7eff] dark:hover:bg-[#5b4df2] dark:hover:text-white px-4 py-1.5 text-xs font-bold transition-all flex items-center gap-1 shadow-2xs whitespace-nowrap flex-shrink-0 cursor-pointer active:scale-95"
+              className="rounded-xl border border-[#5b4df2] bg-[#5b4df2]/5 text-[#5b4df2] hover:bg-[#5b4df2] hover:text-white dark:border-[#7562fa] dark:bg-[#5b4df2]/15 dark:text-[#8b7eff] dark:hover:bg-[#5b4df2] dark:hover:text-white px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs whitespace-nowrap flex-shrink-0 cursor-pointer active:scale-95"
             >
               {isAdding ? (
-                <Loader2 size={12} className="animate-spin flex-shrink-0" />
+                <>
+                  <Loader2 size={12} className="animate-spin flex-shrink-0" />
+                  <span>{isVi ? 'Đang thêm...' : 'Adding...'}</span>
+                </>
               ) : (
-                <span>{isVi ? 'Xem' : 'View'}</span>
+                <>
+                  <ShoppingCart size={12} className="flex-shrink-0" />
+                  <span>{isVi ? 'Thêm giỏ hàng' : 'Add to cart'}</span>
+                </>
               )}
             </button>
           )}
