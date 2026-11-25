@@ -21,6 +21,7 @@ export interface CheckoutCourseItem {
 interface UseCourseCheckoutOptions {
   open: boolean
   courses: CheckoutCourseItem[]
+  voucherCode?: string
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
   isVi: boolean
@@ -29,6 +30,7 @@ interface UseCourseCheckoutOptions {
 export function useCourseCheckout({
   open,
   courses,
+  voucherCode,
   onOpenChange,
   onSuccess,
   isVi,
@@ -166,15 +168,14 @@ export function useCourseCheckout({
       setErrorMessage(null)
 
       try {
-        const key = `${user.user_id}:${checkoutKey}`
+        const key = `${user.user_id}:${checkoutKey}:${voucherCode || 'none'}`
         if (initializationRef.current?.key !== key) {
-          // Reuse the pending operation during Strict Mode effect replay.
-          // The enrollment endpoint verifies the actual server-side price.
           const promise = totalAmount <= 0
             ? Promise.all(selection.map(course => courseService.enrollCourse(course.id))).then(() => null)
             : subscriptionService.createPaymentOrder({
                 plan_slug: 'course', amount: totalAmount, order_type: 'COURSE',
                 course_ids: selection.map(course => course.id), billing_cycle: 'ONCE',
+                voucher_code: voucherCode,
               })
           initializationRef.current = { key, promise }
         }
@@ -215,6 +216,7 @@ export function useCourseCheckout({
     open,
     checkoutKey,
     totalAmount,
+    voucherCode,
     isAuthenticated,
     user,
     isVi,

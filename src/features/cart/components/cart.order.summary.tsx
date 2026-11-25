@@ -1,20 +1,22 @@
-// Component hiển thị khung tóm tắt đơn hàng, mã giảm giá và nút tiến hành thanh toán VietQR
+// Component hiển thị khung tóm tắt đơn hàng, thẻ ưu đãi giảm giá và nút tiến hành thanh toán VietQR
 'use client'
 
-import { QrCode, Tag, Check, ArrowRight, Lock } from 'lucide-react'
+import { QrCode, Tag, Check, ArrowRight, Lock, Gift, Trash2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
+import type { UserVoucher } from '@/features/vouchers/types/voucher'
 
 interface CartOrderSummaryProps {
   originalTotal: number
   finalTotal: number
   savings: number
-  appliedPromo: string | null
-  promoCode: string
+  appliedVoucher: UserVoucher | null
+  voucherCodeInput: string
   itemCount: number
   isVi: boolean
-  onPromoCodeChange: (code: string) => void
-  onApplyPromo: (e: React.FormEvent) => void
-  onQuickApplyPromo: (code: string) => void
+  onVoucherCodeChange: (code: string) => void
+  onApplyVoucherCode: (e: React.FormEvent) => void
+  onRemoveVoucher: () => void
+  onOpenVoucherModal: () => void
   onCheckout: () => void
 }
 
@@ -22,17 +24,21 @@ export function CartOrderSummary({
   originalTotal,
   finalTotal,
   savings,
-  appliedPromo,
-  promoCode,
+  appliedVoucher,
+  voucherCodeInput,
   itemCount,
   isVi,
-  onPromoCodeChange,
-  onApplyPromo,
-  onQuickApplyPromo,
+  onVoucherCodeChange,
+  onApplyVoucherCode,
+  onRemoveVoucher,
+  onOpenVoucherModal,
   onCheckout,
 }: CartOrderSummaryProps) {
-  const effectiveTotal = appliedPromo ? Math.round(finalTotal * 0.5) : finalTotal
-  const totalSavings = (originalTotal - effectiveTotal) > 0 ? originalTotal - effectiveTotal : 0
+  const voucherDiscount = appliedVoucher
+    ? Math.round(finalTotal * (appliedVoucher.discount_percent / 100))
+    : 0
+  const effectiveTotal = Math.max(0, finalTotal - voucherDiscount)
+  const totalSavings = Math.max(0, originalTotal - effectiveTotal)
 
   return (
     <div className="space-y-4">
@@ -60,13 +66,17 @@ export function CartOrderSummary({
             </div>
           )}
 
-          {appliedPromo && (
+          {appliedVoucher && (
             <div className="flex items-center justify-between text-purple-600 dark:text-purple-400 font-semibold">
               <span className="flex items-center gap-1">
                 <Tag size={12} />
-                <span>{isVi ? `Mã ${appliedPromo} (-50%):` : `Code ${appliedPromo} (-50%):`}</span>
+                <span>
+                  {isVi
+                    ? `Thẻ ${appliedVoucher.code} (-${appliedVoucher.discount_percent}%):`
+                    : `Voucher ${appliedVoucher.code} (-${appliedVoucher.discount_percent}%):`}
+                </span>
               </span>
-              <span>-{formatCurrency(Math.round(finalTotal * 0.5))}</span>
+              <span>-{formatCurrency(voucherDiscount)}</span>
             </div>
           )}
 
@@ -93,55 +103,78 @@ export function CartOrderSummary({
         </div>
 
         <div className="space-y-3 pt-2 border-t border-border">
-          <form onSubmit={onApplyPromo} className="space-y-2">
-            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
-              <span className="flex items-center gap-1">
-                <Tag size={12} />
-                <span>{isVi ? 'Mã ưu đãi (Coupon code)' : 'Promo Code'}</span>
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-text-tertiary">
+            <span className="flex items-center gap-1">
+              <Tag size={12} />
+              <span>{isVi ? 'Thẻ ưu đãi học tập (Voucher)' : 'Learning Voucher'}</span>
+            </span>
+            {appliedVoucher && (
+              <span className="text-emerald-600 dark:text-emerald-400 lowercase font-medium flex items-center gap-1">
+                <Check size={12} />
+                <span>{isVi ? 'Đã áp dụng' : 'Applied'}</span>
               </span>
-              {appliedPromo && (
-                <span className="text-emerald-600 dark:text-emerald-400 lowercase font-medium flex items-center gap-1">
-                  <Check size={12} />
-                  <span>{isVi ? 'Đã áp dụng' : 'Applied'}</span>
-                </span>
-              )}
-            </div>
+            )}
+          </div>
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="LINGO50"
-                value={promoCode}
-                onChange={(e) => onPromoCodeChange(e.target.value)}
-                className="flex-1 rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-text-primary placeholder:text-text-tertiary focus:border-purple-600 focus:outline-none uppercase font-mono font-bold"
-              />
-              <button
-                type="submit"
-                className="rounded-xl bg-surface-hover hover:bg-purple-600 hover:text-white border border-border px-4 py-2.5 text-xs font-bold text-text-primary transition-colors cursor-pointer"
-              >
-                {isVi ? 'Áp dụng' : 'Apply'}
-              </button>
-            </div>
-          </form>
-
-          {!appliedPromo && (
-            <div
-              onClick={() => onQuickApplyPromo('LINGO50')}
-              className="group p-2.5 rounded-xl border border-dashed border-purple-300 dark:border-purple-800/60 bg-purple-500/5 hover:bg-purple-500/10 cursor-pointer transition-colors flex items-center justify-between text-xs"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-base">🔥</span>
+          {appliedVoucher ? (
+            <div className="p-3 rounded-2xl border border-purple-500/30 bg-purple-500/10 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
+                  <Tag size={14} />
+                </div>
                 <div className="min-w-0">
-                  <span className="font-extrabold text-purple-600 dark:text-purple-400">LINGO50</span>
-                  <span className="text-text-secondary text-[11px] ml-1.5 font-medium">
-                    {isVi ? 'Giảm ngay 50%' : 'Save 50% instantly'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-extrabold text-xs text-purple-600 dark:text-purple-400">
+                      {appliedVoucher.code}
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-purple-600 text-white">
+                      -{appliedVoucher.discount_percent}%
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-text-secondary truncate">{appliedVoucher.title}</p>
                 </div>
               </div>
-              <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
-                {isVi ? 'Áp dụng' : 'Apply'}
-                <ArrowRight size={12} />
-              </span>
+              <button
+                type="button"
+                onClick={onRemoveVoucher}
+                className="text-xs font-semibold text-rose-500 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors cursor-pointer"
+                title={isVi ? 'Gỡ bỏ mã' : 'Remove voucher'}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={onOpenVoucherModal}
+                className="w-full p-2.5 rounded-xl border border-dashed border-purple-400 dark:border-purple-800/80 bg-purple-500/5 hover:bg-purple-500/15 cursor-pointer transition-colors flex items-center justify-between text-xs"
+              >
+                <div className="flex items-center gap-2 font-bold text-purple-600 dark:text-purple-400">
+                  <Gift size={14} />
+                  <span>{isVi ? 'Chọn từ kho thẻ ưu đãi của bạn' : 'Select from your vouchers'}</span>
+                </div>
+                <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-0.5">
+                  {isVi ? 'Xem thẻ' : 'View'}
+                  <ArrowRight size={12} />
+                </span>
+              </button>
+
+              <form onSubmit={onApplyVoucherCode} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder={isVi ? 'Nhập mã thẻ nếu có...' : 'Enter voucher code...'}
+                  value={voucherCodeInput}
+                  onChange={(e) => onVoucherCodeChange(e.target.value)}
+                  className="flex-1 rounded-xl border border-border bg-background px-3.5 py-2 text-xs text-text-primary placeholder:text-text-tertiary focus:border-purple-600 focus:outline-none uppercase font-mono font-bold"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-surface-hover hover:bg-purple-600 hover:text-white border border-border px-3.5 py-2 text-xs font-bold text-text-primary transition-colors cursor-pointer"
+                >
+                  {isVi ? 'Áp dụng' : 'Apply'}
+                </button>
+              </form>
             </div>
           )}
         </div>
@@ -161,7 +194,6 @@ export function CartOrderSummary({
             : 'Supports 24/7 bank transfer via VietQR with automated verification.'}
         </p>
       </div>
-
     </div>
   )
 }

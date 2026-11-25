@@ -16,6 +16,9 @@ import { CartTrustBanner } from '@/features/cart/components/cart.trust.banner'
 import { CartOrderSummary } from '@/features/cart/components/cart.order.summary'
 import { CartRecommendedSection } from '@/features/cart/components/cart.recommended.section'
 import { resolveMediaUrl } from '@/utils/media.utils'
+import { VoucherSelectorModal } from '@/features/vouchers/components/voucher.selector.modal'
+import { voucherService } from '@/features/vouchers/services/voucher.service'
+import type { UserVoucher } from '@/features/vouchers/types/voucher'
 
 export default function CartPage() {
   const { i18n } = useTranslation()
@@ -23,8 +26,9 @@ export default function CartPage() {
   const navigate = useNavigate()
   const { isAuthenticated, user } = useAuthStore()
   const { cart, removeFromCart, clearCart } = useCart(isAuthenticated)
-  const [promoCode, setPromoCode] = useState('')
-  const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
+  const [voucherCodeInput, setVoucherCodeInput] = useState('')
+  const [appliedVoucher, setAppliedVoucher] = useState<UserVoucher | null>(null)
+  const [showVoucherModal, setShowVoucherModal] = useState(false)
   const [showCheckoutModal, setShowCheckoutModal] = useState(false)
   const [showPlacementPromptModal, setShowPlacementPromptModal] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -56,32 +60,49 @@ export default function CartPage() {
 
   const savings = Math.max(0, originalTotal - finalTotal)
 
-  const handleApplyPromo = (e: React.FormEvent) => {
+  const handleSelectVoucher = (voucher: UserVoucher) => {
+    setAppliedVoucher(voucher)
+    setVoucherCodeInput(voucher.code)
+    toast.success(
+      isVi
+        ? `Đã áp dụng thẻ ưu đãi ${voucher.code} (-${voucher.discount_percent}%) thành công!`
+        : `Applied voucher ${voucher.code} (-${voucher.discount_percent}%) successfully!`,
+      isVi ? 'Thẻ ưu đãi' : 'Voucher'
+    )
+  }
+
+  const handleApplyVoucherCode = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!promoCode.trim()) return
-    if (promoCode.trim().toUpperCase() === 'LINGO50') {
-      setAppliedPromo('LINGO50')
+    const trimmed = voucherCodeInput.trim().toUpperCase()
+    if (!trimmed) return
+
+    try {
+      const res = await voucherService.validateVoucher(trimmed, 'COURSE', finalTotal)
+      setAppliedVoucher(res.voucher)
       toast.success(
-        isVi ? 'Đã áp dụng mã giảm giá LINGO50 (-50%) thành công!' : 'Applied promo code LINGO50 (-50%) successfully!',
-        isVi ? 'Khuyến mãi' : 'Promo code'
+        isVi
+          ? `Đã áp dụng thẻ ưu đãi ${res.voucher.code} (-${res.voucher.discount_percent}%) thành công!`
+          : `Applied voucher ${res.voucher.code} (-${res.voucher.discount_percent}%) successfully!`,
+        isVi ? 'Thẻ ưu đãi' : 'Voucher'
       )
-    } else {
-      toast.error(
-        isVi ? 'Mã giảm giá không hợp lệ hoặc đã hết hạn.' : 'Invalid or expired promo code.',
-        isVi ? 'Khuyến mãi' : 'Promo code'
-      )
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : isVi
+            ? 'Mã ưu đãi không hợp lệ hoặc đã hết hạn.'
+            : 'Invalid or expired voucher code.'
+      toast.error(msg, isVi ? 'Thẻ ưu đãi' : 'Voucher')
     }
   }
 
-  const handleQuickApplyPromo = (code: string) => {
-    setPromoCode(code)
-    if (code.toUpperCase() === 'LINGO50') {
-      setAppliedPromo('LINGO50')
-      toast.success(
-        isVi ? 'Đã áp dụng mã giảm giá LINGO50 (-50%) thành công!' : 'Applied promo code LINGO50 (-50%) successfully!',
-        isVi ? 'Khuyến mãi' : 'Promo code'
-      )
-    }
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null)
+    setVoucherCodeInput('')
+    toast.info(
+      isVi ? 'Đã hủy áp dụng thẻ ưu đãi.' : 'Voucher removed.',
+      isVi ? 'Thẻ ưu đãi' : 'Voucher'
+    )
   }
 
   const handleCheckout = () => {
@@ -382,13 +403,14 @@ export default function CartPage() {
                 originalTotal={originalTotal}
                 finalTotal={finalTotal}
                 savings={savings}
-                appliedPromo={appliedPromo}
-                promoCode={promoCode}
+                appliedVoucher={appliedVoucher}
+                voucherCodeInput={voucherCodeInput}
                 itemCount={items.length}
                 isVi={isVi}
-                onPromoCodeChange={setPromoCode}
-                onApplyPromo={handleApplyPromo}
-                onQuickApplyPromo={handleQuickApplyPromo}
+                onVoucherCodeChange={setVoucherCodeInput}
+                onApplyVoucherCode={handleApplyVoucherCode}
+                onRemoveVoucher={handleRemoveVoucher}
+                onOpenVoucherModal={() => setShowVoucherModal(true)}
                 onCheckout={handleCheckout}
               />
             </div>
@@ -401,9 +423,21 @@ export default function CartPage() {
           open={showCheckoutModal}
           onOpenChange={setShowCheckoutModal}
           courses={checkoutCourses}
+          voucherCode={appliedVoucher?.code}
           onSuccess={() => {
             navigate('/courses')
           }}
+        />
+      )}
+
+      {showVoucherModal && (
+        <VoucherSelectorModal
+          open={showVoucherModal}
+          onOpenChange={setShowVoucherModal}
+          selectedVoucherCode={appliedVoucher?.code || null}
+          orderType="COURSE"
+          isVi={isVi}
+          onSelectVoucher={handleSelectVoucher}
         />
       )}
 

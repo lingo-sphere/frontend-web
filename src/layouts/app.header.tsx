@@ -109,6 +109,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
             isPremium={Boolean(user?.is_premium)}
             isVi={isVi}
             streak={streak}
+            streakFreezesLeft={gamification?.streak_freezes_left}
             onAction={onAction}
             onOpenUpgrade={() => setUpgradeOpen(true)}
           />
