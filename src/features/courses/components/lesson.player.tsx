@@ -7,7 +7,11 @@ import type { Lesson } from '@/features/courses/types/course'
 import { PlayerControlsBar } from '@/features/courses/components/player.controls.bar'
 import { PlayerEndscreen } from '@/features/courses/components/player.endscreen'
 import { PlayerShortcutsModal } from '@/features/courses/components/player.shortcuts.modal'
-import { useCourseMiniPlayerStore, courseMiniPlayerStore } from '@/features/courses/store/course.mini.player.store'
+import {
+  useCourseMiniPlayerStore,
+  courseMiniPlayerStore,
+  type CourseMiniPlayerPlaylistItem,
+} from '@/features/courses/store/course.mini.player.store'
 import { useLessonVideoPlayer } from '@/features/courses/hooks/use.lesson.video.player'
 
 interface LessonPlayerProps {
@@ -18,6 +22,7 @@ interface LessonPlayerProps {
   isTrial?: boolean
   activeTab?: string
   activeSidebarTab?: string
+  playlist?: CourseMiniPlayerPlaylistItem[]
   onOpenCheckout?: () => void
   onProgress?: (lessonId: string, progress: number) => void
   onLessonComplete?: (lessonId: string) => void
@@ -38,6 +43,7 @@ export function LessonPlayer({
   isTrial = false,
   activeTab,
   activeSidebarTab,
+  playlist,
   onOpenCheckout,
   onProgress,
   onLessonComplete,
@@ -325,6 +331,8 @@ export function LessonPlayer({
               const wasPlaying = Boolean(videoRef.current && !videoRef.current.paused && isPlaying)
               videoRef.current?.pause()
               setIsPlaying(false)
+              const curIndex = playlist ? playlist.findIndex((item) => item.id === lesson.id) : -1
+              const validIndex = curIndex >= 0 ? curIndex : 0
               courseMiniPlayerStore.getState().openMiniPlayer({
                 lesson,
                 courseId: courseId || '',
@@ -336,8 +344,10 @@ export function LessonPlayer({
                 isPlaying: wasPlaying,
                 volume,
                 isMuted,
-                hasNextLesson,
-                hasPrevLesson,
+                playlist: playlist || [],
+                currentLessonIndex: validIndex,
+                hasNextLesson: playlist && playlist.length > 0 ? validIndex < playlist.length - 1 : hasNextLesson,
+                hasPrevLesson: playlist && playlist.length > 0 ? validIndex > 0 : hasPrevLesson,
               })
             }
           }}

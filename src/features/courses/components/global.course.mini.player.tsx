@@ -13,6 +13,8 @@ export function GlobalCourseMiniPlayer() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const currentUrlRef = useRef<string>('')
   const pendingSeekRef = useRef<number>(0)
+  const isSeekingRef = useRef<boolean>(false)
+  const seekDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const {
     isOpen,
@@ -34,6 +36,8 @@ export function GlobalCourseMiniPlayer() {
     setDuration,
     setVolume,
     setIsMuted,
+    nextLesson,
+    prevLesson,
   } = useCourseMiniPlayerStore()
 
   const resolvedUrl = useMemo(() => {
@@ -102,6 +106,14 @@ export function GlobalCourseMiniPlayer() {
 
   const handleSeek = useCallback((time: number) => {
     const target = Math.max(0, Math.min(duration || 1000, time))
+    isSeekingRef.current = true
+    if (seekDebounceTimerRef.current) {
+      clearTimeout(seekDebounceTimerRef.current)
+    }
+    seekDebounceTimerRef.current = setTimeout(() => {
+      isSeekingRef.current = false
+    }, 400)
+
     setCurrentTime(target)
     const video = videoRef.current
     if (video) {
@@ -153,16 +165,20 @@ export function GlobalCourseMiniPlayer() {
   }, [lesson, courseId, currentTime, closeMiniPlayer, router])
 
   const handleNextLesson = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('lingosphere:course-next-lesson'))
+    if (hasNextLesson) {
+      nextLesson()
+    } else {
+      handleSeek(Math.min(duration || 1000, currentTime + 10))
     }
-  }, [])
+  }, [hasNextLesson, nextLesson, handleSeek, duration, currentTime])
 
   const handlePrevLesson = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('lingosphere:course-prev-lesson'))
+    if (hasPrevLesson) {
+      prevLesson()
+    } else {
+      handleSeek(Math.max(0, currentTime - 10))
     }
-  }, [])
+  }, [hasPrevLesson, prevLesson, handleSeek, currentTime])
 
   if (!isOpen || !lesson) return null
 
@@ -199,9 +215,16 @@ export function GlobalCourseMiniPlayer() {
               setDuration(video.duration)
             }
           }}
+          onSeeking={() => {
+            isSeekingRef.current = true
+          }}
+          onSeeked={() => {
+            isSeekingRef.current = false
+          }}
           onTimeUpdate={() => {
-            if (videoRef.current && !videoRef.current.seeking) {
-              setCurrentTime(videoRef.current.currentTime)
+            const video = videoRef.current
+            if (video && !video.seeking && !isSeekingRef.current && !isNaN(video.currentTime)) {
+              setCurrentTime(video.currentTime)
             }
           }}
           onPlay={() => setIsPlaying(true)}

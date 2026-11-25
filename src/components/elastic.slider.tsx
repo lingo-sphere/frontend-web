@@ -90,8 +90,8 @@ const ICON_INNER = 'grid place-items-center'
 const HIT =
   'group/hit relative flex h-[var(--elastic-slider-hit,34px)] min-w-0 flex-1 cursor-grab touch-none items-center outline-none data-[dragging]:cursor-grabbing group-data-[orientation=vertical]/es:h-auto group-data-[orientation=vertical]/es:min-h-0 group-data-[orientation=vertical]/es:w-[var(--elastic-slider-hit,34px)] group-data-[orientation=vertical]/es:flex-col group-data-[orientation=vertical]/es:justify-end'
 const TRACK =
-  'relative h-1.5 w-full shrink-0 overflow-hidden rounded-[var(--elastic-slider-radius,999px)] [background:var(--elastic-slider-track)] will-change-transform group-focus-visible/hit:outline-2 group-focus-visible/hit:outline-offset-3 group-focus-visible/hit:outline-current group-data-[orientation=vertical]/es:h-full group-data-[orientation=vertical]/es:w-1.5'
-const RANGE = 'absolute inset-0 [background:var(--elastic-slider-range)] [clip-path:inset(0_100%_0_0)]'
+  'relative h-1.5 w-full shrink-0 overflow-hidden rounded-[var(--elastic-slider-radius,999px)] [background:var(--elastic-slider-track)] will-change-transform group-focus-visible/hit:outline-2 group-focus-visible/hit:outline-offset-3 group-focus-visible/hit:outline-current group-data-[orientation=vertical]/es:h-full group-data-[orientation=vertical]/es:w-1.5 pointer-events-none'
+const RANGE = 'absolute inset-0 [background:var(--elastic-slider-range)] [clip-path:inset(0_100%_0_0)] pointer-events-none'
 const CONTENT =
   'pointer-events-none absolute inset-0 flex items-center justify-between px-[var(--elastic-slider-pad,12px)] text-[13px] leading-none font-semibold tabular-nums opacity-[var(--elastic-slider-reveal,1)] *:grid *:place-items-center *:[transform:var(--elastic-slider-unscale,none)] group-data-[orientation=vertical]/es:flex-col-reverse group-data-[orientation=vertical]/es:px-0 group-data-[orientation=vertical]/es:py-[var(--elastic-slider-pad,12px)] text-[color:var(--elastic-slider-content)]'
 const FILL_CONTENT =
@@ -553,7 +553,9 @@ export function ElasticSlider({
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     const hit = hitRef.current
     if (disabled || event.button !== 0 || !hit) return
-    hit.setPointerCapture(event.pointerId)
+    try {
+      hit.setPointerCapture(event.pointerId)
+    } catch {}
     const m = motion.current
     const s = settingsRef.current
     const { pos, len } = getMetrics(event)
@@ -575,8 +577,15 @@ export function ElasticSlider({
     follow(event)
   }
 
-  const release = () => {
+  const release = (event?: ReactPointerEvent<HTMLDivElement>) => {
     if (!drag.current) return
+    if (event && hitRef.current) {
+      try {
+        if (hitRef.current.hasPointerCapture(event.pointerId)) {
+          hitRef.current.releasePointerCapture(event.pointerId)
+        }
+      } catch {}
+    }
     const m = motion.current
     drag.current = null
     m.dragging = false
@@ -585,6 +594,27 @@ export function ElasticSlider({
     refreshGoal()
     settingsRef.current.onChangeEnd?.(currentRef.current)
   }
+
+  useEffect(() => {
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      if (drag.current && drag.current.id === e.pointerId) {
+        follow(e as unknown as ReactPointerEvent<HTMLDivElement>)
+      }
+    }
+    const handleGlobalPointerUp = (e: PointerEvent) => {
+      if (drag.current && drag.current.id === e.pointerId) {
+        release()
+      }
+    }
+    window.addEventListener('pointermove', handleGlobalPointerMove)
+    window.addEventListener('pointerup', handleGlobalPointerUp)
+    window.addEventListener('pointercancel', handleGlobalPointerUp)
+    return () => {
+      window.removeEventListener('pointermove', handleGlobalPointerMove)
+      window.removeEventListener('pointerup', handleGlobalPointerUp)
+      window.removeEventListener('pointercancel', handleGlobalPointerUp)
+    }
+  }, [])
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (disabled) return

@@ -146,6 +146,7 @@ export function CourseMiniPlayer({
               leftIcon={null}
               rightIcon={null}
               onChange={(val) => onSeek(val)}
+              onChangeEnd={(val) => onSeek(val)}
               formatValue={(val) => formatTime(val)}
               valuePosition="none"
               thickness={4.5}
@@ -242,8 +243,9 @@ export function CourseMiniPlayer({
                   </button>
                 }
                 onChange={(val) => onVolumeChange(val / 100)}
-                maxStretch={20}
-                bounce={0.5}
+                onChangeEnd={(val) => onVolumeChange(val / 100)}
+                maxStretch={8}
+                bounce={0.2}
                 growOnHover
                 wheel={false}
                 orientation="horizontal"
@@ -257,7 +259,7 @@ export function CourseMiniPlayer({
                 iconColor="rgba(255,255,255,0.7)"
                 thumbColor="#ffffff"
                 jumpToClick
-                className="w-24 sm:w-28"
+                className="w-36 sm:w-40"
               />
             </div>
           </div>

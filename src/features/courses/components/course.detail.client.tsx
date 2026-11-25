@@ -1,7 +1,7 @@
 // Component giao diện không gian học tập trực tuyến Client cho học viên LingoSphere
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { ExternalLink, FileText, FolderDown, HelpCircle, Lock } from 'lucide-react'
@@ -108,6 +108,24 @@ export function CourseDetailClient({
   const [showScheduleBanner, setShowScheduleBanner] = useState(true)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [showPracticeModal, setShowPracticeModal] = useState(false)
+
+  const coursePlaylist = useMemo(() => {
+    if (!course?.chapters) return []
+    const list: Array<{ id: string; title: string; videoUrl: string; duration?: number; thumbnail?: string; chapterTitle?: string }> = []
+    course.chapters.forEach((ch) => {
+      ch.lessons.forEach((l) => {
+        list.push({
+          id: l.id,
+          title: l.title,
+          videoUrl: l.videoUrl || l.content?.videoUrl || '',
+          duration: l.duration,
+          thumbnail: course.thumbnail,
+          chapterTitle: ch.title,
+        })
+      })
+    })
+    return list
+  }, [course])
 
   const handleOpenPracticeQuiz = useCallback(
     (chapter?: Chapter, lesson?: Lesson) => {
@@ -294,6 +312,7 @@ export function CourseDetailClient({
                 isTrial={!hasFullAccess}
                 activeTab={activeBottomTab}
                 activeSidebarTab={activeSidebarTab}
+                playlist={coursePlaylist}
                 onOpenCheckout={handleInitiateEnrollOrBuy}
                 onProgress={handleLessonProgress}
                 onTimeUpdate={(t) => setPlayerCurrentTime(t)}
