@@ -219,6 +219,15 @@ export const authService = {
     storage.cookie.remove(STORAGE_KEYS.IS_PRIVILEGED)
     storage.cookie.remove('refresh_token')
     storage.cookie.remove('access_token')
+    if (typeof window !== 'undefined') {
+      try {
+        Object.keys(sessionStorage).forEach((key) => {
+          if (key.startsWith('lingo_streak_') || key.startsWith('streak_seen_')) {
+            sessionStorage.removeItem(key)
+          }
+        })
+      } catch {}
+    }
   },
 
   async logout(): Promise<void> {

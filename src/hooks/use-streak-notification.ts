@@ -1,4 +1,4 @@
-// Hook theo dõi sự kiện chuỗi Streak mới cập nhật và chào mừng chuỗi ngày đăng nhập hàng ngày
+// Hook theo dõi sự kiện chuỗi Streak mới cập nhật và chào mừng chuỗi ngày khi đăng nhập vào hệ thống
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
@@ -43,14 +43,11 @@ export function useStreakNotification() {
   const { data: gamification } = useGamificationProfileQuery(isEnabled)
 
   const userId = user?.user_id
-  const streakCount = gamification?.current_streak ?? user?.streak_count ?? 0
+  const streakCount = gamification?.current_streak ?? 0
   const freezesLeft = gamification?.streak_freezes_left
 
   useEffect(() => {
-    if (!isEnabled) return
-
-    const today = new Date().toISOString().split('T')[0]
-    const dailyKey = userId ? `lingo_streak_daily_${userId}` : ''
+    if (!isEnabled || !userId) return
 
     if (notifications && notifications.length > 0) {
       const streakNotif = notifications.find(
@@ -73,24 +70,23 @@ export function useStreakNotification() {
             streakFreezesLeft,
             notificationId: notifId,
           })
-          if (dailyKey) {
-            localStorage.setItem(dailyKey, today)
-          }
+          sessionStorage.setItem(`lingo_streak_welcome_${userId}`, 'true')
           return
         }
       }
     }
 
-    if (streakCount >= 1 && dailyKey) {
-      const lastCelebrated = localStorage.getItem(dailyKey)
-      if (lastCelebrated !== today) {
+    if (streakCount >= 1) {
+      const sessionKey = `lingo_streak_welcome_${userId}`
+      const alreadyShown = sessionStorage.getItem(sessionKey)
+      if (!alreadyShown) {
         setCelebration({
           open: true,
           streak: streakCount,
           isNewRecord: false,
           streakFreezesLeft: freezesLeft,
         })
-        localStorage.setItem(dailyKey, today)
+        sessionStorage.setItem(sessionKey, 'true')
       }
     }
   }, [isEnabled, notifications, streakCount, freezesLeft, userId])
@@ -125,8 +121,7 @@ export function useStreakNotification() {
       markAsReadMutation.mutate(celebration.notificationId)
     }
     if (userId) {
-      const today = new Date().toISOString().split('T')[0]
-      localStorage.setItem(`lingo_streak_daily_${userId}`, today)
+      sessionStorage.setItem(`lingo_streak_welcome_${userId}`, 'true')
     }
     setCelebration((prev) => ({ ...prev, open: false }))
   }, [celebration.notificationId, markAsReadMutation, userId])
