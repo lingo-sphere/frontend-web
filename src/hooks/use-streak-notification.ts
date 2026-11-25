@@ -1,4 +1,4 @@
-// Hook theo dõi sự kiện chuỗi Streak mới cập nhật và chào mừng chuỗi ngày đăng nhập hàng ngày
+// Hook theo dõi sự kiện chuỗi Streak mới cập nhật và hiển thị vinh danh khi đăng nhập vào hệ thống
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
@@ -43,14 +43,29 @@ export function useStreakNotification() {
   const { data: gamification } = useGamificationProfileQuery(isEnabled)
 
   const userId = user?.user_id
-  const streakCount = gamification?.current_streak ?? user?.streak_count ?? 0
+  const streakCount = gamification?.current_streak ?? 0
   const freezesLeft = gamification?.streak_freezes_left
 
   useEffect(() => {
-    if (!isEnabled) return
+    if (!isEnabled || !userId) return
 
-    const today = new Date().toISOString().split('T')[0]
-    const dailyKey = userId ? `lingo_streak_daily_${userId}` : ''
+    const isPendingLogin = typeof window !== 'undefined' && sessionStorage.getItem('lingo_streak_pending_login') === 'true'
+
+    if (isPendingLogin) {
+      if (gamification !== undefined || user !== null) {
+        sessionStorage.removeItem('lingo_streak_pending_login')
+        const displayStreak = (gamification?.current_streak && gamification.current_streak > 0)
+          ? gamification.current_streak
+          : 1
+        setCelebration({
+          open: true,
+          streak: displayStreak,
+          isNewRecord: false,
+          streakFreezesLeft: freezesLeft,
+        })
+        return
+      }
+    }
 
     if (notifications && notifications.length > 0) {
       const streakNotif = notifications.find(
@@ -73,27 +88,11 @@ export function useStreakNotification() {
             streakFreezesLeft,
             notificationId: notifId,
           })
-          if (dailyKey) {
-            localStorage.setItem(dailyKey, today)
-          }
           return
         }
       }
     }
-
-    if (streakCount >= 1 && dailyKey) {
-      const lastCelebrated = localStorage.getItem(dailyKey)
-      if (lastCelebrated !== today) {
-        setCelebration({
-          open: true,
-          streak: streakCount,
-          isNewRecord: false,
-          streakFreezesLeft: freezesLeft,
-        })
-        localStorage.setItem(dailyKey, today)
-      }
-    }
-  }, [isEnabled, notifications, streakCount, freezesLeft, userId])
+  }, [isEnabled, notifications, streakCount, freezesLeft, userId, gamification, user])
 
   useEffect(() => {
     const handleClientStreakEvent = (e: Event) => {
@@ -124,12 +123,8 @@ export function useStreakNotification() {
       sessionStorage.setItem(`streak_seen_${celebration.notificationId}`, 'true')
       markAsReadMutation.mutate(celebration.notificationId)
     }
-    if (userId) {
-      const today = new Date().toISOString().split('T')[0]
-      localStorage.setItem(`lingo_streak_daily_${userId}`, today)
-    }
     setCelebration((prev) => ({ ...prev, open: false }))
-  }, [celebration.notificationId, markAsReadMutation, userId])
+  }, [celebration.notificationId, markAsReadMutation])
 
   return {
     celebration,

@@ -54,6 +54,7 @@ function LoginPageContent() {
     if (isNavigatingRef.current) return
     isNavigatingRef.current = true
     if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lingo_streak_pending_login', 'true')
       window.location.replace(targetUrl)
     } else {
       router.push(targetUrl)
