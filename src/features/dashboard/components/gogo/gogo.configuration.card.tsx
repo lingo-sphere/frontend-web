@@ -1,7 +1,7 @@
 // Component thẻ mục tiêu cá nhân hóa dạng đồng hồ đo tiến độ theo phong cách thiết kế Cuba Monthly Target Widget hỗ trợ đa ngôn ngữ.
 'use client'
 
-import { Rocket, BookOpen, Target, Sparkles, Flame } from 'lucide-react'
+import { Rocket, BookOpen, Target, Flame } from 'lucide-react'
 import { useLanguage } from '@/hooks/use.language'
 
 interface GogoConfigurationCardProps {
@@ -177,14 +177,10 @@ export function GogoConfigurationCard({
       </div>
 
       <div className="space-y-2 pt-1">
-        <div className="flex items-center justify-between text-xs text-text-secondary px-1">
+        <div className="flex items-center text-xs text-text-secondary px-1">
           <span className="flex items-center gap-1.5 font-medium">
             <Flame className="w-3.5 h-3.5 text-amber-500" />
             <span>{isVi ? 'Chuỗi học: ' : 'Streak: '}{currentStreak} {isVi ? 'ngày' : 'days'}</span>
-          </span>
-          <span className="flex items-center gap-1 font-semibold text-text-primary">
-            <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
-            <span>{xp.toLocaleString(isVi ? 'vi-VN' : 'en-US')} XP</span>
           </span>
         </div>
 

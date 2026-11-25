@@ -97,11 +97,6 @@ export function GogoWelcomeHero({
                   <span>{isVi ? `Mục tiêu: ${targetScore}đ TOEIC` : `Target: ${targetScore} pts TOEIC`}</span>
                 </span>
               )}
-
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/15 backdrop-blur-xs text-white text-xs font-bold border border-white/20">
-                <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                <span>{xp.toLocaleString(isVi ? 'vi-VN' : 'en-US')} XP</span>
-              </span>
             </div>
           </div>
 
