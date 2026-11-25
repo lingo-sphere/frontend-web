@@ -351,16 +351,35 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
         return
       }
-      let isPremium = Boolean(user?.is_premium)
+      let isPremium = Boolean(
+        user?.is_premium ||
+          (user?.subscription_expires_at && new Date(user.subscription_expires_at) > new Date())
+      )
       let profileUser: Partial<User> = {}
+      let profileExpiresAt: string | null = null
+      let profilePlan: string | null = null
       try {
         const profileRes = await userService.getProfile()
         if (profileRes) {
-          if (profileRes.is_premium) isPremium = true
+          if (
+            profileRes.is_premium ||
+            profileRes.profile?.is_premium ||
+            (profileRes.subscription_expires_at && new Date(profileRes.subscription_expires_at) > new Date())
+          ) {
+            isPremium = true
+          }
           if (profileRes.profile) profileUser = profileRes.profile
+          profileExpiresAt = profileRes.subscription_expires_at || profileRes.profile?.subscription_expires_at || null
+          profilePlan = profileRes.subscription_plan || profileRes.profile?.subscription_plan || null
         }
       } catch {}
-      const finalUser = { ...user, ...profileUser, is_premium: isPremium }
+      const finalUser = {
+        ...user,
+        ...profileUser,
+        is_premium: isPremium,
+        subscription_expires_at: profileExpiresAt || profileUser?.subscription_expires_at || user?.subscription_expires_at || null,
+        subscription_plan: profilePlan || profileUser?.subscription_plan || user?.subscription_plan || null,
+      } as User
       if (storage.has(STORAGE_KEYS.ACCESS_TOKEN)) {
         storage.set(STORAGE_KEYS.USER, finalUser)
       } else {
@@ -368,7 +387,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
       set({ user: finalUser, isAuthenticated: true })
     } catch {
-      // Clear cookies too: middleware must not revive a rejected session.
       authService.clearAuthStorage()
       set({ user: null, isAuthenticated: false })
       if (typeof window !== 'undefined') {
