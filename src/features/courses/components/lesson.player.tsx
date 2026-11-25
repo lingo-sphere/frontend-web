@@ -56,8 +56,21 @@ export function LessonPlayer({
   onDurationChange,
 }: LessonPlayerProps) {
   const isMiniPlayer = useCourseMiniPlayerStore(
-    (s) => s.isOpen && s.lesson?.id === lesson.id && s.courseId === (courseId || '')
+    (s) => s.isOpen && s.courseId === (courseId || '')
   )
+
+  useEffect(() => {
+    if (isMiniPlayer && playlist && playlist.length > 0) {
+      const curIdx = playlist.findIndex((p) => p.id === lesson.id)
+      const vIdx = curIdx >= 0 ? curIdx : 0
+      courseMiniPlayerStore.getState().updatePlayback({
+        playlist,
+        currentLessonIndex: vIdx,
+        hasNextLesson: vIdx < playlist.length - 1,
+        hasPrevLesson: vIdx > 0,
+      })
+    }
+  }, [playlist, lesson.id, isMiniPlayer])
 
   useEffect(() => {
     const handleNext = () => onNextLesson?.()

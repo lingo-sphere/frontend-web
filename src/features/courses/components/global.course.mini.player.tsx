@@ -62,8 +62,11 @@ export function GlobalCourseMiniPlayer() {
       pendingSeekRef.current = currentTime
       video.src = resolvedUrl
       video.load()
+      if (isPlaying) {
+        video.play().catch(() => {})
+      }
     }
-  }, [resolvedUrl, isDirect])
+  }, [resolvedUrl, isDirect, isPlaying, currentTime])
 
   useEffect(() => {
     const video = videoRef.current
@@ -82,7 +85,7 @@ export function GlobalCourseMiniPlayer() {
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
-    video.volume = volume
+    video.volume = Math.max(0, Math.min(1, volume))
     video.muted = isMuted
   }, [volume, isMuted])
 
@@ -112,14 +115,14 @@ export function GlobalCourseMiniPlayer() {
     }
     seekDebounceTimerRef.current = setTimeout(() => {
       isSeekingRef.current = false
-    }, 400)
+    }, 350)
 
     setCurrentTime(target)
     const video = videoRef.current
     if (video) {
-      if (video.readyState >= 1) {
+      try {
         video.currentTime = target
-      } else {
+      } catch {
         pendingSeekRef.current = target
       }
     }
