@@ -1,4 +1,4 @@
-// Hook theo dõi sự kiện chuỗi Streak mới cập nhật và chào mừng chuỗi ngày khi đăng nhập vào hệ thống
+// Hook theo dõi sự kiện chuỗi Streak mới cập nhật và hiển thị vinh danh khi đăng nhập vào hệ thống
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
@@ -49,6 +49,24 @@ export function useStreakNotification() {
   useEffect(() => {
     if (!isEnabled || !userId) return
 
+    const isPendingLogin = typeof window !== 'undefined' && sessionStorage.getItem('lingo_streak_pending_login') === 'true'
+
+    if (isPendingLogin) {
+      if (gamification !== undefined || user !== null) {
+        sessionStorage.removeItem('lingo_streak_pending_login')
+        const displayStreak = (gamification?.current_streak && gamification.current_streak > 0)
+          ? gamification.current_streak
+          : 1
+        setCelebration({
+          open: true,
+          streak: displayStreak,
+          isNewRecord: false,
+          streakFreezesLeft: freezesLeft,
+        })
+        return
+      }
+    }
+
     if (notifications && notifications.length > 0) {
       const streakNotif = notifications.find(
         (n) => n.notification_type === 'STREAK_UPDATED' && !n.is_read,
@@ -70,26 +88,11 @@ export function useStreakNotification() {
             streakFreezesLeft,
             notificationId: notifId,
           })
-          sessionStorage.setItem(`lingo_streak_welcome_${userId}`, 'true')
           return
         }
       }
     }
-
-    if (streakCount >= 1) {
-      const sessionKey = `lingo_streak_welcome_${userId}`
-      const alreadyShown = sessionStorage.getItem(sessionKey)
-      if (!alreadyShown) {
-        setCelebration({
-          open: true,
-          streak: streakCount,
-          isNewRecord: false,
-          streakFreezesLeft: freezesLeft,
-        })
-        sessionStorage.setItem(sessionKey, 'true')
-      }
-    }
-  }, [isEnabled, notifications, streakCount, freezesLeft, userId])
+  }, [isEnabled, notifications, streakCount, freezesLeft, userId, gamification, user])
 
   useEffect(() => {
     const handleClientStreakEvent = (e: Event) => {
@@ -120,11 +123,8 @@ export function useStreakNotification() {
       sessionStorage.setItem(`streak_seen_${celebration.notificationId}`, 'true')
       markAsReadMutation.mutate(celebration.notificationId)
     }
-    if (userId) {
-      sessionStorage.setItem(`lingo_streak_welcome_${userId}`, 'true')
-    }
     setCelebration((prev) => ({ ...prev, open: false }))
-  }, [celebration.notificationId, markAsReadMutation, userId])
+  }, [celebration.notificationId, markAsReadMutation])
 
   return {
     celebration,

@@ -169,6 +169,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       })
       if (typeof window !== 'undefined') {
+        sessionStorage.setItem('lingo_streak_pending_login', 'true')
         window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
       }
     } catch (err: unknown) {
@@ -216,6 +217,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       })
       if (typeof window !== 'undefined') {
+        sessionStorage.setItem('lingo_streak_pending_login', 'true')
         window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
       }
     } catch (err: unknown) {
@@ -248,6 +250,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       })
       if (typeof window !== 'undefined') {
+        sessionStorage.setItem('lingo_streak_pending_login', 'true')
         window.dispatchEvent(new CustomEvent('lingosphere:login_success', { detail: { timestamp: Date.now() } }))
       }
     } catch (err: unknown) {
