@@ -295,7 +295,7 @@ export function CoursePlacementPromptModal({
                         </span>
                       </div>
                       <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-                        {isVietnamese ? '90 Phút' : '90 Mins'}
+                        {isVietnamese ? '40 Phút' : '40 Mins'}
                       </span>
                     </div>
 
@@ -332,8 +332,8 @@ export function CoursePlacementPromptModal({
                       </div>
                       <p className="text-[11px] text-slate-400">
                         {isVietnamese
-                          ? 'Bài test Listening & Reading chuẩn format (60 phút)'
-                          : 'Standard Listening & Reading test format (60 mins)'}
+                          ? 'Bài test Listening & Reading chuẩn format (40 phút)'
+                          : 'Standard Listening & Reading test format (40 mins)'}
                       </p>
                     </div>
                     <button
@@ -360,7 +360,7 @@ export function CoursePlacementPromptModal({
                         </span>
                       </div>
                       <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-                        {isVietnamese ? '60 Phút' : '60 Mins'}
+                        {isVietnamese ? '40 Phút' : '40 Mins'}
                       </span>
                     </div>
 
@@ -397,8 +397,8 @@ export function CoursePlacementPromptModal({
                       </div>
                       <p className="text-[11px] text-slate-400">
                         {isVietnamese
-                          ? 'Bài test toàn diện 4 kỹ năng (90 phút)'
-                          : 'Comprehensive 4-skills test (90 mins)'}
+                          ? 'Bài test toàn diện 4 kỹ năng (60 phút)'
+                          : 'Comprehensive 4-skills test (60 mins)'}
                       </p>
                     </div>
                     <button

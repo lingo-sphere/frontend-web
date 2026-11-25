@@ -47,42 +47,104 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
     }
   }, [userScores.skillsType])
 
-  const rawTotal = userScores.totalScore || 0
-  const listeningScore = userScores.listeningScore || 0
-  const readingScore = userScores.readingScore || 0
-  const speakingScore = userScores.speakingScore || 0
-  const writingScore = userScores.writingScore || 0
+  const is4Skills = selectedSkillsType === '4SKILLS'
+  const maxScore = is4Skills ? 1390 : 990
+
+  const displayTotal = is4Skills
+    ? (userScores.placement_4skills_test_score ?? (userScores.skillsType === '4SKILLS' ? userScores.totalScore : 0)) || 0
+    : (userScores.placement_2skills_test_score ?? (userScores.skillsType !== '4SKILLS' ? userScores.totalScore : 0)) || 0
+
+  const listeningScore = is4Skills
+    ? (userScores.placement_4skills_listening_score ?? (userScores.skillsType === '4SKILLS' ? userScores.listeningScore : 0)) || 0
+    : (userScores.placement_2skills_listening_score ?? (userScores.skillsType !== '4SKILLS' ? userScores.listeningScore : 0)) || 0
+
+  const readingScore = is4Skills
+    ? (userScores.placement_4skills_reading_score ?? (userScores.skillsType === '4SKILLS' ? userScores.readingScore : 0)) || 0
+    : (userScores.placement_2skills_reading_score ?? (userScores.skillsType !== '4SKILLS' ? userScores.readingScore : 0)) || 0
+
+  const speakingScore = is4Skills
+    ? (userScores.placement_4skills_speaking_score ?? (userScores.skillsType === '4SKILLS' ? userScores.speakingScore : 0)) || 0
+    : 0
+
+  const writingScore = is4Skills
+    ? (userScores.placement_4skills_writing_score ?? (userScores.skillsType === '4SKILLS' ? userScores.writingScore : 0)) || 0
+    : 0
+
+  const displayTarget = is4Skills
+    ? (userScores.target_toeic_4skills_score ?? (userScores.skillsType === '4SKILLS' ? userScores.targetScore : 0)) || 0
+    : (userScores.target_toeic_2skills_score ?? (userScores.skillsType !== '4SKILLS' ? userScores.targetScore : 0)) || 0
+
   const isManuallyEdited = userScores.isManuallyEdited ?? false
   const hasTested = Boolean(
-    rawTotal > 0 ||
+    displayTotal > 0 ||
     listeningScore > 0 ||
     readingScore > 0 ||
     speakingScore > 0 ||
     writingScore > 0 ||
     userScores.testedAt
   )
-  const totalScore = hasTested ? (rawTotal || listeningScore + readingScore) : 0
+  const totalScore = hasTested
+    ? (displayTotal || (is4Skills ? listeningScore + readingScore + speakingScore + writingScore : listeningScore + readingScore))
+    : 0
+
   const hasTargetScore = Boolean(
-    userScores.targetScore &&
-    userScores.targetScore > 0 &&
+    displayTarget > 0 &&
     (hasTested || isManuallyEdited)
   )
 
   const handleSelectSkillsType = async (type: '2SKILLS' | '4SKILLS') => {
     setSelectedSkillsType(type)
+    const isNow4 = type === '4SKILLS'
+    const newTotal = isNow4
+      ? (userScores.placement_4skills_test_score ?? (userScores.skillsType === '4SKILLS' ? userScores.totalScore : 0)) || 0
+      : (userScores.placement_2skills_test_score ?? (userScores.skillsType !== '4SKILLS' ? userScores.totalScore : 0)) || 0
+    const newListening = isNow4
+      ? (userScores.placement_4skills_listening_score ?? (userScores.skillsType === '4SKILLS' ? userScores.listeningScore : 0)) || 0
+      : (userScores.placement_2skills_listening_score ?? (userScores.skillsType !== '4SKILLS' ? userScores.listeningScore : 0)) || 0
+    const newReading = isNow4
+      ? (userScores.placement_4skills_reading_score ?? (userScores.skillsType === '4SKILLS' ? userScores.readingScore : 0)) || 0
+      : (userScores.placement_2skills_reading_score ?? (userScores.skillsType !== '4SKILLS' ? userScores.readingScore : 0)) || 0
+    const newSpeaking = isNow4
+      ? (userScores.placement_4skills_speaking_score ?? (userScores.skillsType === '4SKILLS' ? userScores.speakingScore : 0)) || 0
+      : 0
+    const newWriting = isNow4
+      ? (userScores.placement_4skills_writing_score ?? (userScores.skillsType === '4SKILLS' ? userScores.writingScore : 0)) || 0
+      : 0
+    const newTarget = isNow4
+      ? (userScores.target_toeic_4skills_score ?? (userScores.skillsType === '4SKILLS' ? userScores.targetScore : 0)) || 0
+      : (userScores.target_toeic_2skills_score ?? (userScores.skillsType !== '4SKILLS' ? userScores.targetScore : 0)) || 0
+
+    const updatePayload = {
+      placement_skills_type: type,
+      placement_test_score: newTotal,
+      placement_listening_score: newListening,
+      placement_reading_score: newReading,
+      placement_speaking_score: isNow4 ? newSpeaking : undefined,
+      placement_writing_score: isNow4 ? newWriting : undefined,
+      target_toeic_score: newTarget > 0 ? newTarget : undefined,
+      current_estimated_score: newTotal,
+    }
+
     try {
-      await userService.updateProfile({ placement_skills_type: type })
+      await userService.updateProfile(updatePayload)
       const { user, setUser } = useAuthStore.getState()
       if (user) {
         setUser({
           ...user,
-          placement_skills_type: type,
+          ...updatePayload,
         })
       }
       if (onScoresUpdated) {
         onScoresUpdated({
           ...userScores,
+          ...updatePayload,
           skillsType: type,
+          totalScore: newTotal,
+          listeningScore: newListening,
+          readingScore: newReading,
+          speakingScore: newSpeaking,
+          writingScore: newWriting,
+          targetScore: newTarget,
         })
       }
     } catch (err) {
@@ -90,7 +152,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
     }
   }
 
-  const level = getUserScoreLevelInfo(totalScore, hasTested)
+  const level = getUserScoreLevelInfo(totalScore, hasTested, maxScore)
 
   return (
     <>
@@ -149,7 +211,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
               <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
                 {hasTested ? (
                   <>
-                    {totalScore} <span className="text-xs font-normal text-slate-400">/ 990</span>
+                    {totalScore} <span className="text-xs font-normal text-slate-400">/ {maxScore}</span>
                   </>
                 ) : (
                   <span className="text-base font-bold text-slate-400">Chưa thiết lập</span>
@@ -168,7 +230,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
               <div className="text-2xl font-black text-violet-600 dark:text-violet-400">
                 {hasTargetScore ? (
                   <>
-                    {userScores.targetScore} <span className="text-xs font-normal text-slate-400">/ 990</span>
+                    {displayTarget} <span className="text-xs font-normal text-slate-400">/ {maxScore}</span>
                   </>
                 ) : (
                   <span className="text-base font-bold text-slate-400">Chưa thiết lập</span>
@@ -178,7 +240,7 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
                 {hasTargetScore ? (
                   hasTested ? (
                     <>
-                      Cần tích lũy thêm: <strong>{Math.max(0, (userScores.targetScore || 0) - totalScore)} điểm</strong>
+                      Cần tích lũy thêm: <strong>{Math.max(0, displayTarget - totalScore)} điểm</strong>
                     </>
                   ) : (
                     <span>Mục tiêu đầu ra dự kiến</span>
@@ -282,12 +344,13 @@ export function UserScoreCard({ userScores, onScoresUpdated }: UserScoreCardProp
           open={showEditModal}
           onOpenChange={setShowEditModal}
           currentScores={{
+            ...userScores,
             totalScore,
             listeningScore,
             readingScore,
-            speakingScore: userScores.speakingScore,
-            writingScore: userScores.writingScore,
-            targetScore: userScores.targetScore,
+            speakingScore,
+            writingScore,
+            targetScore: displayTarget,
             skillsType: selectedSkillsType,
           }}
           onSuccess={(updated) => {

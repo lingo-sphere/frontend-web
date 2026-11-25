@@ -102,10 +102,22 @@ export function useToeicExam(examId?: string) {
     const allParts = [1, 2, 3, 4, 5, 6, 7]
     const questions = parseQuestionsFromExamData(examData, allParts)
     setAllQuestions(questions)
+    const is4SkillsPlacement = Boolean(
+      examData.skills_enabled === 'ALL' ||
+      examData.placement_type === '4SKILLS' ||
+      (typeof examId === 'string' && (examId.includes('4skills') || examId.includes('full')))
+    )
+    const is2SkillsPlacement = Boolean(
+      examData.skills_enabled === 'LR' ||
+      examData.placement_type === '2SKILLS' ||
+      (typeof examId === 'string' && (examId.includes('2skills') || examId.includes('lr')))
+    )
+
+    const expectedPlacementMinutes = is4SkillsPlacement ? 60 : is2SkillsPlacement ? 40 : 120
     const time =
       typeof examData.duration_minutes === 'number' && examData.duration_minutes > 0
         ? examData.duration_minutes * 60
-        : 120 * 60
+        : expectedPlacementMinutes * 60
 
     let draftRestored = false
     let initialAnswers: Record<number, string> = {}
@@ -124,8 +136,13 @@ export function useToeicExam(examId?: string) {
             typeof draft.startedAt === 'number' &&
             typeof draft.totalDurationSeconds === 'number'
           ) {
+            const hasDurationMismatch =
+              (is4SkillsPlacement && draft.totalDurationSeconds !== 60 * 60) ||
+              (is2SkillsPlacement && draft.totalDurationSeconds !== 40 * 60)
+            const targetTotalDuration = hasDurationMismatch ? time : draft.totalDurationSeconds
+
             const elapsed = Math.floor((Date.now() - draft.startedAt) / 1000)
-            const remaining = Math.max(0, draft.totalDurationSeconds - elapsed)
+            const remaining = Math.max(0, targetTotalDuration - elapsed)
 
             draftRestored = true
             initialAnswers = draft.answers || {}

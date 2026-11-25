@@ -281,9 +281,15 @@ export function SpeakingRecorderPanel({
                   waveform
                   slideToCancel
                   cancelDistance={80}
-                  reactive="mic"
+                  reactive="simulated"
                   isRecording={true}
-                  onStop={() => onStopRecording()}
+                  onStop={({ reason }) => {
+                    if (reason === 'cancel') {
+                      onReset()
+                    } else if (reason !== 'unmount') {
+                      onStopRecording()
+                    }
+                  }}
                   className="shadow-2xl ring-4 ring-red-500/20"
                 />
               </div>

@@ -31,94 +31,195 @@ export function UserScoreEditModal({
   onSuccess,
 }: UserScoreEditModalProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const storedUser = useAuthStore((state) => state.user)
+
   const [skillsType, setSkillsType] = useState<'2SKILLS' | '4SKILLS'>(
     currentScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS'
   )
-  const [listeningScore, setListeningScore] = useState<number>(currentScores.listeningScore ?? 0)
-  const [readingScore, setReadingScore] = useState<number>(currentScores.readingScore ?? 0)
-  const [speakingScore, setSpeakingScore] = useState<number>(currentScores.speakingScore ?? 0)
-  const [writingScore, setWritingScore] = useState<number>(currentScores.writingScore ?? 0)
-  const initialTotal =
-    (currentScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS') === '4SKILLS'
-      ? (currentScores.listeningScore ?? 0) +
-        (currentScores.readingScore ?? 0) +
-        (currentScores.speakingScore ?? 0) +
-        (currentScores.writingScore ?? 0)
-      : (currentScores.listeningScore ?? 0) + (currentScores.readingScore ?? 0)
 
-  const [targetScore, setTargetScore] = useState<number>(() => {
-    const storedUser = useAuthStore.getState().user
-    const existing =
-      typeof currentScores.targetScore === 'number' && currentScores.targetScore > 0
-        ? currentScores.targetScore
-        : Number(storedUser?.target_toeic_score) || 0
-
-    const maxLimit = (currentScores.skillsType === '4SKILLS' ? '4SKILLS' : '2SKILLS') === '4SKILLS' ? 1390 : 990
-    if (existing > initialTotal && existing <= maxLimit) return existing
-    return Math.min(
-      maxLimit,
-      Math.max(450, initialTotal > 0 ? Math.ceil((initialTotal + 50) / 10) * 10 : 450)
-    )
+  const [listening2K, setListening2K] = useState<number>(() => {
+    if (typeof currentScores.placement_2skills_listening_score === 'number') {
+      return currentScores.placement_2skills_listening_score
+    }
+    if (typeof storedUser?.placement_2skills_listening_score === 'number') {
+      return storedUser.placement_2skills_listening_score
+    }
+    if (currentScores.skillsType !== '4SKILLS' && typeof currentScores.listeningScore === 'number') {
+      return currentScores.listeningScore
+    }
+    return 0
   })
+
+  const [reading2K, setReading2K] = useState<number>(() => {
+    if (typeof currentScores.placement_2skills_reading_score === 'number') {
+      return currentScores.placement_2skills_reading_score
+    }
+    if (typeof storedUser?.placement_2skills_reading_score === 'number') {
+      return storedUser.placement_2skills_reading_score
+    }
+    if (currentScores.skillsType !== '4SKILLS' && typeof currentScores.readingScore === 'number') {
+      return currentScores.readingScore
+    }
+    return 0
+  })
+
+  const initialTotal2K = listening2K + reading2K
+
+  const [target2K, setTarget2K] = useState<number>(() => {
+    const existing =
+      typeof currentScores.target_toeic_2skills_score === 'number' && currentScores.target_toeic_2skills_score > 0
+        ? currentScores.target_toeic_2skills_score
+        : typeof storedUser?.target_toeic_2skills_score === 'number' && storedUser.target_toeic_2skills_score > 0
+        ? storedUser.target_toeic_2skills_score
+        : currentScores.skillsType !== '4SKILLS' && typeof currentScores.targetScore === 'number' && currentScores.targetScore > 0 && currentScores.targetScore <= 990
+        ? currentScores.targetScore
+        : typeof storedUser?.target_toeic_score === 'number' && storedUser.target_toeic_score > 0 && storedUser.target_toeic_score <= 990
+        ? storedUser.target_toeic_score
+        : 0
+
+    if (existing > initialTotal2K && existing <= 990) return existing
+    return Math.min(990, Math.max(450, initialTotal2K > 0 ? Math.ceil((initialTotal2K + 50) / 10) * 10 : 450))
+  })
+
+  const [listening4K, setListening4K] = useState<number>(() => {
+    if (typeof currentScores.placement_4skills_listening_score === 'number') {
+      return currentScores.placement_4skills_listening_score
+    }
+    if (typeof storedUser?.placement_4skills_listening_score === 'number') {
+      return storedUser.placement_4skills_listening_score
+    }
+    if (currentScores.skillsType === '4SKILLS' && typeof currentScores.listeningScore === 'number') {
+      return currentScores.listeningScore
+    }
+    return 0
+  })
+
+  const [reading4K, setReading4K] = useState<number>(() => {
+    if (typeof currentScores.placement_4skills_reading_score === 'number') {
+      return currentScores.placement_4skills_reading_score
+    }
+    if (typeof storedUser?.placement_4skills_reading_score === 'number') {
+      return storedUser.placement_4skills_reading_score
+    }
+    if (currentScores.skillsType === '4SKILLS' && typeof currentScores.readingScore === 'number') {
+      return currentScores.readingScore
+    }
+    return 0
+  })
+
+  const [speaking4K, setSpeaking4K] = useState<number>(() => {
+    if (typeof currentScores.placement_4skills_speaking_score === 'number') {
+      return currentScores.placement_4skills_speaking_score
+    }
+    if (typeof storedUser?.placement_4skills_speaking_score === 'number') {
+      return storedUser.placement_4skills_speaking_score
+    }
+    if (typeof currentScores.speakingScore === 'number') {
+      return currentScores.speakingScore
+    }
+    return 0
+  })
+
+  const [writing4K, setWriting4K] = useState<number>(() => {
+    if (typeof currentScores.placement_4skills_writing_score === 'number') {
+      return currentScores.placement_4skills_writing_score
+    }
+    if (typeof storedUser?.placement_4skills_writing_score === 'number') {
+      return storedUser.placement_4skills_writing_score
+    }
+    if (typeof currentScores.writingScore === 'number') {
+      return currentScores.writingScore
+    }
+    return 0
+  })
+
+  const initialTotal4K = listening4K + reading4K + speaking4K + writing4K
+
+  const [target4K, setTarget4K] = useState<number>(() => {
+    const existing =
+      typeof currentScores.target_toeic_4skills_score === 'number' && currentScores.target_toeic_4skills_score > 0
+        ? currentScores.target_toeic_4skills_score
+        : typeof storedUser?.target_toeic_4skills_score === 'number' && storedUser.target_toeic_4skills_score > 0
+        ? storedUser.target_toeic_4skills_score
+        : currentScores.skillsType === '4SKILLS' && typeof currentScores.targetScore === 'number' && currentScores.targetScore > 0
+        ? currentScores.targetScore
+        : typeof storedUser?.target_toeic_score === 'number' && storedUser.target_toeic_score > 0
+        ? storedUser.target_toeic_score
+        : 0
+
+    if (existing > initialTotal4K && existing <= 1390) return existing
+    return Math.min(1390, Math.max(650, initialTotal4K > 0 ? Math.ceil((initialTotal4K + 50) / 10) * 10 : 650))
+  })
+
   const [isSaving, setIsSaving] = useState<boolean>(false)
 
   if (!open) return null
 
-  const maxPossibleScore = skillsType === '4SKILLS' ? 1390 : 990
-  const calculatedTotal =
-    skillsType === '4SKILLS'
-      ? listeningScore + readingScore + speakingScore + writingScore
-      : listeningScore + readingScore
+  const is4Skills = skillsType === '4SKILLS'
+  const maxPossibleScore = is4Skills ? 1390 : 990
+  const calculatedTotal = is4Skills
+    ? listening4K + reading4K + speaking4K + writing4K
+    : listening2K + reading2K
 
-  const isTargetInvalid = calculatedTotal < maxPossibleScore && targetScore <= calculatedTotal
+  const currentTargetScore = is4Skills ? target4K : target2K
+  const isTargetInvalid = calculatedTotal < maxPossibleScore && currentTargetScore <= calculatedTotal
 
-  const handleListeningChange = (val: number) => {
+  const handleListening2KChange = (val: number) => {
     const clamped = Math.min(495, Math.max(0, val))
-    setListeningScore(clamped)
-    const newTotal = skillsType === '4SKILLS' ? clamped + readingScore + speakingScore + writingScore : clamped + readingScore
-    if (targetScore <= newTotal && newTotal < maxPossibleScore) {
-      setTargetScore(Math.min(maxPossibleScore, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    setListening2K(clamped)
+    const newTotal = clamped + reading2K
+    if (target2K <= newTotal && newTotal < 990) {
+      setTarget2K(Math.min(990, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
     }
   }
 
-  const handleReadingChange = (val: number) => {
+  const handleReading2KChange = (val: number) => {
     const clamped = Math.min(495, Math.max(0, val))
-    setReadingScore(clamped)
-    const newTotal = skillsType === '4SKILLS' ? listeningScore + clamped + speakingScore + writingScore : listeningScore + clamped
-    if (targetScore <= newTotal && newTotal < maxPossibleScore) {
-      setTargetScore(Math.min(maxPossibleScore, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    setReading2K(clamped)
+    const newTotal = listening2K + clamped
+    if (target2K <= newTotal && newTotal < 990) {
+      setTarget2K(Math.min(990, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
     }
   }
 
-  const handleSpeakingChange = (val: number) => {
-    const clamped = Math.min(200, Math.max(0, val))
-    setSpeakingScore(clamped)
-    const newTotal = listeningScore + readingScore + clamped + writingScore
-    if (targetScore <= newTotal && newTotal < maxPossibleScore) {
-      setTargetScore(Math.min(maxPossibleScore, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+  const handleListening4KChange = (val: number) => {
+    const clamped = Math.min(495, Math.max(0, val))
+    setListening4K(clamped)
+    const newTotal = clamped + reading4K + speaking4K + writing4K
+    if (target4K <= newTotal && newTotal < 1390) {
+      setTarget4K(Math.min(1390, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
     }
   }
 
-  const handleWritingChange = (val: number) => {
+  const handleReading4KChange = (val: number) => {
+    const clamped = Math.min(495, Math.max(0, val))
+    setReading4K(clamped)
+    const newTotal = listening4K + clamped + speaking4K + writing4K
+    if (target4K <= newTotal && newTotal < 1390) {
+      setTarget4K(Math.min(1390, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    }
+  }
+
+  const handleSpeaking4KChange = (val: number) => {
     const clamped = Math.min(200, Math.max(0, val))
-    setWritingScore(clamped)
-    const newTotal = listeningScore + readingScore + speakingScore + clamped
-    if (targetScore <= newTotal && newTotal < maxPossibleScore) {
-      setTargetScore(Math.min(maxPossibleScore, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    setSpeaking4K(clamped)
+    const newTotal = listening4K + reading4K + clamped + writing4K
+    if (target4K <= newTotal && newTotal < 1390) {
+      setTarget4K(Math.min(1390, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
+    }
+  }
+
+  const handleWriting4KChange = (val: number) => {
+    const clamped = Math.min(200, Math.max(0, val))
+    setWriting4K(clamped)
+    const newTotal = listening4K + reading4K + speaking4K + clamped
+    if (target4K <= newTotal && newTotal < 1390) {
+      setTarget4K(Math.min(1390, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
     }
   }
 
   const handleSkillsTypeChange = (newType: '2SKILLS' | '4SKILLS') => {
     setSkillsType(newType)
-    const newMax = newType === '4SKILLS' ? 1390 : 990
-    const newTotal = newType === '4SKILLS'
-      ? listeningScore + readingScore + speakingScore + writingScore
-      : listeningScore + readingScore
-    if (targetScore <= newTotal && newTotal < newMax) {
-      setTargetScore(Math.min(newMax, Math.max(newTotal + 10, Math.ceil((newTotal + 50) / 10) * 10)))
-    } else if (targetScore > newMax) {
-      setTargetScore(newMax)
-    }
   }
 
   const handleSave = async () => {
@@ -127,46 +228,83 @@ export function UserScoreEditModal({
       return
     }
 
-    if (listeningScore < 0 || listeningScore > 495) {
-      toast.error('Điểm Nghe (Listening) phải từ 0 đến 495.')
-      return
-    }
-    if (readingScore < 0 || readingScore > 495) {
-      toast.error('Điểm Đọc (Reading) phải từ 0 đến 495.')
-      return
-    }
-    if (skillsType === '4SKILLS') {
-      if (speakingScore < 0 || speakingScore > 200) {
+    if (is4Skills) {
+      if (listening4K < 0 || listening4K > 495) {
+        toast.error('Điểm Nghe (Listening) phải từ 0 đến 495.')
+        return
+      }
+      if (reading4K < 0 || reading4K > 495) {
+        toast.error('Điểm Đọc (Reading) phải từ 0 đến 495.')
+        return
+      }
+      if (speaking4K < 0 || speaking4K > 200) {
         toast.error('Điểm Nói (Speaking) phải từ 0 đến 200.')
         return
       }
-      if (writingScore < 0 || writingScore > 200) {
+      if (writing4K < 0 || writing4K > 200) {
         toast.error('Điểm Viết (Writing) phải từ 0 đến 200.')
         return
       }
-    }
-    if (calculatedTotal < maxPossibleScore && targetScore <= calculatedTotal) {
-      toast.error(`Điểm mục tiêu (${targetScore}đ) phải lớn hơn tổng điểm hiện tại (${calculatedTotal}đ).`)
-      return
-    }
-    if (targetScore > maxPossibleScore) {
-      toast.error(`Điểm mục tiêu không được vượt quá tối đa ${maxPossibleScore}đ.`)
-      return
+      if (calculatedTotal < 1390 && target4K <= calculatedTotal) {
+        toast.error(`Điểm mục tiêu (${target4K}đ) phải lớn hơn tổng điểm hiện tại (${calculatedTotal}đ).`)
+        return
+      }
+      if (target4K > 1390) {
+        toast.error('Điểm mục tiêu không được vượt quá tối đa 1390đ.')
+        return
+      }
+    } else {
+      if (listening2K < 0 || listening2K > 495) {
+        toast.error('Điểm Nghe (Listening) phải từ 0 đến 495.')
+        return
+      }
+      if (reading2K < 0 || reading2K > 495) {
+        toast.error('Điểm Đọc (Reading) phải từ 0 đến 495.')
+        return
+      }
+      if (calculatedTotal < 990 && target2K <= calculatedTotal) {
+        toast.error(`Điểm mục tiêu (${target2K}đ) phải lớn hơn tổng điểm hiện tại (${calculatedTotal}đ).`)
+        return
+      }
+      if (target2K > 990) {
+        toast.error('Điểm mục tiêu không được vượt quá tối đa 990đ.')
+        return
+      }
     }
 
     setIsSaving(true)
     try {
+      const total2K = listening2K + reading2K
+      const total4K = listening4K + reading4K + speaking4K + writing4K
+
+      const activeTotal = is4Skills ? total4K : total2K
+      const activeTarget = is4Skills ? target4K : target2K
+      const activeListening = is4Skills ? listening4K : listening2K
+      const activeReading = is4Skills ? reading4K : reading2K
+      const activeSpeaking = is4Skills ? speaking4K : undefined
+      const activeWriting = is4Skills ? writing4K : undefined
+
       const payload = {
-        placement_test_score: calculatedTotal,
-        placement_listening_score: listeningScore,
-        placement_reading_score: readingScore,
-        placement_speaking_score: skillsType === '4SKILLS' ? speakingScore : undefined,
-        placement_writing_score: skillsType === '4SKILLS' ? writingScore : undefined,
+        placement_test_score: activeTotal,
+        placement_listening_score: activeListening,
+        placement_reading_score: activeReading,
+        placement_speaking_score: activeSpeaking,
+        placement_writing_score: activeWriting,
         placement_skills_type: skillsType,
-        target_toeic_score: targetScore > 0 ? targetScore : undefined,
-        current_estimated_score: calculatedTotal,
+        target_toeic_score: activeTarget > 0 ? activeTarget : undefined,
+        current_estimated_score: activeTotal,
         is_score_manually_edited: true,
         placement_tested_at: new Date().toISOString(),
+        placement_2skills_test_score: total2K,
+        placement_2skills_listening_score: listening2K,
+        placement_2skills_reading_score: reading2K,
+        target_toeic_2skills_score: target2K > 0 ? target2K : undefined,
+        placement_4skills_test_score: total4K,
+        placement_4skills_listening_score: listening4K,
+        placement_4skills_reading_score: reading4K,
+        placement_4skills_speaking_score: speaking4K,
+        placement_4skills_writing_score: writing4K,
+        target_toeic_4skills_score: target4K > 0 ? target4K : undefined,
       }
 
       const updatedUser = await userService.updateProfile(payload)
@@ -219,7 +357,6 @@ export function UserScoreEditModal({
           </button>
         </div>
 
-        
         {!isAuthenticated && (
           <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11.5px] text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -236,11 +373,10 @@ export function UserScoreEditModal({
             <span>Khuyến Nghị Quan Trọng Từ Hệ Thống</span>
           </div>
           <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-            Hệ thống khuyên bạn nên làm bài kiểm tra đầu vào trên hệ thống để đo lường chính xác nhất. Việc tự ý chỉnh sửa có thể khiến các khóa học được gợi ý không phản ánh đúng năng lực hiện tại của bạn. Tuy nhiên, nếu bạn đã có kết quả thi thật, bạn hoàn toàn có thể lưu lại mức điểm này.
+            Hệ thống khuyên bạn nên làm bài kiểm tra đầu vào trên hệ thống để đo lường chính xác nhất. TOEIC 2 kỹ năng và TOEIC 4 kỹ năng là 2 thang đánh giá riêng biệt. Điểm số giữa 2 hình thức thi này hoàn toàn độc lập và không dùng chung điểm Nghe & Đọc của nhau.
           </p>
         </div>
 
-        
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -274,74 +410,110 @@ export function UserScoreEditModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                <Headphones className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Điểm Nghe (0 - 495):</span>
-              </label>
-              <input
-                type="number"
-                min={0}
-                max={495}
-                value={listeningScore}
-                onChange={(e) => handleListeningChange(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Điểm Đọc (0 - 495):</span>
-              </label>
-              <input
-                type="number"
-                min={0}
-                max={495}
-                value={readingScore}
-                onChange={(e) => handleReadingChange(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-          </div>
-
-          {skillsType === '4SKILLS' && (
-            <div className="grid grid-cols-2 gap-3 pt-1">
+          {!is4Skills ? (
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                  <Mic className="w-3.5 h-3.5 text-teal-500" />
-                  <span>Điểm Nói (0 - 200):</span>
+                  <Headphones className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Điểm Nghe (0 - 495):</span>
                 </label>
                 <input
                   type="number"
                   min={0}
-                  max={200}
-                  value={speakingScore}
-                  onChange={(e) => handleSpeakingChange(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  max={495}
+                  value={listening2K}
+                  onChange={(e) => handleListening2KChange(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                  <FileEdit className="w-3.5 h-3.5 text-teal-500" />
-                  <span>Điểm Viết (0 - 200):</span>
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Điểm Đọc (0 - 495):</span>
                 </label>
                 <input
                   type="number"
                   min={0}
-                  max={200}
-                  value={writingScore}
-                  onChange={(e) => handleWritingChange(Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  max={495}
+                  value={reading2K}
+                  onChange={(e) => handleReading2KChange(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Headphones className="w-3.5 h-3.5 text-teal-500" />
+                    <span>Điểm Nghe 4KN (0 - 495):</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={495}
+                    value={listening4K}
+                    onChange={(e) => handleListening4KChange(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-teal-500" />
+                    <span>Điểm Đọc 4KN (0 - 495):</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={495}
+                    value={reading4K}
+                    onChange={(e) => handleReading4KChange(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Mic className="w-3.5 h-3.5 text-teal-500" />
+                    <span>Điểm Nói (0 - 200):</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={200}
+                    value={speaking4K}
+                    onChange={(e) => handleSpeaking4KChange(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <FileEdit className="w-3.5 h-3.5 text-teal-500" />
+                    <span>Điểm Viết (0 - 200):</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={200}
+                    value={writing4K}
+                    onChange={(e) => handleWriting4KChange(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  />
+                </div>
               </div>
             </div>
           )}
 
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Tổng điểm TOEIC dự kiến:</span>
+            <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+              Tổng điểm TOEIC dự kiến ({is4Skills ? '4 Kỹ Năng' : '2 Kỹ Năng'}):
+            </span>
             <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
               {calculatedTotal} / {maxPossibleScore}
             </span>
@@ -361,8 +533,15 @@ export function UserScoreEditModal({
               min={Math.min(maxPossibleScore, calculatedTotal + 5)}
               max={maxPossibleScore}
               step={5}
-              value={targetScore}
-              onChange={(e) => setTargetScore(Math.min(maxPossibleScore, Math.max(0, Number(e.target.value))))}
+              value={currentTargetScore}
+              onChange={(e) => {
+                const val = Math.min(maxPossibleScore, Math.max(0, Number(e.target.value)))
+                if (is4Skills) {
+                  setTarget4K(val)
+                } else {
+                  setTarget2K(val)
+                }
+              }}
               className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all ${
                 isTargetInvalid
                   ? 'border-rose-400 dark:border-rose-600 focus:ring-rose-500/20 text-rose-600 dark:text-rose-400'
@@ -371,7 +550,7 @@ export function UserScoreEditModal({
             />
             {isTargetInvalid ? (
               <p className="text-[11px] font-bold text-rose-500 mt-1">
-                * Điểm mục tiêu phải lớn hơn tổng điểm hiện tại ({calculatedTotal}đ). Gợi ý: {Math.min(maxPossibleScore, Math.max(calculatedTotal + 10, Math.ceil((calculatedTotal + 50) / 10) * 10))}đ
+                Lưu ý: Điểm mục tiêu phải lớn hơn tổng điểm hiện tại ({calculatedTotal}đ). Gợi ý: {Math.min(maxPossibleScore, Math.max(calculatedTotal + 10, Math.ceil((calculatedTotal + 50) / 10) * 10))}đ
               </p>
             ) : (
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">

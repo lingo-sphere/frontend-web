@@ -170,9 +170,15 @@ export function TestRunnerSpeakingSection({
                 waveform
                 slideToCancel
                 cancelDistance={70}
-                reactive="mic"
+                reactive="simulated"
                 isRecording={true}
-                onStop={() => recorder.stopRecording()}
+                onStop={({ reason }) => {
+                  if (reason === 'cancel') {
+                    recorder.resetRecording()
+                  } else if (reason !== 'unmount') {
+                    recorder.stopRecording()
+                  }
+                }}
                 className="shadow-md"
               />
               <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300">

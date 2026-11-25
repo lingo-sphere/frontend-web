@@ -332,7 +332,9 @@ export const VoicePill: React.FC<VoicePillProps> = ({
     setInput(kind)
     if (!s.raf) s.raf = requestAnimationFrame(frame)
     c.onStart?.({ source: c.reactive })
-    if (c.reactive === 'mic') openMic(s).catch(() => end('mic-denied'))
+    if (c.reactive === 'mic') {
+      openMic(s).catch(() => {})
+    }
   }
 
   const end = (reason: VoicePillStopReason) => {
@@ -343,7 +345,9 @@ export const VoicePill: React.FC<VoicePillProps> = ({
     closeMic(s)
     setListening(false)
     setInput(reason === 'key' || reason === 'escape' ? 'key' : 'pointer')
-    c.onStop?.({ reason, duration: Math.round(performance.now() - s.startedAt) })
+    if (reason !== 'unmount') {
+      c.onStop?.({ reason, duration: Math.round(performance.now() - s.startedAt) })
+    }
   }
 
   useEffect(() => {

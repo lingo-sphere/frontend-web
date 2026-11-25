@@ -85,14 +85,21 @@ export function ToeicSpeakingRecorderInput({
                 waveform
                 slideToCancel
                 cancelDistance={64}
-                reactive="mic"
+                reactive="simulated"
                 isRecording={true}
-                onStop={stopRecording}
+                onStop={({ reason }) => {
+                  if (reason === 'cancel') {
+                    resetRecording()
+                    onSelectAnswer('')
+                  } else if (reason !== 'unmount') {
+                    stopRecording()
+                  }
+                }}
                 className="shadow-md"
               />
             </div>
             <p className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
-              {isVietnamese ? 'Trượt sang trái để hủy • Hoặc nhấn VoicePill / nút Dừng bên dưới' : 'Slide left to cancel • Or tap VoicePill / Stop button below'}
+              {isVietnamese ? 'Trượt sang trái để hủy • Hoặc nhấn nút Dừng bên dưới để lưu' : 'Slide left to cancel • Or tap Stop button below to save'}
             </p>
           </div>
         )}
