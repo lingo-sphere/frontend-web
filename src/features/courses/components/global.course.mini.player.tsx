@@ -65,11 +65,15 @@ export function GlobalCourseMiniPlayer() {
     const video = videoRef.current
     if (!video) return
     if (isPlaying) {
-      video.play().catch(() => setIsPlaying(false))
+      if (video.paused) {
+        video.play().catch(() => {})
+      }
     } else {
-      video.pause()
+      if (!video.paused) {
+        video.pause()
+      }
     }
-  }, [isPlaying, setIsPlaying])
+  }, [isPlaying])
 
   useEffect(() => {
     const video = videoRef.current
@@ -80,9 +84,13 @@ export function GlobalCourseMiniPlayer() {
 
   const handleTogglePlay = useCallback(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video) {
+      setIsPlaying(!isPlaying)
+      return
+    }
     if (video.paused) {
-      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+      setIsPlaying(true)
+      video.play().catch(() => {})
     } else {
       video.pause()
       setIsPlaying(false)
@@ -90,7 +98,7 @@ export function GlobalCourseMiniPlayer() {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('lingosphere:toggle-play'))
     }
-  }, [setIsPlaying])
+  }, [isPlaying, setIsPlaying])
 
   const handleSeek = useCallback((time: number) => {
     const target = Math.max(0, Math.min(duration || 1000, time))
@@ -180,6 +188,15 @@ export function GlobalCourseMiniPlayer() {
             if (pendingSeekRef.current > 0 && video) {
               video.currentTime = pendingSeekRef.current
               pendingSeekRef.current = 0
+            }
+            if (isPlaying && video && video.paused) {
+              video.play().catch(() => {})
+            }
+          }}
+          onDurationChange={() => {
+            const video = videoRef.current
+            if (video?.duration && !isNaN(video.duration)) {
+              setDuration(video.duration)
             }
           }}
           onTimeUpdate={() => {

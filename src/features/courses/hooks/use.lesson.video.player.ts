@@ -6,6 +6,7 @@ import { isDirectVideoUrl } from '@/features/courses/types/player.types'
 import { courseService } from '@/features/courses/services/course.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
 import { Analytics } from '@/lib/posthog'
+import { courseMiniPlayerStore } from '@/features/courses/store/course.mini.player.store'
 
 interface UseLessonVideoPlayerProps {
   lesson: Lesson
@@ -210,7 +211,9 @@ export function useLessonVideoPlayer({
       }
     }
     const handleTogglePlayEvent = () => {
-      togglePlay()
+      if (!courseMiniPlayerStore.getState().isOpen) {
+        togglePlay()
+      }
     }
     window.addEventListener('lingosphere:seek-video', handleSeekEvent)
     window.addEventListener('lingosphere:set-volume', handleVolumeEvent)

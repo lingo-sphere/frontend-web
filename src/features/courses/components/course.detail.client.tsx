@@ -97,6 +97,14 @@ export function CourseDetailClient({
     isInCart,
   } = useCourseWorkspace(courseId, initialIsEnrolled)
 
+  const isVipUser = Boolean(
+    user?.is_premium ||
+      (user?.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) ||
+      user?.role === 'INSTRUCTOR' ||
+      user?.role === 'ADMIN'
+  )
+  const hasFullAccess = isEnrolled || isVipUser
+
   const [showScheduleBanner, setShowScheduleBanner] = useState(true)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [showPracticeModal, setShowPracticeModal] = useState(false)
@@ -108,7 +116,7 @@ export function CourseDetailClient({
         chapter || course?.chapters.find((ch) => ch.lessons.some((l) => l.id === targetLesson?.id))
       const isLocked =
         (targetChapter && lockedChapterIdSet.has(targetChapter.id)) ||
-        (!isEnrolled && !Boolean(targetLesson?.is_free_preview || targetLesson?.is_preview))
+        (!hasFullAccess && !Boolean(targetLesson?.is_free_preview || targetLesson?.is_preview))
 
       if (isLocked) {
         toast.warning(
@@ -126,12 +134,12 @@ export function CourseDetailClient({
       setActiveBottomTab('quiz')
       setShowPracticeModal(true)
     },
-    [handleSelectLesson, setActiveBottomTab, currentLesson, course, lockedChapterIdSet, isEnrolled]
+    [handleSelectLesson, setActiveBottomTab, currentLesson, course, lockedChapterIdSet, hasFullAccess]
   )
 
   const handleBack = () => {
     courseMiniPlayerStore.getState().setIsPlaying(false)
-    navigate(isEnrolled ? '/courses?tab=my-courses' : '/courses')
+    navigate(hasFullAccess ? '/courses?tab=my-courses' : '/courses')
   }
 
   const handleInitiateEnrollOrBuy = () => {
@@ -160,7 +168,7 @@ export function CourseDetailClient({
   }
 
   if (isLoading) {
-    if (isEnrolled) {
+    if (hasFullAccess) {
       return <CourseLoadingState onBack={handleBack} />
     }
     return <CourseLandingLoadingState onBack={handleBack} />
@@ -180,7 +188,7 @@ export function CourseDetailClient({
     )
   }
 
-  if (!isEnrolled) {
+  if (!hasFullAccess) {
     return (
       <>
         <CourseLandingView
@@ -261,9 +269,9 @@ export function CourseDetailClient({
 
       <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden relative">
         <div className="flex-1 flex flex-col overflow-y-auto scroll-smooth max-h-[calc(100vh-3.5rem)] transition-all duration-300">
-          {isEnrolled || Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) ? (
+          {hasFullAccess || Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) ? (
             <div className="flex flex-col">
-              {!isEnrolled && Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) && (
+              {!hasFullAccess && Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) && (
                 <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 shadow-md">
                   <div className="flex items-center gap-2">
                     <span className="text-sm">✨</span>
@@ -283,7 +291,7 @@ export function CourseDetailClient({
                 courseId={course.id}
                 courseTitle={course.title}
                 courseThumbnail={course.thumbnail}
-                isTrial={!isEnrolled}
+                isTrial={!hasFullAccess}
                 activeTab={activeBottomTab}
                 activeSidebarTab={activeSidebarTab}
                 onOpenCheckout={handleInitiateEnrollOrBuy}
@@ -434,7 +442,7 @@ export function CourseDetailClient({
             />
           )}
 
-          {isEnrolled && (showScheduleBanner || courseLockState?.is_locked) && (
+          {hasFullAccess && (showScheduleBanner || courseLockState?.is_locked) && (
             <div className="px-4 sm:px-6 lg:px-8 pt-4 w-full max-w-7xl">
               <CourseScheduleBanner
                 schedule={courseSchedule}
@@ -471,7 +479,7 @@ export function CourseDetailClient({
             course={course}
             currentLesson={currentLesson}
             activeTab={activeBottomTab}
-            isEnrolled={isEnrolled}
+            isEnrolled={hasFullAccess}
             isAuthenticated={isAuthenticated}
             currentUserId={user?.user_id}
             currentUserRole={user?.role}
@@ -494,7 +502,7 @@ export function CourseDetailClient({
           currentLesson={currentLesson}
           activeTab={activeSidebarTab}
           expandedChapters={expandedChapters}
-          isEnrolled={isEnrolled}
+          isEnrolled={hasFullAccess}
           lockedChapterIds={lockedChapterIdSet}
           progressDetail={progressDetail}
           onTabChange={setActiveSidebarTab}

@@ -46,12 +46,19 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
 
   const { data: rawCourse, isLoading: isCourseLoading, isError: isCourseError } = useCourseDetailQuery(courseId)
 
+  const isVipUser = Boolean(
+    user?.is_premium ||
+      (user?.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) ||
+      user?.role === 'INSTRUCTOR' ||
+      user?.role === 'ADMIN'
+  )
+
   const { isEnrolled: checkIsEnrolledByList } = useUserEnrollments(isAuthenticated)
   const isEnrolledInList = checkIsEnrolledByList(courseId)
 
   const { data: enrollmentStatusRes, isLoading: isEnrollmentLoading } = useCourseEnrollmentStatusQuery(
     courseId,
-    isAuthenticated && !isEnrolledInList
+    isAuthenticated && !isEnrolledInList && !isVipUser
   )
 
   const { data: progressData } = useCourseProgressQuery(
@@ -62,7 +69,8 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
   const [overrideEnrolled, setOverrideEnrolled] = useState<boolean | null>(null)
   const isEnrolled =
     overrideEnrolled ??
-    (isEnrolledInList ||
+    (isVipUser ||
+      isEnrolledInList ||
       Boolean(enrollmentStatusRes?.is_enrolled) ||
       Boolean(progressData?.course_progress) ||
       Boolean(progressData?.completed_lesson_ids?.length) ||
@@ -72,15 +80,18 @@ export function useCourseWorkspace(courseId: string, initialIsEnrolled: boolean 
     if (typeof window === 'undefined' || !courseId) return
     try {
       const key = STORAGE_KEYS.COURSE_ENROLLED(courseId)
-      if (isEnrolledInList || enrollmentStatusRes?.is_enrolled || overrideEnrolled) {
+      if (isVipUser || isEnrolledInList || enrollmentStatusRes?.is_enrolled || overrideEnrolled) {
         localStorage.setItem(key, 'true')
         storage.cookie.set(key, 'true', { days: 30, path: '/' })
-      } else if (enrollmentStatusRes && !enrollmentStatusRes.is_enrolled && !isEnrolledInList) {
+        if (isVipUser) {
+          storage.cookie.set(STORAGE_KEYS.IS_PRIVILEGED, 'true', { days: 30, path: '/' })
+        }
+      } else if (enrollmentStatusRes && !enrollmentStatusRes.is_enrolled && !isEnrolledInList && !isVipUser) {
         localStorage.removeItem(key)
         storage.cookie.remove(key, '/')
       }
     } catch {}
-  }, [courseId, isEnrolledInList, enrollmentStatusRes, overrideEnrolled])
+  }, [courseId, isVipUser, isEnrolledInList, enrollmentStatusRes, overrideEnrolled])
 
   const { data: reviewsData } = useCourseReviewsQuery(courseId, Boolean(rawCourse))
   const { data: qnaData } = useCourseQnAQuery(courseId, Boolean(rawCourse))
