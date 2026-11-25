@@ -42,6 +42,10 @@ export const API_CONFIG = {
       ACHIEVEMENTS: '/users/achievements',
       MY_SUBSCRIPTION: '/users/subscriptions/my',
     },
+    VOUCHERS: {
+      MY: '/users/vouchers/my',
+      VALIDATE: '/users/vouchers/validate',
+    },
 
     SUBSCRIPTION: {
       PLANS: '/users/subscriptions/plans',

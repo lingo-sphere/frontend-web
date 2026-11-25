@@ -13,6 +13,7 @@ interface CourseCheckoutModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   courses: CheckoutCourseItem[]
+  voucherCode?: string
   onSuccess?: () => void
 }
 
@@ -20,6 +21,7 @@ export function CourseCheckoutModal({
   open,
   onOpenChange,
   courses,
+  voucherCode,
   onSuccess,
 }: CourseCheckoutModalProps) {
   const { i18n } = useTranslation()
@@ -40,6 +42,7 @@ export function CourseCheckoutModal({
   } = useCourseCheckout({
     open,
     courses,
+    voucherCode,
     onOpenChange,
     onSuccess,
     isVi,

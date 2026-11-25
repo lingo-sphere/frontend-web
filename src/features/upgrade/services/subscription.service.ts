@@ -27,6 +27,7 @@ export interface CreateOrderPayload {
   amount?: number
   order_type?: 'SUBSCRIPTION' | 'COURSE'
   course_ids?: string[]
+  voucher_code?: string
 }
 
 export const subscriptionService = {
