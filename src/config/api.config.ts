@@ -27,6 +27,9 @@ export const API_CONFIG = {
       FORGOT_PASSWORD: '/auth/forgot-password',
       RESET_PASSWORD: '/auth/reset-password',
       SOCIAL_LOGIN: '/auth/social-login',
+      DELETE_ACCOUNT: '/auth/account',
+      SESSION_STATUS: '/auth/session-status',
+      SESSION_STREAM: '/auth/session-stream',
     },
 
     USERS: {

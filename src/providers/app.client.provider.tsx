@@ -154,7 +154,7 @@ export function AppClientProvider({ children }: AppClientProviderProps) {
 
     let eventSource: EventSource | null = null
     try {
-      const sseUrl = `${API_CONFIG.BASE_URL}/auth/session-stream?token=${encodeURIComponent(token)}`
+      const sseUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.SESSION_STREAM}?token=${encodeURIComponent(token)}`
       eventSource = new EventSource(sseUrl)
 
       eventSource.onmessage = (event) => {
