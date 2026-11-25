@@ -1,7 +1,9 @@
+// Giao diện ghi âm và nộp bài thi nói trong khóa học.
 "use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/button";
+import { VoicePill } from "@/components/voice.pill";
 import { useSpeakingRecorder } from "@/features/practice/hooks/use.speaking.recorder";
 import {
   courseService,
@@ -72,8 +74,6 @@ export function TestRunnerSpeakingSection({
     return () => {
       active = false;
     };
-    // The recorder setter only updates local state; restoration runs once for each session.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, sessionId]);
 
   useEffect(() => {
@@ -157,6 +157,29 @@ export function TestRunnerSpeakingSection({
       </p>
       {!graded && (
         <div className="space-y-3 rounded-2xl border border-border p-4">
+          {recorder.isRecording && (
+            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 gap-2">
+              <VoicePill
+                accentColor="#10b981"
+                iconColor="#ffffff"
+                background="#18181b"
+                size={46}
+                shape="pill"
+                reach={14}
+                showTime
+                waveform
+                slideToCancel
+                cancelDistance={70}
+                reactive="mic"
+                isRecording={true}
+                onStop={() => recorder.stopRecording()}
+                className="shadow-md"
+              />
+              <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+                Đang ghi âm câu trả lời • Trượt để hủy hoặc nhấn để dừng
+              </p>
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-3">
             <Button
               disabled={locked && !recorder.isRecording}

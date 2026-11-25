@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { Mic, Square, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/button'
+import { VoicePill } from '@/components/voice.pill'
 import { useSpeakingRecorder } from '@/features/practice/hooks/use.speaking.recorder'
 
 interface ToeicSpeakingRecorderInputProps {
@@ -71,15 +72,27 @@ export function ToeicSpeakingRecorderInput({
         </div>
 
         {isRecording && (
-          <div className="space-y-1">
-            <div className="w-full bg-surface-hover h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-amber-500 h-full transition-all duration-75"
-                style={{ width: `${Math.min(100, Math.max(5, micVolume * 100))}%` }}
+          <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 gap-3">
+            <div className="flex items-center justify-center py-2">
+              <VoicePill
+                accentColor="#f59e0b"
+                iconColor="#ffffff"
+                background="#18181b"
+                size={44}
+                shape="pill"
+                reach={14}
+                showTime
+                waveform
+                slideToCancel
+                cancelDistance={64}
+                reactive="mic"
+                isRecording={true}
+                onStop={stopRecording}
+                className="shadow-md"
               />
             </div>
-            <p className="text-[10px] text-text-tertiary text-right">
-              {isVietnamese ? 'Đang nhận tín hiệu micro...' : 'Detecting microphone audio...'}
+            <p className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+              {isVietnamese ? 'Trượt sang trái để hủy • Hoặc nhấn VoicePill / nút Dừng bên dưới' : 'Slide left to cancel • Or tap VoicePill / Stop button below'}
             </p>
           </div>
         )}

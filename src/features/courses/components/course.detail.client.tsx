@@ -288,6 +288,8 @@ export function CourseDetailClient({
               <LessonPlayer
                 lesson={currentLesson}
                 courseId={course.id}
+                courseTitle={course.title}
+                courseThumbnail={course.thumbnail}
                 isTrial={!isEnrolled}
                 onOpenCheckout={handleInitiateEnrollOrBuy}
                 onProgress={handleLessonProgress}

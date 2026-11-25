@@ -5,16 +5,13 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import {
-  Trophy,
   Headphones,
   BookOpen,
   Sparkles,
-  ClipboardCheck,
   HelpCircle,
   Award,
   FileEdit,
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useActivePlacementExamsQuery } from '@/features/toeic/hooks/use.toeic.query'
@@ -161,62 +158,6 @@ export default function PlacementTestPage() {
               </Button>
             </div>
           </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card className="rounded-2xl border-amber-200/60 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20">
-            <CardContent className="flex items-center gap-3.5 p-4.5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                <Trophy className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-text-primary">
-                  {isVietnamese ? 'Thang điểm ETS 990' : 'Standard ETS 990'}
-                </h4>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {isVietnamese
-                    ? 'Quy đổi điểm số và đối chiếu CEFR chuẩn quốc tế'
-                    : 'Accurate scale and CEFR benchmark'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-indigo-200/60 dark:border-indigo-900/40 bg-indigo-50/50 dark:bg-indigo-950/20">
-            <CardContent className="flex items-center gap-3.5 p-4.5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
-                <ClipboardCheck className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-text-primary">
-                  {isVietnamese ? 'Đề thi rút gọn tinh chuẩn' : 'Optimized Diagnostic Format'}
-                </h4>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {isVietnamese
-                    ? 'Đầy đủ kỹ năng Nghe & Đọc, làm nhanh không mệt mỏi'
-                    : 'Full listening & reading skills evaluation'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-emerald-200/60 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20">
-            <CardContent className="flex items-center gap-3.5 p-4.5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                <Sparkles className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-text-primary">
-                  {isVietnamese ? 'Cá nhân hóa lộ trình AI' : 'AI Learning Recommendations'}
-                </h4>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {isVietnamese
-                    ? 'Tự động gợi ý khóa học và bài luyện tập phù hợp'
-                    : 'Personalized course & practice suggestions'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-4">
