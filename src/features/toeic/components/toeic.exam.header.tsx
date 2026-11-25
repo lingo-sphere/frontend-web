@@ -1,18 +1,9 @@
-/**
- * @file toeic.exam.header.tsx
- * @description Header thanh điều hướng, đếm ngược thời gian và nộp bài thi TOEIC
- */
-
+// Header thanh điều hướng, đếm ngược thời gian hoạt họa và nộp bài thi TOEIC.
 'use client'
 
-import { ArrowLeft, Clock } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/button'
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-}
+import { AnimatedTimer } from '@/components/animated.timer'
 
 interface ToeicExamHeaderProps {
   title: string
@@ -52,14 +43,7 @@ export function ToeicExamHeader({
 
         <div className="flex items-center gap-3">
           {timedMode && timeRemaining > 0 && (
-            <div
-              className={`flex items-center gap-2 rounded-lg px-3 py-1.5 ${
-                timeRemaining < 300 ? 'bg-red-100 text-red-600' : 'bg-surface-subtle'
-              }`}
-            >
-              <Clock size={16} />
-              <span className="font-mono text-[14px] font-semibold">{formatTime(timeRemaining)}</span>
-            </div>
+            <AnimatedTimer seconds={timeRemaining} size="md" isWarningThreshold={300} />
           )}
           <Button size="sm" className="gap-1 bg-primary hover:bg-primary-hover cursor-pointer" onClick={onSubmit}>
             {isVietnamese ? 'Nộp bài' : 'Submit'}

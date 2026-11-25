@@ -18,6 +18,7 @@ import { PracticeExitConfirmModal } from "@/features/practice/components/practic
 import { Icon } from "@/components/icon.map";
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
+import { AnimatedTimer } from "@/components/animated.timer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/tabs";
 import {
   RotateCcw,
@@ -185,12 +186,16 @@ export function ReadingWorkspace({
 
         {/* Timer & Controls */}
         <div className="flex items-center gap-3">
-          <span
-            role="timer"
-            className="rounded-lg border px-3 py-2 font-mono font-bold"
-          >
-            {isSubmitted ? "Đã hoàn tất" : formatTime(remaining)}
-          </span>
+          {isSubmitted ? (
+            <span
+              role="timer"
+              className="rounded-lg border px-3 py-2 font-mono font-bold"
+            >
+              Đã hoàn tất
+            </span>
+          ) : (
+            <AnimatedTimer seconds={remaining} size="sm" isWarningThreshold={300} />
+          )}
 
           <Button
             variant="default"
