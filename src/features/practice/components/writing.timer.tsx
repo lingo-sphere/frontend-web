@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Clock, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatTime, getTimeStatus } from '@/features/practice/lib/writing-time-mode'
+import { getTimeStatus } from '@/features/practice/lib/writing-time-mode'
+import { AnimatedTimer } from '@/components/animated.timer'
 
 interface WritingTimerProps {
   totalSeconds: number
@@ -90,7 +91,13 @@ export function WritingTimer({ totalSeconds, onTimeUp, onElapsedChange, isPaused
             status === 'urgent' && 'scale-110'
           )}
         >
-          {remaining === 0 ? '00:00' : formatTime(remaining)}
+          <AnimatedTimer
+            seconds={remaining}
+            showIcon={false}
+            size={status === 'urgent' ? 'lg' : 'sm'}
+            isWarningThreshold={0}
+            className="p-0 border-0 bg-transparent text-inherit shadow-none"
+          />
         </span>
 
         {status === 'urgent' && remaining > 0 && (

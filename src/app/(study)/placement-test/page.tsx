@@ -5,16 +5,14 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import {
-  Trophy,
   Headphones,
   BookOpen,
+  Mic,
   Sparkles,
-  ClipboardCheck,
   HelpCircle,
   Award,
   FileEdit,
 } from 'lucide-react'
-import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
 import { useActivePlacementExamsQuery } from '@/features/toeic/hooks/use.toeic.query'
@@ -43,7 +41,9 @@ export default function PlacementTestPage() {
 
   const userPlacementScore = Number(user?.placement_test_score) || 0
   const hasTested = Boolean(userPlacementScore > 0 || user?.placement_tested_at)
-  const levelInfo = getUserScoreLevelInfo(userPlacementScore, hasTested)
+  const is4Skills = user?.placement_skills_type === '4SKILLS'
+  const maxScore = is4Skills ? 1390 : 990
+  const levelInfo = getUserScoreLevelInfo(userPlacementScore, hasTested, maxScore)
 
   const handleStartExam = (examId: string) => {
     if (!isAuthenticated) {
@@ -95,8 +95,8 @@ export default function PlacementTestPage() {
                 <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight">
                   {hasTested
                     ? isVietnamese
-                      ? `Trình độ hiện tại: ${userPlacementScore} / 990 TOEIC`
-                      : `Current Level: ${userPlacementScore} / 990 TOEIC`
+                      ? `Trình độ hiện tại: ${userPlacementScore} / ${maxScore} TOEIC`
+                      : `Current Level: ${userPlacementScore} / ${maxScore} TOEIC`
                     : isVietnamese
                     ? 'Bạn chưa có điểm đánh giá năng lực đầu vào'
                     : 'You have not taken an entrance test yet'}
@@ -130,6 +130,28 @@ export default function PlacementTestPage() {
                       </strong>
                     </span>
                   </div>
+                  {is4Skills && (
+                    <>
+                      <div className="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center gap-2">
+                        <Mic size={14} className="text-teal-300" />
+                        <span>
+                          {isVietnamese ? 'Nói:' : 'Speaking:'}{' '}
+                          <strong className="text-white">
+                            {user?.placement_speaking_score ?? 0}đ
+                          </strong>
+                        </span>
+                      </div>
+                      <div className="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center gap-2">
+                        <FileEdit size={14} className="text-purple-300" />
+                        <span>
+                          {isVietnamese ? 'Viết:' : 'Writing:'}{' '}
+                          <strong className="text-white">
+                            {user?.placement_writing_score ?? 0}đ
+                          </strong>
+                        </span>
+                      </div>
+                    </>
+                  )}
                   {user?.placement_tested_at && (
                     <span className="text-[11px] text-emerald-300/80">
                       {isVietnamese ? 'Cập nhật:' : 'Updated:'}{' '}
@@ -161,62 +183,6 @@ export default function PlacementTestPage() {
               </Button>
             </div>
           </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card className="rounded-2xl border-amber-200/60 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20">
-            <CardContent className="flex items-center gap-3.5 p-4.5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                <Trophy className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-text-primary">
-                  {isVietnamese ? 'Thang điểm ETS 990' : 'Standard ETS 990'}
-                </h4>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {isVietnamese
-                    ? 'Quy đổi điểm số và đối chiếu CEFR chuẩn quốc tế'
-                    : 'Accurate scale and CEFR benchmark'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-indigo-200/60 dark:border-indigo-900/40 bg-indigo-50/50 dark:bg-indigo-950/20">
-            <CardContent className="flex items-center gap-3.5 p-4.5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
-                <ClipboardCheck className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-text-primary">
-                  {isVietnamese ? 'Đề thi rút gọn tinh chuẩn' : 'Optimized Diagnostic Format'}
-                </h4>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {isVietnamese
-                    ? 'Đầy đủ kỹ năng Nghe & Đọc, làm nhanh không mệt mỏi'
-                    : 'Full listening & reading skills evaluation'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-2xl border-emerald-200/60 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20">
-            <CardContent className="flex items-center gap-3.5 p-4.5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                <Sparkles className="h-6 w-6" />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-text-primary">
-                  {isVietnamese ? 'Cá nhân hóa lộ trình AI' : 'AI Learning Recommendations'}
-                </h4>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {isVietnamese
-                    ? 'Tự động gợi ý khóa học và bài luyện tập phù hợp'
-                    : 'Personalized course & practice suggestions'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-4">
@@ -296,6 +262,16 @@ export default function PlacementTestPage() {
             writingScore: user?.placement_writing_score ?? 110,
             skillsType: user?.placement_skills_type || '2SKILLS',
             targetScore: Number(user?.target_toeic_score) || 650,
+            placement_2skills_test_score: user?.placement_2skills_test_score ?? undefined,
+            placement_2skills_listening_score: user?.placement_2skills_listening_score ?? undefined,
+            placement_2skills_reading_score: user?.placement_2skills_reading_score ?? undefined,
+            target_toeic_2skills_score: user?.target_toeic_2skills_score ?? undefined,
+            placement_4skills_test_score: user?.placement_4skills_test_score ?? undefined,
+            placement_4skills_listening_score: user?.placement_4skills_listening_score ?? undefined,
+            placement_4skills_reading_score: user?.placement_4skills_reading_score ?? undefined,
+            placement_4skills_speaking_score: user?.placement_4skills_speaking_score ?? undefined,
+            placement_4skills_writing_score: user?.placement_4skills_writing_score ?? undefined,
+            target_toeic_4skills_score: user?.target_toeic_4skills_score ?? undefined,
           }}
           onSuccess={() => {
             setShowEditScoreModal(false)

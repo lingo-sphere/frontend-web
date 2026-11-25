@@ -1,7 +1,4 @@
-/**
- * @file use.speaking.recorder.ts
- * @description Custom hook managing microphone capture, Web Audio API analyser, recording timers, and audio blob creation
- */
+// Hook quản lý thu âm microphone, phân tích âm lượng và tạo tệp âm thanh bài nói.
 
 import { useState, useRef, useEffect } from 'react'
 import { toast } from '@/store/toast.store'
@@ -115,7 +112,7 @@ export function useSpeakingRecorder() {
         }
       } catch {}
 
-      recorder.start(250)
+      recorder.start(100)
       setIsRecording(true)
       setRecordingSeconds(0)
       timerIntervalRef.current = setInterval(() => {
@@ -161,7 +158,15 @@ export function useSpeakingRecorder() {
       audioContextRef.current = null
     }
     setMicVolume(0)
-    if (isRecording) stopRecording()
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.onstop = null
+      mediaRecorderRef.current.stop()
+    }
+    setIsRecording(false)
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+    }
+    audioChunksRef.current = []
     setRecordedBlob(null)
     setRecordedUrl(null)
     setUploadedAudioName(null)

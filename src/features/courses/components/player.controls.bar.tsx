@@ -52,6 +52,7 @@ interface PlayerControlsBarProps {
   onToggleSettings?: () => void
   onSpeedChange: (speed: number) => void
   onTogglePip: () => void
+  onToggleMiniPlayer?: () => void
   onToggleTheater: () => void
   onToggleFullscreen: () => void
   onSeekRelative?: (seconds: number) => void
@@ -91,6 +92,7 @@ export function PlayerControlsBar({
   onToggleSettings,
   onSpeedChange,
   onTogglePip,
+  onToggleMiniPlayer,
   onToggleTheater,
   onToggleFullscreen,
 }: PlayerControlsBarProps) {
@@ -250,9 +252,10 @@ export function PlayerControlsBar({
 
           
           <button
-            onClick={onTogglePip}
+            type="button"
+            onClick={onToggleMiniPlayer || onTogglePip}
             className="p-1.5 rounded-full text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            title="Hình trong hình (p)"
+            title="Thu nhỏ trình phát (Mini player)"
           >
             <PictureInPicture2 size={18} />
           </button>

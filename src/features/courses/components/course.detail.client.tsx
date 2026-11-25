@@ -1,7 +1,7 @@
 // Component giao diện không gian học tập trực tuyến Client cho học viên LingoSphere
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { ExternalLink, FileText, FolderDown, HelpCircle, Lock } from 'lucide-react'
@@ -25,6 +25,7 @@ import { CourseScheduleModal } from '@/features/courses/components/course.schedu
 import { CourseLandingView } from '@/features/courses/components/course.landing.view'
 import { CourseLandingLoadingState } from '@/features/courses/components/course.landing.loading.state'
 import { courseService } from '@/features/courses/services/course.service'
+import { courseMiniPlayerStore } from '@/features/courses/store/course.mini.player.store'
 import { useCourseWorkspace } from '@/features/courses/hooks/use.course.workspace'
 import { getCourseEffectivePrice } from '@/features/courses/helpers/course.workspace.adapter'
 import type { Chapter, Lesson } from '@/features/courses/types/course'
@@ -96,9 +97,35 @@ export function CourseDetailClient({
     isInCart,
   } = useCourseWorkspace(courseId, initialIsEnrolled)
 
+  const isVipUser = Boolean(
+    user?.is_premium ||
+      (user?.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) ||
+      user?.role === 'INSTRUCTOR' ||
+      user?.role === 'ADMIN'
+  )
+  const hasFullAccess = isEnrolled || isVipUser
+
   const [showScheduleBanner, setShowScheduleBanner] = useState(true)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [showPracticeModal, setShowPracticeModal] = useState(false)
+
+  const coursePlaylist = useMemo(() => {
+    if (!course?.chapters) return []
+    const list: Array<{ id: string; title: string; videoUrl: string; duration?: number; thumbnail?: string; chapterTitle?: string }> = []
+    course.chapters.forEach((ch) => {
+      ch.lessons.forEach((l) => {
+        list.push({
+          id: l.id,
+          title: l.title,
+          videoUrl: l.videoUrl || l.content?.videoUrl || '',
+          duration: l.duration,
+          thumbnail: course.thumbnail,
+          chapterTitle: ch.title,
+        })
+      })
+    })
+    return list
+  }, [course])
 
   const handleOpenPracticeQuiz = useCallback(
     (chapter?: Chapter, lesson?: Lesson) => {
@@ -107,7 +134,7 @@ export function CourseDetailClient({
         chapter || course?.chapters.find((ch) => ch.lessons.some((l) => l.id === targetLesson?.id))
       const isLocked =
         (targetChapter && lockedChapterIdSet.has(targetChapter.id)) ||
-        (!isEnrolled && !Boolean(targetLesson?.is_free_preview || targetLesson?.is_preview))
+        (!hasFullAccess && !Boolean(targetLesson?.is_free_preview || targetLesson?.is_preview))
 
       if (isLocked) {
         toast.warning(
@@ -125,20 +152,12 @@ export function CourseDetailClient({
       setActiveBottomTab('quiz')
       setShowPracticeModal(true)
     },
-    [handleSelectLesson, setActiveBottomTab, currentLesson, course, lockedChapterIdSet, isEnrolled]
+    [handleSelectLesson, setActiveBottomTab, currentLesson, course, lockedChapterIdSet, hasFullAccess]
   )
 
   const handleBack = () => {
-    if (
-      typeof window !== 'undefined' &&
-      window.history.state &&
-      typeof window.history.state.idx === 'number' &&
-      window.history.state.idx > 0
-    ) {
-      navigate(-1)
-    } else {
-      navigate('/courses')
-    }
+    courseMiniPlayerStore.getState().setIsPlaying(false)
+    navigate(hasFullAccess ? '/courses?tab=my-courses' : '/courses')
   }
 
   const handleInitiateEnrollOrBuy = () => {
@@ -167,7 +186,7 @@ export function CourseDetailClient({
   }
 
   if (isLoading) {
-    if (isEnrolled) {
+    if (hasFullAccess) {
       return <CourseLoadingState onBack={handleBack} />
     }
     return <CourseLandingLoadingState onBack={handleBack} />
@@ -187,7 +206,7 @@ export function CourseDetailClient({
     )
   }
 
-  if (!isEnrolled) {
+  if (!hasFullAccess) {
     return (
       <>
         <CourseLandingView
@@ -268,9 +287,9 @@ export function CourseDetailClient({
 
       <div className="flex-1 flex flex-col lg:flex-row w-full overflow-hidden relative">
         <div className="flex-1 flex flex-col overflow-y-auto scroll-smooth max-h-[calc(100vh-3.5rem)] transition-all duration-300">
-          {isEnrolled || Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) ? (
+          {hasFullAccess || Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) ? (
             <div className="flex flex-col">
-              {!isEnrolled && Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) && (
+              {!hasFullAccess && Boolean(currentLesson?.is_free_preview || currentLesson?.is_preview) && (
                 <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 shadow-md">
                   <div className="flex items-center gap-2">
                     <span className="text-sm">✨</span>
@@ -288,7 +307,12 @@ export function CourseDetailClient({
               <LessonPlayer
                 lesson={currentLesson}
                 courseId={course.id}
-                isTrial={!isEnrolled}
+                courseTitle={course.title}
+                courseThumbnail={course.thumbnail}
+                isTrial={!hasFullAccess}
+                activeTab={activeBottomTab}
+                activeSidebarTab={activeSidebarTab}
+                playlist={coursePlaylist}
                 onOpenCheckout={handleInitiateEnrollOrBuy}
                 onProgress={handleLessonProgress}
                 onTimeUpdate={(t) => setPlayerCurrentTime(t)}
@@ -437,7 +461,7 @@ export function CourseDetailClient({
             />
           )}
 
-          {isEnrolled && (showScheduleBanner || courseLockState?.is_locked) && (
+          {hasFullAccess && (showScheduleBanner || courseLockState?.is_locked) && (
             <div className="px-4 sm:px-6 lg:px-8 pt-4 w-full max-w-7xl">
               <CourseScheduleBanner
                 schedule={courseSchedule}
@@ -474,7 +498,7 @@ export function CourseDetailClient({
             course={course}
             currentLesson={currentLesson}
             activeTab={activeBottomTab}
-            isEnrolled={isEnrolled}
+            isEnrolled={hasFullAccess}
             isAuthenticated={isAuthenticated}
             currentUserId={user?.user_id}
             currentUserRole={user?.role}
@@ -497,7 +521,7 @@ export function CourseDetailClient({
           currentLesson={currentLesson}
           activeTab={activeSidebarTab}
           expandedChapters={expandedChapters}
-          isEnrolled={isEnrolled}
+          isEnrolled={hasFullAccess}
           lockedChapterIds={lockedChapterIdSet}
           progressDetail={progressDetail}
           onTabChange={setActiveSidebarTab}

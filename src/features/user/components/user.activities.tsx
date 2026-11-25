@@ -56,9 +56,6 @@ export function ActivityItem({ activity }: { activity: Activity }) {
           {formatTime(activity.timestamp)}
         </div>
       </div>
-      <div className="text-sm font-medium text-primary flex-shrink-0">
-        +{activity.xpEarned} XP
-      </div>
     </div>
   )
 }

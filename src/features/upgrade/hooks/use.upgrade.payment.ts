@@ -213,6 +213,7 @@ export function useUpgradePayment({ open, onOpenChange }: UseUpgradePaymentOptio
       }
       setUser(updatedUser)
       storage.set(STORAGE_KEYS.USER, updatedUser)
+      storage.cookie.set(STORAGE_KEYS.IS_PRIVILEGED, 'true', { days: 30, path: '/' })
     }
 
     setTimeout(() => {

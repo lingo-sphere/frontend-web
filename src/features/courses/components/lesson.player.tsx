@@ -1,18 +1,28 @@
 // Trình phát video bài học phong cách YouTube cao cấp cho học viên LingoSphere.
-
 'use client'
 
-import { Play, Pause, Rewind, FastForward } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Play, Pause, Rewind, FastForward, Tv, Maximize2 } from 'lucide-react'
 import type { Lesson } from '@/features/courses/types/course'
 import { PlayerControlsBar } from '@/features/courses/components/player.controls.bar'
 import { PlayerEndscreen } from '@/features/courses/components/player.endscreen'
 import { PlayerShortcutsModal } from '@/features/courses/components/player.shortcuts.modal'
+import {
+  useCourseMiniPlayerStore,
+  courseMiniPlayerStore,
+  type CourseMiniPlayerPlaylistItem,
+} from '@/features/courses/store/course.mini.player.store'
 import { useLessonVideoPlayer } from '@/features/courses/hooks/use.lesson.video.player'
 
 interface LessonPlayerProps {
   lesson: Lesson
   courseId?: string
+  courseTitle?: string
+  courseThumbnail?: string
   isTrial?: boolean
+  activeTab?: string
+  activeSidebarTab?: string
+  playlist?: CourseMiniPlayerPlaylistItem[]
   onOpenCheckout?: () => void
   onProgress?: (lessonId: string, progress: number) => void
   onLessonComplete?: (lessonId: string) => void
@@ -28,7 +38,12 @@ interface LessonPlayerProps {
 export function LessonPlayer({
   lesson,
   courseId,
+  courseTitle,
+  courseThumbnail,
   isTrial = false,
+  activeTab,
+  activeSidebarTab,
+  playlist,
   onOpenCheckout,
   onProgress,
   onLessonComplete,
@@ -40,6 +55,20 @@ export function LessonPlayer({
   onAddNoteAtTimestamp,
   onDurationChange,
 }: LessonPlayerProps) {
+  const isMiniPlayer = useCourseMiniPlayerStore(
+    (s) => s.isOpen && s.lesson?.id === lesson.id && s.courseId === (courseId || '')
+  )
+
+  useEffect(() => {
+    const handleNext = () => onNextLesson?.()
+    const handlePrev = () => onPrevLesson?.()
+    window.addEventListener('lingosphere:course-next-lesson', handleNext)
+    window.addEventListener('lingosphere:course-prev-lesson', handlePrev)
+    return () => {
+      window.removeEventListener('lingosphere:course-next-lesson', handleNext)
+      window.removeEventListener('lingosphere:course-prev-lesson', handlePrev)
+    }
+  }, [onNextLesson, onPrevLesson])
   const {
     containerRef,
     videoRef,
@@ -102,19 +131,60 @@ export function LessonPlayer({
   })
 
   return (
-    <div
-      ref={containerRef}
-      onMouseMove={resetControlsTimeout}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
-      className={`relative w-full overflow-hidden bg-black select-none group font-sans ${
-        isTheater
-          ? 'aspect-21/9 max-h-[85vh]'
-          : isFullscreen
-          ? 'w-screen h-screen'
-          : 'aspect-video rounded-3xl shadow-2xl border border-border/80'
-      }`}
-      onContextMenu={(e) => e.preventDefault()}
-    >
+    <>
+      {isMiniPlayer && (
+        <div className="relative w-full aspect-video rounded-3xl bg-slate-900/90 border border-border/80 flex flex-col items-center justify-center p-6 text-center shadow-xl">
+          <div className="h-16 w-16 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary mb-3 shadow-inner">
+            <Tv size={28} />
+          </div>
+          <h4 className="text-base font-bold text-white mb-1">
+            Bài giảng đang phát ở chế độ thu nhỏ
+          </h4>
+          <p className="text-xs text-white/60 max-w-sm mb-4">
+            Bạn có thể tự do đọc tài liệu, ghi chú hoặc làm bài tập trong khi video vẫn tiếp tục phát ở góc màn hình.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              const currentMiniTime = courseMiniPlayerStore.getState().currentTime
+              const wasPlaying = courseMiniPlayerStore.getState().isPlaying
+              courseMiniPlayerStore.getState().closeMiniPlayer()
+              seekToTime(currentMiniTime)
+              if (wasPlaying) {
+                videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {})
+              } else {
+                videoRef.current?.pause()
+                setIsPlaying(false)
+              }
+              if (typeof window !== 'undefined') {
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover shadow-lg cursor-pointer transition-all active:scale-95"
+          >
+            <Maximize2 size={14} />
+            <span>Phóng to bài giảng trở lại</span>
+          </button>
+        </div>
+      )}
+
+      <div
+        ref={containerRef}
+        onMouseMove={resetControlsTimeout}
+        onMouseLeave={() => isPlaying && setShowControls(false)}
+        className={
+          isMiniPlayer
+            ? 'absolute -top-[9999px] -left-[9999px] w-1 h-1 opacity-0 pointer-events-none overflow-hidden'
+            : `relative w-full overflow-hidden bg-black select-none group font-sans ${
+                isTheater
+                  ? 'aspect-21/9 max-h-[85vh]'
+                  : isFullscreen
+                  ? 'w-screen h-screen'
+                  : 'aspect-video rounded-3xl shadow-2xl border border-border/80'
+              }`
+        }
+        onContextMenu={(e) => e.preventDefault()}
+      >
       <div className="relative w-full h-full flex items-center justify-center bg-black">
         {isDirectVideo && effectiveVideoUrl ? (
           <video
@@ -245,6 +315,42 @@ export function LessonPlayer({
           onToggleTheater={() => setIsTheater(!isTheater)}
           onToggleFullscreen={toggleFullscreen}
           onTogglePip={togglePip}
+          onToggleMiniPlayer={() => {
+            if (isMiniPlayer) {
+              const currentMiniTime = courseMiniPlayerStore.getState().currentTime
+              const wasPlaying = courseMiniPlayerStore.getState().isPlaying
+              courseMiniPlayerStore.getState().closeMiniPlayer()
+              seekToTime(currentMiniTime)
+              if (wasPlaying) {
+                videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {})
+              } else {
+                videoRef.current?.pause()
+                setIsPlaying(false)
+              }
+            } else {
+              const wasPlaying = Boolean(videoRef.current && !videoRef.current.paused && isPlaying)
+              videoRef.current?.pause()
+              setIsPlaying(false)
+              const curIndex = playlist ? playlist.findIndex((item) => item.id === lesson.id) : -1
+              const validIndex = curIndex >= 0 ? curIndex : 0
+              courseMiniPlayerStore.getState().openMiniPlayer({
+                lesson,
+                courseId: courseId || '',
+                courseTitle: courseTitle || '',
+                courseThumbnail: courseThumbnail || '',
+                effectiveVideoUrl: effectiveVideoUrl || '',
+                currentTime,
+                duration,
+                isPlaying: wasPlaying,
+                volume,
+                isMuted,
+                playlist: playlist || [],
+                currentLessonIndex: validIndex,
+                hasNextLesson: playlist && playlist.length > 0 ? validIndex < playlist.length - 1 : hasNextLesson,
+                hasPrevLesson: playlist && playlist.length > 0 ? validIndex > 0 : hasPrevLesson,
+              })
+            }
+          }}
           onNextLesson={onNextLesson}
           onPrevLesson={onPrevLesson}
           onOpenShortcutsModal={() => setShowShortcutsModal(true)}
@@ -258,5 +364,6 @@ export function LessonPlayer({
         onClose={() => setShowShortcutsModal(false)}
       />
     </div>
+  </>
   )
 }

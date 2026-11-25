@@ -365,10 +365,10 @@ export function IpaPracticeModal({
                 </div>
                 <div className="rounded-xl border border-border bg-surface-subtle p-3.5">
                   <span className="text-[11px] font-medium text-text-tertiary">
-                    {isVietnamese ? "Kinh nghiệm" : "XP Earned"}
+                    {isVietnamese ? "Số câu đúng" : "Correct"}
                   </span>
-                  <p className="mt-0.5 text-xl font-extrabold text-amber-500">
-                    +{correctCount * 10} XP
+                  <p className="mt-0.5 text-xl font-extrabold text-emerald-600">
+                    {correctCount}/{exercises.length}
                   </p>
                 </div>
               </div>

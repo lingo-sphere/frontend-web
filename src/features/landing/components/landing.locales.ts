@@ -135,7 +135,7 @@ export const landingLocales = {
       card5Desc: "Cắt lớp cấu trúc câu phức, không cần dịch thô từng từ",
       card6Title: "Chuỗi Học Liên Tục",
       card6Streak: "42 Ngày Liên Tục",
-      card6XP: "+1,280 XP hôm nay",
+      card6XP: "Duy trì mỗi ngày",
     },
     lanyard: {
       tag: "Cổng Nhập Học LingoSphere",
@@ -306,7 +306,7 @@ export const landingLocales = {
       card5Desc: "Complex sentence structure deconstruction without literal translation",
       card6Title: "Active Study Streak",
       card6Streak: "42 Days Streak",
-      card6XP: "+1,280 XP earned today",
+      card6XP: "Consistent every day",
     },
     lanyard: {
       tag: "LingoSphere Academy Entrance",

@@ -72,7 +72,7 @@ export function ProgressMetricsHeader({ metrics }: ProgressMetricsHeaderProps) {
             <span className="text-xs font-bold text-text-secondary">ngày liên tiếp</span>
           </div>
           <p className="text-[11px] font-semibold text-text-tertiary">
-            Tích lũy: <strong className="text-orange-600">{metrics.xp} XP</strong> • Cấp độ {metrics.level}
+            Duy trì học tập mỗi ngày để giữ vững chuỗi
           </p>
         </div>
       </div>

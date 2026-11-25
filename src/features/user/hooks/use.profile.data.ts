@@ -1,7 +1,6 @@
 // Custom hook tải và đồng bộ dữ liệu hồ sơ cá nhân và bảng xếp hạng bằng TanStack Query.
 import { useState, useEffect } from 'react'
 import { userService } from '@/features/user/services/user.service'
-import { useLeaderboardQuery } from '@/features/leaderboard/hooks/use.leaderboard.query'
 import type { User, EditProfileForm } from '@/features/user/types/user'
 import type { UserScoreData } from '@/features/user/utils/user.score.utils'
 import { useAuthStore } from '@/features/auth/store/auth.store'
@@ -84,7 +83,6 @@ export function useProfileData() {
 
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'activity'>('overview')
-  const { data: leaderboard = [] } = useLeaderboardQuery('weekly')
 
   const [userScores, setUserScores] = useState<UserScoreData>(defaultUserScores)
 
@@ -123,6 +121,16 @@ export function useProfileData() {
         writingScore: sWrt,
         targetScore: resolvedTarget,
         skillsType: rawAuth?.placement_skills_type || '2SKILLS',
+        placement_2skills_test_score: rawAuth?.placement_2skills_test_score ?? undefined,
+        placement_2skills_listening_score: rawAuth?.placement_2skills_listening_score ?? undefined,
+        placement_2skills_reading_score: rawAuth?.placement_2skills_reading_score ?? undefined,
+        target_toeic_2skills_score: rawAuth?.target_toeic_2skills_score ?? undefined,
+        placement_4skills_test_score: rawAuth?.placement_4skills_test_score ?? undefined,
+        placement_4skills_listening_score: rawAuth?.placement_4skills_listening_score ?? undefined,
+        placement_4skills_reading_score: rawAuth?.placement_4skills_reading_score ?? undefined,
+        placement_4skills_speaking_score: rawAuth?.placement_4skills_speaking_score ?? undefined,
+        placement_4skills_writing_score: rawAuth?.placement_4skills_writing_score ?? undefined,
+        target_toeic_4skills_score: rawAuth?.target_toeic_4skills_score ?? undefined,
         isManuallyEdited: isManual,
         hasTested: hasScores,
         testedAt: rawAuth?.placement_tested_at || null,
@@ -194,6 +202,16 @@ export function useProfileData() {
                 writingScore: sWrt,
                 targetScore: resolvedTarget,
                 skillsType: profileData?.placement_skills_type || prev.skillsType || '2SKILLS',
+                placement_2skills_test_score: profileData?.placement_2skills_test_score ?? prev.placement_2skills_test_score,
+                placement_2skills_listening_score: profileData?.placement_2skills_listening_score ?? prev.placement_2skills_listening_score,
+                placement_2skills_reading_score: profileData?.placement_2skills_reading_score ?? prev.placement_2skills_reading_score,
+                target_toeic_2skills_score: profileData?.target_toeic_2skills_score ?? prev.target_toeic_2skills_score,
+                placement_4skills_test_score: profileData?.placement_4skills_test_score ?? prev.placement_4skills_test_score,
+                placement_4skills_listening_score: profileData?.placement_4skills_listening_score ?? prev.placement_4skills_listening_score,
+                placement_4skills_reading_score: profileData?.placement_4skills_reading_score ?? prev.placement_4skills_reading_score,
+                placement_4skills_speaking_score: profileData?.placement_4skills_speaking_score ?? prev.placement_4skills_speaking_score,
+                placement_4skills_writing_score: profileData?.placement_4skills_writing_score ?? prev.placement_4skills_writing_score,
+                target_toeic_4skills_score: profileData?.target_toeic_4skills_score ?? prev.target_toeic_4skills_score,
                 isManuallyEdited: isManual,
                 hasTested: sHas,
               }))
@@ -243,7 +261,6 @@ export function useProfileData() {
     setIsEditing,
     activeTab,
     setActiveTab,
-    leaderboard,
     userScores,
     setUserScores,
     handleSaveProfile,

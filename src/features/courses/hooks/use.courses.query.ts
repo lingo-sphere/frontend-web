@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient, queryOptions, type QueryClient }
 import { courseService } from '@/features/courses/services/course.service'
 import { courseKeys } from '@/features/courses/keys/course.keys'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import type { User } from '@/features/user/schemas/user.schema'
 
 export type CourseQueryParams = {
@@ -145,8 +146,13 @@ export function useUserEnrollments(enabled = true) {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    const authUser = storage.get<User>(STORAGE_KEYS.USER)
-    if (authUser?.is_premium || authUser?.role === 'INSTRUCTOR') {
+    const authUser = useAuthStore.getState().user || storage.get<User>(STORAGE_KEYS.USER)
+    if (
+      authUser?.is_premium ||
+      (authUser?.subscription_expires_at && new Date(authUser.subscription_expires_at) > new Date()) ||
+      authUser?.role === 'INSTRUCTOR' ||
+      authUser?.role === 'ADMIN'
+    ) {
       storage.cookie.set(STORAGE_KEYS.IS_PRIVILEGED, 'true', { days: 30, path: '/' })
     }
     enrolledCourseIds.forEach((id) => {
@@ -158,8 +164,13 @@ export function useUserEnrollments(enabled = true) {
   const isEnrolled = useCallback(
     (courseIdOrSlug: string) => {
       if (!courseIdOrSlug) return false
-      const authUser = storage.get<User>(STORAGE_KEYS.USER)
-      if (authUser?.is_premium || authUser?.role === 'INSTRUCTOR') {
+      const authUser = useAuthStore.getState().user || storage.get<User>(STORAGE_KEYS.USER)
+      if (
+        authUser?.is_premium ||
+        (authUser?.subscription_expires_at && new Date(authUser.subscription_expires_at) > new Date()) ||
+        authUser?.role === 'INSTRUCTOR' ||
+        authUser?.role === 'ADMIN'
+      ) {
         return true
       }
       return enrolledCourseIds.includes(String(courseIdOrSlug))

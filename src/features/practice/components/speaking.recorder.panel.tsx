@@ -1,13 +1,10 @@
+// Bảng điều khiển ghi âm, đồng hồ đếm ngược hoạt họa VoicePill và nghe lại bài nói của học viên.
 import { PracticeRecordKey } from '@/features/practice/components/practice.keyboard'
 import { resolveSpeakingPolicy } from '@/features/practice/lib/speaking-policy'
-/**
- * @file speaking.recorder.panel.tsx
- * @description Bảng điều khiển ghi âm, đồng hồ đếm ngược và nghe lại bài nói của học viên
- */
-
 import { Loader2, Mic, Pause, Play, RotateCcw, Square, Zap, Target, Trophy, Check } from 'lucide-react'
 import { Button } from '@/components/button'
 import { Card, CardContent } from '@/components/card'
+import { VoicePill } from '@/components/voice.pill'
 import type { SpeakingExercise, RecordingPhase } from '@/features/practice/types/speaking'
 
 interface SpeakingRecorderPanelProps {
@@ -58,7 +55,6 @@ export function SpeakingRecorderPanel({
   canRetake, takesUsed,
   isSubmitting = false,
 }: SpeakingRecorderPanelProps) {
-  // Lấy các mốc thời gian theo tier
   const easyPrep = resolveSpeakingPolicy(exercise, 'EASY').preparation_time_seconds
   const medPrep = resolveSpeakingPolicy(exercise, 'MEDIUM').preparation_time_seconds
   const hardPrep = resolveSpeakingPolicy(exercise, 'HARD').preparation_time_seconds
@@ -79,7 +75,6 @@ export function SpeakingRecorderPanel({
         <p className="mb-3 text-center text-sm text-text-secondary">{isVietnamese ? 'Lượt thu âm' : 'Takes'}: {takesUsed}/{resolveSpeakingPolicy(exercise, selectedTier).max_record_attempts}</p>
         {phase === 'idle' && (
           <div className="text-center">
-            {/* Bộ chọn 3 mức độ thời gian (Phản xạ - Tiêu chuẩn - Thư thả) đồng bộ Writing & Reading */}
             {needsPreparation && (
               <div className="mb-6 rounded-2xl border border-border/80 bg-surface-subtle p-4 text-left">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -92,7 +87,6 @@ export function SpeakingRecorderPanel({
                 </div>
 
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                  {/* Mức 1: Phản xạ (Hard) */}
                   <button
                     type="button"
                     disabled={takesUsed > 0}
@@ -128,7 +122,6 @@ export function SpeakingRecorderPanel({
                     </p>
                   </button>
 
-                  {/* Mức 2: Tiêu chuẩn (Medium) */}
                   <button
                     type="button"
                     disabled={takesUsed > 0}
@@ -164,7 +157,6 @@ export function SpeakingRecorderPanel({
                     </p>
                   </button>
 
-                  {/* Mức 3: Thư thả (Easy) */}
                   <button
                     type="button"
                     disabled={takesUsed > 0}
@@ -236,7 +228,6 @@ export function SpeakingRecorderPanel({
 
         {phase === 'preparing' && (
           <div className="text-center">
-            {/* Countdown Badge & Circular Display */}
             <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[12px] font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-200">
               <span>
                 {selectedTier === 'EASY'
@@ -262,7 +253,6 @@ export function SpeakingRecorderPanel({
                 : 'Review the task and prepare your main ideas. Recording begins automatically.'}
             </p>
 
-            {/* Skip Button: Cho phép nói ngay không cần chờ */}
             <Button
               variant="outline"
               size="default"
@@ -278,35 +268,50 @@ export function SpeakingRecorderPanel({
 
         {phase === 'recording' && (
           <div className="text-center">
-            <div className="mb-6 flex items-center justify-center gap-3">
-              <div className="relative">
-                <div className="h-32 w-32 animate-pulse rounded-full bg-red-500/20" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Mic className="h-16 w-16 text-red-500" />
-                </div>
+            <div className="mb-6 flex flex-col items-center justify-center gap-4">
+              <div className="relative flex items-center justify-center py-6">
+                <VoicePill
+                  accentColor="#ef4444"
+                  iconColor="#ffffff"
+                  background="#18181b"
+                  size={56}
+                  shape="pill"
+                  reach={16}
+                  showTime
+                  waveform
+                  slideToCancel
+                  cancelDistance={80}
+                  reactive="simulated"
+                  isRecording={true}
+                  onStop={({ reason }) => {
+                    if (reason === 'cancel') {
+                      onReset()
+                    } else if (reason !== 'unmount') {
+                      onStopRecording()
+                    }
+                  }}
+                  className="shadow-2xl ring-4 ring-red-500/20"
+                />
               </div>
 
-            </div>
-
-            <div className="mb-4">
-              <span className="text-4xl font-bold text-red-500">
+              <span className="text-4xl font-mono font-bold text-red-500">
                 {formatTime(speakingTimeLeft)}
               </span>
             </div>
 
             <h2 className="mb-2 text-[18px] font-semibold text-red-500">
-              {isVietnamese ? 'Đang ghi âm...' : 'Recording...'}
+              {isVietnamese ? 'Đang ghi âm giọng nói của bạn...' : 'Recording your voice...'}
             </h2>
             <p className="mb-6 text-[14px] text-text-secondary">
               {isVietnamese
-                ? 'Nói câu trả lời của bạn. Dùng nút Dừng ghi âm khi xong.'
-                : 'Speak your response. Press Stop when done.'}
+                ? 'Nói câu trả lời của bạn vào micro. Trượt VoicePill để hủy hoặc nhấn nút Dừng khi xong.'
+                : 'Speak your response. Slide VoicePill to cancel or tap Stop when done.'}
             </p>
 
             <Button
               size="lg"
               variant="outline"
-              className="h-14 gap-2 border-red-500 text-red-500 hover:bg-red-50"
+              className="h-14 gap-2 border-red-500 text-red-500 hover:bg-red-50 cursor-pointer"
               data-practice-action="record" onClick={onStopRecording}
             >
               <Square size={20} />

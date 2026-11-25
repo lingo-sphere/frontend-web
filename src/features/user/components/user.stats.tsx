@@ -41,28 +41,3 @@ export function StatCard({
     </div>
   )
 }
-
-export function XPProgress({ currentXP }: { currentXP: number }) {
-  const current = currentXP % 100
-  const required = 100
-  const progress = Math.min(Math.round((current / required) * 100), 100)
-
-  return (
-    <div className="rounded-xl bg-surface-subtle p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium text-text-secondary">
-          Cấp độ tiếp theo
-        </span>
-        <span className="text-sm text-text-tertiary">
-          {current}/{required} XP
-        </span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-surface">
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    </div>
-  )
-}

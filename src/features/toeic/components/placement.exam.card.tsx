@@ -28,20 +28,29 @@ export function PlacementExamCard({
   const rawId = useId()
   const uniqueId = rawId.replace(/[^a-zA-Z0-9]/g, '')
 
-  const skillsText =
-    exam.skills_enabled === 'LRSW'
-      ? isVietnamese
-        ? '4 Kỹ năng (Nghe, Đọc, Nói, Viết)'
-        : '4 Skills (L, R, S, W)'
-      : isVietnamese
-      ? '2 Kỹ năng (Nghe & Đọc)'
-      : '2 Skills (Listening & Reading)'
+  const is4Skills = Boolean(
+    exam.skills_enabled === 'ALL' ||
+    exam.skills_enabled === 'LRSW' ||
+    exam.placement_type === '4SKILLS' ||
+    exam.code?.includes('4skills')
+  )
 
-  const durationText = `${exam.duration_minutes || 120} ${isVietnamese ? 'phút làm bài' : 'minutes'}`
-  const questionsText = `${exam.total_questions || 40} ${
-    isVietnamese ? 'câu hỏi trắc nghiệm' : 'multiple-choice questions'
+  const skillsText = is4Skills
+    ? isVietnamese
+      ? '4 Kỹ năng (Nghe, Đọc, Nói, Viết)'
+      : '4 Skills (L, R, S, W)'
+    : isVietnamese
+    ? '2 Kỹ năng (Nghe & Đọc)'
+    : '2 Skills (Listening & Reading)'
+
+  const defaultDuration = is4Skills ? 60 : 40
+  const durationText = `${exam.duration_minutes || defaultDuration} ${isVietnamese ? 'phút làm bài' : 'minutes'}`
+  const questionsText = `${exam.total_questions || (is4Skills ? 60 : 40)} ${
+    isVietnamese ? 'câu hỏi đánh giá' : 'assessment questions'
   }`
-  const targetScoreText = isVietnamese ? 'Thang điểm 10 - 990 TOEIC chuẩn ETS' : 'Score Scale 10 - 990 ETS standard'
+  const targetScoreText = is4Skills
+    ? isVietnamese ? 'Thang điểm 10 - 1390 TOEIC chuẩn ETS' : 'Score Scale 10 - 1390 ETS standard'
+    : isVietnamese ? 'Thang điểm 10 - 990 TOEIC chuẩn ETS' : 'Score Scale 10 - 990 ETS standard'
 
   return (
     <div
@@ -129,7 +138,7 @@ export function PlacementExamCard({
 
             <div className="hidden sm:flex shrink-0 items-center gap-1 rounded-2xl bg-white/10 px-3 py-1.5 text-xs font-bold text-white border border-white/20 backdrop-blur-md">
               <Award size={14} className="text-amber-300" />
-              <span>ETS 990</span>
+              <span>{is4Skills ? 'ETS 1390' : 'ETS 990'}</span>
             </div>
           </div>
         </div>

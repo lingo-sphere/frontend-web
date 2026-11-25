@@ -45,6 +45,16 @@ export interface User {
   placement_speaking_score?: number | null
   placement_writing_score?: number | null
   placement_skills_type?: '2SKILLS' | '4SKILLS' | string | null
+  placement_2skills_test_score?: number | null
+  placement_2skills_listening_score?: number | null
+  placement_2skills_reading_score?: number | null
+  target_toeic_2skills_score?: number | null
+  placement_4skills_test_score?: number | null
+  placement_4skills_listening_score?: number | null
+  placement_4skills_reading_score?: number | null
+  placement_4skills_speaking_score?: number | null
+  placement_4skills_writing_score?: number | null
+  target_toeic_4skills_score?: number | null
   placement_tested_at?: string | null
   is_score_manually_edited?: boolean
   xp?: number
@@ -80,6 +90,16 @@ export interface UpdateUserProfilePayload {
   placement_speaking_score?: number
   placement_writing_score?: number
   placement_skills_type?: '2SKILLS' | '4SKILLS' | string
+  placement_2skills_test_score?: number
+  placement_2skills_listening_score?: number
+  placement_2skills_reading_score?: number
+  target_toeic_2skills_score?: number
+  placement_4skills_test_score?: number
+  placement_4skills_listening_score?: number
+  placement_4skills_reading_score?: number
+  placement_4skills_speaking_score?: number
+  placement_4skills_writing_score?: number
+  target_toeic_4skills_score?: number
   placement_tested_at?: string
   is_score_manually_edited?: boolean
   learning_goal_minutes_per_day?: number

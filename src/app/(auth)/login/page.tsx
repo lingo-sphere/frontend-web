@@ -124,7 +124,7 @@ function LoginPageContent() {
       <div className="lg:w-1/2 xl:w-7/12 p-8 sm:p-12 lg:p-16 flex flex-col justify-between relative z-10 border-b lg:border-b-0 lg:border-r border-slate-800/80">
         <div>
           <Link
-            href="/home"
+            href="/"
             className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors py-1.5 px-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 mb-8"
           >
             <ArrowLeft size={14} />

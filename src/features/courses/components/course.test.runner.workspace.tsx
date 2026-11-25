@@ -5,6 +5,7 @@ import { courseSkillPracticeUrl } from '@/features/courses/lib/mistake-domain'
 import { useState, useEffect } from 'react'
 import { ArrowLeft, Clock, Send, BookOpen, Mic, PenTool } from 'lucide-react'
 import { Button } from '@/components/button'
+import { AnimatedTimer } from '@/components/animated.timer'
 import { useNavigate } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import type { Course } from '@/types/api.types'
@@ -203,10 +204,12 @@ export function CourseTestRunnerWorkspace({
 
         <div className="flex items-center gap-3">
           {!isSubmitted && (
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-mono font-bold text-sm shadow-2xs">
-              <Clock size={16} className="animate-pulse" />
-              <span>{formatTime(timeLeft)}</span>
-            </div>
+            <AnimatedTimer
+              seconds={timeLeft}
+              size="md"
+              isWarningThreshold={180}
+              className="bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400"
+            />
           )}
           {!isSubmitted && (
             <Button

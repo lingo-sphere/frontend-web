@@ -6,6 +6,7 @@ import { isDirectVideoUrl } from '@/features/courses/types/player.types'
 import { courseService } from '@/features/courses/services/course.service'
 import { resolveMediaUrl } from '@/utils/media.utils'
 import { Analytics } from '@/lib/posthog'
+import { courseMiniPlayerStore } from '@/features/courses/store/course.mini.player.store'
 
 interface UseLessonVideoPlayerProps {
   lesson: Lesson
@@ -203,11 +204,26 @@ export function useLessonVideoPlayer({
         seekToTime(customEvent.detail.time)
       }
     }
+    const handleVolumeEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ volume: number }>
+      if (typeof customEvent.detail?.volume === 'number') {
+        handleVolumeChange(customEvent.detail.volume)
+      }
+    }
+    const handleTogglePlayEvent = () => {
+      if (!courseMiniPlayerStore.getState().isOpen) {
+        togglePlay()
+      }
+    }
     window.addEventListener('lingosphere:seek-video', handleSeekEvent)
+    window.addEventListener('lingosphere:set-volume', handleVolumeEvent)
+    window.addEventListener('lingosphere:toggle-play', handleTogglePlayEvent)
     return () => {
       window.removeEventListener('lingosphere:seek-video', handleSeekEvent)
+      window.removeEventListener('lingosphere:set-volume', handleVolumeEvent)
+      window.removeEventListener('lingosphere:toggle-play', handleTogglePlayEvent)
     }
-  }, [seekToTime])
+  }, [seekToTime, handleVolumeChange, togglePlay])
 
   const initialSeekDoneRef = useRef<string | null>(null)
 
