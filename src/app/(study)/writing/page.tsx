@@ -10,6 +10,7 @@ import { useWritingWorkspace } from '@/features/practice/hooks/use.writing.works
 import { useTranslation } from 'react-i18next'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/button'
+import { useNavigate, useSearchParams } from '@/lib/navigation'
 
 function LoadingState() {
   const { i18n } = useTranslation()
@@ -80,6 +81,14 @@ export default function WritingAppPage() {
   } = useWritingWorkspace()
   const { i18n } = useTranslation()
   const vi = i18n.language.toLowerCase().startsWith('vi')
+  const searchParams = useSearchParams()
+  const navigate = useNavigate()
+  const requestedContextId = searchParams?.get('context_id') || ''
+  const requestedTopicName = searchParams?.get('topic_name') || ''
+  const contextMatchedExercises = requestedContextId
+    ? exerciseList.filter((item) => (item as any).context_id === requestedContextId || (item as any).topic_id === requestedContextId)
+    : []
+  const displayedExercises = requestedContextId && contextMatchedExercises.length > 0 ? contextMatchedExercises : exerciseList
 
   if (error) {
     return <ErrorState message={error} onRetry={handleGoHome} />
@@ -129,7 +138,21 @@ export default function WritingAppPage() {
               </>
             )}
           </div>
-        ) : <WritingExerciseList embedded exercises={exerciseList} onSelectExercise={handleSelectExercise} onBack={handleGoHome} />}
+        ) : (
+          <div className="space-y-4">
+            {requestedContextId && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+                <span>
+                  {contextMatchedExercises.length > 0
+                    ? (vi ? `Đang lọc ${contextMatchedExercises.length} bài viết theo ngữ cảnh${requestedTopicName ? ` (${requestedTopicName})` : ''}.` : `Showing ${contextMatchedExercises.length} writing exercises for this context.`)
+                    : (vi ? `Chưa có bài viết riêng cho ngữ cảnh${requestedTopicName ? ` (${requestedTopicName})` : ''}, đang hiển thị toàn bộ danh sách.` : 'No exact context match found; showing all writing exercises.')}
+                </span>
+                <Button size="sm" variant="outline" onClick={() => navigate('/writing')}>{vi ? 'Xem tất cả' : 'Show all'}</Button>
+              </div>
+            )}
+            <WritingExerciseList embedded exercises={displayedExercises} onSelectExercise={handleSelectExercise} onBack={handleGoHome} />
+          </div>
+        )}
       </main>
     )
   }

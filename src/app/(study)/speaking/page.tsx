@@ -42,6 +42,12 @@ export default function SpeakingAppPage() {
   const [practiceFocus, setPracticeFocus] = useState('')
   const searchParams = useSearchParams()
   const requestedExercise = searchParams?.get('exercise_id'), requestedFocus = searchParams?.get('focus')?.slice(0, 1500) || ''
+  const requestedContextId = searchParams?.get('context_id') || ''
+  const requestedTopicName = searchParams?.get('topic_name') || ''
+  const contextMatchedExercises = requestedContextId
+    ? exerciseList.filter((item) => (item as any).context_id === requestedContextId || (item as any).topic_id === requestedContextId)
+    : []
+  const displayedExercises = requestedContextId && contextMatchedExercises.length > 0 ? contextMatchedExercises : exerciseList
   const [dismissedReview, setDismissedReview] = useState('')
   const reviewKey = `${requestedExercise}:${requestedFocus}`
   const choosingExercise = pendingExercise || (requestedExercise && dismissedReview !== reviewKey ? exerciseList.find(item => item.id === requestedExercise) : null)
@@ -69,12 +75,24 @@ export default function SpeakingAppPage() {
           ) : history ? (
             <SpeakingHistory embedded attempts={historyAttempts} exercises={exerciseList} onBack={handleGoList} onViewAttempt={handleViewSubmission} />
           ) : (
-            <SpeakingExerciseList
-              embedded
-              exercises={exerciseList}
-              onSelectExercise={(exercise) => setPendingExercise(exercise)}
-              onBack={handleGoList}
-            />
+            <div className="space-y-4">
+              {requestedContextId && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+                  <span>
+                    {contextMatchedExercises.length > 0
+                      ? (vi ? `Đang lọc ${contextMatchedExercises.length} bài nói theo ngữ cảnh${requestedTopicName ? ` (${requestedTopicName})` : ''}.` : `Showing ${contextMatchedExercises.length} speaking exercises for this context.`)
+                      : (vi ? `Chưa có bài nói riêng cho ngữ cảnh${requestedTopicName ? ` (${requestedTopicName})` : ''}, đang hiển thị toàn bộ danh sách.` : 'No exact context match found; showing all speaking exercises.')}
+                  </span>
+                  <Button size="sm" variant="outline" onClick={handleGoList}>{vi ? 'Xem tất cả' : 'Show all'}</Button>
+                </div>
+              )}
+              <SpeakingExerciseList
+                embedded
+                exercises={displayedExercises}
+                onSelectExercise={(exercise) => setPendingExercise(exercise)}
+                onBack={handleGoList}
+              />
+            </div>
           )}
         </div>
 

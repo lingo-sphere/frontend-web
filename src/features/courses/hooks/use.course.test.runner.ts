@@ -574,7 +574,9 @@ export function useCourseTestRunner({
         if (isTimeout) toast.warning(isVietnamese ? 'Hết thời gian làm bài! Đã tự động nộp bài.' : 'Time is up! Exam auto-submitted.')
         else toast.success(isVietnamese ? `Nộp bài thành công! Điểm: ${finalScore}%` : `Submitted successfully! Score: ${finalScore}%`)
 
-        if (enrichedWrongs.length > 0) {
+        // Session-backed tests are synchronized by the server, including retries and auto-submit.
+        // Keep this legacy fallback only for older non-session submissions.
+        if (enrichedWrongs.length > 0 && !sessionIdRef.current) {
           const mistakes = enrichedWrongs.map((w, idx) => {
             const qIdx = (w.question_number || idx + 1) - 1
             const rawQ = rawQuestions[qIdx]

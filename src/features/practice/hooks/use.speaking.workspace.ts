@@ -121,6 +121,7 @@ export function useSpeakingWorkspace() {
       response_time_seconds: item.response_time_seconds ?? 45,
       prompt_text_en: item.prompt_text_en || item.title,
       prompt_text_vi: (item.prompt_text_vi || item.title_vi) ?? undefined,
+      context_id: (item as any).context_id,
       context_path: (item as any).context_path || [],
       prompt_media_id: (item as any).prompt_media_id,
       reference_media_id: (item as any).reference_media_id,

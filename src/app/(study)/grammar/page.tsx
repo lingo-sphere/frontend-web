@@ -42,6 +42,8 @@ export default function GrammarAppPage() {
     retry: 1,
   });
   const urlSearch = searchParams.get("search");
+  const targetGrammarId = searchParams.get("grammar_knowledge_id");
+  const targetContextId = searchParams.get("context_id");
   const urlLevel = searchParams.get("level") as
     | "A1"
     | "A2"
@@ -80,6 +82,12 @@ export default function GrammarAppPage() {
     queryFn: () => grammarPracticeService.getTopics(selectedLevel, userId),
     enabled: activeTab === "practice" && !sessionId,
   });
+  const targetedTopicsQuery = useQuery({
+    queryKey: ["grammar-topics-all", userId, targetGrammarId],
+    queryFn: () => grammarPracticeService.getTopics(undefined, userId),
+    enabled: activeTab === "practice" && !sessionId && Boolean(targetGrammarId),
+    staleTime: 60_000,
+  });
   const sessionsQuery = useQuery({
     queryKey: ["grammar-sessions", userId, "pending", 50],
     queryFn: () => grammarPracticeService.getSessions(1, { limit: 50, status: "IN_PROGRESS" }),
@@ -97,6 +105,14 @@ export default function GrammarAppPage() {
   const levels = levelsQuery.data || [],
     topics = topicsQuery.data || [],
     isLoadingTopics = topicsQuery.isPending;
+  const recommendedGrammarTopic =
+    (targetGrammarId
+      ? topics.find((t) => t._id === targetGrammarId) ||
+        targetedTopicsQuery.data?.find((t) => t._id === targetGrammarId)
+      : undefined) ||
+    (targetContextId
+      ? topics.find((t) => (t as any).context_id === targetContextId)
+      : undefined);
   const activeSession = sessionQuery.data;
   const matchingTheory = theorySlug && activeSession && theoryTargets.data?.links.some(link => link.topic?._id === activeSession.grammar_knowledge_id);
   const theoryReturnUrl = matchingTheory
@@ -223,6 +239,40 @@ export default function GrammarAppPage() {
 
       {activeTab === "practice" && (
         <div className="mt-8 space-y-6">
+          {(targetGrammarId || targetContextId) && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-primary">
+                  {isVietnamese ? "Gợi ý luyện tập từ câu sai" : "Recommended from your mistake"}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-text-primary">
+                  {recommendedGrammarTopic
+                    ? `${isVietnamese ? recommendedGrammarTopic.name_vi : recommendedGrammarTopic.name_en || recommendedGrammarTopic.name_vi} (${recommendedGrammarTopic.cefr_level})`
+                    : isVietnamese
+                      ? "Chọn chủ điểm ngữ pháp bên dưới để củng cố kiến thức vừa sai."
+                      : "Select a grammar topic below to reinforce this skill."}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {recommendedGrammarTopic && (
+                  <Button
+                    size="sm"
+                    disabled={startingSessionTopicId === recommendedGrammarTopic._id}
+                    onClick={() => void handleStartPractice(recommendedGrammarTopic)}
+                  >
+                    {isVietnamese ? "Luyện chủ điểm này ngay" : "Practice this topic now"}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigateView({ grammar_knowledge_id: null, context_id: null, topic_name: null, exercise_type: null })}
+                >
+                  {isVietnamese ? "Bỏ lọc" : "Clear"}
+                </Button>
+              </div>
+            </div>
+          )}
           {levelsQuery.error && <div role="alert">Không tải được tiến độ cấp độ. <Button onClick={() => void levelsQuery.refetch()}>Thử lại</Button></div>}
           {sessionsQuery.error && <div role="alert" className="rounded-xl border border-border p-4 text-sm">{isVietnamese ? "Không tải được phiên đang làm." : "Could not load unfinished sessions."} <Button variant="ghost" size="sm" onClick={() => void sessionsQuery.refetch()}>{isVietnamese ? "Thử lại phiên đang làm" : "Retry unfinished sessions"}</Button></div>}
           {!!sessionsQuery.data?.items.length && <section aria-label="Phiên Ngữ pháp đang làm" className="rounded-2xl border border-border bg-card p-4 space-y-3">

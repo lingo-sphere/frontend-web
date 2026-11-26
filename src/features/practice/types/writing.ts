@@ -71,6 +71,8 @@ export interface WritingExercise {
   description?: string
   description_vi?: string
   domain: 'WRITING'
+  context_id?: string
+  context_path?: string[]
   toeic_part?: number
   exercise_type: ExerciseType
   writing_level: WritingLevel
