@@ -78,6 +78,8 @@ export function DictionaryModal({
   }, []);
 
   useEffect(() => {
+    if (!open) return;
+
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
@@ -105,7 +107,7 @@ export function DictionaryModal({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [query, fetchSuggestions, fetchSearchHistory]);
+  }, [open, query, fetchSuggestions, fetchSearchHistory]);
 
   const saveToHistory = useCallback(
     async (item: LookupResultItem) => {
