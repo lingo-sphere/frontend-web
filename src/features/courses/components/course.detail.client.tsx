@@ -1,7 +1,7 @@
 // Component giao diện không gian học tập trực tuyến Client cho học viên LingoSphere
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import { ExternalLink, FileText, FolderDown, HelpCircle, Lock } from 'lucide-react'
@@ -126,6 +126,25 @@ export function CourseDetailClient({
     })
     return list
   }, [course])
+
+  useEffect(() => {
+    if (!currentLesson?.id || coursePlaylist.length === 0) return
+    const miniState = courseMiniPlayerStore.getState()
+    if (miniState.isOpen && miniState.courseId === courseId) {
+      const idx = coursePlaylist.findIndex((item) => item.id === currentLesson.id)
+      if (idx >= 0) {
+        miniState.updatePlayback({
+          playlist: coursePlaylist,
+          currentLessonIndex: idx,
+          hasNextLesson: idx < coursePlaylist.length - 1,
+          hasPrevLesson: idx > 0,
+          lesson: currentLesson,
+          effectiveVideoUrl: currentLesson.videoUrl || currentLesson.content?.videoUrl || '',
+          duration: currentLesson.duration || miniState.duration,
+        })
+      }
+    }
+  }, [currentLesson, coursePlaylist, courseId])
 
   const handleOpenPracticeQuiz = useCallback(
     (chapter?: Chapter, lesson?: Lesson) => {

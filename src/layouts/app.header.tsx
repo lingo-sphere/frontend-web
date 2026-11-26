@@ -94,6 +94,13 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
   const isVi = mounted ? isVietnamese : true;
   const languageLabel = (currentLanguage || "vi").toUpperCase();
 
+  const isVipUser = Boolean(
+    user?.is_premium ||
+      (user?.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) ||
+      user?.role === "INSTRUCTOR" ||
+      user?.role === "ADMIN"
+  );
+
   return (
     <>
       <header className="sticky top-0 z-40 flex min-h-[72px] shrink-0 items-center justify-between gap-4 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur-md shadow-xs sm:px-6 lg:px-8">
@@ -106,7 +113,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
           <HeaderStatsBadges
             mounted={mounted}
-            isPremium={Boolean(user?.is_premium)}
+            isPremium={isVipUser}
             isVi={isVi}
             streak={streak}
             streakFreezesLeft={gamification?.streak_freezes_left}
@@ -250,7 +257,7 @@ export function UtilityHeader({ onAction }: UtilityHeaderProps) {
           <HeaderUserSection
             mounted={mounted}
             isAuthenticated={isAuthenticated}
-            user={user}
+            user={user ? { ...user, is_premium: isVipUser } : null}
             isVi={isVi}
             isHovered={hoveredHeaderMenu === "user"}
             onMouseEnter={() => handleMouseEnter("user")}

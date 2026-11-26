@@ -126,7 +126,12 @@ let state: CourseMiniPlayerStoreState = {
   },
   nextLesson: () => {
     const { playlist, currentLessonIndex, lesson } = state
-    if (!playlist || playlist.length === 0) return
+    if (!playlist || playlist.length === 0) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:course-next-lesson'))
+      }
+      return
+    }
     const nextIdx = currentLessonIndex + 1
     if (nextIdx < playlist.length) {
       const nextItem = playlist[nextIdx]
@@ -160,7 +165,12 @@ let state: CourseMiniPlayerStoreState = {
   },
   prevLesson: () => {
     const { playlist, currentLessonIndex, lesson } = state
-    if (!playlist || playlist.length === 0) return
+    if (!playlist || playlist.length === 0) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lingosphere:course-prev-lesson'))
+      }
+      return
+    }
     const prevIdx = currentLessonIndex - 1
     if (prevIdx >= 0) {
       const prevItem = playlist[prevIdx]

@@ -1,7 +1,7 @@
-// Widget trình phát bài giảng thu nhỏ góc màn hình phong cách SoundCloud với thanh trượt ElasticSlider.
+// Trình phát bài giảng mini player chuẩn phong cách Cirrus với các nút điều khiển media và thanh trượt đàn hồi.
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Play,
   Pause,
@@ -58,13 +58,18 @@ export function CourseMiniPlayer({
   onMaximize,
   onClose,
 }: CourseMiniPlayerProps) {
+  const [isDraggingSeek, setIsDraggingSeek] = useState(false)
+  const [dragSeekTime, setDragSeekTime] = useState<number | null>(null)
+
   const thumbnail = useMemo(() => {
     const raw = courseThumbnail || ''
     if (!raw) return '/images/course-default.jpg'
     return resolveMediaUrl(raw)
   }, [courseThumbnail])
 
-  const remaining = Math.max(0, duration - currentTime)
+  const effectiveDuration = duration > 0 ? duration : 100
+  const activeCurrentTime = isDraggingSeek && dragSeekTime !== null ? dragSeekTime : currentTime
+  const remaining = Math.max(0, duration - activeCurrentTime)
 
   const handlePrev = () => {
     if (hasPrevLesson && onPrevLesson) {
@@ -86,7 +91,7 @@ export function CourseMiniPlayer({
     <div
       role="region"
       aria-label="Mini course audio player"
-      className="fixed bottom-6 right-6 z-50 w-[470px] max-w-[calc(100vw-2rem)] rounded-[28px] bg-[#14121c]/95 text-white p-5 border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.75)] backdrop-blur-2xl select-none animate-in fade-in slide-in-from-bottom-8 duration-300 transition-all font-sans"
+      className="fixed bottom-6 right-6 z-50 w-[470px] max-w-[calc(100vw-2rem)] rounded-[28px] bg-[#16151d]/95 text-white p-5 border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.8)] backdrop-blur-2xl select-none animate-in fade-in slide-in-from-bottom-8 duration-300 transition-all font-sans"
     >
       <div className="flex items-stretch gap-4">
         <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden shrink-0 shadow-lg border border-white/10 bg-black/60">
@@ -139,18 +144,25 @@ export function CourseMiniPlayer({
 
           <div className="w-full my-1">
             <ElasticSlider
-              value={currentTime}
+              value={activeCurrentTime}
               defaultValue={0}
-              maxValue={duration > 0 ? duration : 100}
+              maxValue={effectiveDuration}
               startingValue={0}
               leftIcon={null}
               rightIcon={null}
-              onChange={(val) => onSeek(val)}
-              onChangeEnd={(val) => onSeek(val)}
+              onChange={(val) => {
+                setIsDraggingSeek(true)
+                setDragSeekTime(val)
+              }}
+              onChangeEnd={(val) => {
+                setIsDraggingSeek(false)
+                setDragSeekTime(null)
+                onSeek(val)
+              }}
               formatValue={(val) => formatTime(val)}
               valuePosition="none"
-              thickness={4.5}
-              activeThickness={8}
+              thickness={4}
+              activeThickness={7}
               radius={999}
               trackColor="rgba(255,255,255,0.18)"
               rangeColor="#ffffff"
@@ -161,13 +173,13 @@ export function CourseMiniPlayer({
               className="w-full"
             />
             <div className="flex items-center justify-between text-[11px] text-neutral-400 font-mono tabular-nums mt-1 px-0.5">
-              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(activeCurrentTime)}</span>
               <span>{duration > 0 ? `-${formatTime(remaining)}` : '0:00'}</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between gap-2 pt-0.5">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={handlePrev}
@@ -252,14 +264,14 @@ export function CourseMiniPlayer({
                 iconPlacement="outside"
                 valuePosition="none"
                 thickness={3.5}
-                activeThickness={7}
+                activeThickness={6.5}
                 radius={999}
                 trackColor="rgba(255,255,255,0.18)"
                 rangeColor="#ffffff"
                 iconColor="rgba(255,255,255,0.7)"
                 thumbColor="#ffffff"
                 jumpToClick
-                className="w-36 sm:w-40"
+                className="w-32 sm:w-36"
               />
             </div>
           </div>
