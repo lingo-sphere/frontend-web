@@ -1,7 +1,7 @@
 // Trang danh sách đề thi đánh giá năng lực đầu vào và quản lý trình độ học viên.
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@/lib/navigation'
 import {
@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Award,
   FileEdit,
+  Target,
 } from 'lucide-react'
 import { Button } from '@/components/button'
 import { SectionHeading } from '@/features/dashboard/components/section.heading'
@@ -21,6 +22,7 @@ import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import { UserScoreEditModal } from '@/features/user/components/user.score.edit.modal'
 import { getUserScoreLevelInfo } from '@/features/user/utils/user.score.utils'
+import { userService } from '@/features/user/services/user.service'
 import { formatDate } from '@/lib/format'
 import { PlacementExamCard } from '@/features/toeic/components/placement.exam.card'
 
@@ -32,6 +34,15 @@ export default function PlacementTestPage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   const [showEditScoreModal, setShowEditScoreModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'2SKILLS' | '4SKILLS'>(
+    user?.placement_skills_type === '4SKILLS' ? '4SKILLS' : '2SKILLS'
+  )
+
+  useEffect(() => {
+    if (user?.placement_skills_type === '4SKILLS' || user?.placement_skills_type === '2SKILLS') {
+      setActiveTab(user.placement_skills_type)
+    }
+  }, [user?.placement_skills_type])
 
   const { data: rawExams = [], isLoading } = useActivePlacementExamsQuery()
 
@@ -39,11 +50,106 @@ export default function PlacementTestPage() {
     (e: BackendToeicExam) => e.is_published !== false
   )
 
-  const userPlacementScore = Number(user?.placement_test_score) || 0
-  const hasTested = Boolean(userPlacementScore > 0 || user?.placement_tested_at)
-  const is4Skills = user?.placement_skills_type === '4SKILLS'
-  const maxScore = is4Skills ? 1390 : 990
-  const levelInfo = getUserScoreLevelInfo(userPlacementScore, hasTested, maxScore)
+  const listening2K = typeof user?.placement_2skills_listening_score === 'number'
+    ? user.placement_2skills_listening_score
+    : (user?.placement_skills_type !== '4SKILLS' && typeof user?.placement_listening_score === 'number')
+    ? user.placement_listening_score
+    : (user?.placement_listening_score ?? 0)
+
+  const reading2K = typeof user?.placement_2skills_reading_score === 'number'
+    ? user.placement_2skills_reading_score
+    : (user?.placement_skills_type !== '4SKILLS' && typeof user?.placement_reading_score === 'number')
+    ? user.placement_reading_score
+    : (user?.placement_reading_score ?? 0)
+
+  const score2K = typeof user?.placement_2skills_test_score === 'number' && user.placement_2skills_test_score > 0
+    ? user.placement_2skills_test_score
+    : (user?.placement_skills_type !== '4SKILLS' && typeof user?.placement_test_score === 'number' && user.placement_test_score > 0)
+    ? user.placement_test_score
+    : (listening2K + reading2K > 0 ? listening2K + reading2K : 0)
+
+  const target2K = typeof user?.target_toeic_2skills_score === 'number' && user.target_toeic_2skills_score > 0
+    ? user.target_toeic_2skills_score
+    : (user?.placement_skills_type !== '4SKILLS' && typeof user?.target_toeic_score === 'number' && user.target_toeic_score <= 990)
+    ? user.target_toeic_score
+    : 0
+
+  const hasTested2K = Boolean(
+    score2K > 0 ||
+    user?.placement_2skills_test_score != null ||
+    (user?.placement_skills_type !== '4SKILLS' && user?.placement_tested_at)
+  )
+  const levelInfo2K = getUserScoreLevelInfo(score2K, hasTested2K, 990)
+
+  const listening4K = typeof user?.placement_4skills_listening_score === 'number'
+    ? user.placement_4skills_listening_score
+    : (user?.placement_skills_type === '4SKILLS' && typeof user?.placement_listening_score === 'number')
+    ? user.placement_listening_score
+    : (user?.placement_listening_score ?? 0)
+
+  const reading4K = typeof user?.placement_4skills_reading_score === 'number'
+    ? user.placement_4skills_reading_score
+    : (user?.placement_skills_type === '4SKILLS' && typeof user?.placement_reading_score === 'number')
+    ? user.placement_reading_score
+    : (user?.placement_reading_score ?? 0)
+
+  const speaking4K = typeof user?.placement_4skills_speaking_score === 'number'
+    ? user.placement_4skills_speaking_score
+    : (user?.placement_speaking_score ?? 0)
+
+  const writing4K = typeof user?.placement_4skills_writing_score === 'number'
+    ? user.placement_4skills_writing_score
+    : (user?.placement_writing_score ?? 0)
+
+  const score4K = typeof user?.placement_4skills_test_score === 'number' && user.placement_4skills_test_score > 0
+    ? user.placement_4skills_test_score
+    : (user?.placement_skills_type === '4SKILLS' && typeof user?.placement_test_score === 'number' && user.placement_test_score > 0)
+    ? user.placement_test_score
+    : (listening4K + reading4K + speaking4K + writing4K > 0 ? listening4K + reading4K + speaking4K + writing4K : 0)
+
+  const target4K = typeof user?.target_toeic_4skills_score === 'number' && user.target_toeic_4skills_score > 0
+    ? user.target_toeic_4skills_score
+    : (user?.placement_skills_type === '4SKILLS' && typeof user?.target_toeic_score === 'number')
+    ? user.target_toeic_score
+    : 0
+
+  const hasTested4K = Boolean(
+    score4K > 0 ||
+    user?.placement_4skills_test_score != null ||
+    (user?.placement_skills_type === '4SKILLS' && user?.placement_tested_at)
+  )
+  const levelInfo4K = getUserScoreLevelInfo(score4K, hasTested4K, 1390)
+
+  const is4Skills = activeTab === '4SKILLS'
+  const currentScore = is4Skills ? score4K : score2K
+  const currentMaxScore = is4Skills ? 1390 : 990
+  const currentHasTested = is4Skills ? hasTested4K : hasTested2K
+  const currentLevelInfo = is4Skills ? levelInfo4K : levelInfo2K
+  const currentListening = is4Skills ? listening4K : listening2K
+  const currentReading = is4Skills ? reading4K : reading2K
+  const currentSpeaking = speaking4K
+  const currentWriting = writing4K
+  const currentTargetScore = is4Skills ? target4K : target2K
+
+  const handleTabChange = async (tab: '2SKILLS' | '4SKILLS') => {
+    setActiveTab(tab)
+    if (isAuthenticated) {
+      try {
+        const updated = await userService.updateProfile({
+          placement_skills_type: tab,
+        })
+        const { user: curUser, setUser } = useAuthStore.getState()
+        if (curUser) {
+          setUser({
+            ...curUser,
+            placement_skills_type: tab,
+            ...(updated || {}),
+          })
+        }
+      } catch {
+      }
+    }
+  }
 
   const handleStartExam = (examId: string) => {
     if (!isAuthenticated) {
@@ -77,47 +183,95 @@ export default function PlacementTestPage() {
 
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white p-5 sm:p-7 border border-emerald-500/30 shadow-xl shadow-emerald-950/20">
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-2xl">
+            <div className="space-y-4 max-w-2xl">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                   <Sparkles size={14} className="text-amber-400" />
                   <span>{isVietnamese ? 'Hồ Sơ Năng Lực Baseline' : 'Baseline Profile'}</span>
                 </span>
                 <span
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border ${levelInfo.badgeColor}`}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border ${currentLevelInfo.badgeColor}`}
                 >
                   <Award size={13} />
-                  <span>{levelInfo.name}</span>
+                  <span>{currentLevelInfo.name}</span>
                 </span>
+              </div>
+
+              <div className="inline-flex p-1 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('2SKILLS')}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    activeTab === '2SKILLS'
+                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 ring-1 ring-emerald-300/40'
+                      : 'text-emerald-100/70 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <BookOpen size={15} />
+                  <span>{isVietnamese ? 'Điểm 2 kỹ năng' : '2 Skills Score'}</span>
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-lg font-black ${
+                      activeTab === '2SKILLS'
+                        ? 'bg-black/25 text-white'
+                        : 'bg-white/10 text-emerald-200'
+                    }`}
+                  >
+                    {score2K > 0 ? `${score2K} / 990` : '990đ'}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('4SKILLS')}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    activeTab === '4SKILLS'
+                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 ring-1 ring-emerald-300/40'
+                      : 'text-emerald-100/70 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Mic size={15} />
+                  <span>{isVietnamese ? 'Điểm 4 kỹ năng' : '4 Skills Score'}</span>
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-lg font-black ${
+                      activeTab === '4SKILLS'
+                        ? 'bg-black/25 text-white'
+                        : 'bg-white/10 text-emerald-200'
+                    }`}
+                  >
+                    {score4K > 0 ? `${score4K} / 1390` : '1390đ'}
+                  </span>
+                </button>
               </div>
 
               <div>
                 <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight">
-                  {hasTested
+                  {currentHasTested
                     ? isVietnamese
-                      ? `Trình độ hiện tại: ${userPlacementScore} / ${maxScore} TOEIC`
-                      : `Current Level: ${userPlacementScore} / ${maxScore} TOEIC`
+                      ? `Trình độ hiện tại: ${currentScore} / ${currentMaxScore} TOEIC`
+                      : `Current Level: ${currentScore} / ${currentMaxScore} TOEIC`
                     : isVietnamese
-                    ? 'Bạn chưa có điểm đánh giá năng lực đầu vào'
-                    : 'You have not taken an entrance test yet'}
+                    ? activeTab === '2SKILLS'
+                      ? 'Bạn chưa có điểm đánh giá TOEIC 2 kỹ năng'
+                      : 'Bạn chưa có điểm đánh giá TOEIC 4 kỹ năng'
+                    : 'You have not taken this entrance test yet'}
                 </h3>
                 <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed mt-1">
-                  {hasTested
-                    ? levelInfo.desc
+                  {currentHasTested
+                    ? currentLevelInfo.desc
                     : isVietnamese
                     ? 'Làm bài kiểm tra đầu vào rút gọn miễn phí ngay bên dưới để AI cá nhân hóa lộ trình học và gợi ý khóa học sát nhất với mục tiêu của bạn.'
                     : 'Take a quick free placement test below so our AI can personalize your study roadmap to reach your target band.'}
                 </p>
               </div>
 
-              {hasTested && (
+              {currentHasTested && (
                 <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
                   <div className="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-center gap-2">
                     <Headphones size={14} className="text-sky-300" />
                     <span>
                       {isVietnamese ? 'Nghe:' : 'Listening:'}{' '}
                       <strong className="text-white">
-                        {user?.placement_listening_score ?? 0}đ
+                        {currentListening}đ
                       </strong>
                     </span>
                   </div>
@@ -126,7 +280,7 @@ export default function PlacementTestPage() {
                     <span>
                       {isVietnamese ? 'Đọc:' : 'Reading:'}{' '}
                       <strong className="text-white">
-                        {user?.placement_reading_score ?? 0}đ
+                        {currentReading}đ
                       </strong>
                     </span>
                   </div>
@@ -137,7 +291,7 @@ export default function PlacementTestPage() {
                         <span>
                           {isVietnamese ? 'Nói:' : 'Speaking:'}{' '}
                           <strong className="text-white">
-                            {user?.placement_speaking_score ?? 0}đ
+                            {currentSpeaking}đ
                           </strong>
                         </span>
                       </div>
@@ -146,11 +300,22 @@ export default function PlacementTestPage() {
                         <span>
                           {isVietnamese ? 'Viết:' : 'Writing:'}{' '}
                           <strong className="text-white">
-                            {user?.placement_writing_score ?? 0}đ
+                            {currentWriting}đ
                           </strong>
                         </span>
                       </div>
                     </>
+                  )}
+                  {currentTargetScore > 0 && (
+                    <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 backdrop-blur-sm border border-amber-400/30 flex items-center gap-2 text-amber-200">
+                      <Target size={14} className="text-amber-400" />
+                      <span>
+                        {isVietnamese ? 'Mục tiêu:' : 'Target:'}{' '}
+                        <strong className="text-white">
+                          {currentTargetScore} / {currentMaxScore} TOEIC
+                        </strong>
+                      </span>
+                    </div>
                   )}
                   {user?.placement_tested_at && (
                     <span className="text-[11px] text-emerald-300/80">
@@ -255,13 +420,13 @@ export default function PlacementTestPage() {
           open={showEditScoreModal}
           onOpenChange={setShowEditScoreModal}
           currentScores={{
-            totalScore: userPlacementScore || 450,
-            listeningScore: user?.placement_listening_score ?? 225,
-            readingScore: user?.placement_reading_score ?? 225,
-            speakingScore: user?.placement_speaking_score ?? 110,
-            writingScore: user?.placement_writing_score ?? 110,
-            skillsType: user?.placement_skills_type || '2SKILLS',
-            targetScore: Number(user?.target_toeic_score) || 650,
+            totalScore: currentScore || (is4Skills ? 700 : 450),
+            listeningScore: currentListening || 225,
+            readingScore: currentReading || 225,
+            speakingScore: currentSpeaking || 110,
+            writingScore: currentWriting || 110,
+            skillsType: activeTab,
+            targetScore: currentTargetScore || (is4Skills ? 850 : 650),
             placement_2skills_test_score: user?.placement_2skills_test_score ?? undefined,
             placement_2skills_listening_score: user?.placement_2skills_listening_score ?? undefined,
             placement_2skills_reading_score: user?.placement_2skills_reading_score ?? undefined,
