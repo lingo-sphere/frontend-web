@@ -6,6 +6,7 @@ import type { Chapter } from '@/features/courses/types/course'
 import { courseService, type SpeakingSubmissionResponse } from '@/features/courses/services/course.service'
 import { mistakeService } from '@/features/practice/services/mistake.service'
 import { courseMistakeDomain } from '@/features/courses/lib/mistake-domain'
+import { useAuthStore } from '@/features/auth/store/auth.store'
 import { toast } from '@/store/toast.store'
 import {
   CourseTestQuestion,
@@ -603,8 +604,6 @@ export function useCourseTestRunner({
         if (isTimeout) toast.warning(isVietnamese ? 'Hết thời gian làm bài! Đã tự động nộp bài.' : 'Time is up! Exam auto-submitted.')
         else toast.success(isVietnamese ? `Nộp bài thành công! Điểm: ${finalScore}%` : `Submitted successfully! Score: ${finalScore}%`)
 
-        // Save skill classification immediately, independently of the AI response.
-        // AI enrichment must not record the same mistakes again or double-count profile stats.
         if (enrichedWrongs.length > 0) {
           const mistakes = enrichedWrongs.map((w, idx) => {
             const qIdx = (w.question_number || idx + 1) - 1
@@ -724,46 +723,14 @@ export function useCourseTestRunner({
       return
     }
 
-    let hasLocalDraft = false
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem(storageKey)
-        if (saved) {
-          const draft: CourseTestDraft = JSON.parse(saved)
-          if (
-            draft &&
-            typeof draft.startedAt === 'number' &&
-            typeof draft.totalDurationSeconds === 'number' &&
-            draft.selectedAnswers &&
-            typeof draft.selectedAnswers === 'object'
-          ) {
-            const elapsed = Math.floor((Date.now() - draft.startedAt) / 1000)
-            const remaining = Math.max(0, draft.totalDurationSeconds - elapsed)
-
-            if (remaining <= 0) {
-              setTimeLeft(0)
-              setHasAutoSubmitted(true)
-              setSelectedAnswers(draft.selectedAnswers)
-            } else {
-              setSelectedAnswers(draft.selectedAnswers)
-              hasLocalDraft = true
-              setTimeLeft(remaining)
-              setHasAutoSubmitted(false)
-              toast.info(
-                isVietnamese
-                  ? 'Đã tự động khôi phục tiến trình bài làm trước đó của bạn.'
-                  : 'Restored previous test draft.'
-              )
-            }
-          }
-        }
+        localStorage.removeItem(storageKey)
       } catch {}
     }
 
-    if (!hasLocalDraft) {
-      setTimeLeft(totalSecs)
-      setHasAutoSubmitted(false)
-    }
+    setTimeLeft(totalSecs)
+    setHasAutoSubmitted(false)
 
     courseService
       .startCourseTestSession(courseId, chapter?.id || 'final', {
@@ -795,7 +762,6 @@ export function useCourseTestRunner({
           }
 
           if (
-            !hasLocalDraft &&
             Array.isArray(sessionRes.interim_answers) &&
             sessionRes.interim_answers.length > 0
           ) {
@@ -847,6 +813,21 @@ export function useCourseTestRunner({
     }, 1000)
     return () => clearInterval(timer)
   }, [isOpen, isSubmitted, awaitingGrading, sessionId, timeLeft, hasAutoSubmitted, handleSubmitTest])
+
+  const wasKickedOutRef = useRef(false)
+  useEffect(() => {
+    const unsubscribe = useAuthStore.subscribe(() => {
+      const isKickedOut = useAuthStore.getState().isKickedOut
+      if (isKickedOut && !wasKickedOutRef.current && isOpen && !isSubmitted) {
+        wasKickedOutRef.current = true
+        toast.warning(
+          'Tài khoản của bạn vừa đăng nhập ở thiết bị khác. Hệ thống đã tự động nộp bài và chấm điểm ở thời điểm này!'
+        )
+        void handleSubmitTest(false)
+      }
+    })
+    return unsubscribe
+  }, [isOpen, isSubmitted, handleSubmitTest])
 
   return {
     sessionId, skillSubmissions, setSkillSubmissions, awaitingGrading, skillScores, missingSkills,
