@@ -17,12 +17,6 @@ import {
   getCorrectOptionIndex,
 } from '@/features/courses/types/test.runner.types'
 
-interface CourseTestDraft {
-  startedAt: number
-  totalDurationSeconds: number
-  selectedAnswers: Record<number, number>
-}
-
 const clearTestDraftStorage = (courseId: string, testType: string, chapterId?: string) => {
   if (typeof window === 'undefined') return
   try {
@@ -246,11 +240,7 @@ export function useCourseTestRunner({
     return testType === 'final-test' ? 60 : 15
   }, [durationMinutes, chapter, testType])
 
-  const storageKey = useMemo(() => {
-    return `lingo_course_test_draft_${courseId}_${testType}_${chapter?.id || 'final'}`
-  }, [courseId, testType, chapter?.id])
-
-  const hasRestoredDraftRef = useRef(false)
+  const hasInitializedRef = useRef(false)
   const handleSubmitTestRef = useRef<(isTimeout?: boolean) => Promise<void>>(async () => {})
   const sessionIdRef = useRef<string | null>(null)
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -272,26 +262,6 @@ export function useCourseTestRunner({
     if (isSubmitted || awaitingGrading) return
     setSelectedAnswers((prev) => {
       const next = { ...prev, [qIdx]: optIdx }
-      if (typeof window !== 'undefined') {
-        try {
-          const totalSecs = effectiveDurationMinutes * 60
-          let startedAt = Date.now()
-          const existing = localStorage.getItem(storageKey)
-          if (existing) {
-            const parsed = JSON.parse(existing)
-            if (parsed && typeof parsed.startedAt === 'number') {
-              startedAt = parsed.startedAt
-            }
-          }
-          const draft: CourseTestDraft = {
-            startedAt,
-            totalDurationSeconds: totalSecs,
-            selectedAnswers: next,
-          }
-          localStorage.setItem(storageKey, JSON.stringify(draft))
-        } catch {}
-      }
-
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
       syncTimeoutRef.current = setTimeout(() => {
         const currentSessionId = sessionIdRef.current
@@ -677,11 +647,11 @@ export function useCourseTestRunner({
 
   useEffect(() => {
     if (!isOpen) {
-      hasRestoredDraftRef.current = false
+      hasInitializedRef.current = false
       return
     }
-    if (hasRestoredDraftRef.current) return
-    hasRestoredDraftRef.current = true
+    if (hasInitializedRef.current) return
+    hasInitializedRef.current = true
 
     const totalSecs = effectiveDurationMinutes * 60
 
@@ -723,11 +693,7 @@ export function useCourseTestRunner({
       return
     }
 
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey)
-      } catch {}
-    }
+    clearTestDraftStorage(courseId, testType, chapter?.id)
 
     setTimeLeft(totalSecs)
     setHasAutoSubmitted(false)
@@ -785,7 +751,6 @@ export function useCourseTestRunner({
   }, [
     effectiveDurationMinutes,
     isOpen,
-    storageKey,
     isVietnamese,
     courseId,
     chapter?.id,
