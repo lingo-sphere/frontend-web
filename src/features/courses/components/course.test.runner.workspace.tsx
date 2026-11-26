@@ -20,6 +20,7 @@ import { TestRunnerHistoryModal } from '@/features/courses/components/test.runne
 import {
   TestRunnerExitConfirmModal,
   TestRunnerSubmitConfirmModal,
+  TestRunnerStartConfirmModal,
 } from '@/features/courses/components/test.runner.confirm.modal'
 import { TopicDrillModal } from '@/features/practice/components/topic.drill.modal'
 import { useCourseTestRunner } from '@/features/courses/hooks/use.course.test.runner'
@@ -129,6 +130,13 @@ export function CourseTestRunnerWorkspace({
 
   const navigate = useNavigate()
   const [drillTopic, setDrillTopic] = useState<string | null>(null)
+  const [showStartConfirm, setShowStartConfirm] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const hasSession = localStorage.getItem(`course_test_draft_${courseId}_${testType}`)
+      if (hasSession) return false
+    }
+    return true
+  })
   const [isExiting, setIsExiting] = useState(false)
   const [nextCourses, setNextCourses] = useState<
     (Course & { recommendation_reason?: string; match_score?: number })[]
@@ -371,6 +379,16 @@ export function CourseTestRunnerWorkspace({
         passingScore={passingScore}
         totalQuestionsCount={rawQuestions.length}
         onClose={() => setShowHistoryModal(false)}
+      />
+      <TestRunnerStartConfirmModal
+        isOpen={showStartConfirm && !isSubmitted}
+        title={testTitle}
+        durationMinutes={durationMinutes}
+        totalQuestions={rawQuestions.length}
+        is4Skills={is4Skills}
+        skillsText={is4Skills ? '4 Kỹ năng (Nghe, Đọc, Nói, Viết)' : 'Trắc nghiệm & Kỹ năng'}
+        onCancel={onClose}
+        onConfirmStart={() => setShowStartConfirm(false)}
       />
       <TestRunnerExitConfirmModal
         isOpen={showExitConfirm}

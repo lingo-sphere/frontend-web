@@ -13,6 +13,7 @@ import { toast } from '@/store/toast.store'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
 import { formatCurrency } from '@/lib/format'
 import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/utils/media.utils'
 
 interface HeaderWishlistHoverProps {
   isOpen: boolean
@@ -120,8 +121,13 @@ export function HeaderWishlistHover({ isOpen }: HeaderWishlistHoverProps) {
                   className="p-3 hover:bg-surface-subtle/70 transition-colors cursor-pointer group relative flex items-start gap-3"
                 >
                   <img
-                    src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'}
+                    src={resolveMediaUrl(course.thumbnail) || IMAGE_FALLBACK_PLACEHOLDER}
                     alt={course.title}
+                    onError={(e) => {
+                      const target = e.currentTarget
+                      target.onerror = null
+                      target.src = IMAGE_FALLBACK_PLACEHOLDER
+                    }}
                     className="h-14 w-20 rounded-xl object-cover shrink-0 border border-border/60 shadow-2xs"
                   />
 

@@ -5,6 +5,7 @@ import { Flag, ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react'
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Badge } from '@/components/badge'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 import { ToeicWritingEssayInput } from '@/features/toeic/components/toeic.writing.essay.input'
 import { ToeicSpeakingRecorderInput } from '@/features/toeic/components/toeic.speaking.recorder.input'
 import { ToeicMultipleChoiceOptions } from '@/features/toeic/components/toeic.multiple.choice.options'
@@ -146,8 +147,11 @@ export function ToeicQuestionCard({
           )}
 
           {question.audioMediaId && (
-            <div className="my-3 max-w-md overflow-hidden rounded-xl border border-border bg-surface-subtle p-2">
-              <audio controls src={question.audioMediaId} className="w-full h-10" />
+            <div className="my-3 max-w-xl">
+              <CustomAudioPlayer
+                src={question.audioMediaId}
+                title={isVietnamese ? 'Audio câu hỏi' : 'Question audio'}
+              />
             </div>
           )}
 

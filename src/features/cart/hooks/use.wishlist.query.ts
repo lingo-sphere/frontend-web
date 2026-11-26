@@ -6,23 +6,28 @@ import { wishlistService } from '@/features/cart/services/wishlist.service'
 import { wishlistKeys } from '@/features/cart/keys/wishlist.keys'
 import type { Wishlist, WishlistItem } from '@/features/cart/types/wishlist'
 import type { CourseCardData } from '@/features/courses/types/course'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/utils/media.utils'
 
-export const mapWishlistItemToCourseCard = (item: WishlistItem): CourseCardData => ({
-  id: item.course_id,
-  title: item.title,
-  thumbnail: item.thumbnail_url || '',
-  instructor: item.instructor_name || 'LingoSphere Academic Team',
-  price: item.price,
-  discountPrice: item.discount_price,
-  category: item.category || 'TOEIC_2_SKILLS',
-  description: '',
-  duration: '10 giờ',
-  totalLessons: 0,
-  chapters: 0,
-  students: item.students_count ?? 0,
-  rating: 4.8,
-  ratingCount: 0,
-})
+export const mapWishlistItemToCourseCard = (item: WishlistItem): CourseCardData => {
+  const rawThumbnail = item.thumbnail_url || (item as unknown as { thumbnail?: string })?.thumbnail || ''
+  return {
+    id: item.course_id,
+    slug: (item as unknown as { slug?: string })?.slug,
+    title: item.title,
+    thumbnail: resolveMediaUrl(rawThumbnail) || IMAGE_FALLBACK_PLACEHOLDER,
+    instructor: item.instructor_name || 'LingoSphere Academic Team',
+    price: item.price,
+    discountPrice: item.discount_price,
+    category: item.category || 'TOEIC_2_SKILLS',
+    description: '',
+    duration: '10 giờ',
+    totalLessons: 0,
+    chapters: 0,
+    students: item.students_count ?? 0,
+    rating: 4.8,
+    ratingCount: 0,
+  }
+}
 
 export function useWishlistQuery(enabled = true) {
   return useQuery<Wishlist>({

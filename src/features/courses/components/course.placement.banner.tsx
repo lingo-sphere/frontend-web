@@ -1,7 +1,7 @@
 // Banner gọn hiển thị điểm số baseline đầu vào hoặc gợi ý làm bài kiểm tra năng lực
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from '@/lib/navigation'
 import {
   Sparkles,
@@ -29,17 +29,41 @@ interface PlacementData {
   testedAt?: string
 }
 
-function resolvePlacementData(user: ReturnType<typeof useAuthStore.getState>['user']): PlacementData | null {
+function resolvePlacementData(
+  user: ReturnType<typeof useAuthStore.getState>['user'],
+  skillsTypePreference?: '2SKILLS' | '4SKILLS'
+): PlacementData | null {
   if (user) {
-    const scoreNum = Number(user.placement_test_score)
-    if (scoreNum > 0) {
+    const is4 = (skillsTypePreference || user.placement_skills_type) === '4SKILLS'
+
+    const listening = is4
+      ? (user.placement_4skills_listening_score ?? (user.placement_skills_type === '4SKILLS' ? user.placement_listening_score : undefined) ?? user.placement_listening_score)
+      : (user.placement_2skills_listening_score ?? (user.placement_skills_type !== '4SKILLS' ? user.placement_listening_score : undefined) ?? user.placement_listening_score)
+
+    const reading = is4
+      ? (user.placement_4skills_reading_score ?? (user.placement_skills_type === '4SKILLS' ? user.placement_reading_score : undefined) ?? user.placement_reading_score)
+      : (user.placement_2skills_reading_score ?? (user.placement_skills_type !== '4SKILLS' ? user.placement_reading_score : undefined) ?? user.placement_reading_score)
+
+    const speaking = is4
+      ? (user.placement_4skills_speaking_score ?? user.placement_speaking_score)
+      : undefined
+
+    const writing = is4
+      ? (user.placement_4skills_writing_score ?? user.placement_writing_score)
+      : undefined
+
+    const scoreNum = is4
+      ? (user.placement_4skills_test_score ?? (user.placement_skills_type === '4SKILLS' ? user.placement_test_score : undefined) ?? Number(user.placement_test_score) ?? 0)
+      : (user.placement_2skills_test_score ?? (user.placement_skills_type !== '4SKILLS' ? user.placement_test_score : undefined) ?? ((typeof listening === 'number' && typeof reading === 'number') ? listening + reading : Number(user.placement_test_score)) ?? 0)
+
+    if (scoreNum > 0 || (typeof listening === 'number' && typeof reading === 'number' && (listening > 0 || reading > 0))) {
       return {
         score: scoreNum,
-        listening: typeof user.placement_listening_score === 'number' ? user.placement_listening_score : undefined,
-        reading: typeof user.placement_reading_score === 'number' ? user.placement_reading_score : undefined,
-        speaking: typeof user.placement_speaking_score === 'number' ? user.placement_speaking_score : undefined,
-        writing: typeof user.placement_writing_score === 'number' ? user.placement_writing_score : undefined,
-        skillsType: typeof user.placement_skills_type === 'string' ? user.placement_skills_type : '2SKILLS',
+        listening: typeof listening === 'number' ? listening : undefined,
+        reading: typeof reading === 'number' ? reading : undefined,
+        speaking: typeof speaking === 'number' ? speaking : undefined,
+        writing: typeof writing === 'number' ? writing : undefined,
+        skillsType: is4 ? '4SKILLS' : '2SKILLS',
         testedAt: typeof user.placement_tested_at === 'string' ? user.placement_tested_at : undefined,
       }
     }
@@ -72,6 +96,16 @@ export function CoursePlacementBanner() {
   const { user } = useAuthStore()
   const [showEditScoreModal, setShowEditScoreModal] = useState(false)
   const [customPlacementData, setCustomPlacementData] = useState<PlacementData | null>(null)
+  const [selectedSkillsType, setSelectedSkillsType] = useState<'2SKILLS' | '4SKILLS'>(
+    user?.placement_skills_type === '4SKILLS' ? '4SKILLS' : '2SKILLS'
+  )
+
+  useEffect(() => {
+    if (user?.placement_skills_type === '4SKILLS' || user?.placement_skills_type === '2SKILLS') {
+      setSelectedSkillsType(user.placement_skills_type)
+    }
+  }, [user?.placement_skills_type])
+
   const { data: activePlacements = [] } = useActivePlacementExamsQuery(mounted)
 
   const has2Skills = useMemo(() => {
@@ -93,8 +127,8 @@ export function CoursePlacementBanner() {
   const placementData = useMemo(() => {
     if (!mounted) return null
     if (customPlacementData) return customPlacementData
-    return resolvePlacementData(user)
-  }, [mounted, customPlacementData, user])
+    return resolvePlacementData(user, selectedSkillsType)
+  }, [mounted, customPlacementData, user, selectedSkillsType])
 
   if (!mounted) {
     return <CoursePlacementBannerSkeleton />
@@ -112,6 +146,30 @@ export function CoursePlacementBanner() {
                 <CheckCircle2 size={12} />
                 <span>Baseline</span>
               </span>
+              <div className="inline-flex p-0.5 bg-black/40 rounded-xl border border-white/10 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSkillsType('2SKILLS')}
+                  className={`px-2.5 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
+                    selectedSkillsType === '2SKILLS'
+                      ? 'bg-emerald-500 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  2 Kỹ Năng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSkillsType('4SKILLS')}
+                  className={`px-2.5 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
+                    selectedSkillsType === '4SKILLS'
+                      ? 'bg-emerald-500 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  4 Kỹ Năng
+                </button>
+              </div>
               <span className="text-xs sm:text-sm font-bold text-white">
                 Trình độ: <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 font-extrabold">{placementData.score} / {is4Skills ? '1390' : '990'} TOEIC</span>
               </span>
@@ -171,7 +229,7 @@ export function CoursePlacementBanner() {
               readingScore: placementData.reading,
               speakingScore: placementData.speaking,
               writingScore: placementData.writing,
-              skillsType: (placementData.skillsType as '2SKILLS' | '4SKILLS') || '2SKILLS',
+              skillsType: selectedSkillsType,
               targetScore: Number(user?.target_toeic_score) || 450,
             }}
             onSuccess={(updated) => {
@@ -183,7 +241,7 @@ export function CoursePlacementBanner() {
                   reading: updated.placement_reading_score,
                   speaking: updated.placement_speaking_score,
                   writing: updated.placement_writing_score,
-                  skillsType: updated.placement_skills_type || '2SKILLS',
+                  skillsType: updated.placement_skills_type || selectedSkillsType,
                   testedAt: updated.placement_tested_at || new Date().toISOString(),
                 })
               }

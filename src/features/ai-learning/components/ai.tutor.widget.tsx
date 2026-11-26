@@ -148,7 +148,11 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
       <div className="flex items-center justify-between border-b border-border/80 bg-surface/90 px-4 py-3 dark:bg-[#101818]/90 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-emerald-400 text-white shadow-sm shrink-0">
-            <Sparkles className="h-5 w-5" />
+            <img
+              src="/assets/ai-bot-mascot.png"
+              alt="Gia Sư AI LingoSphere"
+              className="h-6 w-6 object-contain brightness-0 invert drop-shadow-xs pointer-events-none select-none"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -217,8 +221,12 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white shadow-xs mt-0.5">
-                <Bot className="h-4 w-4" />
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-emerald-400 text-white shadow-xs mt-0.5">
+                <img
+                  src="/assets/ai-bot-mascot.png"
+                  alt="AI"
+                  className="h-4.5 w-4.5 object-contain brightness-0 invert pointer-events-none select-none"
+                />
               </div>
             )}
 
@@ -273,8 +281,12 @@ export function AiTutorWidget({ isOpen, onClose }: AiTutorWidgetProps) {
 
         {isLoading && (
           <div className="flex gap-2.5 items-start">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white shadow-xs mt-0.5">
-              <Bot className="h-4 w-4" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-emerald-400 text-white shadow-xs mt-0.5">
+              <img
+                src="/assets/ai-bot-mascot.png"
+                alt="AI"
+                className="h-4.5 w-4.5 object-contain brightness-0 invert pointer-events-none select-none animate-pulse"
+              />
             </div>
             <div className="rounded-2xl rounded-bl-none bg-surface border border-border px-3 py-2 text-[11px] shadow-xs flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />

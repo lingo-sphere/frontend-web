@@ -1,3 +1,4 @@
+// Trang học bộ từ vựng theo ID hoặc theo chế độ ôn tập đặc biệt.
 "use client";
 
 import { useState, useMemo } from "react";
@@ -162,12 +163,12 @@ export default function VocabularyDeckLearnAppPage() {
     });
 
     const deckTitle =
-      isVietnamese && (deck as any).name_vi
-        ? (deck as any).name_vi
+      isVietnamese && deck.name_vi
+        ? deck.name_vi
         : deck.name || "Vocabulary Deck";
     const deckDescription =
-      isVietnamese && (deck as any).description_vi
-        ? (deck as any).description_vi
+      isVietnamese && deck.description_vi
+        ? deck.description_vi
         : deck.description || "";
 
     return {

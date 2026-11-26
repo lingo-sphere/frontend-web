@@ -8,7 +8,7 @@ import { useNavigate } from '@/lib/navigation'
 import { useCart } from '@/features/cart/hooks/use.cart.query'
 import { toast } from '@/store/toast.store'
 import { formatCurrency } from '@/lib/format'
-import { resolveMediaUrl } from '@/utils/media.utils'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/utils/media.utils'
 import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 
 interface HeaderCartHoverProps {
@@ -64,9 +64,14 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
                   <img
                     src={
                       resolveMediaUrl(item.thumbnail_url) ||
-                      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
+                      IMAGE_FALLBACK_PLACEHOLDER
                     }
                     alt={item.title}
+                    onError={(e) => {
+                      const target = e.currentTarget
+                      target.onerror = null
+                      target.src = IMAGE_FALLBACK_PLACEHOLDER
+                    }}
                     className="h-12 w-12 rounded-xl object-cover shrink-0 border border-border/60"
                   />
                   <div className="flex-1 space-y-1 min-w-0 pr-6">

@@ -12,7 +12,11 @@ import { ToeicQuestionCard } from '@/features/toeic/components/toeic.question.ca
 import { ToeicQuestionNav } from '@/features/toeic/components/toeic.question.nav'
 import { ToeicExamHeader } from '@/features/toeic/components/toeic.exam.header'
 import { PART_TIMINGS, PART_TIPS } from '@/features/toeic/components/toeic.constants'
-import { TestRunnerExitConfirmModal } from '@/features/courses/components/test.runner.confirm.modal'
+import {
+  TestRunnerExitConfirmModal,
+  TestRunnerSubmitConfirmModal,
+  TestRunnerStartConfirmModal,
+} from '@/features/courses/components/test.runner.confirm.modal'
 import { UserScoreUpgradeModal } from '@/features/user/components/user.score.upgrade.modal'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { userService } from '@/features/user/services/user.service'
@@ -36,6 +40,7 @@ export default function ToeicExamAppPage() {
     handleSelectAnswer,
     goToQuestion,
     toggleFlag,
+    startExam,
     handleSubmit,
     handleSubmitAttemptAsync,
     handleRetry,
@@ -46,6 +51,7 @@ export default function ToeicExamAppPage() {
   } = useToeicExam(examId)
 
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
   const [hasDismissedUpgrade, setHasDismissedUpgrade] = useState(false)
 
@@ -291,7 +297,7 @@ export default function ToeicExamAppPage() {
         timeRemaining={state.timeRemaining}
         isVietnamese={isVietnamese}
         onBackToModeSelect={handleBackClick}
-        onSubmit={handleSubmit}
+        onSubmit={() => setShowSubmitConfirm(true)}
       />
 
       <div className="w-full grid gap-6 p-4 sm:p-6 lg:p-8 lg:grid-cols-[1fr_320px]">
@@ -324,6 +330,38 @@ export default function ToeicExamAppPage() {
           onGoToQuestion={goToQuestion}
         />
       </div>
+
+      <TestRunnerStartConfirmModal
+        isOpen={!state.started && !state.submitted}
+        title={examData?.title || 'Đề thi TOEIC'}
+        description={examData?.description}
+        durationMinutes={
+          examData?.duration_minutes || (is4SkillsExam ? 60 : 40)
+        }
+        totalQuestions={allQuestions.length}
+        is4Skills={is4SkillsExam}
+        skillsText={
+          is4SkillsExam
+            ? '4 Kỹ năng (Nghe, Đọc, Nói, Viết)'
+            : '2 Kỹ năng (Nghe & Đọc)'
+        }
+        onCancel={() => navigate('/placement-test')}
+        onConfirmStart={startExam}
+      />
+
+      <TestRunnerSubmitConfirmModal
+        isOpen={showSubmitConfirm}
+        totalQuestions={allQuestions.length}
+        answeredCount={Object.keys(state.answers).length}
+        unansweredCount={allQuestions.length - Object.keys(state.answers).length}
+        timeLeftFormatted={`${Math.floor(state.timeRemaining / 60)}:${(state.timeRemaining % 60).toString().padStart(2, '0')}`}
+        isSaving={isSubmittingAttempt}
+        onCancel={() => setShowSubmitConfirm(false)}
+        onConfirmSubmit={async () => {
+          setShowSubmitConfirm(false)
+          await handleSubmitAttemptAsync()
+        }}
+      />
 
       <TestRunnerExitConfirmModal
         isOpen={showExitConfirm}

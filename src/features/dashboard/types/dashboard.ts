@@ -5,8 +5,6 @@ export type NavSectionId = 'home' | 'learning' | 'ai' | 'leaderboard' | 'progres
 export type LearningTaskKind = 'vocabulary' | 'listening' | 'writing' | 'speaking'
 export type MilestoneStatus = 'done' | 'current' | 'locked'
 export type LeaderboardPeriod = 'week' | 'month' | 'year'
-export type HeatmapIntensity = 0 | 1 | 2 | 3 | 4
-export type HeatmapStatus = 'checked-in' | 'freeze' | 'inactive'
 export type LeaderboardType = 'streak' | 'learning' | 'vocabulary' | 'xp' | 'level'
 
 export interface NavItem {
@@ -57,29 +55,12 @@ export interface Topic {
   words: number
 }
 
-export interface HeatmapDay {
-  id: string
-  date: string
-  intensity: HeatmapIntensity
-  status: HeatmapStatus
-  minutes: number
-  activityLabel: string
-}
-
-export interface HeatmapSummary {
-  studyDays: number
-  totalMinutes: number
-  longestStreak: number
-}
-
 export interface DashboardData {
   navGroups: NavGroup[]
   tasks: LearningTask[]
   milestones: StreakMilestone[]
   leaderboard: LeaderboardData
   topics: Topic[]
-  heatmap: HeatmapDay[]
-  heatmapSummary: HeatmapSummary
 }
 
 export interface MonthlyLeaderboardUser {

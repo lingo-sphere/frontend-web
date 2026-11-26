@@ -29,7 +29,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useNavigate } from '@/lib/navigation'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
-import { resolveMediaUrl } from '@/utils/media.utils'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/utils/media.utils'
 import { formatCurrency, formatNumber } from '@/lib/format'
 import { storage, STORAGE_KEYS } from '@/lib/storage'
 
@@ -216,12 +216,13 @@ export function CourseCard({
           className="relative h-full w-full block overflow-hidden"
         >
           <img
-            src={resolveMediaUrl(course.thumbnail)}
+            src={resolveMediaUrl(course.thumbnail) || IMAGE_FALLBACK_PLACEHOLDER}
             alt={course.title}
             loading="lazy"
             onError={(e) => {
-              ;(e.target as HTMLImageElement).src =
-                'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop'
+              const target = e.currentTarget
+              target.onerror = null
+              target.src = IMAGE_FALLBACK_PLACEHOLDER
             }}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />

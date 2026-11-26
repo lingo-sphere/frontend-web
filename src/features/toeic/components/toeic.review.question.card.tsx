@@ -13,6 +13,7 @@ import {
   Bot,
   Volume2,
 } from 'lucide-react'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 import type { ToeicQuestion } from '@/features/toeic/types/toeic'
 
 interface ToeicReviewQuestionCardProps {
@@ -208,9 +209,10 @@ export function ToeicReviewQuestionCard({
               Audio Recorded
             </span>
           </div>
-          <div className="p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-purple-100 dark:border-purple-900/40">
-            <audio controls className="w-full h-10 rounded-lg" src={getAudioSrc(selected)} preload="auto" />
-          </div>
+          <CustomAudioPlayer
+            src={getAudioSrc(selected)}
+            title="Bản Ghi Âm Giọng Nói Của Bạn (Speaking Voice)"
+          />
         </div>
       )}
 

@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/button";
-import { VoicePill } from "@/components/voice.pill";
+import { CustomAudioPlayer } from "@/components/custom.audio.player";
+import { Mic, Square, RotateCcw } from "lucide-react";
 import { useSpeakingRecorder } from "@/features/practice/hooks/use.speaking.recorder";
 import {
   courseService,
@@ -157,50 +158,66 @@ export function TestRunnerSpeakingSection({
       </p>
       {!graded && (
         <div className="space-y-3 rounded-2xl border border-border p-4">
-          {recorder.isRecording && (
-            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 gap-2">
-              <VoicePill
-                accentColor="#10b981"
-                iconColor="#ffffff"
-                background="#18181b"
-                size={46}
-                shape="pill"
-                reach={14}
-                showTime
-                waveform
-                slideToCancel
-                cancelDistance={70}
-                reactive="simulated"
-                isRecording={true}
-                onStop={({ reason }) => {
-                  if (reason === 'cancel') {
-                    recorder.resetRecording()
-                  } else if (reason !== 'unmount') {
-                    recorder.stopRecording()
-                  }
-                }}
-                className="shadow-md"
-              />
-              <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
-                Đang ghi âm câu trả lời • Trượt để hủy hoặc nhấn để dừng
-              </p>
+          {recorder.isRecording ? (
+            <div className="relative p-5 rounded-xl bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 text-white overflow-hidden space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+                  <span>ĐANG GHI ÂM</span>
+                </div>
+                <div className="font-mono text-base font-bold text-emerald-400">
+                  {Math.floor(recorder.recordingSeconds / 60)}:{String(recorder.recordingSeconds % 60).padStart(2, "0")}s
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5 h-12">
+                {[18, 36, 60, 80, 100, 75, 90, 65, 85, 50, 70, 40, 25].map((base, idx) => {
+                  const dynamicHeight = Math.max(
+                    15,
+                    Math.min(100, Math.round(base * 0.35 + (recorder.micVolume / 100) * base * 0.8))
+                  );
+                  return (
+                    <span
+                      key={idx}
+                      style={{ height: `${dynamicHeight}%` }}
+                      className="w-1.5 rounded-full bg-gradient-to-t from-emerald-600 via-emerald-400 to-teal-200 transition-all duration-75 ease-out shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                    />
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-center gap-3 pt-1">
+                <Button
+                  type="button"
+                  onClick={() => recorder.stopRecording()}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-2 text-xs rounded-xl px-5 h-10 shadow-lg cursor-pointer"
+                >
+                  <Square size={13} className="fill-white" />
+                  Dừng & Lưu bản thu âm
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => recorder.resetRecording()}
+                  className="text-neutral-400 hover:text-white hover:bg-neutral-800 text-xs rounded-xl h-10 px-3 cursor-pointer"
+                >
+                  <RotateCcw size={13} />
+                  Hủy
+                </Button>
+              </div>
             </div>
-          )}
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              disabled={locked && !recorder.isRecording}
-              onClick={() =>
-                recorder.isRecording
-                  ? recorder.stopRecording()
-                  : recorder.startRecording()
-              }
-            >
-              {recorder.isRecording
-                ? `Dừng ghi âm (${recorder.recordingSeconds}s)`
-                : "Bắt đầu ghi âm"}
-            </Button>
-            <label className="text-sm">
-              Chọn audio (tối đa 8MB)
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                disabled={locked}
+                onClick={() => recorder.startRecording()}
+                className="bg-primary hover:bg-primary-hover text-white font-bold gap-2 text-xs rounded-xl px-5 h-10 shadow cursor-pointer"
+              >
+                <Mic size={14} />
+                Bắt đầu ghi âm
+              </Button>
+              <label className="text-sm">
+                Chọn audio (tối đa 8MB)
               <input
                 disabled={locked}
                 type="file"
@@ -220,8 +237,12 @@ export function TestRunnerSpeakingSection({
               />
             </label>
           </div>
+          )}
           {recorder.recordedUrl && (
-            <audio controls src={recorder.recordedUrl} className="w-full" />
+            <CustomAudioPlayer
+              src={recorder.recordedUrl}
+              title="Nghe lại bản thu âm của bạn"
+            />
           )}
           {result?.grading_error && (
             <p role="status" className="text-sm text-amber-700">
