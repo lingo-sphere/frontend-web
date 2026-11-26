@@ -6,11 +6,12 @@ import { wishlistService } from '@/features/cart/services/wishlist.service'
 import { wishlistKeys } from '@/features/cart/keys/wishlist.keys'
 import type { Wishlist, WishlistItem } from '@/features/cart/types/wishlist'
 import type { CourseCardData } from '@/features/courses/types/course'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 export const mapWishlistItemToCourseCard = (item: WishlistItem): CourseCardData => ({
   id: item.course_id,
   title: item.title,
-  thumbnail: item.thumbnail_url || '',
+  thumbnail: resolveMediaUrl(item.thumbnail_url) || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600',
   instructor: item.instructor_name || 'LingoSphere Academic Team',
   price: item.price,
   discountPrice: item.discount_price,

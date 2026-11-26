@@ -67,6 +67,10 @@ export function HeaderCartHover({ isOpen }: HeaderCartHoverProps) {
                       'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
                     }
                     alt={item.title}
+                    onError={(e) => {
+                      ;(e.target as HTMLImageElement).src =
+                        'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
+                    }}
                     className="h-12 w-12 rounded-xl object-cover shrink-0 border border-border/60"
                   />
                   <div className="flex-1 space-y-1 min-w-0 pr-6">

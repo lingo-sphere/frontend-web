@@ -129,8 +129,12 @@ export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
                 className="flex items-start gap-3 p-3.5 hover:bg-surface-subtle transition-colors cursor-pointer group"
               >
                 <img
-                  src={course.thumbnail}
+                  src={resolveMediaUrl(course.thumbnail) || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'}
                   alt={course.title}
+                  onError={(e) => {
+                    ;(e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
+                  }}
                   className="h-12 w-12 rounded-xl object-cover shrink-0 border border-border/60"
                 />
                 <div className="flex-1 space-y-1.5 min-w-0">

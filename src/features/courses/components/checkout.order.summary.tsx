@@ -1,6 +1,7 @@
 // Thành phần tóm tắt danh sách khóa học và tổng số tiền thanh toán trong modal checkout
 import { BookOpen, CheckCircle2 } from 'lucide-react'
 import type { CheckoutCourseItem } from '@/features/courses/components/course.checkout.modal'
+import { resolveMediaUrl } from '@/utils/media.utils'
 
 interface CheckoutOrderSummaryProps {
   courses: CheckoutCourseItem[]
@@ -34,8 +35,12 @@ export function CheckoutOrderSummary({
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
               {c.thumbnail ? (
                 <img
-                  src={c.thumbnail}
+                  src={resolveMediaUrl(c.thumbnail) || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'}
                   alt={c.title}
+                  onError={(e) => {
+                    ;(e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
+                  }}
                   className="w-12 h-8 rounded-md object-cover shrink-0 border border-border/40"
                 />
               ) : (
