@@ -96,6 +96,7 @@ export function VocabularyLearningSession({
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSlowLoading, setIsSlowLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMode, setSelectedMode] = useState<string>(sessionMode);
   const [showModeMenu, setShowModeMenu] = useState(false);
@@ -329,6 +330,10 @@ export function VocabularyLearningSession({
       return;
     }
 
+    const slowLoadingTimer = setTimeout(() => {
+      setIsSlowLoading(true);
+    }, 4500);
+
     async function initSession() {
       setIsLoading(true);
       setError("");
@@ -432,6 +437,7 @@ export function VocabularyLearningSession({
             : "Unable to load session. Retry or start a new session."
         );
       } finally {
+        clearTimeout(slowLoadingTimer);
         setIsLoading(false);
       }
     }
@@ -440,6 +446,7 @@ export function VocabularyLearningSession({
 
     return () => {
       isMounted = false;
+      clearTimeout(slowLoadingTimer);
     };
   }, [sourceType, sourceId, deck?.id, userId, retryInit]);
 
@@ -450,12 +457,10 @@ export function VocabularyLearningSession({
   ) {
     setIsLoading(true);
     try {
-      const q = await serialize(() =>
-        vocabularyService.getNextLearningQuestion(
-          activeSessionId,
-          requestedMode,
-          targetVocabId
-        )
+      const q = await vocabularyService.getNextLearningQuestion(
+        activeSessionId,
+        requestedMode,
+        targetVocabId
       );
       revisionRef.current = q.revision ?? revisionRef.current;
       setError("");
@@ -866,13 +871,44 @@ export function VocabularyLearningSession({
 
   if (isLoading && !currentQuestion) {
     return (
-      <div className="flex h-96 flex-col items-center justify-center gap-3">
+      <div className="flex h-96 flex-col items-center justify-center gap-4 text-center px-4">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="text-[14px] font-semibold text-text-secondary">
-          {isVietnamese
-            ? "Đang chuẩn bị câu hỏi thích ứng..."
-            : "Preparing adaptive question..."}
-        </p>
+        <div className="space-y-1">
+          <p className="text-[14px] font-semibold text-text-primary">
+            {isVietnamese
+              ? "Đang chuẩn bị câu hỏi thích ứng..."
+              : "Preparing adaptive question..."}
+          </p>
+          {isSlowLoading && (
+            <p className="text-[12px] text-text-tertiary max-w-sm">
+              {isVietnamese
+                ? "Quá trình tải đang mất nhiều thời gian hơn bình thường. Bạn có thể bắt đầu phiên học mới ngay."
+                : "Loading is taking longer than usual. You can start a fresh session."}
+            </p>
+          )}
+        </div>
+        {isSlowLoading && (
+          <div className="flex items-center gap-2 pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                sessionStorage.removeItem(pointerKey);
+                sessionStorage.removeItem(`${pointerKey}:start-key`);
+                const url = new URL(window.location.href);
+                url.searchParams.delete("session");
+                window.history.replaceState(null, "", url);
+                setRetryInit((n) => n + 1);
+              }}
+              className="text-xs"
+            >
+              {isVietnamese ? "Bắt đầu phiên mới" : "Start Fresh Session"}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onExit} className="text-xs">
+              {isVietnamese ? "Quay lại" : "Back"}
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
