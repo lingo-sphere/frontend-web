@@ -25,6 +25,7 @@ import { getUserScoreLevelInfo } from '@/features/user/utils/user.score.utils'
 import { userService } from '@/features/user/services/user.service'
 import { formatDate } from '@/lib/format'
 import { PlacementExamCard } from '@/features/toeic/components/placement.exam.card'
+import { TestRunnerStartConfirmModal } from '@/features/courses/components/test.runner.confirm.modal'
 
 export default function PlacementTestPage() {
   const { i18n } = useTranslation()
@@ -34,6 +35,7 @@ export default function PlacementTestPage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   const [showEditScoreModal, setShowEditScoreModal] = useState(false)
+  const [examToStart, setExamToStart] = useState<BackendToeicExam | null>(null)
   const [activeTab, setActiveTab] = useState<'2SKILLS' | '4SKILLS'>(
     user?.placement_skills_type === '4SKILLS' ? '4SKILLS' : '2SKILLS'
   )
@@ -161,7 +163,12 @@ export default function PlacementTestPage() {
       navigate(`/login?returnUrl=/toeic/exam/${examId}`)
       return
     }
-    navigate(`/toeic/exam/${examId}`)
+    const target = placementExams.find((e) => e._id === examId) || null
+    if (target) {
+      setExamToStart(target)
+    } else {
+      navigate(`/toeic/exam/${examId}`)
+    }
   }
 
   return (
@@ -445,6 +452,34 @@ export default function PlacementTestPage() {
                 ? 'Đã cập nhật điểm trình độ thành công!'
                 : 'Proficiency score updated successfully!'
             )
+          }}
+        />
+      )}
+
+      {examToStart && (
+        <TestRunnerStartConfirmModal
+          isOpen={Boolean(examToStart)}
+          title={examToStart.title}
+          description={examToStart.description}
+          durationMinutes={
+            examToStart.duration_minutes ||
+            (examToStart.skills_enabled === 'ALL' || examToStart.placement_type === '4SKILLS' ? 60 : 40)
+          }
+          totalQuestions={
+            examToStart.total_questions ||
+            (examToStart.skills_enabled === 'ALL' || examToStart.placement_type === '4SKILLS' ? 60 : 40)
+          }
+          is4Skills={Boolean(examToStart.skills_enabled === 'ALL' || examToStart.placement_type === '4SKILLS')}
+          skillsText={
+            examToStart.skills_enabled === 'ALL' || examToStart.placement_type === '4SKILLS'
+              ? '4 Kỹ năng (Nghe, Đọc, Nói, Viết)'
+              : '2 Kỹ năng (Nghe & Đọc)'
+          }
+          onCancel={() => setExamToStart(null)}
+          onConfirmStart={() => {
+            const id = examToStart._id
+            setExamToStart(null)
+            navigate(`/toeic/exam/${id}`)
           }}
         />
       )}

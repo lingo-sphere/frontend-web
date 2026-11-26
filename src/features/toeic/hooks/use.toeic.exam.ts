@@ -173,13 +173,98 @@ export function useToeicExam(examId?: string) {
       answers: initialAnswers,
       flagged: initialFlagged,
       timeRemaining: effectiveTime,
-      started: true,
+      started: draftRestored,
       submitted: shouldAutoSubmit,
       showAnswer: shouldAutoSubmit,
       timedMode: true,
     }))
 
-    if (!draftRestored && typeof window !== 'undefined' && storageKey) {
+    if (draftRestored) {
+      const isSystemPlacement = Boolean(
+        examData.is_system_placement ||
+        examData.placement_type ||
+        Boolean(examData.code && examData.code.includes('placement')) ||
+        examData.title?.toLowerCase().includes('đầu vào') ||
+        examData.title?.toLowerCase().includes('placement') ||
+        examId?.includes('placement')
+      )
+
+      const authUser = useAuthStore.getState().user
+      if (authUser && examId && !attemptIdRef.current) {
+        examService
+          .startExamAttempt(examId, {
+            attempt_type: isSystemPlacement ? 'PLACEMENT' : 'FULL_TEST',
+          })
+          .then((attemptRes) => {
+            if (attemptRes && attemptRes.attempt_id) {
+              attemptIdRef.current = attemptRes.attempt_id
+              if (attemptRes.expires_at) {
+                const serverRemaining = Math.max(
+                  0,
+                  Math.floor((new Date(attemptRes.expires_at).getTime() - Date.now()) / 1000)
+                )
+                if (serverRemaining <= 0) {
+                  handleSubmitRef.current()
+                  return
+                }
+                setState((prev) => ({ ...prev, timeRemaining: serverRemaining }))
+              }
+
+              if (Array.isArray(attemptRes.interim_answers) && attemptRes.interim_answers.length > 0) {
+                setState((prev) => {
+                  const merged = { ...prev.answers }
+                  attemptRes.interim_answers?.forEach((ans) => {
+                    if (ans.question_number && ans.selected_option && !merged[ans.question_number]) {
+                      merged[ans.question_number] = ans.selected_option
+                    }
+                  })
+                  return { ...prev, answers: merged }
+                })
+              }
+
+              if (typeof window !== 'undefined' && storageKey) {
+                try {
+                  const existing = localStorage.getItem(storageKey)
+                  if (existing) {
+                    const parsed = JSON.parse(existing)
+                    localStorage.setItem(
+                      storageKey,
+                      JSON.stringify({ ...parsed, attemptId: attemptRes.attempt_id })
+                    )
+                  }
+                } catch {}
+              }
+            }
+          })
+          .catch(() => {})
+      }
+    }
+  }, [examData, examId, storageKey])
+
+  const startExam = useCallback(() => {
+    setState((prev) => {
+      if (prev.started) return prev
+      return { ...prev, started: true }
+    })
+
+    if (!examData) return
+    const is4SkillsPlacement = Boolean(
+      examData.skills_enabled === 'ALL' ||
+      examData.placement_type === '4SKILLS' ||
+      (typeof examId === 'string' && (examId.includes('4skills') || examId.includes('full')))
+    )
+    const is2SkillsPlacement = Boolean(
+      examData.skills_enabled === 'LR' ||
+      examData.placement_type === '2SKILLS' ||
+      (typeof examId === 'string' && (examId.includes('2skills') || examId.includes('lr')))
+    )
+    const expectedPlacementMinutes = is4SkillsPlacement ? 60 : is2SkillsPlacement ? 40 : 120
+    const time =
+      typeof examData.duration_minutes === 'number' && examData.duration_minutes > 0
+        ? examData.duration_minutes * 60
+        : expectedPlacementMinutes * 60
+
+    if (typeof window !== 'undefined' && storageKey) {
       try {
         const newDraft: ToeicExamDraft = {
           attemptId: attemptIdRef.current,
@@ -222,19 +307,6 @@ export function useToeicExam(examId?: string) {
               }
               setState((prev) => ({ ...prev, timeRemaining: serverRemaining }))
             }
-
-            if (Array.isArray(attemptRes.interim_answers) && attemptRes.interim_answers.length > 0) {
-              setState((prev) => {
-                const merged = { ...prev.answers }
-                attemptRes.interim_answers?.forEach((ans) => {
-                  if (ans.question_number && ans.selected_option && !merged[ans.question_number]) {
-                    merged[ans.question_number] = ans.selected_option
-                  }
-                })
-                return { ...prev, answers: merged }
-              })
-            }
-
             if (typeof window !== 'undefined' && storageKey) {
               try {
                 const existing = localStorage.getItem(storageKey)
@@ -545,6 +617,7 @@ export function useToeicExam(examId?: string) {
     handleSelectAnswer,
     goToQuestion,
     toggleFlag,
+    startExam,
     handleSubmit,
     handleSubmitAttemptAsync,
     handleRetry,

@@ -13,6 +13,7 @@ import {
   BookOpen,
   Volume2,
 } from 'lucide-react'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 import type { LessonQuestion } from '@/features/courses/types/course'
 
 interface LessonPracticeQuizViewProps {
@@ -156,12 +157,10 @@ export function LessonPracticeQuizView({
                 </p>
 
                 {(q.audio_url || q.media_url) && (
-                  <div className="p-3 rounded-xl bg-background border border-border flex items-center gap-3">
-                    <Volume2 className="w-5 h-5 text-primary shrink-0" />
-                    <audio
-                      controls
+                  <div className="max-w-xl">
+                    <CustomAudioPlayer
                       src={q.audio_url || q.media_url || ''}
-                      className="w-full h-8"
+                      title={`Audio câu ${idx + 1}`}
                     />
                   </div>
                 )}

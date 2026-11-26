@@ -3,6 +3,7 @@
 'use client'
 
 import { AlertCircle, Bot, Target, XCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 import {
   CourseTestQuestion,
   AiExplanationDetail,
@@ -89,8 +90,11 @@ export function TestRunnerQuestionItem({
             question.media_url.includes('audio') ||
             question.media_url.includes('quiz-audio') ? (
               question.media_url !== testAudioUrl ? (
-                <div className="mt-2.5 max-w-md rounded-xl overflow-hidden border border-border">
-                  <audio controls src={question.media_url} className="w-full" />
+                <div className="mt-2.5 max-w-xl">
+                  <CustomAudioPlayer
+                    src={question.media_url}
+                    title={`Audio câu ${index + 1}`}
+                  />
                 </div>
               ) : null
             ) : (

@@ -1,9 +1,5 @@
+// Quản lý phiên học từ vựng thích ứng và tương tác đa chế độ.
 "use client";
-
-/**
- * @file vocabulary.learning.session.tsx
- * @description Interactive Adaptive Learning Engine Runner (Hỗ trợ 6 chế độ học, Server-side Grading, Typo Feedback)
- */
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -104,7 +100,6 @@ export function VocabularyLearningSession({
   const [selectedMode, setSelectedMode] = useState<string>(sessionMode);
   const [showModeMenu, setShowModeMenu] = useState(false);
 
-  // Current Question Data
   const [currentQuestion, setCurrentQuestion] = useState<{
     lexical_item_id: string;
     question_id: string;
@@ -126,13 +121,11 @@ export function VocabularyLearningSession({
     };
   } | null>(null);
 
-  // Input states
   const [userInput, setUserInput] = useState("");
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
-  // Session Statistics tracking
   const [resolvedCount, setResolvedCount] = useState(0);
   const [totalCount, setTotalCount] = useState(deck?.cardCount || 10);
   const [currentIndex, setCurrentIndex] = useState(1);
@@ -140,9 +133,8 @@ export function VocabularyLearningSession({
   const [correctStreak, setCorrectStreak] = useState(0);
 
   const user = useAuthStore((state) => state.user);
-  const userId = user?.user_id || (user as any)?._id || (user as any)?.id || "";
+  const userId = user?.user_id || "";
 
-  // Saved word tracking
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -151,7 +143,6 @@ export function VocabularyLearningSession({
     null
   );
 
-  // Bộ đếm thời gian học Flashcard theo thời gian thực (Stopwatch)
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
@@ -326,7 +317,6 @@ export function VocabularyLearningSession({
     )}`;
   };
 
-  // 1. Khởi tạo phiên học từ Backend Learning Engine
   useEffect(() => {
     let isMounted = true;
     if (!userId) {
@@ -341,6 +331,7 @@ export function VocabularyLearningSession({
 
     async function initSession() {
       setIsLoading(true);
+      setError("");
       try {
         const resolvedSourceId = sourceId || deck?.id;
         const url = new URL(window.location.href);
@@ -352,15 +343,39 @@ export function VocabularyLearningSession({
           startKey = crypto.randomUUID();
           sessionStorage.setItem(keyName, startKey);
         }
-        const res = previous
-          ? await vocabularyService.readLearningSession(previous)
-          : await vocabularyService.startLearningSession({
-              source_type: sourceType,
-              source_id: resolvedSourceId,
-              session_mode: sessionMode,
-              session_type: sessionType,
-              session_key: startKey,
-            });
+
+        let res: any = null;
+        if (previous) {
+          try {
+            res = await vocabularyService.readLearningSession(previous);
+            if (res?.status === "COMPLETED" || res?.summary) {
+              res = null;
+              sessionStorage.removeItem(pointerKey);
+              sessionStorage.removeItem(keyName);
+              const cleanUrl = new URL(window.location.href);
+              cleanUrl.searchParams.delete("session");
+              window.history.replaceState(null, "", cleanUrl);
+            }
+          } catch {
+            sessionStorage.removeItem(pointerKey);
+            sessionStorage.removeItem(keyName);
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete("session");
+            window.history.replaceState(null, "", cleanUrl);
+            res = null;
+          }
+        }
+
+        if (!res) {
+          res = await vocabularyService.startLearningSession({
+            source_type: sourceType,
+            source_id: resolvedSourceId,
+            session_mode: sessionMode,
+            session_type: sessionType,
+            session_key: startKey,
+          });
+        }
+
         if (!isMounted) return;
         const activeId = res.session_id;
         sessionStorage.setItem(pointerKey, activeId);
@@ -370,10 +385,12 @@ export function VocabularyLearningSession({
         setTotalCount(res.total_items);
         revisionRef.current = res.revision || 0;
         setElapsedSeconds(res.elapsed_seconds || 0);
+
         if (res.summary) {
           await handleFinishSession(activeId);
           return;
         }
+
         if (res.status === "PAUSED") {
           const resumed = await vocabularyService.saveLearningSession(
             activeId,
@@ -385,6 +402,7 @@ export function VocabularyLearningSession({
           );
           revisionRef.current = resumed.revision;
         }
+
         if (res.question) {
           setCurrentQuestion(res.question);
           setFeedback(res.feedback);
@@ -404,21 +422,17 @@ export function VocabularyLearningSession({
           );
           setCurrentIndex(res.question.progress?.current_index || 1);
           setIsRelearning(Boolean(res.question.progress?.is_relearning));
-        } else await fetchNextQuestion(activeId);
+        } else {
+          await fetchNextQuestion(activeId);
+        }
       } catch (err: unknown) {
         setError(
           isVietnamese
             ? "Không thể tải phiên học. Hãy thử lại hoặc bắt đầu phiên mới."
             : "Unable to load session. Retry or start a new session."
         );
-        console.error("Không thể khởi tạo phiên học:", err);
-        onAction?.(
-          isVietnamese
-            ? "Không thể bắt đầu phiên học, vui lòng thử lại sau."
-            : "Failed to start session."
-        );
       } finally {
-        if (isMounted) setIsLoading(false);
+        setIsLoading(false);
       }
     }
 
@@ -429,7 +443,6 @@ export function VocabularyLearningSession({
     };
   }, [sourceType, sourceId, deck?.id, userId, retryInit]);
 
-  // 2. Kéo câu hỏi tiếp theo từ Adaptive Engine
   async function fetchNextQuestion(
     activeSessionId: string,
     requestedMode?: string,
@@ -447,7 +460,6 @@ export function VocabularyLearningSession({
       revisionRef.current = q.revision ?? revisionRef.current;
       setError("");
       if (q.is_completed) {
-        // Đã hoàn thành toàn bộ câu hỏi trong phiên
         await handleFinishSession(activeSessionId);
         return;
       }
@@ -480,18 +492,20 @@ export function VocabularyLearningSession({
         }
       }
     } catch (err: unknown) {
+      sessionStorage.removeItem(pointerKey);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("session");
+      window.history.replaceState(null, "", url);
       setError(
         isVietnamese
           ? "Không thể tải câu kế tiếp. Nhấn Thử lại."
           : "Unable to load next question. Retry."
       );
-      console.error("Lỗi khi tải câu hỏi kế tiếp:", err);
     } finally {
       setIsLoading(false);
     }
   }
 
-  // 3. Hoàn thành phiên và chốt dữ liệu
   async function handleFinishSession(activeSessionId: string) {
     try {
       const summary = await serialize(() =>
@@ -533,7 +547,6 @@ export function VocabularyLearningSession({
     }
   }
 
-  // 4. Nộp câu trả lời để Server tự đánh giá
   const handleSubmitAnswer = async (answerRaw: string) => {
     if (!sessionId || !currentQuestion || isSubmitting || feedback) return;
 
@@ -577,7 +590,6 @@ export function VocabularyLearningSession({
     }
   };
 
-  // Kiểm tra từ hiện tại đã được lưu vào sổ tay hay chưa
   useEffect(() => {
     let isMounted = true;
     async function checkSaved() {
@@ -611,7 +623,6 @@ export function VocabularyLearningSession({
     userId,
   ]);
 
-  // Xử lý lưu / bỏ lưu từ vào kho từ vựng đã lưu (Sổ tay)
   const handleToggleSave = async () => {
     if (
       !currentQuestion?.lexical_item_id ||
@@ -660,13 +671,11 @@ export function VocabularyLearningSession({
     }
   };
 
-  // Xử lý đánh dấu Thành thạo (Master) trực tiếp
   const handleMarkMastered = () => {
     if (currentQuestion?.mode === "FLASHCARD")
       void handleSubmitAnswer("master");
   };
 
-  // Lấy nhãn hiển thị cho từng chế độ học
   const getModeLabel = (m: string) => {
     switch (m) {
       case "SMART_ADAPTIVE":
@@ -693,12 +702,10 @@ export function VocabularyLearningSession({
     }
   };
 
-  // Chuyển đổi linh hoạt chế độ học trong phiên
   const handleSelectMode = async (newMode: string) => {
     setSelectedMode(newMode);
     setShowModeMenu(false);
 
-    // Nếu đang ở câu hỏi hiện tại chưa nộp đáp án, lập tức chuyển đổi câu hỏi hiện tại sang mode mới
     if (sessionId && currentQuestion && !feedback) {
       await fetchNextQuestion(
         sessionId,
@@ -714,14 +721,12 @@ export function VocabularyLearningSession({
     );
   };
 
-  // Chuyển sang câu hỏi kế tiếp
   const handleNext = () => {
     if (sessionId) {
       fetchNextQuestion(sessionId);
     }
   };
 
-  // Phát âm thanh hỗ trợ 2 giọng US và UK (Cơ chế Hybrid: R2 First + Web Speech Fallback + Tự động sinh bù file bằng Piper TTS)
   const handlePlayAudio = (type: "us" | "uk" = "us") => {
     audioRef.current?.pause();
     setAudioNotice("");
@@ -747,12 +752,10 @@ export function VocabularyLearningSession({
         );
         return;
       }
-      // 1. Phát âm thanh ngay lập tức bằng Web Speech TTS để học viên không bị trễ
       if (wordText) {
         speakWord(wordText, 0.9, type === "uk" ? "en-GB" : "en-US");
       }
 
-      // 2. Tự động gọi backend Edge TTS sinh file MP3 và upload bù lên Cloudflare R2
       if (wordText) {
         const levelMatch = rawAudioUrl?.match(/\/(A1|A2|B1|B2|C1|C2)\//i);
         const cefrLevel = levelMatch
@@ -782,7 +785,6 @@ export function VocabularyLearningSession({
                 } else {
                   currentQuestion.prompt.audio_url = res.audio_url_uk;
                 }
-                // Tự động phát ngay âm thanh vừa sinh thành công trên R2
                 setIsPlayingAudio(type);
                 const genAudio = new Audio(resolveAudioUrl(targetUrl));
                 audioRef.current = genAudio;
@@ -930,7 +932,6 @@ export function VocabularyLearningSession({
           {currentQuestion.notice}
         </p>
       )}
-      {/* HEADER: Thoát, Tiến độ, Chế độ */}
       <div className="mb-6 flex items-center justify-between">
         <button
           onClick={handleInitiateExit}
@@ -951,7 +952,6 @@ export function VocabularyLearningSession({
                 : `Question ${displayCardNumber} / ${totalCount}`}
             </span>
 
-            {/* Huy hiệu số từ đã thuộc trong phiên */}
             <span
               className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
               title={
@@ -964,7 +964,6 @@ export function VocabularyLearningSession({
               <span>{resolvedCount}</span>
             </span>
 
-            {/* Huy hiệu vòng ôn lại thẻ chưa thuộc */}
             {isRelearning && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-500/20"
@@ -1076,7 +1075,6 @@ export function VocabularyLearningSession({
           </div>
         </div>
 
-        {/* BỘ ĐẾM THỜI GIAN HỌC FLASHCARD */}
         <div
           title={
             isVietnamese ? "Thời gian học phiên này" : "Session study timer"
@@ -1088,7 +1086,6 @@ export function VocabularyLearningSession({
         </div>
       </div>
 
-      {/* PROGRESS BAR */}
       <div className="mb-6 h-2 w-full overflow-hidden rounded-full bg-surface-subtle">
         <div
           className="h-full rounded-full bg-primary transition-all duration-500"
@@ -1096,7 +1093,6 @@ export function VocabularyLearningSession({
         />
       </div>
 
-      {/* CHẶNG PHỤC HỒI LỖI SAI (RECOVERY STAGE BANNER) */}
       {isRelearning && (
         <div className="mb-6 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent p-4 sm:p-5 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center gap-3.5">
@@ -1134,10 +1130,8 @@ export function VocabularyLearningSession({
         </div>
       )}
 
-      {/* CARD MAIN WORKSPACE */}
       <Card className="dashboard-card border-border/80 shadow-md">
         <CardContent className="p-6 sm:p-8">
-          {/* ==================== 1. MODE: FLASHCARD ==================== */}
           {mode === "FLASHCARD" && (
             <div className="flex flex-col items-center">
               <div
@@ -1153,7 +1147,6 @@ export function VocabularyLearningSession({
                     transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
                   }}
                 >
-                  {/* Front Side */}
                   <div
                     className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-6 shadow-sm"
                     style={{ backfaceVisibility: "hidden" }}
@@ -1170,7 +1163,6 @@ export function VocabularyLearningSession({
                       </p>
                     )}
 
-                    {/* US & UK Pronunciation Buttons */}
                     <div className="mt-4 flex items-center gap-2.5 sm:gap-3">
                       <button
                         type="button"
@@ -1229,7 +1221,6 @@ export function VocabularyLearningSession({
                     </p>
                   </div>
 
-                  {/* Back Side */}
                   <div
                     className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl border-2 border-primary bg-surface p-6 shadow-sm"
                     style={{
@@ -1257,11 +1248,9 @@ export function VocabularyLearningSession({
                 </div>
               </div>
 
-              {/* Flashcard 4 Self-Rating Buttons & Master/Save */}
               {!feedback ? (
                 <div className="w-full flex flex-col gap-3.5">
                   <div className="grid w-full grid-cols-4 gap-2.5 sm:gap-3">
-                    {/* 1. HỌC LẠI */}
                     <button
                       type="button"
                       disabled={isSubmitting}
@@ -1276,7 +1265,6 @@ export function VocabularyLearningSession({
                       </span>
                     </button>
 
-                    {/* 2. KHÓ */}
                     <button
                       type="button"
                       disabled={isSubmitting}
@@ -1291,7 +1279,6 @@ export function VocabularyLearningSession({
                       </span>
                     </button>
 
-                    {/* 3. TỐT */}
                     <button
                       type="button"
                       disabled={isSubmitting}
@@ -1306,7 +1293,6 @@ export function VocabularyLearningSession({
                       </span>
                     </button>
 
-                    {/* 4. DỄ */}
                     <button
                       type="button"
                       disabled={isSubmitting}
@@ -1322,7 +1308,6 @@ export function VocabularyLearningSession({
                     </button>
                   </div>
 
-                  {/* Hàng phụ: Thành thạo & Lưu từ vựng */}
                   <div className="flex items-center justify-center gap-3 sm:gap-5 pt-1">
                     <button
                       type="button"
@@ -1374,7 +1359,6 @@ export function VocabularyLearningSession({
             </div>
           )}
 
-          {/* ==================== 2. MODE: MULTIPLE CHOICE & REVERSE ==================== */}
           {(mode === "MULTIPLE_CHOICE" || mode === "REVERSE") && (
             <div className="flex flex-col items-center">
               <div className="mb-6 text-center">
@@ -1504,7 +1488,6 @@ export function VocabularyLearningSession({
             </div>
           )}
 
-          {/* ==================== 3. MODE: TYPE WORD ==================== */}
           {mode === "TYPE_WORD" && (
             <div className="flex flex-col items-center">
               <div className="mb-5 text-center">
@@ -1566,7 +1549,6 @@ export function VocabularyLearningSession({
             </div>
           )}
 
-          {/* ==================== 4. MODE: LISTEN & TYPE ==================== */}
           {mode === "LISTEN_TYPE" && (
             <div className="flex flex-col items-center">
               <div className="mb-6 text-center">
@@ -1660,7 +1642,6 @@ export function VocabularyLearningSession({
             </div>
           )}
 
-          {/* ==================== 5. MODE: CONTEXT CLOZE ==================== */}
           {mode === "CONTEXT" && (
             <div className="flex flex-col items-center">
               <div className="mb-6 text-center">
@@ -1725,7 +1706,6 @@ export function VocabularyLearningSession({
             </div>
           )}
 
-          {/* ==================== SERVER EVALUATION FEEDBACK BOX ==================== */}
           {feedback && (
             <div
               className={`mt-6 rounded-2xl p-4 sm:p-5 border transition-all ${
@@ -1832,7 +1812,6 @@ export function VocabularyLearningSession({
         </CardContent>
       </Card>
 
-      {/* Hộp thoại xác nhận tạm dừng & thoát phiên */}
       <PracticeExitConfirmModal
         isOpen={showExitConfirm}
         onClose={handleResume}

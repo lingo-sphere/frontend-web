@@ -2,6 +2,7 @@
 import { CheckCircle, XCircle, AlertCircle, Mic, Bot, Lightbulb, Volume2, PenTool } from 'lucide-react'
 import { Card } from '@/components/card'
 import { Badge } from '@/components/badge'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 import { resolveMediaUrl } from '@/utils/media.utils'
 
 export interface AttemptAnswerDetail {
@@ -132,18 +133,20 @@ export function ToeicQuestionCard({ answer }: ToeicQuestionCardProps) {
       )}
 
       {(q?.audio_url || q?.media_url) && (
-        <div className="pt-1">
-          <audio controls className="w-full h-8" src={resolveMediaUrl(q.audio_url || q.media_url)} />
+        <div className="pt-1 max-w-xl">
+          <CustomAudioPlayer
+            src={resolveMediaUrl(q.audio_url || q.media_url)}
+            title={`Audio câu ${answer.question_number}`}
+          />
         </div>
       )}
 
       {isAudioAns ? (
-        <div className="p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2">
-          <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-bold">
-            <Mic size={14} className="text-indigo-600" />
-            <span>Bản ghi âm bài nói của bạn:</span>
-          </div>
-          <audio controls className="w-full h-9 rounded-lg" src={getAudioSrc(rawAnswer)} preload="auto" />
+        <div className="space-y-2">
+          <CustomAudioPlayer
+            src={getAudioSrc(rawAnswer)}
+            title="Bản ghi âm bài nói của bạn"
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
@@ -429,18 +432,20 @@ export function CourseQuestionCard({
       )}
 
       {question.media_url && (
-        <div className="pt-1">
-          <audio controls className="w-full h-8" src={resolveMediaUrl(question.media_url)} />
+        <div className="pt-1 max-w-xl">
+          <CustomAudioPlayer
+            src={resolveMediaUrl(question.media_url)}
+            title={`Audio câu ${question.question_number}`}
+          />
         </div>
       )}
 
       {isAudioString(question.selected_option) ? (
-        <div className="p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2">
-          <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-bold">
-            <Mic size={14} className="text-indigo-600" />
-            <span>Bản ghi âm bài nói của bạn:</span>
-          </div>
-          <audio controls className="w-full h-9 rounded-lg" src={question.selected_option} preload="auto" />
+        <div className="space-y-2">
+          <CustomAudioPlayer
+            src={question.selected_option}
+            title="Bản ghi âm bài nói của bạn"
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">

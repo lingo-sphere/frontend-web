@@ -1,9 +1,9 @@
 // Modal thực hiện ôn tập lặp lại ngắt quãng (SRS SM-2) cho câu hỏi trong Sổ tay lỗi sai.
-// Hỗ trợ trắc nghiệm (MULTIPLE_CHOICE), điền vào chỗ trống (FILL_BLANK) và ghép câu (ORDERING).
 
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 import {
   X,
   RotateCcw,
@@ -71,7 +71,16 @@ function ListeningMistakeReview({ open, onClose, mistake, onSuccess }: MistakeRe
     <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-surface p-6 space-y-5">
       <div className="flex justify-between gap-3"><h3 className="font-bold">Ôn tập nghe · {mistake.question_text}</h3><button type="button" aria-label="Đóng" onClick={onClose}><X size={20} /></button></div>
       {review.image_url && <img src={review.image_url} alt="Hình minh họa bài nghe" className="max-h-64 mx-auto rounded-xl" />}
-      {review.audio_url ? <audio controls src={review.audio_url} className="w-full" onLoadedMetadata={e => { if (review.start_time) e.currentTarget.currentTime = review.start_time }} onPlay={e => { if (review.end_time && (e.currentTarget.currentTime < (review.start_time || 0) || e.currentTarget.currentTime >= review.end_time)) e.currentTarget.currentTime = review.start_time || 0 }} onTimeUpdate={e => { if (review.end_time && e.currentTarget.currentTime >= review.end_time) e.currentTarget.pause() }} /> : <p>Audio của bài nghe hiện không khả dụng.</p>}
+      {review.audio_url ? (
+        <CustomAudioPlayer
+          src={review.audio_url}
+          startTime={review.start_time}
+          endTime={review.end_time}
+          title="Audio bài nghe ôn tập"
+        />
+      ) : (
+        <p>Audio của bài nghe hiện không khả dụng.</p>
+      )}
       {questions.map((q, i) => <fieldset key={i} className="rounded-xl border border-border p-4 space-y-2"><legend className="px-1 font-semibold">Câu {i + 1}{q.was_incorrect ? ' · Đã sai lần trước' : ''}</legend><p>{q.question_text}</p>
         {q.options?.length ? q.options.map(o => <label key={o.key} className="flex gap-2 p-2"><input type="radio" name={`review-${i}`} value={o.key} checked={answers[i] === o.key} disabled={revealed} onChange={() => setAnswers(v => ({ ...v, [i]: o.key }))} />{o.key}. {o.text}</label>) : <input className="w-full rounded-xl border border-border p-2" value={answers[i] || ''} disabled={revealed} onChange={e => setAnswers(v => ({ ...v, [i]: e.target.value }))} placeholder="Nhập từ nghe được" />}
         {revealed && <p className="text-sm text-emerald-600">Đáp án: {q.correct_answer}</p>}
@@ -97,7 +106,6 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
 
   const reviewMutation = useReviewMistakeMutation()
 
-  // Reset state when modal opens or mistake changes
   useEffect(() => {
     setSelectedOption(null)
     setFillBlankInput('')
@@ -106,7 +114,6 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
     setReviewResult(null)
   }, [mistake?._id, open])
 
-  // Determine question type
   const questionType: 'MULTIPLE_CHOICE' | 'FILL_BLANK' | 'ORDERING' = useMemo(() => {
     if (!mistake) return 'MULTIPLE_CHOICE'
 
@@ -121,7 +128,6 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
     if (mistake.ordering_items && mistake.ordering_items.length > 0) return 'ORDERING'
     if (mistake.options && mistake.options.length > 0) return 'MULTIPLE_CHOICE'
 
-    // Fallback detection based on question structure
     if (mistake.question_text?.includes('/') && !mistake.question_text.includes('(')) {
       return 'ORDERING'
     }
@@ -129,7 +135,6 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
     return 'FILL_BLANK'
   }, [mistake])
 
-  // Derived ordering items (support existing records without ordering_items populated)
   const orderingItems: string[] = useMemo(() => {
     if (!mistake) return []
     if (mistake.ordering_items && mistake.ordering_items.length > 0) {
@@ -146,7 +151,6 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
 
   if (!open || !mistake) return null
 
-  // Ordering handlers
   const handleSelectWord = (word: string) => {
     if (isAnswerRevealed) return
     setReorderSelectedWords((prev) => [...prev, word])
@@ -162,13 +166,11 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
     setReorderSelectedWords([])
   }
 
-  // MC handler
   const handleSelectOption = (opt: string) => {
     if (isAnswerRevealed) return
     setSelectedOption(opt)
   }
 
-  // Can user submit?
   const canSubmit = useMemo(() => {
     if (reviewMutation.isPending) return false
     if (questionType === 'MULTIPLE_CHOICE') return selectedOption !== null

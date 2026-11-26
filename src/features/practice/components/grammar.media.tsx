@@ -1,6 +1,9 @@
+// Hiển thị tệp đính kèm đa phương tiện của câu hỏi ngữ pháp.
+'use client'
 import { useEffect, useState } from 'react'
 import { api } from '@/services/api.client'
 import { resolveMediaUrl } from '@/utils/media.utils'
+import { CustomAudioPlayer } from '@/components/custom.audio.player'
 
 export function GrammarMedia({ id }: { id: string }) {
   const [media, setMedia] = useState<{ url: string; kind: string } | null>(null)
@@ -16,7 +19,7 @@ export function GrammarMedia({ id }: { id: string }) {
   }, [id, retry])
   if (failed) return <div role="alert">Không tải được tệp đính kèm. <button type="button" className="underline" onClick={() => { setFailed(false); setMedia(null); setRetry(v => v + 1) }}>Thử lại</button></div>
   if (!media) return <p role="status">Đang tải tệp đính kèm…</p>
-  if (media.kind === 'AUDIO') return <audio key={retry} controls preload="metadata" src={media.url} onError={() => setFailed(true)} className="w-full" />
+  if (media.kind === 'AUDIO') return <div className="max-w-xl py-2"><CustomAudioPlayer key={retry} src={media.url} onError={() => setFailed(true)} /></div>
   if (media.kind === 'VIDEO') return <video key={retry} controls preload="metadata" src={media.url} onError={() => setFailed(true)} className="max-h-96 w-full" />
   return <img key={retry} src={media.url} alt="Hình minh họa câu hỏi" onError={() => setFailed(true)} className="max-h-96 w-full object-contain" />
 }
