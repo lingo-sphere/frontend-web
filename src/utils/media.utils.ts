@@ -90,8 +90,9 @@ export function resolveMediaUrl(urlOrPath?: string | null): string {
   const cleanKey = normalizeToRelativePath(trimmed)
   if (!cleanKey) return ''
 
-  const base = (API_CONFIG.BASE_URL ?? '').replace(/\/+$/, '')
-  return `${base}/media/stream/${cleanKey}`
+  const rawBase = API_CONFIG.BASE_URL || (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_BASE_URL : '') || ''
+  const base = (rawBase ?? '').replace(/\/+$/, '')
+  return base ? `${base}/media/stream/${cleanKey}` : `/media/stream/${cleanKey}`
 }
 
 export function resolveAudioUrl(url?: string | null): string {

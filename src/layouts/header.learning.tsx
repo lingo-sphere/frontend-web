@@ -8,7 +8,7 @@ import { useNavigate } from '@/lib/navigation'
 import { courseService } from '@/features/courses/services/course.service'
 import { useAuthStore } from '@/features/auth/store/auth.store'
 import { buildCourseUrl } from '@/features/courses/lib/course.url'
-import { resolveMediaUrl } from '@/utils/media.utils'
+import { resolveMediaUrl, IMAGE_FALLBACK_PLACEHOLDER } from '@/utils/media.utils'
 import { usePreventScrollChain } from '@/hooks/use.prevent.scroll.chain'
 import type { Course } from '@/types/api.types'
 
@@ -129,11 +129,12 @@ export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
                 className="flex items-start gap-3 p-3.5 hover:bg-surface-subtle transition-colors cursor-pointer group"
               >
                 <img
-                  src={resolveMediaUrl(course.thumbnail) || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'}
+                  src={resolveMediaUrl(course.thumbnail) || IMAGE_FALLBACK_PLACEHOLDER}
                   alt={course.title}
                   onError={(e) => {
-                    ;(e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
+                    const target = e.currentTarget
+                    target.onerror = null
+                    target.src = IMAGE_FALLBACK_PLACEHOLDER
                   }}
                   className="h-12 w-12 rounded-xl object-cover shrink-0 border border-border/60"
                 />

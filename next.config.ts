@@ -1,3 +1,4 @@
+// Cấu hình Next.js cho frontend-web hỗ trợ remote patterns và rewrites tới API Gateway.
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
@@ -19,6 +20,10 @@ const nextConfig: NextConfig = {
       {
         source: '/api/:path*',
         destination: `${apiBaseUrl}/api/:path*`,
+      },
+      {
+        source: '/media/:path*',
+        destination: `${apiBaseUrl}/media/:path*`,
       },
     ]
   },
