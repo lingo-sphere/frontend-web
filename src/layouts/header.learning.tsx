@@ -35,12 +35,9 @@ export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
   usePreventScrollChain(containerRef, isOpen)
 
   useEffect(() => {
+    if (!isOpen || !isAuthenticated) return
     let isMounted = true
     const loadMyLearning = async () => {
-      if (!isAuthenticated) {
-        setCourses([])
-        return
-      }
       setLoading(true)
       try {
         const [enrollments, allCourses] = await Promise.all([
@@ -85,7 +82,7 @@ export function HeaderMyLearningHover({ isOpen }: HeaderMyLearningHoverProps) {
     return () => {
       isMounted = false
     }
-  }, [isAuthenticated])
+  }, [isOpen, isAuthenticated])
 
   return (
     <div

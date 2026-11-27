@@ -441,6 +441,7 @@ export default function MistakeVaultPage() {
                         snapshot?.domain || 'LISTENING'
                       ).toUpperCase()
                       const contextId = snapshot?.context_id || ''
+                      const grammarKnowledgeId = snapshot?.grammar_knowledge_id || ''
                       const exerciseType = snapshot?.exercise_type || ''
                       const rawTopic = m.topic_name_vi || m.topic_tags?.[0] || ''
                       const topicName =
@@ -450,7 +451,7 @@ export default function MistakeVaultPage() {
                           ? rawTopic
                           : ''
 
-                      if (!contextId) {
+                      if (!contextId && !(domain === 'GRAMMAR' && grammarKnowledgeId)) {
                         toast.warning(
                           isVi ? 'Câu hỏi này chưa được gắn chủ đề luyện tập cụ thể.' : 'This question is not linked to a specific practice topic.'
                         )
@@ -458,7 +459,9 @@ export default function MistakeVaultPage() {
                       }
 
                       let targetUrl = '/listening'
-                      if (domain === 'SPEAKING') {
+                      if (domain === 'READING') {
+                        targetUrl = '/reading'
+                      } else if (domain === 'SPEAKING') {
                         targetUrl = '/speaking'
                       } else if (domain === 'WRITING') {
                         targetUrl = '/writing'
@@ -470,6 +473,7 @@ export default function MistakeVaultPage() {
 
                       const params = new URLSearchParams()
                       if (contextId) params.set('context_id', contextId)
+                      if (grammarKnowledgeId) params.set('grammar_knowledge_id', grammarKnowledgeId)
                       if (exerciseType) params.set('exercise_type', exerciseType)
                       if (topicName) params.set('topic_name', topicName)
 

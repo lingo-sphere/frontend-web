@@ -84,8 +84,7 @@ export function useCommunityChat() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    if (messages.length > 0 && !isOpen) return;
+    if (!isAuthenticated || !isOpen) return;
 
     let isMounted = true;
     setIsLoading(true);

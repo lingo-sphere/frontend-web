@@ -81,6 +81,25 @@ interface FeedbackState {
   bonus_xp?: number;
 }
 
+function updateUrlSessionId(id: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    const currentUrl = new URL(window.location.href);
+    const existing = currentUrl.searchParams.get("session");
+    if (id) {
+      if (existing !== id) {
+        currentUrl.searchParams.set("session", id);
+        window.history.replaceState(null, "", currentUrl.pathname + currentUrl.search);
+      }
+    } else {
+      if (existing !== null) {
+        currentUrl.searchParams.delete("session");
+        window.history.replaceState(null, "", currentUrl.pathname + currentUrl.search);
+      }
+    }
+  } catch {}
+}
+
 export function VocabularyLearningSession({
   deck,
   sourceType = "DECK",
@@ -146,6 +165,14 @@ export function VocabularyLearningSession({
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (showExitConfirm || !sessionId) return;
@@ -319,7 +346,6 @@ export function VocabularyLearningSession({
   };
 
   useEffect(() => {
-    let isMounted = true;
     if (!userId) {
       setIsLoading(false);
       setError(
@@ -339,9 +365,11 @@ export function VocabularyLearningSession({
       setError("");
       try {
         const resolvedSourceId = sourceId || deck?.id;
-        const url = new URL(window.location.href);
+        const currentUrl =
+          typeof window !== "undefined" ? new URL(window.location.href) : null;
         const previous =
-          url.searchParams.get("session") || sessionStorage.getItem(pointerKey);
+          currentUrl?.searchParams.get("session") ||
+          sessionStorage.getItem(pointerKey);
         const keyName = `${pointerKey}:start-key`;
         let startKey = sessionStorage.getItem(keyName);
         if (!startKey) {
@@ -357,21 +385,19 @@ export function VocabularyLearningSession({
               res = null;
               sessionStorage.removeItem(pointerKey);
               sessionStorage.removeItem(keyName);
-              const cleanUrl = new URL(window.location.href);
-              cleanUrl.searchParams.delete("session");
-              window.history.replaceState(null, "", cleanUrl);
+              updateUrlSessionId(null);
             }
           } catch {
             sessionStorage.removeItem(pointerKey);
             sessionStorage.removeItem(keyName);
-            const cleanUrl = new URL(window.location.href);
-            cleanUrl.searchParams.delete("session");
-            window.history.replaceState(null, "", cleanUrl);
+            updateUrlSessionId(null);
             res = null;
           }
         }
 
         if (!res) {
+          startKey = crypto.randomUUID();
+          sessionStorage.setItem(keyName, startKey);
           res = await vocabularyService.startLearningSession({
             source_type: sourceType,
             source_id: resolvedSourceId,
@@ -381,11 +407,10 @@ export function VocabularyLearningSession({
           });
         }
 
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         const activeId = res.session_id;
         sessionStorage.setItem(pointerKey, activeId);
-        url.searchParams.set("session", activeId);
-        window.history.replaceState(null, "", url);
+        updateUrlSessionId(activeId);
         setSessionId(activeId);
         setTotalCount(res.total_items);
         revisionRef.current = res.revision || 0;
@@ -431,21 +456,23 @@ export function VocabularyLearningSession({
           await fetchNextQuestion(activeId);
         }
       } catch (err: unknown) {
+        if (!isMountedRef.current) return;
         setError(
           isVietnamese
             ? "Không thể tải phiên học. Hãy thử lại hoặc bắt đầu phiên mới."
             : "Unable to load session. Retry or start a new session."
         );
       } finally {
-        clearTimeout(slowLoadingTimer);
-        setIsLoading(false);
+        if (isMountedRef.current) {
+          clearTimeout(slowLoadingTimer);
+          setIsLoading(false);
+        }
       }
     }
 
     initSession();
 
     return () => {
-      isMounted = false;
       clearTimeout(slowLoadingTimer);
     };
   }, [sourceType, sourceId, deck?.id, userId, retryInit]);
@@ -497,17 +524,18 @@ export function VocabularyLearningSession({
         }
       }
     } catch (err: unknown) {
+      if (!isMountedRef.current) return;
       sessionStorage.removeItem(pointerKey);
-      const url = new URL(window.location.href);
-      url.searchParams.delete("session");
-      window.history.replaceState(null, "", url);
+      updateUrlSessionId(null);
       setError(
         isVietnamese
           ? "Không thể tải câu kế tiếp. Nhấn Thử lại."
           : "Unable to load next question. Retry."
       );
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -533,9 +561,7 @@ export function VocabularyLearningSession({
       sessionStorage.removeItem(pointerKey);
       sessionStorage.removeItem(`${pointerKey}:start-key`);
       localStorage.removeItem(`vocabulary-draft:${userId}:${activeSessionId}`);
-      const url = new URL(window.location.href);
-      url.searchParams.delete("session");
-      window.history.replaceState(null, "", url);
+      updateUrlSessionId(null);
       onAction?.(
         isVietnamese
           ? `Đã hoàn thành phiên học.`
@@ -895,9 +921,7 @@ export function VocabularyLearningSession({
               onClick={() => {
                 sessionStorage.removeItem(pointerKey);
                 sessionStorage.removeItem(`${pointerKey}:start-key`);
-                const url = new URL(window.location.href);
-                url.searchParams.delete("session");
-                window.history.replaceState(null, "", url);
+                updateUrlSessionId(null);
                 setRetryInit((n) => n + 1);
               }}
               className="text-xs"
@@ -923,9 +947,7 @@ export function VocabularyLearningSession({
           onClick={() => {
             sessionStorage.removeItem(pointerKey);
             sessionStorage.removeItem(`${pointerKey}:start-key`);
-            const url = new URL(window.location.href);
-            url.searchParams.delete("session");
-            window.history.replaceState(null, "", url);
+            updateUrlSessionId(null);
             setRetryInit((n) => n + 1);
           }}
         >

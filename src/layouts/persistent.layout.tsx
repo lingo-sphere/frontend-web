@@ -12,11 +12,17 @@ import { ScrollToTopButton } from '@/components/scroll.to.top.button'
 import { GlobalRouteGuard } from '@/components/auth/global.route.guard'
 import { GlobalCourseMiniPlayer } from '@/features/courses/components/global.course.mini.player'
 
-function PersistentLayoutContent({ children }: { children: ReactNode }) {
+function FloatingActionsDockContainer() {
   const pathname = usePathname() || '/'
   const searchParams = useSearchParams()
-  const readingGrammar = pathname.startsWith('/grammar/handbook/') ||
+  const readingGrammar =
+    pathname.startsWith('/grammar/handbook/') ||
     (pathname === '/grammar' && searchParams.get('view') === 'handbook')
+  return <FloatingActionsDock readingMode={readingGrammar} />
+}
+
+function PersistentLayoutContent({ children }: { children: ReactNode }) {
+  const pathname = usePathname() || '/'
   const router = useRouter()
   const { showAction, mobileSidebarOpen, setMobileSidebarOpen, sidebarCollapsed } = useApp()
 
@@ -57,7 +63,9 @@ function PersistentLayoutContent({ children }: { children: ReactNode }) {
             <UtilityHeader onAction={showAction} />
             {children}
           </div>
-          <FloatingActionsDock readingMode={readingGrammar} />
+          <Suspense fallback={null}>
+            <FloatingActionsDockContainer />
+          </Suspense>
         </div>
       )}
       <GlobalCourseMiniPlayer />

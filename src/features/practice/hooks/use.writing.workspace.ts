@@ -63,6 +63,8 @@ function mapBackendToWritingExercise(item: any): WritingExercise {
     description: item.description || '',
     description_vi: item.description_vi || item.description || '',
     domain: 'WRITING',
+    context_id: item.context_id,
+    context_path: item.context_path || [],
     exercise_type: toExerciseType(item.exercise_type),
     estimated_minutes: item.estimated_minutes || 10,
     writing_level: toWritingLevel(item.writing_level, item.difficulty_level, item.cefr_level),
