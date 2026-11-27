@@ -4,6 +4,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { CustomAudioPlayer } from '@/components/custom.audio.player'
+import { resolveMediaUrl } from '@/utils/media.utils'
+import { toast } from '@/store/toast.store'
 import {
   X,
   RotateCcw,
@@ -221,7 +223,7 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
         },
       })
       setReviewResult({
-        is_correct: isCorrect,
+        is_correct: res.is_correct,
         message: res.message,
         consecutive_correct: res.consecutive_correct,
         status: res.status,
@@ -229,13 +231,7 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
       setIsAnswerRevealed(true)
       onSuccess?.()
     } catch {
-      setReviewResult({
-        is_correct: isCorrect,
-        message: isCorrect ? 'Chính xác!' : 'Chưa chính xác!',
-        consecutive_correct: isCorrect ? mistake.consecutive_correct + 1 : 0,
-        status: isCorrect && mistake.consecutive_correct + 1 >= 3 ? MistakeStatus.MASTERED : MistakeStatus.PRACTICING,
-      })
-      setIsAnswerRevealed(true)
+      toast.error('Chưa lưu được kết quả ôn tập. Vui lòng thử lại.')
     }
   }
 
@@ -308,6 +304,13 @@ function StandardMistakeReviewModal({ open, onClose, mistake, onSuccess }: Mista
               {mistake.question_text}
             </p>
           </div>
+
+          {mistake.question_data?.course_review?.image_url && (
+            <img src={resolveMediaUrl(mistake.question_data.course_review.image_url)} alt="Hình minh họa câu hỏi" className="max-h-64 mx-auto rounded-xl" />
+          )}
+          {mistake.question_data?.course_review?.audio_url && (
+            <CustomAudioPlayer src={resolveMediaUrl(mistake.question_data.course_review.audio_url)} />
+          )}
 
           {/* 1. MULTIPLE CHOICE */}
           {questionType === 'MULTIPLE_CHOICE' && (

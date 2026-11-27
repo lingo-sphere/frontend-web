@@ -26,6 +26,7 @@ export function courseSkillPracticeUrl(item: WrongQuestionItem): string {
   const route = routes[domain] || '/practice/mistakes'
   const params = new URLSearchParams()
   if (item.context_id) params.set('context_id', item.context_id)
+  if (item.grammar_knowledge_id) params.set('grammar_knowledge_id', item.grammar_knowledge_id)
   if (item.exercise_type) params.set('exercise_type', item.exercise_type)
   return params.size ? `${route}?${params}` : route
 }
